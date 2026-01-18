@@ -24,18 +24,6 @@ if '--log-level' in sys.argv:
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.CRITICAL + 1)
 
-# Add OpenHCS to path if needed
-try:
-    from openhcs.core.config import GlobalPipelineConfig
-except ImportError:
-    # Add parent directory to path
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from openhcs.core.config import GlobalPipelineConfig
-    
-
-from openhcs.pyqt_gui.app import OpenHCSPyQtApp
-from pyqt_reactive.utils.window_utils import install_global_window_bounds_filter
-
 
 def is_wsl() -> bool:
     """Check if running in Windows Subsystem for Linux."""
@@ -46,7 +34,21 @@ def is_wsl() -> bool:
 
 
 def setup_qt_platform():
-    """Setup Qt platform for different environments (macOS, Linux, WSL2, Windows)."""
+    """Configure Qt platform based on OS and display environment.
+    
+    Qt requires different platform plugins for different operating systems and
+    display servers. This function detects the current environment and sets
+    QT_QPA_PLATFORM accordingly, with special handling for WSL2's dual-mode
+    support (Wayland via WSLg on Windows 11+, or X11/xcb fallback).
+    
+    Detection order for WSL2:
+        1. Wayland (WSLg on Windows 11+)
+        2. X11 via DISPLAY variable
+        3. Fallback to auto-detect (wayland;xcb)
+    
+    The environment variables must be set BEFORE any PyQt6 imports occur,
+    as Qt caches platform selection at import time.
+    """
     import platform
     from pathlib import Path
 
@@ -76,12 +78,29 @@ def setup_qt_platform():
                 logging.warning(f"Could not set QT_QPA_PLATFORM_PLUGIN_PATH: {e}")
 
     elif platform.system() == 'Linux':
-        os.environ['QT_QPA_PLATFORM'] = 'xcb'
         if is_wsl():
-            logging.info("WSL2 detected - setting QT_QPA_PLATFORM=xcb")
+            logging.info("WSL2 detected")
+            # WSL2 can use Wayland (WSLg on Windows 11+) or X11. Detect which is available
+            # and configure Qt accordingly. Wayland is preferred as it provides better
+            # integration with Windows 11's native graphics.
+            display = os.environ.get('DISPLAY')
+            wayland_display = os.environ.get('WAYLAND_DISPLAY')
+            
+            if wayland_display:
+                os.environ['QT_QPA_PLATFORM'] = 'wayland'
+                logging.info("WSL2+WSLg with Wayland detected - setting QT_QPA_PLATFORM=wayland")
+            elif display:
+                os.environ['QT_QPA_PLATFORM'] = 'xcb'
+                logging.info(f"WSL2 with X11 display {display} - setting QT_QPA_PLATFORM=xcb")
+            else:
+                # Neither display server explicitly configured. Let Qt auto-detect in order.
+                os.environ['QT_QPA_PLATFORM'] = 'wayland;xcb'
+                logging.info("WSL2 detected - enabling platform auto-detection (wayland;xcb)")
         else:
+            os.environ['QT_QPA_PLATFORM'] = 'xcb'
             logging.info("Linux detected - setting QT_QPA_PLATFORM=xcb")
-        # Disable shared memory for X11 (helps with display issues)
+        
+        # Disable X11 shared memory (MITSHM) for compatibility.
         os.environ['QT_X11_NO_MITSHM'] = '1'
     # Windows doesn't need QT_QPA_PLATFORM set
     else:
@@ -295,8 +314,13 @@ def main():
     logging.info(f"Python version: {sys.version}")
     logging.info(f"Platform: {sys.platform}")
 
-    # Setup Qt platform (must be done before creating QApplication)
+    # Setup Qt platform (must be done BEFORE any OpenHCS imports that depend on PyQt6)
     setup_qt_platform()
+
+    # NOW import OpenHCS modules and dependencies that may load PyQt6
+    from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.pyqt_gui.app import OpenHCSPyQtApp
+    from pyqt_reactor.utils.window_utils import install_global_window_bounds_filter
 
     try:
         # Check dependencies
