@@ -181,6 +181,10 @@ The solver is given oracle access to decision information at queried states (e.g
 
 Unless explicitly stated otherwise, ``polynomial time'' refers to the succinct encoding.
 
+\begin{remark}[Decision Questions vs Decision Problems]\label{rem:question-vs-problem}
+We distinguish between a \emph{decision question} and a \emph{decision problem}. A decision question is the encoding-independent predicate: ``is coordinate set $I$ sufficient for $\mathcal{D}$?'' This is a mathematical relation, fixed by the model contract (C1--C4). A decision problem is a decision question together with a specific encoding of its inputs. The same decision question yields different decision problems under different encodings, and these problems may belong to different complexity classes. Formally, each encoding regime $e$ induces a language $L_{\mathcal{D},e}$; complexity classification is a property of $L_{\mathcal{D},e}$, not of $\mathcal{D}$ alone.
+\end{remark}
+
 \subsection{Model Contract and Regime Tags}\label{sec:model-contract}
 
 All theorem statements in this paper are typed by the following model contract:
@@ -217,13 +221,15 @@ For each declared regime in $\mathcal{R}_{\mathrm{static}}$, the paper has a the
 
 \paragraph{Scope Lattice (typed classes and transfer boundary).}
 \begin{center}
-\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.37\linewidth}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}X@{}}
 \toprule
 \textbf{Layer} & \textbf{Transfer Status} & \textbf{Lean handles (representative)} \\
 \midrule
-Static sufficiency class (C1--C4; declared regimes) & Internal landscape complete & \nolinkurl{ClaimClosure.typed\_static\_class\_completeness}, \nolinkurl{ClaimClosure.regime\_core\_claim\_proved} \\
-Bridge-admissible adjacent class (one-step deterministic) & Transfer licensed & \nolinkurl{ClaimClosure.one\_step\_bridge}, \nolinkurl{ClaimClosure.bridge\_transfer\_iff\_one\_step\_class} \\
-Non-admissible represented adjacent classes (horizon/stochastic/transition-coupled) & Transfer blocked by witness & \nolinkurl{ClaimClosure.bridge\_failure\_witness\_non\_one\_step}, \nolinkurl{ClaimClosure.bridge\_boundary\_represented\_family} \\
+Static sufficiency class (C1--C4; declared regimes) & Internal landscape complete & \nolinkurl{ClaimClosure.typed_static_class_completeness}\\\nolinkurl{ClaimClosure.regime_core_claim_proved} \\
+Bridge-admissible adjacent class (one-step deterministic) & Transfer licensed & \nolinkurl{ClaimClosure.one_step_bridge}\\\nolinkurl{ClaimClosure.bridge_transfer_iff_one_step_class} \\
+Non-admissible represented adjacent classes (horizon, stochastic, transition-coupled) & Transfer blocked by witness & \nolinkurl{ClaimClosure.bridge_failure_witness_non_one_step}\\\nolinkurl{ClaimClosure.bridge_boundary_represented_family} \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -305,15 +311,15 @@ The claims in later applied sections are theorem-indexed consequences of this se
 \subsection{Structural Complexity vs Representational Hardness}
 
 \begin{definition}[Structural Complexity]\label{def:structural-complexity}
-For a fixed formal decision relation (e.g., ``$I$ is sufficient for $\mathcal{D}$''), \emph{structural complexity} means its placement in standard complexity classes within the formal model (coNP, $\Sigma_2^P$, etc.), as established by class-membership arguments and reductions.
+For a fixed decision question (e.g., ``is $I$ sufficient for $\mathcal{D}$?''; see Remark~\ref{rem:question-vs-problem}), \emph{structural complexity} means its placement in standard complexity classes within the formal model (coNP, $\Sigma_2^P$, etc.), as established by class-membership arguments and reductions.
 \end{definition}
 
 \begin{definition}[Representational Hardness]\label{def:representational-hardness}
-For a fixed decision relation and an encoding regime $E$ (Section~\ref{sec:encoding}), \emph{representational hardness} is the worst-case computational cost incurred by solvers whose input access is restricted to $E$.
+For a fixed decision question and an encoding regime $E$ (Section~\ref{sec:encoding}), \emph{representational hardness} is the worst-case computational cost incurred by solvers whose input access is restricted to $E$.
 \end{definition}
 
 \begin{remark}[Interpretation Contract]
-This paper keeps the decision relation fixed and varies the encoding regime explicitly. Thus, later separations are read as changes in representational hardness under fixed structural complexity, not as changes to the underlying sufficiency semantics.
+This paper keeps the decision question fixed and varies the encoding regime explicitly. Thus, later separations are read as changes in representational hardness under fixed structural complexity, not as changes to the underlying sufficiency semantics.
 Accordingly, ``complete landscape'' means complete for this static sufficiency class under the declared regimes; adjacent objective classes are distinct typed objects, not unproved remainder cases of the same class.
 \end{remark}
 
@@ -333,7 +339,7 @@ For the static sufficiency class fixed by C1--C4 and declared regime family $\ma
 To keep practical corollaries type-safe, we separate \emph{integrity} (what a solver is allowed to assert) from \emph{competence} (what it can cover under a declared regime), following the certifying-algorithms schema \cite{mcconnell2010certifying}.
 
 \begin{definition}[Certifying Solver]\label{def:certifying-solver}
-Fix a decision relation $\mathcal{R} \subseteq \mathcal{X}\times\mathcal{Y}$ and an encoding regime $E$ over $\mathcal{X}$. A \emph{certifying solver} is a pair $(Q,V)$ where:
+Fix a decision question $\mathcal{R} \subseteq \mathcal{X}\times\mathcal{Y}$ and an encoding regime $E$ over $\mathcal{X}$. A \emph{certifying solver} is a pair $(Q,V)$ where:
 \begin{itemize}
 \item $Q$ maps each input $x\in\mathcal{X}$ to either $\mathsf{ABSTAIN}$ or a candidate pair $(y,w)$,
 \item $V$ is a polynomial-time checker (in $|{\rm enc}_E(x)|$) with output in $\{0,1\}$.

@@ -1,6 +1,6 @@
 \section{Encoding-Regime Separation}\label{sec:dichotomy}
 
-The hardness results of Section~\ref{sec:hardness} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family.
+The hardness results of Section~\ref{sec:hardness} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family. The complexity class is a property of the encoding measured against a fixed decision question (Remark~\ref{rem:question-vs-problem}), not a property of the question itself: the same sufficiency question admits polynomial-time algorithms under one encoding and worst-case exponential cost under another.
 
 \paragraph{Model note.} Theorem~\ref{thm:dichotomy} has Part~1 in [E] (time polynomial in $|S|$) and Part~2 in [S+ETH] (time exponential in $n$). Proposition~\ref{prop:query-regime-obstruction} is [Q\_fin] (finite-state Opt-oracle core), while Propositions~\ref{prop:query-value-entry-lb} and~\ref{prop:query-state-batch-lb} are [Q\_bool] interface refinements (value-entry and state-batch). These regimes are defined in Section~\ref{sec:encoding} and are not directly comparable as functions of one numeric input-length parameter.
 
@@ -52,7 +52,7 @@ Consequently, no deterministic query procedure using fewer than $|S|$ state quer
 
 \begin{proof}
 This is exactly the finite-state indistinguishability theorem
-\texttt{ClaimClosure.query\_obstruction\_finite\_state\_core}: for any $|Q|<|S|$, there is an unqueried hidden state $s_0$ producing oracle-indistinguishable yes/no instances with opposite truth values on the $I=\emptyset$ subproblem. Since SUFFICIENCY-CHECK contains that subproblem, fewer than $|S|$ queries cannot be correct on both instances, yielding the $\Omega(|S|)$ worst-case lower bound.
+\nolinkurl{ClaimClosure.query_obstruction_finite_state_core}. For any $|Q|<|S|$, there is an unqueried hidden state $s_0$ producing oracle-indistinguishable yes/no instances with opposite truth values on the $I=\emptyset$ subproblem. Since SUFFICIENCY-CHECK contains that subproblem, fewer than $|S|$ queries cannot be correct on both instances, yielding the $\Omega(|S|)$ worst-case lower bound.
 \end{proof}
 
 \begin{corollary}[Boolean-Coordinate Instantiation]\label{cor:query-obstruction-bool}
@@ -68,7 +68,7 @@ In the mechanized Boolean value-entry query submodel [Q\_bool], for any determin
 \end{proposition}
 
 \begin{proof}
-The theorem \texttt{emptySufficiency\_valueEntry\_indistinguishable\_pair} constructs, for any query set of cardinality $<2^n$, an unqueried hidden state $s_0$ and a yes/no instance pair that agree on all queried values but disagree on $\emptyset$-sufficiency. The auxiliary bound \texttt{touchedStates\_card\_le\_query\_card} ensures that fewer than $2^n$ value-entry queries cannot cover all states, so the indistinguishability argument applies in the worst case.
+The theorem \nolinkurl{emptySufficiency_valueEntry_indistinguishable_pair} constructs, for any query set of cardinality $<2^n$, an unqueried hidden state $s_0$ and a yes/no instance pair that agree on all queried values but disagree on $\emptyset$-sufficiency. The auxiliary bound \nolinkurl{touchedStates_card_le_query_card} ensures that fewer than $2^n$ value-entry queries cannot cover all states, so the indistinguishability argument applies in the worst case.
 \end{proof}
 
 \begin{proposition}[Subproblem-to-Full Transfer Rule]\label{prop:query-subproblem-transfer}
@@ -133,4 +133,6 @@ In [Q\_bool], agreement on state-batch oracle views over touched states implies 
 Theorem~\ref{thm:dichotomy} and Propositions~\ref{prop:query-regime-obstruction}--\ref{prop:query-value-entry-lb} keep the structural problem fixed (same sufficiency relation) and separate representational hardness by access regime: explicit-state access exposes the boundary $s \mapsto \Opt(s)$, finite-state query access already yields $\Omega(|S|)$ lower bounds at the Opt-oracle level (Boolean instantiation: $\Omega(2^n)$), value-entry/state-batch interfaces preserve the obstruction in [Q\_bool], and succinct access can hide structure enough to force ETH-level worst-case cost on a hard family.
 \end{remark}
 
-This regime-typed landscape identifies tractability under [E], a finite-state query lower-bound core under [Q\_fin] with Boolean interface refinements under [Q\_bool], and worst-case intractability under [S+ETH] for the same underlying decision relation.
+This regime-typed landscape identifies tractability under [E], a finite-state query lower-bound core under [Q\_fin] with Boolean interface refinements under [Q\_bool], and worst-case intractability under [S+ETH] for the same underlying decision question.
+
+The structural reason for this separation is enumerable access. Under the explicit-state encoding, the mapping $s \mapsto \Opt(s)$ is directly inspectable and sufficiency verification reduces to scanning state pairs, at cost polynomial in $|S|$. Under succinct encoding, the circuit compresses an exponential state space into polynomial size; universal verification over that compressed domain---``for all $s, s'$ with $s_I = s'_I$, does $\Opt(s) = \Opt(s')$?''---carries worst-case cost exponential in $n$, because the domain the circuit compressed away cannot be reconstructed without undoing the compression.
