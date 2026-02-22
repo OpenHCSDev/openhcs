@@ -53,7 +53,7 @@ For fixed selector $\sigma$, a coordinate set $I$ is \emph{selector-sufficient} 
 
 \begin{proposition}[Set-Level Target Dominates Selector Targets]\label{prop:set-to-selector}
 If $I$ is sufficient in the set-valued sense (Definition~\ref{def:sufficient}), then $I$ is selector-sufficient for every deterministic selector $\sigma$ (Definition~\ref{def:selector-sufficient}).
-\textit{(Lean: \nolinkurl{DecisionProblem.sufficient_implies_selectorSufficient})}
+\leanmeta{Lean: \nolinkurl{DecisionProblem.sufficient_implies_selectorSufficient}}
 \end{proposition}
 
 \begin{proof}
@@ -78,13 +78,13 @@ Set-valued sufficiency is exactly the $\varepsilon=0$ case:
 \[
 I\text{ sufficient } \iff I\text{ is }0\text{-sufficient}.
 \]
-\textit{(Lean: \nolinkurl{DecisionProblem.epsOpt_zero_eq_opt},
-\nolinkurl{DecisionProblem.sufficient_iff_zeroEpsilonSufficient})}
+\leanmeta{Lean: \nolinkurl{DecisionProblem.epsOpt_zero_eq_opt},
+\nolinkurl{DecisionProblem.sufficient_iff_zeroEpsilonSufficient}}
 \end{proposition}
 
 \begin{proposition}[Selector-Level Separation Witness]\label{prop:selector-separation}
 The converse of Proposition~\ref{prop:set-to-selector} fails in general: there exists a decision problem, selector, and coordinate set $I$ such that $I$ is selector-sufficient but not sufficient in the full set-valued sense.
-\textit{(Lean witness: \nolinkurl{ClaimClosure.selectorSufficient_not_implies_setSufficient}.)}
+\leanmeta{Lean witness: \nolinkurl{ClaimClosure.selectorSufficient_not_implies_setSufficient}.}
 \end{proposition}
 
 \begin{definition}[Minimal Sufficient Set]\label{def:minimal-sufficient}
@@ -106,8 +106,8 @@ For any minimal sufficient set $I$ and any coordinate $i$:
 i \in I \iff i \text{ is relevant}.
 \]
 Hence every minimal sufficient set is exactly the relevant-coordinate set.
-\textit{(Lean product-space handles: \nolinkurl{DecisionProblem.minimalSufficient_iff_relevant},
-\nolinkurl{DecisionProblem.relevantSet_is_minimal}.)}
+\leanmeta{Lean product-space handles: \nolinkurl{DecisionProblem.minimalSufficient_iff_relevant},
+\nolinkurl{DecisionProblem.relevantSet_is_minimal}.}
 \end{proposition}
 
 \begin{proof}
@@ -149,8 +149,8 @@ This measures the fraction of actions that are optimal for at least one state co
 
 \begin{proposition}[Sufficiency Characterization]\label{prop:sufficiency-char}
 Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\Opt(s)|/|A|$ for all $s \in S$.
-\textit{(Lean finite-model form: \nolinkurl{ClaimClosure.sufficiency_iff_dq_ratio},
-\nolinkurl{ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt})}
+\leanmeta{Lean finite-model form: \nolinkurl{ClaimClosure.sufficiency_iff_dq_ratio},
+\nolinkurl{ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt}}
 \end{proposition}
 
 \begin{proof}
@@ -185,6 +185,15 @@ Unless explicitly stated otherwise, ``polynomial time'' refers to the succinct e
 We distinguish between a \emph{decision question} and a \emph{decision problem}. A decision question is the encoding-independent predicate: ``is coordinate set $I$ sufficient for $\mathcal{D}$?'' This is a mathematical relation, fixed by the model contract (C1--C4). A decision problem is a decision question together with a specific encoding of its inputs. The same decision question yields different decision problems under different encodings, and these problems may belong to different complexity classes. Formally, each encoding regime $e$ induces a language $L_{\mathcal{D},e}$; complexity classification is a property of $L_{\mathcal{D},e}$, not of $\mathcal{D}$ alone.
 \end{remark}
 
+\begin{definition}[Regime Simulation]\label{def:regime-simulation}
+Fix a decision question $Q$ and two regimes $R_1,R_2$ for that question.
+We say $R_1$ \emph{simulates} $R_2$ if there exists a polynomial-time transformer that maps any $R_2$ instance to an $R_1$ instance while preserving the answer to $Q$; in oracle settings, this includes a polynomial-time transcript transducer that preserves yes/no outcomes for induced solvers.
+\leanmeta{Lean abstraction: \nolinkurl{ClaimClosure.RegimeSimulation},
+\nolinkurl{ClaimClosure.regime\_simulation\_transfers\_hardness}.}
+\end{definition}
+
+This paper uses that simulation spine in two explicit forms: restriction-map simulation (subproblem-to-full transfer; Proposition~\ref{prop:query-subproblem-transfer}) and oracle-transducer simulation (batch-to-entry transfer; Proposition~\ref{prop:oracle-lattice-transfer}).
+
 \subsection{Model Contract and Regime Tags}\label{sec:model-contract}
 
 All theorem statements in this paper are typed by the following model contract:
@@ -215,8 +224,8 @@ Let
 \{\text{[E]},\ \text{[S+ETH]},\ \text{[Q\_fin:Opt]},\ \text{[Q\_bool:value-entry]},\ \text{[Q\_bool:state-batch]}\}.
 \]
 For each declared regime in $\mathcal{R}_{\mathrm{static}}$, the paper has a theorem-level mechanized core claim. Equivalently, regime typing is complete over the declared static family.
-\textit{(Lean: \nolinkurl{ClaimClosure.declaredRegimeFamily\_complete},
-\nolinkurl{ClaimClosure.regime\_core\_claim\_proved}.)}
+\leanmeta{Lean: \nolinkurl{ClaimClosure.declaredRegimeFamily\_complete},
+\nolinkurl{ClaimClosure.regime\_core\_claim\_proved}.}
 \end{theorem}
 
 \paragraph{Scope Lattice (typed classes and transfer boundary).}
@@ -255,7 +264,7 @@ Consider an instance of Definition~\ref{def:adjacent-sequential-regime} satisfyi
 \item no post-decision state update relevant to the objective.
 \end{enumerate}
 Then the induced optimization problem is exactly the static decision problem of Definition~\ref{def:decision-problem}, and coordinate sufficiency in the sequential formulation is equivalent to Definition~\ref{def:sufficient}.
-\textit{(Lean bridge core: \nolinkurl{ClaimClosure.one_step_bridge})}
+\leanmeta{Lean bridge core: \nolinkurl{ClaimClosure.one_step_bridge}}
 \end{proposition}
 
 \begin{proof}
@@ -264,7 +273,7 @@ Under (1)--(3), optimizing $J$ at state $s$ is identical to choosing an action i
 
 \begin{proposition}[Bridge Transfer Rule]\label{prop:bridge-transfer-scope}
 Under conditions (1)--(4), any sufficiency statement formulated over Definition~\ref{def:sufficient} is equivalent between the adjacent sequential formulation and the static model.
-\textit{(Lean: \nolinkurl{ClaimClosure.one_step_bridge})}
+\leanmeta{Lean: \nolinkurl{ClaimClosure.one_step_bridge}}
 \end{proposition}
 
 \begin{proof}
@@ -279,18 +288,18 @@ Beyond Proposition~\ref{prop:one-step-bridge} (multi-step horizon, stochastic tr
 
 \begin{proposition}[Horizon-$>1$ Bridge-Failure Witness]\label{prop:bridge-failure-horizon}
 Dropping the one-step condition can break sufficiency transfer: there exists a two-step objective where sufficiency in the immediate-utility static projection does not match sufficiency in the two-step objective.
-\textit{(Lean: \nolinkurl{ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency},
-\nolinkurl{ClaimClosure.horizonTwoWitness_immediate_empty_sufficient}.)}
+\leanmeta{Lean: \nolinkurl{ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency},
+\nolinkurl{ClaimClosure.horizonTwoWitness_immediate_empty_sufficient}.}
 \end{proposition}
 
 \begin{proposition}[Stochastic-Criterion Bridge-Failure Witness]\label{prop:bridge-failure-stochastic}
 If optimization is performed against a stochastic criterion not equal to deterministic utility maximization, bridge transfer to Definition~\ref{def:decision-problem} can fail even when an expected-utility projection is available.
-\textit{(Lean: \nolinkurl{ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency}.)}
+\leanmeta{Lean: \nolinkurl{ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency}.}
 \end{proposition}
 
 \begin{proposition}[Transition-Coupled Bridge-Failure Witness]\label{prop:bridge-failure-transition}
 If post-decision transition effects are objective-relevant, bridge transfer to the static one-step class can fail.
-\textit{(Lean: \nolinkurl{ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency}.)}
+\leanmeta{Lean: \nolinkurl{ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency}.}
 \end{proposition}
 
 \begin{theorem}[Exact Bridge Boundary in the Represented Adjacent Family]\label{thm:bridge-boundary-represented}
@@ -299,9 +308,9 @@ Within the represented adjacent family
 \{\text{one-step deterministic},\ \text{horizon-extended},\ \text{stochastic-criterion},\ \text{transition-coupled}\},
 \]
 direct transfer of static sufficiency claims is licensed if and only if the class is one-step deterministic. Each represented non-one-step class has an explicit mechanized bridge-failure witness.
-\textit{(Lean: \nolinkurl{ClaimClosure.bridge\_transfer\_iff\_one\_step\_class},
+\leanmeta{Lean: \nolinkurl{ClaimClosure.bridge\_transfer\_iff\_one\_step\_class},
 \nolinkurl{ClaimClosure.bridge\_failure\_witness\_non\_one\_step},
-\nolinkurl{ClaimClosure.bridge\_boundary\_represented\_family}.)}
+\nolinkurl{ClaimClosure.bridge\_boundary\_represented\_family}.}
 \end{theorem}
 
 \begin{definition}[Agent Snapshot vs Agent Process Typing]\label{def:agent-snapshot-process}
@@ -314,12 +323,12 @@ Within the represented adjacent family, we type:
 
 \begin{proposition}[Snapshot/Process Transfer Typing]\label{prop:snapshot-process-typing}
 In the represented adjacent family, direct transfer of static sufficiency claims is licensed if and only if the agent is typed as an \emph{agent snapshot}. Every process-typed represented class has an explicit mechanized bridge-failure witness.
-\textit{(Lean: \nolinkurl{ClaimClosure.agent_transfer_licensed_iff_snapshot},
+\leanmeta{Lean: \nolinkurl{ClaimClosure.agent_transfer_licensed_iff_snapshot},
 \nolinkurl{ClaimClosure.process_bridge_failure_witness},
-\nolinkurl{ClaimClosure.snapshot_vs_process_typed_boundary}.)}
+\nolinkurl{ClaimClosure.snapshot_vs_process_typed_boundary}.}
 \end{proposition}
 
-Operationally: a trained model evaluated with fixed parameters during inference is an agent snapshot for this typing; once parameters or transition-relevant internals are updated online, the object is process-typed and transfer from static sufficiency theorems is blocked unless the one-step bridge conditions are re-established.
+Operationally: a trained model evaluated with fixed parameters during inference is an agent snapshot for this typing; once parameters or transition-relevant internals are updated online, the object is process-typed and transfer from static sufficiency theorems is blocked unless the one-step bridge conditions are re-established.\claimstamp{Prop.~\ref{prop:snapshot-process-typing}}{[R=represented adjacent class]}
 
 \section{Interpretive Foundations: Hardness and Solver Claims}\label{sec:interpretive-foundations}
 
@@ -348,7 +357,7 @@ For the static sufficiency class fixed by C1--C4 and declared regime family $\ma
 \item a regime-indexed mechanized core claim for every declared regime; and
 \item declared-family exhaustiveness in the typed regime algebra.
 \end{enumerate}
-\textit{(Lean package: \nolinkurl{ClaimClosure.typed\_static\_class\_completeness}.)}
+\leanmeta{Lean package: \nolinkurl{ClaimClosure.typed\_static\_class\_completeness}.}
 \end{theorem}
 
 \subsection{Solver Integrity and Regime Competence}
@@ -403,12 +412,14 @@ If $\mathcal{R}_0=\mathcal{R}$, then
 \text{competent for exact relation }\mathcal{R}.
 \]
 Moreover, $\varepsilon$-competence implies integrity for the corresponding $\mathcal{R}_\varepsilon$.
-\textit{(Lean: \nolinkurl{IntegrityCompetence.zero_epsilon_competence_iff_exact},
-\nolinkurl{IntegrityCompetence.epsilon_competence_implies_integrity}.)}
+\leanmeta{Lean: \nolinkurl{IntegrityCompetence.zero_epsilon_competence_iff_exact},
+\nolinkurl{IntegrityCompetence.epsilon_competence_implies_integrity}.}
 \end{proposition}
 
 \begin{proposition}[Integrity--Competence Separation]\label{prop:integrity-competence-separation}
 Integrity and competence are distinct predicates: integrity constrains asserted outputs, while competence adds non-abstaining coverage under resource bounds.
+\leanmeta{Lean: \nolinkurl{IntegrityCompetence.competence_implies_integrity},
+\nolinkurl{IntegrityCompetence.integrity_not_competent_of_nonempty_scope}.}
 \end{proposition}
 
 \begin{proof}
@@ -432,12 +443,12 @@ Let $I,A,C\in\{0,1\}$ denote integrity, attempted exact competence, and competen
 \item if $I=1$ and $(A,C)\in\{(0,0),(0,1),(1,1)\}$: irrational for the same verified-cost objective.
 \end{itemize}
 Hence, in the integrity-preserving plane ($I=1$), exactly one cell is rational and three are irrational.
-\textit{(Lean: \nolinkurl{IntegrityCompetence.overModelVerdict_rational_iff},
+\leanmeta{Lean: \nolinkurl{IntegrityCompetence.overModelVerdict_rational_iff},
 \nolinkurl{IntegrityCompetence.admissible_matrix_counts},
-\nolinkurl{IntegrityCompetence.admissible_irrational_strictly_more_than_rational})}
+\nolinkurl{IntegrityCompetence.admissible_irrational_strictly_more_than_rational}}
 \end{proposition}
 
-This separation plus Proposition~\ref{prop:attempted-competence-matrix} is load-bearing for the regime-conditional trilemma used later: if exact competence is blocked by hardness in a declared regime after an attempted exact procedure, integrity forces one of three responses---abstain, weaken guarantees, or change regime assumptions.
+This separation plus Proposition~\ref{prop:attempted-competence-matrix} is load-bearing for the regime-conditional trilemma used later: if exact competence is blocked by hardness in a declared regime after an attempted exact procedure, integrity forces one of three responses---abstain, weaken guarantees, or change regime assumptions.\claimstamp{Prop.~\ref{prop:attempted-competence-matrix}}{[R=active declared regime]}
 
 \paragraph{Mechanized status.}
 This separation is machine-checked in \texttt{DecisionQuotient/IntegrityCompetence.lean} via:
@@ -446,6 +457,20 @@ This separation is machine-checked in \texttt{DecisionQuotient/IntegrityCompeten
 \texttt{overModelVerdict\_rational\_iff},
 \texttt{admissible\_matrix\_counts}, and
 \texttt{admissible\_irrational\_strictly\_more\_than\_rational}.
+
+\begin{proposition}[Integrity-Resource Bound]\label{prop:integrity-resource-bound}
+Let $\Gamma$ be a declared regime whose in-scope family includes all instances of SUFFICIENCY-CHECK and whose declared resource bound is polynomial in the encoding length. If $\Pclass \neq \coNP$, then no certifying solver is simultaneously integrity-preserving and competent on $\Gamma$ for exact sufficiency.
+Equivalently, for every integrity-preserving solver, at least one of the competence conjuncts must fail on $\Gamma$: either full non-abstaining coverage fails or the declared budget bound fails.
+\leanmeta{Lean: \nolinkurl{IntegrityCompetence.integrity\_resource\_bound},
+\nolinkurl{IntegrityCompetence.integrity\_forces\_abstention},
+\nolinkurl{ClaimClosure.integrity\_resource\_bound\_for\_sufficiency}.}
+\end{proposition}
+
+\begin{proof}
+By Definition~\ref{def:competence-regime}, competence on $\Gamma$ requires integrity, full in-scope coverage, and budget compliance. Under the coNP-hardness transfer for SUFFICIENCY-CHECK (Theorem~\ref{thm:sufficiency-conp}), universal competence on this scope would induce a polynomial-time collapse to $\Pclass=\coNP$. Therefore, under $\Pclass \neq \coNP$, the full competence predicate cannot hold.
+Since integrity alone is satisfiable (Proposition~\ref{prop:integrity-competence-separation}, via always-abstain), the obstruction is exactly competence coverage/budget under the declared regime.
+\claimstamp{Thm.~\ref{thm:sufficiency-conp}, Prop.~\ref{prop:integrity-competence-separation}, Prop.~\ref{prop:integrity-resource-bound}}{[R=active declared regime]}
+\end{proof}
 
 
 % Include the hardness proofs (already developed)

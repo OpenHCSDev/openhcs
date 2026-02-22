@@ -12,7 +12,7 @@ OpenHCS Architecture:
 STRUCTURAL INVARIANTS (mathematical constraints):
   1. Content: ∀p ∈ Papers: content(p) ⊂ paper_dir(p)/latex/content/*.tex
   2. Proofs:  ∀p ∈ Papers: proofs(p) ⊂ proofs_dir/paper{id}_*.lean
-  3. Output:  ∀p ∈ Papers: releases(p) = {pdf, md, BUILD_LOG.txt, tar.gz, zip}
+  3. Output:  ∀p ∈ Papers: releases(p) = {pdf, md, copy_paste.txt, BUILD_LOG.txt, tar.gz, zip}
 
 All papers follow identical structure. No special cases.
 """
@@ -21,7 +21,7 @@ import sys
 import subprocess
 import shutil
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional, Set
 from dataclasses import dataclass
 import yaml
 import argparse
@@ -58,6 +58,11 @@ class PaperMeta:
     latex_dir: str          # Relative to paper dir, typically "latex"
     latex_file: str         # Main .tex file name
     venue: str              # Target venue, e.g., "JSAIT", "TOPLAS"
+    proofs_dir: str = "proofs"
+    archive_prefix: str = ""
+    assumption_ledger_sources: Tuple[str, ...] = ()
+    claim_mapping_file: str = ""
+    arxiv_comments: str = ""
 
     @classmethod
     def from_dict(cls, paper_id: str, d: dict) -> "PaperMeta":
@@ -69,6 +74,11 @@ class PaperMeta:
             latex_dir=d.get("latex_dir", "latex"),
             latex_file=d["latex_file"],
             venue=d.get("venue", "Draft"),
+            proofs_dir=d.get("proofs_dir", "proofs"),
+            archive_prefix=d.get("archive_prefix", ""),
+            assumption_ledger_sources=tuple(d.get("assumption_ledger_sources", [])),
+            claim_mapping_file=d.get("claim_mapping_file", ""),
+            arxiv_comments=d.get("arxiv_comments", ""),
         )
 
 
@@ -102,7 +112,12 @@ class PaperBuilder:
     All papers follow these invariants. No exceptions.
     """
 
-    def __init__(self, repo_root: Path):
+    def __init__(
+        self,
+        repo_root: Path,
+        validate_prerequisites: bool = True,
+        validate_paper_structure: bool = True,
+    ):
         self.repo_root = repo_root
         self.scripts_dir = repo_root / "scripts"
         self.papers_dir = repo_root / "docs" / "papers"
@@ -118,8 +133,10 @@ class PaperBuilder:
         self._lean_build_output: str = ""
 
         # Validate upfront (fail-loud)
-        self._validate_prerequisites()
-        self._validate_paper_structure()
+        if validate_prerequisites:
+            self._validate_prerequisites()
+        if validate_paper_structure:
+            self._validate_paper_structure()
 
     def _load_raw_metadata(self) -> dict:
         """Load raw YAML metadata."""
@@ -195,6 +212,240 @@ class PaperBuilder:
         releases_dir = self._get_paper_dir(paper_id) / "releases"
         releases_dir.mkdir(parents=True, exist_ok=True)
         return releases_dir
+
+    def _write_text_file(
+        self,
+        path: Path,
+        content: str,
+        overwrite: bool,
+        created_files: List[Path],
+        skipped_files: List[Path],
+    ) -> None:
+        """Write UTF-8 text file unless it exists and overwrite is disabled."""
+        if path.exists() and not overwrite:
+            skipped_files.append(path)
+            return
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        created_files.append(path)
+
+    def _to_pascal_case(self, raw: str) -> str:
+        """Convert an arbitrary identifier to a Lean-safe PascalCase module root."""
+        tokens = [tok for tok in re.split(r"[^A-Za-z0-9]+", raw) if tok]
+        if not tokens:
+            return "PaperScaffold"
+        normalized = "".join(tok[:1].upper() + tok[1:] for tok in tokens)
+        if normalized[0].isdigit():
+            normalized = f"P{normalized}"
+        return normalized
+
+    def _to_package_name(self, raw: str) -> str:
+        """Convert an arbitrary identifier to a Lean package-safe snake_case name."""
+        normalized = re.sub(r"[^a-zA-Z0-9_]+", "_", raw).strip("_").lower()
+        if not normalized:
+            normalized = "paper_scaffold"
+        if normalized[0].isdigit():
+            normalized = f"p_{normalized}"
+        return normalized
+
+    def _discover_template_lean_toolchain(self) -> str:
+        """Find an existing Lean toolchain pin from current papers, or use a safe fallback."""
+        candidate_paths: List[Path] = []
+        for meta in self.papers.values():
+            candidate_paths.append(self.papers_dir / meta.dir_name / meta.proofs_dir / "lean-toolchain")
+
+        for path in candidate_paths:
+            if not path.exists():
+                continue
+            content = path.read_text(encoding="utf-8", errors="replace").strip()
+            if content:
+                return content
+
+        return "leanprover/lean4:stable"
+
+    def _discover_template_mathlib_require(self) -> str:
+        """Extract a pinned `require mathlib` block from an existing lakefile."""
+        pattern = re.compile(
+            r"require\s+mathlib\s+from\s+git\s*\n\s*\"[^\"]+\"\s*@\s*\"[^\"]+\"",
+            re.MULTILINE,
+        )
+        candidate_paths: List[Path] = []
+        for meta in self.papers.values():
+            candidate_paths.append(self.papers_dir / meta.dir_name / meta.proofs_dir / "lakefile.lean")
+
+        for path in candidate_paths:
+            if not path.exists():
+                continue
+            content = path.read_text(encoding="utf-8", errors="replace")
+            match = pattern.search(content)
+            if match:
+                return match.group(0)
+
+        return (
+            'require mathlib from git\n'
+            '  "https://github.com/leanprover-community/mathlib4" @ "master"'
+        )
+
+    def _latex_main_template(self, meta: PaperMeta) -> str:
+        """Generate a self-contained LaTeX starter file for a new paper variant."""
+        return f"""\\documentclass[11pt]{{article}}
+\\usepackage[utf8]{{inputenc}}
+\\usepackage[T1]{{fontenc}}
+\\usepackage{{amsmath,amssymb,amsthm}}
+\\usepackage{{geometry}}
+\\usepackage{{hyperref}}
+\\usepackage{{url}}
+\\geometry{{margin=1in}}
+
+% Auto-generated scaffold. Replace with venue-specific preamble as needed.
+\\IfFileExists{{content/lean_stats.tex}}{{\\input{{content/lean_stats.tex}}}}{{}}
+
+\\title{{{meta.full_name}}}
+\\author{{Anonymous Author\\\\Anonymous Institution\\\\\\texttt{{anonymous@example.com}}}}
+\\date{{\\today}}
+
+\\begin{{document}}
+\\maketitle
+
+\\begin{{abstract}}
+\\input{{content/abstract.tex}}
+\\end{{abstract}}
+
+\\input{{content/01_introduction.tex}}
+
+\\bibliographystyle{{plain}}
+\\bibliography{{references}}
+
+\\end{{document}}
+"""
+
+    def _latex_abstract_template(self, meta: PaperMeta) -> str:
+        """Generate default abstract placeholder content."""
+        return (
+            f"Scaffold abstract for {meta.name}. "
+            "Replace this paragraph with the final abstract text.\n"
+        )
+
+    def _latex_intro_template(self, meta: PaperMeta) -> str:
+        """Generate default introduction placeholder content."""
+        return f"""\\section{{Introduction}}
+
+This is scaffold content for \\texttt{{{meta.paper_id}}}. Replace it with your paper text.
+"""
+
+    def _references_template(self) -> str:
+        """Generate an empty bibliography placeholder."""
+        return (
+            "% Auto-generated scaffold bibliography.\n"
+            "% Add BibTeX entries here.\n"
+        )
+
+    def _proofs_readme_template(self, meta: PaperMeta) -> str:
+        """Generate README for scaffolded Lean proofs."""
+        return f"""# {meta.name} Lean Proofs
+
+This directory was scaffolded by `scripts/build_papers.py scaffold {meta.paper_id}`.
+
+- Replace starter modules with your formalization.
+- Run `lake build` inside this directory once dependencies are initialized.
+"""
+
+    def _lakefile_template(self, package_name: str, module_root: str, mathlib_require: str) -> str:
+        """Generate a minimal lakefile pinned to the repository's current mathlib source."""
+        return f"""import Lake
+open Lake DSL
+
+package «{package_name}» where
+  -- Auto-generated scaffold package.
+
+{mathlib_require}
+
+@[default_target]
+lean_lib «{module_root}» where
+  globs := #[.submodules `{module_root}]
+  srcDir := "."
+"""
+
+    def _lean_root_template(self, module_root: str) -> str:
+        """Generate root Lean module importing starter files."""
+        return f"""import {module_root}.Basic
+"""
+
+    def _lean_basic_template(self, module_root: str) -> str:
+        """Generate starter Lean theorem file."""
+        return f"""namespace {module_root}
+
+theorem scaffold_sanity : True := by
+  trivial
+
+end {module_root}
+"""
+
+    def scaffold_paper(self, paper_id: str, overwrite: bool = False) -> Dict[str, List[Path]]:
+        """Create required folder/file boilerplate for a paper entry in papers.yaml."""
+        meta = self._get_paper_meta(paper_id)
+        paper_dir = self._get_paper_dir(paper_id)
+        latex_dir = paper_dir / meta.latex_dir
+        content_dir = latex_dir / "content"
+        proofs_dir = self._get_paper_proofs_dir(paper_id)
+        releases_dir = paper_dir / "releases"
+        markdown_dir = paper_dir / "markdown"
+        proofs_dir_was_nonempty = proofs_dir.exists() and any(proofs_dir.iterdir())
+
+        created_dirs: List[Path] = []
+        created_files: List[Path] = []
+        skipped_files: List[Path] = []
+
+        for directory in [paper_dir, latex_dir, content_dir, proofs_dir, releases_dir, markdown_dir]:
+            if not directory.exists():
+                directory.mkdir(parents=True, exist_ok=True)
+                created_dirs.append(directory)
+
+        module_root = self._to_pascal_case(meta.dir_name)
+        package_name = self._to_package_name(meta.dir_name)
+        lean_toolchain = self._discover_template_lean_toolchain()
+        mathlib_require = self._discover_template_mathlib_require()
+
+        files_to_write = [
+            (latex_dir / meta.latex_file, self._latex_main_template(meta)),
+            (content_dir / "abstract.tex", self._latex_abstract_template(meta)),
+            (content_dir / "01_introduction.tex", self._latex_intro_template(meta)),
+            (latex_dir / "references.bib", self._references_template()),
+        ]
+        if overwrite or not proofs_dir_was_nonempty:
+            files_to_write.extend(
+                [
+                    (proofs_dir / "README.md", self._proofs_readme_template(meta)),
+                    (proofs_dir / "lean-toolchain", f"{lean_toolchain}\n"),
+                    (proofs_dir / "lakefile.lean", self._lakefile_template(package_name, module_root, mathlib_require)),
+                    (proofs_dir / f"{module_root}.lean", self._lean_root_template(module_root)),
+                    (proofs_dir / module_root / "Basic.lean", self._lean_basic_template(module_root)),
+                ]
+            )
+        else:
+            print(
+                f"[scaffold] {paper_id}: proofs scaffold skipped "
+                f"(existing non-empty directory: {proofs_dir.relative_to(self.repo_root)})"
+            )
+
+        for path, content in files_to_write:
+            self._write_text_file(
+                path,
+                content,
+                overwrite=overwrite,
+                created_files=created_files,
+                skipped_files=skipped_files,
+            )
+
+        print(f"[scaffold] {paper_id}: created {len(created_dirs)} dirs, {len(created_files)} files")
+        if skipped_files:
+            print(f"[scaffold] {paper_id}: skipped {len(skipped_files)} existing files")
+
+        return {
+            "created_dirs": created_dirs,
+            "created_files": created_files,
+            "skipped_files": skipped_files,
+        }
 
     def _discover_content_files(self, paper_id: str) -> List[Path]:
         """Discover markdown content files by following main LaTeX include order."""
@@ -332,9 +583,12 @@ class PaperBuilder:
         For variants (e.g., paper1_jsait), use the base paper's proofs.
         """
         meta = self._get_paper_meta(paper_id)
-        # Handle variants: paper1_jsait -> paper1_typing_discipline/proofs
-        base_dir_name = meta.dir_name
-        return self.papers_dir / base_dir_name / "proofs"
+        return self.papers_dir / meta.dir_name / meta.proofs_dir
+
+    def _get_archive_prefix(self, paper_id: str) -> str:
+        """Archive/package basename, configurable per paper."""
+        meta = self._get_paper_meta(paper_id)
+        return meta.archive_prefix if meta.archive_prefix else paper_id
 
     def _iter_paper_lean_files(self, proofs_dir: Path) -> List[Path]:
         """Return paper Lean files, excluding build/cache directories."""
@@ -537,14 +791,76 @@ class PaperBuilder:
 
         (content_dir / "lean_stats.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    def _write_assumption_ledger_auto(self, paper_id: str) -> None:
-        """Write auto-generated assumption-ledger snippet when available.
+    def _iter_claim_closure_sources(self, paper_id: str) -> List[Path]:
+        """Return ClaimClosure Lean sources for assumption-ledger extraction."""
+        meta = self._get_paper_meta(paper_id)
+        proofs_dir = self._get_paper_proofs_dir(paper_id)
+        if not proofs_dir.exists():
+            return []
 
-        For papers with a `ClaimClosure.lean` containing
-        `StandardComplexityAssumptions`, this emits:
-          latex/content/assumption_ledger_auto.tex
-        so the paper can include a drift-free assumption ledger.
-        """
+        explicit_paths: List[Path] = []
+        for rel_path in meta.assumption_ledger_sources:
+            src = (proofs_dir / rel_path).resolve()
+            if src.exists() and src.is_file():
+                explicit_paths.append(src)
+
+        if explicit_paths:
+            return sorted(set(explicit_paths))
+
+        candidates: List[Path] = []
+        excluded_dirs = {".lake", "build"}
+        for src in proofs_dir.rglob("ClaimClosure.lean"):
+            rel_parts = src.relative_to(proofs_dir).parts
+            if any(part in excluded_dirs for part in rel_parts):
+                continue
+            candidates.append(src.resolve())
+        return sorted(set(candidates))
+
+    def _extract_primary_namespace(self, content: str) -> Optional[str]:
+        """Extract first namespace declaration (if any)."""
+        match = re.search(r"(?m)^\s*namespace\s+([A-Za-z0-9_'.]+)\s*$", content)
+        return match.group(1) if match else None
+
+    def _parse_assumption_bundles(self, content: str) -> Dict[str, List[str]]:
+        """Parse `*Assumptions` class/structure bundles and their fields."""
+        bundles: Dict[str, List[str]] = {}
+        matches = list(
+            re.finditer(
+                r"(?m)^\s*(?:class|structure)\s+([A-Za-z0-9_']*Assumptions)\b[^\n]*\bwhere\s*$",
+                content,
+            )
+        )
+        for idx, match in enumerate(matches):
+            bundle_name = match.group(1)
+            body_start = match.end()
+            body_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(content)
+            body = content[body_start:body_end]
+            fields: List[str] = []
+            for raw_line in body.splitlines():
+                line = raw_line.strip()
+                if not line:
+                    continue
+                if re.match(r"^(?:theorem|lemma|def|class|structure|namespace|end)\b", line):
+                    break
+                field_match = re.match(r"^([A-Za-z0-9_']+)\s*:\s*(.+)$", line)
+                if not field_match:
+                    continue
+                field_name = field_match.group(1)
+                field_type = re.sub(r"\s+", " ", field_match.group(2)).strip()
+                fields.append(f"{field_name} : {field_type}" if field_type else field_name)
+            bundles[bundle_name] = fields
+        return bundles
+
+    def _parse_conditional_handles(self, content: str) -> List[str]:
+        """Extract theorem/lemma handles ending with `_conditional`."""
+        handles = re.findall(
+            r"(?m)^\s*(?:theorem|lemma)\s+([A-Za-z0-9_']*_conditional)\b",
+            content,
+        )
+        return sorted(set(handles))
+
+    def _write_assumption_ledger_auto(self, paper_id: str) -> None:
+        """Write auto-generated assumption-ledger snippet when available."""
         meta = self._get_paper_meta(paper_id)
         latex_dir = self._get_paper_dir(paper_id) / meta.latex_dir
         content_dir = latex_dir / "content"
@@ -552,57 +868,179 @@ class PaperBuilder:
             return
 
         out_file = content_dir / "assumption_ledger_auto.tex"
-        proofs_dir = self._get_paper_proofs_dir(paper_id)
-        claim_file = proofs_dir / "DecisionQuotient" / "ClaimClosure.lean"
-        if not claim_file.exists():
-            # Keep output deterministic across builds.
+        source_files = self._iter_claim_closure_sources(paper_id)
+        if not source_files:
             out_file.write_text(
                 "% Auto-generated by scripts/build_papers.py. No assumption ledger source found.\n",
                 encoding="utf-8",
             )
             return
 
-        content = claim_file.read_text(encoding="utf-8", errors="replace")
+        all_bundles: Dict[str, List[str]] = {}
+        all_conditional_handles: Set[str] = set()
+        source_labels: List[str] = []
 
-        struct_match = re.search(
-            r"structure\s+StandardComplexityAssumptions[\s\S]*?where\s*(?P<body>[\s\S]*?)\n\s*/-!",
-            content,
-        )
-        assumptions: List[str] = []
-        if struct_match:
-            body = struct_match.group("body")
-            assumptions = re.findall(r"^\s*h[A-Za-z0-9_']+\s*:\s*([A-Za-z0-9_']+)", body, flags=re.MULTILINE)
+        proofs_dir = self._get_paper_proofs_dir(paper_id)
+        for src in source_files:
+            rel = src.relative_to(proofs_dir)
+            source_labels.append(str(rel).replace("\\", "/"))
+            content = src.read_text(encoding="utf-8", errors="replace")
+            ns = self._extract_primary_namespace(content)
 
-        conditional_theorems = sorted(
-            set(re.findall(r"^\s*theorem\s+([A-Za-z0-9_']*_conditional)\b", content, flags=re.MULTILINE))
-        )
+            bundles = self._parse_assumption_bundles(content)
+            for bundle_name, fields in bundles.items():
+                full_bundle_name = f"{ns}.{bundle_name}" if ns else bundle_name
+                all_bundles[full_bundle_name] = fields
+
+            for handle in self._parse_conditional_handles(content):
+                full_handle = f"{ns}.{handle}" if ns else handle
+                all_conditional_handles.add(full_handle)
 
         lines: List[str] = [
             "% Auto-generated by scripts/build_papers.py. Do not edit manually.",
             f"% Generated: {datetime.now().isoformat()}",
             r"\subsection{Assumption Ledger (Auto)}",
-            r"\paragraph{Bundle fields in \nolinkurl{ClaimClosure.StandardComplexityAssumptions}.}",
+            r"\paragraph{Source files.}",
             r"\begin{itemize}",
         ]
-        if assumptions:
-            for a in assumptions:
-                lines.append(rf"\item \nolinkurl{{{a}}}")
-        else:
-            lines.append(r"\item (No fields parsed.)")
+        for source_label in sorted(set(source_labels)):
+            lines.append(rf"\item \nolinkurl{{{source_label}}}")
+        lines.append(r"\end{itemize}")
+
         lines.extend([
-            r"\end{itemize}",
+            r"\paragraph{Assumption bundles and fields.}",
+            r"\begin{itemize}",
+        ])
+        if all_bundles:
+            for bundle_name in sorted(all_bundles.keys()):
+                lines.append(rf"\item \nolinkurl{{{bundle_name}}}")
+                fields = all_bundles[bundle_name]
+                if fields:
+                    lines.append(r"\begin{itemize}")
+                    for field in fields:
+                        lines.append(rf"\item \nolinkurl{{{field}}}")
+                    lines.append(r"\end{itemize}")
+        else:
+            lines.append(r"\item (No assumption bundles parsed.)")
+        lines.append(r"\end{itemize}")
+
+        lines.extend([
             r"\paragraph{Conditional closure handles.}",
             r"\begin{itemize}",
         ])
-        if conditional_theorems:
-            for thm in conditional_theorems:
-                lines.append(rf"\item \nolinkurl{{ClaimClosure.{thm}}}")
+        if all_conditional_handles:
+            for handle in sorted(all_conditional_handles):
+                lines.append(rf"\item \nolinkurl{{{handle}}}")
         else:
             lines.append(r"\item (No conditional theorem handles parsed.)")
-        lines.extend([
-            r"\end{itemize}",
-        ])
+        lines.append(r"\end{itemize}")
 
+        out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def _extract_claim_label_to_lean_handles(self, paper_id: str) -> Dict[str, List[str]]:
+        """Extract mapping from theorem-style labels to inline Lean handles.
+
+        Source heuristic:
+        - scan theorem/proposition/corollary/lemma blocks in content/*.tex
+        - collect `\\label{thm:...|prop:...|cor:...|lem:...}` inside each block
+        - collect non-paper-handle `\\nolinkurl{...}` entries inside each block as Lean support
+        """
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return {}
+
+        block_pattern = re.compile(
+            r"\\begin\{(theorem|proposition|corollary|lemma)\}(.*?)\\end\{\1\}",
+            re.DOTALL,
+        )
+        label_pattern = re.compile(r"\\label\{((?:thm|cor|lem|prop):[^}]+)\}")
+        nolink_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
+        paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
+
+        mapping: Dict[str, Set[str]] = {}
+        for tex_file in sorted(content_dir.glob("*.tex")):
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            for match in block_pattern.finditer(text):
+                block_text = match.group(0)
+                labels = label_pattern.findall(block_text)
+                if not labels:
+                    continue
+                handles = []
+                for h in nolink_pattern.findall(block_text):
+                    if paper_handle_pattern.match(h):
+                        continue
+                    # Keep declaration-like handles, drop bare module/file mentions.
+                    if h.endswith(".lean"):
+                        continue
+                    if "." not in h and "_" not in h:
+                        continue
+                    handles.append(h)
+                for label in labels:
+                    mapping.setdefault(label, set()).update(handles)
+
+        return {k: sorted(v) for k, v in mapping.items()}
+
+    def _write_claim_mapping_auto(self, paper_id: str) -> None:
+        """Write auto-generated claim coverage matrix from inline theorem anchors."""
+        meta = self._get_paper_meta(paper_id)
+        latex_dir = self._get_paper_dir(paper_id) / meta.latex_dir
+        content_dir = latex_dir / "content"
+        if not content_dir.exists():
+            return
+
+        out_file = content_dir / "claim_mapping_auto.tex"
+        claim_labels = sorted(self._extract_paper_claim_labels(paper_id))
+        claim_to_handles = self._extract_claim_label_to_lean_handles(paper_id)
+
+        mapped_count = sum(1 for label in claim_labels if claim_to_handles.get(label))
+        has_unmapped = mapped_count < len(claim_labels)
+        lines: List[str] = [
+            "% Auto-generated by scripts/build_papers.py. Do not edit manually.",
+            f"% Generated: {datetime.now().isoformat()}",
+            rf"% Paper: {paper_id}",
+            r"\begingroup",
+            r"\scriptsize",
+            r"\sloppy",
+            r"\setlength{\tabcolsep}{4pt}",
+            (
+                r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.11\linewidth}>{\raggedright\arraybackslash}p{0.42\linewidth}>{\raggedright\arraybackslash}p{0.23\linewidth}@{}}"
+                if has_unmapped
+                else r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.62\linewidth}@{}}"
+            ),
+            r"\toprule",
+            (
+                r"\textbf{Paper handle} & \textbf{Status} & \textbf{Lean support} & \textbf{Notes} \\"
+                if has_unmapped
+                else r"\textbf{Paper handle} & \textbf{Status} & \textbf{Lean support} \\"
+            ),
+            r"\midrule",
+        ]
+
+        for label in claim_labels:
+            handles = claim_to_handles.get(label, [])
+            status = "Full" if handles else "Unmapped"
+            if handles:
+                support = ", ".join(rf"\nolinkurl{{{h}}}" for h in handles)
+                note = ""
+            else:
+                support = r"\emph{(no inline Lean handle found)}"
+                note = r"No theorem-local Lean anchor detected; add inline \nolinkurl{...} in the corresponding claim block."
+            if has_unmapped:
+                lines.append(rf"\nolinkurl{{{label}}} & {status} & {support} & {note} \\")
+            else:
+                lines.append(rf"\nolinkurl{{{label}}} & {status} & {support} \\")
+
+        lines.extend([r"\bottomrule", r"\end{longtable}", r"\endgroup", ""])
+        if has_unmapped:
+            lines.extend(
+                [
+                    r"\noindent\textit{Notes: Full rows are auto-extracted from inline theorem-local Lean anchors.}",
+                    "",
+                ]
+            )
+        lines.append(
+            rf"\noindent\textit{{Auto summary: mapped {mapped_count}/{len(claim_labels)} theorem-level handles from inline anchors.}}"
+        )
         out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     def _expand_lean_stat_macros(self, text: str, paper_id: str) -> str:
@@ -735,6 +1173,7 @@ class PaperBuilder:
 
         self._write_latex_lean_stats(paper_id)
         self._write_assumption_ledger_auto(paper_id)
+        self._write_claim_mapping_auto(paper_id)
         self._update_paper_date(latex_file)
 
         print(f"[build] Building {paper_id} LaTeX...")
@@ -804,6 +1243,7 @@ class PaperBuilder:
 
         self._write_latex_lean_stats(paper_id)
         self._write_assumption_ledger_auto(paper_id)
+        self._write_claim_mapping_auto(paper_id)
         self._update_paper_date(latex_file)
 
         print(f"[build] Building {paper_id} submission PDF ({description})...")
@@ -863,16 +1303,19 @@ class PaperBuilder:
         print(f"[build-md] Building {paper_id}: {meta.name}...")
         self._write_latex_lean_stats(paper_id)
         self._write_assumption_ledger_auto(paper_id)
+        self._write_claim_mapping_auto(paper_id)
 
         # Discover files from main LaTeX include order
         content_files = self._discover_content_files(paper_id)
-        title = self._extract_main_latex_title(paper_id) or meta.full_name
+        # Single source of truth for generated artifacts: papers.yaml `full_name`.
+        title = meta.full_name
         lean_stats = self._get_lean_stats(paper_id)
         self._build_markdown_file(meta, content_files, out_file, title, lean_stats)
 
         # Also copy to releases/ for arxiv package
         releases_dir = self._get_releases_dir(paper_id)
         shutil.copy2(out_file, releases_dir / out_file.name)
+        self.build_copy_paste_metadata(paper_id)
         print(f"[build-md] {paper_id} → {out_file.relative_to(self.repo_root)}")
 
     def _extract_braced_command_argument(self, content: str, command: str) -> str | None:
@@ -959,6 +1402,282 @@ class PaperBuilder:
             return None
         return self._latex_inline_to_plain(raw_title)
 
+    def _extract_abstract_latex(self, paper_id: str) -> Optional[str]:
+        """Extract abstract LaTeX content from content/abstract.tex."""
+        abstract_file = self._get_content_dir(paper_id) / "abstract.tex"
+        if not abstract_file.exists():
+            return None
+
+        content = abstract_file.read_text(encoding="utf-8", errors="replace")
+        match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", content, re.DOTALL)
+        if match:
+            content = match.group(1)
+
+        content = content.strip()
+        return content if content else None
+
+    def _normalize_plaintext_block(self, text: str) -> str:
+        """Normalize plain text for copy/paste metadata fields."""
+        lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+        normalized_lines: List[str] = []
+        last_blank = False
+
+        for line in lines:
+            clean = re.sub(r"\s+", " ", line).strip()
+            if not clean:
+                if not last_blank:
+                    normalized_lines.append("")
+                last_blank = True
+                continue
+            normalized_lines.append(clean)
+            last_blank = False
+
+        return "\n".join(normalized_lines).strip()
+
+    def _clean_metadata_reference_tokens(self, text: str) -> str:
+        """Remove paper-internal reference tokens from metadata snippets."""
+        text = self._postprocess_markdown_text(text)
+        text = re.sub(r"\[\s*\\*\s*\]\(#.*?\)\{[^}]*\}", "", text)
+        text = re.sub(r"\[\s*\\*\s*\]\(#.*?\)", "", text)
+        text = re.sub(r"\{reference-type=\"ref\"[^}]*\}", "", text)
+        text = re.sub(r"\[D:[^\[]*\[R=[^\]]+\]\]", "", text)
+        text = re.sub(r"\[(?:sec|thm|prop|cor|lem|app|rem|eq|fig|tab):[^\]]+\]", "", text)
+        text = re.sub(r"\[R=[^\]]+\]", "", text)
+        text = re.sub(r"\[D:[^\]]+\]", "", text)
+        text = re.sub(r"\[R:[^\]]+\]", "", text)
+        text = re.sub(r"\[[^\]]*\]\(#.*?\)", "", text)
+        text = re.sub(r";\s*see Appendix\s*\)", ")", text)
+        text = re.sub(r"see Appendix\s*", "", text)
+        text = re.sub(r"\((?:see )?(?:Section|Remark|Appendix)\s*\)", "", text)
+        text = re.sub(r"\s+\\\s*$", "", text, flags=re.MULTILINE)
+        text = re.sub(r"\s+\\\s+", " ", text)
+        text = re.sub(r"\s+([,.;:])", r"\1", text)
+        text = re.sub(r"\(\s*\)", "", text)
+        return text
+
+    def _latex_snippet_to_plain(self, latex_input: str, paper_id: str) -> str:
+        """Convert a LaTeX snippet into plain UTF-8 text for metadata copy/paste."""
+        prepared = self._expand_lean_stat_macros(latex_input, paper_id)
+        prepared = self._normalize_claimstamp_for_markdown(prepared)
+        prepared = self._prepend_markdown_macro_prelude(prepared)
+
+        result = subprocess.run(
+            ["pandoc", "-f", "latex", "-t", "plain", "--wrap=none", "--columns=100"],
+            input=prepared,
+            capture_output=True,
+            text=True,
+        )
+        plain = result.stdout if result.returncode == 0 and result.stdout.strip() else latex_input
+
+        plain = self._clean_metadata_reference_tokens(plain)
+        return self._normalize_plaintext_block(plain)
+
+    def _latex_snippet_to_mathjax(self, latex_input: str, paper_id: str) -> str:
+        """Convert a LaTeX snippet into markdown text with MathJax-style TeX math."""
+        prepared = self._expand_lean_stat_macros(latex_input, paper_id)
+        prepared = self._normalize_claimstamp_for_markdown(prepared)
+        prepared = self._prepend_markdown_macro_prelude(prepared)
+
+        result = subprocess.run(
+            ["pandoc", "-f", "latex", "-t", "markdown+tex_math_dollars", "--wrap=none", "--columns=100"],
+            input=prepared,
+            capture_output=True,
+            text=True,
+        )
+        mathjax = result.stdout if result.returncode == 0 and result.stdout.strip() else latex_input
+
+        # Expand common project macros to MathJax-safe forms.
+        mathjax = re.sub(r"\\SigmaP\{([^}]+)\}", r"\\Sigma_{\1}^{P}", mathjax)
+        mathjax = re.sub(r"\\PiP\{([^}]+)\}", r"\\Pi_{\1}^{P}", mathjax)
+        mathjax = mathjax.replace(r"\coNP", "coNP")
+        mathjax = mathjax.replace(r"\NP", "NP")
+        mathjax = mathjax.replace(r"\Pclass", "P")
+        mathjax = mathjax.replace(r"\Opt", r"\operatorname{Opt}")
+        mathjax = re.sub(r"\\claimstamp\{[^}]*\}\{[^}]*\}", "", mathjax)
+
+        mathjax = self._clean_metadata_reference_tokens(mathjax)
+        return self._normalize_plaintext_block(mathjax)
+
+    def _mathjax_markdown_to_unicode_markdown(self, mathjax_text: str) -> str:
+        """Convert `$...$` math in markdown to Unicode while preserving markdown structure."""
+        cache: Dict[str, str] = {}
+
+        def _to_unicode(expr: str) -> str:
+            expr = expr.strip()
+            if expr in cache:
+                return cache[expr]
+
+            result = subprocess.run(
+                ["pandoc", "-f", "latex", "-t", "plain", "--wrap=none", "--columns=100"],
+                input=f"${expr}$",
+                capture_output=True,
+                text=True,
+            )
+            converted = result.stdout.strip() if result.returncode == 0 and result.stdout.strip() else expr
+            converted = re.sub(r"\s+", " ", converted).strip()
+            cache[expr] = converted
+            return converted
+
+        # Convert display math first, then inline math.
+        converted = re.sub(
+            r"\$\$([\s\S]*?)\$\$",
+            lambda m: _to_unicode(m.group(1)),
+            mathjax_text,
+        )
+        converted = re.sub(
+            r"\$([^$\n]+?)\$",
+            lambda m: _to_unicode(m.group(1)),
+            converted,
+        )
+        return self._normalize_plaintext_block(converted)
+
+    def _default_arxiv_comments(self, paper_id: str) -> str:
+        """Build a default arXiv comments line when no explicit metadata is configured."""
+        meta = self._get_paper_meta(paper_id)
+        lean_stats = self._get_lean_stats(paper_id)
+        return (
+            f"{meta.venue} submission. Lean 4 artifact: "
+            f"{lean_stats.line_count} lines, {lean_stats.theorem_count} theorems/lemmas "
+            f"across {lean_stats.file_count} files ({lean_stats.sorry_count} sorry placeholders)."
+        )
+
+    def _write_abstract_helper_files(
+        self,
+        paper_id: str,
+        title: str,
+        abstract_mathjax: str,
+        abstract_unicode: str,
+    ) -> tuple[Path, Path]:
+        """Write convenience abstract files from one canonical source.
+
+        Primary file is paper-id scoped to avoid collisions when multiple variants
+        share a directory (e.g., `paper4` and `paper4_toc`).
+        """
+        meta = self._get_paper_meta(paper_id)
+        releases_dir = self._get_releases_dir(paper_id)
+
+        primary_path = releases_dir / f"arxiv_abstract_{paper_id}.md"
+        primary_lines = [
+            f"# arXiv abstract ({paper_id})",
+            "",
+            f"Title: {title}",
+            "",
+            "## Abstract (MathJax, arXiv-ready)",
+            "",
+            "```text",
+            abstract_mathjax,
+            "```",
+            "",
+            "## Abstract (Unicode, Zenodo-ready)",
+            "",
+            "```text",
+            abstract_unicode,
+            "```",
+            "",
+        ]
+        primary_path.write_text("\n".join(primary_lines), encoding="utf-8")
+
+        # Backward-compatible filename (dir-scoped) can be ambiguous when
+        # multiple paper IDs point at the same directory.
+        legacy_path = releases_dir / f"arxiv_abstract_{meta.dir_name}.md"
+        sibling_ids = sorted(
+            pid for pid, sibling_meta in self.papers.items() if sibling_meta.dir_name == meta.dir_name
+        )
+        if len(sibling_ids) == 1:
+            legacy_path.write_text("\n".join(primary_lines), encoding="utf-8")
+        else:
+            redirect_lines = [
+                f"# Deprecated helper file: arxiv_abstract_{meta.dir_name}.md",
+                "",
+                "This directory has multiple paper IDs with different titles/abstracts.",
+                "Use the paper-id-specific helper files instead:",
+                "",
+            ]
+            redirect_lines.extend(
+                f"- `arxiv_abstract_{sibling_id}.md`"
+                for sibling_id in sibling_ids
+            )
+            redirect_lines.append("")
+            legacy_path.write_text("\n".join(redirect_lines), encoding="utf-8")
+
+        return primary_path, legacy_path
+
+    def build_copy_paste_metadata(self, paper_id: str) -> Path:
+        """Generate human/machine copy-paste metadata for Zenodo + arXiv."""
+        meta = self._get_paper_meta(paper_id)
+        # Single source of truth for generated artifacts: papers.yaml `full_name`.
+        title = meta.full_name
+        abstract_latex = self._extract_abstract_latex(paper_id)
+        abstract_mathjax = (
+            self._latex_snippet_to_mathjax(abstract_latex, paper_id)
+            if abstract_latex
+            else "Abstract not found."
+        )
+        abstract_unicode = self._mathjax_markdown_to_unicode_markdown(abstract_mathjax)
+        arxiv_comments = (
+            self._normalize_plaintext_block(meta.arxiv_comments)
+            if meta.arxiv_comments.strip()
+            else self._default_arxiv_comments(paper_id)
+        )
+
+        payload = {
+            "paper_id": paper_id,
+            "title": title,
+            "zenodo": {
+                "title": title,
+                "abstract": abstract_unicode,
+            },
+            "arxiv": {
+                "title": title,
+                "abstract": abstract_mathjax,
+                "comments": arxiv_comments,
+            },
+            "abstract_variants": {
+                "unicode": abstract_unicode,
+                "mathjax": abstract_mathjax,
+            },
+        }
+        machine_yaml = yaml.safe_dump(payload, sort_keys=False, allow_unicode=True).strip()
+
+        lines = [
+            "AUTO-GENERATED COPY/PASTE METADATA",
+            f"Generated: {datetime.now().isoformat()}",
+            "",
+            "=== HUMAN COPY/PASTE ===",
+            "",
+            f"Title: {title}",
+            "",
+            "Abstract (Unicode, for Zenodo):",
+            abstract_unicode,
+            "",
+            "Abstract (MathJax, for arXiv):",
+            abstract_mathjax,
+            "",
+            "arXiv Comments:",
+            arxiv_comments,
+            "",
+            "=== MACHINE YAML ===",
+            machine_yaml,
+            "",
+        ]
+
+        releases_dir = self._get_releases_dir(paper_id)
+        out_file = releases_dir / f"{paper_id}_copy_paste.txt"
+        out_file.write_text("\n".join(lines), encoding="utf-8")
+        abstract_helper_file, legacy_helper_file = self._write_abstract_helper_files(
+            paper_id=paper_id,
+            title=title,
+            abstract_mathjax=abstract_mathjax,
+            abstract_unicode=abstract_unicode,
+        )
+        print(f"[metadata] {paper_id} → {out_file.relative_to(self.repo_root)}")
+        print(
+            "[metadata] "
+            f"{paper_id} abstracts → {abstract_helper_file.relative_to(self.repo_root)} "
+            f"(legacy alias: {legacy_helper_file.relative_to(self.repo_root)})"
+        )
+        return out_file
+
     def _build_markdown_file(
         self,
         meta: PaperMeta,
@@ -1041,6 +1760,7 @@ class PaperBuilder:
             latex_input = content
 
         latex_input = self._expand_lean_stat_macros(latex_input, paper_id)
+        latex_input = self._normalize_claimstamp_for_markdown(latex_input)
         latex_input = self._prepend_markdown_macro_prelude(latex_input)
         result = subprocess.run(
             ["pandoc", "-f", "latex", "-t", "markdown", "--wrap=none", "--columns=100"],
@@ -1054,6 +1774,34 @@ class PaperBuilder:
             out_file.write("\n\n")
         else:
             out_file.write(f"_Failed to convert {tex_file.name}_\n\n")
+
+    def _normalize_claimstamp_for_markdown(self, latex_input: str) -> str:
+        """Simplify `\\claimstamp{...}{...}` arguments for markdown readability.
+
+        Keep theorem provenance, but normalize references to raw labels
+        (e.g., `Thm.~\\ref{thm:x}` -> `thm:x`) so generated markdown stays compact.
+        """
+        pattern = re.compile(
+            r"\\claimstamp\{((?:[^{}]|\\ref\{[^}]+\})*)\}\{([^}]*)\}",
+            re.DOTALL,
+        )
+
+        title_ref = re.compile(
+            r"(?:Theorem|Thm\.?|Proposition|Prop\.?|Corollary|Cor\.?|Lemma|Lem\.?)\s*~?\s*\\ref\{([^}]+)\}"
+        )
+
+        def repl(match: re.Match[str]) -> str:
+            derived = match.group(1)
+            regime = match.group(2)
+            derived = title_ref.sub(r"\1", derived)
+            derived = re.sub(r"\\ref\{([^}]+)\}", r"\1", derived)
+            derived = derived.replace("~", " ")
+            derived = re.sub(r"\s+", " ", derived).strip(" ,")
+            derived = re.sub(r"\s*,\s*", ", ", derived)
+            regime = re.sub(r"\s+", " ", regime).strip()
+            return rf"\claimstamp{{{derived}}}{{{regime}}}"
+
+        return pattern.sub(repl, latex_input)
 
     def _prepend_markdown_macro_prelude(self, latex_input: str) -> str:
         """Prepend markdown-only macro normalizations for pandoc conversion.
@@ -1072,6 +1820,7 @@ class PaperBuilder:
                 r"\newcommand{\SigmaP}[1]{\Sigma_{#1}^{P}}",
                 r"\newcommand{\PiP}[1]{\Pi_{#1}^{P}}",
                 r"\newcommand{\Opt}{\operatorname{Opt}}",
+                r"\newcommand{\claimstamp}[2]{ [D:#1; R:#2]}",
             ]
         )
         return f"{prelude}\n{latex_input}"
@@ -1085,6 +1834,102 @@ class PaperBuilder:
         Insert the missing separator for known complexity-class tokens.
         """
         return re.sub(r"\bcoNP(?=[A-Za-z])", "coNP ", text)
+
+    def _get_claim_mapping_file(self, paper_id: str) -> Optional[Path]:
+        """Locate theorem-handle mapping file for claim coverage checks."""
+        meta = self._get_paper_meta(paper_id)
+        latex_dir = self._get_paper_dir(paper_id) / meta.latex_dir
+        if meta.claim_mapping_file:
+            explicit = latex_dir / meta.claim_mapping_file
+            return explicit if explicit.exists() else None
+
+        candidates = [
+            latex_dir / "content" / "11_lean_proofs.tex",
+            latex_dir / "content" / "10_lean_4_proof_listings.tex",
+            latex_dir / "content" / "10_lean_proof_listings.tex",
+            latex_dir / "content" / "10_lean_proofs.tex",
+        ]
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+        return None
+
+    def _extract_paper_claim_labels(self, paper_id: str) -> Set[str]:
+        """Extract theorem/corollary/lemma/proposition labels from content/*.tex."""
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return set()
+
+        labels: Set[str] = set()
+        label_pattern = re.compile(r"\\label\{((?:thm|cor|lem|prop):[^}]+)\}")
+        for tex_file in sorted(content_dir.glob("*.tex")):
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            labels.update(label_pattern.findall(text))
+        return labels
+
+    def _extract_mapped_claim_labels(self, mapping_file: Path) -> Set[str]:
+        """Extract mapped theorem-handle labels from a Lean-coverage appendix file."""
+        text = mapping_file.read_text(encoding="utf-8", errors="replace")
+        labels: Set[str] = set()
+        patterns = [
+            r"\\nolinkurl\{((?:thm|cor|lem|prop):[^}]+)\}",
+            r"\\(?:ref|autoref|Cref)\{((?:thm|cor|lem|prop):[^}]+)\}",
+        ]
+        for pattern in patterns:
+            labels.update(re.findall(pattern, text))
+        return labels
+
+    def check_claim_coverage(self, paper_id: str, fail_on_missing: bool = False) -> Dict[str, object]:
+        """Check label coverage between paper claims and Lean mapping appendix."""
+        self._write_claim_mapping_auto(paper_id)
+        claim_labels = self._extract_paper_claim_labels(paper_id)
+        mapping_file = self._get_claim_mapping_file(paper_id)
+
+        if mapping_file is None:
+            message = f"[claim-check] {paper_id}: no mapping file found; skipping."
+            print(message)
+            if fail_on_missing and claim_labels:
+                raise RuntimeError(message)
+            return {
+                "paper_id": paper_id,
+                "mapping_file": None,
+                "paper_labels": sorted(claim_labels),
+                "mapped_labels": [],
+                "missing_labels": sorted(claim_labels),
+                "extra_labels": [],
+            }
+
+        mapped_labels = self._extract_mapped_claim_labels(mapping_file)
+        missing_labels = sorted(claim_labels - mapped_labels)
+        extra_labels = sorted(mapped_labels - claim_labels)
+
+        print(
+            f"[claim-check] {paper_id}: "
+            f"paper={len(claim_labels)} mapped={len(mapped_labels)} "
+            f"missing={len(missing_labels)} extra={len(extra_labels)}"
+        )
+        if missing_labels:
+            print("[claim-check]   Missing mappings:")
+            for label in missing_labels:
+                print(f"[claim-check]     - {label}")
+        if extra_labels:
+            print("[claim-check]   Extra mappings (not found in paper labels):")
+            for label in extra_labels:
+                print(f"[claim-check]     - {label}")
+
+        if fail_on_missing and missing_labels:
+            raise RuntimeError(
+                f"Claim mapping incomplete for {paper_id}: {len(missing_labels)} labels unmapped"
+            )
+
+        return {
+            "paper_id": paper_id,
+            "mapping_file": str(mapping_file.relative_to(self.repo_root)),
+            "paper_labels": sorted(claim_labels),
+            "mapped_labels": sorted(mapped_labels),
+            "missing_labels": missing_labels,
+            "extra_labels": extra_labels,
+        }
 
     def _update_paper_date(self, tex_file: Path):
         """Update publication date in LaTeX file using regex for correct replacement."""
@@ -1121,6 +1966,7 @@ class PaperBuilder:
         For variants (e.g., paper1_jsait), uses variant-specific staging directory.
         """
         self._write_latex_lean_stats(paper_id)
+        metadata_file = self.build_copy_paste_metadata(paper_id)
 
         # Phase 1: Validate all required files exist (fail-loud)
         pdf_file = self._validate_and_get_pdf(paper_id)
@@ -1128,7 +1974,8 @@ class PaperBuilder:
 
         # Phase 2: Create staging directory in releases/ with variant-specific naming
         releases_dir = self._get_releases_dir(paper_id)
-        package_dir = releases_dir / f"arxiv_package_{paper_id}"
+        archive_prefix = self._get_archive_prefix(paper_id)
+        package_dir = releases_dir / f"arxiv_package_{archive_prefix}"
         if package_dir.exists():
             shutil.rmtree(package_dir)
         package_dir.mkdir(parents=True)
@@ -1138,6 +1985,7 @@ class PaperBuilder:
         # Phase 3: Copy artifacts
         self._copy_pdf(pdf_file, package_dir)
         self._copy_markdown(md_file, package_dir)
+        self._copy_copy_paste_metadata(metadata_file, package_dir)
         self._copy_latex_sources(paper_id, package_dir)
         self._copy_lean_proofs(paper_id, package_dir)
         self._copy_experiments(paper_id, package_dir)
@@ -1194,6 +2042,12 @@ class PaperBuilder:
         md_dest = package_dir / md_file.name
         shutil.copy2(md_file, md_dest)
         print(f"[arxiv]   Markdown: {md_file.name}")
+
+    def _copy_copy_paste_metadata(self, metadata_file: Path, package_dir: Path) -> None:
+        """Copy copy/paste metadata file to package directory."""
+        metadata_dest = package_dir / metadata_file.name
+        shutil.copy2(metadata_file, metadata_dest)
+        print(f"[arxiv]   Metadata: {metadata_file.name}")
 
     def _copy_latex_sources(self, paper_id: str, package_dir: Path) -> None:
         """Copy LaTeX source files for arXiv submission.
@@ -1472,27 +2326,33 @@ Repository: https://github.com/trissim/openhcs
         import tarfile
         import zipfile
 
-        meta = self._get_paper_meta(paper_id)
+        archive_prefix = self._get_archive_prefix(paper_id)
         releases_dir = self._get_releases_dir(paper_id)
 
         # Create tar.gz with variant-specific naming
-        tar_name = f"{paper_id}_arxiv.tar.gz"
+        tar_name = f"{archive_prefix}_arxiv.tar.gz"
         tar_path = releases_dir / tar_name
         with tarfile.open(tar_path, "w:gz") as tar:
-            tar.add(package_dir, arcname=paper_id)
+            tar.add(package_dir, arcname=archive_prefix)
 
         # Create zip with variant-specific naming
-        zip_name = f"{paper_id}_arxiv.zip"
+        zip_name = f"{archive_prefix}_arxiv.zip"
         zip_path = releases_dir / zip_name
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for file_path in package_dir.rglob("*"):
                 if file_path.is_file():
-                    arcname = paper_id / file_path.relative_to(package_dir)
+                    arcname = str(Path(archive_prefix) / file_path.relative_to(package_dir))
                     zf.write(file_path, arcname)
 
         return tar_path, zip_path
 
-    def release(self, paper_id: str, verbose: bool = True, axiom_check: bool = False):
+    def release(
+        self,
+        paper_id: str,
+        verbose: bool = True,
+        axiom_check: bool = False,
+        claim_check: bool = False,
+    ):
         """Full release build: Lean + LaTeX + Markdown + arXiv package.
 
         For variants (e.g., paper1_jsait), only build Lean once (shared proofs).
@@ -1513,6 +2373,8 @@ Repository: https://github.com/trissim/openhcs
 
         self.build_latex(paper_id, verbose=verbose)
         self.build_markdown(paper_id)
+        if claim_check:
+            self.check_claim_coverage(paper_id, fail_on_missing=True)
         self.package_arxiv(paper_id)
 
         if axiom_check and not is_variant:
@@ -1695,14 +2557,25 @@ Repository: https://github.com/trissim/openhcs
 
         return results
 
-    def build_all(self, build_type: str = "all", verbose: bool = True, axiom_check: bool = False):
+    def build_all(
+        self,
+        build_type: str = "all",
+        verbose: bool = True,
+        axiom_check: bool = False,
+        claim_check: bool = False,
+    ):
         """Build all papers of specified type."""
         paper_ids = list(self.papers.keys())
 
         if build_type == "release":
             for paper_id in paper_ids:
                 try:
-                    self.release(paper_id, verbose=verbose, axiom_check=axiom_check)
+                    self.release(
+                        paper_id,
+                        verbose=verbose,
+                        axiom_check=axiom_check,
+                        claim_check=claim_check,
+                    )
                 except Exception as e:
                     print(f"[release] ERROR {paper_id}: {e}")
             return
@@ -1728,6 +2601,13 @@ Repository: https://github.com/trissim/openhcs
                 except Exception as e:
                     print(f"[build-md] ERROR: {e}")
 
+        if build_type in ("all", "metadata"):
+            for paper_id in paper_ids:
+                try:
+                    self.build_copy_paste_metadata(paper_id)
+                except Exception as e:
+                    print(f"[metadata] ERROR {paper_id}: {e}")
+
         if build_type in ("all", "arxiv"):
             for paper_id in paper_ids:
                 try:
@@ -1741,6 +2621,13 @@ Repository: https://github.com/trissim/openhcs
                     self.build_submission(paper_id, verbose=verbose)
                 except Exception as e:
                     print(f"[build] ERROR: {e}")
+
+        if build_type in ("all", "claim-check"):
+            for paper_id in paper_ids:
+                try:
+                    self.check_claim_coverage(paper_id, fail_on_missing=claim_check)
+                except Exception as e:
+                    print(f"[claim-check] ERROR {paper_id}: {e}")
 
         if axiom_check:
             for paper_id in paper_ids:
@@ -1761,21 +2648,35 @@ Examples:
   python scripts/build_papers.py lean paper1 -v    # Build Paper 1 Lean proofs (verbose)
   python scripts/build_papers.py latex paper2      # Build Paper 2 LaTeX
   python scripts/build_papers.py lean paper2 --axiom-check  # Build + check axioms
+  python scripts/build_papers.py claim-check paper4_toc      # Verify theorem-label mapping coverage
   python scripts/build_papers.py submission paper1_jsait  # Build JSAIT review PDF
+  python scripts/build_papers.py metadata paper4_toc      # Generate Zenodo/arXiv copy-paste metadata
+  python scripts/build_papers.py scaffold paper6   # Create boilerplate from papers.yaml entry
 """
     )
     parser.add_argument(
         "build_type",
         nargs="?",
         default="release",
-        choices=["release", "all", "lean", "latex", "markdown", "arxiv", "submission"],
+        choices=[
+            "release",
+            "all",
+            "lean",
+            "latex",
+            "markdown",
+            "arxiv",
+            "submission",
+            "claim-check",
+            "metadata",
+            "scaffold",
+        ],
         help="What to build (default: release)",
     )
     parser.add_argument(
         "paper",
         nargs="?",
         default="all",
-        help="Which paper: paper1, paper2, paper3, paper4, paper5, or all (default: all)",
+        help="Which paper id from papers.yaml, or all (default: all)",
     )
     parser.add_argument(
         "-v", "--verbose",
@@ -1792,6 +2693,16 @@ Examples:
         action="store_true",
         help="Run axiom verification on Lean theorems (checks what axioms each theorem depends on)",
     )
+    parser.add_argument(
+        "--claim-check",
+        action="store_true",
+        help="Enforce theorem-label mapping coverage check (fails on unmapped labels in release mode)",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Allow scaffold command to overwrite existing files",
+    )
 
     args = parser.parse_args()
     repo_root = Path(__file__).parent.parent
@@ -1806,24 +2717,52 @@ Examples:
         verbose = args.verbose or args.build_type in ("release", "lean")
 
     axiom_check = args.axiom_check
+    claim_check = args.claim_check
 
     try:
+        if args.build_type == "scaffold":
+            builder = PaperBuilder(
+                repo_root,
+                validate_prerequisites=False,
+                validate_paper_structure=False,
+            )
+            if args.paper == "all":
+                for paper_id in builder.papers.keys():
+                    builder.scaffold_paper(paper_id, overwrite=args.overwrite)
+            else:
+                builder.scaffold_paper(args.paper, overwrite=args.overwrite)
+            return
+
         builder = PaperBuilder(repo_root)
         if args.paper == "all":
-            builder.build_all(args.build_type, verbose=verbose, axiom_check=axiom_check)
+            builder.build_all(
+                args.build_type,
+                verbose=verbose,
+                axiom_check=axiom_check,
+                claim_check=claim_check,
+            )
         else:
             if args.build_type == "release":
-                builder.release(args.paper, verbose=verbose, axiom_check=axiom_check)
+                builder.release(
+                    args.paper,
+                    verbose=verbose,
+                    axiom_check=axiom_check,
+                    claim_check=claim_check,
+                )
             elif args.build_type in ("all", "lean"):
                 builder.build_lean(args.paper, verbose=verbose)
             if args.build_type in ("all", "latex"):
                 builder.build_latex(args.paper, verbose=verbose)
             if args.build_type in ("all", "markdown"):
                 builder.build_markdown(args.paper)
+            if args.build_type in ("all", "metadata"):
+                builder.build_copy_paste_metadata(args.paper)
             if args.build_type in ("all", "arxiv"):
                 builder.package_arxiv(args.paper)
             if args.build_type in ("all", "submission"):
                 builder.build_submission(args.paper, verbose=verbose)
+            if args.build_type in ("all", "claim-check"):
+                builder.check_claim_coverage(args.paper, fail_on_missing=claim_check)
             if axiom_check:
                 builder.check_axioms(args.paper, verbose=verbose)
     except Exception as e:

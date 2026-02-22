@@ -21,6 +21,7 @@ import DecisionQuotient.QueryComplexity
 import DecisionQuotient.Hardness.Sigma2PHardness
 import DecisionQuotient.Hardness.Sigma2PExhaustive.AnchorSufficiency
 import DecisionQuotient.HardnessDistribution
+import DecisionQuotient.IntegrityCompetence
 import DecisionQuotient.Tractability.BoundedActions
 import DecisionQuotient.Tractability.SeparableUtility
 import DecisionQuotient.Tractability.TreeStructure
@@ -476,6 +477,14 @@ theorem no_auto_minimize_of_p_neq_conp
   intro hPoly
   exact hNeq (hCollapse hPoly)
 
+/-- Packaged integrity-resource closure for sufficiency-style collapse assumptions. -/
+theorem integrity_resource_bound_for_sufficiency
+    {P_eq_coNP PolytimeUniversalCompetence : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hSuffHard : PolytimeUniversalCompetence → P_eq_coNP) :
+    ¬ PolytimeUniversalCompetence :=
+  DecisionQuotient.IntegrityCompetence.integrity_resource_bound hNeq hSuffHard
+
 end ConditionalComposition
 
 /-! ## Complexity-theoretic lift closures (explicitly conditional on standard facts) -/
@@ -669,6 +678,139 @@ theorem tractable_subcases_conditional
     (hAssemble : BoundedCase → SeparableCase → TreeCase → TractableSubcases) :
     TractableSubcases :=
   hAssemble hBounded hSeparable hTree
+
+/-! ### Heuristic reusability bridge -/
+
+/-- A structure class is detectable if membership is decidable via a boolean
+    detector (used as the proxy for polynomial detectability in this layer). -/
+structure StructureDetectable {α : Type*} (C : α → Prop) where
+  detect : α → Bool
+  detect_correct : ∀ x, detect x = true ↔ C x
+
+/-- Any decidable class yields a canonical detector. -/
+def structureDetectable_of_decidable
+    {α : Type*} (C : α → Prop) [DecidablePred C] :
+    StructureDetectable C where
+  detect x := decide (C x)
+  detect_correct x := by simp
+
+/-- Heuristic reusability bridge:
+    if class membership is detectable and class-conditioned checker correctness
+    is known, then detect-then-check yields a correct result on detected
+    instances. -/
+theorem reusable_heuristic_of_detectable
+    {α Result : Type*}
+    (C : α → Prop)
+    (hDetect : StructureDetectable C)
+    (Correct : Result → Prop)
+    (checker : α → Result)
+    (hCorrect : ∀ x, C x → Correct (checker x))
+    (x : α) (hx : hDetect.detect x = true) :
+    Correct (checker x) := by
+  exact hCorrect x ((hDetect.detect_correct x).1 hx)
+
+/-- Bounded-actions class is detectable by checking `|A| ≤ k`. -/
+def bounded_actions_detectable
+    {A S : Type*} [DecidableEq A] [DecidableEq S]
+    [Fintype A] [Fintype S] {n : ℕ} [CoordinateSpace S n]
+    [∀ s s' : S, ∀ I : Finset (Fin n), Decidable (agreeOn s s' I)]
+    (k : ℕ) :
+    StructureDetectable
+      (fun _ : ComputableDecisionProblem A S => Fintype.card A ≤ k) :=
+  structureDetectable_of_decidable (C := fun _ : ComputableDecisionProblem A S => Fintype.card A ≤ k)
+
+/-- Reusable bounded-actions heuristic on detected instances. -/
+theorem bounded_actions_reusable_heuristic
+    {A S : Type*} [DecidableEq A] [DecidableEq S]
+    [Fintype A] [Fintype S] {n : ℕ} [CoordinateSpace S n]
+    [∀ s s' : S, ∀ I : Finset (Fin n), Decidable (agreeOn s s' I)]
+    (k : ℕ) (cdp : ComputableDecisionProblem A S)
+    (hx : (bounded_actions_detectable (A := A) (S := S) (n := n) k).detect cdp = true) :
+    ∃ decide : Finset (Fin n) → Bool,
+      ∀ I, decide I = true ↔ cdp.toAbstract.isSufficient I := by
+  let C : ComputableDecisionProblem A S → Prop := fun _ => Fintype.card A ≤ k
+  let hDetect : StructureDetectable C := bounded_actions_detectable (A := A) (S := S) (n := n) k
+  let checker : ComputableDecisionProblem A S → Prop :=
+    fun x =>
+      ∃ decide : Finset (Fin n) → Bool,
+        ∀ I, decide I = true ↔ x.toAbstract.isSufficient I
+  have hCorrect : ∀ x, C x → checker x := by
+    intro x hxCard
+    exact tractable_bounded_core (A := A) (S := S) (n := n) x k hxCard
+  have hReusable :=
+    reusable_heuristic_of_detectable
+      (C := C) (hDetect := hDetect) (Correct := fun p : Prop => p)
+      (checker := checker) hCorrect cdp hx
+  simpa [checker] using hReusable
+
+/-- Separable-utility class is detectable from a decidable-membership predicate
+    on the witness-bearing class condition. -/
+noncomputable def separable_detectable
+    {A S : Type*} [DecidableEq A] [DecidableEq S] {n : ℕ} [CoordinateSpace S n] :
+    StructureDetectable
+      (fun dp : FiniteDecisionProblem (A := A) (S := S) =>
+        Nonempty (SeparableUtility (dp := dp))) := by
+  classical
+  exact structureDetectable_of_decidable
+    (C := fun dp : FiniteDecisionProblem (A := A) (S := S) =>
+      Nonempty (SeparableUtility (dp := dp)))
+
+/-- Reusable separable-utility heuristic on detected instances. -/
+theorem separable_reusable_heuristic
+    {A S : Type*} [DecidableEq A] [DecidableEq S]
+    {n : ℕ} [CoordinateSpace S n]
+    (dp : FiniteDecisionProblem (A := A) (S := S))
+    (hx : (separable_detectable (A := A) (S := S) (n := n)).detect dp = true) :
+    ∃ algo : Finset (Fin n) → Bool,
+      ∀ I, algo I = true ↔ dp.isSufficient I := by
+  let C : FiniteDecisionProblem (A := A) (S := S) → Prop :=
+    fun x => Nonempty (SeparableUtility (dp := x))
+  let hDetect : StructureDetectable C := separable_detectable (A := A) (S := S) (n := n)
+  let checker : FiniteDecisionProblem (A := A) (S := S) → Prop :=
+    fun x =>
+      ∃ algo : Finset (Fin n) → Bool,
+        ∀ I, algo I = true ↔ x.isSufficient I
+  have hCorrect : ∀ x, C x → checker x := by
+    intro x hxSep
+    exact tractable_separable_core (A := A) (S := S) (n := n) x (Classical.choice hxSep)
+  have hReusable :=
+    reusable_heuristic_of_detectable
+      (C := C) (hDetect := hDetect) (Correct := fun p : Prop => p)
+      (checker := checker) hCorrect dp hx
+  simpa [checker] using hReusable
+
+/-- Tree-structured class is detectable from a decidable-membership predicate. -/
+noncomputable def tree_structure_detectable
+    {n : ℕ} :
+    StructureDetectable (fun deps : Fin n → Finset (Fin n) => TreeStructured deps) := by
+  classical
+  exact structureDetectable_of_decidable
+    (C := fun deps : Fin n → Finset (Fin n) => TreeStructured deps)
+
+/-- Reusable tree-structured heuristic on detected instances. -/
+theorem tree_reusable_heuristic
+    {A S : Type*} [DecidableEq A] [DecidableEq S] [Fintype A] [Fintype S]
+    {n : ℕ} [CoordinateSpace S n]
+    [∀ s s' : S, ∀ I : Finset (Fin n), Decidable (agreeOn s s' I)]
+    (cdp : ComputableDecisionProblem A S)
+    (deps : Fin n → Finset (Fin n))
+    (hx : (tree_structure_detectable (n := n)).detect deps = true) :
+    ∃ algo : Finset (Fin n) → Bool,
+      ∀ I, algo I = true ↔ cdp.toAbstract.isSufficient I := by
+  let C : (Fin n → Finset (Fin n)) → Prop := fun d => TreeStructured d
+  let hDetect : StructureDetectable C := tree_structure_detectable (n := n)
+  let checker : (Fin n → Finset (Fin n)) → Prop :=
+    fun d =>
+      ∃ algo : Finset (Fin n) → Bool,
+        ∀ I, algo I = true ↔ cdp.toAbstract.isSufficient I
+  have hCorrect : ∀ d, C d → checker d := by
+    intro d hd
+    exact tractable_tree_core (A := A) (S := S) (n := n) cdp d hd
+  have hReusable :=
+    reusable_heuristic_of_detectable
+      (C := C) (hDetect := hDetect) (Correct := fun p : Prop => p)
+      (checker := checker) hCorrect deps hx
+  simpa [checker] using hReusable
 
 end ComplexityLifts
 
@@ -984,6 +1126,46 @@ theorem snapshot_vs_process_typed_boundary :
 
 end AgentSnapshotProcess
 
+/-! ## Regime simulation abstraction (`#12`) -/
+
+section RegimeSimulation
+
+/-- Generic simulation relation between two regime-typed solver obligations.
+`R₁` simulates `R₂` when any solver for `R₁` induces a solver for `R₂`. -/
+def RegimeSimulation (R₁ R₂ : Prop) : Prop := R₁ → R₂
+
+/-- Generic transfer rule: if `R₁` simulates `R₂`, hardness of `R₂`
+transfers to hardness of `R₁`. -/
+theorem regime_simulation_transfers_hardness
+    {R₁ R₂ : Prop}
+    (hSim : RegimeSimulation R₁ R₂)
+    (hHard₂ : ¬ R₂) :
+    ¬ R₁ := by
+  intro hR₁
+  exact hHard₂ (hSim hR₁)
+
+/-- Restriction-map simulation instance used by subproblem-to-full transfer. -/
+theorem subproblem_transfer_as_regime_simulation
+    {HasFullSolver HasSubSolver : Prop}
+    (hRestrict : HasFullSolver → HasSubSolver) :
+    RegimeSimulation HasFullSolver HasSubSolver :=
+  hRestrict
+
+/-- Oracle-transducer simulation instance: batch-view indistinguishability
+induces value-entry indistinguishability on touched states. -/
+theorem oracle_lattice_transfer_as_regime_simulation
+    {n : ℕ}
+    (Q : Finset (ValueQueryState n))
+    (dp₁ dp₂ : DecisionProblem Bool (Fin n → Bool)) :
+    RegimeSimulation
+      (stateBatchView (Q := touchedStates Q) dp₁ = stateBatchView (Q := touchedStates Q) dp₂)
+      (valueEntryView Q dp₁ = valueEntryView Q dp₂) := by
+  intro hBatch
+  exact valueEntryView_eq_of_stateBatchView_eq_on_touched
+    (Q := Q) (dp₁ := dp₁) (dp₂ := dp₂) hBatch
+
+end RegimeSimulation
+
 /-! ## Subproblem-to-full transfer closure (`#2`) -/
 
 section SubproblemTransfer
@@ -996,8 +1178,9 @@ theorem subproblem_hardness_lifts_to_full
     (hRestrict : HasFullSolver → HasSubSolver)
     (hSubHard : ¬ HasSubSolver) :
     ¬ HasFullSolver := by
-  intro hFull
-  exact hSubHard (hRestrict hFull)
+  exact regime_simulation_transfers_hardness
+    (hSim := subproblem_transfer_as_regime_simulation hRestrict)
+    (hHard₂ := hSubHard)
 
 end SubproblemTransfer
 

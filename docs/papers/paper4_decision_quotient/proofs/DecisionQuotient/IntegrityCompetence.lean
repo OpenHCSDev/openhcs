@@ -124,6 +124,51 @@ theorem integrity_not_competent_of_nonempty_scope
       (Q := alwaysAbstain (X := X) (Y := Y) (W := W)) hComp x hx with ⟨y, w, hSolve⟩
   simp [alwaysAbstain] at hSolve
 
+/-!
+  Integrity-resource closure (conditional pattern):
+  if universal competence would force a complexity collapse, then under
+  non-collapse universal competence is impossible.
+-/
+
+/-- Integrity-Resource Bound (logical core): if universal competence implies
+    a complexity collapse, then under non-collapse no universal competence
+    predicate can hold. -/
+theorem integrity_resource_bound
+    {P_eq_coNP PolytimeUniversalCompetence : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse : PolytimeUniversalCompetence → P_eq_coNP) :
+    ¬ PolytimeUniversalCompetence := by
+  intro hPoly
+  exact hNeq (hCollapse hPoly)
+
+/-- Integrity forces abstention or budget violation under the same
+    integrity-resource obstruction:
+    for any integrity-preserving solver, full in-scope coverage and declared
+    budget compliance cannot both hold. -/
+theorem integrity_forces_abstention
+    (R : Set (X × Y)) (Γ : Regime X)
+    {P_eq_coNP : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse : (∃ Q : CertifyingSolver X Y W, CompetentOn R Γ Q) → P_eq_coNP) :
+    ∀ Q : CertifyingSolver X Y W, SolverIntegrity R Q →
+      ¬ (∀ x, x ∈ Γ.inScope → ∃ y w, Q.solve x = some (y, w))
+      ∨
+      ¬ (∀ x, x ∈ Γ.inScope → Q.solveCost x ≤ Γ.budget (Γ.encLen x)) := by
+  classical
+  intro Q hIntegrity
+  by_contra hFail
+  have hCoverage :
+      ∀ x, x ∈ Γ.inScope → ∃ y w, Q.solve x = some (y, w) := by
+    by_contra hNoCoverage
+    exact hFail (Or.inl hNoCoverage)
+  have hBudget :
+      ∀ x, x ∈ Γ.inScope → Q.solveCost x ≤ Γ.budget (Γ.encLen x) := by
+    by_contra hNoBudget
+    exact hFail (Or.inr hNoBudget)
+  have hComp : CompetentOn R Γ Q := ⟨hIntegrity, hCoverage, hBudget⟩
+  have hCollapseWitness : P_eq_coNP := hCollapse ⟨Q, hComp⟩
+  exact hNeq hCollapseWitness
+
 /-- Three-way policy verdict used for the attempted-competence matrix:
     rational (conditionally justified), irrational, or inadmissible. -/
 inductive OverModelVerdict where
