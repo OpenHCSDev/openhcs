@@ -63,6 +63,7 @@ class PaperMeta:
     assumption_ledger_sources: Tuple[str, ...] = ()
     claim_mapping_file: str = ""
     arxiv_comments: str = ""
+    scaffold_from: str = ""
 
     @classmethod
     def from_dict(cls, paper_id: str, d: dict) -> "PaperMeta":
@@ -79,6 +80,7 @@ class PaperMeta:
             assumption_ledger_sources=tuple(d.get("assumption_ledger_sources", [])),
             claim_mapping_file=d.get("claim_mapping_file", ""),
             arxiv_comments=d.get("arxiv_comments", ""),
+            scaffold_from=d.get("scaffold_from", ""),
         )
 
 
@@ -350,6 +352,109 @@ This directory was scaffolded by `scripts/build_papers.py scaffold {meta.paper_i
 - Run `lake build` inside this directory once dependencies are initialized.
 """
 
+    def _replace_first_latex_title(self, content: str, new_title: str) -> str:
+        """Replace first `\\title{...}` argument while preserving surrounding LaTeX."""
+        marker = r"\title"
+        start = content.find(marker)
+        if start == -1:
+            return content
+
+        i = start + len(marker)
+        n = len(content)
+        while i < n and content[i].isspace():
+            i += 1
+        if i < n and content[i] == "[":
+            depth = 1
+            i += 1
+            while i < n and depth > 0:
+                if content[i] == "[":
+                    depth += 1
+                elif content[i] == "]":
+                    depth -= 1
+                i += 1
+            while i < n and content[i].isspace():
+                i += 1
+        if i >= n or content[i] != "{":
+            return content
+
+        arg_start = i + 1
+        depth = 1
+        i = arg_start
+        while i < n and depth > 0:
+            ch = content[i]
+            prev = content[i - 1] if i > 0 else ""
+            if ch == "{" and prev != "\\":
+                depth += 1
+            elif ch == "}" and prev != "\\":
+                depth -= 1
+            i += 1
+        if depth != 0:
+            return content
+
+        arg_end = i - 1
+        return content[:arg_start] + new_title + content[arg_end:]
+
+    def _build_derived_latex_scaffold(
+        self,
+        paper_id: str,
+        meta: PaperMeta,
+        latex_dir: Path,
+        content_dir: Path,
+    ) -> Optional[List[Tuple[Path, str]]]:
+        """Build scaffold file list by deriving from an existing paper variant."""
+        source_id = meta.scaffold_from.strip()
+        if not source_id:
+            return None
+        if source_id == paper_id:
+            raise ValueError(f"{paper_id}: scaffold_from cannot reference itself")
+
+        source_meta = self._get_paper_meta(source_id)
+        source_latex_dir = self._get_paper_dir(source_id) / source_meta.latex_dir
+        source_main = source_latex_dir / source_meta.latex_file
+        if not source_main.exists():
+            raise FileNotFoundError(
+                f"{paper_id}: scaffold_from source missing main TeX: "
+                f"{source_main.relative_to(self.repo_root)}"
+            )
+
+        source_main_content = source_main.read_text(encoding="utf-8", errors="replace")
+        main_content = self._replace_first_latex_title(source_main_content, meta.full_name)
+        files_to_write: List[Tuple[Path, str]] = [
+            (latex_dir / meta.latex_file, main_content),
+        ]
+
+        # Skip generated files; they are rebuilt automatically by the pipeline.
+        generated_content = {"lean_stats.tex", "claim_mapping_auto.tex", "assumption_ledger_auto.tex"}
+        source_content_dir = source_latex_dir / "content"
+        copied_content = False
+        if source_content_dir.exists():
+            for source_file in sorted(source_content_dir.glob("*.tex")):
+                if source_file.name in generated_content:
+                    continue
+                files_to_write.append(
+                    (content_dir / source_file.name, source_file.read_text(encoding="utf-8", errors="replace"))
+                )
+                copied_content = True
+
+        if not copied_content:
+            files_to_write.extend(
+                [
+                    (content_dir / "abstract.tex", self._latex_abstract_template(meta)),
+                    (content_dir / "01_introduction.tex", self._latex_intro_template(meta)),
+                ]
+            )
+
+        source_references = source_latex_dir / "references.bib"
+        if source_references.exists():
+            files_to_write.append(
+                (latex_dir / "references.bib", source_references.read_text(encoding="utf-8", errors="replace"))
+            )
+        else:
+            files_to_write.append((latex_dir / "references.bib", self._references_template()))
+
+        print(f"[scaffold] {paper_id}: deriving LaTeX scaffold from {source_id}")
+        return files_to_write
+
     def _lakefile_template(self, package_name: str, module_root: str, mathlib_require: str) -> str:
         """Generate a minimal lakefile pinned to the repository's current mathlib source."""
         return f"""import Lake
@@ -406,12 +511,14 @@ end {module_root}
         lean_toolchain = self._discover_template_lean_toolchain()
         mathlib_require = self._discover_template_mathlib_require()
 
-        files_to_write = [
-            (latex_dir / meta.latex_file, self._latex_main_template(meta)),
-            (content_dir / "abstract.tex", self._latex_abstract_template(meta)),
-            (content_dir / "01_introduction.tex", self._latex_intro_template(meta)),
-            (latex_dir / "references.bib", self._references_template()),
-        ]
+        files_to_write = self._build_derived_latex_scaffold(paper_id, meta, latex_dir, content_dir)
+        if files_to_write is None:
+            files_to_write = [
+                (latex_dir / meta.latex_file, self._latex_main_template(meta)),
+                (content_dir / "abstract.tex", self._latex_abstract_template(meta)),
+                (content_dir / "01_introduction.tex", self._latex_intro_template(meta)),
+                (latex_dir / "references.bib", self._references_template()),
+            ]
         if overwrite or not proofs_dir_was_nonempty:
             files_to_write.extend(
                 [
@@ -1307,8 +1414,8 @@ end {module_root}
 
         # Discover files from main LaTeX include order
         content_files = self._discover_content_files(paper_id)
-        # Single source of truth for generated artifacts: papers.yaml `full_name`.
-        title = meta.full_name
+        # Single source of truth for generated artifacts: main LaTeX `\title{...}`.
+        title = self._release_title_from_latex(paper_id)
         lean_stats = self._get_lean_stats(paper_id)
         self._build_markdown_file(meta, content_files, out_file, title, lean_stats)
 
@@ -1401,6 +1508,18 @@ end {module_root}
         if not raw_title:
             return None
         return self._latex_inline_to_plain(raw_title)
+
+    def _release_title_from_latex(self, paper_id: str) -> str:
+        """Canonical release title source: main LaTeX `\\title{...}`."""
+        title = self._extract_main_latex_title(paper_id)
+        if title:
+            return title
+        meta = self._get_paper_meta(paper_id)
+        main_tex = self._get_paper_dir(paper_id) / meta.latex_dir / meta.latex_file
+        raise ValueError(
+            f"{paper_id}: missing canonical LaTeX title in {main_tex.relative_to(self.repo_root)} "
+            "(expected \\\\title{...})"
+        )
 
     def _extract_abstract_latex(self, paper_id: str) -> Optional[str]:
         """Extract abstract LaTeX content from content/abstract.tex."""
@@ -1531,6 +1650,13 @@ end {module_root}
         )
         return self._normalize_plaintext_block(converted)
 
+    def _latex_snippet_to_unicode_zenodo(self, latex_input: str, paper_id: str) -> str:
+        """Convert LaTeX to Unicode plain text suitable for Zenodo (no markdown markers)."""
+        plain = self._latex_snippet_to_plain(latex_input, paper_id)
+        # Use explicit Unicode bullets instead of markdown-style `- ` markers.
+        plain = re.sub(r"(?m)^-\s+", "• ", plain)
+        return self._normalize_plaintext_block(plain)
+
     def _default_arxiv_comments(self, paper_id: str) -> str:
         """Build a default arXiv comments line when no explicit metadata is configured."""
         meta = self._get_paper_meta(paper_id)
@@ -1605,15 +1731,20 @@ end {module_root}
     def build_copy_paste_metadata(self, paper_id: str) -> Path:
         """Generate human/machine copy-paste metadata for Zenodo + arXiv."""
         meta = self._get_paper_meta(paper_id)
-        # Single source of truth for generated artifacts: papers.yaml `full_name`.
-        title = meta.full_name
+        # Single source of truth for generated artifacts: main LaTeX `\title{...}`.
+        title = self._release_title_from_latex(paper_id)
         abstract_latex = self._extract_abstract_latex(paper_id)
         abstract_mathjax = (
             self._latex_snippet_to_mathjax(abstract_latex, paper_id)
             if abstract_latex
             else "Abstract not found."
         )
-        abstract_unicode = self._mathjax_markdown_to_unicode_markdown(abstract_mathjax)
+        # Zenodo variant should be Unicode plain text (no markdown formatting markers).
+        abstract_unicode = (
+            self._latex_snippet_to_unicode_zenodo(abstract_latex, paper_id)
+            if abstract_latex
+            else "Abstract not found."
+        )
         arxiv_comments = (
             self._normalize_plaintext_block(meta.arxiv_comments)
             if meta.arxiv_comments.strip()
@@ -2253,7 +2384,7 @@ MIT License - See main repository for details.
         Create BUILD_LOG.txt with ACTUAL lake build output as compilation proof.
         This is the mathematical evidence that proofs compile.
         """
-        meta = self._get_paper_meta(paper_id)
+        paper_title = self._release_title_from_latex(paper_id)
         lean_stats = self._get_lean_stats(paper_id)
         log_file = package_dir / "BUILD_LOG.txt"
 
@@ -2266,7 +2397,7 @@ MIT License - See main repository for details.
         log_content = f"""OpenHCS Paper Build Log
 ========================
 
-Paper: {paper_id} - {meta.full_name}
+Paper: {paper_id} - {paper_title}
 Package Date: {datetime.now().isoformat()}
 Lean Toolchain: {toolchain_version}
 

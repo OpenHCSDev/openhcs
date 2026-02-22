@@ -1,29 +1,30 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-02-22T06:47:55.358266
+Generated: 2026-02-22T08:24:19.691321
 
 === HUMAN COPY/PASTE ===
 
-Title: Computational Complexity of Sufficiency in Decision Problems
+Title: Computational Complexity of Information Sufficiency
 
 Abstract (Unicode, for Zenodo):
-We characterize the computational complexity of *information sufficiency* as a *meta-problem*: given an arbitrary decision problem 𝒟 with action set A, factored state space S = X₁ × ⋯ × X_(n), and utility U : A × S → ℚ, does a candidate coordinate set I carry enough information to act optimally? Formally, I is *sufficient* if s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized by an arbitrary 𝒟, and any problem requiring a choice among alternatives under structured information instantiates the (A, S, U) tuple, the complexity results apply to every problem with factored state space---not to a specific problem domain.
+We characterize the computational complexity of information sufficiency as a meta-problem: given an arbitrary decision problem 𝒟 with action set A, factored state space S = X₁ × ⋯ × X_(n), and utility U: A × S → ℚ, does a candidate coordinate set I carry enough information to act optimally? Formally, I is sufficient if s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized by an arbitrary 𝒟, and any problem requiring a choice among alternatives under structured information instantiates the (A, S, U) tuple, the complexity results apply to every problem with factored state space—not to a specific problem domain.
 
-**The landscape in the formal model:**
+The landscape in the formal model:
 
-- **General case:** SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete.
+• General case: SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete.
 
-- **Tractable cases:** Polynomial-time for bounded action sets under the explicit-state encoding; separable utilities (U = f + g) under any encoding; and tree-structured utility with explicit local factors.
+• Tractable cases: Polynomial-time for bounded action sets under the explicit-state encoding; separable utilities (U = f + g) under any encoding; and tree-structured utility with explicit local factors.
 
-- **Encoding-regime separation:** Polynomial-time under the explicit-state encoding (polynomial in |S|). Under ETH, there exist succinctly encoded worst-case instances witnessed by a strengthened gadget construction (mechanized in Lean) with k^(*) = n for which SUFFICIENCY-CHECK requires 2^(Ω(n)) time.
+• Encoding-regime separation: Polynomial-time under the explicit-state encoding (polynomial in |S|). Under ETH, there exist succinctly encoded worst-case instances witnessed by a strengthened gadget construction (mechanized in Lean) with k^(*) = n for which SUFFICIENCY-CHECK requires 2^(Ω(n)) time.
 
-- **Intermediate query-access lower bounds:** In the finite-state query core, SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable yes/no pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized Boolean interface refinements show the same obstruction for value-entry and state-batch access, including finite-support randomized robustness and oracle-lattice transfer/strictness statements.
+• Intermediate query-access lower bounds: In the finite-state query core, SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable yes/no pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized Boolean interface refinements show the same obstruction for value-entry and state-batch access, including finite-support randomized robustness and oracle-lattice transfer/strictness statements.
 
-The tractable cases are stated with explicit encoding assumptions. Together, these results answer the question "when is decision-relevant information identifiable efficiently?" within the stated regimes. Complexity classification is a property of the encoding regime measured against a fixed decision question: the same sufficiency predicate is polynomial-time under explicit-state access and worst-case exponential under succinct encoding. At the structural level, the apparent ∃∀ form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion sufficient(I) ⇔ Relevant ⊆ I. Within this regime-typed framework, over-modeling is rational only under integrity-preserving attempted-competence-failure conditions; otherwise it is irrational.
+The tractable cases are stated with explicit encoding assumptions. Together, these results answer the question “when is decision-relevant information identifiable efficiently?” within the stated regimes. Complexity classification is a property of the encoding regime measured against a fixed decision question: the same sufficiency predicate is polynomial-time under explicit-state access and worst-case exponential under succinct encoding. At the structural level, the apparent ∃∀ form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion sufficient(I) ⇔ Relevant ⊆ I. Within this regime-typed framework, over-modeling is rational only under integrity-preserving attempted-competence-failure conditions; otherwise it is irrational.
+
 The contribution has two levels: (i) a complete complexity landscape for the core decision-relevant problems in the static sufficiency class defined by the model contract (coNP/Σ₂^(P) completeness and tractable regimes under explicit encoding assumptions), and (ii) a formal regime-typing framework that separates structural complexity from representational hardness and yields theorem-indexed engineering corollaries.
 
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (8565 lines, 389 theorem/lemma statements); complexity classifications follow by composition with standard results .
+The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (8698 lines, 393 theorem/lemma statements); complexity classifications follow by composition with standard results .
 
-**Keywords:** computational complexity, decision theory, polynomial hierarchy, tractability dichotomy, Lean 4
+Keywords: computational complexity, decision theory, polynomial hierarchy, tractability dichotomy, Lean 4
 
 Abstract (MathJax, for arXiv):
 We characterize the computational complexity of *information sufficiency* as a *meta-problem*: given an arbitrary decision problem $\mathcal{D}$ with action set $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility $U: A \times S \to \mathbb{Q}$, does a candidate coordinate set $I$ carry enough information to act optimally? Formally, $I$ is *sufficient* if $s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$. Because the problems below are parameterized by an arbitrary $\mathcal{D}$, and any problem requiring a choice among alternatives under structured information instantiates the $(A, S, U)$ tuple, the complexity results apply to every problem with factored state space---not to a specific problem domain.
@@ -41,57 +42,56 @@ We characterize the computational complexity of *information sufficiency* as a *
 The tractable cases are stated with explicit encoding assumptions. Together, these results answer the question "when is decision-relevant information identifiable efficiently?" within the stated regimes. Complexity classification is a property of the encoding regime measured against a fixed decision question: the same sufficiency predicate is polynomial-time under explicit-state access and worst-case exponential under succinct encoding. At the structural level, the apparent $\exists\forall$ form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion $\text{sufficient}(I) \iff \text{Relevant} \subseteq I$. Within this regime-typed framework, over-modeling is rational only under integrity-preserving attempted-competence-failure conditions; otherwise it is irrational.
 The contribution has two levels: (i) a complete complexity landscape for the core decision-relevant problems in the static sufficiency class defined by the model contract (coNP/$\Sigma_2^P$ completeness and tractable regimes under explicit encoding assumptions), and (ii) a formal regime-typing framework that separates structural complexity from representational hardness and yields theorem-indexed engineering corollaries.
 
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (8565 lines, 389 theorem/lemma statements); complexity classifications follow by composition with standard results .
+The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (8698 lines, 393 theorem/lemma statements); complexity classifications follow by composition with standard results .
 
 **Keywords:** computational complexity, decision theory, polynomial hierarchy, tractability dichotomy, Lean 4
 
 arXiv Comments:
-Theory of Computing submission. Lean 4 artifact: 8565 lines, 389 theorems/lemmas across 42 files (0 sorry placeholders).
+Theory of Computing submission. Lean 4 artifact: 8698 lines, 393 theorems/lemmas across 42 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper4_toc
-title: Computational Complexity of Sufficiency in Decision Problems
+title: Computational Complexity of Information Sufficiency
 zenodo:
-  title: Computational Complexity of Sufficiency in Decision Problems
-  abstract: 'We characterize the computational complexity of *information sufficiency*
-    as a *meta-problem*: given an arbitrary decision problem 𝒟 with action set A,
-    factored state space S = X₁ × ⋯ × X_(n), and utility U : A × S → ℚ, does a candidate
-    coordinate set I carry enough information to act optimally? Formally, I is *sufficient*
-    if s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized
+  title: Computational Complexity of Information Sufficiency
+  abstract: 'We characterize the computational complexity of information sufficiency
+    as a meta-problem: given an arbitrary decision problem 𝒟 with action set A, factored
+    state space S = X₁ × ⋯ × X_(n), and utility U: A × S → ℚ, does a candidate coordinate
+    set I carry enough information to act optimally? Formally, I is sufficient if
+    s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized
     by an arbitrary 𝒟, and any problem requiring a choice among alternatives under
     structured information instantiates the (A, S, U) tuple, the complexity results
-    apply to every problem with factored state space---not to a specific problem domain.
+    apply to every problem with factored state space—not to a specific problem domain.
 
 
-    **The landscape in the formal model:**
+    The landscape in the formal model:
 
 
-    - **General case:** SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is
-    Σ₂^(P)-complete.
+    • General case: SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete.
 
 
-    - **Tractable cases:** Polynomial-time for bounded action sets under the explicit-state
+    • Tractable cases: Polynomial-time for bounded action sets under the explicit-state
     encoding; separable utilities (U = f + g) under any encoding; and tree-structured
     utility with explicit local factors.
 
 
-    - **Encoding-regime separation:** Polynomial-time under the explicit-state encoding
+    • Encoding-regime separation: Polynomial-time under the explicit-state encoding
     (polynomial in |S|). Under ETH, there exist succinctly encoded worst-case instances
     witnessed by a strengthened gadget construction (mechanized in Lean) with k^(*)
     = n for which SUFFICIENCY-CHECK requires 2^(Ω(n)) time.
 
 
-    - **Intermediate query-access lower bounds:** In the finite-state query core,
-    SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable
-    yes/no pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized
-    Boolean interface refinements show the same obstruction for value-entry and state-batch
+    • Intermediate query-access lower bounds: In the finite-state query core, SUFFICIENCY-CHECK
+    has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable yes/no
+    pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized Boolean
+    interface refinements show the same obstruction for value-entry and state-batch
     access, including finite-support randomized robustness and oracle-lattice transfer/strictness
     statements.
 
 
     The tractable cases are stated with explicit encoding assumptions. Together, these
-    results answer the question "when is decision-relevant information identifiable
-    efficiently?" within the stated regimes. Complexity classification is a property
+    results answer the question “when is decision-relevant information identifiable
+    efficiently?” within the stated regimes. Complexity classification is a property
     of the encoding regime measured against a fixed decision question: the same sufficiency
     predicate is polynomial-time under explicit-state access and worst-case exponential
     under succinct encoding. At the structural level, the apparent ∃∀ form of MINIMUM-SUFFICIENT-SET
@@ -99,6 +99,7 @@ zenodo:
     ⊆ I. Within this regime-typed framework, over-modeling is rational only under
     integrity-preserving attempted-competence-failure conditions; otherwise it is
     irrational.
+
 
     The contribution has two levels: (i) a complete complexity landscape for the core
     decision-relevant problems in the static sufficiency class defined by the model
@@ -109,14 +110,14 @@ zenodo:
 
 
     The reduction constructions and key equivalence theorems are machine-checked in
-    Lean 4 (8565 lines, 389 theorem/lemma statements); complexity classifications
+    Lean 4 (8698 lines, 393 theorem/lemma statements); complexity classifications
     follow by composition with standard results .
 
 
-    **Keywords:** computational complexity, decision theory, polynomial hierarchy,
-    tractability dichotomy, Lean 4'
+    Keywords: computational complexity, decision theory, polynomial hierarchy, tractability
+    dichotomy, Lean 4'
 arxiv:
-  title: Computational Complexity of Sufficiency in Decision Problems
+  title: Computational Complexity of Information Sufficiency
   abstract: 'We characterize the computational complexity of *information sufficiency*
     as a *meta-problem*: given an arbitrary decision problem $\mathcal{D}$ with action
     set $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility
@@ -175,54 +176,53 @@ arxiv:
 
 
     The reduction constructions and key equivalence theorems are machine-checked in
-    Lean 4 (8565 lines, 389 theorem/lemma statements); complexity classifications
+    Lean 4 (8698 lines, 393 theorem/lemma statements); complexity classifications
     follow by composition with standard results .
 
 
     **Keywords:** computational complexity, decision theory, polynomial hierarchy,
     tractability dichotomy, Lean 4'
-  comments: 'Theory of Computing submission. Lean 4 artifact: 8565 lines, 389 theorems/lemmas
+  comments: 'Theory of Computing submission. Lean 4 artifact: 8698 lines, 393 theorems/lemmas
     across 42 files (0 sorry placeholders).'
 abstract_variants:
-  unicode: 'We characterize the computational complexity of *information sufficiency*
-    as a *meta-problem*: given an arbitrary decision problem 𝒟 with action set A,
-    factored state space S = X₁ × ⋯ × X_(n), and utility U : A × S → ℚ, does a candidate
-    coordinate set I carry enough information to act optimally? Formally, I is *sufficient*
-    if s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized
+  unicode: 'We characterize the computational complexity of information sufficiency
+    as a meta-problem: given an arbitrary decision problem 𝒟 with action set A, factored
+    state space S = X₁ × ⋯ × X_(n), and utility U: A × S → ℚ, does a candidate coordinate
+    set I carry enough information to act optimally? Formally, I is sufficient if
+    s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized
     by an arbitrary 𝒟, and any problem requiring a choice among alternatives under
     structured information instantiates the (A, S, U) tuple, the complexity results
-    apply to every problem with factored state space---not to a specific problem domain.
+    apply to every problem with factored state space—not to a specific problem domain.
 
 
-    **The landscape in the formal model:**
+    The landscape in the formal model:
 
 
-    - **General case:** SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is
-    Σ₂^(P)-complete.
+    • General case: SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete.
 
 
-    - **Tractable cases:** Polynomial-time for bounded action sets under the explicit-state
+    • Tractable cases: Polynomial-time for bounded action sets under the explicit-state
     encoding; separable utilities (U = f + g) under any encoding; and tree-structured
     utility with explicit local factors.
 
 
-    - **Encoding-regime separation:** Polynomial-time under the explicit-state encoding
+    • Encoding-regime separation: Polynomial-time under the explicit-state encoding
     (polynomial in |S|). Under ETH, there exist succinctly encoded worst-case instances
     witnessed by a strengthened gadget construction (mechanized in Lean) with k^(*)
     = n for which SUFFICIENCY-CHECK requires 2^(Ω(n)) time.
 
 
-    - **Intermediate query-access lower bounds:** In the finite-state query core,
-    SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable
-    yes/no pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized
-    Boolean interface refinements show the same obstruction for value-entry and state-batch
+    • Intermediate query-access lower bounds: In the finite-state query core, SUFFICIENCY-CHECK
+    has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable yes/no
+    pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized Boolean
+    interface refinements show the same obstruction for value-entry and state-batch
     access, including finite-support randomized robustness and oracle-lattice transfer/strictness
     statements.
 
 
     The tractable cases are stated with explicit encoding assumptions. Together, these
-    results answer the question "when is decision-relevant information identifiable
-    efficiently?" within the stated regimes. Complexity classification is a property
+    results answer the question “when is decision-relevant information identifiable
+    efficiently?” within the stated regimes. Complexity classification is a property
     of the encoding regime measured against a fixed decision question: the same sufficiency
     predicate is polynomial-time under explicit-state access and worst-case exponential
     under succinct encoding. At the structural level, the apparent ∃∀ form of MINIMUM-SUFFICIENT-SET
@@ -230,6 +230,7 @@ abstract_variants:
     ⊆ I. Within this regime-typed framework, over-modeling is rational only under
     integrity-preserving attempted-competence-failure conditions; otherwise it is
     irrational.
+
 
     The contribution has two levels: (i) a complete complexity landscape for the core
     decision-relevant problems in the static sufficiency class defined by the model
@@ -240,12 +241,12 @@ abstract_variants:
 
 
     The reduction constructions and key equivalence theorems are machine-checked in
-    Lean 4 (8565 lines, 389 theorem/lemma statements); complexity classifications
+    Lean 4 (8698 lines, 393 theorem/lemma statements); complexity classifications
     follow by composition with standard results .
 
 
-    **Keywords:** computational complexity, decision theory, polynomial hierarchy,
-    tractability dichotomy, Lean 4'
+    Keywords: computational complexity, decision theory, polynomial hierarchy, tractability
+    dichotomy, Lean 4'
   mathjax: 'We characterize the computational complexity of *information sufficiency*
     as a *meta-problem*: given an arbitrary decision problem $\mathcal{D}$ with action
     set $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility
@@ -304,7 +305,7 @@ abstract_variants:
 
 
     The reduction constructions and key equivalence theorems are machine-checked in
-    Lean 4 (8565 lines, 389 theorem/lemma statements); complexity classifications
+    Lean 4 (8698 lines, 393 theorem/lemma statements); complexity classifications
     follow by composition with standard results .
 
 

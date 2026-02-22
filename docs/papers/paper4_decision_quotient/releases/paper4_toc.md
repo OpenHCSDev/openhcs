@@ -1,12 +1,12 @@
-# Paper: Computational Complexity of Sufficiency in Decision Problems
+# Paper: Computational Complexity of Information Sufficiency
 
-**Status**: Theory of Computing-ready | **Lean**: 8470 lines, 383 theorems
+**Status**: Theory of Computing-ready | **Lean**: 8698 lines, 393 theorems
 
 ---
 
 ## Abstract
 
-We characterize the computational complexity of coordinate sufficiency in decision problems within the formal model. Given action set $A$, state space $S = X_1 \times \cdots \times X_n$, and utility $U: A \times S \to \mathbb{Q}$, a coordinate set $I$ is *sufficient* if $s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$.
+We characterize the computational complexity of *information sufficiency* as a *meta-problem*: given an arbitrary decision problem $\mathcal{D}$ with action set $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility $U: A \times S \to \mathbb{Q}$, does a candidate coordinate set $I$ carry enough information to act optimally? Formally, $I$ is *sufficient* if $s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$. Because the problems below are parameterized by an arbitrary $\mathcal{D}$, and any problem requiring a choice among alternatives under structured information instantiates the $(A, S, U)$ tuple, the complexity results apply to every problem with factored state space---not to a specific problem domain.
 
 **The landscape in the formal model:**
 
@@ -18,20 +18,26 @@ We characterize the computational complexity of coordinate sufficiency in decisi
 
 -   **Intermediate query-access lower bounds:** In the finite-state query core, SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity $\Omega(|S|)$ via indistinguishable yes/no pairs for the $I=\emptyset$ subproblem (Boolean instantiation: $\Omega(2^n)$); mechanized Boolean interface refinements show the same obstruction for value-entry and state-batch access, including finite-support randomized robustness and oracle-lattice transfer/strictness statements.
 
-The tractable cases are stated with explicit encoding assumptions (Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}). Together, these results answer the question "when is decision-relevant information identifiable efficiently?" within the stated regimes. Complexity classification is a property of the encoding regime measured against a fixed decision question (Remark [\[rem:question-vs-problem\]](#rem:question-vs-problem){reference-type="ref" reference="rem:question-vs-problem"}): the same sufficiency predicate is polynomial-time under explicit-state access and worst-case exponential under succinct encoding. At the structural level, the apparent $\exists\forall$ form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion $\text{sufficient}(I) \iff \text{Relevant} \subseteq I$. Within this regime-typed framework, over-modeling is rational only under integrity-preserving attempted-competence-failure conditions; otherwise it is irrational.
+The tractable cases are stated with explicit encoding assumptions (Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}). Together, these results answer the question "when is decision-relevant information identifiable efficiently?" within the stated regimes. Complexity classification is a property of the encoding regime measured against a fixed decision question (Remark [\[rem:question-vs-problem\]](#rem:question-vs-problem){reference-type="ref" reference="rem:question-vs-problem"}): the same sufficiency predicate is polynomial-time under explicit-state access and worst-case exponential under succinct encoding. At the structural level, the apparent $\exists\forall$ form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion $\text{sufficient}(I) \iff \text{Relevant} \subseteq I$. Within this regime-typed framework, over-modeling is rational only under integrity-preserving attempted-competence-failure conditions; otherwise it is irrational. \[D:prop:attempted-competence-matrix; R:\[R=active declared regime\]\]
 
 The contribution has two levels: (i) a complete complexity landscape for the core decision-relevant problems in the static sufficiency class defined by the model contract (coNP/$\Sigma_2^P$ completeness and tractable regimes under explicit encoding assumptions), and (ii) a formal regime-typing framework that separates structural complexity from representational hardness and yields theorem-indexed engineering corollaries.
 
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (8470 lines, 383 theorem/lemma statements); complexity classifications follow by composition with standard results (see Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"}).
+The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (8698 lines, 393 theorem/lemma statements); complexity classifications follow by composition with standard results (see Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"}).
 
 **Keywords:** computational complexity, decision theory, polynomial hierarchy, tractability dichotomy, Lean 4
 
 
 # Introduction {#sec:introduction}
 
-Consider a decision problem with actions $A$ and states $S = X_1 \times \cdots \times X_n$. A coordinate set $I \subseteq \{1, \ldots, n\}$ is *sufficient* if knowing only coordinates in $I$ determines the optimal action: $$s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$$
+Consider any decision problem $\mathcal{D}$ with actions $A$ and factored state space $S = X_1 \times \cdots \times X_n$. A coordinate set $I \subseteq \{1, \ldots, n\}$ is *sufficient* if knowing only coordinates in $I$ determines the optimal action: $$s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$$ This is *coordinate sufficiency*---the formalization of *information sufficiency* (whether available information determines the optimal action) over a factored state space.
 
-This paper characterizes the efficient cases of coordinate sufficiency within the formal model:
+SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, and ANCHOR-SUFFICIENCY are *meta-problems*: each is parameterized by an arbitrary decision problem $\mathcal{D}$ and asks a structural question about $\mathcal{D}$'s coordinate space. The complexity results therefore apply to every problem with factored state space, not to a specific problem domain. \[D:thm:sufficiency-conp, thm:minsuff-conp, thm:anchor-sigma2p; R:\[S\]\]
+
+::: remark
+[]{#rem:universality label="rem:universality"} The formal object of this paper is the decision-problem tuple $\mathcal{D} = (A, S, U)$: actions, factored states, utility. This is not a restriction. Any problem requiring a choice among alternatives given structured information instantiates the tuple: the alternatives are $A$, the structured information is $S = X_1 \times \cdots \times X_n$, and the objective is $U$. "Decision problem" is therefore coextensive with "problem"---the qualifier restricts nothing. The meta-problem results below are universal over all problems with coordinate structure; the $(A, S, U)$ formalism provides the coordinate framework for stating the sufficiency predicate, not a boundary on the class of problems to which the results apply.
+:::
+
+This paper characterizes the complexity landscape of these meta-problems within the formal model:
 
 Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"} fixes the computational model and input encodings used for all complexity claims. Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"} gives the model contract and regime tags used to type every strong claim. Completeness claims are class-internal: complete for the static sufficiency class fixed by C1--C4 and the declared access regimes. Adjacent objective classes that violate the bridge conditions are typed separately (Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"}).
 
@@ -55,9 +61,7 @@ Theorems in this paper are intended to be read as hardness/recovery pairs for th
 
 3.  **Anchor sufficiency:** $\Sigma_{2}^{P}$-complete in the general anchored formulation (Theorem [\[thm:anchor-sigma2p\]](#thm:anchor-sigma2p){reference-type="ref" reference="thm:anchor-sigma2p"}); no general polynomial-time recovery condition is established in this model.
 
-*(Lean anchors for this map: `ClaimClosure.sufficiency_conp_complete_conditional`, `ClaimClosure.minsuff_conp_complete_conditional`, `ClaimClosure.minsuff_collapse_core`, `ClaimClosure.anchor_sigma2p_complete_conditional`, `ClaimClosure.tractable_subcases_conditional`, `Sigma2PHardness.min_sufficient_set_iff_relevant_card`.)*
-
-An operational criterion follows later from the same chain: once decision-site count exceeds the amortization threshold $n^*$, avoiding structural identification is more expensive than paying the one-time centralization cost (Theorem [\[thm:amortization\]](#thm:amortization){reference-type="ref" reference="thm:amortization"}). *(Lean: `HardnessDistribution.complete_model_dominates_after_threshold`, `HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`.)*
+An operational criterion follows later from the same chain: once decision-site count exceeds the amortization threshold $n^*$, avoiding structural identification is more expensive than paying the one-time centralization cost (Theorem [\[thm:amortization\]](#thm:amortization){reference-type="ref" reference="thm:amortization"}).
 
 ## Landscape Summary
 
@@ -95,7 +99,7 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 
 ## Machine-Checked Proofs
 
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 [@moura2021lean4] (8470 lines, 383 theorem/lemma statements). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets. Complexity class membership (coNP-completeness, $\Sigma_2^P$-completeness) follows by composition with standard complexity-theoretic results.
+The reduction constructions and key equivalence theorems are machine-checked in Lean 4 [@moura2021lean4] (8698 lines, 393 theorem/lemma statements). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets. Complexity class membership (coNP-completeness, $\Sigma_2^P$-completeness) follows by composition with standard complexity-theoretic results.
 
 #### What is new.
 
@@ -105,7 +109,9 @@ We contribute (i) formal definitions of decision-theoretic sufficiency in Lean; 
 
 The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/$\Sigma_2^P$ completeness and tractable cases stated under explicit encoding assumptions). A second contribution is formal claim typing: Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"} introduces the structural/representational and integrity/competence splits that type-check the applied corollaries.
 
-Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference="sec:foundations"}: decision-problem foundations and encoding model. Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}: structural vs representational hardness; integrity vs competence. Section [\[sec:hardness\]](#sec:hardness){reference-type="ref" reference="sec:hardness"}: hardness proofs. Section [\[sec:dichotomy\]](#sec:dichotomy){reference-type="ref" reference="sec:dichotomy"}: regime separation. Section [\[sec:tractable\]](#sec:tractable){reference-type="ref" reference="sec:tractable"}: tractable cases. Section [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}: engineering corollaries by regime. Section [\[sec:implications\]](#sec:implications){reference-type="ref" reference="sec:implications"}: software architecture corollaries. Section [\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"}: complexity redistribution corollary. Section [\[sec:related\]](#sec:related){reference-type="ref" reference="sec:related"}: related work. Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"}: Lean listings.
+Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference="sec:foundations"}: decision-problem foundations and encoding model. Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}: structural vs representational hardness; integrity vs competence. Section [\[sec:hardness\]](#sec:hardness){reference-type="ref" reference="sec:hardness"}: hardness proofs. Section [\[sec:dichotomy\]](#sec:dichotomy){reference-type="ref" reference="sec:dichotomy"}: regime separation. Section [\[sec:tractable\]](#sec:tractable){reference-type="ref" reference="sec:tractable"}: tractable cases. Section [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}: regime-conditional corollaries. Section [\[sec:implications\]](#sec:implications){reference-type="ref" reference="sec:implications"}: dominance theorems for hardness placement. Section [\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"}: conservation law for decision-relevant coordinates. Section [\[sec:related\]](#sec:related){reference-type="ref" reference="sec:related"}: related work. Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"}: Lean listings.
+
+Sections [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}--[\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"} are not applied commentary. Every claim in those sections is a formal corollary, regime-typed by the framework of Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"} and indexed to a machine-checked theorem handle. They complete the complexity landscape by characterizing when exact minimization is rational and when it is not: the rationality matrix (Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"}), the dominance and conservation theorems (Theorems [\[thm:centralization-dominance\]](#thm:centralization-dominance){reference-type="ref" reference="thm:centralization-dominance"}, [\[thm:tax-conservation\]](#thm:tax-conservation){reference-type="ref" reference="thm:tax-conservation"}), and the amortization threshold (Theorem [\[thm:amortization\]](#thm:amortization){reference-type="ref" reference="thm:amortization"}) are all mechanized in Lean.
 
 
 # Formal Foundations {#sec:foundations}
@@ -149,7 +155,7 @@ We formalize decision problems with coordinate structure, sufficiency of coordin
 :::
 
 ::: proposition
-[]{#prop:set-to-selector label="prop:set-to-selector"} If $I$ is sufficient in the set-valued sense (Definition [\[def:sufficient\]](#def:sufficient){reference-type="ref" reference="def:sufficient"}), then $I$ is selector-sufficient for every deterministic selector $\sigma$ (Definition [\[def:selector-sufficient\]](#def:selector-sufficient){reference-type="ref" reference="def:selector-sufficient"}). *(Lean: `DecisionProblem.sufficient_implies_selectorSufficient`)*
+[]{#prop:set-to-selector label="prop:set-to-selector"} If $I$ is sufficient in the set-valued sense (Definition [\[def:sufficient\]](#def:sufficient){reference-type="ref" reference="def:sufficient"}), then $I$ is selector-sufficient for every deterministic selector $\sigma$ (Definition [\[def:selector-sufficient\]](#def:selector-sufficient){reference-type="ref" reference="def:selector-sufficient"}).
 :::
 
 ::: proof
@@ -163,11 +169,11 @@ We formalize decision problems with coordinate structure, sufficiency of coordin
 :::
 
 ::: proposition
-[]{#prop:zero-epsilon-reduction label="prop:zero-epsilon-reduction"} Set-valued sufficiency is exactly the $\varepsilon=0$ case: $$I\text{ sufficient } \iff I\text{ is }0\text{-sufficient}.$$ *(Lean: `DecisionProblem.epsOpt_zero_eq_opt`, `DecisionProblem.sufficient_iff_zeroEpsilonSufficient`)*
+[]{#prop:zero-epsilon-reduction label="prop:zero-epsilon-reduction"} Set-valued sufficiency is exactly the $\varepsilon=0$ case: $$I\text{ sufficient } \iff I\text{ is }0\text{-sufficient}.$$
 :::
 
 ::: proposition
-[]{#prop:selector-separation label="prop:selector-separation"} The converse of Proposition [\[prop:set-to-selector\]](#prop:set-to-selector){reference-type="ref" reference="prop:set-to-selector"} fails in general: there exists a decision problem, selector, and coordinate set $I$ such that $I$ is selector-sufficient but not sufficient in the full set-valued sense. *(Lean witness: `ClaimClosure.selectorSufficient_not_implies_setSufficient`.)*
+[]{#prop:selector-separation label="prop:selector-separation"} The converse of Proposition [\[prop:set-to-selector\]](#prop:set-to-selector){reference-type="ref" reference="prop:set-to-selector"} fails in general: there exists a decision problem, selector, and coordinate set $I$ such that $I$ is selector-sufficient but not sufficient in the full set-valued sense.
 :::
 
 ::: definition
@@ -181,7 +187,7 @@ We formalize decision problems with coordinate structure, sufficiency of coordin
 :::
 
 ::: proposition
-[]{#prop:minimal-relevant-equiv label="prop:minimal-relevant-equiv"} For any minimal sufficient set $I$ and any coordinate $i$: $$i \in I \iff i \text{ is relevant}.$$ Hence every minimal sufficient set is exactly the relevant-coordinate set. *(Lean product-space handles: `DecisionProblem.minimalSufficient_iff_relevant`, `DecisionProblem.relevantSet_is_minimal`.)*
+[]{#prop:minimal-relevant-equiv label="prop:minimal-relevant-equiv"} For any minimal sufficient set $I$ and any coordinate $i$: $$i \in I \iff i \text{ is relevant}.$$ Hence every minimal sufficient set is exactly the relevant-coordinate set.
 :::
 
 ::: proof
@@ -215,7 +221,7 @@ The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordina
 :::
 
 ::: proposition
-[]{#prop:sufficiency-char label="prop:sufficiency-char"} Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\operatorname{Opt}(s)|/|A|$ for all $s \in S$. *(Lean finite-model form: `ClaimClosure.sufficiency_iff_dq_ratio`, `ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`)*
+[]{#prop:sufficiency-char label="prop:sufficiency-char"} Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\operatorname{Opt}(s)|/|A|$ for all $s \in S$.
 :::
 
 ::: proof
@@ -254,6 +260,12 @@ Unless explicitly stated otherwise, "polynomial time" refers to the succinct enc
 []{#rem:question-vs-problem label="rem:question-vs-problem"} We distinguish between a *decision question* and a *decision problem*. A decision question is the encoding-independent predicate: "is coordinate set $I$ sufficient for $\mathcal{D}$?" This is a mathematical relation, fixed by the model contract (C1--C4). A decision problem is a decision question together with a specific encoding of its inputs. The same decision question yields different decision problems under different encodings, and these problems may belong to different complexity classes. Formally, each encoding regime $e$ induces a language $L_{\mathcal{D},e}$; complexity classification is a property of $L_{\mathcal{D},e}$, not of $\mathcal{D}$ alone.
 :::
 
+::: definition
+[]{#def:regime-simulation label="def:regime-simulation"} Fix a decision question $Q$ and two regimes $R_1,R_2$ for that question. We say $R_1$ *simulates* $R_2$ if there exists a polynomial-time transformer that maps any $R_2$ instance to an $R_1$ instance while preserving the answer to $Q$; in oracle settings, this includes a polynomial-time transcript transducer that preserves yes/no outcomes for induced solvers.
+:::
+
+This paper uses that simulation spine in two explicit forms: restriction-map simulation (subproblem-to-full transfer; Proposition [\[prop:query-subproblem-transfer\]](#prop:query-subproblem-transfer){reference-type="ref" reference="prop:query-subproblem-transfer"}) and oracle-transducer simulation (batch-to-entry transfer; Proposition [\[prop:oracle-lattice-transfer\]](#prop:oracle-lattice-transfer){reference-type="ref" reference="prop:oracle-lattice-transfer"}).
+
 ## Model Contract and Regime Tags {#sec:model-contract}
 
 All theorem statements in this paper are typed by the following model contract:
@@ -286,7 +298,7 @@ This tagging is a claim-typing convention: each strong statement is attached to 
 
 ::: theorem
 []{#thm:regime-coverage label="thm:regime-coverage"} Let $$\mathcal{R}_{\mathrm{static}} =
-\{\text{[E]},\ \text{[S+ETH]},\ \text{[Q\_fin:Opt]},\ \text{[Q\_bool:value-entry]},\ \text{[Q\_bool:state-batch]}\}.$$ For each declared regime in $\mathcal{R}_{\mathrm{static}}$, the paper has a theorem-level mechanized core claim. Equivalently, regime typing is complete over the declared static family. *(Lean: `ClaimClosure.declaredRegimeFamily_complete`, `ClaimClosure.regime_core_claim_proved`.)*
+\{\text{[E]},\ \text{[S+ETH]},\ \text{[Q\_fin:Opt]},\ \text{[Q\_bool:value-entry]},\ \text{[Q\_bool:state-batch]}\}.$$ For each declared regime in $\mathcal{R}_{\mathrm{static}}$, the paper has a theorem-level mechanized core claim. Equivalently, regime typing is complete over the declared static family.
 :::
 
 #### Scope Lattice (typed classes and transfer boundary).
@@ -334,7 +346,7 @@ This tagging is a claim-typing convention: each strong statement is attached to 
 
 4.  no post-decision state update relevant to the objective.
 
-Then the induced optimization problem is exactly the static decision problem of Definition [\[def:decision-problem\]](#def:decision-problem){reference-type="ref" reference="def:decision-problem"}, and coordinate sufficiency in the sequential formulation is equivalent to Definition [\[def:sufficient\]](#def:sufficient){reference-type="ref" reference="def:sufficient"}. *(Lean bridge core: `ClaimClosure.one_step_bridge`)*
+Then the induced optimization problem is exactly the static decision problem of Definition [\[def:decision-problem\]](#def:decision-problem){reference-type="ref" reference="def:decision-problem"}, and coordinate sufficiency in the sequential formulation is equivalent to Definition [\[def:sufficient\]](#def:sufficient){reference-type="ref" reference="def:sufficient"}.
 :::
 
 ::: proof
@@ -342,7 +354,7 @@ Then the induced optimization problem is exactly the static decision problem of 
 :::
 
 ::: proposition
-[]{#prop:bridge-transfer-scope label="prop:bridge-transfer-scope"} Under conditions (1)--(4), any sufficiency statement formulated over Definition [\[def:sufficient\]](#def:sufficient){reference-type="ref" reference="def:sufficient"} is equivalent between the adjacent sequential formulation and the static model. *(Lean: `ClaimClosure.one_step_bridge`)*
+[]{#prop:bridge-transfer-scope label="prop:bridge-transfer-scope"} Under conditions (1)--(4), any sufficiency statement formulated over Definition [\[def:sufficient\]](#def:sufficient){reference-type="ref" reference="def:sufficient"} is equivalent between the adjacent sequential formulation and the static model.
 :::
 
 ::: proof
@@ -356,19 +368,19 @@ Beyond Proposition [\[prop:one-step-bridge\]](#prop:one-step-bridge){reference-
 :::
 
 ::: proposition
-[]{#prop:bridge-failure-horizon label="prop:bridge-failure-horizon"} Dropping the one-step condition can break sufficiency transfer: there exists a two-step objective where sufficiency in the immediate-utility static projection does not match sufficiency in the two-step objective. *(Lean: `ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`, `ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`.)*
+[]{#prop:bridge-failure-horizon label="prop:bridge-failure-horizon"} Dropping the one-step condition can break sufficiency transfer: there exists a two-step objective where sufficiency in the immediate-utility static projection does not match sufficiency in the two-step objective.
 :::
 
 ::: proposition
-[]{#prop:bridge-failure-stochastic label="prop:bridge-failure-stochastic"} If optimization is performed against a stochastic criterion not equal to deterministic utility maximization, bridge transfer to Definition [\[def:decision-problem\]](#def:decision-problem){reference-type="ref" reference="def:decision-problem"} can fail even when an expected-utility projection is available. *(Lean: `ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`.)*
+[]{#prop:bridge-failure-stochastic label="prop:bridge-failure-stochastic"} If optimization is performed against a stochastic criterion not equal to deterministic utility maximization, bridge transfer to Definition [\[def:decision-problem\]](#def:decision-problem){reference-type="ref" reference="def:decision-problem"} can fail even when an expected-utility projection is available.
 :::
 
 ::: proposition
-[]{#prop:bridge-failure-transition label="prop:bridge-failure-transition"} If post-decision transition effects are objective-relevant, bridge transfer to the static one-step class can fail. *(Lean: `ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`.)*
+[]{#prop:bridge-failure-transition label="prop:bridge-failure-transition"} If post-decision transition effects are objective-relevant, bridge transfer to the static one-step class can fail.
 :::
 
 ::: theorem
-[]{#thm:bridge-boundary-represented label="thm:bridge-boundary-represented"} Within the represented adjacent family $$\{\text{one-step deterministic},\ \text{horizon-extended},\ \text{stochastic-criterion},\ \text{transition-coupled}\},$$ direct transfer of static sufficiency claims is licensed if and only if the class is one-step deterministic. Each represented non-one-step class has an explicit mechanized bridge-failure witness. *(Lean: `ClaimClosure.bridge_transfer_iff_one_step_class`, `ClaimClosure.bridge_failure_witness_non_one_step`, `ClaimClosure.bridge_boundary_represented_family`.)*
+[]{#thm:bridge-boundary-represented label="thm:bridge-boundary-represented"} Within the represented adjacent family $$\{\text{one-step deterministic},\ \text{horizon-extended},\ \text{stochastic-criterion},\ \text{transition-coupled}\},$$ direct transfer of static sufficiency claims is licensed if and only if the class is one-step deterministic. Each represented non-one-step class has an explicit mechanized bridge-failure witness.
 :::
 
 ::: definition
@@ -380,10 +392,10 @@ Beyond Proposition [\[prop:one-step-bridge\]](#prop:one-step-bridge){reference-
 :::
 
 ::: proposition
-[]{#prop:snapshot-process-typing label="prop:snapshot-process-typing"} In the represented adjacent family, direct transfer of static sufficiency claims is licensed if and only if the agent is typed as an *agent snapshot*. Every process-typed represented class has an explicit mechanized bridge-failure witness. *(Lean: `ClaimClosure.agent_transfer_licensed_iff_snapshot`, `ClaimClosure.process_bridge_failure_witness`, `ClaimClosure.snapshot_vs_process_typed_boundary`.)*
+[]{#prop:snapshot-process-typing label="prop:snapshot-process-typing"} In the represented adjacent family, direct transfer of static sufficiency claims is licensed if and only if the agent is typed as an *agent snapshot*. Every process-typed represented class has an explicit mechanized bridge-failure witness.
 :::
 
-Operationally: a trained model evaluated with fixed parameters during inference is an agent snapshot for this typing; once parameters or transition-relevant internals are updated online, the object is process-typed and transfer from static sufficiency theorems is blocked unless the one-step bridge conditions are re-established.
+Operationally: a trained model evaluated with fixed parameters during inference is an agent snapshot for this typing; once parameters or transition-relevant internals are updated online, the object is process-typed and transfer from static sufficiency theorems is blocked unless the one-step bridge conditions are re-established. \[D:prop:snapshot-process-typing; R:\[R=represented adjacent class\]\]
 
 # Interpretive Foundations: Hardness and Solver Claims {#sec:interpretive-foundations}
 
@@ -413,8 +425,6 @@ This paper keeps the decision question fixed and varies the encoding regime expl
 3.  a regime-indexed mechanized core claim for every declared regime; and
 
 4.  declared-family exhaustiveness in the typed regime algebra.
-
-*(Lean package: `ClaimClosure.typed_static_class_completeness`.)*
 :::
 
 ## Solver Integrity and Regime Competence
@@ -460,7 +470,7 @@ The output $\mathsf{ABSTAIN}$ (equivalently, $\mathsf{UNKNOWN}$) is first-class 
 ::: proposition
 []{#prop:zero-epsilon-competence label="prop:zero-epsilon-competence"} If $\mathcal{R}_0=\mathcal{R}$, then $$\text{$\varepsilon$-competent at }\varepsilon=0
 \iff
-\text{competent for exact relation }\mathcal{R}.$$ Moreover, $\varepsilon$-competence implies integrity for the corresponding $\mathcal{R}_\varepsilon$. *(Lean: `IntegrityCompetence.zero_epsilon_competence_iff_exact`, `IntegrityCompetence.epsilon_competence_implies_integrity`.)*
+\text{competent for exact relation }\mathcal{R}.$$ Moreover, $\varepsilon$-competence implies integrity for the corresponding $\mathcal{R}_\varepsilon$.
 :::
 
 ::: proposition
@@ -490,19 +500,27 @@ The output $\mathsf{ABSTAIN}$ (equivalently, $\mathsf{UNKNOWN}$) is first-class 
 
 -   if $I=1$ and $(A,C)\in\{(0,0),(0,1),(1,1)\}$: irrational for the same verified-cost objective.
 
-Hence, in the integrity-preserving plane ($I=1$), exactly one cell is rational and three are irrational. *(Lean: `IntegrityCompetence.overModelVerdict_rational_iff`, `IntegrityCompetence.admissible_matrix_counts`, `IntegrityCompetence.admissible_irrational_strictly_more_than_rational`)*
+Hence, in the integrity-preserving plane ($I=1$), exactly one cell is rational and three are irrational.
 :::
 
-This separation plus Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"} is load-bearing for the regime-conditional trilemma used later: if exact competence is blocked by hardness in a declared regime after an attempted exact procedure, integrity forces one of three responses---abstain, weaken guarantees, or change regime assumptions.
+This separation plus Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"} is load-bearing for the regime-conditional trilemma used later: if exact competence is blocked by hardness in a declared regime after an attempted exact procedure, integrity forces one of three responses---abstain, weaken guarantees, or change regime assumptions. \[D:prop:attempted-competence-matrix; R:\[R=active declared regime\]\]
 
 #### Mechanized status.
 
 This separation is machine-checked in `DecisionQuotient/IntegrityCompetence.lean` via: `competence_implies_integrity` and `integrity_not_competent_of_nonempty_scope`; the attempted-competence matrix is mechanized via `overModelVerdict_rational_iff`, `admissible_matrix_counts`, and `admissible_irrational_strictly_more_than_rational`.
 
+::: proposition
+[]{#prop:integrity-resource-bound label="prop:integrity-resource-bound"} Let $\Gamma$ be a declared regime whose in-scope family includes all instances of SUFFICIENCY-CHECK and whose declared resource bound is polynomial in the encoding length. If $P\neq coNP$, then no certifying solver is simultaneously integrity-preserving and competent on $\Gamma$ for exact sufficiency. Equivalently, for every integrity-preserving solver, at least one of the competence conjuncts must fail on $\Gamma$: either full non-abstaining coverage fails or the declared budget bound fails.
+:::
+
+::: proof
+*Proof.* By Definition [\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"}, competence on $\Gamma$ requires integrity, full in-scope coverage, and budget compliance. Under the coNP-hardness transfer for SUFFICIENCY-CHECK (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}), universal competence on this scope would induce a polynomial-time collapse to $P=coNP$. Therefore, under $P\neq coNP$, the full competence predicate cannot hold. Since integrity alone is satisfiable (Proposition [\[prop:integrity-competence-separation\]](#prop:integrity-competence-separation){reference-type="ref" reference="prop:integrity-competence-separation"}, via always-abstain), the obstruction is exactly competence coverage/budget under the declared regime. \[D:thm:sufficiency-conp, prop:integrity-competence-separation, prop:integrity-resource-bound; R:\[R=active declared regime\]\] ◻
+:::
+
 
 # Computational Complexity of Decision-Relevant Uncertainty {#sec:hardness}
 
-This section establishes the computational complexity of determining which state coordinates are decision-relevant. We prove three main results:
+This section establishes the computational complexity of information sufficiency---formalized as coordinate sufficiency---for an arbitrary decision problem $\mathcal{D}$ with factored state space. Because the problems below are parameterized by $\mathcal{D}$, and the $(A, S, U)$ tuple captures any problem with choices under structured information (Remark [\[rem:universality\]](#rem:universality){reference-type="ref" reference="rem:universality"}), the hardness results are universal: they apply to every problem with coordinate structure, not to a specific problem domain. We prove three main results:
 
 1.  **SUFFICIENCY-CHECK** is coNP-complete
 
@@ -514,7 +532,7 @@ Under the model contract of Section [\[sec:model-contract\]](#sec:model-contrac
 
 #### Reading convention for this section.
 
-Each hardness theorem below is paired with a recovery boundary for the same decision question: when structural-access assumptions in Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} hold, polynomial-time exact procedures are recovered; when they fail in \[S\], the stated hardness applies. *(Lean map handles: `ClaimClosure.sufficiency_conp_complete_conditional`, `ClaimClosure.minsuff_conp_complete_conditional`, `ClaimClosure.anchor_sigma2p_complete_conditional`, `ClaimClosure.tractable_subcases_conditional`.)*
+Each hardness theorem below is paired with a recovery boundary for the same decision question: when structural-access assumptions in Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} hold, polynomial-time exact procedures are recovered; when they fail in \[S\], the stated hardness applies.
 
 ## Problem Definitions
 
@@ -553,7 +571,7 @@ A coordinate set $I \subseteq \{1, \ldots, n\}$ is *sufficient* if: $$\forall s,
 ## Hardness of SUFFICIENCY-CHECK
 
 ::: theorem
-[]{#thm:sufficiency-conp label="thm:sufficiency-conp"} SUFFICIENCY-CHECK is coNP-complete [@cook1971complexity; @karp1972reducibility]. *(Lean handles: `ClaimClosure.sufficiency_conp_reduction_core`, `ClaimClosure.sufficiency_conp_complete_conditional`, `tautology_iff_sufficient`.)*
+[]{#thm:sufficiency-conp label="thm:sufficiency-conp"} SUFFICIENCY-CHECK is coNP-complete [@cook1971complexity; @karp1972reducibility].
 :::
 
 ::: center
@@ -605,7 +623,7 @@ For $\text{Opt}$ to be constant, $\varphi(a)$ must be true for all assignments $
 
 #### Immediate recovery boundary (SUFFICIENCY-CHECK).
 
-Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"} is the \[S\] general-case hardness statement. For the same sufficiency relation, Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} gives polynomial-time recovery under explicit-state, separable, and tree-structured regimes. *(Lean bridge handles: `ClaimClosure.sufficiency_conp_complete_conditional`, `ClaimClosure.tractable_subcases_conditional`, `ClaimClosure.tractable_bounded_core`, `ClaimClosure.tractable_separable_core`, `ClaimClosure.tractable_tree_core`.)*
+Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"} is the \[S\] general-case hardness statement. For the same sufficiency relation, Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} gives polynomial-time recovery under explicit-state, separable, and tree-structured regimes.
 
 #### Mechanized strengthening (all coordinates relevant).
 
@@ -616,7 +634,7 @@ We formalized a strengthened reduction in Lean 4: given a Boolean formula $\varp
 ## Complexity of MINIMUM-SUFFICIENT-SET
 
 ::: theorem
-[]{#thm:minsuff-conp label="thm:minsuff-conp"} MINIMUM-SUFFICIENT-SET is coNP-complete. *(Lean handles: `ClaimClosure.minsuff_collapse_core`, `ClaimClosure.minsuff_conp_complete_conditional`.)*
+[]{#thm:minsuff-conp label="thm:minsuff-conp"} MINIMUM-SUFFICIENT-SET is coNP-complete.
 :::
 
 ::: proof
@@ -633,7 +651,7 @@ We formalized a strengthened reduction in Lean 4: given a Boolean formula $\varp
 
 #### Immediate recovery boundary (MINIMUM-SUFFICIENT-SET).
 
-Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"} pairs with Theorem [\[thm:minsuff-collapse\]](#thm:minsuff-collapse){reference-type="ref" reference="thm:minsuff-collapse"}: exact minimization complexity is governed by relevance-cardinality once the collapse is applied. Recovery then depends on computing relevance efficiently, with structured-access assumptions from Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} giving the corresponding route for the underlying sufficiency computations. *(Lean bridge handles: `ClaimClosure.minsuff_conp_complete_conditional`, `ClaimClosure.minsuff_collapse_core`, `ClaimClosure.minsuff_collapse_to_conp_conditional`, `Sigma2PHardness.min_sufficient_set_iff_relevant_card`, `ClaimClosure.tractable_subcases_conditional`.)*
+Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"} pairs with Theorem [\[thm:minsuff-collapse\]](#thm:minsuff-collapse){reference-type="ref" reference="thm:minsuff-collapse"}: exact minimization complexity is governed by relevance-cardinality once the collapse is applied. Recovery then depends on computing relevance efficiently, with structured-access assumptions from Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} giving the corresponding route for the underlying sufficiency computations.
 
 ## Anchor Sufficiency (Fixed Coordinates)
 
@@ -645,7 +663,7 @@ We also formalize a strengthened variant that fixes the coordinate set and asks 
 :::
 
 ::: theorem
-[]{#thm:anchor-sigma2p label="thm:anchor-sigma2p"} ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete [@stockmeyer1976polynomial] (already for Boolean coordinate spaces). *(Lean handles: `ClaimClosure.anchor_sigma2p_reduction_core`, `ClaimClosure.anchor_sigma2p_complete_conditional`, `anchor_sufficiency_sigma2p`.)*
+[]{#thm:anchor-sigma2p label="thm:anchor-sigma2p"} ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete [@stockmeyer1976polynomial] (already for Boolean coordinate spaces).
 :::
 
 ::: proof
@@ -682,7 +700,7 @@ Hence the subcube for this $x$ is not constant. Thus an anchor assignment exists
 
 #### Immediate boundary statement (ANCHOR-SUFFICIENCY).
 
-Theorem [\[thm:anchor-sigma2p\]](#thm:anchor-sigma2p){reference-type="ref" reference="thm:anchor-sigma2p"} remains a second-level hardness statement in the anchored formulation; unlike MINIMUM-SUFFICIENT-SET, no general collapse to relevance counting is established here, so the corresponding tractability status remains open in this model. *(Lean anchor handles: `ClaimClosure.anchor_sigma2p_reduction_core`, `ClaimClosure.anchor_sigma2p_complete_conditional`, `anchor_sufficiency_sigma2p`.)*
+Theorem [\[thm:anchor-sigma2p\]](#thm:anchor-sigma2p){reference-type="ref" reference="thm:anchor-sigma2p"} remains a second-level hardness statement in the anchored formulation; unlike MINIMUM-SUFFICIENT-SET, no general collapse to relevance counting is established here, so the corresponding tractability status remains open in this model.
 
 ## Tractable Subcases
 
@@ -703,14 +721,14 @@ When $U(a, s) = w_a \cdot s$ for weight vectors $w_a \in \mathbb{Q}^n$, MINIMUM-
 ## Implications
 
 ::: corollary
-Under the succinct encoding, exact minimization of sufficient coordinate sets is coNP-hard via the $k=0$ case, and fixed-anchor minimization is $\Sigma_2^P$-complete. *(Lean handles: `ClaimClosure.minsuff_conp_complete_conditional`, `ClaimClosure.anchor_sigma2p_complete_conditional`)*
+Under the succinct encoding, exact minimization of sufficient coordinate sets is coNP-hard via the $k=0$ case, and fixed-anchor minimization is $\Sigma_2^P$-complete.
 :::
 
 ::: proof
 *Proof.* The $k=0$ case of MINIMUM-SUFFICIENT-SET is SUFFICIENCY-CHECK (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}), giving coNP-hardness for exact minimization. The fixed-anchor variant is exactly Theorem [\[thm:anchor-sigma2p\]](#thm:anchor-sigma2p){reference-type="ref" reference="thm:anchor-sigma2p"}. ◻
 :::
 
-The modeling budget for deciding what to model is therefore a computationally constrained resource under this encoding.
+The modeling budget for deciding what to model is therefore a computationally constrained resource under this encoding. \[D:thm:sufficiency-conp, thm:anchor-sigma2p; R:\[S\]\]
 
 ## The succinct--minimal gap and physical agents {#sec:neuro-correspondence}
 
@@ -722,16 +740,16 @@ Let $C$ be a succinct circuit computing a utility function $U$, and let $C^*$ be
 
 ::: proposition
 []{#prop:representation-gap label="prop:representation-gap"} In the Boolean-coordinate model, let $R_{\mathrm{rel}}=\texttt{relevantFinset}(dp)$ and define $$\varepsilon(I)\;:=\;|I\setminus R_{\mathrm{rel}}| + |R_{\mathrm{rel}}\setminus I|.$$ Then: $$\varepsilon(I)=0 \iff I=R_{\mathrm{rel}}
-\iff I \text{ is minimal sufficient}.$$ *(Lean: `Sigma2PHardness.representationGap`, `Sigma2PHardness.representationGap_eq_zero_iff`, `Sigma2PHardness.representationGap_zero_iff_minimalSufficient`.)*
+\iff I \text{ is minimal sufficient}.$$
 :::
 
 The results of this paper give $\varepsilon$ formal complexity consequences. By Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"}, determining the minimal sufficient coordinate set is coNP-complete under the succinct encoding. By Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}, under ETH there exist succinct instances requiring $2^{\Omega(n)}$ time to verify sufficiency. In the formal Boolean-coordinate collapse model, size-bounded $\varepsilon=0$ search is exactly the relevance-cardinality predicate (*Lean:* `Sigma2PHardness.min_representationGap_zero_iff_relevant_card`). Together: for an agent encoded as a succinct circuit, the worst-case cost of determining whether its own coordinate attention set is minimal is exponential in the number of input coordinates (under ETH). The gap $\varepsilon$ is not merely unnamed; it is *computationally irreducible*: no polynomial-time algorithm solves all succinct instances (assuming $\mathrm{P} \neq coNP$), and the hard instance family requires $2^{\Omega(n)}$ time.
 
 #### Physical agents as circuits.
 
-Any physical agent that selects actions based on sensory state can be modeled, in the static snapshot, as a circuit: sensory inputs are coordinates $X_1, \ldots, X_n$; the agent's internal computation maps states to actions; and the quality of that mapping is measured by a utility function $U$. The explicit-state encoding (truth table) of this mapping has size exponential in the number of sensory dimensions. No physical agent can store it. Every physical agent is therefore a succinct encoding, a circuit whose size is bounded by physical resources (neurons, synapses, transistors, parameters) rather than by the size of the state space it navigates.
+Any physical agent that selects actions based on sensory state can be modeled, in the static snapshot, as a circuit: sensory inputs are coordinates $X_1, \ldots, X_n$; the agent's internal computation maps states to actions; and the quality of that mapping is measured by a utility function $U$. \[D:prop:snapshot-process-typing, prop:bridge-transfer-scope; R:\[bridge-admissible snapshot\]\] The explicit-state encoding (truth table) of this mapping has size exponential in the number of sensory dimensions. No physical agent can store it. \[D:thm:dichotomy; R:\[E\] vs \[S+ETH\]\] Every physical agent is therefore a succinct encoding, a circuit whose size is bounded by physical resources (neurons, synapses, transistors, parameters) rather than by the size of the state space it navigates. \[D:thm:dichotomy; R:\[S\]\]
 
-This is not a metaphor. A biological nervous system is a feedforward or recurrent circuit that takes sensory state as input and produces motor commands as output. A trained neural network is a parameterized circuit. In both cases, the agent *is* a succinct encoding of a utility-to-action mapping, and the question "is this agent attending to the right inputs?" is exactly SUFFICIENCY-CHECK under the succinct encoding. The compression that makes a circuit physically realizable---polynomial size rather than exponential---is the same compression that makes self-verification exponentially costly in the worst case: the state space the circuit compressed away is precisely the domain that must be exhaustively checked to certify sufficiency.
+This is not a metaphor. A biological nervous system is a feedforward or recurrent circuit that takes sensory state as input and produces motor commands as output. \[D:prop:snapshot-process-typing; R:\[represented adjacent class\]\] A trained neural network is a parameterized circuit. \[D:prop:snapshot-process-typing; R:\[represented adjacent class\]\] In both cases, the agent *is* a succinct encoding of a utility-to-action mapping, and the question "is this agent attending to the right inputs?" is exactly SUFFICIENCY-CHECK under the succinct encoding. \[D:thm:config-reduction, thm:sufficiency-conp; R:\[S\]\] The compression that makes a circuit physically realizable---polynomial size rather than exponential---is the same compression that makes self-verification exponentially costly in the worst case: the state space the circuit compressed away is precisely the domain that must be exhaustively checked to certify sufficiency. \[D:thm:dichotomy, prop:query-regime-obstruction; R:\[S+ETH\],\[Q_fin\]\]
 
 #### The simplicity tax as $\varepsilon$.
 
@@ -739,16 +757,16 @@ The simplicity tax (Definition [\[def:simplicity-tax\]](#def:simplicity-tax){re
 
 #### Consequences for learned circuits.
 
-Large language models and deep networks are succinct circuits with $\mathrm{poly}(n)$ parameters. Mechanistic interpretability asks which internal components (attention heads, neurons, layers) are necessary for a given capability; this is SUFFICIENCY-CHECK applied to the circuit's internal coordinate structure. Pruning research asks for the minimal subcircuit that preserves performance; this is MINIMUM-SUFFICIENT-SET. The results of this paper imply that these questions are coNP-hard in the worst case under succinct encoding. Empirical progress on interpretability and pruning therefore depends on exploiting the structural properties of specific trained circuits (analogous to the tractable subcases of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}), not on solving the general problem.
+Large language models and deep networks are succinct circuits with $\mathrm{poly}(n)$ parameters. \[D:thm:dichotomy; R:\[S\]\] Mechanistic interpretability asks which internal components (attention heads, neurons, layers) are necessary for a given capability; this is SUFFICIENCY-CHECK applied to the circuit's internal coordinate structure. Pruning research asks for the minimal subcircuit that preserves performance; this is MINIMUM-SUFFICIENT-SET. The results of this paper imply that these questions are coNP-hard in the worst case under succinct encoding. \[D:thm:sufficiency-conp, thm:minsuff-conp; R:\[S\]\] Empirical progress on interpretability and pruning therefore depends on exploiting the structural properties of specific trained circuits (analogous to the tractable subcases of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}), not on solving the general problem. \[D:thm:sufficiency-conp, thm:tractable; R:\[S\] vs \[tractable regimes\]\]
 
 #### Scope and caveats.
 
-The formal results above apply to the static, deterministic model fixed by C1--C4 (Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"}). Biological neural systems add noise, temporal dynamics, and synaptic plasticity; trained networks add stochastic optimization and distribution shift. These factors may alter empirical tractability relative to the static worst-case bounds. The bridge conditions of Proposition [\[prop:one-step-bridge\]](#prop:one-step-bridge){reference-type="ref" reference="prop:one-step-bridge"} delineate when static sufficiency results transfer to sequential settings; beyond those conditions, the governing complexity objects change (Propositions [\[prop:bridge-failure-horizon\]](#prop:bridge-failure-horizon){reference-type="ref" reference="prop:bridge-failure-horizon"}--[\[prop:bridge-failure-transition\]](#prop:bridge-failure-transition){reference-type="ref" reference="prop:bridge-failure-transition"}). The claims in this subsection are therefore regime-typed consequences of the formal results, not universal assertions about all possible agent architectures.
+The formal results above apply to the static, deterministic model fixed by C1--C4 (Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"}). Biological neural systems add noise, temporal dynamics, and synaptic plasticity; trained networks add stochastic optimization and distribution shift. These factors may alter empirical tractability relative to the static worst-case bounds. The bridge conditions of Proposition [\[prop:one-step-bridge\]](#prop:one-step-bridge){reference-type="ref" reference="prop:one-step-bridge"} delineate when static sufficiency results transfer to sequential settings; beyond those conditions, the governing complexity objects change (Propositions [\[prop:bridge-failure-horizon\]](#prop:bridge-failure-horizon){reference-type="ref" reference="prop:bridge-failure-horizon"}--[\[prop:bridge-failure-transition\]](#prop:bridge-failure-transition){reference-type="ref" reference="prop:bridge-failure-transition"}). The claims in this subsection are therefore regime-typed consequences of the formal results, not universal assertions about all possible agent architectures. \[D:prop:one-step-bridge, thm:bridge-boundary-represented, prop:snapshot-process-typing; R:\[represented adjacent class\]\]
 
 ## Quantifier Collapse for MINIMUM-SUFFICIENT-SET
 
 ::: theorem
-[]{#thm:minsuff-collapse label="thm:minsuff-collapse"} The apparent second-level predicate $$\exists I \, (|I| \leq k) \; \forall s,s' \in S:\; s_I = s'_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s')$$ is equivalent to the coNP predicate $|\text{Relevant}| \le k$, where $$\text{Relevant} = \{i : \exists s,s'.\; s \text{ differs from } s' \text{ only at } i \text{ and } \operatorname{Opt}(s)\neq\operatorname{Opt}(s')\}.$$ Consequently, MINIMUM-SUFFICIENT-SET is governed by coNP certificates rather than a genuine $\Sigma_2^P$ alternation. *(Lean handles: `ClaimClosure.minsuff_collapse_core`, `ClaimClosure.minsuff_collapse_to_conp_conditional`, `Sigma2PHardness.min_sufficient_set_iff_relevant_card`.)*
+[]{#thm:minsuff-collapse label="thm:minsuff-collapse"} The apparent second-level predicate $$\exists I \, (|I| \leq k) \; \forall s,s' \in S:\; s_I = s'_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s')$$ is equivalent to the coNP predicate $|\text{Relevant}| \le k$, where $$\text{Relevant} = \{i : \exists s,s'.\; s \text{ differs from } s' \text{ only at } i \text{ and } \operatorname{Opt}(s)\neq\operatorname{Opt}(s')\}.$$ Consequently, MINIMUM-SUFFICIENT-SET is governed by coNP certificates rather than a genuine $\Sigma_2^P$ alternation.
 :::
 
 ::: proof
@@ -770,7 +788,7 @@ The hardness results of Section [\[sec:hardness\]](#sec:hardness){reference-typ
 
 #### Model note.
 
-Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} has Part 1 in \[E\] (time polynomial in $|S|$) and Part 2 in \[S+ETH\] (time exponential in $n$). Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} is \[Q_fin\] (finite-state Opt-oracle core), while Propositions [\[prop:query-value-entry-lb\]](#prop:query-value-entry-lb){reference-type="ref" reference="prop:query-value-entry-lb"} and [\[prop:query-state-batch-lb\]](#prop:query-state-batch-lb){reference-type="ref" reference="prop:query-state-batch-lb"} are \[Q_bool\] interface refinements (value-entry and state-batch). These regimes are defined in Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"} and are not directly comparable as functions of one numeric input-length parameter.
+Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} has Part 1 in \[E\] (time polynomial in $|S|$) and Part 2 in \[S+ETH\] (time exponential in $n$). Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} is \[Q_fin\] (finite-state Opt-oracle core), while Propositions [\[prop:query-value-entry-lb\]](#prop:query-value-entry-lb){reference-type="ref" reference="prop:query-value-entry-lb"} and [\[prop:query-state-batch-lb\]](#prop:query-state-batch-lb){reference-type="ref" reference="prop:query-state-batch-lb"} are \[Q_bool\] interface refinements (value-entry and state-batch). Relative to Definition [\[def:regime-simulation\]](#def:regime-simulation){reference-type="ref" reference="def:regime-simulation"}, Propositions [\[prop:query-subproblem-transfer\]](#prop:query-subproblem-transfer){reference-type="ref" reference="prop:query-subproblem-transfer"} and [\[prop:oracle-lattice-transfer\]](#prop:oracle-lattice-transfer){reference-type="ref" reference="prop:oracle-lattice-transfer"} are explicit simulation-transfer instances. The \[E\] vs \[S+ETH\] split in Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} is a same-question encoding/cost-model separation, not a bidirectional simulation claim between those regimes. These regimes are defined in Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"} and are not directly comparable as functions of one numeric input-length parameter.
 
 ::: theorem
 []{#thm:dichotomy label="thm:dichotomy"} Let $\mathcal{D} = (A, X_1, \ldots, X_n, U)$ be a decision problem with $|S| = N$ states. Let $k^*$ be the size of the minimal sufficient set.
@@ -778,8 +796,6 @@ Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm
 1.  **\[E\] Explicit-state upper bound:** Under the explicit-state encoding, SUFFICIENCY-CHECK is solvable in time polynomial in $N$ (e.g. $O(N^2|A|)$).
 
 2.  **\[S+ETH\] Succinct lower bound (worst case):** Assuming ETH, there exists a family of succinctly encoded instances with $n$ coordinates and minimal sufficient set size $k^* = n$ such that SUFFICIENCY-CHECK requires time $2^{\Omega(n)}$.
-
-*(Lean handles: `ClaimClosure.dichotomy_conditional`, `ClaimClosure.explicit_state_upper_core`, `ClaimClosure.hard_family_all_coords_core`.)*
 :::
 
 ::: proof
@@ -813,7 +829,7 @@ For Boolean coordinate spaces ($N = 2^n$), the explicit-state bound is polynomia
 
 -   $\emptyset$ is not sufficient for $\mathcal{D}_{\mathrm{no}}$.
 
-Consequently, no deterministic query procedure using fewer than $|S|$ state queries can solve SUFFICIENCY-CHECK on all such instances; the worst-case query complexity is $\Omega(|S|)$. *(Lean: `ClaimClosure.query_obstruction_finite_state_core`, `emptySufficiency_query_indistinguishable_pair_finite`, `spikeFinite_empty_not_sufficient`.)*
+Consequently, no deterministic query procedure using fewer than $|S|$ state queries can solve SUFFICIENCY-CHECK on all such instances; the worst-case query complexity is $\Omega(|S|)$.
 :::
 
 ::: proof
@@ -821,11 +837,11 @@ Consequently, no deterministic query procedure using fewer than $|S|$ state quer
 :::
 
 ::: corollary
-[]{#cor:query-obstruction-bool label="cor:query-obstruction-bool"} In the Boolean-coordinate state space $S=\{0,1\}^n$, Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} yields the familiar $\Omega(2^n)$ worst-case query lower bound for Opt-oracle access. *(Lean wrapper: `ClaimClosure.query_obstruction_boolean_corollary`; core: `emptySufficiency_query_indistinguishable_pair`.)*
+[]{#cor:query-obstruction-bool label="cor:query-obstruction-bool"} In the Boolean-coordinate state space $S=\{0,1\}^n$, Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} yields the familiar $\Omega(2^n)$ worst-case query lower bound for Opt-oracle access.
 :::
 
 ::: proposition
-[]{#prop:query-value-entry-lb label="prop:query-value-entry-lb"} In the mechanized Boolean value-entry query submodel \[Q_bool\], for any deterministic procedure using fewer than $2^n$ value-entry queries $(a,s)\mapsto U(a,s)$, there exist two queried-value-indistinguishable instances with opposite truth values for SUFFICIENCY-CHECK on the $I=\emptyset$ subproblem. Therefore worst-case value-entry query complexity is also $\Omega(2^n)$. *(Lean: `emptySufficiency_valueEntry_indistinguishable_pair`, `touchedStates_card_le_query_card`.)*
+[]{#prop:query-value-entry-lb label="prop:query-value-entry-lb"} In the mechanized Boolean value-entry query submodel \[Q_bool\], for any deterministic procedure using fewer than $2^n$ value-entry queries $(a,s)\mapsto U(a,s)$, there exist two queried-value-indistinguishable instances with opposite truth values for SUFFICIENCY-CHECK on the $I=\emptyset$ subproblem. Therefore worst-case value-entry query complexity is also $\Omega(2^n)$.
 :::
 
 ::: proof
@@ -833,39 +849,43 @@ Consequently, no deterministic query procedure using fewer than $|S|$ state quer
 :::
 
 ::: proposition
-[]{#prop:query-subproblem-transfer label="prop:query-subproblem-transfer"} If every full-problem solver induces a solver for a fixed subproblem, then any lower bound for that subproblem lifts to the full problem. *(Lean closure: `ClaimClosure.subproblem_hardness_lifts_to_full`.)*
+[]{#prop:query-subproblem-transfer label="prop:query-subproblem-transfer"} If every full-problem solver induces a solver for a fixed subproblem, then any lower bound for that subproblem lifts to the full problem.
+:::
+
+This is the restriction-map instance of Definition [\[def:regime-simulation\]](#def:regime-simulation){reference-type="ref" reference="def:regime-simulation"}: a solver for the full regime induces one for the restricted subproblem regime, so lower bounds transfer.
+
+::: proposition
+[]{#prop:query-randomized-robustness label="prop:query-randomized-robustness"} In \[Q_bool\], for any query set with cardinality $<2^n$, the indistinguishable yes/no pair from Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} forces one decoding error *per random seed* for any seed-indexed decoder from oracle transcripts. Consequently, finite-support randomization does not remove the obstruction: averaging preserves a constant error floor on the hard pair.
 :::
 
 ::: proposition
-[]{#prop:query-randomized-robustness label="prop:query-randomized-robustness"} In \[Q_bool\], for any query set with cardinality $<2^n$, the indistinguishable yes/no pair from Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} forces one decoding error *per random seed* for any seed-indexed decoder from oracle transcripts. Consequently, finite-support randomization does not remove the obstruction: averaging preserves a constant error floor on the hard pair. *(Lean: `indistinguishable_pair_forces_one_error`, `indistinguishable_pair_forces_one_error_per_seed`, `decode_error_sum_two_labels`.)*
+[]{#prop:query-randomized-weighted label="prop:query-randomized-weighted"} For any finite-support seed weighting $\mu$, the same hard pair satisfies a weighted identity: the weighted sum of yes-error and no-error equals total seed weight. Hence randomization cannot collapse both errors simultaneously.
 :::
 
 ::: proposition
-[]{#prop:query-randomized-weighted label="prop:query-randomized-weighted"} For any finite-support seed weighting $\mu$, the same hard pair satisfies a weighted identity: the weighted sum of yes-error and no-error equals total seed weight. Hence randomization cannot collapse both errors simultaneously. *(Lean: `weighted_seed_error_identity`, `weighted_seed_half_floor`.)*
+[]{#prop:query-state-batch-lb label="prop:query-state-batch-lb"} In \[Q_bool\], the same $\Omega(2^n)$ lower bound holds for a state-batch oracle that returns the full Boolean-action utility tuple at each queried state.
 :::
 
 ::: proposition
-[]{#prop:query-state-batch-lb label="prop:query-state-batch-lb"} In \[Q_bool\], the same $\Omega(2^n)$ lower bound holds for a state-batch oracle that returns the full Boolean-action utility tuple at each queried state. *(Lean: `emptySufficiency_stateBatch_indistinguishable_pair`, `stateBatchView_eq_if_hidden_untouched`.)*
+[]{#prop:query-finite-state-generalization label="prop:query-finite-state-generalization"} The empty-subproblem indistinguishability lower-bound core extends from Boolean-vector state spaces to any finite state type with at least two states.
 :::
 
 ::: proposition
-[]{#prop:query-finite-state-generalization label="prop:query-finite-state-generalization"} The empty-subproblem indistinguishability lower-bound core extends from Boolean-vector state spaces to any finite state type with at least two states. *(Lean: `emptySufficiency_query_indistinguishable_pair_finite`, `spikeFinite_empty_not_sufficient`.)*
+[]{#prop:query-tightness-full-scan label="prop:query-tightness-full-scan"} For the const/spike adversary family used in the query lower bounds, querying all states distinguishes the pair; thus the lower-bound family is tight up to constant factors under full-state scan.
 :::
 
 ::: proposition
-[]{#prop:query-tightness-full-scan label="prop:query-tightness-full-scan"} For the const/spike adversary family used in the query lower bounds, querying all states distinguishes the pair; thus the lower-bound family is tight up to constant factors under full-state scan. *(Lean: `full_query_distinguishes_const_spike_finite`.)*
+[]{#prop:query-weighted-transfer label="prop:query-weighted-transfer"} Let $w(q)$ be per-query cost and $w_{\min}$ a lower bound on all queried costs. Any cardinality lower bound $|Q|\geq L$ lifts to weighted cost: $$\sum_{q\in Q} w(q)\ \ge\ w_{\min}\cdot L.$$
 :::
 
 ::: proposition
-[]{#prop:query-weighted-transfer label="prop:query-weighted-transfer"} Let $w(q)$ be per-query cost and $w_{\min}$ a lower bound on all queried costs. Any cardinality lower bound $|Q|\geq L$ lifts to weighted cost: $$\sum_{q\in Q} w(q)\ \ge\ w_{\min}\cdot L.$$ *(Lean: `weightedQueryCost_ge_min_mul_card`, `weightedQueryCost_ge_min_mul_of_card_lb`.)*
+[]{#prop:oracle-lattice-transfer label="prop:oracle-lattice-transfer"} In \[Q_bool\], agreement on state-batch oracle views over touched states implies agreement on all value-entry views for the corresponding entry-query set.
 :::
 
-::: proposition
-[]{#prop:oracle-lattice-transfer label="prop:oracle-lattice-transfer"} In \[Q_bool\], agreement on state-batch oracle views over touched states implies agreement on all value-entry views for the corresponding entry-query set. *(Lean: `valueEntryView_eq_of_stateBatchView_eq_on_touched`.)*
-:::
+This is the oracle-transducer instance of Definition [\[def:regime-simulation\]](#def:regime-simulation){reference-type="ref" reference="def:regime-simulation"}: batch transcripts induce entry transcripts while preserving indistinguishability for the target sufficiency question.
 
 ::: proposition
-[]{#prop:oracle-lattice-strict label="prop:oracle-lattice-strict"} 'Opt'-oracle views are strictly coarser than value-entry views: there exist instances with identical 'Opt' views but distinguishable value entries. *(Lean witness: `const_vs_scaled_opt_view_equal`, `const_vs_scaled_value_entry_diff_at_true`.)*
+[]{#prop:oracle-lattice-strict label="prop:oracle-lattice-strict"} 'Opt'-oracle views are strictly coarser than value-entry views: there exist instances with identical 'Opt' views but distinguishable value entries.
 :::
 
 ::: remark
@@ -889,8 +909,6 @@ We distinguish the encodings of Section [\[sec:encoding\]](#sec:encoding){refer
 2.  **Separable utility (any encoding):** $U(a, s) = f(a) + g(s)$.
 
 3.  **Tree-structured utility with explicit local factors (succinct structured encoding):** There exists a rooted tree on coordinates and local functions $u_i$ such that $$U(a,s) = \sum_i u_i\bigl(a, s_i, s_{\mathrm{parent}(i)}\bigr),$$ with the root term depending only on $(a, s_{\mathrm{root}})$ and all $u_i$ given explicitly as part of the input.
-
-*(Lean handles: `ClaimClosure.tractable_bounded_core`, `ClaimClosure.tractable_separable_core`, `ClaimClosure.tractable_tree_core`, `ClaimClosure.tractable_subcases_conditional`.)*
 :::
 
 ## Explicit-State Encoding
@@ -921,33 +939,41 @@ We distinguish the encodings of Section [\[sec:encoding\]](#sec:encoding){refer
   Tree-structured utility   Hierarchies, causal trees
 :::
 
+::: proposition
+[]{#prop:heuristic-reusability label="prop:heuristic-reusability"} Let $\mathcal{C}$ be a structure class for which SUFFICIENCY-CHECK is polynomial (Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}). If membership in $\mathcal{C}$ is decidable in polynomial time, then the combined detect-then-check procedure is a sound, polynomial-time heuristic applicable to all future instances in $\mathcal{C}$. For each subcase of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}, structure detection is polynomial (under the declared representation assumptions).
+:::
 
-# Engineering Corollaries by Regime {#sec:engineering-justification}
+::: remark
+Proposition [\[prop:heuristic-reusability\]](#prop:heuristic-reusability){reference-type="ref" reference="prop:heuristic-reusability"} removes the complexity-theoretic obstruction to integrity-preserving action on detectable tractable instances: integrity no longer *forces* abstention. Whether the agent acts still requires competence (Definition [\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"}): budget and coverage must also be satisfied. An agent that detects structure class $\mathcal{C}$, applies the corresponding polynomial checker, and abstains when detection fails maintains integrity---it never claims sufficiency without verification. Mistaking the heuristic for the general solution---claiming polynomial-time competence on a coNP-hard problem---violates integrity (Proposition [\[prop:integrity-resource-bound\]](#prop:integrity-resource-bound){reference-type="ref" reference="prop:integrity-resource-bound"}).
+:::
+
+
+# Regime-Conditional Corollaries {#sec:engineering-justification}
 
 This section derives regime-typed engineering corollaries from the core complexity theorems. Theorem [\[thm:config-reduction\]](#thm:config-reduction){reference-type="ref" reference="thm:config-reduction"} maps configuration simplification to SUFFICIENCY-CHECK; Theorems [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}, [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"}, and [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} then yield exact minimization consequences under \[S\] and \[S+ETH\].
 
-Regime tags used below follow Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"}: \[S\], \[S+ETH\], \[E\], \[S_bool\]. Any prescription that requires exact minimization is constrained by these theorem-level bounds. Theorem [\[thm:overmodel-diagnostic\]](#thm:overmodel-diagnostic){reference-type="ref" reference="thm:overmodel-diagnostic"} implies that persistent failure to isolate a minimal sufficient set is a boundary-characterization signal in the current model, not a universal irreducibility claim.
+Regime tags used below follow Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"}: \[S\], \[S+ETH\], \[E\], \[S_bool\]. Any prescription that requires exact minimization is constrained by these theorem-level bounds. \[D:thm:sufficiency-conp, thm:minsuff-conp, thm:dichotomy; R:\[S\],\[S+ETH\]\] Theorem [\[thm:overmodel-diagnostic\]](#thm:overmodel-diagnostic){reference-type="ref" reference="thm:overmodel-diagnostic"} implies that persistent failure to isolate a minimal sufficient set is a boundary-characterization signal in the current model, not a universal irreducibility claim.
 
 #### Conditional rationality criterion.
 
-For the objective "minimize verified total cost while preserving integrity," over-specification is rational only under *attempted competence failure* in the active regime (Definition [\[def:attempted-competence-failure\]](#def:attempted-competence-failure){reference-type="ref" reference="def:attempted-competence-failure"}): if exact irrelevance cannot be certified efficiently after an attempted exact procedure, integrity forbids uncertified exclusion. When exact competence is available in the active regime (e.g., Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} and the exact-identifiability criterion), persistent over-specification is irrational relative to that objective because proven-irrelevant coordinates can be removed with certified correctness. Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"} makes this explicit: in the integrity-preserving matrix, one cell is rational and three are irrational, so irrationality is the default verdict. *(Lean anchors: `IntegrityCompetence.competence_implies_integrity`, `IntegrityCompetence.integrity_not_competent_of_nonempty_scope`, `IntegrityCompetence.admissible_matrix_counts`, `ClaimClosure.tractable_subcases_conditional`, `Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`.)*
+For the objective "minimize verified total cost while preserving integrity," over-specification is rational only under *attempted competence failure* in the active regime (Definition [\[def:attempted-competence-failure\]](#def:attempted-competence-failure){reference-type="ref" reference="def:attempted-competence-failure"}): if exact irrelevance cannot be certified efficiently after an attempted exact procedure, integrity forbids uncertified exclusion. \[D:prop:attempted-competence-matrix; R:\[R=active declared regime\]\] When exact competence is available in the active regime (e.g., Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} and the exact-identifiability criterion), persistent over-specification is irrational relative to that objective because proven-irrelevant coordinates can be removed with certified correctness. \[D:prop:attempted-competence-matrix, thm:tractable; R:\[E\],\[structured\]\] Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"} makes this explicit: in the integrity-preserving matrix, one cell is rational and three are irrational, so irrationality is the default verdict. \[D:prop:attempted-competence-matrix; R:\[R=active declared regime\]\]
 
 ::: remark
 All claims in this section are formal corollaries under the declared model assumptions.
 
--   Competence claims are indexed by the regime tuple of Definition [\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"}; prescriptions are meaningful only relative to feasible resources under that regime (bounded-rationality feasibility discipline) [@sep_bounded_rationality].
+-   Competence claims are indexed by the regime tuple of Definition [\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"}; prescriptions are meaningful only relative to feasible resources under that regime (bounded-rationality feasibility discipline) [@sep_bounded_rationality]. \[D:prop:integrity-competence-separation; R:\[R=active declared regime\]\]
 
--   Integrity (Definition [\[def:solver-integrity\]](#def:solver-integrity){reference-type="ref" reference="def:solver-integrity"}) forbids overclaiming beyond certifiable outputs; $\mathsf{ABSTAIN}$/$\mathsf{UNKNOWN}$ is first-class when certification is unavailable.
+-   Integrity (Definition [\[def:solver-integrity\]](#def:solver-integrity){reference-type="ref" reference="def:solver-integrity"}) forbids overclaiming beyond certifiable outputs; $\mathsf{ABSTAIN}$/$\mathsf{UNKNOWN}$ is first-class when certification is unavailable. \[D:prop:integrity-competence-separation; R:\[R=active declared regime\]\]
 
--   Therefore, hardness results imply a regime-conditional trilemma: abstain, weaken guarantees (heuristics/approximation), or change encoding/structural assumptions to recover competence.
+-   Therefore, hardness results imply a regime-conditional trilemma: abstain, weaken guarantees (heuristics/approximation), or change encoding/structural assumptions to recover competence. \[D:prop:attempted-competence-matrix, thm:sufficiency-conp, thm:dichotomy; R:\[S\],\[S+ETH\]\]
 :::
 
 ## Configuration Simplification is SUFFICIENCY-CHECK
 
-Real engineering problems reduce directly to the decision problems studied in this paper.
+Because SUFFICIENCY-CHECK is a meta-problem parameterized by an arbitrary decision problem $\mathcal{D}$, real engineering problems with factored configuration spaces are instances of the hardness landscape established above.
 
 ::: theorem
-[]{#thm:config-reduction label="thm:config-reduction"} Given a software system with configuration parameters $P = \{p_1, \ldots, p_n\}$ and observed behaviors $B = \{b_1, \ldots, b_m\}$, the problem of determining whether parameter subset $I \subseteq P$ preserves all behaviors is equivalent to SUFFICIENCY-CHECK. *(Lean: `ConfigReduction.config_sufficiency_iff_behavior_preserving`)*
+[]{#thm:config-reduction label="thm:config-reduction"} Given a software system with configuration parameters $P = \{p_1, \ldots, p_n\}$ and observed behaviors $B = \{b_1, \ldots, b_m\}$, the problem of determining whether parameter subset $I \subseteq P$ preserves all behaviors is equivalent to SUFFICIENCY-CHECK.
 :::
 
 ::: proof
@@ -989,7 +1015,7 @@ These are exactly the model-contract premises C1--C3 instantiated for configurat
 :::
 
 ::: theorem
-[]{#thm:overmodel-diagnostic label="thm:overmodel-diagnostic"} By contraposition of Theorem [\[thm:config-reduction\]](#thm:config-reduction){reference-type="ref" reference="thm:config-reduction"}, if no coordinate set can be certified as exactly relevance-identifying (Definition [\[def:exact-identifiability\]](#def:exact-identifiability){reference-type="ref" reference="def:exact-identifiability"}) for the modeled system, then the decision boundary is not completely characterized by the current parameterization. *(Lean model-level contrapositive: `ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`, `ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`)*
+[]{#thm:overmodel-diagnostic label="thm:overmodel-diagnostic"} By contraposition of Theorem [\[thm:config-reduction\]](#thm:config-reduction){reference-type="ref" reference="thm:config-reduction"}, if no coordinate set can be certified as exactly relevance-identifying (Definition [\[def:exact-identifiability\]](#def:exact-identifiability){reference-type="ref" reference="def:exact-identifiability"}) for the modeled system, then the decision boundary is not completely characterized by the current parameterization.
 :::
 
 ::: proof
@@ -1019,7 +1045,7 @@ Assume ETH in the succinct encoding model of Section [\[sec:encoding\]](#sec:en
 
 Therefore, there exists $n_0$ such that for all $n > n_0$, the finding-vs-maintenance asymmetry satisfies: $$C_{\text{over}}(k) < C_{\text{find}}(n) + C_{\text{under}}$$
 
-Within \[S+ETH\], persistent over-specification is consistent with unresolved boundary characterization rather than a proof that all included parameters are intrinsically necessary. Conversely, when exact competence is available in the active regime, persistent over-specification is irrational for the same cost-minimization objective. *(Lean handles: `ClaimClosure.cost_asymmetry_eth_conditional`, `HardnessDistribution.linear_lt_exponential_plus_constant_eventually`.)*
+Within \[S+ETH\], persistent over-specification is consistent with unresolved boundary characterization rather than a proof that all included parameters are intrinsically necessary. Conversely, when exact competence is available in the active regime, persistent over-specification is irrational for the same cost-minimization objective. \[D:thm:cost-asymmetry-eth, prop:attempted-competence-matrix; R:\[S+ETH\] vs \[tractable active regime\]\]
 :::
 
 ::: proof
@@ -1048,8 +1074,6 @@ For any fixed nonnegative $C_{\text{under}}$, the asymptotic dominance inequalit
 2.  Identifies the minimal sufficient parameter subset
 
 3.  Guarantees correctness (no false negatives)
-
-*(Lean conditional closure: `ClaimClosure.no_auto_minimize_of_p_neq_conp`)*
 :::
 
 ::: proof
@@ -1068,27 +1092,27 @@ The practical force of worst-case hardness depends on instance structure, especi
 
 Theorems [\[thm:overmodel-diagnostic\]](#thm:overmodel-diagnostic){reference-type="ref" reference="thm:overmodel-diagnostic"} and [\[thm:cost-asymmetry-eth\]](#thm:cost-asymmetry-eth){reference-type="ref" reference="thm:cost-asymmetry-eth"} yield the following conditional operational consequences:
 
-**1. Conservative retention under unresolved relevance.** If irrelevance cannot be certified efficiently under the active regime, retaining a superset of parameters is a sound conservative policy.
+**1. Conservative retention under unresolved relevance.** If irrelevance cannot be certified efficiently under the active regime, retaining a superset of parameters is a sound conservative policy. \[D:thm:overmodel-diagnostic; R:\[S\]\]
 
-**2. Heuristic selection as weakened-guarantee mode.** Under \[S+ETH\], exact global minimization can be exponentially costly in the worst case (Theorem [\[thm:cost-asymmetry-eth\]](#thm:cost-asymmetry-eth){reference-type="ref" reference="thm:cost-asymmetry-eth"}); methods such as AIC/BIC/cross-validation therefore fit the "weaken guarantees" branch of Definition [\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"}.
+**2. Heuristic selection as weakened-guarantee mode.** Under \[S+ETH\], exact global minimization can be exponentially costly in the worst case (Theorem [\[thm:cost-asymmetry-eth\]](#thm:cost-asymmetry-eth){reference-type="ref" reference="thm:cost-asymmetry-eth"}); methods such as AIC/BIC/cross-validation therefore fit the "weaken guarantees" branch of Definition [\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"}. \[D:thm:cost-asymmetry-eth; R:\[S+ETH\]\]
 
-**3. Full-parameter inclusion as an $O(n)$ upper-bound strategy.** Under \[S+ETH\], if exact minimization is unresolved, including all $n$ parameters incurs linear maintenance overhead while avoiding false irrelevance claims.
+**3. Full-parameter inclusion as an $O(n)$ upper-bound strategy.** Under \[S+ETH\], if exact minimization is unresolved, including all $n$ parameters incurs linear maintenance overhead while avoiding false irrelevance claims. \[D:thm:cost-asymmetry-eth; R:\[S+ETH\]\]
 
-**4. Irrationality outside attempted-competence-failure conditions.** If the active regime admits exact competence (tractable structural-access conditions or exact relevance identifiability), or if exact competence was never actually attempted, continued over-specification is not justified by hardness and is irrational relative to the stated objective. *(Lean anchors: `ClaimClosure.tractable_subcases_conditional`, `IntegrityCompetence.admissible_irrational_strictly_more_than_rational`, `Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`.)*
+**4. Irrationality outside attempted-competence-failure conditions.** If the active regime admits exact competence (tractable structural-access conditions or exact relevance identifiability), or if exact competence was never actually attempted, continued over-specification is not justified by hardness and is irrational relative to the stated objective. \[D:prop:attempted-competence-matrix, thm:tractable; R:\[tractable active regime\]\]
 
-These corollaries are direct consequences of the hardness/tractability landscape: over-specification is an attempted-competence-failure policy, not a default optimum. To move beyond it, one must either shift to tractable regimes from Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} or adopt explicit approximation commitments.
+These corollaries are direct consequences of the hardness/tractability landscape: over-specification is an attempted-competence-failure policy, not a default optimum. To move beyond it, one must either shift to tractable regimes from Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} or adopt explicit approximation commitments. \[D:prop:attempted-competence-matrix, thm:tractable; R:\[regime-typed\]\]
 
 [^1]: Naive subset enumeration still gives an intuitive baseline of $O(2^n)$ checks, but that is an algorithmic upper bound; the theorem below uses ETH for the lower-bound argument.
 
 
-# Applied Corollaries for Software Architecture {#sec:implications}
+# Dominance Theorems for Hardness Placement {#sec:implications}
 
 Regime for this section: the mechanized Boolean-coordinate model \[S_bool\] plus the architecture cost model defined below.
 
 ## Over-Specification as Diagnostic Signal
 
 ::: corollary
-[]{#cor:overmodel-diagnostic-implication label="cor:overmodel-diagnostic-implication"} In the mechanized Boolean-coordinate model, if a coordinate is relevant and omitted from a candidate set $I$, then $I$ is not sufficient. *(Lean: `Sigma2PHardness.sufficient_iff_relevant_subset`)*
+[]{#cor:overmodel-diagnostic-implication label="cor:overmodel-diagnostic-implication"} In the mechanized Boolean-coordinate model, if a coordinate is relevant and omitted from a candidate set $I$, then $I$ is not sufficient.
 :::
 
 ::: proof
@@ -1098,7 +1122,7 @@ Regime for this section: the mechanized Boolean-coordinate model \[S_bool\] plus
 ::: corollary
 []{#cor:exact-identifiability label="cor:exact-identifiability"} In the mechanized Boolean-coordinate model, for any candidate set $I$: $$I \text{ is exactly relevance-identifying}
 \iff
-\bigl(I \text{ is sufficient and } I \subseteq R_{\mathrm{rel}}\bigr),$$ where $R_{\mathrm{rel}}$ is the full relevant-coordinate set. *(Lean: `Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`)*
+\bigl(I \text{ is sufficient and } I \subseteq R_{\mathrm{rel}}\bigr),$$ where $R_{\mathrm{rel}}$ is the full relevant-coordinate set.
 :::
 
 ::: proof
@@ -1106,7 +1130,7 @@ Regime for this section: the mechanized Boolean-coordinate model \[S_bool\] plus
 :::
 
 ::: remark
-[]{#rem:overmodel-conditional label="rem:overmodel-conditional"} In this paper's formal typing, over-specification is rational only under attempted competence failure: exact relevance competence is unavailable in the active regime *after* an attempted exact procedure, and integrity forbids uncertified exclusion (Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}; Section [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}). Once exact competence is available in the active regime (Corollaries [\[cor:practice-bounded\]](#cor:practice-bounded){reference-type="ref" reference="cor:practice-bounded"}--[\[cor:practice-tree\]](#cor:practice-tree){reference-type="ref" reference="cor:practice-tree"} together with Corollary [\[cor:exact-identifiability\]](#cor:exact-identifiability){reference-type="ref" reference="cor:exact-identifiability"}), persistent over-specification is irrational for the same objective (verified total-cost minimization), because excluded coordinates can be certified irrelevant. *(Lean anchors: `IntegrityCompetence.competence_implies_integrity`, `IntegrityCompetence.integrity_not_competent_of_nonempty_scope`, `IntegrityCompetence.admissible_matrix_counts`, `sufficiency_poly_bounded_actions`, `sufficiency_poly_separable`, `sufficiency_poly_tree_structured`, `Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`.)*
+[]{#rem:overmodel-conditional label="rem:overmodel-conditional"} In this paper's formal typing, over-specification is rational only under attempted competence failure: exact relevance competence is unavailable in the active regime *after* an attempted exact procedure, and integrity forbids uncertified exclusion (Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}; Section [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}). \[D:prop:attempted-competence-matrix; R:\[R=active declared regime\]\] Once exact competence is available in the active regime (Corollaries [\[cor:practice-bounded\]](#cor:practice-bounded){reference-type="ref" reference="cor:practice-bounded"}--[\[cor:practice-tree\]](#cor:practice-tree){reference-type="ref" reference="cor:practice-tree"} together with Corollary [\[cor:exact-identifiability\]](#cor:exact-identifiability){reference-type="ref" reference="cor:exact-identifiability"}), persistent over-specification is irrational for the same objective (verified total-cost minimization), because excluded coordinates can be certified irrelevant. \[D:prop:attempted-competence-matrix, thm:tractable; R:\[tractable active regime\]\]
 :::
 
 ## Architectural Decision Quotient
@@ -1116,7 +1140,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 :::
 
 ::: proposition
-[]{#prop:adq-ordering label="prop:adq-ordering"} For coordinate sets $I,J$ in the same system, if $\mathrm{ADQ}(I) < \mathrm{ADQ}(J)$, then fixing $I$ leaves a strictly smaller achievable-behavior set than fixing $J$. *(Lean finite-cardinality form: `ClaimClosure.adq_ordering`)*
+[]{#prop:adq-ordering label="prop:adq-ordering"} For coordinate sets $I,J$ in the same system, if $\mathrm{ADQ}(I) < \mathrm{ADQ}(J)$, then fixing $I$ leaves a strictly smaller achievable-behavior set than fixing $J$.
 :::
 
 ::: proof
@@ -1126,7 +1150,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 ## Corollaries for Practice
 
 ::: corollary
-[]{#cor:practice-diagnostic label="cor:practice-diagnostic"} In the mechanized Boolean-coordinate model, existence of a sufficient set of size at most $k$ is equivalent to the relevance set having cardinality at most $k$. *(Lean: `Sigma2PHardness.min_sufficient_set_iff_relevant_card`)*
+[]{#cor:practice-diagnostic label="cor:practice-diagnostic"} In the mechanized Boolean-coordinate model, existence of a sufficient set of size at most $k$ is equivalent to the relevance set having cardinality at most $k$.
 :::
 
 ::: proof
@@ -1134,7 +1158,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 :::
 
 ::: corollary
-[]{#cor:practice-bounded label="cor:practice-bounded"} When the bounded-action or explicit-state conditions of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} hold, minimal modeling can be solved in polynomial time in the stated input size. *(Lean: `sufficiency_poly_bounded_actions`)*
+[]{#cor:practice-bounded label="cor:practice-bounded"} When the bounded-action or explicit-state conditions of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} hold, minimal modeling can be solved in polynomial time in the stated input size.
 :::
 
 ::: proof
@@ -1142,7 +1166,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 :::
 
 ::: corollary
-[]{#cor:practice-structured label="cor:practice-structured"} When utility is separable with explicit factors, sufficiency checking is polynomial in the explicit-state regime. *(Lean: `sufficiency_poly_separable`)*
+[]{#cor:practice-structured label="cor:practice-structured"} When utility is separable with explicit factors, sufficiency checking is polynomial in the explicit-state regime.
 :::
 
 ::: proof
@@ -1150,7 +1174,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 :::
 
 ::: corollary
-[]{#cor:practice-tree label="cor:practice-tree"} When utility factors form a tree structure with explicit local factors, sufficiency checking is polynomial in the explicit-state regime. *(Lean: `sufficiency_poly_tree_structured`)*
+[]{#cor:practice-tree label="cor:practice-tree"} When utility factors form a tree structure with explicit local factors, sufficiency checking is polynomial in the explicit-state regime.
 :::
 
 ::: proof
@@ -1158,7 +1182,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 :::
 
 ::: corollary
-[]{#cor:practice-unstructured label="cor:practice-unstructured"} There is a machine-checked family of reduction instances where, for non-tautological source formulas, every coordinate is relevant ($k^*=n$), exhibiting worst-case boundary complexity. *(Lean: `all_coords_relevant_of_not_tautology`)*
+[]{#cor:practice-unstructured label="cor:practice-unstructured"} There is a machine-checked family of reduction instances where, for non-tautological source formulas, every coordinate is relevant ($k^*=n$), exhibiting worst-case boundary complexity.
 :::
 
 ::: proof
@@ -1178,7 +1202,7 @@ For $n$ use sites, total realized hardness is: $$H_{\text{total}}(S) = H_{\text{
 :::
 
 ::: proposition
-[]{#prop:hardness-conservation label="prop:hardness-conservation"} For any problem family $P$ measured by $H(P;n)$ above, any solution architecture $S$ and any number of use sites $n \ge 1$, if $H_{\text{total}}(S)$ is measured in the same worst-case step units over the same input family, then: $$H_{\text{total}}(S) = H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S) \geq H(P;n).$$ For SUFFICIENCY-CHECK, Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} provides the baseline on the hard succinct family: $H(\text{SUFFICIENCY-CHECK};n)=2^{\Omega(n)}$ under ETH. *(Lean structural core: `HardnessDistribution.totalDOF_ge_intrinsic`)*
+[]{#prop:hardness-conservation label="prop:hardness-conservation"} For any problem family $P$ measured by $H(P;n)$ above, any solution architecture $S$ and any number of use sites $n \ge 1$, if $H_{\text{total}}(S)$ is measured in the same worst-case step units over the same input family, then: $$H_{\text{total}}(S) = H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S) \geq H(P;n).$$ For SUFFICIENCY-CHECK, Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} provides the baseline on the hard succinct family: $H(\text{SUFFICIENCY-CHECK};n)=2^{\Omega(n)}$ under ETH.
 :::
 
 ::: proof
@@ -1186,11 +1210,11 @@ For $n$ use sites, total realized hardness is: $$H_{\text{total}}(S) = H_{\text{
 :::
 
 ::: definition
-[]{#def:hardness-efficiency label="def:hardness-efficiency"} The *hardness efficiency* of solution $S$ with $n$ use sites is: $$\eta(S, n) = \frac{H_{\text{central}}(S)}{H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S)}$$ *(Lean ratio identity when denominator is positive: `HardnessDistribution.hardnessEfficiency_eq_central_share`)*
+[]{#def:hardness-efficiency label="def:hardness-efficiency"} The *hardness efficiency* of solution $S$ with $n$ use sites is: $$\eta(S, n) = \frac{H_{\text{central}}(S)}{H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S)}$$
 :::
 
 ::: proposition
-[]{#prop:hardness-efficiency-interpretation label="prop:hardness-efficiency-interpretation"} For fixed $n$ and positive total hardness, larger $\eta(S,n)$ is equivalent to a larger central share of realized hardness. *(Lean definitional step: `HardnessDistribution.hardnessEfficiency_eq_central_share`)*
+[]{#prop:hardness-efficiency-interpretation label="prop:hardness-efficiency-interpretation"} For fixed $n$ and positive total hardness, larger $\eta(S,n)$ is equivalent to a larger central share of realized hardness.
 :::
 
 ::: proof
@@ -1199,7 +1223,7 @@ For $n$ use sites, total realized hardness is: $$H_{\text{total}}(S) = H_{\text{
 
 ::: definition
 []{#def:right-wrong-placement label="def:right-wrong-placement"} For a solution architecture $S$ in this linear model: $$\text{right hardness} \iff H_{\mathrm{distributed}}(S)=0,\qquad
-\text{wrong hardness} \iff H_{\mathrm{distributed}}(S)>0.$$ *(Lean: `HardnessDistribution.isRightHardness`, `HardnessDistribution.isWrongHardness`)*
+\text{wrong hardness} \iff H_{\mathrm{distributed}}(S)>0.$$
 :::
 
 ::: theorem
@@ -1212,8 +1236,6 @@ H_{\mathrm{distributed}}(S_{\mathrm{wrong}})>0,$$ and let $n > \max\!\bigl(1, H_
 2.  Fewer error sites: errors in centralized components affect 1 location; errors in distributed components affect $n$ locations
 
 3.  Quantified leverage: moving one unit of work from distributed to central saves exactly $n-1$ units of total realized hardness
-
-*(Lean: `HardnessDistribution.centralization_dominance_bundle`, `HardnessDistribution.centralization_step_saves_n_minus_one`)*
 :::
 
 ::: proof
@@ -1223,7 +1245,7 @@ H_{\mathrm{distributed}}(S_{\mathrm{wrong}})>0,$$ and let $n > \max\!\bigl(1, H_
 ::: corollary
 []{#cor:right-wrong-hardness label="cor:right-wrong-hardness"} In the linear model, a right-hardness architecture strictly dominates a wrong-hardness architecture once use-site count exceeds central one-time hardness. Formally, for architectures $S_{\mathrm{right}}, S_{\mathrm{wrong}}$ over the same problem family, if $S_{\mathrm{right}}$ has right hardness, $S_{\mathrm{wrong}}$ has wrong hardness, and $n > H_{\mathrm{central}}(S_{\mathrm{right}})$, then $$H_{\mathrm{central}}(S_{\mathrm{right}}) + n\,H_{\mathrm{distributed}}(S_{\mathrm{right}})
 <
-H_{\mathrm{central}}(S_{\mathrm{wrong}}) + n\,H_{\mathrm{distributed}}(S_{\mathrm{wrong}}).$$ *(Lean: `HardnessDistribution.right_dominates_wrong`)*
+H_{\mathrm{central}}(S_{\mathrm{wrong}}) + n\,H_{\mathrm{distributed}}(S_{\mathrm{wrong}}).$$
 :::
 
 ::: proof
@@ -1258,7 +1280,7 @@ H_{\mathrm{central}}(S_{\mathrm{wrong}}) + n\,H_{\mathrm{distributed}}(S_{\mathr
 The table is schematic; the formal statement is Corollary [\[cor:type-system-threshold\]](#cor:type-system-threshold){reference-type="ref" reference="cor:type-system-threshold"}.
 
 ::: corollary
-[]{#cor:type-system-threshold label="cor:type-system-threshold"} For the formal native-vs-manual architecture instance, native support has lower total realized cost for all $$n > H_{\mathrm{baseline}}(P),$$ where $H_{\mathrm{baseline}}(P)$ corresponds to the Lean identifier `intrinsicDOF`(P) in module `HardnessDistribution`. *(Lean: `HardnessDistribution.native_dominates_manual`)*
+[]{#cor:type-system-threshold label="cor:type-system-threshold"} For the formal native-vs-manual architecture instance, native support has lower total realized cost for all $$n > H_{\mathrm{baseline}}(P),$$ where $H_{\mathrm{baseline}}(P)$ corresponds to the Lean identifier `intrinsicDOF`(P) in module `HardnessDistribution`.
 :::
 
 ::: proof
@@ -1284,7 +1306,7 @@ The table is schematic; the formal statement is Corollary [\[cor:type-system-th
 
 Then for every $$n > H_{\text{central}}(S_{\mathrm{right}})+B,$$ one has $$H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{right}},n)
 <
-H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$ *(Lean: `HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower`)*
+H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$
 :::
 
 ::: proof
@@ -1294,7 +1316,7 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$ *(Lean: `HardnessDistri
 ::: corollary
 []{#cor:generalized-eventual-dominance label="cor:generalized-eventual-dominance"} If condition (1) above holds and there exists $N$ such that condition (2) holds for all $m\ge N$, then there exists $N_0$ such that for all $n\ge N_0$, $$H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{right}},n)
 <
-H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$ *(Lean: `HardnessDistribution.generalized_right_eventually_dominates_wrong`)*
+H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$
 :::
 
 ::: proof
@@ -1307,8 +1329,6 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$ *(Lean: `HardnessDistri
 1.  If wrong-side growth lower bounds are dropped, right-side strict dominance can fail for all $n$.
 
 2.  If right-side boundedness is dropped, strict dominance can fail for all $n$ even when wrong-side growth is linear.
-
-*(Lean: `HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`, `HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`)*
 :::
 
 ::: proof
@@ -1316,7 +1336,7 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$ *(Lean: `HardnessDistri
 :::
 
 ::: theorem
-[]{#thm:linear-saturation-iff-zero label="thm:linear-saturation-iff-zero"} In the linear model of this section, $$H_{\text{total}}(S,n)=H_{\text{central}}(S)+n\cdot H_{\text{distributed}}(S),$$ the function $n\mapsto H_{\text{total}}(S,n)$ is eventually saturating if and only if $H_{\text{distributed}}(S)=0$. *(Lean: `HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`)*
+[]{#thm:linear-saturation-iff-zero label="thm:linear-saturation-iff-zero"} In the linear model of this section, $$H_{\text{total}}(S,n)=H_{\text{central}}(S)+n\cdot H_{\text{distributed}}(S),$$ the function $n\mapsto H_{\text{total}}(S,n)$ is eventually saturating if and only if $H_{\text{distributed}}(S)=0$.
 :::
 
 ::: proof
@@ -1327,7 +1347,7 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$ *(Lean: `HardnessDistri
 []{#thm:generalized-saturation-possible label="thm:generalized-saturation-possible"} There exists a generalized site-cost model with eventual saturation. In particular, for $$C_K(n)=\begin{cases}
 n, & n\le K\\
 K, & n>K,
-\end{cases}$$ both $C_K$ and $n\mapsto H_{\text{central}}+C_K(n)$ are eventually saturating. *(Lean: `HardnessDistribution.saturatingSiteCost_eventually_constant`, `HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`)*
+\end{cases}$$ both $C_K$ and $n\mapsto H_{\text{central}}+C_K(n)$ are eventually saturating.
 :::
 
 ::: proof
@@ -1335,7 +1355,7 @@ K, & n>K,
 :::
 
 ::: corollary
-[]{#cor:linear-positive-no-saturation label="cor:linear-positive-no-saturation"} No positive-slope linear per-site model can represent the saturating family above for all $n$. *(Lean: `HardnessDistribution.no_positive_slope_linear_represents_saturating`)*
+[]{#cor:linear-positive-no-saturation label="cor:linear-positive-no-saturation"} No positive-slope linear per-site model can represent the saturating family above for all $n$.
 :::
 
 ::: proof
@@ -1349,7 +1369,7 @@ The strengthened all-coordinates-relevant reduction is presented in Section [\[
 The next section develops the major practical consequence of this framework: the Simplicity Tax Theorem.
 
 
-# Corollary: Complexity Redistribution Under Incomplete Models {#sec:simplicity-tax}
+# Conservation Law for Decision-Relevant Coordinates {#sec:simplicity-tax}
 
 The load-bearing fact in this section is not the set identity itself; it is the difficulty of shrinking the required set $R(P)$ in the first place. By Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"} (and Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"} for minimization), exact relevance identification is intractable in the worst case under succinct encoding. The identities below therefore quantify how unresolved relevance is redistributed between central and per-site work.
 
@@ -1362,7 +1382,7 @@ Let $R(P)$ be the required dimensions (those affecting $\operatorname{Opt}$) and
 :::
 
 ::: theorem
-[]{#thm:tax-conservation label="thm:tax-conservation"} $|\text{Gap}(M, P)| + |R(P) \cap A(M)| = |R(P)|$. The total cannot be reduced---only redistributed between "handled natively" and "handled externally." *(Lean: `HardnessDistribution.gap_conservation_card`)*
+[]{#thm:tax-conservation label="thm:tax-conservation"} $|\text{Gap}(M, P)| + |R(P) \cap A(M)| = |R(P)|$. The total cannot be reduced---only redistributed between "handled natively" and "handled externally."
 :::
 
 ::: proof
@@ -1374,7 +1394,7 @@ The algebraic identity in Theorem [\[thm:tax-conservation\]](#thm:tax-conservat
 :::
 
 ::: theorem
-[]{#thm:tax-grows label="thm:tax-grows"} For $n$ decision sites: $$\text{TotalExternalWork} = n \times \text{SimplicityTax}(M, P).$$ *(Lean: `HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`)*
+[]{#thm:tax-grows label="thm:tax-grows"} For $n$ decision sites: $$\text{TotalExternalWork} = n \times \text{SimplicityTax}(M, P).$$
 :::
 
 ::: proof
@@ -1382,7 +1402,7 @@ The algebraic identity in Theorem [\[thm:tax-conservation\]](#thm:tax-conservat
 :::
 
 ::: theorem
-[]{#thm:amortization label="thm:amortization"} Let $H_{\text{central}}$ be the one-time cost of using a complete model. There exists $$n^* = \left\lfloor \frac{H_{\text{central}}}{\text{SimplicityTax}(M,P)} \right\rfloor$$ such that for $n > n^*$, the complete model has lower total cost. *(Lean: `HardnessDistribution.complete_model_dominates_after_threshold`)*
+[]{#thm:amortization label="thm:amortization"} Let $H_{\text{central}}$ be the one-time cost of using a complete model. There exists $$n^* = \left\lfloor \frac{H_{\text{central}}}{\text{SimplicityTax}(M,P)} \right\rfloor$$ such that for $n > n^*$, the complete model has lower total cost.
 :::
 
 ::: proof
@@ -1392,7 +1412,7 @@ H_{\text{central}} < n\cdot \text{SimplicityTax}$$ is mechanized as `HardnessDis
 :::
 
 ::: corollary
-[]{#cor:gap-externalization label="cor:gap-externalization"} If $\text{Gap}(M,P)\neq\emptyset$, then external handling cost scales linearly with the number of decision sites. *(Lean: `HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`, `HardnessDistribution.simplicityTax_grows`)*
+[]{#cor:gap-externalization label="cor:gap-externalization"} If $\text{Gap}(M,P)\neq\emptyset$, then external handling cost scales linearly with the number of decision sites.
 :::
 
 ::: proof
@@ -1400,7 +1420,7 @@ H_{\text{central}} < n\cdot \text{SimplicityTax}$$ is mechanized as `HardnessDis
 :::
 
 ::: corollary
-[]{#cor:gap-minimization-hard label="cor:gap-minimization-hard"} For mechanized Boolean-coordinate instances, "there exists a sufficient set of size at most $k$" is equivalent to "the relevant-coordinate set has cardinality at most $k$." *(Lean: `Sigma2PHardness.min_sufficient_set_iff_relevant_card`)*
+[]{#cor:gap-minimization-hard label="cor:gap-minimization-hard"} For mechanized Boolean-coordinate instances, "there exists a sufficient set of size at most $k$" is equivalent to "the relevant-coordinate set has cardinality at most $k$."
 :::
 
 ::: proof
@@ -1420,6 +1440,16 @@ The complexity of decision-making has been studied extensively. Papadimitriou [
 
 Closest to our contribution is the feature-selection/model-selection hardness literature, which proves NP-hardness and inapproximability for predictive subset selection [@blum1997selection; @amaldi1998complexity]. Our contribution is stronger on two axes not provided by those works: (i) machine-checked reductions (TAUTOLOGY and $\exists\forall$-SAT mappings with explicit polynomial bounds), and (ii) a complete hardness/tractability landscape for decision relevance under explicit encoding assumptions. We study decision relevance rather than predictive compression, and we formalize the core reductions in Lean 4 rather than leaving them only on paper.
 
+## Succinct Representations and Regime Separation
+
+Representation-sensitive complexity is established in planning and decision-process theory: classical and compactly represented MDP/planning problems exhibit sharp complexity shifts under different input models [@papadimitriou1987mdp; @mundhenk2000mdp; @littman1998probplanning]. Our explicit-vs-succinct separation aligns with this broader principle.
+
+The distinction in this paper is the object and scope of the classification: we classify *decision relevance* (sufficiency, anchor sufficiency, and minimum sufficient sets) for a fixed decision relation, with theorem-level regime typing and mechanized reduction chains.
+
+## Oracle and Query-Access Lower Bounds
+
+Query-access lower bounds are a standard source of computational hardness transfer [@dobzinski2012query]. Our `[Q_fin]` and `[Q_bool]` results are in this tradition, but specialized to the same sufficiency predicate used throughout the paper: they establish access-obstruction lower bounds while keeping the underlying decision relation fixed across regimes.
+
 ## Feature Selection
 
 In machine learning, feature selection asks which input features are relevant for prediction. This is known to be NP-hard in general [@blum1997selection]. Our results show the decision-theoretic analog is coNP-complete for both checking and minimization.
@@ -1438,7 +1468,43 @@ Our integrity layer matches the certifying-algorithms pattern: algorithms emit c
 
 At the systems level, this is the same architecture as proof-carrying code: a producer ships evidence and a consumer runs a small checker before accepting the claim [@necula1997proof]. Our competence definition adds the regime-specific coverage/resource requirement that certifying soundness alone does not provide.
 
-The feasibility qualifier in Definition [\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"} also aligns with bounded-rationality normativity: what agents *should* do is constrained by what is computationally feasible under the declared resource model [@sep_bounded_rationality].
+The feasibility qualifier in Definition [\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"} also aligns with bounded-rationality normativity: what agents *should* do is constrained by what is computationally feasible under the declared resource model [@sep_bounded_rationality]. \[D:prop:integrity-competence-separation; R:\[R=active declared regime\]\]
+
+#### Three-axis integration.
+
+To our knowledge, prior work treats these pillars separately: representation-sensitive hardness, query-access lower bounds, and certifying soundness disciplines. This paper integrates all three for the same decision-relevance object in one regime-typed and machine-checked framework.
+
+## Extended Bibliographic Coverage Map
+
+To support the grand-unification scope, we explicitly anchor additional adjacent literatures across formal methods, programming languages, information theory, optimization, and decision analysis. The following citations are included as a structured coverage map rather than as theorem-local dependencies.
+
+#### Coverage tranche 1.
+
+[@moura2021lean4; @cook1971complexity; @karp1972reducibility; @stockmeyer1976polynomial; @impagliazzo2001complexity; @savage1954foundations; @raiffa1961applied; @pearl1988probabilistic; @koller2009probabilistic; @chickering2004large; @teyssier2012ordering; @nipkow2014concrete; @cook2018complexity; @fisher1922mathematical; @lehmann1950completeness; @pearl2009causality; @spirtes2000causation; @shpitser2006identification].
+
+#### Coverage tranche 2.
+
+[@rissanen1978modeling; @grunwald2007minimum; @li2008introduction; @sobol2001global; @guyon2003introduction; @forster2019verified; @kunze2019formal; @nipkow2002isabelle; @haslbeck2021verified; @mathlib2020; @lipton2009np; @feige1998threshold; @cardelli1988semantics; @malayeri2008integrating; @malayeri2009cz; @abdelgawad2014noop; @abdelgawad2016nominal; @liskov1994behavioral].
+
+#### Coverage tranche 3.
+
+[@barrett1996monotonic; @cook1990inheritance; @gil2008whiteoak; @siek2006gradual; @veldhuizen2006tradeoffs; @damasevicius2010complexity; @pierce2002types; @wadler1990linear; @blum1967machine; @pep544; @pep484; @pythonBuiltinsHasattr; @bierman2014typescript; @tsHandbookTypeCompatibility; @tsIssue202; @tsPR33038; @jlsErasure; @goSpec].
+
+#### Coverage tranche 4.
+
+[@mdnPrototypeChain; @chugh2012nested; @systemDArxiv; @lamaison2012duck; @blum1967size; @damasevicius2010metrics; @ocamlObjectsRowVars; @abadi1996theory; @reynolds1983types; @malayeri2009esop; @openhcs2025; @openhcsPR44; @openhcsLeanProofs; @paper2_ssot; @gamma1994design; @boehm1981software; @nasa2010error; @Shannon1948].
+
+#### Coverage tranche 5.
+
+[@ahlswede1989identification; @CoverThomas2006; @Kolmogorov1965; @Welsh1976; @Pierce2002; @Cardelli1985; @Structural2014; @Lean2015; @Tishby2000; @Grunwald2007; @LiVitanyi2008; @PythonDocs; @CPythonDocs; @JavaDocs; @TypeScriptDocs; @RustDocs; @shannon1959coding; @berger1971rate].
+
+#### Coverage tranche 6.
+
+[@cousot1977abstract; @buhrman2002complexity; @JVMSpec; @RustTraitObjects; @DNABarcoding; @ISBN; @Codd1990; @ahlswede1989identification2; @hanverdu1993generalization; @steinberg1998identification; @csiszar2011information; @blahut1972computation; @gray1998quantization; @blau2019rethinking; @burnashev1976data; @wolfowitz1961coding; @korner1973coding; @witsenhausen1976zero].
+
+#### Coverage tranche 7.
+
+[@orlitsky1991worst; @hunt1999pragmatic].
 
 
 # Conclusion
@@ -1494,7 +1560,7 @@ The results provide precise complexity characterizations within the formal model
 
 ## The Complexity Redistribution Corollary {#the-complexity-redistribution-corollary .unnumbered}
 
-Section [\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"} develops a quantitative consequence: when a problem requires $k$ dimensions and a model handles only $j < k$ natively, the remaining $k - j$ dimensions must be handled externally at each decision site. For $n$ sites, total external work is $(k-j) \times n$.
+Section [\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"} develops a quantitative consequence: when a problem requires $k$ dimensions and a model handles only $j < k$ natively, the remaining $k - j$ dimensions must be handled externally at each decision site. For $n$ sites, total external work is $(k-j) \times n$. \[D:thm:tax-grows; R:\[linear cost model\]\]
 
 The set identity is elementary; its operational content comes from composition with the hardness results on exact relevance minimization. This redistribution corollary is formalized in Lean 4 (`HardnessDistribution.lean`), proving:
 
@@ -1530,12 +1596,12 @@ The practical corollaries are regime-indexed and theorem-indexed:
 
 -   **Redistribution consequences:** omitted native coverage externalizes work with explicit growth/amortization laws (Theorems [\[thm:tax-conservation\]](#thm:tax-conservation){reference-type="ref" reference="thm:tax-conservation"}--[\[thm:amortization\]](#thm:amortization){reference-type="ref" reference="thm:amortization"}).
 
-Hence the design choice is typed: enforce a tractable regime, or adopt weakened guarantees with explicit verification boundaries. Equivalently, over-specification is a conditional attempted-competence-failure policy in this framework; once exact competence is available in the active regime (or no attempted exact competence was made), persistent over-specification is irrational for the same verified-cost objective. By Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"}, this is not a close call: in the integrity-preserving matrix, irrational cells outnumber rational cells (3 vs 1).
+Hence the design choice is typed: enforce a tractable regime, or adopt weakened guarantees with explicit verification boundaries. \[D:thm:tractable, thm:dichotomy; R:\[regime-typed\]\] Equivalently, over-specification is a conditional attempted-competence-failure policy in this framework; once exact competence is available in the active regime (or no attempted exact competence was made), persistent over-specification is irrational for the same verified-cost objective. \[D:prop:attempted-competence-matrix; R:\[R=active declared regime\]\] By Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"}, this is not a close call: in the integrity-preserving matrix, irrational cells outnumber rational cells (3 vs 1). \[D:prop:attempted-competence-matrix; R:\[R=active declared regime\]\]
 
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 8470 lines across 42 files, with 383 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 8698 lines across 42 files, with 393 theorem/lemma statements.
 
 ## What Is Machine-Checked
 
@@ -1617,140 +1683,6 @@ The hardness distribution theorems (Section [\[sec:simplicity-tax\]](#sec:simpl
 
 ## Complete Claim Coverage Matrix
 
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  **Paper handle**                            **Status**           **Lean support**                                                                                                                                                                                                                                                                                                                                       **Notes**
-  ------------------------------------------- -------------------- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-  `cor:exact-identifiability`                 Full                 `Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`                                                                                                                                                                                                                                                                   Direct theorem mapping.
-
-  `cor:gap-externalization`                   Full                 `HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`, `HardnessDistribution.simplicityTax_grows`                                                                                                                                                                                                                                                  Composite from two mechanized theorems.
-
-  `cor:gap-minimization-hard`                 Full                 `Sigma2PHardness.min_sufficient_set_iff_relevant_card`                                                                                                                                                                                                                                                                                                 Direct theorem mapping.
-
-  `prop:representation-gap`                   Full                 `Sigma2PHardness.representationGap`, `Sigma2PHardness.representationGap_eq_zero_iff`, `Sigma2PHardness.representationGap_zero_iff_minimalSufficient`, `Sigma2PHardness.representationGap_missing_eq_gapCard`, `Sigma2PHardness.min_representationGap_zero_iff_relevant_card`                                                                           Formal $\varepsilon$ object plus zero-gap, minimality, simplicity-tax component, and bounded-search collapse mapping.
-
-  `cor:generalized-eventual-dominance`        Full                 `HardnessDistribution.generalized_right_eventually_dominates_wrong`                                                                                                                                                                                                                                                                                    Direct theorem mapping.
-
-  `cor:linear-positive-no-saturation`         Full                 `HardnessDistribution.no_positive_slope_linear_represents_saturating`                                                                                                                                                                                                                                                                                  Direct theorem mapping.
-
-  `cor:no-auto-minimize`                      Full (conditional)   `ClaimClosure.no_auto_minimize_of_p_neq_conp`                                                                                                                                                                                                                                                                                                          Mechanized conditional closure: non-collapse plus collapse-implication yields impossibility.
-
-  `cor:overmodel-diagnostic-implication`      Full                 `Sigma2PHardness.sufficient_iff_relevant_subset`                                                                                                                                                                                                                                                                                                       Contrapositive of mechanized theorem.
-
-  `cor:practice-bounded`                      Full                 `sufficiency_poly_bounded_actions`                                                                                                                                                                                                                                                                                                                     Direct theorem mapping.
-
-  `cor:practice-diagnostic`                   Full                 `Sigma2PHardness.min_sufficient_set_iff_relevant_card`                                                                                                                                                                                                                                                                                                 Direct theorem mapping.
-
-  `cor:practice-structured`                   Full                 `sufficiency_poly_separable`                                                                                                                                                                                                                                                                                                                           Direct theorem mapping.
-
-  `cor:practice-tree`                         Full                 `sufficiency_poly_tree_structured`                                                                                                                                                                                                                                                                                                                     Direct theorem mapping.
-
-  `cor:practice-unstructured`                 Full                 `all_coords_relevant_of_not_tautology`                                                                                                                                                                                                                                                                                                                 Direct theorem mapping.
-
-  `cor:right-wrong-hardness`                  Full                 `HardnessDistribution.right_dominates_wrong`                                                                                                                                                                                                                                                                                                           Direct theorem mapping.
-
-  `cor:type-system-threshold`                 Full                 `HardnessDistribution.native_dominates_manual`                                                                                                                                                                                                                                                                                                         Direct theorem mapping.
-
-  `prop:adq-ordering`                         Full                 `ClaimClosure.adq_ordering`                                                                                                                                                                                                                                                                                                                            Strict ordering theorem for shared nonempty behavior denominator.
-
-  `prop:dominance-modes`                      Full                 `HardnessDistribution.right_dominates_wrong`, `HardnessDistribution.centralized_higher_leverage`, `HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower`, `HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`, `HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`   Compositional index proposition.
-
-  `prop:generalized-assumption-boundary`      Full                 `HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`, `HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`                                                                                                                                                                                            Direct pair mapping.
-
-  `prop:hardness-conservation`                Full                 `HardnessDistribution.totalDOF_ge_intrinsic`                                                                                                                                                                                                                                                                                                           Direct structural core theorem.
-
-  `prop:hardness-efficiency-interpretation`   Full                 `HardnessDistribution.hardnessEfficiency_eq_central_share`                                                                                                                                                                                                                                                                                             Direct definitional equivalence.
-
-  `prop:integrity-competence-separation`      Full                 `IntegrityCompetence.competence_implies_integrity`, `IntegrityCompetence.integrity_not_competent_of_nonempty_scope`                                                                                                                                                                                                                                    Direct pair mapping.
-
-  `prop:bridge-failure-horizon`               Full                 `ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`, `ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`                                                                                                                                                                                                                              Mechanized counterexample: dropping one-step horizon can break bridge transfer on sufficiency claims.
-
-  `prop:bridge-failure-stochastic`            Full                 `ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`                                                                                                                                                                                                                                                                                     Mechanized counterexample: stochastic-criterion optimization can diverge from expected-utility static transfer.
-
-  `prop:bridge-failure-transition`            Full                 `ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`                                                                                                                                                                                                                                                                                       Mechanized counterexample: transition-coupled objective can break static transfer.
-
-  `thm:bridge-boundary-represented`           Full                 `ClaimClosure.bridge_transfer_iff_one_step_class`, `ClaimClosure.bridge_failure_witness_non_one_step`, `ClaimClosure.bridge_boundary_represented_family`                                                                                                                                                                                               Represented-family boundary closure: transfer licensed iff one-step deterministic, with explicit non-one-step witnesses.
-
-  `prop:minimal-relevant-equiv`               Full                 `DecisionProblem.minimalSufficient_iff_relevant`, `DecisionProblem.relevantSet_is_minimal`                                                                                                                                                                                                                                                             Product-space bridge: minimal sufficient sets coincide with the witness-defined relevance set.
-
-  `prop:query-regime-obstruction`             Full                 `ClaimClosure.query_obstruction_finite_state_core`, `emptySufficiency_query_indistinguishable_pair_finite`, `spikeFinite_empty_not_sufficient`                                                                                                                                                                                                         Finite-state query-regime lower-bound core (arbitrary finite state type, $|S|\ge 2$) via $I=\emptyset$ indistinguishability.
-
-  `cor:query-obstruction-bool`                Full                 `ClaimClosure.query_obstruction_boolean_corollary`, `emptySufficiency_query_indistinguishable_pair`                                                                                                                                                                                                                                                    Boolean-coordinate corollary of the finite-state core (recovers $\Omega(2^n)$ bound).
-
-  `prop:query-value-entry-lb`                 Full                 `emptySufficiency_valueEntry_indistinguishable_pair`, `valueEntryView_eq_if_hidden_untouched`, `touchedStates_card_le_query_card`                                                                                                                                                                                                                      Mechanized Boolean value-entry query lower bound (full problem via $I=\emptyset$ indistinguishability).
-
-  `prop:query-subproblem-transfer`            Full                 `ClaimClosure.subproblem_hardness_lifts_to_full`                                                                                                                                                                                                                                                                                                       Generic mechanized closure from subproblem hardness to full-problem hardness under restriction maps.
-
-  `prop:query-randomized-robustness`          Full                 `indistinguishable_pair_forces_one_error`, `indistinguishable_pair_forces_one_error_per_seed`, `decode_error_sum_two_labels`                                                                                                                                                                                                                           Seedwise mechanized randomized-robustness closure for indistinguishable yes/no pairs.
-
-  `prop:query-randomized-weighted`            Full                 `weighted_seed_error_identity`, `weighted_seed_half_floor`                                                                                                                                                                                                                                                                                             Weighted finite-support randomized closure: aggregate error mass identity on the hard pair.
-
-  `prop:query-state-batch-lb`                 Full                 `emptySufficiency_stateBatch_indistinguishable_pair`, `stateBatchView_eq_if_hidden_untouched`                                                                                                                                                                                                                                                          Mechanized state-batch query lower bound via hidden-state indistinguishability.
-
-  `prop:query-finite-state-generalization`    Full                 `emptySufficiency_query_indistinguishable_pair_finite`, `spikeFinite_empty_not_sufficient`                                                                                                                                                                                                                                                             Finite-state generalization of the empty-subproblem obstruction core (cardinality $\ge 2$).
-
-  `prop:query-tightness-full-scan`            Full                 `full_query_distinguishes_const_spike_finite`                                                                                                                                                                                                                                                                                                          Mechanized adversary-family tightness witness under full-state scan.
-
-  `prop:query-weighted-transfer`              Full                 `weightedQueryCost_ge_min_mul_card`, `weightedQueryCost_ge_min_mul_of_card_lb`                                                                                                                                                                                                                                                                         Weighted-query transfer: cardinality lower bounds lift to weighted-cost lower bounds.
-
-  `prop:oracle-lattice-transfer`              Full                 `valueEntryView_eq_of_stateBatchView_eq_on_touched`                                                                                                                                                                                                                                                                                                    Mechanized oracle-lattice transfer: state-batch agreement implies entry-view agreement on touched states.
-
-  `prop:oracle-lattice-strict`                Full                 `const_vs_scaled_opt_view_equal`, `const_vs_scaled_value_entry_diff_at_true`                                                                                                                                                                                                                                                                           Mechanized strictness witness: 'Opt'-oracle view can hide value-level differences visible to value-entry queries.
-
-  `prop:set-to-selector`                      Full                 `DecisionProblem.sufficient_implies_selectorSufficient`                                                                                                                                                                                                                                                                                                Set-valued sufficiency implies selector-level sufficiency for any deterministic selector.
-
-  `prop:zero-epsilon-reduction`               Full                 `DecisionProblem.epsOpt_zero_eq_opt`, `DecisionProblem.sufficient_iff_zeroEpsilonSufficient`                                                                                                                                                                                                                                                           Mechanized zero-$\varepsilon$ reduction: exact sufficiency is exactly the $\varepsilon=0$ case.
-
-  `prop:zero-epsilon-competence`              Full                 `IntegrityCompetence.zero_epsilon_competence_iff_exact`, `IntegrityCompetence.epsilon_competence_implies_integrity`                                                                                                                                                                                                                                    Mechanized reduction from exact competence to the $\varepsilon=0$ competence instance, with integrity preservation for each $\varepsilon$-typed relation.
-
-  `prop:selector-separation`                  Full                 `ClaimClosure.selectorSufficient_not_implies_setSufficient`                                                                                                                                                                                                                                                                                            Mechanized counterexample: selector-sufficiency does not imply set-valued sufficiency.
-
-  `prop:attempted-competence-matrix`          Full                 `IntegrityCompetence.overModelVerdict_rational_iff`, `IntegrityCompetence.admissible_matrix_counts`, `IntegrityCompetence.admissible_irrational_strictly_more_than_rational`                                                                                                                                                                           Integrity-preserving matrix is mechanized: one rational admissible cell and three irrational admissible cells.
-
-  `prop:bridge-transfer-scope`                Full                 `ClaimClosure.one_step_bridge`                                                                                                                                                                                                                                                                                                                         Transfer rule follows from the one-step deterministic bridge equivalence.
-
-  `prop:snapshot-process-typing`              Full                 `ClaimClosure.agent_transfer_licensed_iff_snapshot`, `ClaimClosure.process_bridge_failure_witness`, `ClaimClosure.snapshot_vs_process_typed_boundary`                                                                                                                                                                                                  Agent snapshot/process typing closure over represented adjacent classes: transfer license iff snapshot, with mechanized process-side bridge-failure witnesses.
-
-  `prop:one-step-bridge`                      Full                 `ClaimClosure.one_step_bridge`                                                                                                                                                                                                                                                                                                                         One-step deterministic bridge is mechanized as an equivalence of sufficiency predicates.
-
-  `prop:sufficiency-char`                     Full                 `ClaimClosure.sufficiency_iff_dq_ratio`, `ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`                                                                                                                                                                                                                                                       Finite-model quotient characterization mechanized in both ratio form and projected-cover form.
-
-  `thm:amortization`                          Full                 `HardnessDistribution.complete_model_dominates_after_threshold`                                                                                                                                                                                                                                                                                        Direct theorem mapping.
-
-  `thm:anchor-sigma2p`                        Full (conditional)   `ClaimClosure.anchor_sigma2p_reduction_core`, `ClaimClosure.anchor_sigma2p_complete_conditional`, `anchor_sufficiency_sigma2p`                                                                                                                                                                                                                         Reduction core is mechanized; completeness lift is mechanized as a conditional transfer on standard source-class facts.
-
-  `thm:centralization-dominance`              Full                 `HardnessDistribution.centralization_dominance_bundle`, `HardnessDistribution.centralization_step_saves_n_minus_one`                                                                                                                                                                                                                                   Direct pair mapping.
-
-  `thm:config-reduction`                      Full                 `ConfigReduction.config_sufficiency_iff_behavior_preserving`                                                                                                                                                                                                                                                                                           Direct theorem mapping.
-
-  `thm:cost-asymmetry-eth`                    Full (conditional)   `ClaimClosure.cost_asymmetry_eth_conditional`, `HardnessDistribution.linear_lt_exponential_plus_constant_eventually`                                                                                                                                                                                                                                   Asymptotic dominance and ETH-conditioned lift are both mechanized.
-
-  `thm:regime-coverage`                       Full                 `ClaimClosure.declaredRegimeFamily_complete`, `ClaimClosure.regime_core_claim_proved`                                                                                                                                                                                                                                                                  Declared static-class regime family is finite and exhaustive, with one mechanized core claim per regime constructor.
-
-  `thm:typed-completeness-static`             Full (conditional)   `ClaimClosure.typed_static_class_completeness`                                                                                                                                                                                                                                                                                                         Typed static-class completeness package: class-label closures + dichotomy closure + regime coverage + family exhaustiveness.
-
-  `thm:dichotomy`                             Full (conditional)   `ClaimClosure.dichotomy_conditional`, `ClaimClosure.hard_family_all_coords_core`, `ClaimClosure.explicit_state_upper_core`                                                                                                                                                                                                                             Upper-branch core and hard-family core are mechanized; ETH lower branch is mechanized as conditional transfer.
-
-  `thm:generalized-dominance`                 Full                 `HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower`                                                                                                                                                                                                                                                                  Direct theorem mapping.
-
-  `thm:generalized-saturation-possible`       Full                 `HardnessDistribution.saturatingSiteCost_eventually_constant`, `HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`                                                                                                                                                                                                             Direct construction mapping.
-
-  `thm:linear-saturation-iff-zero`            Full                 `HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`                                                                                                                                                                                                                                                                               Direct theorem mapping.
-
-  `thm:minsuff-collapse`                      Full (conditional)   `ClaimClosure.minsuff_collapse_core`, `ClaimClosure.minsuff_collapse_to_conp_conditional`, `Sigma2PHardness.min_sufficient_set_iff_relevant_card`                                                                                                                                                                                                      Quantifier collapse core and coNP-reading lift are mechanized.
-
-  `thm:minsuff-conp`                          Full (conditional)   `ClaimClosure.minsuff_collapse_core`, `ClaimClosure.minsuff_conp_complete_conditional`                                                                                                                                                                                                                                                                 coNP-completeness transfer is mechanized conditionally from the collapse core.
-
-  `thm:overmodel-diagnostic`                  Full                 `ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`, `ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`, `ConfigReduction.config_sufficiency_iff_behavior_preserving`                                                                                                                                                 Contrapositive diagnostic step mechanized under explicit boundary-characterization definition.
-
-  `thm:sufficiency-conp`                      Full (conditional)   `ClaimClosure.sufficiency_conp_reduction_core`, `ClaimClosure.sufficiency_conp_complete_conditional`, `tautology_iff_sufficient`                                                                                                                                                                                                                       Reduction core and coNP-completeness transfer are mechanized conditionally.
-
-  `thm:tax-conservation`                      Full                 `HardnessDistribution.gap_conservation_card`                                                                                                                                                                                                                                                                                                           Direct theorem mapping.
-
-  `thm:tax-grows`                             Full                 `HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`                                                                                                                                                                                                                                                                                              Direct theorem mapping.
-
-  `thm:tractable`                             Full (conditional)   `ClaimClosure.tractable_bounded_core`, `ClaimClosure.tractable_separable_core`, `ClaimClosure.tractable_tree_core`, `ClaimClosure.tractable_subcases_conditional`                                                                                                                                                                                      All three tractable branch cores and assembly closure are mechanized.
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 ## Claims Not Fully Mechanized
 
 **Status:** all theorem/proposition/corollary handles in this paper now have Lean backing. Entries marked **Full (conditional)** are explicitly mechanized transfer theorems that depend on standard external complexity facts (e.g., source-class completeness or ETH assumptions), with those dependencies represented as hypotheses in Lean.
@@ -1807,6 +1739,137 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 -   `DecisionQuotient.tractable_subcases_conditional`
 
 
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  **Paper handle**                            **Status**   **Lean support**
+  ------------------------------------------- ------------ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  `cor:exact-identifiability`                 Full         `Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`
+
+  `cor:gap-externalization`                   Full         `HardnessDistribution.simplicityTax_grows`, `HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`
+
+  `cor:gap-minimization-hard`                 Full         `Sigma2PHardness.min_sufficient_set_iff_relevant_card`
+
+  `cor:generalized-eventual-dominance`        Full         `HardnessDistribution.generalized_right_eventually_dominates_wrong`
+
+  `cor:linear-positive-no-saturation`         Full         `HardnessDistribution.no_positive_slope_linear_represents_saturating`
+
+  `cor:no-auto-minimize`                      Full         `ClaimClosure.no_auto_minimize_of_p_neq_conp`
+
+  `cor:overmodel-diagnostic-implication`      Full         `Sigma2PHardness.sufficient_iff_relevant_subset`
+
+  `cor:practice-bounded`                      Full         `sufficiency_poly_bounded_actions`
+
+  `cor:practice-diagnostic`                   Full         `Sigma2PHardness.min_sufficient_set_iff_relevant_card`
+
+  `cor:practice-structured`                   Full         `sufficiency_poly_separable`
+
+  `cor:practice-tree`                         Full         `sufficiency_poly_tree_structured`
+
+  `cor:practice-unstructured`                 Full         `all_coords_relevant_of_not_tautology`
+
+  `cor:query-obstruction-bool`                Full         `ClaimClosure.query_obstruction_boolean_corollary`, `emptySufficiency_query_indistinguishable_pair`
+
+  `cor:right-wrong-hardness`                  Full         `HardnessDistribution.right_dominates_wrong`
+
+  `cor:type-system-threshold`                 Full         `HardnessDistribution.native_dominates_manual`
+
+  `prop:adq-ordering`                         Full         `ClaimClosure.adq_ordering`
+
+  `prop:attempted-competence-matrix`          Full         `IntegrityCompetence.admissible_irrational_strictly_more_than_rational`, `IntegrityCompetence.admissible_matrix_counts`, `IntegrityCompetence.overModelVerdict_rational_iff`
+
+  `prop:bridge-failure-horizon`               Full         `ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`, `ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`
+
+  `prop:bridge-failure-stochastic`            Full         `ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`
+
+  `prop:bridge-failure-transition`            Full         `ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`
+
+  `prop:bridge-transfer-scope`                Full         `ClaimClosure.one_step_bridge`
+
+  `prop:dominance-modes`                      Full         `HardnessDistribution.centralized_higher_leverage`
+
+  `prop:generalized-assumption-boundary`      Full         `HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`, `HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`
+
+  `prop:hardness-conservation`                Full         `HardnessDistribution.totalDOF_ge_intrinsic`
+
+  `prop:hardness-efficiency-interpretation`   Full         `HardnessDistribution.hardnessEfficiency_eq_central_share`
+
+  `prop:heuristic-reusability`                Full         `ClaimClosure.bounded_actions_detectable`, `ClaimClosure.reusable_heuristic_of_detectable`, `ClaimClosure.separable_detectable`, `ClaimClosure.tree_structure_detectable`
+
+  `prop:integrity-competence-separation`      Full         `IntegrityCompetence.competence_implies_integrity`, `IntegrityCompetence.integrity_not_competent_of_nonempty_scope`
+
+  `prop:integrity-resource-bound`             Full         `ClaimClosure.integrity_resource_bound_for_sufficiency`, `IntegrityCompetence.integrity_forces_abstention`, `IntegrityCompetence.integrity_resource_bound`
+
+  `prop:minimal-relevant-equiv`               Full         `DecisionProblem.minimalSufficient_iff_relevant`, `DecisionProblem.relevantSet_is_minimal`
+
+  `prop:one-step-bridge`                      Full         `ClaimClosure.one_step_bridge`
+
+  `prop:oracle-lattice-strict`                Full         `const_vs_scaled_opt_view_equal`, `const_vs_scaled_value_entry_diff_at_true`
+
+  `prop:oracle-lattice-transfer`              Full         `ClaimClosure.oracle_lattice_transfer_as_regime_simulation`, `valueEntryView_eq_of_stateBatchView_eq_on_touched`
+
+  `prop:query-finite-state-generalization`    Full         `emptySufficiency_query_indistinguishable_pair_finite`, `spikeFinite_empty_not_sufficient`
+
+  `prop:query-randomized-robustness`          Full         `decode_error_sum_two_labels`, `indistinguishable_pair_forces_one_error`, `indistinguishable_pair_forces_one_error_per_seed`
+
+  `prop:query-randomized-weighted`            Full         `weighted_seed_error_identity`, `weighted_seed_half_floor`
+
+  `prop:query-regime-obstruction`             Full         `ClaimClosure.query_obstruction_finite_state_core`, `emptySufficiency_query_indistinguishable_pair_finite`, `spikeFinite_empty_not_sufficient`
+
+  `prop:query-state-batch-lb`                 Full         `emptySufficiency_stateBatch_indistinguishable_pair`, `stateBatchView_eq_if_hidden_untouched`
+
+  `prop:query-subproblem-transfer`            Full         `ClaimClosure.regime_simulation_transfers_hardness`, `ClaimClosure.subproblem_hardness_lifts_to_full`, `ClaimClosure.subproblem_transfer_as_regime_simulation`
+
+  `prop:query-tightness-full-scan`            Full         `full_query_distinguishes_const_spike_finite`
+
+  `prop:query-value-entry-lb`                 Full         `emptySufficiency_valueEntry_indistinguishable_pair`, `touchedStates_card_le_query_card`
+
+  `prop:query-weighted-transfer`              Full         `weightedQueryCost_ge_min_mul_card`, `weightedQueryCost_ge_min_mul_of_card_lb`
+
+  `prop:selector-separation`                  Full         `ClaimClosure.selectorSufficient_not_implies_setSufficient`
+
+  `prop:set-to-selector`                      Full         `DecisionProblem.sufficient_implies_selectorSufficient`
+
+  `prop:snapshot-process-typing`              Full         `ClaimClosure.agent_transfer_licensed_iff_snapshot`, `ClaimClosure.process_bridge_failure_witness`, `ClaimClosure.snapshot_vs_process_typed_boundary`
+
+  `prop:sufficiency-char`                     Full         `ClaimClosure.sufficiency_iff_dq_ratio`, `ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`
+
+  `prop:zero-epsilon-competence`              Full         `IntegrityCompetence.epsilon_competence_implies_integrity`, `IntegrityCompetence.zero_epsilon_competence_iff_exact`
+
+  `prop:zero-epsilon-reduction`               Full         `DecisionProblem.epsOpt_zero_eq_opt`, `DecisionProblem.sufficient_iff_zeroEpsilonSufficient`
+
+  `thm:amortization`                          Full         `HardnessDistribution.complete_model_dominates_after_threshold`
+
+  `thm:bridge-boundary-represented`           Full         `ClaimClosure.bridge_boundary_represented_family`, `ClaimClosure.bridge_failure_witness_non_one_step`, `ClaimClosure.bridge_transfer_iff_one_step_class`
+
+  `thm:centralization-dominance`              Full         `HardnessDistribution.centralization_dominance_bundle`, `HardnessDistribution.centralization_step_saves_n_minus_one`
+
+  `thm:config-reduction`                      Full         `ConfigReduction.config_sufficiency_iff_behavior_preserving`
+
+  `thm:cost-asymmetry-eth`                    Full         `ClaimClosure.cost_asymmetry_eth_conditional`, `HardnessDistribution.linear_lt_exponential_plus_constant_eventually`
+
+  `thm:dichotomy`                             Full         `ClaimClosure.dichotomy_conditional`, `ClaimClosure.explicit_state_upper_core`, `ClaimClosure.hard_family_all_coords_core`
+
+  `thm:generalized-dominance`                 Full         `HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower`
+
+  `thm:generalized-saturation-possible`       Full         `HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`, `HardnessDistribution.saturatingSiteCost_eventually_constant`
+
+  `thm:linear-saturation-iff-zero`            Full         `HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`
+
+  `thm:overmodel-diagnostic`                  Full         `ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`, `ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`
+
+  `thm:regime-coverage`                       Full         `ClaimClosure.declaredRegimeFamily_complete`, `ClaimClosure.regime_core_claim_proved`
+
+  `thm:tax-conservation`                      Full         `HardnessDistribution.gap_conservation_card`
+
+  `thm:tax-grows`                             Full         `HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`
+
+  `thm:tractable`                             Full         `ClaimClosure.tractable_bounded_core`, `ClaimClosure.tractable_separable_core`, `ClaimClosure.tractable_subcases_conditional`, `ClaimClosure.tractable_tree_core`
+
+  `thm:typed-completeness-static`             Full         `ClaimClosure.typed_static_class_completeness`
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+*Auto summary: mapped 62/62 theorem-level handles from inline anchors.*
+
+
 
 
 ---
@@ -1815,6 +1878,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 8470
-- Theorems: 383
+- Lines: 8698
+- Theorems: 393
 - `sorry` placeholders: 0

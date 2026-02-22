@@ -8,6 +8,15 @@
 # 3. Releases location: <paper_dir>/releases/{pdf, md, BUILD_LOG.txt, tar.gz}
 #
 # Content files and Lean proof statistics are auto-discovered by build_papers.py.
+#
+# Optional per-paper fields:
+#   proofs_dir: "proofs"                      # override proofs directory name
+#   archive_prefix: "paper4_toc"              # controls arXiv package/archive basename
+#   assumption_ledger_sources:                # relative paths under proofs_dir
+#     - "DecisionQuotient/ClaimClosure.lean"
+#   claim_mapping_file: "content/11_lean_proofs.tex"   # coverage appendix file
+#   arxiv_comments: "Submitted to ... (X pages)."       # overrides auto-generated arXiv comments line
+#   scaffold_from: "paper4_toc"               # derive scaffold content from another paper id
 
 # arXiv Packaging Configuration
 arxiv:
@@ -23,7 +32,7 @@ arxiv:
 papers:
   paper1:
     name: "Typing Discipline"
-    full_name: "A Universal Typing Discipline for Polymorphic Abstraction"
+    full_name: "Impossibility Theorems for Fixed-Axis Classification Systems: With Application to Type Theory"
     dir: "paper1_typing_discipline"
     latex_dir: "latex"
     latex_file: "main.tex"
@@ -36,6 +45,7 @@ papers:
     latex_dir: "latex_jsait"
     latex_file: "type_compression_jsait.tex"
     venue: "JSAIT"
+    claim_mapping_file: "content/claim_mapping_auto.tex"
     # Review submission format: pdflatex flag triggers single-column double-spaced
     submission_format:
       latex_flag: "\\JSAITREVIEW"
@@ -43,7 +53,7 @@ papers:
 
   paper2:
     name: "SSOT Foundations"
-    full_name: "Formal Foundations for the Single Source of Truth Principle"
+    full_name: "Formal Foundations for the Single Source of Truth Principle: A Language Design Specification Derived from Epistemic Coherence"
     dir: "paper2_ssot"
     latex_dir: "latex"
     latex_file: "main.tex"
@@ -51,15 +61,18 @@ papers:
 
   paper2_it:
     name: "Coherence Theory (IT)"
-    full_name: "Optimal Encoding Under Coherence Constraints: Rate-Complexity Tradeoffs in Multi-Location Representation Systems"
+    full_name: "Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability, Converse, and Side Information Bounds"
     dir: "paper2_ssot"
     latex_dir: "latex_it"
     latex_file: "coherence_it.tex"
     venue: "IEEE Transactions on Information Theory"
+    assumption_ledger_sources:
+      - "Ssot/ClaimClosure.lean"
+    claim_mapping_file: "content/11_lean_proofs.tex"
 
   paper3:
     name: "Leverage Framework"
-    full_name: "Leverage-Driven Software Architecture"
+    full_name: "Leverage-Driven Software Architecture: A Probabilistic Framework for Architectural Decision-Making"
     dir: "paper3_leverage"
     latex_dir: "latex"
     latex_file: "leverage_arxiv.tex"
@@ -67,23 +80,29 @@ papers:
 
   paper4:
     name: "Decision Quotient"
-    full_name: "Decision Quotient: Formal Semantics of Architectural Choice"
+    full_name: "Verified Polynomial-Time Reductions in Lean 4: Formalizing the Complexity of Decision-Relevant Information"
     dir: "paper4_decision_quotient"
     latex_dir: "latex"
     latex_file: "decision_quotient_arxiv.tex"
     venue: "Draft"
+    assumption_ledger_sources:
+      - "DecisionQuotient/ClaimClosure.lean"
+    claim_mapping_file: "content/claim_mapping_auto.tex"
 
   paper4_toc:
     name: "Decision Quotient (ToC)"
-    full_name: "Computational Complexity of Sufficiency in Decision Problems"
+    full_name: "Computational Complexity of Information Sufficiency"
     dir: "paper4_decision_quotient"
     latex_dir: "latex_toc"
     latex_file: "decision_quotient_toc.tex"
     venue: "Theory of Computing"
+    assumption_ledger_sources:
+      - "DecisionQuotient/ClaimClosure.lean"
+    claim_mapping_file: "content/claim_mapping_auto.tex"
 
   paper5:
     name: "Credibility"
-    full_name: "Credibility: Formal Verification of Architectural Claims"
+    full_name: "A Formal Theory of Credibility: Why Assertions of Trustworthiness Decrease Trust"
     dir: "paper5_credibility"
     latex_dir: "latex"
     latex_file: "credibility_arxiv.tex"
@@ -91,7 +110,7 @@ papers:
 
   paper6:
     name: "Formality Universality"
-    full_name: "Formality and Universality in Software Engineering"
+    full_name: "Formality as Universality: A Type Theory of Argument Epistemology"
     dir: "paper6_formality_universality"
     latex_dir: "latex"
     latex_file: "formality_arxiv.tex"
