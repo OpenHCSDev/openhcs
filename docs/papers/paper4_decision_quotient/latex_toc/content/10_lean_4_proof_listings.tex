@@ -107,6 +107,9 @@ Lean identifiers retain internal naming (\texttt{intrinsicDOF}, \texttt{simplici
 \nolinkurl{HardnessDistribution.totalExternalWork_eq_n_mul_gapCard}, \nolinkurl{HardnessDistribution.simplicityTax_grows} & Composite from two mechanized theorems. \\
 \nolinkurl{cor:gap-minimization-hard} & Full &
 \nolinkurl{Sigma2PHardness.min_sufficient_set_iff_relevant_card} & Direct theorem mapping. \\
+\nolinkurl{prop:representation-gap} & Full &
+\nolinkurl{Sigma2PHardness.representationGap}, \nolinkurl{Sigma2PHardness.representationGap_eq_zero_iff}, \nolinkurl{Sigma2PHardness.representationGap_zero_iff_minimalSufficient}, \nolinkurl{Sigma2PHardness.representationGap_missing_eq_gapCard}, \nolinkurl{Sigma2PHardness.min_representationGap_zero_iff_relevant_card} &
+Formal $\varepsilon$ object plus zero-gap, minimality, simplicity-tax component, and bounded-search collapse mapping. \\
 \nolinkurl{cor:generalized-eventual-dominance} & Full &
 \nolinkurl{HardnessDistribution.generalized_right_eventually_dominates_wrong} & Direct theorem mapping. \\
 \nolinkurl{cor:linear-positive-no-saturation} & Full &
@@ -200,6 +203,9 @@ Set-valued sufficiency implies selector-level sufficiency for any deterministic 
 \nolinkurl{prop:zero-epsilon-reduction} & Full &
 \nolinkurl{DecisionProblem.epsOpt_zero_eq_opt}, \nolinkurl{DecisionProblem.sufficient_iff_zeroEpsilonSufficient} &
 Mechanized zero-$\varepsilon$ reduction: exact sufficiency is exactly the $\varepsilon=0$ case. \\
+\nolinkurl{prop:zero-epsilon-competence} & Full &
+\nolinkurl{IntegrityCompetence.zero_epsilon_competence_iff_exact}, \nolinkurl{IntegrityCompetence.epsilon_competence_implies_integrity} &
+Mechanized reduction from exact competence to the $\varepsilon=0$ competence instance, with integrity preservation for each $\varepsilon$-typed relation. \\
 \nolinkurl{prop:selector-separation} & Full &
 \nolinkurl{ClaimClosure.selectorSufficient_not_implies_setSufficient} &
 Mechanized counterexample: selector-sufficiency does not imply set-valued sufficiency. \\
@@ -209,6 +215,9 @@ Integrity-preserving matrix is mechanized: one rational admissible cell and thre
 \nolinkurl{prop:bridge-transfer-scope} & Full &
 \nolinkurl{ClaimClosure.one_step_bridge} &
 Transfer rule follows from the one-step deterministic bridge equivalence. \\
+\nolinkurl{prop:snapshot-process-typing} & Full &
+\nolinkurl{ClaimClosure.agent_transfer_licensed_iff_snapshot}, \nolinkurl{ClaimClosure.process_bridge_failure_witness}, \nolinkurl{ClaimClosure.snapshot_vs_process_typed_boundary} &
+Agent snapshot/process typing closure over represented adjacent classes: transfer license iff snapshot, with mechanized process-side bridge-failure witnesses. \\
 \nolinkurl{prop:one-step-bridge} & Full &
 \nolinkurl{ClaimClosure.one_step_bridge} &
 One-step deterministic bridge is mechanized as an equivalence of sufficiency predicates. \\

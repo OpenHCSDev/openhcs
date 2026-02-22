@@ -52,12 +52,39 @@ def CompetentOn (R : Set (X × Y)) (Γ : Regime X) (Q : CertifyingSolver X Y W) 
   (∀ x, x ∈ Γ.inScope → ∃ y w, Q.solve x = some (y, w)) ∧
   (∀ x, x ∈ Γ.inScope → Q.solveCost x ≤ Γ.budget (Γ.encLen x))
 
+/-- ε-typed objective family:
+    for each tolerance ε, `Rε ε` is the certified target relation. -/
+abbrev EpsilonRelation (X : Type u) (Y : Type v) := ℝ → Set (X × Y)
+
+/-- ε-competence under a declared regime:
+    competence for the ε-indexed target relation. -/
+def EpsilonCompetentOn
+    (Rε : EpsilonRelation X Y) (ε : ℝ)
+    (Γ : Regime X) (Q : CertifyingSolver X Y W) : Prop :=
+  CompetentOn (Rε ε) Γ Q
+
 /-- Competence implies integrity by definition. -/
 theorem competence_implies_integrity
     (R : Set (X × Y)) (Γ : Regime X) (Q : CertifyingSolver X Y W) :
     CompetentOn R Γ Q → SolverIntegrity R Q := by
   intro h
   exact h.1
+
+/-- ε-competence implies integrity for the ε-indexed relation. -/
+theorem epsilon_competence_implies_integrity
+    (Rε : EpsilonRelation X Y) (ε : ℝ)
+    (Γ : Regime X) (Q : CertifyingSolver X Y W) :
+    EpsilonCompetentOn Rε ε Γ Q → SolverIntegrity (Rε ε) Q := by
+  intro h
+  exact competence_implies_integrity (R := Rε ε) (Γ := Γ) (Q := Q) h
+
+/-- Zero-ε reduction at the competence level:
+    if `Rε 0` is the exact relation `R`, ε-competence at ε=0 is exactly competence on `R`. -/
+theorem zero_epsilon_competence_iff_exact
+    (R : Set (X × Y)) (Rε : EpsilonRelation X Y)
+    (h0 : Rε 0 = R) (Γ : Regime X) (Q : CertifyingSolver X Y W) :
+    EpsilonCompetentOn Rε 0 Γ Q ↔ CompetentOn R Γ Q := by
+  simpa [EpsilonCompetentOn, h0]
 
 /-- A canonical integrity-preserving abstaining solver:
     - Always abstains

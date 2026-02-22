@@ -922,6 +922,68 @@ theorem bridge_boundary_represented_family :
 
 end BridgeBoundary
 
+/-! ## Agent snapshot/process typing over the represented bridge family (`#11`) -/
+
+section AgentSnapshotProcess
+
+/-- Typed agent views used by scope prose:
+`snapshotFixed` models fixed-parameter inference;
+`process*` constructors model online/dynamical update regimes. -/
+inductive AgentRegime where
+  | snapshotFixed
+  | processHorizonExtended
+  | processStochasticCriterion
+  | processTransitionCoupled
+  deriving DecidableEq, Repr
+
+/-- Projection from agent-typing vocabulary to represented bridge classes. -/
+def agentBridgeClass : AgentRegime → BridgeTypedClass
+  | .snapshotFixed => BridgeTypedClass.oneStepDeterministic
+  | .processHorizonExtended => BridgeTypedClass.horizonExtended
+  | .processStochasticCriterion => BridgeTypedClass.stochasticCriterion
+  | .processTransitionCoupled => BridgeTypedClass.transitionCoupled
+
+/-- In the represented family, transfer license is equivalent to snapshot typing. -/
+theorem agent_transfer_licensed_iff_snapshot (r : AgentRegime) :
+    bridgeTransferLicensed (agentBridgeClass r) ↔ r = AgentRegime.snapshotFixed := by
+  cases r <;> simp [agentBridgeClass, bridgeTransferLicensed]
+
+/-- Every process-typed represented class has an explicit bridge-failure witness. -/
+theorem process_bridge_failure_witness
+    (r : AgentRegime) (hr : r ≠ AgentRegime.snapshotFixed) :
+    bridgeFailureWitness (agentBridgeClass r) := by
+  cases r with
+  | snapshotFixed =>
+      cases hr rfl
+  | processHorizonExtended =>
+      simpa [agentBridgeClass] using
+        bridge_failure_witness_non_one_step
+          (c := BridgeTypedClass.horizonExtended) (hc := by decide)
+  | processStochasticCriterion =>
+      simpa [agentBridgeClass] using
+        bridge_failure_witness_non_one_step
+          (c := BridgeTypedClass.stochasticCriterion) (hc := by decide)
+  | processTransitionCoupled =>
+      simpa [agentBridgeClass] using
+        bridge_failure_witness_non_one_step
+          (c := BridgeTypedClass.transitionCoupled) (hc := by decide)
+
+/-- Packaged snapshot/process boundary result used by theorem-indexed prose. -/
+theorem snapshot_vs_process_typed_boundary :
+    bridgeTransferLicensed (agentBridgeClass AgentRegime.snapshotFixed) ∧
+    bridgeFailureWitness (agentBridgeClass AgentRegime.processHorizonExtended) ∧
+    bridgeFailureWitness (agentBridgeClass AgentRegime.processStochasticCriterion) ∧
+    bridgeFailureWitness (agentBridgeClass AgentRegime.processTransitionCoupled) := by
+  refine ⟨by simp [agentBridgeClass, bridgeTransferLicensed], ?_, ?_, ?_⟩
+  · exact process_bridge_failure_witness
+      (r := AgentRegime.processHorizonExtended) (hr := by decide)
+  · exact process_bridge_failure_witness
+      (r := AgentRegime.processStochasticCriterion) (hr := by decide)
+  · exact process_bridge_failure_witness
+      (r := AgentRegime.processTransitionCoupled) (hr := by decide)
+
+end AgentSnapshotProcess
+
 /-! ## Subproblem-to-full transfer closure (`#2`) -/
 
 section SubproblemTransfer

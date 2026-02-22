@@ -304,6 +304,23 @@ direct transfer of static sufficiency claims is licensed if and only if the clas
 \nolinkurl{ClaimClosure.bridge\_boundary\_represented\_family}.)}
 \end{theorem}
 
+\begin{definition}[Agent Snapshot vs Agent Process Typing]\label{def:agent-snapshot-process}
+Within the represented adjacent family, we type:
+\begin{itemize}
+\item \emph{agent snapshot}: fixed-parameter inference view (mapped to one-step deterministic class),
+\item \emph{agent process}: online/dynamical update views (horizon-extended, stochastic-criterion, or transition-coupled classes).
+\end{itemize}
+\end{definition}
+
+\begin{proposition}[Snapshot/Process Transfer Typing]\label{prop:snapshot-process-typing}
+In the represented adjacent family, direct transfer of static sufficiency claims is licensed if and only if the agent is typed as an \emph{agent snapshot}. Every process-typed represented class has an explicit mechanized bridge-failure witness.
+\textit{(Lean: \nolinkurl{ClaimClosure.agent_transfer_licensed_iff_snapshot},
+\nolinkurl{ClaimClosure.process_bridge_failure_witness},
+\nolinkurl{ClaimClosure.snapshot_vs_process_typed_boundary}.)}
+\end{proposition}
+
+Operationally: a trained model evaluated with fixed parameters during inference is an agent snapshot for this typing; once parameters or transition-relevant internals are updated online, the object is process-typed and transfer from static sufficiency theorems is blocked unless the one-step bridge conditions are re-established.
+
 \section{Interpretive Foundations: Hardness and Solver Claims}\label{sec:interpretive-foundations}
 
 The claims in later applied sections are theorem-indexed consequences of this section and Sections~\ref{sec:hardness}--\ref{sec:tractable}.
@@ -363,6 +380,32 @@ Fix a regime $\Gamma=(\mathcal{X}_\Gamma,E_\Gamma,\mathcal{C}_\Gamma)$ with inst
 \item (resource bound) runtime$_Q(x)\le \mathcal{C}_\Gamma(|{\rm enc}_{E_\Gamma}(x)|)$ for all $x\in\mathcal{X}_\Gamma$.
 \end{itemize}
 \end{definition}
+
+\begin{definition}[$\varepsilon$-Objective Relation Family]\label{def:epsilon-objective-family}
+An \emph{$\varepsilon$-objective relation family} is a map
+\[
+\varepsilon \mapsto \mathcal{R}_\varepsilon \subseteq \mathcal{X}\times\mathcal{Y}
+\]
+that assigns a certified target relation to each tolerance level $\varepsilon\ge 0$.
+The exact target is $\mathcal{R}_0$.
+\end{definition}
+
+\begin{definition}[$\varepsilon$-Competence Under a Regime]\label{def:epsilon-competence-regime}
+Fix a relation family $(\mathcal{R}_\varepsilon)_{\varepsilon\ge 0}$ and regime $\Gamma$.
+A certifying solver $(Q,V)$ is \emph{$\varepsilon$-competent} on $\Gamma$ if it is competent on $\Gamma$ for relation $\mathcal{R}_\varepsilon$ in the sense of Definition~\ref{def:competence-regime}.
+\end{definition}
+
+\begin{proposition}[Zero-$\varepsilon$ Competence Reduction]\label{prop:zero-epsilon-competence}
+If $\mathcal{R}_0=\mathcal{R}$, then
+\[
+\text{$\varepsilon$-competent at }\varepsilon=0
+\iff
+\text{competent for exact relation }\mathcal{R}.
+\]
+Moreover, $\varepsilon$-competence implies integrity for the corresponding $\mathcal{R}_\varepsilon$.
+\textit{(Lean: \nolinkurl{IntegrityCompetence.zero_epsilon_competence_iff_exact},
+\nolinkurl{IntegrityCompetence.epsilon_competence_implies_integrity}.)}
+\end{proposition}
 
 \begin{proposition}[Integrity--Competence Separation]\label{prop:integrity-competence-separation}
 Integrity and competence are distinct predicates: integrity constrains asserted outputs, while competence adds non-abstaining coverage under resource bounds.
