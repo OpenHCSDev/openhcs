@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Decision Quotient.
 
-- **Lines:** 7132
-- **Theorems:** 315
+- **Lines:** 11499
+- **Theorems:** 527
 - **`sorry` placeholders:** 0
 
 
@@ -31,11 +31,13 @@ lake build
 | `Complexity.lean` | Complexity |
 | `ComplexityMain.lean` | ComplexityMain |
 | `Computation.lean` | Computation |
+| `DecisionGeometry.lean` | DecisionGeometry |
 | `Dichotomy.lean` | Dichotomy |
 | `Approximation.lean` | Approximation |
 | `Elicitation.lean` | Elicitation |
 | `ValueOfInformation.lean` | ValueOfInformation |
 | `Finite.lean` | Finite |
+| `HandleAliases.lean` | HandleAliases |
 | `ApproximationHardness.lean` | ApproximationHardness |
 | `ConfigReduction.lean` | ConfigReduction |
 | `CountingComplexity.lean` | CountingComplexity |
@@ -52,6 +54,11 @@ lake build
 | `Information.lean` | Information |
 | `Instances.lean` | Instances |
 | `IntegrityCompetence.lean` | IntegrityCompetence |
+| `InteriorVerification.lean` | InteriorVerification |
+| `PhysicalBudgetCrossover.lean` | PhysicalBudgetCrossover |
+| `AccessRegime.lean` | AccessRegime |
+| `Instantiation.lean` | Instantiation |
+| `PhysicalHardness.lean` | PhysicalHardness |
 | `PolynomialReduction.lean` | PolynomialReduction |
 | `QueryComplexity.lean` | QueryComplexity |
 | `Quotient.lean` | Quotient |
@@ -59,12 +66,14 @@ lake build
 | `Reduction_AllCoords.lean` | Reduction_AllCoords |
 | `Sufficiency.lean` | Sufficiency |
 | `Summary.lean` | Summary |
+| `ThermodynamicLift.lean` | ThermodynamicLift |
 | `BoundedActions.lean` | BoundedActions |
 | `FPT.lean` | FPT |
 | `SeparableUtility.lean` | SeparableUtility |
 | `Tightness.lean` | Tightness |
 | `TreeStructure.lean` | TreeStructure |
 | `Tractable.lean` | Tractable |
+| `UniverseObjective.lean` | UniverseObjective |
 | `DecisionQuotient.lean` | DecisionQuotient |
 | `lakefile.lean` | lakefile |
 

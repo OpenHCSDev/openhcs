@@ -3,6 +3,19 @@
 
   Theorem 5.1-5.3: Impossibility Results
 
+  IMPORTANT FLAG: These theorems show that text alone CANNOT achieve high credibility
+  for exceptional claims.
+  
+  The key insight: text is CHEAP TALK (costs the same whether true or false).
+  Therefore, text is subject to the cheap talk bound.
+  
+  This is why:
+  - Editing memory text doesn't solve credibility problems
+  - Repeating assertions decreases credibility (Theorem 3.3)
+  - Meta-assertions don't help (Theorem 3.4)
+  
+  The ONLY escape is costly signals (see CostlySignals.lean).
+  
   Key results:
   - No text achieves full credibility for high-magnitude claims
   - Memory iteration is bounded in effectiveness
@@ -24,8 +37,12 @@ theorem text_is_cheap_talk (text : String) :
 def magnitudeThreshold : ℝ := 3
 
 /-- Theorem 5.1: Text credibility bound.
-    No plain text achieves credibility above the cheap talk bound.
+    
+    IMPORTANT: Text is CHEAP TALK. Therefore, no text can exceed the cheap talk bound.
+    
     For high-magnitude claims (low prior p), the bound τ = p/(p+(1-p)q) → 0.
+    This is an IMPOSSIBILITY RESULT: no amount of clever phrasing can escape it.
+    
     Note: Requires p < 1 (not p ≤ 1) because when p = 1, the bound equals 1. -/
 theorem text_credibility_bound
     (text : String) (p q : ℝ)
@@ -73,7 +90,13 @@ theorem high_magnitude_credibility_small
     h_exp_M_pos h_exp_M_lt1 h_exp_thresh_pos h_exp_thresh_lt1 h_exp_mono hq hq'
 
 /-- Theorem 5.2: Memory iteration futility.
-    Rephrasing memory entries cannot exceed the cheap-talk bound. -/
+    
+    CRITICAL: Rephrasing memory entries CANNOT exceed the cheap-talk bound.
+    
+    This is why we can't solve credibility by editing text - text is cheap talk,
+    and cheap talk bounds apply regardless of phrasing.
+    
+    IMPORTANT: This is an IMPOSSIBILITY RESULT, not a heuristic. -/
 theorem memory_iteration_futility
     (memories : List String) (p q : ℝ)
     (hp : 0 < p) (hp' : p < 1)

@@ -1,0 +1,25 @@
+\section{Related Work}\label{sec:related}
+
+This paper extends the static decision quotient to stochastic and sequential regimes. Related work falls into several categories.
+
+\subsection{Complexity of Dynamic Decision Problems}
+
+The complexity of MDPs and POMDPs is well-established: optimal MDP planning is in P, optimal POMDP planning is PSPACE-complete \cite{papadimitriou1987mdp, mundhenk2000mdp, littman1998probplanning}. Our contribution extends this to the meta-question of identifying sufficient coordinates in these settings.
+
+Sufficient statistics \cite{fisher1922mathematical} is the classical foundation. Our stochastic sufficiency definition connects to this tradition but focuses on decision-relevant information rather than statistical estimation.
+
+\subsection{Information and Signaling}
+
+Value of information \cite{howard1966information, raiffa1961applied} quantifies payment for information. We address a different question: the complexity of identifying which information is sufficient for decision.
+
+Signaling games \cite{spence1973job, myerson1979incentive, milgrom1986price} connect to our temporal integrity and credibility results (Paper 5). The agent must abstain (Paper 4), cannot credibly signal why (Paper 5), and can only escape via costly signals.
+
+\subsection{Feature Selection in Machine Learning}
+
+Feature selection asks which inputs predict outputs, known NP-hard in general \cite{blum1997selection, amaldi1998complexity, guyon2003introduction}. Our decision-theoretic analog for sufficiency is PP-complete (stochastic) and PSPACE-complete (sequential).
+
+\subsection{Regime Complexity Hierarchy}
+
+Our hierarchy Static $\subset$ Stochastic $\subset$ Sequential with complexity classes coNP $\subset$ PP $\subset$ PSPACE extends the representation-sensitive complexity results established for MDPs/POMDPs to the meta-level sufficiency problem.
+
+This paper integrates: (i) stochastic and sequential extensions, (ii) substrate cost formalization, (iii) temporal learning and integrity, and (iv) cross-regime transfer conditions.

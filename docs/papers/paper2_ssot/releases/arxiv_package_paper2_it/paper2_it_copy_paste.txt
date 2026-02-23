@@ -1,0 +1,147 @@
+AUTO-GENERATED COPY/PASTE METADATA
+Generated: 2026-02-22T22:21:37.632066
+
+=== HUMAN COPY/PASTE ===
+
+Title: Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability, Converse, and Side Information Bounds
+
+Abstract (Unicode, for Zenodo):
+We introduce the zero-incoherence capacity for interactive multi-location encoding systems: the maximum encoding rate that guarantees exactly zero probability of disagreement among replicated encodings. Our main information-theoretic results are compact and self-contained: an exact capacity theorem (C₀ = 1), a tight side-information lower bound for resolution ( ≥ log₂k bits for k-way incoherence), and a rate–complexity separation (modification cost O(1) at capacity vs Ω(n) above).
+
+The paper frames encoding locations as terminals in a multi-terminal source-coding model. Derivation (automatic deterministic dependence) is interpreted as perfect correlation that reduces effective rate; only complete derivation (one independent source) achieves zero incoherence. We give concise achievability and converse proofs in IT style, formalize the confusability/incoherence graph connection, and present an explicit mutual-information argument for the side-information bound.
+
+Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
+
+Index Terms—zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
+
+Abstract (MathJax, for arXiv):
+We introduce the zero-incoherence capacity for interactive multi-location encoding systems: the maximum encoding rate that guarantees exactly zero probability of disagreement among replicated encodings. Our main information-theoretic results are compact and self-contained: an exact capacity theorem ($C_0=1$), a tight side-information lower bound for resolution ($\geq\log_2 k$ bits for $k$-way incoherence), and a rate--complexity separation (modification cost $O(1)$ at capacity vs $\Omega(n)$ above).
+
+The paper frames encoding locations as terminals in a multi-terminal source-coding model. Derivation (automatic deterministic dependence) is interpreted as perfect correlation that reduces effective rate; only complete derivation (one independent source) achieves zero incoherence. We give concise achievability and converse proofs in IT style, formalize the confusability/incoherence graph connection, and present an explicit mutual-information argument for the side-information bound.
+
+Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
+
+**Index Terms---**zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
+
+arXiv Comments:
+IEEE Transactions on Information Theory submission. Lean 4 artifact: 9672 lines, 466 theorems/lemmas across 31 files (0 sorry placeholders).
+
+=== MACHINE YAML ===
+paper_id: paper2_it
+title: 'Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability,
+  Converse, and Side Information Bounds'
+zenodo:
+  title: 'Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability,
+    Converse, and Side Information Bounds'
+  abstract: 'We introduce the zero-incoherence capacity for interactive multi-location
+    encoding systems: the maximum encoding rate that guarantees exactly zero probability
+    of disagreement among replicated encodings. Our main information-theoretic results
+    are compact and self-contained: an exact capacity theorem (C₀ = 1), a tight side-information
+    lower bound for resolution ( ≥ log₂k bits for k-way incoherence), and a rate–complexity
+    separation (modification cost O(1) at capacity vs Ω(n) above).
+
+
+    The paper frames encoding locations as terminals in a multi-terminal source-coding
+    model. Derivation (automatic deterministic dependence) is interpreted as perfect
+    correlation that reduces effective rate; only complete derivation (one independent
+    source) achieves zero incoherence. We give concise achievability and converse
+    proofs in IT style, formalize the confusability/incoherence graph connection,
+    and present an explicit mutual-information argument for the side-information bound.
+
+
+    Theoretical contributions are supplemented by constructive instantiations (programming-language
+    patterns and a software case study). For TIT submission we move detailed language
+    evaluation, extended code examples, and the full Lean proof corpus to supplementary
+    material; the main text contains brief instantiations only. Core theorems (capacity,
+    realizability, bounds) are machine-checked in Lean 4; entropy arguments apply
+    standard Fano-inequality techniques.
+
+
+    Index Terms—zero-error capacity, multi-terminal source coding, side information,
+    mutual information, confusability graph'
+arxiv:
+  title: 'Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability,
+    Converse, and Side Information Bounds'
+  abstract: 'We introduce the zero-incoherence capacity for interactive multi-location
+    encoding systems: the maximum encoding rate that guarantees exactly zero probability
+    of disagreement among replicated encodings. Our main information-theoretic results
+    are compact and self-contained: an exact capacity theorem ($C_0=1$), a tight side-information
+    lower bound for resolution ($\geq\log_2 k$ bits for $k$-way incoherence), and
+    a rate--complexity separation (modification cost $O(1)$ at capacity vs $\Omega(n)$
+    above).
+
+
+    The paper frames encoding locations as terminals in a multi-terminal source-coding
+    model. Derivation (automatic deterministic dependence) is interpreted as perfect
+    correlation that reduces effective rate; only complete derivation (one independent
+    source) achieves zero incoherence. We give concise achievability and converse
+    proofs in IT style, formalize the confusability/incoherence graph connection,
+    and present an explicit mutual-information argument for the side-information bound.
+
+
+    Theoretical contributions are supplemented by constructive instantiations (programming-language
+    patterns and a software case study). For TIT submission we move detailed language
+    evaluation, extended code examples, and the full Lean proof corpus to supplementary
+    material; the main text contains brief instantiations only. Core theorems (capacity,
+    realizability, bounds) are machine-checked in Lean 4; entropy arguments apply
+    standard Fano-inequality techniques.
+
+
+    **Index Terms---**zero-error capacity, multi-terminal source coding, side information,
+    mutual information, confusability graph'
+  comments: 'IEEE Transactions on Information Theory submission. Lean 4 artifact:
+    9672 lines, 466 theorems/lemmas across 31 files (0 sorry placeholders).'
+abstract_variants:
+  unicode: 'We introduce the zero-incoherence capacity for interactive multi-location
+    encoding systems: the maximum encoding rate that guarantees exactly zero probability
+    of disagreement among replicated encodings. Our main information-theoretic results
+    are compact and self-contained: an exact capacity theorem (C₀ = 1), a tight side-information
+    lower bound for resolution ( ≥ log₂k bits for k-way incoherence), and a rate–complexity
+    separation (modification cost O(1) at capacity vs Ω(n) above).
+
+
+    The paper frames encoding locations as terminals in a multi-terminal source-coding
+    model. Derivation (automatic deterministic dependence) is interpreted as perfect
+    correlation that reduces effective rate; only complete derivation (one independent
+    source) achieves zero incoherence. We give concise achievability and converse
+    proofs in IT style, formalize the confusability/incoherence graph connection,
+    and present an explicit mutual-information argument for the side-information bound.
+
+
+    Theoretical contributions are supplemented by constructive instantiations (programming-language
+    patterns and a software case study). For TIT submission we move detailed language
+    evaluation, extended code examples, and the full Lean proof corpus to supplementary
+    material; the main text contains brief instantiations only. Core theorems (capacity,
+    realizability, bounds) are machine-checked in Lean 4; entropy arguments apply
+    standard Fano-inequality techniques.
+
+
+    Index Terms—zero-error capacity, multi-terminal source coding, side information,
+    mutual information, confusability graph'
+  mathjax: 'We introduce the zero-incoherence capacity for interactive multi-location
+    encoding systems: the maximum encoding rate that guarantees exactly zero probability
+    of disagreement among replicated encodings. Our main information-theoretic results
+    are compact and self-contained: an exact capacity theorem ($C_0=1$), a tight side-information
+    lower bound for resolution ($\geq\log_2 k$ bits for $k$-way incoherence), and
+    a rate--complexity separation (modification cost $O(1)$ at capacity vs $\Omega(n)$
+    above).
+
+
+    The paper frames encoding locations as terminals in a multi-terminal source-coding
+    model. Derivation (automatic deterministic dependence) is interpreted as perfect
+    correlation that reduces effective rate; only complete derivation (one independent
+    source) achieves zero incoherence. We give concise achievability and converse
+    proofs in IT style, formalize the confusability/incoherence graph connection,
+    and present an explicit mutual-information argument for the side-information bound.
+
+
+    Theoretical contributions are supplemented by constructive instantiations (programming-language
+    patterns and a software case study). For TIT submission we move detailed language
+    evaluation, extended code examples, and the full Lean proof corpus to supplementary
+    material; the main text contains brief instantiations only. Core theorems (capacity,
+    realizability, bounds) are machine-checked in Lean 4; entropy arguments apply
+    standard Fano-inequality techniques.
+
+
+    **Index Terms---**zero-error capacity, multi-terminal source coding, side information,
+    mutual information, confusability graph'

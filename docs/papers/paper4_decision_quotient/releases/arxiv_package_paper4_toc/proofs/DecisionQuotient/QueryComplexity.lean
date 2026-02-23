@@ -388,7 +388,7 @@ theorem emptySufficiency_query_indistinguishable_pair {n : ℕ}
     intro s hs
     exact Finset.mem_univ s
   have hsdiff : (Finset.univ \ Q).card = Fintype.card (Fin n → Bool) - Q.card := by
-    simpa using Finset.card_sdiff hsubset
+    simpa using Finset.card_sdiff_of_subset hsubset
   have hpos : 0 < (Finset.univ \ Q).card := by
     rw [hsdiff]
     exact Nat.sub_pos_of_lt hQ
@@ -462,7 +462,7 @@ theorem emptySufficiency_valueEntry_indistinguishable_pair {n : ℕ}
     exact Finset.mem_univ s
   have hsdiff : (Finset.univ \ touchedStates Q).card =
       Fintype.card (Fin n → Bool) - (touchedStates Q).card := by
-    simpa using Finset.card_sdiff hsubset
+    simpa using Finset.card_sdiff_of_subset hsubset
   have hpos : 0 < (Finset.univ \ touchedStates Q).card := by
     rw [hsdiff]
     exact Nat.sub_pos_of_lt hTouchedLt
@@ -620,7 +620,7 @@ theorem emptySufficiency_stateBatch_indistinguishable_pair {n : ℕ}
     intro s hs
     exact Finset.mem_univ s
   have hsdiff : (Finset.univ \ Q).card = Fintype.card (Fin n → Bool) - Q.card := by
-    simpa using Finset.card_sdiff hsubset
+    simpa using Finset.card_sdiff_of_subset hsubset
   have hpos : 0 < (Finset.univ \ Q).card := by
     rw [hsdiff]
     exact Nat.sub_pos_of_lt hQ
@@ -728,7 +728,7 @@ theorem spikeFinite_empty_not_sufficient
     intro s hs
     exact Finset.mem_univ s
   have hcardErase : (Finset.univ \ ({s0} : Finset S)).card = Fintype.card S - 1 := by
-    simpa using Finset.card_sdiff hsubset
+    simpa [Finset.card_singleton] using Finset.card_sdiff_of_subset hsubset
   have hposErase : 0 < (Finset.univ \ ({s0} : Finset S)).card := by
     rw [hcardErase]
     omega
@@ -761,7 +761,7 @@ theorem emptySufficiency_query_indistinguishable_pair_finite
     intro s hs
     exact Finset.mem_univ s
   have hsdiff : (Finset.univ \ Q).card = Fintype.card S - Q.card := by
-    simpa using Finset.card_sdiff hsubset
+    simpa using Finset.card_sdiff_of_subset hsubset
   have hpos : 0 < (Finset.univ \ Q).card := by
     rw [hsdiff]
     exact Nat.sub_pos_of_lt hQ
@@ -813,7 +813,7 @@ theorem weightedQueryCost_ge_min_mul_card
       intro q hq
       exact hmin q (by simp [hq, ha])
     have hIH' : wmin * Q.card ≤ Q.sum w := hIH hminQ
-    have hcard : (insert a Q).card = Q.card + 1 := Finset.card_insert_of_not_mem ha
+    have hcard : (insert a Q).card = Q.card + 1 := Finset.card_insert_of_notMem ha
     calc
       wmin * (insert a Q).card = wmin * (Q.card + 1) := by rw [hcard]
       _ = wmin * Q.card + wmin := by simpa using Nat.mul_succ wmin Q.card

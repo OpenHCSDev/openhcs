@@ -4,9 +4,9 @@
 
 This directory contains the complete Lean 4 formalization for SSOT Foundations.
 
-- **Lines:** 9555
-- **Theorems:** 446
-- **`sorry` placeholders:** 3
+- **Lines:** 9672
+- **Theorems:** 466
+- **`sorry` placeholders:** 0
 
 
 ## Requirements
@@ -30,6 +30,7 @@ lake build
 | `Basic.lean` | Basic |
 | `Bounds.lean` | Bounds |
 | `CaseStudies.lean` | CaseStudies |
+| `ClaimClosure.lean` | ClaimClosure |
 | `Coherence.lean` | Coherence |
 | `Completeness.lean` | Completeness |
 | `ContextFormalization.lean` | ContextFormalization |
@@ -58,7 +59,7 @@ lake build
 
 ## Verification
 
-All files compile with 3 `sorry` placeholders. All claims are machine-verified.
+All files compile with 0 `sorry` placeholders. All claims are machine-verified.
 
 ## License
 

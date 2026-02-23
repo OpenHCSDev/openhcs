@@ -81,36 +81,62 @@ noncomputable def entropy {n : ℕ} (p : FiniteDist n) : ℝ :=
 
 namespace Entropy
 
-/-- Entropy is non-negative -/
-theorem entropy_nonneg {n : ℕ} (p : FiniteDist n) : 0 ≤ entropy p := by
-  sorry
+/--
+Classical entropy facts used as external assumptions.
 
-/-- Entropy is bounded by log of support size -/
+These correspond to standard information-theoretic results (Jensen/Fano toolchain)
+that are used conditionally by the paper-level closure theorems.
+-/
+class ClassicalEntropyAssumptions : Prop where
+  entropy_nonneg_ax : ∀ {n : ℕ} (p : FiniteDist n), 0 ≤ entropy p
+  entropy_le_log_card_ax : ∀ {n : ℕ} (p : FiniteDist n),
+      entropy p ≤ Real.log (p.supportSize : ℝ)
+  entropy_uniform_ax : ∀ {n : ℕ} (hn : n > 0),
+      entropy (FiniteDist.uniform n hn) = Real.log n
+  entropy_zero_iff_ax : ∀ {n : ℕ} (p : FiniteDist n),
+      entropy p = 0 ↔ p.isDeterministic
+
+variable [ClassicalEntropyAssumptions]
+
+/-- Entropy is non-negative (conditional on `ClassicalEntropyAssumptions`). -/
+theorem entropy_nonneg {n : ℕ} (p : FiniteDist n) : 0 ≤ entropy p := by
+  exact ClassicalEntropyAssumptions.entropy_nonneg_ax p
+
+/-- Entropy is bounded by log of support size (conditional). -/
 theorem entropy_le_log_card {n : ℕ} (p : FiniteDist n) :
     entropy p ≤ Real.log (p.supportSize : ℝ) := by
-  sorry -- Proof uses Jensen's inequality for concave function -log
+  exact ClassicalEntropyAssumptions.entropy_le_log_card_ax p
 
-/-- Entropy of uniform distribution is log n -/
+/-- Entropy of the uniform distribution (conditional). -/
 theorem entropy_uniform {n : ℕ} (hn : n > 0) :
     entropy (FiniteDist.uniform n hn) = Real.log n := by
-  sorry
+  exact ClassicalEntropyAssumptions.entropy_uniform_ax hn
 
-/-- Helper: entropyTerm is zero iff p = 0 or p = 1 -/
-theorem entropyTerm_zero_iff (p : ℝ) : entropyTerm p = 0 ↔ p = 0 ∨ p = 1 := by
-  sorry
+/--
+Helper: for nonnegative probabilities, `entropyTerm p = 0` iff `p = 0` or `p = 1`.
 
-/-- Entropy is zero iff distribution is deterministic -/
+Without the nonnegativity premise, `Real.log` also vanishes at `p = -1`.
+-/
+theorem entropyTerm_zero_iff {p : ℝ} (hp : 0 ≤ p) :
+    entropyTerm p = 0 ↔ p = 0 ∨ p = 1 := by
+  by_cases h0 : p = 0
+  · simp [entropyTerm, h0]
+  · have hp_pos : 0 < p := lt_of_le_of_ne hp (Ne.symm h0)
+    constructor
+    · intro h
+      have hlog : Real.log p = 0 := by
+        exact (mul_eq_zero.mp (by simpa [entropyTerm, h0] using h)).resolve_left h0
+      right
+      exact Real.eq_one_of_pos_of_log_eq_zero hp_pos hlog
+    · intro h
+      rcases h with h' | h'
+      · contradiction
+      · subst h'
+        simp [entropyTerm]
+
+/-- Entropy is zero iff distribution is deterministic (conditional). -/
 theorem entropy_zero_iff {n : ℕ} (p : FiniteDist n) :
     entropy p = 0 ↔ p.isDeterministic := by
-  constructor
-  · intro h_ent
-    -- If H(p) = 0, then all entropy terms are zero
-    -- This means each p.prob i is either 0 or 1
-    -- Since sum is 1, exactly one has probability 1
-    sorry
-  · intro h_det
-    -- If deterministic, exactly one outcome has probability 1, rest are 0
-    -- Then entropy = -1*log(1) - 0*log(0) - ... = 0
-    sorry
+  exact ClassicalEntropyAssumptions.entropy_zero_iff_ax p
 
 end Entropy

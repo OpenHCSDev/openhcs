@@ -91,7 +91,7 @@ An encoding system achieves $C_0 = 1$ iff it provides both causal propagation an
 
 \subsection{Paper Organization}\label{overview}
 
-Core theorems (capacity, realizability, complexity bounds) are machine-checked in Lean 4~\cite{demoura2021lean4} (9,369 lines, 441 theorems, 0 \texttt{sorry} placeholders). The entropy and mutual-information arguments in Section~\ref{sec:info-converse} apply standard information theory (Fano's inequality~\cite{cover2006elements}); we state these results without separate formalization, as they follow directly from the classical source.
+Core theorems (capacity, realizability, complexity bounds) are machine-checked in Lean 4~\cite{demoura2021lean4} (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements, \LeanTotalSorry\ \texttt{sorry} placeholders). The entropy and mutual-information arguments in Section~\ref{sec:info-converse} are encoded as explicit classical-information assumptions in the Lean closure layer, matching paper-level conditional usage of Fano-style bounds~\cite{cover2006elements}.
 
 \textbf{Section~\ref{sec:foundations}---Encoding Model and Capacity.} We define multi-location encoding systems, encoding rate (DOF), and coherence/incoherence. We introduce information-theoretic quantities (value entropy, redundancy, incoherence entropy). We prove the \textbf{zero-incoherence capacity theorem} ($C_0 = 1$) with explicit achievability/converse structure, and the \textbf{side information bound} ($\geq \log_2 k$ bits for $k$-way resolution). We formalize encoding-theoretic CAP/FLP.
 

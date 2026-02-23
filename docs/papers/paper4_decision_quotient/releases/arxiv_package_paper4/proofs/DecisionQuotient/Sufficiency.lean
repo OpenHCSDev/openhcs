@@ -56,6 +56,25 @@ variable {A S : Type*} {n : ℕ} [CoordinateSpace S n]
 def DecisionProblem.isSufficient (dp : DecisionProblem A S) (I : Finset (Fin n)) : Prop :=
   ∀ s s' : S, agreeOn s s' I → dp.Opt s = dp.Opt s'
 
+/-- A deterministic selector extracts one action from an optimal-action set. -/
+def DecisionProblem.SelectedAction (dp : DecisionProblem A S) (σ : Set A → A) (s : S) : A :=
+  σ (dp.Opt s)
+
+/-- Sufficiency relative to a fixed deterministic selector. -/
+def DecisionProblem.isSelectorSufficient (dp : DecisionProblem A S)
+    (σ : Set A → A) (I : Finset (Fin n)) : Prop :=
+  ∀ s s' : S, agreeOn s s' I → dp.SelectedAction σ s = dp.SelectedAction σ s'
+
+/-- Full optimal-set sufficiency implies selector-level sufficiency
+    for every deterministic selector. -/
+theorem DecisionProblem.sufficient_implies_selectorSufficient
+    (dp : DecisionProblem A S) (I : Finset (Fin n))
+    (hI : dp.isSufficient I) (σ : Set A → A) :
+    dp.isSelectorSufficient σ I := by
+  intro s s' hagree
+  unfold DecisionProblem.SelectedAction
+  exact congrArg σ (hI s s' hagree)
+
 /-- The empty set is sufficient iff Opt is constant -/
 theorem DecisionProblem.emptySet_sufficient_iff_constant (dp : DecisionProblem A S) :
     dp.isSufficient (∅ : Finset (Fin n)) ↔ ∀ s s' : S, dp.Opt s = dp.Opt s' := by
@@ -63,9 +82,43 @@ theorem DecisionProblem.emptySet_sufficient_iff_constant (dp : DecisionProblem A
   · intro h s s'
     apply h
     intro i hi
-    exact absurd hi (Finset.not_mem_empty i)
+    exact (by simpa using hi)
   · intro h s s' _
     exact h s s'
+
+/-- Generic non-sufficiency characterization:
+    a set is not sufficient iff there exists an explicit counterexample pair
+    that agrees on the queried coordinates but has different optimal sets. -/
+theorem DecisionProblem.not_sufficient_iff_exists_counterexample
+    (dp : DecisionProblem A S) (I : Finset (Fin n)) :
+    ¬ dp.isSufficient I ↔
+      ∃ s s' : S, agreeOn s s' I ∧ dp.Opt s ≠ dp.Opt s' := by
+  unfold DecisionProblem.isSufficient
+  push_neg
+  constructor
+  · intro h
+    rcases h with ⟨s, hs⟩
+    rcases hs with ⟨s', hs'⟩
+    exact ⟨s, s', hs'.1, hs'.2⟩
+  · intro h
+    rcases h with ⟨s, s', hagree, hneq⟩
+    exact ⟨s, s', hagree, hneq⟩
+
+/-- Empty-set non-sufficiency is exactly non-constancy of the decision boundary:
+    there exist two states with different optimal sets. -/
+theorem DecisionProblem.emptySet_not_sufficient_iff_exists_opt_difference
+    (dp : DecisionProblem A S) :
+    ¬ dp.isSufficient (∅ : Finset (Fin n)) ↔
+      ∃ s s' : S, dp.Opt s ≠ dp.Opt s' := by
+  constructor
+  · intro hNot
+    rcases (DecisionProblem.not_sufficient_iff_exists_counterexample
+      (dp := dp) (I := (∅ : Finset (Fin n)))).1 hNot with ⟨s, s', _hAgree, hNeq⟩
+    exact ⟨s, s', hNeq⟩
+  · intro hDiff
+    rcases hDiff with ⟨s, s', hNeq⟩
+    exact (DecisionProblem.not_sufficient_iff_exists_counterexample
+      (dp := dp) (I := (∅ : Finset (Fin n)))).2 ⟨s, s', (by intro i hi; simpa using hi), hNeq⟩
 
 /-! ## Minimal Sufficient Sets -/
 
@@ -143,7 +196,8 @@ theorem DecisionProblem.erase_of_not_mem [DecidableEq (Fin n)]
     (dp : DecisionProblem A S) (I : Finset (Fin n)) (i : Fin n)
     (hI : dp.isSufficient I) (hi : i ∉ I) :
     dp.isSufficient (I.erase i) := by
-  have heq : I.erase i = I := Finset.erase_eq_of_not_mem hi
+  have heq : I.erase i = I := by
+    simpa [hi]
   rw [heq]
   exact hI
 
@@ -256,8 +310,7 @@ theorem DecisionProblem.sufficientSets_principal'
   ext J
   constructor
   · -- If J is sufficient, then I ⊆ J
-    intro hJ
-    intro i hi
+    intro hJ i hi
     -- i ∈ I means i is relevant (by minimalSufficient_iff_relevant)
     have hrel : dp.isRelevant i := (dp.minimalSufficient_iff_relevant I hmin i).mp hi
     -- relevant coordinates must be in any sufficient set
@@ -281,4 +334,3 @@ theorem DecisionProblem.minimalSufficient_all_relevant'
   (dp.minimalSufficient_iff_relevant I hmin i).mp hi
 
 end DecisionQuotient
-

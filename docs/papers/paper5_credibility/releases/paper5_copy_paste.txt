@@ -1,0 +1,207 @@
+AUTO-GENERATED COPY/PASTE METADATA
+Generated: 2026-02-22T22:22:20.362342
+
+=== HUMAN COPY/PASTE ===
+
+Title: A Formal Theory of Credibility: Why Assertions of Trustworthiness Decrease Trust
+
+Abstract (Unicode, for Zenodo):
+A counterintuitive phenomenon pervades epistemic communication: emphatic assertions of trustworthiness often decrease perceived trustworthiness. “Trust me” invites suspicion; excessive qualification triggers doubt rather than alleviating it. This paper provides the first formal framework explaining this phenomenon through the lens of signaling theory.
+
+Theorem (Cheap Talk Bound). For any signal s whose production cost is truth-independent, posterior credibility is bounded: Pr [C = 1 ∣ s] ≤ p/(p + (1 − p)q), where p is the prior and q is the mimicability of the signal. Verbal assertions—including assertions about credibility—are cheap talk and therefore subject to this bound.
+
+Theorem (Emphasis Penalty). There exists a threshold k^(*) such that for n > k^(*) repeated assertions of claim c: ∂C(c, s_(1..n))/∂n < 0. Additional emphasis decreases credibility, as excessive signaling is itself informative of deceptive intent.
+
+Theorem (Text Credibility Bound). For high-magnitude claims (low prior probability), no text string achieves credibility above threshold τ < 1. This is an impossibility result: rephrasing cannot escape the cheap talk bound.
+
+Theorem (Costly Signal Escape). Signals with truth-dependent costs—where Cost(s ∣ false) > Cost(s ∣ true)—can achieve arbitrarily high credibility as the cost differential increases. Machine-checked proofs are maximally costly signals: producing a compiling proof of a false theorem has infinite cost.
+
+These results integrate with the leverage framework (Paper 3): credibility leverage L_(C) = ΔC/Signal Cost is maximized by minimizing cheap talk and maximizing costly signal exposure. Claims are regime-typed by channel ([CT] cheap-talk, [VS] verifier-backed) and audience domain ([M], [S]). The theorems are formalized in Lean 4.
+
+Keywords: signaling theory, cheap talk, credibility, Bayesian epistemology, costly signals, formal verification, Lean 4
+
+Abstract (MathJax, for arXiv):
+A counterintuitive phenomenon pervades epistemic communication: emphatic assertions of trustworthiness often *decrease* perceived trustworthiness. "Trust me" invites suspicion; excessive qualification triggers doubt rather than alleviating it. This paper provides the first formal framework explaining this phenomenon through the lens of signaling theory.
+
+**Theorem (Cheap Talk Bound).** For any signal $s$ whose production cost is truth-independent, posterior credibility is bounded: $\Pr[C{=}1 \mid s] \leq p/(p + (1-p)q)$, where $p$ is the prior and $q$ is the mimicability of the signal. Verbal assertions---including assertions about credibility---are cheap talk and therefore subject to this bound.
+
+**Theorem (Emphasis Penalty).** There exists a threshold $k^*$ such that for $n > k^*$ repeated assertions of claim $c$: $\partial C(c, s_{1..n})/\partial n < 0$. Additional emphasis *decreases* credibility, as excessive signaling is itself informative of deceptive intent.
+
+**Theorem (Text Credibility Bound).** For high-magnitude claims (low prior probability), no text string achieves credibility above threshold $\tau < 1$. This is an impossibility result: rephrasing cannot escape the cheap talk bound.
+
+**Theorem (Costly Signal Escape).** Signals with truth-dependent costs---where $\text{Cost}(s \mid \text{false}) > \text{Cost}(s \mid \text{true})$---can achieve arbitrarily high credibility as the cost differential increases. Machine-checked proofs are maximally costly signals: producing a compiling proof of a false theorem has infinite cost.
+
+These results integrate with the leverage framework (Paper 3): credibility leverage $L_C = \Delta C / \text{Signal Cost}$ is maximized by minimizing cheap talk and maximizing costly signal exposure. Claims are regime-typed by channel (`[CT]` cheap-talk, `[VS]` verifier-backed) and audience domain (`[M]`, `[S]`). The theorems are formalized in Lean 4.
+
+**Keywords:** signaling theory, cheap talk, credibility, Bayesian epistemology, costly signals, formal verification, Lean 4
+
+arXiv Comments:
+Draft submission. Lean 4 artifact: 2057 lines, 82 theorems/lemmas across 10 files (0 sorry placeholders).
+
+=== MACHINE YAML ===
+paper_id: paper5
+title: 'A Formal Theory of Credibility: Why Assertions of Trustworthiness Decrease
+  Trust'
+zenodo:
+  title: 'A Formal Theory of Credibility: Why Assertions of Trustworthiness Decrease
+    Trust'
+  abstract: 'A counterintuitive phenomenon pervades epistemic communication: emphatic
+    assertions of trustworthiness often decrease perceived trustworthiness. “Trust
+    me” invites suspicion; excessive qualification triggers doubt rather than alleviating
+    it. This paper provides the first formal framework explaining this phenomenon
+    through the lens of signaling theory.
+
+
+    Theorem (Cheap Talk Bound). For any signal s whose production cost is truth-independent,
+    posterior credibility is bounded: Pr [C = 1 ∣ s] ≤ p/(p + (1 − p)q), where p is
+    the prior and q is the mimicability of the signal. Verbal assertions—including
+    assertions about credibility—are cheap talk and therefore subject to this bound.
+
+
+    Theorem (Emphasis Penalty). There exists a threshold k^(*) such that for n > k^(*)
+    repeated assertions of claim c: ∂C(c, s_(1..n))/∂n < 0. Additional emphasis decreases
+    credibility, as excessive signaling is itself informative of deceptive intent.
+
+
+    Theorem (Text Credibility Bound). For high-magnitude claims (low prior probability),
+    no text string achieves credibility above threshold τ < 1. This is an impossibility
+    result: rephrasing cannot escape the cheap talk bound.
+
+
+    Theorem (Costly Signal Escape). Signals with truth-dependent costs—where Cost(s
+    ∣ false) > Cost(s ∣ true)—can achieve arbitrarily high credibility as the cost
+    differential increases. Machine-checked proofs are maximally costly signals: producing
+    a compiling proof of a false theorem has infinite cost.
+
+
+    These results integrate with the leverage framework (Paper 3): credibility leverage
+    L_(C) = ΔC/Signal Cost is maximized by minimizing cheap talk and maximizing costly
+    signal exposure. Claims are regime-typed by channel ([CT] cheap-talk, [VS] verifier-backed)
+    and audience domain ([M], [S]). The theorems are formalized in Lean 4.
+
+
+    Keywords: signaling theory, cheap talk, credibility, Bayesian epistemology, costly
+    signals, formal verification, Lean 4'
+arxiv:
+  title: 'A Formal Theory of Credibility: Why Assertions of Trustworthiness Decrease
+    Trust'
+  abstract: 'A counterintuitive phenomenon pervades epistemic communication: emphatic
+    assertions of trustworthiness often *decrease* perceived trustworthiness. "Trust
+    me" invites suspicion; excessive qualification triggers doubt rather than alleviating
+    it. This paper provides the first formal framework explaining this phenomenon
+    through the lens of signaling theory.
+
+
+    **Theorem (Cheap Talk Bound).** For any signal $s$ whose production cost is truth-independent,
+    posterior credibility is bounded: $\Pr[C{=}1 \mid s] \leq p/(p + (1-p)q)$, where
+    $p$ is the prior and $q$ is the mimicability of the signal. Verbal assertions---including
+    assertions about credibility---are cheap talk and therefore subject to this bound.
+
+
+    **Theorem (Emphasis Penalty).** There exists a threshold $k^*$ such that for $n
+    > k^*$ repeated assertions of claim $c$: $\partial C(c, s_{1..n})/\partial n <
+    0$. Additional emphasis *decreases* credibility, as excessive signaling is itself
+    informative of deceptive intent.
+
+
+    **Theorem (Text Credibility Bound).** For high-magnitude claims (low prior probability),
+    no text string achieves credibility above threshold $\tau < 1$. This is an impossibility
+    result: rephrasing cannot escape the cheap talk bound.
+
+
+    **Theorem (Costly Signal Escape).** Signals with truth-dependent costs---where
+    $\text{Cost}(s \mid \text{false}) > \text{Cost}(s \mid \text{true})$---can achieve
+    arbitrarily high credibility as the cost differential increases. Machine-checked
+    proofs are maximally costly signals: producing a compiling proof of a false theorem
+    has infinite cost.
+
+
+    These results integrate with the leverage framework (Paper 3): credibility leverage
+    $L_C = \Delta C / \text{Signal Cost}$ is maximized by minimizing cheap talk and
+    maximizing costly signal exposure. Claims are regime-typed by channel (`[CT]`
+    cheap-talk, `[VS]` verifier-backed) and audience domain (`[M]`, `[S]`). The theorems
+    are formalized in Lean 4.
+
+
+    **Keywords:** signaling theory, cheap talk, credibility, Bayesian epistemology,
+    costly signals, formal verification, Lean 4'
+  comments: 'Draft submission. Lean 4 artifact: 2057 lines, 82 theorems/lemmas across
+    10 files (0 sorry placeholders).'
+abstract_variants:
+  unicode: 'A counterintuitive phenomenon pervades epistemic communication: emphatic
+    assertions of trustworthiness often decrease perceived trustworthiness. “Trust
+    me” invites suspicion; excessive qualification triggers doubt rather than alleviating
+    it. This paper provides the first formal framework explaining this phenomenon
+    through the lens of signaling theory.
+
+
+    Theorem (Cheap Talk Bound). For any signal s whose production cost is truth-independent,
+    posterior credibility is bounded: Pr [C = 1 ∣ s] ≤ p/(p + (1 − p)q), where p is
+    the prior and q is the mimicability of the signal. Verbal assertions—including
+    assertions about credibility—are cheap talk and therefore subject to this bound.
+
+
+    Theorem (Emphasis Penalty). There exists a threshold k^(*) such that for n > k^(*)
+    repeated assertions of claim c: ∂C(c, s_(1..n))/∂n < 0. Additional emphasis decreases
+    credibility, as excessive signaling is itself informative of deceptive intent.
+
+
+    Theorem (Text Credibility Bound). For high-magnitude claims (low prior probability),
+    no text string achieves credibility above threshold τ < 1. This is an impossibility
+    result: rephrasing cannot escape the cheap talk bound.
+
+
+    Theorem (Costly Signal Escape). Signals with truth-dependent costs—where Cost(s
+    ∣ false) > Cost(s ∣ true)—can achieve arbitrarily high credibility as the cost
+    differential increases. Machine-checked proofs are maximally costly signals: producing
+    a compiling proof of a false theorem has infinite cost.
+
+
+    These results integrate with the leverage framework (Paper 3): credibility leverage
+    L_(C) = ΔC/Signal Cost is maximized by minimizing cheap talk and maximizing costly
+    signal exposure. Claims are regime-typed by channel ([CT] cheap-talk, [VS] verifier-backed)
+    and audience domain ([M], [S]). The theorems are formalized in Lean 4.
+
+
+    Keywords: signaling theory, cheap talk, credibility, Bayesian epistemology, costly
+    signals, formal verification, Lean 4'
+  mathjax: 'A counterintuitive phenomenon pervades epistemic communication: emphatic
+    assertions of trustworthiness often *decrease* perceived trustworthiness. "Trust
+    me" invites suspicion; excessive qualification triggers doubt rather than alleviating
+    it. This paper provides the first formal framework explaining this phenomenon
+    through the lens of signaling theory.
+
+
+    **Theorem (Cheap Talk Bound).** For any signal $s$ whose production cost is truth-independent,
+    posterior credibility is bounded: $\Pr[C{=}1 \mid s] \leq p/(p + (1-p)q)$, where
+    $p$ is the prior and $q$ is the mimicability of the signal. Verbal assertions---including
+    assertions about credibility---are cheap talk and therefore subject to this bound.
+
+
+    **Theorem (Emphasis Penalty).** There exists a threshold $k^*$ such that for $n
+    > k^*$ repeated assertions of claim $c$: $\partial C(c, s_{1..n})/\partial n <
+    0$. Additional emphasis *decreases* credibility, as excessive signaling is itself
+    informative of deceptive intent.
+
+
+    **Theorem (Text Credibility Bound).** For high-magnitude claims (low prior probability),
+    no text string achieves credibility above threshold $\tau < 1$. This is an impossibility
+    result: rephrasing cannot escape the cheap talk bound.
+
+
+    **Theorem (Costly Signal Escape).** Signals with truth-dependent costs---where
+    $\text{Cost}(s \mid \text{false}) > \text{Cost}(s \mid \text{true})$---can achieve
+    arbitrarily high credibility as the cost differential increases. Machine-checked
+    proofs are maximally costly signals: producing a compiling proof of a false theorem
+    has infinite cost.
+
+
+    These results integrate with the leverage framework (Paper 3): credibility leverage
+    $L_C = \Delta C / \text{Signal Cost}$ is maximized by minimizing cheap talk and
+    maximizing costly signal exposure. Claims are regime-typed by channel (`[CT]`
+    cheap-talk, `[VS]` verifier-backed) and audience domain (`[M]`, `[S]`). The theorems
+    are formalized in Lean 4.
+
+
+    **Keywords:** signaling theory, cheap talk, credibility, Bayesian epistemology,
+    costly signals, formal verification, Lean 4'

@@ -1,8 +1,8 @@
 OpenHCS Paper Build Log
 ========================
 
-Paper: paper1 - A Universal Typing Discipline for Polymorphic Abstraction
-Package Date: 2026-02-20T21:00:26.722210
+Paper: paper1 - Impossibility Theorems for Fixed-Axis Classification Systems: With Application to Type Theory
+Package Date: 2026-02-22T22:21:07.831787
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:

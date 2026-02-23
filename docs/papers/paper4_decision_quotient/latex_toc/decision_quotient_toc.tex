@@ -2,13 +2,21 @@
 \usepackage{pentalogy-preamble}
 \IfFileExists{content/lean_stats.tex}{\input{content/lean_stats.tex}}{}
 
-\title{Computational Complexity of Sufficiency in Decision Problems}
+\title{Computational Complexity of Information Sufficiency}
 \author{
   Tristan Simas\\
   McGill University\\
   \texttt{tristan.simas@mail.mcgill.ca}
 }
 \date{\today}
+
+% Keep claim stamps and Lean tags inline and wrap-friendly (avoid superscript overflow/clipping).
+% C = grouped claim refs (D/P/C/T/L/R), R = compact regime codes.
+\newcommand{\claimstamp}[2]{\allowbreak{\scriptsize\textit{[C:#1;R:#2]}}}
+\newcommand{\leanmeta}[1]{\allowbreak{\scriptsize\textit{(L: #1)}}}
+% Compact inline handle-id token used inside \leanmeta.
+% Shared preamble defines this globally; keep local fallback only if absent.
+\providecommand{\LH}[1]{\hyperlink{lh:#1}{\texttt{#1}}}
 
 \begin{document}
 \maketitle

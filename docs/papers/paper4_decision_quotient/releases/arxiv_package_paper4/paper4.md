@@ -1,6 +1,6 @@
 # Paper: Verified Polynomial-Time Reductions in Lean 4: Formalizing the Complexity of Decision-Relevant Information
 
-**Status**: Draft-ready | **Lean**: 7132 lines, 315 theorems
+**Status**: Draft-ready | **Lean**: 11499 lines, 527 theorems
 
 ---
 
@@ -8,9 +8,9 @@
 
 We present a Lean 4 formalization of polynomial-time reductions and computational complexity proofs, demonstrated through a comprehensive analysis of *decision-relevant information*: the problem of identifying which variables matter for optimal decision-making.
 
-**Formalization contributions.** We develop a reusable framework for expressing Karp reductions, oracle complexity classes, and parameterized hardness in Lean 4. The framework integrates with Mathlib's computability library and provides: (1) bundled reduction types with polynomial-time witnesses; (2) tactics for composing reductions; (3) templates for NP/coNP/ membership and hardness proofs.
+**Formalization contributions.** We develop a reusable framework for expressing Karp reductions, oracle complexity classes, and parameterized hardness in Lean 4. The framework integrates with Mathlib's computability library and provides: (1) bundled reduction types with polynomial-time witnesses; (2) tactics for composing reductions; (3) templates for NP/coNP/\_2\^P membership and hardness proofs.
 
-**Verified complexity results.** As a case study, we formalize the complexity of the SUFFICIENCY-CHECK problem---determining which coordinates of a decision problem suffice for optimal action. We machine-verify:
+**Verified complexity results.** As a case study, we formalize the complexity of the SUFFICIENCY-CHECK problem, determining which coordinates of a decision problem suffice for optimal action. We machine-verify:
 
 -   **coNP-completeness** of sufficiency checking via reduction from TAUTOLOGY [@cook1971complexity]
 
@@ -24,7 +24,7 @@ We present a Lean 4 formalization of polynomial-time reductions and computationa
 
 All complexity claims use the input encodings fixed in Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}.
 
-The formalization comprises 7132 lines of Lean 4 with 315 machine-verified theorems/lemmas across 42 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
+The formalization comprises 11499 lines of Lean 4 with 527 machine-verified theorems/lemmas across 51 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
 
 **Practical corollaries.** The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/$\Sigma_2^P$ completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle *determining what you need to know is harder than knowing everything*. This implies that over-modeling is rational under the model and that "simpler" incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
 
@@ -67,7 +67,7 @@ Our case study addresses a core question in decision theory:
 
 > **Which variables are sufficient to determine the optimal action?**
 
-Consider a decision problem with actions $A$ and states $S = X_1 \times \cdots \times X_n$. A coordinate set $I \subseteq \{1, \ldots, n\}$ is *sufficient* if knowing only coordinates in $I$ determines optimal action: $$s_I = s'_I \implies \Opt(s) = \Opt(s')$$
+Consider a decision problem with actions $A$ and states $S = X_1 \times \cdots \times X_n$. A coordinate set $I \subseteq \{1, \ldots, n\}$ is *sufficient* if knowing only coordinates in $I$ determines optimal action: $$s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$$
 
 We prove this problem is coNP-complete (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}), finding minimum sufficient sets is coNP-complete (Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"}), and a complexity dichotomy separates polynomial time in the explicit-state model for $O(\log |S|)$-size sufficient sets from $2^{\Omega(n)}$ lower bounds under ETH in the succinct model for $\Omega(n)$-size sets.
 
@@ -78,9 +78,9 @@ The primary contribution is theoretical: a formalized reduction framework and a 
 ::: center
   **Metric**                                                 **Value**
   ----------------------- --------------------------------------------
-  Lines of Lean 4                                                 7132
-  Theorems/lemmas                                                  315
-  Proof files                                                       42
+  Lines of Lean 4                                                11499
+  Theorems/lemmas                                                  527
+  Proof files                                                       51
   Reduction proofs          5 (SAT, TAUTOLOGY, SET-COVER, ETH, W\[2\])
   External dependencies           Mathlib (computability, data.finset)
   `sorry` count                                                      0
@@ -229,7 +229,7 @@ Each theorem includes verification metadata:
     #print axioms sufficiency_coNP_complete  -- axiom dependencies
     #eval Nat.repr (countSorry `sufficiency_coNP_complete)  -- 0
 
-The build log (included in the artifact) records successful compilation of all 315 theorem/lemma statements with 0 `sorry` placeholders.
+The build log (included in the artifact) records successful compilation of all 527 theorem/lemma statements with 0 `sorry` placeholders.
 
 
 # Formal Foundations {#sec:foundations}
@@ -255,13 +255,13 @@ We formalize decision problems with coordinate structure, sufficiency of coordin
 :::
 
 ::: definition
-[]{#def:optimizer label="def:optimizer"} For state $s \in S$, the *optimal action set* is: $$\Opt(s) := \arg\max_{a \in A} U(a, s) = \{a \in A : U(a,s) = \max_{a' \in A} U(a', s)\}$$
+[]{#def:optimizer label="def:optimizer"} For state $s \in S$, the *optimal action set* is: $$\operatorname{Opt}(s) := \arg\max_{a \in A} U(a, s) = \{a \in A : U(a,s) = \max_{a' \in A} U(a', s)\}$$
 :::
 
 ## Sufficiency and Relevance
 
 ::: definition
-[]{#def:sufficient label="def:sufficient"} A coordinate set $I \subseteq \{1, \ldots, n\}$ is *sufficient* for decision problem $\mathcal{D}$ if: $$\forall s, s' \in S: \quad s_I = s'_I \implies \Opt(s) = \Opt(s')$$ Equivalently, the optimal action depends only on coordinates in $I$.
+[]{#def:sufficient label="def:sufficient"} A coordinate set $I \subseteq \{1, \ldots, n\}$ is *sufficient* for decision problem $\mathcal{D}$ if: $$\forall s, s' \in S: \quad s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$$ Equivalently, the optimal action depends only on coordinates in $I$.
 :::
 
 ::: definition
@@ -291,15 +291,15 @@ The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordina
 :::
 
 ::: definition
-[]{#def:decision-quotient label="def:decision-quotient"} The *decision quotient* for state $s$ under coordinate set $I$ is: $$\text{DQ}_I(s) = \frac{|\{a \in A : a \in \Opt(s') \text{ for some } s' \sim_I s\}|}{|A|}$$ This measures the fraction of actions that are optimal for at least one state consistent with $I$.
+[]{#def:decision-quotient label="def:decision-quotient"} The *decision quotient* for state $s$ under coordinate set $I$ is: $$\text{DQ}_I(s) = \frac{|\{a \in A : a \in \operatorname{Opt}(s') \text{ for some } s' \sim_I s\}|}{|A|}$$ This measures the fraction of actions that are optimal for at least one state consistent with $I$.
 :::
 
 ::: proposition
-[]{#prop:sufficiency-char label="prop:sufficiency-char"} Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\Opt(s)|/|A|$ for all $s \in S$.
+[]{#prop:sufficiency-char label="prop:sufficiency-char"} Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\operatorname{Opt}(s)|/|A|$ for all $s \in S$.
 :::
 
 ::: proof
-*Proof.* If $I$ is sufficient, then $s \sim_I s' \implies \Opt(s) = \Opt(s')$, so the set of actions optimal for some $s' \sim_I s$ is exactly $\Opt(s)$.
+*Proof.* If $I$ is sufficient, then $s \sim_I s' \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$, so the set of actions optimal for some $s' \sim_I s$ is exactly $\operatorname{Opt}(s)$.
 
 Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal actions form the same set (since $\text{DQ}_I(s) = \text{DQ}_I(s')$ and both equal the relative size of the common optimal set). ◻
 :::
@@ -318,7 +318,7 @@ This succinct circuit encoding is the standard representation for decision probl
 
 -   a Boolean or arithmetic circuit $C_U$ that on input $(a,s)$ outputs $U(a,s)$.
 
-The input length is $L = |A| + \sum_i \log |X_i| + |C_U|$. Polynomial time and all complexity classes (, $\Sigma_2^P$, ETH, W\[2\]) are measured in $L$. All hardness results in Section [\[sec:hardness\]](#sec:hardness){reference-type="ref" reference="sec:hardness"} use this encoding.
+The input length is $L = |A| + \sum_i \log |X_i| + |C_U|$. Polynomial time and all complexity classes (coNP, $\Sigma_2^P$, ETH, W\[2\]) are measured in $L$. All hardness results in Section [\[sec:hardness\]](#sec:hardness){reference-type="ref" reference="sec:hardness"} use this encoding.
 
 #### Explicit-state encoding (used for enumeration algorithms and experiments).
 
@@ -611,7 +611,7 @@ The transition point is where $2^{k^*} = N^{k^*/\log N}$ stops being polynomial 
 Under ETH, the lower bound is asymptotically tight in the succinct encoding. The explicit-state upper bound is tight in the sense that it matches enumeration complexity in $N$.
 :::
 
-This dichotomy explains why some domains admit tractable model selection (few relevant variables) while others require heuristics (many relevant variables). The ETH reduction chain makes precise what "hard" means: not merely coNP-complete, but requiring $2^{\Omega(n)}$ time under widely-believed complexity assumptions.
+This dichotomy explains why some domains admit tractable model selection (few relevant variables) while others require heuristics (many relevant variables). In the succinct regime, the reduction chain gives a class-level coNP statement together with a worst-case $2^{\Omega(n)}$ lower bound under the declared ETH assumption.
 
 ::: remark
 The ETH lower bound is stated in the succinct circuit encoding of Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}, where the utility function $U: A \times S \to \mathbb{R}$ is represented by a Boolean circuit computing $\mathbf{1}[U(a,s) > \theta]$ for threshold comparisons. In this model:
@@ -643,13 +643,13 @@ We distinguish the encodings of Section [\[sec:encoding\]](#sec:encoding){refer
 ## Explicit-State Encoding
 
 ::: proof
-*Proof of Part 1.* Given the full table of $U(a,s)$, compute $\Opt(s)$ for all $s \in S$ in $O(|S||A|)$ time. For SUFFICIENCY-CHECK on a given $I$, verify that for all pairs $(s,s')$ with $s_I = s'_I$, we have $\Opt(s) = \Opt(s')$. This takes $O(|S|^2|A|)$ time by direct enumeration and is polynomial in the explicit input length. If $|A|$ is constant, the runtime is $O(|S|^2)$. ◻
+*Proof of Part 1.* Given the full table of $U(a,s)$, compute $\operatorname{Opt}(s)$ for all $s \in S$ in $O(|S||A|)$ time. For SUFFICIENCY-CHECK on a given $I$, verify that for all pairs $(s,s')$ with $s_I = s'_I$, we have $\operatorname{Opt}(s) = \operatorname{Opt}(s')$. This takes $O(|S|^2|A|)$ time by direct enumeration and is polynomial in the explicit input length. If $|A|$ is constant, the runtime is $O(|S|^2)$. ◻
 :::
 
 ## Separable Utility
 
 ::: proof
-*Proof of Part 2.* If $U(a, s) = f(a) + g(s)$, then: $$\Opt(s) = \arg\max_{a \in A} [f(a) + g(s)] = \arg\max_{a \in A} f(a)$$ The optimal action is independent of the state! Thus $I = \emptyset$ is always sufficient. ◻
+*Proof of Part 2.* If $U(a, s) = f(a) + g(s)$, then: $$\operatorname{Opt}(s) = \arg\max_{a \in A} [f(a) + g(s)] = \arg\max_{a \in A} f(a)$$ The optimal action is independent of the state! Thus $I = \emptyset$ is always sufficient. ◻
 :::
 
 ## Tree-Structured Utility
@@ -675,7 +675,7 @@ For problems given in the succinct encoding without these structural restriction
 
 This section states corollaries for engineering practice. Within the formal model, the complexity results of Sections [\[sec:hardness\]](#sec:hardness){reference-type="ref" reference="sec:hardness"} and [\[sec:dichotomy\]](#sec:dichotomy){reference-type="ref" reference="sec:dichotomy"} transform engineering practice from art to mathematics. The observed behaviors (configuration over-specification, absence of automated minimization tools, heuristic model selection) are not failures of discipline but *provably optimal responses* to computational constraints under the stated cost model.
 
-The conventional critique of over-modeling ("identify only the essential variables") is computationally unrealistic in the general case. It asks engineers to solve -complete problems. A rational response is to include everything and pay linear maintenance costs, rather than attempt exponential minimization costs.
+The conventional critique of over-modeling ("identify only the essential variables") is computationally unrealistic in the general case. It asks engineers to solve coNP-complete problems. A rational response is to include everything and pay linear maintenance costs, rather than attempt exponential minimization costs.
 
 ## Configuration Simplification is SUFFICIENCY-CHECK
 
@@ -696,9 +696,9 @@ Real engineering problems reduce directly to the decision problems studied in th
 
 -   Utility $U(b, s) = 1$ if behavior $b$ occurs under configuration $s$, else $U(b, s) = 0$
 
-Then $\Opt(s) = \{b \in B : b \text{ occurs under configuration } s\}$.
+Then $\operatorname{Opt}(s) = \{b \in B : b \text{ occurs under configuration } s\}$.
 
-Coordinate set $I$ is sufficient iff: $$s_I = s'_I \implies \Opt(s) = \Opt(s')$$
+Coordinate set $I$ is sufficient iff: $$s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$$
 
 This holds iff configurations agreeing on parameters in $I$ exhibit identical behaviors.
 
@@ -706,7 +706,7 @@ Therefore, "does parameter subset $I$ preserve all behaviors?" is exactly SUFFIC
 :::
 
 ::: remark
-This reduction is *parsimonious*: every instance of configuration simplification corresponds bijectively to an instance of SUFFICIENCY-CHECK. The problems are not merely related; they are identical up to encoding.
+This reduction is *parsimonious*: every instance of configuration simplification corresponds bijectively to an instance of SUFFICIENCY-CHECK. The formulations are equivalent up to encoding under this construction.
 :::
 
 ## Computational Rationality of Over-Modeling
@@ -722,7 +722,7 @@ We now prove that over-specification is an optimal engineering strategy given th
 
 -   $C_{\text{under}}$ = expected cost of production failures from underspecification
 
-When SUFFICIENCY-CHECK is -complete (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}):
+When SUFFICIENCY-CHECK is coNP-complete (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}):
 
 1.  Worst-case finding cost is exponential: $C_{\text{find}}(n) = \Omega(2^n)$
 
@@ -736,7 +736,7 @@ Over-modeling is economically optimal under the stated model and complexity cons
 :::
 
 ::: proof
-*Proof.* By Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}, SUFFICIENCY-CHECK is -complete. Under standard complexity assumptions ($\Pclass \neq \coNP$), no polynomial-time algorithm exists for checking sufficiency.
+*Proof.* By Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}, SUFFICIENCY-CHECK is coNP-complete. Under standard complexity assumptions ($P\neq coNP$), no polynomial-time algorithm exists for checking sufficiency.
 
 Finding the minimal sufficient set requires checking sufficiency of multiple candidate sets. Exhaustive search examines: $$\sum_{i=0}^{n} \binom{n}{i} = 2^n \text{ candidate subsets}$$
 
@@ -760,7 +760,7 @@ Adding underspecification risk $C_{\text{under}}$ (production failures from miss
 :::
 
 ::: corollary
-[]{#cor:no-auto-minimize label="cor:no-auto-minimize"} Assuming $\Pclass \neq \coNP$, there exists no polynomial-time algorithm that:
+[]{#cor:no-auto-minimize label="cor:no-auto-minimize"} Assuming $P\neq coNP$, there exists no polynomial-time algorithm that:
 
 1.  Takes an arbitrary configuration file with $n$ parameters
 
@@ -770,7 +770,7 @@ Adding underspecification risk $C_{\text{under}}$ (production failures from miss
 :::
 
 ::: proof
-*Proof.* Such an algorithm would solve MINIMUM-SUFFICIENT-SET in polynomial time, contradicting Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"} (assuming $\Pclass \neq \coNP$). ◻
+*Proof.* Such an algorithm would solve MINIMUM-SUFFICIENT-SET in polynomial time, contradicting Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"} (assuming $P\neq coNP$). ◻
 :::
 
 ::: remark
@@ -781,13 +781,13 @@ Corollary [\[cor:no-auto-minimize\]](#cor:no-auto-minimize){reference-type="ref
 
 These theorems provide mathematical grounding for three widespread engineering behaviors:
 
-**1. Configuration files grow over time.** Removing parameters requires solving -complete problems. Engineers rationally choose linear maintenance cost over exponential minimization cost.
+**1. Configuration files grow over time.** Removing parameters requires solving coNP-complete problems. Engineers rationally choose linear maintenance cost over exponential minimization cost.
 
 **2. Heuristic model selection dominates.** ML practitioners use AIC, BIC, cross-validation instead of optimal feature selection because optimal selection is intractable (Theorem [\[thm:rational-overmodel\]](#thm:rational-overmodel){reference-type="ref" reference="thm:rational-overmodel"}).
 
 **3. "Include everything" is a legitimate strategy.** When determining relevance costs $\Omega(2^n)$, including all $n$ parameters costs $O(n)$. For large $n$, this is the rational choice.
 
-These are not merely workarounds or approximations. They are optimal responses under the stated model. The complexity results provide a mathematical lens: over-modeling is not a failure; it is the rational strategy under the model.
+Under the stated model, these behaviors are optimal responses to the verified complexity constraints. The conclusion is model-conditional and does not claim optimality outside the declared assumptions.
 
 
 # Experimental Validation {#sec:experiments}
@@ -866,7 +866,7 @@ This section states corollaries for software architecture. The complexity result
 Software architects routinely specify more configuration parameters than strictly necessary. Our results show this is computationally rational:
 
 ::: corollary
-Given a software system with $n$ configuration parameters, checking whether a proposed subset suffices is -complete. Finding the minimum such set is also -complete.
+Given a software system with $n$ configuration parameters, checking whether a proposed subset suffices is coNP-complete. Finding the minimum such set is also coNP-complete.
 :::
 
 This explains why configuration files grow over time: removing "unnecessary" parameters requires solving a hard problem.
@@ -1186,7 +1186,7 @@ Mathlib's computability library [@mathlib2020] provides primitive recursive fun
 
 #### The verification gap.
 
-Published complexity proofs occasionally contain errors [@lipton2009np]. Machine verification eliminates this uncertainty. Our contribution demonstrates that complexity reductions are amenable to formalization with reasonable effort (7132 lines for the full reduction suite).
+Published complexity proofs occasionally contain errors [@lipton2009np]. Machine verification eliminates this uncertainty. Our contribution demonstrates that complexity reductions are amenable to formalization with reasonable effort (11499 lines for the full reduction suite).
 
 ## Computational Decision Theory
 
@@ -1196,11 +1196,21 @@ The complexity of decision-making has been studied extensively. Papadimitriou [
 
 Closest to our contribution is the literature on feature selection and model selection hardness, which proves NP-hardness of selecting informative feature subsets and inapproximability for minimum feature sets [@blum1997selection; @amaldi1998complexity]. Those results analyze predictive relevance or compression objectives. We study decision relevance and show coNP-completeness for sufficiency checking, a different quantifier structure (universal verification) with distinct proof techniques and a full hardness/tractability landscape under explicit encoding assumptions, mechanized in Lean 4. The formalization aspect is also novel: prior work establishes hardness on paper, while we provide machine-checked reductions with explicit polynomial bounds.
 
+## Succinct Representations and Regime Separation
+
+Representation-sensitive complexity is established in planning and decision-process theory: classical and compactly represented MDP/planning problems exhibit sharp complexity shifts under different input models [@papadimitriou1987mdp; @mundhenk2000mdp; @littman1998probplanning]. Our explicit-vs-succinct separation aligns with this broader principle.
+
+The distinction in this paper is the object and scope of the classification: we classify *decision relevance* (sufficiency, anchor sufficiency, and minimum sufficient sets) for a fixed decision relation, with theorem-level regime typing and mechanized reduction chains.
+
+## Oracle and Query-Access Lower Bounds
+
+Query-access lower bounds are a standard source of computational hardness transfer [@dobzinski2012query]. Our `[Q_fin]` and `[Q_bool]` results are in this tradition, but specialized to the same sufficiency predicate used throughout the paper: they establish access-obstruction lower bounds while keeping the underlying decision relation fixed across regimes.
+
 ## Feature Selection Complexity
 
 In machine learning, feature selection asks which input features are relevant for prediction. Blum and Langley [@blum1997selection] survey the field, noting hardness in general settings. Amaldi and Kann [@amaldi1998complexity] proved that finding minimum feature sets for linear classifiers is NP-hard, and established inapproximability bounds: no polynomial-time algorithm approximates the minimum feature set within factor $2^{\log^{1-\epsilon} n}$ unless NP $\subseteq$ DTIME$(n^{\text{polylog } n})$.
 
-Our results extend this line: the decision-theoretic analog (SUFFICIENCY-CHECK) is -complete, and MINIMUM-SUFFICIENT-SET inherits this hardness. The key insight is that sufficiency checking is "dual" to feature selection; rather than asking which features predict a label, we ask which coordinates determine optimal action. The (rather than NP) classification reflects this duality: insufficiency has short certificates (counterexample state pairs), while sufficiency requires universal verification.
+Our results extend this line: the decision-theoretic analog (SUFFICIENCY-CHECK) is coNP-complete, and MINIMUM-SUFFICIENT-SET inherits this hardness. The key insight is that sufficiency checking is "dual" to feature selection; rather than asking which features predict a label, we ask which coordinates determine optimal action. The coNP (rather than NP) classification reflects this duality: insufficiency has short certificates (counterexample state pairs), while sufficiency requires universal verification.
 
 ## Sufficient Statistics
 
@@ -1210,7 +1220,7 @@ Our coordinate sufficiency is the decision-theoretic analog: a coordinate set $I
 
 -   **Statistics:** $T$ is sufficient $\iff$ $P(X | T(X), \theta) = P(X | T(X))$
 
--   **Decisions:** $I$ is sufficient $\iff$ $\Opt(s) = \Opt(s')$ whenever $s_I = s'_I$
+-   **Decisions:** $I$ is sufficient $\iff$ $\operatorname{Opt}(s) = \operatorname{Opt}(s')$ whenever $s_I = s'_I$
 
 Fisher's factorization theorem provides a characterization; our Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"} shows that *finding* minimal sufficient statistics (in the decision-theoretic sense) is computationally hard.
 
@@ -1220,7 +1230,7 @@ Pearl [@pearl2009causality] and Spirtes et al. [@spirtes2000causation] develop
 
 Our sufficiency problem is analogous: which coordinates must be observed to determine optimal action? We conjecture that optimal adjustment set selection is intractable; recent work on the complexity of causal discovery supports this [@chickering2004large].
 
-The connection runs deeper: Shpitser and Pearl [@shpitser2006identification] showed that identifying causal effects is NP-hard in general graphs. Our -completeness result for SUFFICIENCY-CHECK is the decision-theoretic counterpart.
+The connection runs deeper: Shpitser and Pearl [@shpitser2006identification] showed that identifying causal effects is NP-hard in general graphs. Our coNP-completeness result for SUFFICIENCY-CHECK is the decision-theoretic counterpart.
 
 ## Minimum Description Length and Kolmogorov Complexity
 
@@ -1228,17 +1238,17 @@ The Minimum Description Length (MDL) principle [@rissanen1978modeling; @grunwal
 
 Our decision quotient connects to this perspective: a coordinate set $I$ is sufficient if it compresses the decision problem without loss---knowing $s_I$ is as good as knowing $s$ for decision purposes. The minimal sufficient set is the MDL-optimal compression of the decision problem.
 
-The complexity results explain why MDL-based model selection uses heuristics: finding the true minimum description length is uncomputable (Kolmogorov complexity) or intractable (MDL approximations). Our results show the decision-theoretic analog is -complete---intractable but decidable.
+The complexity results explain why MDL-based model selection uses heuristics: finding the true minimum description length is uncomputable (Kolmogorov complexity) or intractable (MDL approximations). Our results show the decision-theoretic analog is coNP-complete---intractable but decidable.
 
 ## Value of Information
 
 The value of information (VOI) framework [@howard1966information] quantifies the maximum rational payment for information. Our work addresses a different question: not the *value* of information, but the *complexity* of identifying which information has value.
 
-In explicit-state representations, VOI is polynomial to compute in the input size, while identifying which information *to value* (our problem) is -complete. This separation explains why VOI is practical while optimal sensor placement remains heuristic.
+In explicit-state representations, VOI is polynomial to compute in the input size, while identifying which information *to value* (our problem) is coNP-complete. This separation explains why VOI is practical while optimal sensor placement remains heuristic.
 
 ## Sensitivity Analysis
 
-Sensitivity analysis asks how outputs change with inputs. Local sensitivity (derivatives) is polynomial; global sensitivity (Sobol indices [@sobol2001global]) requires sampling. Identifying which inputs *matter* for decision-making is our sufficiency problem, which we show is -complete.
+Sensitivity analysis asks how outputs change with inputs. Local sensitivity (derivatives) is polynomial; global sensitivity (Sobol indices [@sobol2001global]) requires sampling. Identifying which inputs *matter* for decision-making is our sufficiency problem, which we show is coNP-complete.
 
 This explains why practitioners use sampling-based sensitivity analysis rather than exact methods: exact identification of decision-relevant inputs is intractable. The dichotomy theorem (Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}) characterizes when sensitivity analysis becomes tractable (logarithmic relevant inputs) versus intractable (linear relevant inputs).
 
@@ -1247,6 +1257,10 @@ This explains why practitioners use sampling-based sensitivity analysis rather t
 Statistical model selection (AIC [@akaike1974new], BIC [@schwarz1978estimating], cross-validation [@stone1974cross]) provides practical heuristics for choosing among models. Our results provide theoretical justification: optimal model selection is intractable, so heuristics are necessary.
 
 The Simplicity Tax Theorem (Section [\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"}) adds a warning: model selection heuristics that favor "simpler" models incur hidden costs when the true model is complex. The simplicity preference fallacy (choosing low-parameter models without accounting for per-site costs) is the decision-theoretic formalization of overfitting-by-underfitting.
+
+#### Three-axis integration.
+
+To our knowledge, prior work treats these pillars separately: representation-sensitive hardness, query-access lower bounds, and certifying soundness disciplines. This paper integrates all three for the same decision-relevance object in one regime-typed and machine-checked framework.
 
 
 # Proof Engineering Insights {#sec:engineering}
@@ -1310,7 +1324,7 @@ Proving that polynomial-time reductions compose to polynomial-time requires poly
 
 #### The oracle model.
 
-For $\SigmaP{2}$-completeness, we need oracle Turing machines. We model these abstractly:
+For $\Sigma_{2}^{P}$-completeness, we need oracle Turing machines. We model these abstractly:
 
     structure OracleTM (Oracle : Type*) where
       query : Oracle → Bool
@@ -1369,11 +1383,11 @@ Keep the mathematical content ("sufficiency is the same as tautology under this 
 
 ## Formalization Size
 
--   Total Lean lines: 7132
+-   Total Lean lines: 11499
 
--   Theorem/lemma statements: 315
+-   Theorem/lemma statements: 527
 
--   Proof files: 42
+-   Proof files: 51
 
 -   `sorry` placeholders: 0
 
@@ -1400,11 +1414,11 @@ The primary contributions are methodological:
 
 Through the case study, we machine-verified:
 
--   Checking whether a coordinate set is sufficient is -complete
+-   Checking whether a coordinate set is sufficient is coNP-complete
 
--   Finding the minimum sufficient set is -complete (the $\SigmaP{2}$ structure collapses)
+-   Finding the minimum sufficient set is coNP-complete (the $\Sigma_{2}^{P}$ structure collapses)
 
--   Anchor sufficiency (fixed-coordinate subcube) is $\SigmaP{2}$-complete
+-   Anchor sufficiency (fixed-coordinate subcube) is $\Sigma_{2}^{P}$-complete
 
 -   A complexity dichotomy separates easy (logarithmic) from hard (linear) cases
 
@@ -1414,9 +1428,9 @@ These results establish a fundamental principle of rational decision-making unde
 
 > **Determining what you need to know is harder than knowing everything.**
 
-This is not a metaphor or heuristic observation. It is a mathematical theorem with universal scope *within the formal model*. Any agent facing structured uncertainty (whether a climate scientist, financial analyst, software engineer, or artificial intelligence) faces the same computational constraint when their decision problem fits the coordinate-structured encoding. The ubiquity of over-modeling across domains is not coincidence, laziness, or poor discipline. It is a rational response to intractability in the general case.
+Within the formal model, this is a theorem-level statement about verification cost: identifying sufficient information can be harder than evaluating the full objective. For decision problems that fit the coordinate-structured encoding, over-modeling is a computational response to intractable exact minimization.
 
-The principle has immediate normative force: criticizing engineers for including "irrelevant" parameters or demanding minimal models conflicts with computational reality in the general case. The dichotomy theorem (Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}) characterizes when tractability holds; outside those boundaries, over-modeling is not a failure mode---it is the rational strategy under the model.
+The dichotomy theorem (Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}) specifies when tractability holds under the declared regime assumptions. Outside those tractable boundaries, exact minimization is hardness-blocked and over-modeling remains an admissible strategy under the model.
 
 All proofs are machine-checked in Lean 4, ensuring correctness of the core mathematical claims including the reduction mappings and equivalence theorems. Complexity classifications follow from standard complexity-theoretic results (TAUTOLOGY is coNP-complete, $\exists\forall$-SAT is $\Sigma_2^\text{P}$-complete) under the encoding model described in Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}.
 
@@ -1424,7 +1438,7 @@ All proofs are machine-checked in Lean 4, ensuring correctness of the core mathe
 
 The theorems proven here are *tight within the formal model and standard assumptions*: stronger claims would require changing the model, the encoding, or the complexity assumptions.
 
-1.  **Exact complexity characterization (not just lower bounds).** We prove SUFFICIENCY-CHECK is -complete (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}). This is *both* a lower bound (-hard) and an upper bound (in ). The complexity class is exact. Additional lower or upper bounds would be redundant.
+1.  **Exact complexity characterization (not just lower bounds).** We prove SUFFICIENCY-CHECK is coNP-complete (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}). This is *both* a lower bound (coNP-hard) and an upper bound (in coNP). The complexity class is exact. Additional lower or upper bounds would be redundant.
 
 2.  **Universal over the formal model ($\forall$), not probabilistic prevalence ($\mu = 1$).** Theorems quantify over *all* decision problems satisfying the stated structural constraints and encodings, not measure-1 subsets. Measure-theoretic claims like "hard instances are prevalent" would *weaken* the results from "always hard (unless P = coNP)" to "almost always hard."
 
@@ -1436,7 +1450,7 @@ The theorems proven here are *tight within the formal model and standard assumpt
 
 **What would NOT strengthen the results:**
 
--   **Additional complexity classes:** SUFFICIENCY-CHECK is -complete. Proving it is also NP-hard, PSPACE-hard, or #P-hard would add no information (these follow from -completeness under standard reductions).
+-   **Additional complexity classes:** SUFFICIENCY-CHECK is coNP-complete. Proving it is also NP-hard, PSPACE-hard, or #P-hard would add no information (these follow from coNP-completeness under standard reductions).
 
 -   **Average-case hardness:** We prove worst-case hardness. Average-case results would be *weaker* (average $\leq$ worst) and would require distributional assumptions not present in the problem definition.
 
@@ -1472,13 +1486,13 @@ This paper proves a universal constraint on optimization under uncertainty *with
 
 -   **Universal within the model**, not domain-specific: it applies to any decision problem with coordinate structure as defined in Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference="sec:foundations"}
 
--   **Robust under standard assumptions**, not provisional: no algorithmic breakthrough circumvents -completeness (unless P = coNP)
+-   **Robust under standard assumptions**, not provisional: no algorithmic breakthrough circumvents coNP-completeness (unless P = coNP)
 
 The result explains phenomena across disciplines *within the scope of the model*: why feature selection uses heuristics, why configuration files grow, why sensitivity analysis is approximate, why model selection is art rather than science. These are not separate problems with separate explanations. They are manifestations of a single computational constraint, now formally characterized.
 
 The Simplicity Tax Theorem yields the corollary stated above: for any incomplete tool and any $n>0$ use sites, total external work is strictly larger than for a complete tool (Theorem [\[thm:complete-dominates\]](#thm:complete-dominates){reference-type="ref" reference="thm:complete-dominates"}). Therefore, avoiding over-modeling by choosing an incomplete "simpler" tool increases total work.
 
-Open questions remain (fixed-parameter tractability, quantum complexity, average-case behavior under natural distributions), but the central question---*is identifying relevance fundamentally hard?*---is answered: yes.
+Open questions remain (fixed-parameter tractability, quantum complexity, average-case behavior under natural distributions), but the central question is answered: *is identifying relevance fundamentally hard?* Yes.
 
 ## Future Work {#future-work .unnumbered}
 
@@ -1535,15 +1549,15 @@ The Lean proofs are straightforward applications of definitions and standard com
 
 3.  **Complexity dichotomy.** Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} separates logarithmic and linear regimes: polynomial behavior when the minimal sufficient set has size $O(\log |S|)$, and exponential lower bounds under ETH when it has size $\Omega(n)$. Intermediate regimes are not ruled out by the lower-bound statement.
 
-**What machine-checking guarantees.** The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic combinatorics and complexity definitions). 0 `sorry` placeholders means 0 unproven claims. The 7132 lines establish a verified chain from basic definitions (decision problems, coordinate spaces, polynomial reductions) to the final theorems (hardness results, dichotomy, tractable cases). Reviewers need not trust our informal explanations; they run `lake build` and verify the proofs themselves.
+**What machine-checking guarantees.** The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic combinatorics and complexity definitions). 0 `sorry` placeholders means 0 unproven claims. The 11499 lines establish a verified chain from basic definitions (decision problems, coordinate spaces, polynomial reductions) to the final theorems (hardness results, dichotomy, tractable cases). Reviewers need not trust our informal explanations; they run `lake build` and verify the proofs themselves.
 
-**Comparison to informal complexity arguments.** Prior work on model selection complexity (Chickering et al. [@chickering2004large], Teyssier & Koller [@teyssier2012ordering]) presents compelling informal arguments but lacks machine-checked proofs. Our contribution is not new *wisdom*---the insight that model selection is hard is old. Our contribution is *formalization*: making "coordinate sufficiency" precise enough to mechanize, constructing verified reductions, and proving the complexity results hold for the formalized definitions.
+**Comparison to informal complexity arguments.** Prior work on model selection complexity (Chickering et al. [@chickering2004large], Teyssier & Koller [@teyssier2012ordering]) presents compelling informal arguments but lacks machine-checked proofs. Our contribution is not new *wisdom*; the insight that model selection is hard is old. Our contribution is *formalization*: making "coordinate sufficiency" precise enough to mechanize, constructing verified reductions, and proving the complexity results hold for the formalized definitions.
 
 This follows the tradition of verified complexity theory: just as Nipkow & Klein [@nipkow2014concrete] formalized automata theory and Cook [@cook2018complexity] formalized NP-completeness in proof assistants, we formalize decision-theoretic complexity. The proofs are simple because the formalization makes the structure clear. Simple proofs from precise definitions are the goal, not a limitation.
 
 ## Module Structure
 
-The formalization consists of 42 files organized as follows:
+The formalization consists of 51 files organized as follows:
 
 -   `Basic.lean` -- Core definitions (DecisionProblem, CoordinateSet, Projection)
 
@@ -1594,11 +1608,11 @@ The formalization consists of 42 files organized as follows:
 
 ## Verification Status
 
--   Total lines: 7132
+-   Total lines: 11499
 
--   Theorems/lemmas: 315
+-   Theorems/lemmas: 527
 
--   Files: 42
+-   Files: 51
 
 -   Status: All proofs compile with 0 `sorry`
 
@@ -1629,7 +1643,7 @@ The coordinate structure abstracts common patterns: independent sensors, orthogo
 
 **Response:** All coNP-completeness proofs use reductions. The reduction demonstrates that TAUT instances admit an encoding as sufficiency-checking problems while preserving computational structure. This is standard methodology [@cook1971complexity; @karp1972reducibility].
 
-The claim is not that practitioners encounter SAT problems in disguise, but that sufficiency checking is *at least as hard as* TAUT. If sufficiency checking is tractable, then TAUT is solvable in polynomial time, contradicting the widely-believed $\P \neq \NP$ conjecture.
+The claim is not that practitioners encounter SAT problems in disguise, but that sufficiency checking is *at least as hard as* TAUT. If sufficiency checking is tractable, then TAUT is solvable in polynomial time, contradicting the widely-believed $\P \neq NP$ conjecture.
 
 ## On Tractable Subcase Scope
 
@@ -1683,7 +1697,7 @@ In practice, the dichotomy captures the relevant cases: either the problem has l
 
 1.  **Tractable subcases** (Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}): Check if your problem has bounded actions, separable utility, or tree structure
 
-2.  **Justification for heuristics**: Over-modeling is not laziness---it's computationally rational
+2.  **Justification for heuristics**: Over-modeling is not laziness; it's computationally rational
 
 3.  **Focus for optimization**: Don't waste effort on optimal dimension selection; invest in good defaults and local search
 
@@ -1734,6 +1748,6 @@ The "cover important axes" heuristic only works if you *correctly identify* whic
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 7132
-- Theorems: 315
+- Lines: 11499
+- Theorems: 527
 - `sorry` placeholders: 0

@@ -8,6 +8,8 @@ import DecisionQuotient.Basic
 import DecisionQuotient.Finite
 import DecisionQuotient.Quotient
 import DecisionQuotient.Sufficiency
+import DecisionQuotient.UniverseObjective
+import DecisionQuotient.DecisionGeometry
 import DecisionQuotient.Hardness
 import DecisionQuotient.Hardness.ConfigReduction
 import DecisionQuotient.Hardness.SAT
@@ -25,7 +27,17 @@ import DecisionQuotient.Reduction
 import DecisionQuotient.Dichotomy
 import DecisionQuotient.Information
 import DecisionQuotient.IntegrityCompetence
+import DecisionQuotient.PhysicalBudgetCrossover
+import DecisionQuotient.ThermodynamicLift
+import DecisionQuotient.Physics.AccessRegime
+import DecisionQuotient.Physics.PhysicalHardness
+import DecisionQuotient.Physics.Instantiation
+import DecisionQuotient.Physics.DecisionTime
+import DecisionQuotient.Physics.PhysicalIncompleteness
+import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.ClaimClosure
+import DecisionQuotient.InteriorVerification
+import DecisionQuotient.HandleAliases
 import DecisionQuotient.Economics.ValueOfInformation
 import DecisionQuotient.Economics.Elicitation
 import DecisionQuotient.Economics.Approximation

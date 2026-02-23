@@ -1,7 +1,7 @@
 \section{Computational Complexity of Decision-Relevant Uncertainty}
 \label{sec:hardness}
 
-This section establishes the computational complexity of determining which state coordinates are decision-relevant. We prove three main results:
+This section establishes the computational complexity of information sufficiency, formalized as coordinate sufficiency, for an arbitrary decision problem $\mathcal{D}$ with factored state space. Because the problems below are parameterized by $\mathcal{D}$, and the $(A, S, U)$ tuple captures any problem with choices under structured information (Remark~\ref{rem:universality}), the hardness results are universal: they apply to every problem with coordinate structure, not to a specific problem domain. We prove three main results:
 
 \begin{enumerate}
     \item \textbf{SUFFICIENCY-CHECK} is coNP-complete
@@ -12,11 +12,11 @@ This section establishes the computational complexity of determining which state
 Under the model contract of Section~\ref{sec:model-contract} and the succinct encoding of Section~\ref{sec:encoding}, these results place exact relevance identification beyond NP-completeness: in the worst case, finding (or certifying) minimal decision-relevant sets is computationally intractable.
 
 \paragraph{Reading convention for this section.}
-Each hardness theorem below is paired with a recovery boundary for the same decision relation: when structural-access assumptions in Theorem~\ref{thm:tractable} hold, polynomial-time exact procedures are recovered; when they fail in [S], the stated hardness applies.
-\textit{(Lean map handles: \nolinkurl{ClaimClosure.sufficiency_conp_complete_conditional},
-\nolinkurl{ClaimClosure.minsuff_conp_complete_conditional},
-\nolinkurl{ClaimClosure.anchor_sigma2p_complete_conditional},
-\nolinkurl{ClaimClosure.tractable_subcases_conditional}.)}
+Each hardness theorem below is paired with a recovery boundary for the same decision question: when structural-access assumptions in Theorem~\ref{thm:tractable} hold, polynomial-time exact procedures are recovered; when they fail in [S], the stated hardness applies.
+\leanmeta{\LH{CC60},
+\LH{CC36},
+\LH{CC4},
+\LH{CC71}.}
 
 \subsection{Problem Definitions}
 
@@ -28,6 +28,9 @@ A \emph{decision problem instance} is a tuple $(A, X_1, \ldots, X_n, U)$ where:
     \item $U: A \times S \to \mathbb{Q}$ is the utility function (in the succinct encoding, $U$ is given as a Boolean circuit)
 \end{itemize}
 \end{definition}
+
+\paragraph{Succinct/circuit encoding.}
+When $U$ is given succinctly as a Boolean or arithmetic circuit, the instance size refers to the circuit description rather than the (possibly exponentially large) truth table. Evaluating $U(a,s)$ on a single pair $(a,s)$ can be done in time polynomial in the circuit size, but quantification over all states (for example, "for all $s$") ranges over an exponentially large domain and is the source of the hardness results below.
 
 \begin{definition}[Optimizer Map]
 For state $s \in S$, define:
@@ -56,12 +59,16 @@ where $s_I$ denotes the projection of $s$ onto coordinates in $I$.
 
 \subsection{Hardness of SUFFICIENCY-CHECK}
 
+Classical coNP-completeness methodology follows standard NP/coNP reduction frameworks and
+polynomial-time many-one reducibility \cite{papadimitriou1994complexity,arora2009computational}.
+We instantiate that framework for SUFFICIENCY-CHECK with a mechanized TAUTOLOGY reduction.
+
 \begin{theorem}[coNP-completeness of SUFFICIENCY-CHECK]
 \label{thm:sufficiency-conp}
-SUFFICIENCY-CHECK is coNP-complete \cite{cook1971complexity, karp1972reducibility}.
-\textit{(Lean handles: \nolinkurl{ClaimClosure.sufficiency_conp_reduction_core},
-\nolinkurl{ClaimClosure.sufficiency_conp_complete_conditional},
-\nolinkurl{tautology_iff_sufficient}.)}
+SUFFICIENCY-CHECK is coNP-complete.
+\leanmeta{\LH{CC61},
+\LH{CC60},
+\LH{L18}.}
 \end{theorem}
 
 \begin{center}
@@ -76,11 +83,12 @@ $\exists\forall$-SAT & ANCHOR-SUFFICIENCY & Witness anchors iff formula true \\
 \end{center}
 
 \begin{proof}
-\textbf{Membership in coNP:} The complementary problem INSUFFICIENCY is in NP. Given a decision problem $(A, X_1, \ldots, X_n, U)$ and coordinate set $I$, a witness for insufficiency is a pair $(s, s')$ such that:
+	extbf{Membership in coNP:} The complementary problem INSUFFICIENCY is in NP. A nondeterministic verifier can check a witness pair $(s,s')$ as follows:
 \begin{enumerate}
-    \item $s_I = s'_I$ (verifiable in polynomial time)
-    \item $\text{Opt}(s) \neq \text{Opt}(s')$ (verifiable by evaluating $U$ on all alternatives)
+  \item Verify $s_I = s'_I$ by projecting and comparing coordinates; this takes time polynomial in the input size.
+  \item Evaluate $U$ on every alternative for both $s$ and $s'$. When $U$ is given as a circuit each evaluation runs in time polynomial in the circuit size; using these values the verifier checks whether $\text{Opt}(s) \neq \text{Opt}(s')$.
 \end{enumerate}
+Hence INSUFFICIENCY is in NP and SUFFICIENCY-CHECK is in coNP.
 
 \textbf{coNP-hardness:} We reduce from TAUTOLOGY.
 
@@ -112,11 +120,11 @@ For $\text{Opt}$ to be constant, $\varphi(a)$ must be true for all assignments $
 
 \paragraph{Immediate recovery boundary (SUFFICIENCY-CHECK).}
 Theorem~\ref{thm:sufficiency-conp} is the [S] general-case hardness statement. For the same sufficiency relation, Theorem~\ref{thm:tractable} gives polynomial-time recovery under explicit-state, separable, and tree-structured regimes.
-\textit{(Lean bridge handles: \nolinkurl{ClaimClosure.sufficiency_conp_complete_conditional},
-\nolinkurl{ClaimClosure.tractable_subcases_conditional},
-\nolinkurl{ClaimClosure.tractable_bounded_core},
-\nolinkurl{ClaimClosure.tractable_separable_core},
-\nolinkurl{ClaimClosure.tractable_tree_core}.)}
+\leanmeta{\LH{CC60},
+\LH{CC71},
+\LH{CC69},
+\LH{CC70},
+\LH{CC72}.}
 
 \paragraph{Mechanized strengthening (all coordinates relevant).}
 The reduction above establishes coNP-hardness using a single witness set $I=\emptyset$. For the ETH-based lower bound in Theorem~\ref{thm:dichotomy}, we additionally need worst-case instances where the minimal sufficient set has \emph{linear} size.
@@ -128,8 +136,8 @@ We formalized a strengthened reduction in Lean 4: given a Boolean formula $\varp
 \begin{theorem}[MINIMUM-SUFFICIENT-SET is coNP-complete]
 \label{thm:minsuff-conp}
 MINIMUM-SUFFICIENT-SET is coNP-complete.
-\textit{(Lean handles: \nolinkurl{ClaimClosure.minsuff_collapse_core},
-\nolinkurl{ClaimClosure.minsuff_conp_complete_conditional}.)}
+\leanmeta{\LH{CC34},
+\LH{CC36}.}
 \end{theorem}
 
 \begin{proof}
@@ -155,11 +163,11 @@ This is the same relevance object as Definition~\ref{def:relevant}; Proposition~
 
 \paragraph{Immediate recovery boundary (MINIMUM-SUFFICIENT-SET).}
 Theorem~\ref{thm:minsuff-conp} pairs with Theorem~\ref{thm:minsuff-collapse}: exact minimization complexity is governed by relevance-cardinality once the collapse is applied. Recovery then depends on computing relevance efficiently, with structured-access assumptions from Theorem~\ref{thm:tractable} giving the corresponding route for the underlying sufficiency computations.
-\textit{(Lean bridge handles: \nolinkurl{ClaimClosure.minsuff_conp_complete_conditional},
-\nolinkurl{ClaimClosure.minsuff_collapse_core},
-\nolinkurl{ClaimClosure.minsuff_collapse_to_conp_conditional},
-\nolinkurl{Sigma2PHardness.min_sufficient_set_iff_relevant_card},
-\nolinkurl{ClaimClosure.tractable_subcases_conditional}.)}
+\leanmeta{\LH{CC36},
+\LH{CC34},
+\LH{CC35},
+\LH{S2P2},
+\LH{CC71}.}
 
 \subsection{Anchor Sufficiency (Fixed Coordinates)}
 
@@ -173,12 +181,16 @@ constant on the induced subcube.
 $\text{Opt}(s)$ is constant for all states $s$ with $s_I = \alpha$?
 \end{problem}
 
+The second-level hardness template used here follows canonical
+$\Sigma_2^P$ polynomial-hierarchy characterizations
+\cite{papadimitriou1994complexity,arora2009computational}, instantiated to the anchor formulation below.
+
 \begin{theorem}[ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete]
 \label{thm:anchor-sigma2p}
-ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete \cite{stockmeyer1976polynomial} (already for Boolean coordinate spaces).
-\textit{(Lean handles: \nolinkurl{ClaimClosure.anchor_sigma2p_reduction_core},
-\nolinkurl{ClaimClosure.anchor_sigma2p_complete_conditional},
-\nolinkurl{anchor_sufficiency_sigma2p}.)}
+ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete (already for Boolean coordinate spaces).
+\leanmeta{\LH{CC5},
+\LH{CC4},
+\LH{L2}.}
 \end{theorem}
 
 \begin{proof}
@@ -224,9 +236,9 @@ Hence the subcube for this $x$ is not constant. Thus an anchor assignment exists
 
 \paragraph{Immediate boundary statement (ANCHOR-SUFFICIENCY).}
 Theorem~\ref{thm:anchor-sigma2p} remains a second-level hardness statement in the anchored formulation; unlike MINIMUM-SUFFICIENT-SET, no general collapse to relevance counting is established here, so the corresponding tractability status remains open in this model.
-\textit{(Lean anchor handles: \nolinkurl{ClaimClosure.anchor_sigma2p_reduction_core},
-\nolinkurl{ClaimClosure.anchor_sigma2p_complete_conditional},
-\nolinkurl{anchor_sufficiency_sigma2p}.)}
+\leanmeta{\LH{CC5},
+\LH{CC4},
+\LH{L2}.}
 
 \subsection{Tractable Subcases}
 
@@ -248,15 +260,67 @@ When $U(a, s) = w_a \cdot s$ for weight vectors $w_a \in \mathbb{Q}^n$, MINIMUM-
 
 \begin{corollary}[Computational Bottleneck for Exact Minimization]
 Under the succinct encoding, exact minimization of sufficient coordinate sets is coNP-hard via the $k=0$ case, and fixed-anchor minimization is $\Sigma_2^P$-complete.
-\textit{(Lean handles: \nolinkurl{ClaimClosure.minsuff_conp_complete_conditional},
-\nolinkurl{ClaimClosure.anchor_sigma2p_complete_conditional})}
+\leanmeta{\LH{CC36},
+\LH{CC4}}
 \end{corollary}
 
 \begin{proof}
 The $k=0$ case of MINIMUM-SUFFICIENT-SET is SUFFICIENCY-CHECK (Theorem~\ref{thm:sufficiency-conp}), giving coNP-hardness for exact minimization. The fixed-anchor variant is exactly Theorem~\ref{thm:anchor-sigma2p}.
 \end{proof}
 
-The modeling budget for deciding what to model is therefore a computationally constrained resource under this encoding.
+The modeling budget for deciding what to model is therefore a computationally constrained resource under this encoding.\claimstamp{Thm.~\ref{thm:sufficiency-conp}, Thm.~\ref{thm:anchor-sigma2p}}{[S]}
+
+\subsection{The succinct--minimal gap and physical agents}
+\label{sec:neuro-correspondence}
+
+In complexity theory, a \emph{succinct} representation of a combinatorial object is a Boolean circuit of size $\mathrm{poly}(n)$ that computes a function whose explicit (truth-table) form has size $2^{\Theta(n)}$. The term is standard but informal: it denotes a size class (polynomial in input variables), not a structural property. In particular, ``succinct'' does not mean \emph{minimal}. The minimal circuit for a function is the smallest circuit that computes it, a rigorous, unique object. A succinct circuit may be far larger than the minimal one while still qualifying as ``succinct'' by the poly-size criterion.
+
+\paragraph{The gap.}
+Let $C$ be a succinct circuit computing a utility function $U$, and let $C^*$ be the minimal circuit for the same function. The \emph{representation gap} $\varepsilon = |C| - |C^*|$ measures how far the agent's encoding is from the tightest possible encoding. This gap has no standard formal definition in the literature; it is the unnamed distance between an informal size class and a rigorous structural minimum.
+
+\begin{proposition}[Coordinate Representation Gap as a Formal Object]
+\label{prop:representation-gap}
+In the Boolean-coordinate model, let $R_{\mathrm{rel}}=\texttt{relevantFinset}(dp)$ and define
+\[
+\varepsilon(I)\;:=\;|I\setminus R_{\mathrm{rel}}| + |R_{\mathrm{rel}}\setminus I|.
+\]
+Then:
+\[
+\varepsilon(I)=0 \iff I=R_{\mathrm{rel}}
+\iff I \text{ is minimal sufficient}.
+\]
+\leanmeta{\LH{S2P3},
+\LH{S2P4},
+\LH{S2P5}.}
+\end{proposition}
+
+The results of this paper give $\varepsilon$ formal complexity consequences. By Theorem~\ref{thm:minsuff-conp}, determining the minimal sufficient coordinate set is \coNP-complete under the succinct encoding. By Theorem~\ref{thm:dichotomy}, under ETH there exist succinct instances requiring $2^{\Omega(n)}$ time to verify sufficiency. In the formal Boolean-coordinate collapse model, size-bounded $\varepsilon=0$ search is exactly the relevance-cardinality predicate (\textit{Lean:} \nolinkurl{S2P.min_representationGap_zero_iff_relevant_card}). Together: for an agent encoded as a succinct circuit, the worst-case cost of determining whether its own coordinate attention set is minimal is exponential in the number of input coordinates (under ETH). The gap $\varepsilon$ is not merely unnamed; it is \emph{computationally irreducible}: no polynomial-time algorithm solves all succinct instances (assuming $\mathrm{P} \neq \coNP$), and the hard instance family requires $2^{\Omega(n)}$ time.
+
+\paragraph{Physical agents as circuits.}
+Any physical agent that selects actions based on sensory state can be modeled, in the static snapshot, as a circuit: sensory inputs are coordinates $X_1, \ldots, X_n$; the agent's internal computation maps states to actions; and the quality of that mapping is measured by a utility function $U$.\claimstamp{Prop.~\ref{prop:snapshot-process-typing}, Prop.~\ref{prop:bridge-transfer-scope}}{[bridge-admissible snapshot]}
+The explicit-state encoding (truth table) of this mapping has size exponential in the number of sensory dimensions.
+No physical agent can store it.\claimstamp{Thm.~\ref{thm:dichotomy}}{[E] vs [S+ETH]}
+Every physical agent is therefore a succinct encoding, a circuit whose size is bounded by physical resources (neurons, synapses, transistors, parameters) rather than by the size of the state space it navigates.\claimstamp{Thm.~\ref{thm:dichotomy}}{[S]}
+
+This is not a metaphor.
+A biological nervous system is a feedforward or recurrent circuit that takes sensory state as input and produces motor commands as output.\claimstamp{Prop.~\ref{prop:snapshot-process-typing}}{[represented adjacent class]}
+A trained neural network is a parameterized circuit.\claimstamp{Prop.~\ref{prop:snapshot-process-typing}}{[represented adjacent class]}
+In both cases, the agent \emph{is} a succinct encoding of a utility-to-action mapping, and the question ``is this agent attending to the right inputs?'' is exactly SUFFICIENCY-CHECK under the succinct encoding.\claimstamp{Thm.~\ref{thm:config-reduction}, Thm.~\ref{thm:sufficiency-conp}}{[S]}
+The compression that makes a circuit physically realizable, with polynomial size rather than exponential size, is the same compression that makes self-verification exponentially costly in the worst case: the state space the circuit compressed away is precisely the domain that must be exhaustively checked to certify sufficiency.\claimstamp{Thm.~\ref{thm:dichotomy}, Prop.~\ref{prop:query-regime-obstruction}}{[S+ETH],[Q\_fin]}
+
+\paragraph{The simplicity tax as $\varepsilon$.}
+The simplicity tax (Definition~\ref{def:simplicity-tax}) measures $|\mathrm{Gap}(M,P)| = |R(P) \setminus A(M)|$: the number of decision-relevant coordinates that the agent's model does not handle natively. In the $\varepsilon$ decomposition above, this is exactly the unattended-relevant component $|R_{\mathrm{rel}}\setminus I|$ (\textit{Lean:} \nolinkurl{S2P.representationGap_missing_eq_gapCard},
+\nolinkurl{S2P.representationGap_eq_waste_plus_missing}). For a physical agent modeled as a circuit, this is the coordinate-level manifestation of $\varepsilon$: the agent attends to a superset of what is necessary, or fails to attend to coordinates that are relevant, and faces worst-case cost exponential in $n$ to verify which case holds (Theorem~\ref{thm:sufficiency-conp}). Theorem~\ref{thm:tax-conservation} then says the total relevance budget is conserved: unhandled coordinates are not eliminated, only redistributed as external per-site cost.
+
+\paragraph{Consequences for learned circuits.}
+Large language models and deep networks are succinct circuits with $\mathrm{poly}(n)$ parameters.\claimstamp{Thm.~\ref{thm:dichotomy}}{[S]}
+Mechanistic interpretability asks which internal components (attention heads, neurons, layers) are necessary for a given capability; this is SUFFICIENCY-CHECK applied to the circuit's internal coordinate structure.
+Pruning research asks for the minimal subcircuit that preserves performance; this is MINIMUM-SUFFICIENT-SET.
+The results of this paper imply that these questions are \coNP-hard in the worst case under succinct encoding.\claimstamp{Thm.~\ref{thm:sufficiency-conp}, Thm.~\ref{thm:minsuff-conp}}{[S]}
+Empirical progress on interpretability and pruning therefore depends on exploiting the structural properties of specific trained circuits (analogous to the tractable subcases of Theorem~\ref{thm:tractable}), not on solving the general problem.\claimstamp{Thm.~\ref{thm:sufficiency-conp}, Thm.~\ref{thm:tractable}}{[S] vs [tractable regimes]}
+
+\paragraph{Scope and caveats.}
+The formal results above apply to the static, deterministic model fixed by C1--C4 (Section~\ref{sec:model-contract}). Biological neural systems add noise, temporal dynamics, and synaptic plasticity; trained networks add stochastic optimization and distribution shift. These factors may alter empirical tractability relative to the static worst-case bounds. The bridge conditions of Proposition~\ref{prop:one-step-bridge} delineate when static sufficiency results transfer to sequential settings; beyond those conditions, the governing complexity objects change (Propositions~\ref{prop:bridge-failure-horizon}--\ref{prop:bridge-failure-transition}). The claims in this subsection are therefore regime-typed consequences of the formal results, not universal assertions about all possible agent architectures.\claimstamp{Prop.~\ref{prop:one-step-bridge}, Thm.~\ref{thm:bridge-boundary-represented}, Prop.~\ref{prop:snapshot-process-typing}}{[represented adjacent class]}
 
 \subsection{Quantifier Collapse for MINIMUM-SUFFICIENT-SET}
 
@@ -271,9 +335,9 @@ is equivalent to the coNP predicate $|\text{Relevant}| \le k$, where
 \text{Relevant} = \{i : \exists s,s'.\; s \text{ differs from } s' \text{ only at } i \text{ and } \Opt(s)\neq\Opt(s')\}.
 \]
 Consequently, MINIMUM-SUFFICIENT-SET is governed by coNP certificates rather than a genuine $\Sigma_2^P$ alternation.
-\textit{(Lean handles: \nolinkurl{ClaimClosure.minsuff_collapse_core},
-\nolinkurl{ClaimClosure.minsuff_collapse_to_conp_conditional},
-\nolinkurl{Sigma2PHardness.min_sufficient_set_iff_relevant_card}.)}
+\leanmeta{\LH{CC34},
+\LH{CC35},
+\LH{S2P2}.}
 \end{theorem}
 
 \begin{proof}

@@ -100,6 +100,22 @@ papers:
       - "DecisionQuotient/ClaimClosure.lean"
     claim_mapping_file: "content/claim_mapping_auto.tex"
 
+  paper4b:
+    name: "Stochastic and Sequential Regimes"
+    full_name: "Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency"
+    dir: "paper4_decision_quotient"
+    proofs_dir: "proofs_4b"
+    module_root: "Paper4bStochasticSequential"
+    latex_dir: "latex_4b"
+    latex_file: "decision_quotient_4b.tex"
+    venue: "Draft"
+    scaffold_from: "paper4_toc"
+    lean_dependencies:
+      - "paper4"
+    assumption_ledger_sources:
+      - "DecisionQuotient/ClaimClosure.lean"
+    claim_mapping_file: "content/claim_mapping_auto.tex"
+
   paper5:
     name: "Credibility"
     full_name: "A Formal Theory of Credibility: Why Assertions of Trustworthiness Decrease Trust"

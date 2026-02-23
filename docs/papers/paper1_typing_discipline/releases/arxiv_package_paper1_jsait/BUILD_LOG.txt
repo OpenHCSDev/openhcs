@@ -2,7 +2,7 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper1_jsait - Identification Capacity and Rate-Query Tradeoffs in Classification Systems
-Package Date: 2026-02-20T21:00:34.386027
+Package Date: 2026-02-22T22:21:18.134559
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:

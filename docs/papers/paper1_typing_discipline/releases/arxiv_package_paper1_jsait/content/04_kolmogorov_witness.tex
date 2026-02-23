@@ -2,13 +2,15 @@
 
 Recall from Section 2 that the witness cost $W(P)$ is the minimum number of primitive queries required to compute property $P$. For class identity, we ask: what is the minimum number of queries to determine if two values have the same class?
 
-\begin{theorem}[Nominal-Tag Observers Achieve Minimum Witness Cost]
+\begin{theorem}[Nominal-Tag Observers Achieve Minimum Witness Cost]\label{thm:nominal-minimum-witness-cost}
 Nominal-tag observers achieve the minimum witness cost for class identity:
 $$W_{\text{eq}} = O(1)$$
 
 Specifically, the witness is a single tag read: compare $\text{tag}(v_1) = \text{tag}(v_2)$.
 
 Attribute-only observers require $W_{\text{eq}} = \Omega(d)$ where $d$ is the distinguishing dimension (and $d \le n$, with worst-case $d = n$).
+\textit{(Lean: \nolinkurl{nominal_localization_constant_semantic},
+\nolinkurl{adversary_forces_n_minus_1_queries}.)}
 \end{theorem}
 
 \begin{proof}

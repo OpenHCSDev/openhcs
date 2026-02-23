@@ -1,8 +1,8 @@
 OpenHCS Paper Build Log
 ========================
 
-Paper: paper3 - Leverage-Driven Software Architecture
-Package Date: 2026-02-20T21:00:55.938246
+Paper: paper3 - Leverage-Driven Software Architecture: A Probabilistic Framework for Architectural Decision-Making
+Package Date: 2026-02-22T22:21:47.814740
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:

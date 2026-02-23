@@ -8,6 +8,8 @@ For costly signal $s$ with cost differential
 $\Delta = \text{Cost}(s | \bot) - \text{Cost}(s | \top) > 0$:
 \[\Pr[C=1 \mid S] \to 1 \text{ as } \Delta \to \infty\]
 Costly signals can achieve arbitrarily high credibility.
+
+\nolinkurl{Credibility.CostlySignals.costly_dominates_cheap} \nolinkurl{Credibility.CostlySignals.verified_signal_limit_one}
 \end{theorem}
 
 \begin{proof}
@@ -57,6 +59,8 @@ Then
 \]
 In particular, if $\varepsilon_F\to 0$ and $\varepsilon_T$ is bounded away from $1$,
 then $\Pr[C=1\mid A]\to 1$.
+
+\nolinkurl{Credibility.CostlySignals.verified_signal_credibility} \nolinkurl{Credibility.CostlySignals.verifiedCredibilityBound}
 \end{theorem}
 
 \begin{proof}
@@ -132,6 +136,8 @@ proof of a false theorem. The cost differential is infinite
 Let $s$ be a machine-checked proof of claim $c$. Then:
 \[\Pr[c \mid s] = 1 - \varepsilon\]
 where $\varepsilon$ accounts only for proof assistant bugs.
+
+\nolinkurl{Credibility.CostlySignals.proof_as_ultimate_signal} \nolinkurl{Credibility.CostlySignals.verified_signal_limit_one}
 \end{theorem}
 
 \begin{proof}

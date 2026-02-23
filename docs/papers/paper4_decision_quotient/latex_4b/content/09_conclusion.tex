@@ -1,0 +1,31 @@
+\section{Conclusion}\label{sec:conclusion}
+
+This paper extends the static decision quotient to stochastic and sequential regimes.
+
+\subsection*{Summary of Results}
+
+\begin{itemize}
+\item \textbf{Stochastic sufficiency} (Section~\ref{sec:stochastic}): STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT reduction. Tractable under product distributions, bounded support, log-concave.
+
+\item \textbf{Sequential sufficiency} (Section~\ref{sec:sequential}): SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF reduction. Tractable under full observability, bounded horizon, tree structure.
+
+\item \textbf{Regime hierarchy} (Section~\ref{sec:regime-hierarchy}): Static $\subset$ Stochastic $\subset$ Sequential; coNP $\subset$ PP $\subset$ PSPACE.
+
+\item \textbf{Substrate cost} (Section~\ref{sec:substrate-cost}): Verdict is $\kappa$-independent; trajectory is $\kappa$-dependent.
+
+\item \textbf{Temporal learning} (Section~\ref{sec:temporal-learning}): Bayesian structure detection reduces abstention over time.
+
+\item \textbf{Temporal integrity} (Section~\ref{sec:temporal-integrity}): Evidence-monotone retractions preserve integrity.
+\end{itemize}
+
+These results place stochastic and sequential sufficiency at higher complexity levels than static sufficiency.
+
+\subsection*{Open Questions}
+
+\begin{itemize}
+\item \textbf{Exact transfer conditions:} Characterize when stochastic sufficiency transfers to sequential.
+\item \textbf{PAC learning bounds:} Prove sample complexity bounds for structure detection.
+\item \textbf{Temporal integrity complexity:} Tight complexity bounds for TEMPORAL-INTEGRITY-CHECK.
+\end{itemize}
+
+This work extends Paper 4's framework to dynamic settings while preserving the core insight: identifying sufficient information is computationally hard, and integrity forces abstention when resources don't match problem complexity.

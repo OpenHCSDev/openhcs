@@ -1,0 +1,229 @@
+key	status	category	reason	location	title
+papadimitriou1994complexity	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/02_formal_foundations.tex:167	Computational Complexity
+blum1997selection	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:14	Selection of Relevant Features and Examples in Machine Learning
+amaldi1998complexity	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:14	On the Approximability of Some Maximum Spanning Tree Problems
+howard1966information	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:32	Information Value Theory
+moura2021lean4	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	The Lean 4 Theorem Prover and Programming Language
+cook1971complexity	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/hardness_proofs.tex:63	The Complexity of Theorem-Proving Procedures
+karp1972reducibility	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/hardness_proofs.tex:63	Reducibility Among Combinatorial Problems
+stockmeyer1976polynomial	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/hardness_proofs.tex:186	The Polynomial-Time Hierarchy
+impagliazzo2001complexity	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/03_complexity_dichotomy.tex:27	On the Complexity of $k$-SAT
+arora2009computational	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/02_formal_foundations.tex:167	Computational Complexity: A Modern Approach
+papadimitriou1987mdp	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:18	The Complexity of Markov Decision Processes
+mundhenk2000mdp	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:18	The Complexity of Finite-Horizon Markov Decision Process Problems
+littman1998probplanning	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:18	The Computational Complexity of Probabilistic Planning
+dobzinski2012query	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:24	From Query Complexity to Computational Complexity
+savage1954foundations	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/02_formal_foundations.tex:3	The Foundations of Statistics
+raiffa1961applied	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/02_formal_foundations.tex:3	Applied Statistical Decision Theory
+pearl1988probabilistic	drop	drop_nonessential	Not required for a specific retained claim.	-	Probabilistic Reasoning in Intelligent Systems
+koller2009probabilistic	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:11	Probabilistic Graphical Models: Principles and Techniques
+akaike1974new	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/05_mathematical_justification_of_engineering_practice.tex:171	A New Look at the Statistical Model Identification
+schwarz1978estimating	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/05_mathematical_justification_of_engineering_practice.tex:171	Estimating the Dimension of a Model
+stone1974cross	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/05_mathematical_justification_of_engineering_practice.tex:171	Cross-validatory choice and assessment of statistical predictions
+chickering2004large	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:11	Large-Sample Learning of {Bayesian
+teyssier2012ordering	drop	drop_nonessential	Not required for a specific retained claim.	-	Ordering-Based Search: A Simple and Effective Algorithm for Learning {Bayesian
+nipkow2014concrete	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:5	Concrete Semantics with {Isabelle/HOL
+cook2018complexity	drop	drop_nonessential	Not required for a specific retained claim.	-	The {P
+mcconnell2010certifying	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/02_formal_foundations.tex:365	Certifying Algorithms
+necula1997proof	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/02_formal_foundations.tex:365	Proof-Carrying Code
+sep_bounded_rationality	keep	keep_other	Directly cited in claim-bearing prose.	docs/papers/paper4_decision_quotient/latex_toc/content/05_mathematical_justification_of_engineering_practice.tex:22	Bounded Rationality
+fisher1922mathematical	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	On the Mathematical Foundations of Theoretical Statistics
+lehmann1950completeness	drop	drop_nonessential	Not required for a specific retained claim.	-	Completeness, Similar Regions, and Unbiased Estimation
+pearl2009causality	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/05_mathematical_justification_of_engineering_practice.tex:171	Causality: Models, Reasoning, and Inference
+spirtes2000causation	drop	drop_nonessential	Not required for a specific retained claim.	-	Causation, Prediction, and Search
+shpitser2006identification	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:11	Identification of Joint Interventional Distributions in Recursive Semi-{Markovian
+rissanen1978modeling	drop	drop_nonessential	Not required for a specific retained claim.	-	Modeling by Shortest Data Description
+grunwald2007minimum	drop	drop_nonessential	Not required for a specific retained claim.	-	The Minimum Description Length Principle
+li2008introduction	drop	drop_nonessential	Not required for a specific retained claim.	-	An Introduction to {Kolmogorov
+sobol2001global	drop	drop_nonessential	Not required for a specific retained claim.	-	Global Sensitivity Indices for Nonlinear Mathematical Models and Their {Monte Carlo
+guyon2003introduction	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/05_mathematical_justification_of_engineering_practice.tex:171	An Introduction to Variable and Feature Selection
+forster2019verified	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	Verified Programming of {Turing
+kunze2019formal	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	Formal Small-step Verification of a Call-by-value Lambda Calculus Machine
+nipkow2002isabelle	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:5	{Isabelle/HOL
+haslbeck2021verified	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:5	Verified Analysis of List Update Algorithms
+mathlib2020	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	The {Lean
+lipton2009np	drop	drop_nonessential	Not required for a specific retained claim.	-	The {P
+feige1998threshold	drop	drop_nonessential	Not required for a specific retained claim.	-	A Threshold of $\ln n$ for Approximating Set Cover
+cardelli1988semantics	drop	drop_nonessential	Not required for a specific retained claim.	-	A semantics of multiple inheritance
+malayeri2008integrating	drop	drop_nonessential	Not required for a specific retained claim.	-	Integrating nominal and structural subtyping
+malayeri2009cz	drop	drop_nonessential	Not required for a specific retained claim.	-	CZ: multiple inheritance without diamonds
+abdelgawad2014noop	drop	drop_nonessential	Not required for a specific retained claim.	-	NOOP: A domain-theoretic model for object-oriented programming
+abdelgawad2016nominal	drop	drop_nonessential	Not required for a specific retained claim.	-	Why nominal-typing matters in OOP
+liskov1994behavioral	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	A behavioral notion of subtyping
+barrett1996monotonic	drop	drop_nonessential	Not required for a specific retained claim.	-	A monotonic superclass linearization for Dylan
+cook1990inheritance	drop	drop_nonessential	Not required for a specific retained claim.	-	Inheritance is not subtyping
+gil2008whiteoak	drop	drop_nonessential	Not required for a specific retained claim.	-	Whiteoak: Introducing structural typing into Java
+siek2006gradual	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	Gradual typing for functional languages
+veldhuizen2006tradeoffs	drop	drop_nonessential	Not required for a specific retained claim.	-	Tradeoffs in metaprogramming
+damasevicius2010complexity	drop	drop_nonessential	Not required for a specific retained claim.	-	Complexity metrics for metaprograms
+pierce2002types	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	Types and programming languages
+wadler1990linear	drop	drop_nonessential	Not required for a specific retained claim.	-	Linear types can change the world!
+blum1967machine	drop	drop_nonessential	Not required for a specific retained claim.	-	A machine-independent theory of the complexity of recursive functions
+pep544	drop	drop_nonessential	Not required for a specific retained claim.	-	{PEP 544
+pep484	drop	drop_nonessential	Not required for a specific retained claim.	-	{PEP 484
+pythonBuiltinsHasattr	drop	drop_nonessential	Not required for a specific retained claim.	-	Built-in Functions: \texttt{hasattr
+bierman2014typescript	drop	drop_nonessential	Not required for a specific retained claim.	-	Understanding {TypeScript
+tsHandbookTypeCompatibility	drop	drop_nonessential	Not required for a specific retained claim.	-	Type Compatibility
+tsIssue202	drop	drop_nonessential	Not required for a specific retained claim.	-	Nominal typing / nominal types request (Issue \#202)
+tsPR33038	drop	drop_nonessential	Not required for a specific retained claim.	-	Proposal/experiment for unique/nominal-ish types (PR \#33038)
+jlsErasure	drop	drop_nonessential	Not required for a specific retained claim.	-	The Java Language Specification, {\S
+goSpec	drop	drop_nonessential	Not required for a specific retained claim.	-	The Go Programming Language Specification
+mdnPrototypeChain	drop	drop_nonessential	Not required for a specific retained claim.	-	Inheritance and the prototype chain
+chugh2012nested	drop	drop_nonessential	Not required for a specific retained claim.	-	Nested Refinements: A Logic for Duck Typing
+systemDArxiv	drop	drop_nonessential	Not required for a specific retained claim.	-	Nested Refinements for Dynamic Languages
+lamaison2012duck	drop	drop_nonessential	Not required for a specific retained claim.	-	Inferring Useful Static Types for Duck Typed Languages
+blum1967size	drop	drop_nonessential	Not required for a specific retained claim.	-	On the Size of Machines
+damasevicius2010metrics	drop	drop_nonessential	Not required for a specific retained claim.	-	Assessment of the Relative Complexity and Difficulty of Software Development Methods
+ocamlObjectsRowVars	drop	drop_nonessential	Not required for a specific retained claim.	-	The object layer (OCaml objects; structural object types and row variables)
+abadi1996theory	drop	drop_nonessential	Not required for a specific retained claim.	-	A theory of objects
+reynolds1983types	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	Types, abstraction and parametric polymorphism
+malayeri2009esop	drop	drop_nonessential	Not required for a specific retained claim.	-	Is structural subtyping useful? An empirical study
+openhcs2025	drop	drop_nonessential	Not required for a specific retained claim.	-	{OpenHCS
+openhcsPR44	drop	drop_nonessential	Not required for a specific retained claim.	-	{UI Anti-Duck-Typing Refactor
+openhcsLeanProofs	drop	drop_nonessential	Not required for a specific retained claim.	-	Lean 4 Formalization: Typing Discipline Selection Theorems
+paper2_ssot	drop	drop_nonessential	Not required for a specific retained claim.	-	Formal Foundations for the Single Source of Truth Principle
+gamma1994design	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	Design patterns: elements of reusable object-oriented software
+boehm1981software	drop	drop_nonessential	Not required for a specific retained claim.	-	Software Engineering Economics
+nasa2010error	drop	drop_nonessential	Not required for a specific retained claim.	-	Error Cost Escalation Through the Project Life Cycle
+Shannon1948	drop	drop_nonessential	Not required for a specific retained claim.	-	A Mathematical Theory of Communication
+ahlswede1989identification	drop	drop_nonessential	Not required for a specific retained claim.	-	Identification via Channels
+CoverThomas2006	drop	drop_nonessential	Not required for a specific retained claim.	-	Elements of Information Theory
+Kolmogorov1965	drop	drop_nonessential	Not required for a specific retained claim.	-	Three Approaches to the Definition of the Concept of Information Quantity
+Welsh1976	drop	drop_nonessential	Not required for a specific retained claim.	-	Matroid Theory
+Pierce2002	drop	drop_nonessential	Not required for a specific retained claim.	-	Types and Programming Languages
+Cardelli1985	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	On Understanding Types, Data Abstraction, and Polymorphism
+Structural2014	drop	drop_nonessential	Not required for a specific retained claim.	-	Certified Programming with Dependent Types
+Lean2015	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	The Lean Theorem Prover
+Tishby2000	drop	drop_nonessential	Not required for a specific retained claim.	-	The Information Bottleneck Method
+Grunwald2007	drop	drop_nonessential	Not required for a specific retained claim.	-	The Minimum Description Length Principle
+LiVitanyi2008	drop	drop_nonessential	Not required for a specific retained claim.	-	An Introduction to Kolmogorov Complexity and Its Applications
+PythonDocs	drop	drop_nonessential	Not required for a specific retained claim.	-	Python Data Model: type()
+CPythonDocs	drop	drop_nonessential	Not required for a specific retained claim.	-	CPython Object Implementation: Object Structure
+JavaDocs	drop	drop_nonessential	Not required for a specific retained claim.	-	Java Object: getClass()
+TypeScriptDocs	drop	drop_nonessential	Not required for a specific retained claim.	-	TypeScript Handbook: Type Compatibility
+RustDocs	drop	drop_nonessential	Not required for a specific retained claim.	-	Rust std::any::type\_id
+shannon1959coding	drop	drop_nonessential	Not required for a specific retained claim.	-	Coding Theorems for a Discrete Source with a Fidelity Criterion
+berger1971rate	drop	drop_nonessential	Not required for a specific retained claim.	-	Rate Distortion Theory: A Mathematical Basis for Data Compression
+cousot1977abstract	drop	drop_nonessential	Not required for a specific retained claim.	-	Abstract Interpretation: A Unified Lattice Model for Static Analysis of Programs by Construction or Approximation of Fixpoints
+buhrman2002complexity	keep	keep_complexity	Supports explicit complexity/hardness/query/model-selection claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:24	Computational Complexity of Discrete Problems
+JVMSpec	drop	drop_nonessential	Not required for a specific retained claim.	-	The Java Virtual Machine Specification: Chapter 2.5 Runtime Data Areas
+RustTraitObjects	drop	drop_nonessential	Not required for a specific retained claim.	-	The Rust Reference: Trait Objects
+DNABarcoding	drop	drop_nonessential	Not required for a specific retained claim.	-	Biological identifications through DNA barcodes
+ISBN	drop	drop_nonessential	Not required for a specific retained claim.	-	ISBN Users' Manual
+Codd1990	drop	drop_nonessential	Not required for a specific retained claim.	-	The Relational Model for Database Management: Version 2
+ahlswede1989identification2	drop	drop_nonessential	Not required for a specific retained claim.	-	Identification in the Presence of Feedback---A Discovery of New Capacity Formulas
+hanverdu1993generalization	drop	drop_nonessential	Not required for a specific retained claim.	-	Approximation Theory of Output Statistics
+steinberg1998identification	drop	drop_nonessential	Not required for a specific retained claim.	-	New Converses in the Theory of Identification via Channels
+csiszar2011information	drop	drop_nonessential	Not required for a specific retained claim.	-	Information Theory: Coding Theorems for Discrete Memoryless Systems
+blahut1972computation	drop	drop_nonessential	Not required for a specific retained claim.	-	Computation of Channel Capacity and Rate-Distortion Functions
+gray1998quantization	drop	drop_nonessential	Not required for a specific retained claim.	-	Quantization
+blau2019rethinking	drop	drop_nonessential	Not required for a specific retained claim.	-	Rethinking Lossy Compression: The Rate-Distortion-Perception Tradeoff
+burnashev1976data	drop	drop_nonessential	Not required for a specific retained claim.	-	Data Transmission over a Discrete Channel with Feedback
+wolfowitz1961coding	drop	drop_nonessential	Not required for a specific retained claim.	-	Coding Theorems of Information Theory
+korner1973coding	drop	drop_nonessential	Not required for a specific retained claim.	-	Coding of an Information Source Having Ambiguous Alphabet and the Entropy of Graphs
+witsenhausen1976zero	drop	drop_nonessential	Not required for a specific retained claim.	-	The Zero-Error Side Information Problem and Chromatic Numbers
+orlitsky1991worst	drop	drop_nonessential	Not required for a specific retained claim.	-	Worst-Case Interactive Communication I: Two Messages Are Almost Optimal
+hunt1999pragmatic	drop	drop_nonessential	Not required for a specific retained claim.	-	The Pragmatic Programmer: From Journeyman to Master
+kiczales1991art	drop	drop_nonessential	Not required for a specific retained claim.	-	The Art of the Metaobject Protocol
+parnas1972criteria	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:3	On the criteria to be used in decomposing systems into modules
+winskel1993semantics	drop	drop_nonessential	Not required for a specific retained claim.	-	The Formal Semantics of Programming Languages: An Introduction
+smith1984reflection	drop	drop_nonessential	Not required for a specific retained claim.	-	Reflection and semantics in Lisp
+vanrossum2003unifying	drop	drop_nonessential	Not required for a specific retained claim.	-	Unifying types and classes in Python 2.2
+mccabe1976complexity	drop	drop_nonessential	Not required for a specific retained claim.	-	A complexity measure
+stevens1974structured	drop	drop_nonessential	Not required for a specific retained claim.	-	Structured design
+fowler1999refactoring	drop	drop_nonessential	Not required for a specific retained claim.	-	Refactoring: improving the design of existing code
+leroy2009compcert	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:5	Formal verification of a realistic compiler
+scott2015programming	drop	drop_nonessential	Not required for a specific retained claim.	-	Programming language pragmatics
+prechelt2000empirical	drop	drop_nonessential	Not required for a specific retained claim.	-	An empirical comparison of seven programming languages
+beck1999xp	drop	drop_nonessential	Not required for a specific retained claim.	-	Extreme Programming Explained: Embrace Change
+pep487	drop	drop_nonessential	Not required for a specific retained claim.	-	{PEP 487
+tiobe2024	drop	drop_nonessential	Not required for a specific retained claim.	-	{TIOBE
+juergens2009clones	drop	drop_nonessential	Not required for a specific retained claim.	-	Do code clones matter?
+runeson2009guidelines	drop	drop_nonessential	Not required for a specific retained claim.	-	Guidelines for conducting and reporting case study research in software engineering
+weyuker1988metrics	drop	drop_nonessential	Not required for a specific retained claim.	-	Evaluating software complexity measures
+czarnecki2000generative	drop	drop_nonessential	Not required for a specific retained claim.	-	Generative Programming: Methods, Tools, and Applications
+roy2007survey	drop	drop_nonessential	Not required for a specific retained claim.	-	A survey on software clone detection research
+demoura2021lean4	keep	keep_formalization	Supports formalization/mechanization prior-art claim in prose.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	The {Lean
+gosling2021java	drop	drop_nonessential	Not required for a specific retained claim.	-	The {Java
+stroustrup2013cpp	drop	drop_nonessential	Not required for a specific retained claim.	-	The {C++
+gospec2024	drop	drop_nonessential	Not required for a specific retained claim.	-	The {Go
+rustref2024	drop	drop_nonessential	Not required for a specific retained claim.	-	The {Rust
+flanagan2020ruby	drop	drop_nonessential	Not required for a specific retained claim.	-	The {Ruby
+paper1_typing_discipline	drop	drop_nonessential	Not required for a specific retained claim.	-	A Universal Typing Discipline for Polymorphic Abstraction: Impossibility Theorems and Language Design
+cook1989inheritance	drop	drop_nonessential	Not required for a specific retained claim.	-	Inheritance is not subtyping
+heering2015generative	drop	drop_nonessential	Not required for a specific retained claim.	-	Generative Software Complexity
+heering2003software	drop	drop_nonessential	Not required for a specific retained claim.	-	Software Architecture and Software Configuration Management
+rissanen1978mdl	drop	drop_nonessential	Not required for a specific retained claim.	-	Modeling by Shortest Data Description
+gruenwald2007mdl	drop	drop_nonessential	Not required for a specific retained claim.	-	The Minimum Description Length Principle
+rashmi2015multiversion	drop	drop_nonessential	Not required for a specific retained claim.	-	Multi-Version Coding---An Information-Theoretic Perspective of Consistent Distributed Storage
+rivest1982wom	drop	drop_nonessential	Not required for a specific retained claim.	-	How to Reuse a ``Write-Once'' Memory
+wolf1984wom	drop	drop_nonessential	Not required for a specific retained claim.	-	Coding for a Write-Once Memory
+slepian1973noiseless	drop	drop_nonessential	Not required for a specific retained claim.	-	Noiseless Coding of Correlated Information Sources
+shannon1948mathematical	drop	drop_nonessential	Not required for a specific retained claim.	-	A Mathematical Theory of Communication
+shannon1956zero	drop	drop_nonessential	Not required for a specific retained claim.	-	Zero-Error Capacity of a Noisy Channel
+cover2006elements	drop	drop_nonessential	Not required for a specific retained claim.	-	Elements of Information Theory
+korner1973graphs	drop	drop_nonessential	Not required for a specific retained claim.	-	Coding of an Information Source Having Ambiguous Alphabet and the Entropy of Graphs
+lovasz1979shannon	drop	drop_nonessential	Not required for a specific retained claim.	-	On the Shannon Capacity of a Graph
+brewer2000cap	drop	drop_nonessential	Not required for a specific retained claim.	-	Towards Robust Distributed Systems
+gilbert2002cap	drop	drop_nonessential	Not required for a specific retained claim.	-	Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services
+flp1985impossibility	drop	drop_nonessential	Not required for a specific retained claim.	-	Impossibility of Distributed Consensus with One Faulty Process
+lamport1998paxos	drop	drop_nonessential	Not required for a specific retained claim.	-	The Part-Time Parliament
+ongaro2014raft	drop	drop_nonessential	Not required for a specific retained claim.	-	In Search of an Understandable Consensus Algorithm
+birs2012interactive	drop	drop_nonessential	Not required for a specific retained claim.	-	Interactive Information Theory (12w5119)
+ma2011distributed	drop	drop_nonessential	Not required for a specific retained claim.	-	Some Results on Distributed Source Coding for Interactive Function Computation
+xiang2013interactive	drop	drop_nonessential	Not required for a specific retained claim.	-	Interactive Schemes in Information Theory and Statistics
+delaet2010survey	drop	drop_nonessential	Not required for a specific retained claim.	-	A Survey of System Configuration Tools
+hunt2002vcdiff	drop	drop_nonessential	Not required for a specific retained claim.	-	Delta Algorithms: An Empirical Analysis
+chidamber1994metrics	drop	drop_nonessential	Not required for a specific retained claim.	-	A Metrics Suite for Object Oriented Design
+halstead1977elements	drop	drop_nonessential	Not required for a specific retained claim.	-	Elements of Software Science
+maes1987concepts	drop	drop_nonessential	Not required for a specific retained claim.	-	Concepts and Experiments in Computational Reflection
+bobrow1986commonloops	drop	drop_nonessential	Not required for a specific retained claim.	-	CommonLoops: Merging Lisp and Object-Oriented Programming
+kiczales1991amop	drop	drop_nonessential	Not required for a specific retained claim.	-	The Art of the Metaobject Protocol
+basili1996comparing	drop	drop_nonessential	Not required for a specific retained claim.	-	A Validation of Object-Oriented Design Metrics as Quality Indicators
+martin2008clean	drop	drop_nonessential	Not required for a specific retained claim.	-	Clean Code: A Handbook of Agile Software Craftsmanship
+brooks1987no	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:3	No Silver Bullet: Essence and Accidents of Software Engineering
+dasanayake2017empirical	drop	drop_nonessential	Not required for a specific retained claim.	-	Empirical Study on Software Architecture Decision Making in Agile Software Development
+cunningham1992wycash	drop	drop_nonessential	Not required for a specific retained claim.	-	The WyCash Portfolio Management System
+hansson2005rails	drop	drop_nonessential	Not required for a specific retained claim.	-	The Rails Doctrine
+fowler2014microservices	drop	drop_nonessential	Not required for a specific retained claim.	-	Microservices: a definition of this new architectural term
+allen1997formal	drop	drop_nonessential	Not required for a specific retained claim.	-	A Formal Basis for Architectural Connection
+garlan1997acme	drop	drop_nonessential	Not required for a specific retained claim.	-	ACME: An Architecture Description Interchange Language
+garlan1994exploiting	drop	drop_nonessential	Not required for a specific retained claim.	-	Exploiting Style in Architectural Design Environments
+kazman2000atam	drop	drop_nonessential	Not required for a specific retained claim.	-	ATAM: Method for Architecture Evaluation
+bachmann2000cbam	drop	drop_nonessential	Not required for a specific retained claim.	-	Characterizing, Planning, and Managing Technical Debt
+bass2012software	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:3	Software Architecture in Practice
+shaw1996software	keep	keep_architecture_type	Supports architecture/type-theory implication claim.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:3	Software Architecture: Perspectives on an Emerging Discipline
+beck1999extreme	drop	drop_nonessential	Not required for a specific retained claim.	-	Extreme Programming Explained: Embrace Change
+martin2002agile	drop	drop_nonessential	Not required for a specific retained claim.	-	Agile Software Development: Principles, Patterns, and Practices
+codd1970relational	drop	drop_nonessential	Not required for a specific retained claim.	-	A Relational Model of Data for Large Shared Data Banks
+date2003introduction	drop	drop_nonessential	Not required for a specific retained claim.	-	An Introduction to Database Systems
+pike1984program	drop	drop_nonessential	Not required for a specific retained claim.	-	Program Design in the UNIX Environment
+patterson2013computer	drop	drop_nonessential	Not required for a specific retained claim.	-	Computer Organization and Design: The Hardware/Software Interface
+garlan1993introduction	drop	drop_nonessential	Not required for a specific retained claim.	-	An Introduction to Software Architecture
+mackay2022necessity	drop	drop_nonessential	Not required for a specific retained claim.	-	Necessity Specifications for Robustness
+crawford1982strategic	drop	drop_nonessential	Not required for a specific retained claim.	-	Strategic Information Transmission
+farrell1987cheap	drop	drop_nonessential	Not required for a specific retained claim.	-	Cheap Talk, Coordination, and Entry
+spence1973job	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	Job Market Signaling
+cho1987signaling	drop	drop_nonessential	Not required for a specific retained claim.	-	Signaling Games and Stable Equilibria
+farrell1996cheap	drop	drop_nonessential	Not required for a specific retained claim.	-	Cheap Talk
+sobel1985theory	drop	drop_nonessential	Not required for a specific retained claim.	-	A Theory of Credibility
+milgrom1986price	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	Price and Advertising Signals of Product Quality
+zahavi1975mate	drop	drop_nonessential	Not required for a specific retained claim.	-	Mate selection---a selection for a handicap
+grice1975logic	drop	drop_nonessential	Not required for a specific retained claim.	-	Logic and Conversation
+hintikka1962knowledge	drop	drop_nonessential	Not required for a specific retained claim.	-	Knowledge and Belief: An Introduction to the Logic of the Two Notions
+fagin1995reasoning	drop	drop_nonessential	Not required for a specific retained claim.	-	Reasoning About Knowledge
+kamenica2011bayesian	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	Bayesian Persuasion
+aumann1976agreeing	drop	drop_nonessential	Not required for a specific retained claim.	-	Agreeing to Disagree
+akerlof1970market	drop	drop_nonessential	Not required for a specific retained claim.	-	The Market for ``Lemons'': Quality Uncertainty and the Market Mechanism
+shannon1948	drop	drop_nonessential	Not required for a specific retained claim.	-	A mathematical theory of communication
+aumann1995backward	drop	drop_nonessential	Not required for a specific retained claim.	-	Backward induction and common knowledge of rationality
+debruijn1970automath	drop	drop_nonessential	Not required for a specific retained claim.	-	The Mathematical Language {AUTOMATH
+paper1_typing	drop	drop_nonessential	Not required for a specific retained claim.	-	Paper 1: Nominal Typing Dominates Structural Typing
+paper3_leverage	drop	drop_nonessential	Not required for a specific retained claim.	-	Paper 3: Leverage Maximization in Software Systems
+paper4_decisionquotient	drop	drop_nonessential	Not required for a specific retained claim.	-	Paper 4: The Complexity of Decision-Relevant Uncertainty
+bommasani2021opportunities	drop	drop_nonessential	Not required for a specific retained claim.	-	On the Opportunities and Risks of Foundation Models
+bender2021dangers	drop	drop_nonessential	Not required for a specific retained claim.	-	On the Dangers of Stochastic Parrots: Can Language Models Be Too Big?
+myerson1979incentive	keep	keep_decision_foundation	Supports decision-theoretic or known-adjacent prior-work claim.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	Incentive Compatibility and the Bargaining Problem
+mascolell1995microeconomic	drop	drop_nonessential	Not required for a specific retained claim.	-	Microeconomic Theory
+kolmogorov1965three	drop	drop_nonessential	Not required for a specific retained claim.	-	Three Approaches to the Quantitative Definition of Information
+solomonoff1964formal	drop	drop_nonessential	Not required for a specific retained claim.	-	A Formal Theory of Inductive Inference

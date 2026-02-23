@@ -137,6 +137,7 @@ theorem opt_falsifying (φ : Formula n) (a : Assignment n) (hfalse : φ.eval a =
 
 /-- The empty set of coordinates (we use a trivial 1-coordinate space) -/
 instance : CoordinateSpace (ReductionState n) 1 where
+  Coord := fun _ => Unit
   proj := fun _ _ => ()
 
 open ReductionAction ReductionState in
@@ -166,7 +167,9 @@ theorem sufficient_implies_tautology (φ : Formula n)
   intro a
   -- Compare assignment a with reference state
   -- They agree on ∅, so must have same Opt
-  have heq := hsuff (assignment a) reference (by intro i; exact Finset.not_mem_empty i |>.elim)
+  have heq := hsuff (assignment a) reference (by
+    intro i hi
+    exact (by simpa using hi))
   -- Reference has Opt = {accept}
   rw [opt_reference] at heq
   -- So assignment a must also have Opt = {accept}
@@ -188,6 +191,40 @@ theorem sufficient_implies_tautology (φ : Formula n)
 theorem tautology_iff_sufficient (φ : Formula n) :
     φ.isTautology ↔ (reductionProblem φ).isSufficient (∅ : Finset (Fin 1)) :=
   ⟨tautology_implies_sufficient φ, sufficient_implies_tautology φ⟩
+
+/-- Reduction bridge: tautology is exactly constancy of the decision boundary
+    on the reduction instance (`I = ∅` equivalence unfolded). -/
+theorem tautology_iff_opt_constant (φ : Formula n) :
+    φ.isTautology ↔ ∀ s s' : ReductionState n, (reductionProblem φ).Opt s = (reductionProblem φ).Opt s' := by
+  constructor
+  · intro hT
+    exact (DecisionProblem.emptySet_sufficient_iff_constant (dp := reductionProblem φ)).1
+      ((tautology_iff_sufficient φ).1 hT)
+  · intro hConst
+    exact (tautology_iff_sufficient φ).2
+      ((DecisionProblem.emptySet_sufficient_iff_constant (dp := reductionProblem φ)).2 hConst)
+
+/-- Reduction bridge (counterexample form):
+    non-tautology is exactly existence of a decision-boundary difference witness
+    in the reduction instance. -/
+theorem not_tautology_iff_exists_opt_difference (φ : Formula n) :
+    ¬ φ.isTautology ↔
+      ∃ s s' : ReductionState n, (reductionProblem φ).Opt s ≠ (reductionProblem φ).Opt s' := by
+  constructor
+  · intro hNotT
+    have hNotConst : ¬ (∀ s s' : ReductionState n,
+        (reductionProblem φ).Opt s = (reductionProblem φ).Opt s') := by
+      intro hConst
+      exact hNotT ((tautology_iff_opt_constant φ).2 hConst)
+    push_neg at hNotConst
+    rcases hNotConst with ⟨s, hs⟩
+    rcases hs with ⟨s', hs'⟩
+    exact ⟨s, s', hs'⟩
+  · intro hDiff
+    rcases hDiff with ⟨s, s', hNeq⟩
+    intro hT
+    have hConst := (tautology_iff_opt_constant φ).1 hT
+    exact hNeq (hConst s s')
 
 /-! ## Complexity Classification
 

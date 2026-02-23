@@ -5,3 +5,4 @@ Use the paper-id-specific helper files instead:
 
 - `arxiv_abstract_paper4.md`
 - `arxiv_abstract_paper4_toc.md`
+- `arxiv_abstract_paper4b.md`

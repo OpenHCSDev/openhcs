@@ -41,11 +41,14 @@ private lemma poly_inner_bound (c n k : ℕ) : c * n ^ k + c ≤ 2 * c * (n + 1)
       _ = (2 * c) * (n + 1) ^ k := by rw [Nat.two_mul]
       _ = 2 * c * (n + 1) ^ k := by rw [Nat.mul_assoc]
   have hstep : c * (n + 1) ^ k + c ≤ c * (n + 1) ^ k + c * (n + 1) ^ k := by
-    apply add_le_add_left
-    calc c = c * 1 := (Nat.mul_one c).symm
-      _ ≤ c * (n + 1) ^ k := Nat.mul_le_mul_left c hpow_ge1
+    have hc_le : c ≤ c * (n + 1) ^ k := by
+      calc
+        c = c * 1 := (Nat.mul_one c).symm
+        _ ≤ c * (n + 1) ^ k := Nat.mul_le_mul_left c hpow_ge1
+    omega
+  have hmul_mono : c * n ^ k ≤ c * (n + 1) ^ k := Nat.mul_le_mul_left c hpow_mono
   calc c * n ^ k + c
-      ≤ c * (n + 1) ^ k + c := add_le_add_right (Nat.mul_le_mul_left c hpow_mono) c
+      ≤ c * (n + 1) ^ k + c := by omega
     _ ≤ c * (n + 1) ^ k + c * (n + 1) ^ k := hstep
     _ = 2 * c * (n + 1) ^ k := heq
 
@@ -94,10 +97,19 @@ theorem poly_compose_bound (c1 k1 c2 k2 n : ℕ) :
       calc B * B ^ (2 * k2) = B ^ (2 * k2) * B := by simp [Nat.mul_comm]
         _ = B ^ (2 * k2 + 1) := by rw [Nat.pow_succ]
     calc c2 * (c1 * n ^ k1 + c1) ^ k2 + c2
-        ≤ c2 * (B ^ (2 * k2) * (n + 1) ^ (k1 * k2)) + c2 := add_le_add_right (Nat.mul_le_mul_left c2 hpower) _
+        ≤ c2 * (B ^ (2 * k2) * (n + 1) ^ (k1 * k2)) + c2 := by
+          have hm : c2 * (c1 * n ^ k1 + c1) ^ k2 ≤ c2 * (B ^ (2 * k2) * (n + 1) ^ (k1 * k2)) :=
+            Nat.mul_le_mul_left c2 hpower
+          omega
       _ = c2 * B ^ (2 * k2) * (n + 1) ^ (k1 * k2) + c2 := by rw [Nat.mul_assoc]
-      _ ≤ B * B ^ (2 * k2) * (n + 1) ^ (k1 * k2) + c2 := add_le_add_right (Nat.mul_le_mul_right _ hc2B2k2) _
-      _ ≤ B * B ^ (2 * k2) * (n + 1) ^ (k1 * k2) + B := add_le_add_left hc2_le _
+      _ ≤ B * B ^ (2 * k2) * (n + 1) ^ (k1 * k2) + c2 := by
+          have hm : c2 * B ^ (2 * k2) * (n + 1) ^ (k1 * k2) ≤
+              B * B ^ (2 * k2) * (n + 1) ^ (k1 * k2) := by
+            have hm' : c2 * B ^ (2 * k2) ≤ B * B ^ (2 * k2) := hc2B2k2
+            exact Nat.mul_le_mul_right ((n + 1) ^ (k1 * k2)) hm'
+          omega
+      _ ≤ B * B ^ (2 * k2) * (n + 1) ^ (k1 * k2) + B := by
+          omega
       _ = B ^ (2 * k2 + 1) * (n + 1) ^ (k1 * k2) + B := by rw [hBpow_eq]
   -- Key: 2*k2 + 1 ≤ 2*K + 1 and k1*k2 ≤ K
   have hkkK : k1 * k2 ≤ K := by
@@ -136,12 +148,11 @@ theorem poly_compose_bound (c1 k1 c2 k2 n : ℕ) :
       c2 * (c1 * 0 ^ k1 + c1) ^ k2 + c2
           ≤ B ^ (2 * k2 + 1) + B := hstep1'
       _ ≤ B ^ (2 * k2 + 1) + B ^ (2 * k2 + 1) := by
-          apply add_le_add_left
           have hpos : 1 ≤ 2 * k2 + 1 := by omega
           have hBpow : B ≤ B ^ (2 * k2 + 1) := by
             have hmono := Nat.pow_le_pow_right hB_pos hpos
             simpa [Nat.pow_one] using hmono
-          exact hBpow
+          omega
       _ = 2 * B ^ (2 * k2 + 1) := (Nat.two_mul _).symm
       _ ≤ B ^ (2 * (K - k2)) * B ^ (2 * k2 + 1) := by
           have := htwo_le
@@ -198,19 +209,23 @@ theorem poly_compose_bound (c1 k1 c2 k2 n : ℕ) :
     calc c2 * (c1 * n ^ k1 + c1) ^ k2 + c2
         ≤ B ^ (2 * k2 + 1) * (n + 1) ^ (k1 * k2) + B := hstep1
       _ ≤ B ^ (2 * k2 + 1) * (B ^ (k1 * k2) * n ^ (k1 * k2)) + B := by
-          apply add_le_add_right
-          exact Nat.mul_le_mul_left _ hnp1_bound
+          have hm : B ^ (2 * k2 + 1) * (n + 1) ^ (k1 * k2) ≤
+              B ^ (2 * k2 + 1) * (B ^ (k1 * k2) * n ^ (k1 * k2)) :=
+            Nat.mul_le_mul_left (B ^ (2 * k2 + 1)) hnp1_bound
+          omega
       _ = B ^ (2 * k2 + 1 + k1 * k2) * n ^ (k1 * k2) + B := by
           -- combine the B powers
           simp [Nat.mul_assoc, Nat.pow_add, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc, Nat.mul_add]
       _ ≤ B ^ (2 * K + 1) * n ^ (k1 * k2) + B := by
-          apply add_le_add_right
-          exact Nat.mul_le_mul_right _ hBexp_le
+          have hm : B ^ (2 * k2 + 1 + k1 * k2) * n ^ (k1 * k2) ≤
+              B ^ (2 * K + 1) * n ^ (k1 * k2) :=
+            Nat.mul_le_mul_right (n ^ (k1 * k2)) hBexp_le
+          omega
       _ ≤ B ^ (2 * K + 1) * n ^ K + B := by
           have h := Nat.mul_le_mul_left (B ^ (2 * K + 1)) hnpow_le
-          exact add_le_add_right h _
+          omega
       _ ≤ B ^ (2 * K + 1) * n ^ K + B ^ (2 * K + 1) := by
-          exact add_le_add_left hB_le_pow _
+          omega
       _ ≤ B ^ (2 * (k1 + 1) * (k2 + 1) + 1) * n ^ K + B ^ (2 * (k1 + 1) * (k2 + 1) + 1) := by
           simp [hK_def, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc]
 
@@ -227,9 +242,11 @@ theorem PolyReduction.comp_exists {A B C : Type*} [SizeOf A] [SizeOf B] [SizeOf 
   calc sizeOf (r2.f (r1.f a))
       ≤ c2 * sizeOf (r1.f a) ^ k2 + c2 := h2 (r1.f a)
     _ ≤ c2 * (c1 * sizeOf a ^ k1 + c1) ^ k2 + c2 := by
-        apply add_le_add_right
-        apply Nat.mul_le_mul_left
-        apply Nat.pow_le_pow_left (h1 a)
+        have hpow : sizeOf (r1.f a) ^ k2 ≤ (c1 * sizeOf a ^ k1 + c1) ^ k2 :=
+          Nat.pow_le_pow_left (h1 a) k2
+        have hmul : c2 * sizeOf (r1.f a) ^ k2 ≤ c2 * (c1 * sizeOf a ^ k1 + c1) ^ k2 :=
+          Nat.mul_le_mul_left c2 hpow
+        omega
     _ ≤ _ := poly_compose_bound c1 k1 c2 k2 (sizeOf a)
 
 /-- Identity reduction -/
@@ -306,7 +323,7 @@ theorem poly_reduction_preserves_P {A B : Type*} [SizeOf A] [SizeOf B]
             Nat.pow_le_pow_left hsize _
           have hmul : c * (sizeOf (r.f a)) ^ k ≤ c * (cr * (sizeOf a) ^ kr + cr) ^ k :=
             Nat.mul_le_mul_left _ hpow
-          exact add_le_add_right hmul _
+          omega
       _ ≤ (cr + c + 2) ^ (2 * (kr + 1) * (k + 1) + 1) * (sizeOf a) ^ ((kr + 1) * (k + 1)) +
           (cr + c + 2) ^ (2 * (kr + 1) * (k + 1) + 1) := by
             exact poly_compose_bound cr kr c k (sizeOf a)

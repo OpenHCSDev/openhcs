@@ -1,0 +1,743 @@
+\section{Formal Foundations}\label{sec:foundations}
+
+We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory \cite{savage1954foundations, raiffa1961applied}.
+
+\subsection{Decision Problems with Coordinate Structure}
+
+\begin{definition}[Decision Problem]\label{def:decision-problem}
+A \emph{decision problem with coordinate structure} is a tuple $\mathcal{D} = (A, X_1, \ldots, X_n, U)$ where:
+\begin{itemize}
+\item $A$ is a finite set of \emph{actions} (alternatives)
+\item $X_1, \ldots, X_n$ are finite \emph{coordinate spaces}
+\item $S = X_1 \times \cdots \times X_n$ is the \emph{state space}
+\item $U : A \times S \to \mathbb{Q}$ is the \emph{utility function}
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Projection]\label{def:projection}
+For state $s = (s_1, \ldots, s_n) \in S$ and coordinate set $I \subseteq \{1, \ldots, n\}$:
+\[
+s_I := (s_i)_{i \in I}
+\]
+is the \emph{projection} of $s$ onto coordinates in $I$.
+\end{definition}
+
+\begin{definition}[Optimizer Map]\label{def:optimizer}
+For state $s \in S$, the \emph{optimal action set} is:
+\[
+\Opt(s) := \arg\max_{a \in A} U(a, s) = \{a \in A : U(a,s) = \max_{a' \in A} U(a', s)\}
+\]
+\end{definition}
+
+\subsection{Sufficiency and Relevance}
+
+\begin{definition}[Sufficient Coordinate Set]\label{def:sufficient}
+A coordinate set $I \subseteq \{1, \ldots, n\}$ is \emph{sufficient} for decision problem $\mathcal{D}$ if:
+\[
+\forall s, s' \in S: \quad s_I = s'_I \implies \Opt(s) = \Opt(s')
+\]
+Equivalently, the optimal action depends only on coordinates in $I$.
+In this paper, this set-valued invariance of the full optimal-action correspondence is the primary decision-relevance target.
+\end{definition}
+
+\begin{proposition}[Empty-Set Sufficiency Equals Constant Decision Boundary]\label{prop:empty-sufficient-constant}
+For any decision problem,
+\[
+\text{sufficient}(\emptyset)
+\iff
+\forall s,s'\in S,\ \Opt(s)=\Opt(s').
+\]
+Hence, the $I=\emptyset$ query is exactly a universal constancy check of the decision boundary.
+\leanmeta{\LH{DP2}.}
+\end{proposition}
+
+\begin{proposition}[Insufficiency Equals Counterexample Witness]\label{prop:insufficiency-counterexample}
+For any coordinate set $I$,
+\[
+\neg\text{sufficient}(I)
+\iff
+\exists s,s'\in S:\ s_I=s'_I\ \wedge\ \Opt(s)\neq\Opt(s').
+\]
+In particular,
+\[
+\neg\text{sufficient}(\emptyset)
+\iff
+\exists s,s'\in S:\ \Opt(s)\neq\Opt(s').
+\]
+\leanmeta{\LH{DP5},
+\LH{DP1}.}
+\end{proposition}
+\claimstamp{D\ref{def:sufficient},P\ref{prop:empty-sufficient-constant},P\ref{prop:insufficiency-counterexample}}{DM}
+
+\begin{definition}[Deterministic Selector]\label{def:selector}
+A \emph{deterministic selector} is a map $\sigma : 2^A \to A$ that returns one action from an optimal-action set.
+\end{definition}
+
+\begin{definition}[Selector-Level Sufficiency]\label{def:selector-sufficient}
+For fixed selector $\sigma$, a coordinate set $I$ is \emph{selector-sufficient} if
+\[
+\forall s,s' \in S:\quad s_I=s'_I \implies \sigma(\Opt(s))=\sigma(\Opt(s')).
+\]
+\end{definition}
+
+\begin{proposition}[Set-Level Target Dominates Selector Targets]\label{prop:set-to-selector}
+If $I$ is sufficient in the set-valued sense (Definition~\ref{def:sufficient}), then $I$ is selector-sufficient for every deterministic selector $\sigma$ (Definition~\ref{def:selector-sufficient}).
+\leanmeta{\LH{DP8}}
+\end{proposition}
+
+\begin{proof}
+If $I$ is sufficient, then $s_I=s'_I$ implies $\Opt(s)=\Opt(s')$. Applying any deterministic selector $\sigma$ to equal optimal-action sets yields equal selected actions.
+\end{proof}
+
+\begin{definition}[$\varepsilon$-Optimal Set and $\varepsilon$-Sufficiency]\label{def:epsilon-sufficiency}
+For $\varepsilon \ge 0$, define
+\[
+\Opt_\varepsilon(s)
+:=
+\{a\in A:\forall a'\in A,\ U(a',s)\le U(a,s)+\varepsilon\}.
+\]
+Coordinate set $I$ is \emph{$\varepsilon$-sufficient} if
+\[
+\forall s,s'\in S:\ s_I=s'_I \implies \Opt_\varepsilon(s)=\Opt_\varepsilon(s').
+\]
+\end{definition}
+
+\begin{proposition}[Zero-$\varepsilon$ Reduction]\label{prop:zero-epsilon-reduction}
+Set-valued sufficiency is exactly the $\varepsilon=0$ case:
+\[
+I\text{ sufficient } \iff I\text{ is }0\text{-sufficient}.
+\]
+\leanmeta{\LH{DP3},
+\LH{DP7}}
+\end{proposition}
+
+\begin{proposition}[Selector-Level Separation Witness]\label{prop:selector-separation}
+The converse of Proposition~\ref{prop:set-to-selector} fails in general: there exists a decision problem, selector, and coordinate set $I$ such that $I$ is selector-sufficient but not sufficient in the full set-valued sense.
+\leanmeta{\LH{CC44}.}
+\end{proposition}
+
+\begin{definition}[Minimal Sufficient Set]\label{def:minimal-sufficient}
+A sufficient set $I$ is \emph{minimal} if no proper subset $I' \subsetneq I$ is sufficient.
+\end{definition}
+
+\begin{definition}[Relevant Coordinate]\label{def:relevant}
+Coordinate $i$ is \emph{relevant} if there exist states that differ only at coordinate $i$ and induce different optimal action sets:
+\[
+i \text{ is relevant}
+\iff
+\exists s,s' \in S:\; \Big(\forall j \neq i,\; s_j = s'_j\Big)\ \wedge\ \Opt(s)\neq\Opt(s').
+\]
+\end{definition}
+
+\begin{proposition}[Minimal-Set/Relevance Equivalence]\label{prop:minimal-relevant-equiv}
+For any minimal sufficient set $I$ and any coordinate $i$:
+\[
+i \in I \iff i \text{ is relevant}.
+\]
+Hence every minimal sufficient set is exactly the relevant-coordinate set.
+\leanmeta{\LH{DP4},
+\LH{DP6}.}
+\end{proposition}
+
+\begin{proof}
+The ``only if'' direction follows by minimality: if $i\in I$ were irrelevant, removing $i$ would preserve sufficiency, contradicting minimality. The ``if'' direction follows from sufficiency: every sufficient set must contain each relevant coordinate.
+\end{proof}
+
+\begin{definition}[Exact Relevance Identifiability]\label{def:exact-identifiability}
+For a decision problem $\mathcal{D}$ and candidate coordinate set $I$, we say $I$ is \emph{exactly relevance-identifying} if
+\[
+\forall i \in \{1,\ldots,n\}:\quad i \in I \iff i \text{ is relevant for } \mathcal{D}.
+\]
+Equivalently, $I$ is exactly relevance-identifying iff $I$ equals the full relevant-coordinate set.
+\end{definition}
+
+\begin{example}[Weather Decision]
+Consider deciding whether to carry an umbrella:
+\begin{itemize}
+\item Actions: $A = \{\text{carry}, \text{don't carry}\}$
+\item Coordinates: $X_1 = \{\text{rain}, \text{no rain}\}$, $X_2 = \{\text{hot}, \text{cold}\}$, $X_3 = \{\text{Monday}, \ldots, \text{Sunday}\}$
+\item Utility: $U(\text{carry}, s) = -1 + 3 \cdot \mathbf{1}[s_1 = \text{rain}]$, $U(\text{don't carry}, s) = -2 \cdot \mathbf{1}[s_1 = \text{rain}]$
+\end{itemize}
+
+The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordinates 2 and 3 (temperature, day of week) are irrelevant.
+\end{example}
+
+\subsection{The Decision Quotient}
+
+\begin{definition}[Decision Equivalence]\label{def:decision-equiv}
+For coordinate set $I$, states $s, s'$ are \emph{$I$-equivalent} (written $s \sim_I s'$) if $s_I = s'_I$.
+\end{definition}
+
+\begin{definition}[Decision Quotient]\label{def:decision-quotient}
+The \emph{decision quotient} for state $s$ under coordinate set $I$ is:
+\[
+\text{DQ}_I(s) = \frac{|\{a \in A : a \in \Opt(s') \text{ for some } s' \sim_I s\}|}{|A|}
+\]
+This measures the fraction of actions that are optimal for at least one state consistent with $I$.
+\end{definition}
+
+\begin{proposition}[Sufficiency Characterization]\label{prop:sufficiency-char}
+Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\Opt(s)|/|A|$ for all $s \in S$.
+\leanmeta{\LH{CC66},
+\LH{CC67}}
+\end{proposition}
+
+\begin{proof}
+If $I$ is sufficient, then $s \sim_I s' \implies \Opt(s) = \Opt(s')$, so the set of actions optimal for some $s' \sim_I s$ is exactly $\Opt(s)$.
+
+Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal actions form the same set (since $\text{DQ}_I(s) = \text{DQ}_I(s')$ and both equal the relative size of the common optimal set).
+\end{proof}
+
+\subsection{Computational Model and Input Encoding}\label{sec:encoding}
+
+We fix the computational model used by the complexity claims.
+
+\paragraph{Succinct encoding (primary for hardness).}
+This succinct circuit encoding is the standard representation for decision problems in complexity theory; hardness is stated with respect to the input length of the circuit description \cite{arora2009computational,papadimitriou1994complexity}.
+An instance is encoded as:
+\begin{itemize}
+\item a finite action set $A$ given explicitly,
+\item coordinate domains $X_1,\ldots,X_n$ given by their sizes in binary,
+\item a Boolean or arithmetic circuit $C_U$ that on input $(a,s)$ outputs $U(a,s)$.
+\end{itemize}
+The input length is $L = |A| + \sum_i \log |X_i| + |C_U|$. Polynomial time and all complexity classes (\coNP, $\Sigma_2^P$, ETH) are measured in $L$. All hardness results in Section~\ref{sec:hardness} use this encoding.
+
+\paragraph{Explicit-state encoding (used for enumeration algorithms and experiments).}
+The utility is given as a full table over $A \times S$. The input length is $L_{\text{exp}} = \Theta(|A||S|)$ (up to the bitlength of utilities). Polynomial time is measured in $L_{\text{exp}}$. Results stated in terms of $|S|$ use this encoding.
+
+\paragraph{Query-access regime (intermediate black-box access).}
+The solver is given oracle access to decision information at queried states (e.g., $\Opt(s)$, or $U(a,s)$ with $\Opt(s)$ reconstructed from finitely many value queries). Complexity is measured by oracle-query count (optionally paired with per-query evaluation cost). This separates representational access from full-table availability and from succinct-circuit input length.
+
+Unless explicitly stated otherwise, ``polynomial time'' refers to the succinct encoding.
+
+\begin{remark}[Decision Questions vs Decision Problems]\label{rem:question-vs-problem}
+We distinguish between a \emph{decision question} and a \emph{decision problem}. A decision question is the encoding-independent predicate: ``is coordinate set $I$ sufficient for $\mathcal{D}$?'' This is a mathematical relation, fixed by the model contract (C1--C4). A decision problem is a decision question together with a specific encoding of its inputs. The same decision question yields different decision problems under different encodings, and these problems may belong to different complexity classes. Formally, each encoding regime $e$ induces a language $L_{\mathcal{D},e}$; complexity classification is a property of $L_{\mathcal{D},e}$, not of $\mathcal{D}$ alone.
+\end{remark}
+
+\begin{definition}[Regime Simulation]\label{def:regime-simulation}
+Fix a decision question $Q$ and two regimes $R_1,R_2$ for that question.
+We say $R_1$ \emph{simulates} $R_2$ if there exists a polynomial-time transformer that maps any $R_2$ instance to an $R_1$ instance while preserving the answer to $Q$; in oracle settings, this includes a polynomial-time transcript transducer that preserves yes/no outcomes for induced solvers.
+\leanmeta{\LH{CC1},
+\LH{CC42}.}
+\end{definition}
+
+This paper uses that simulation spine in two explicit forms: restriction-map simulation (subproblem-to-full transfer; Proposition~\ref{prop:query-subproblem-transfer}) and oracle-transducer simulation (batch-to-entry transfer; Proposition~\ref{prop:oracle-lattice-transfer}).
+
+\subsection{Model Contract and Regime Tags}\label{sec:model-contract}
+
+All theorem statements in this paper are typed by the following model contract:
+\begin{itemize}
+\item \textbf{C1 (finite actions):} $A$ is finite.
+\item \textbf{C2 (finite coordinate domains):} each $X_i$ is finite, so $S=\prod_i X_i$ is finite.
+\item \textbf{C3 (evaluable utility):} $U(a,s)$ is computable from the declared input encoding.
+\item \textbf{C4 (fixed decision semantics):} optimality is defined by $\Opt(s)=\arg\max_a U(a,s)$.
+\end{itemize}
+
+We use short regime tags for applied corollaries:
+\begin{itemize}
+\item \textbf{[E]} explicit-state encoding,
+\item \textbf{[Q]} query-access (oracle) regime,
+\item \textbf{[Q\_fin]} finite-state query-access core (state-oracle),
+\item \textbf{[S]} succinct encoding,
+\item \textbf{[S+ETH]} succinct encoding with ETH,
+\item \textbf{[Q\_bool]} mechanized Boolean query submodel,
+\item \textbf{[S\_bool]} mechanized Boolean-coordinate submodel.
+\end{itemize}
+
+This tagging is a claim-typing convention: each strong statement is attached to the regime where it is proven.
+
+\begin{remark}[Uniform Assumption Discipline]\label{rem:uniform-assumption-discipline}
+All theorem-level claims in this paper are conditional on their stated premises and regime tags; no assumption family is given special status.
+For each claim, the active assumptions are exactly those appearing in its statement, its regime tag, and its cited mechanized handles.
+\end{remark}
+
+\begin{theorem}[Declared Regime Coverage for the Static Class]\label{thm:regime-coverage}
+Let
+\[
+\mathcal{R}_{\mathrm{static}} =
+\{\text{[E]},\ \text{[S+ETH]},\ \text{[Q\_fin:Opt]},\ \text{[Q\_bool:value-entry]},\ \text{[Q\_bool:state-batch]}\}.
+\]
+For each declared regime in $\mathcal{R}_{\mathrm{static}}$, the paper has a theorem-level mechanized core claim. Equivalently, regime typing is complete over the declared static family.
+\leanmeta{\LH{CC11},
+\LH{CC40}.}
+\end{theorem}
+
+\paragraph{Scope Lattice (typed classes and transfer boundary).}
+\begin{center}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.37\linewidth}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Layer} & \textbf{Transfer Status} & \textbf{Lean handles (representative)} \\
+\midrule
+Static sufficiency class (C1--C4; declared regimes) & Internal landscape complete & \LH{CC85}\\\LH{CC40} \\
+Bridge-admissible adjacent class (one-step deterministic) & Transfer licensed & \LH{CC30}\\\LH{CC9} \\
+Non-admissible represented adjacent classes (horizon, stochastic, transition-coupled) & Transfer blocked by witness & \LH{CC8}\\\LH{CC7} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Adjacent Objective Regimes and Bridge}
+
+\begin{definition}[Adjacent Sequential Objective Regime]\label{def:adjacent-sequential-regime}
+An adjacent sequential objective instance consists of:
+\begin{itemize}
+\item finite action set $A$,
+\item finite coordinate state space $S = X_1 \times \cdots \times X_n$,
+\item horizon $T \in \mathbb{N}_{\ge 1}$ and history-dependent policy class,
+\item reward process $r_t$ and objective functional $J(\pi)$ (e.g., cumulative reward or regret).
+\end{itemize}
+\end{definition}
+
+\begin{proposition}[One-Step Deterministic Bridge]\label{prop:one-step-bridge}
+Consider an instance of Definition~\ref{def:adjacent-sequential-regime} satisfying:
+\begin{enumerate}
+\item $T=1$,
+\item deterministic rewards $r_1(a,s)=U(a,s)$ for some evaluable $U$,
+\item objective $J(\pi)=U(\pi(s),s)$ (single-step maximization),
+\item no post-decision state update relevant to the objective.
+\end{enumerate}
+Then the induced optimization problem is exactly the static decision problem of Definition~\ref{def:decision-problem}, and coordinate sufficiency in the sequential formulation is equivalent to Definition~\ref{def:sufficient}.
+\leanmeta{\LH{CC30}}
+\end{proposition}
+
+\begin{proof}
+Under (1)--(3), optimizing $J$ at state $s$ is identical to choosing an action in $\arg\max_{a\in A} U(a,s)=\Opt(s)$. Condition (4) removes any dependence on future transition effects. Therefore the optimal-policy relation in the adjacent formulation coincides pointwise with $\Opt$ from Definition~\ref{def:optimizer}, and the invariance condition ``same projection implies same optimal choice set'' is exactly Definition~\ref{def:sufficient}.
+\end{proof}
+
+\begin{proposition}[Bridge Transfer Rule]\label{prop:bridge-transfer-scope}
+Under conditions (1)--(4), any sufficiency statement formulated over Definition~\ref{def:sufficient} is equivalent between the adjacent sequential formulation and the static model.
+\leanmeta{\LH{CC30}}
+\end{proposition}
+
+\begin{proof}
+By Proposition~\ref{prop:one-step-bridge}, the adjacent sequential objective induces exactly the same sufficiency predicate as Definition~\ref{def:sufficient} when (1)--(4) hold. Equivalence of any sufficiency statement then follows by substitution.
+\end{proof}
+
+If any bridge condition fails, direct transfer from this paper's static complexity theorems is not licensed by this rule.
+
+\begin{remark}[Extension Boundary]
+Beyond Proposition~\ref{prop:one-step-bridge} (multi-step horizon, stochastic transitions/rewards, or regret objectives), the governing complexity objects change. Those regimes are natural extensions, but they are distinct formal classes from the static sufficiency class analyzed in this paper.
+\end{remark}
+
+\begin{proposition}[Horizon-$>1$ Bridge-Failure Witness]\label{prop:bridge-failure-horizon}
+Dropping the one-step condition can break sufficiency transfer: there exists a two-step objective where sufficiency in the immediate-utility static projection does not match sufficiency in the two-step objective.
+\leanmeta{\LH{CC18},
+\LH{CC17}.}
+\end{proposition}
+
+\begin{proposition}[Stochastic-Criterion Bridge-Failure Witness]\label{prop:bridge-failure-stochastic}
+If optimization is performed against a stochastic criterion not equal to deterministic utility maximization, bridge transfer to Definition~\ref{def:decision-problem} can fail even when an expected-utility projection is available.
+\leanmeta{\LH{CC54}.}
+\end{proposition}
+
+\begin{proposition}[Transition-Coupled Bridge-Failure Witness]\label{prop:bridge-failure-transition}
+If post-decision transition effects are objective-relevant, bridge transfer to the static one-step class can fail.
+\leanmeta{\LH{CC82}.}
+\end{proposition}
+
+\begin{theorem}[Exact Bridge Boundary in the Represented Adjacent Family]\label{thm:bridge-boundary-represented}
+Within the represented adjacent family
+\[
+\{\text{one-step deterministic},\ \text{horizon-extended},\ \text{stochastic-criterion},\ \text{transition-coupled}\},
+\]
+direct transfer of static sufficiency claims is licensed if and only if the class is one-step deterministic. Each represented non-one-step class has an explicit mechanized bridge-failure witness.
+\leanmeta{\LH{CC9},
+\LH{CC8},
+\LH{CC7}.}
+\end{theorem}
+
+\begin{definition}[Agent Snapshot vs Agent Process Typing]\label{def:agent-snapshot-process}
+Within the represented adjacent family, we type:
+\begin{itemize}
+\item \emph{agent snapshot}: fixed-parameter inference view (mapped to one-step deterministic class),
+\item \emph{agent process}: online/dynamical update views (horizon-extended, stochastic-criterion, or transition-coupled classes).
+\end{itemize}
+\end{definition}
+
+\begin{proposition}[Snapshot/Process Transfer Typing]\label{prop:snapshot-process-typing}
+In the represented adjacent family, direct transfer of static sufficiency claims is licensed if and only if the agent is typed as an \emph{agent snapshot}. Every process-typed represented class has an explicit mechanized bridge-failure witness.
+\leanmeta{\LH{CC3},
+\LH{CC36},
+\LH{CC51}.}
+\end{proposition}
+
+Operationally: a trained model evaluated with fixed parameters during inference is an agent snapshot for this typing; once parameters or transition-relevant internals are updated online, the object is process-typed and transfer from static sufficiency theorems is blocked unless the one-step bridge conditions are re-established.\claimstamp{P\ref{prop:snapshot-process-typing}}{RA}
+
+\section{Interpretive Foundations: Hardness and Solver Claims}\label{sec:interpretive-foundations}
+
+The claims in later applied sections are theorem-indexed consequences of this section and Sections~\ref{sec:hardness}--\ref{sec:tractable}.
+
+\subsection{Structural Complexity vs Representational Hardness}
+
+\begin{definition}[Structural Complexity]\label{def:structural-complexity}
+For a fixed decision question (e.g., ``is $I$ sufficient for $\mathcal{D}$?''; see Remark~\ref{rem:question-vs-problem}), \emph{structural complexity} means its placement in standard complexity classes within the formal model (coNP, $\Sigma_2^P$, etc.), as established by class-membership arguments and reductions.
+\end{definition}
+
+\begin{definition}[Representational Hardness]\label{def:representational-hardness}
+For a fixed decision question and an encoding regime $E$ (Section~\ref{sec:encoding}), \emph{representational hardness} is the worst-case computational cost incurred by solvers whose input access is restricted to $E$.
+\end{definition}
+
+\begin{remark}[Interpretation Contract]
+This paper keeps the decision question fixed and varies the encoding regime explicitly. Thus, later separations are read as changes in representational hardness under fixed structural complexity, not as changes to the underlying sufficiency semantics.
+Accordingly, ``complete landscape'' means complete for this static sufficiency class under the declared regimes; adjacent objective classes are distinct typed objects, not unproved remainder cases of the same class.
+\end{remark}
+
+\begin{theorem}[Typed Completeness for the Static Sufficiency Class]\label{thm:typed-completeness-static}
+For the static sufficiency class fixed by C1--C4 and declared regime family $\mathcal{R}_{\mathrm{static}}$, the paper provides:
+\begin{enumerate}
+\item conditional class-label closures for SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, and ANCHOR-SUFFICIENCY;
+\item a conditional explicit/succinct dichotomy closure;
+\item a regime-indexed mechanized core claim for every declared regime; and
+\item declared-family exhaustiveness in the typed regime algebra.
+\end{enumerate}
+\leanmeta{\LH{CC85}.}
+\end{theorem}
+
+\subsection{Solver Integrity and Regime Competence}
+
+To keep practical corollaries type-safe, we separate \emph{integrity} (what a solver is allowed to assert) from \emph{competence} (what it can cover under a declared regime), following the certifying-algorithms schema \cite{mcconnell2010certifying,necula1997proof}.
+The induced-relation view used below is standard in complexity/computability presentations: algorithms are analyzed as machines deciding languages or computing functions/relations over encodings \cite{papadimitriou1994complexity,arora2009computational,forster2019verified}.
+
+\begin{definition}[Certifying Solver]\label{def:certifying-solver}
+Fix a decision question $\mathcal{R} \subseteq \mathcal{X}\times\mathcal{Y}$ and an encoding regime $E$ over $\mathcal{X}$. A \emph{certifying solver} is a pair $(Q,V)$ where:
+\begin{itemize}
+\item $Q$ maps each input $x\in\mathcal{X}$ to either $\mathsf{ABSTAIN}$ or a candidate pair $(y,w)$,
+\item $V$ is a polynomial-time checker (in $|{\rm enc}_E(x)|$) with output in $\{0,1\}$.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Induced Solver Relation]\label{def:induced-solver-relation}
+For any deterministic program $M$ computing a partial map
+$f_M:\mathcal{X}\rightharpoonup\mathcal{Y}$ on encoded inputs, define
+\[
+\mathcal{R}_M
+:=
+\{(x,y)\in\mathcal{X}\times\mathcal{Y} : f_M(x)\downarrow \ \wedge\ y=f_M(x)\}.
+\]
+\end{definition}
+
+\begin{proposition}[Universality of Solver Framing]\label{prop:universal-solver-framing}
+Every deterministic computer program that computes a (possibly partial) map on encoded inputs can be framed as a solver for its induced relation (Definition~\ref{def:induced-solver-relation}).
+In this formal sense, all computers are solvers of specific problems.
+\leanmeta{\LH{CC86}.}
+\end{proposition}
+
+\begin{proof}
+Immediate from Definition~\ref{def:induced-solver-relation}: each program induces a relation given by its graph on the domain where it halts.
+\end{proof}
+
+\begin{definition}[Solver Integrity]\label{def:solver-integrity}
+A certifying solver $(Q,V)$ has \emph{integrity} for relation $\mathcal{R}$ if:
+\begin{itemize}
+\item (assertion soundness) $Q(x)=(y,w)\implies V(x,y,w)=1$,
+\item (checker soundness) $V(x,y,w)=1\implies (x,y)\in\mathcal{R}$.
+\end{itemize}
+The output $\mathsf{ABSTAIN}$ (equivalently, $\mathsf{UNKNOWN}$) is first-class and carries no assertion about membership in $\mathcal{R}$.
+\end{definition}
+
+\begin{definition}[Competence Under a Regime]\label{def:competence-regime}
+Fix a regime $\Gamma=(\mathcal{X}_\Gamma,E_\Gamma,\mathcal{C}_\Gamma)$ with instance family $\mathcal{X}_\Gamma\subseteq\mathcal{X}$, encoding assumptions $E_\Gamma$, and resource bound $\mathcal{C}_\Gamma$. A certifying solver $(Q,V)$ is \emph{competent} on $\Gamma$ for relation $\mathcal{R}$ if:
+\begin{itemize}
+\item it has integrity for $\mathcal{R}$ (Definition~\ref{def:solver-integrity}),
+\item (coverage) $\forall x\in\mathcal{X}_\Gamma,\;Q(x)\neq\mathsf{ABSTAIN}$,
+\item (resource bound) runtime$_Q(x)\le \mathcal{C}_\Gamma(|{\rm enc}_{E_\Gamma}(x)|)$ for all $x\in\mathcal{X}_\Gamma$.
+\end{itemize}
+\end{definition}
+
+\begin{corollary}[Universality of Integrity Applicability]\label{cor:integrity-universal}
+Let $M$ be any deterministic program, viewed as a certifying solver pair $(Q,V)$ for some externally fixed target relation $\mathcal{R}$.
+Then Definition~\ref{def:solver-integrity} applies unchanged.
+Thus epistemic integrity is architecture-universal over computing systems once they are cast as solvers for declared tasks.
+\leanmeta{\LH{CC24}.}
+\end{corollary}
+
+\begin{proof}
+Definition~\ref{def:solver-integrity} quantifies over a relation $\mathcal{R}$ and a certifying pair $(Q,V)$; it does not assume any special implementation substrate.
+\end{proof}
+\claimstamp{P\ref{prop:universal-solver-framing},C\ref{cor:integrity-universal}}{TR}
+
+\begin{remark}[External-Task Non-Vacuity]\label{rem:external-task-nonvacuity}
+If the target relation is chosen post hoc from the program's own behavior (for example, $\mathcal{R}=\mathcal{R}_M$ from Definition~\ref{def:induced-solver-relation}), integrity can become tautological and competence claims can be vacuous.
+Non-vacuous competence claims therefore require the target relation, encoding regime, and resource bound to be declared independently of observed outputs.
+\claimstamp{D\ref{def:solver-integrity},D\ref{def:competence-regime},P\ref{prop:integrity-competence-separation},P\ref{prop:integrity-resource-bound}}{AR}
+\end{remark}
+
+\begin{definition}[$\varepsilon$-Objective Relation Family]\label{def:epsilon-objective-family}
+An \emph{$\varepsilon$-objective relation family} is a map
+\[
+\varepsilon \mapsto \mathcal{R}_\varepsilon \subseteq \mathcal{X}\times\mathcal{Y}
+\]
+that assigns a certified target relation to each tolerance level $\varepsilon\ge 0$.
+The exact target is $\mathcal{R}_0$.
+\end{definition}
+
+\begin{definition}[$\varepsilon$-Competence Under a Regime]\label{def:epsilon-competence-regime}
+Fix a relation family $(\mathcal{R}_\varepsilon)_{\varepsilon\ge 0}$ and regime $\Gamma$.
+A certifying solver $(Q,V)$ is \emph{$\varepsilon$-competent} on $\Gamma$ if it is competent on $\Gamma$ for relation $\mathcal{R}_\varepsilon$ in the sense of Definition~\ref{def:competence-regime}.
+\end{definition}
+
+\begin{proposition}[Zero-$\varepsilon$ Competence Reduction]\label{prop:zero-epsilon-competence}
+If $\mathcal{R}_0=\mathcal{R}$, then
+\[
+\text{$\varepsilon$-competent at }\varepsilon=0
+\iff
+\text{competent for exact relation }\mathcal{R}.
+\]
+Moreover, $\varepsilon$-competence implies integrity for the corresponding $\mathcal{R}_\varepsilon$.
+\leanmeta{\LH{IC18},
+\LH{IC6}.}
+\end{proposition}
+
+\begin{definition}[Typed Claim Report]\label{def:typed-claim-report}
+For a declared objective family and regime, a solver-side report is one of:
+\begin{itemize}
+\item $\mathsf{ABSTAIN}$,
+\item $\mathsf{EXACT}$ (claiming exact competence/certification),
+\item $\mathsf{EPSILON}(\varepsilon)$ (claiming $\varepsilon$-competence/certification).
+\end{itemize}
+\end{definition}
+
+\begin{proposition}[Typed Claim Admissibility Discipline]\label{prop:typed-claim-admissibility}
+Under Definitions~\ref{def:competence-regime}, \ref{def:epsilon-competence-regime}, and \ref{def:typed-claim-report}:
+\begin{itemize}
+\item $\mathsf{ABSTAIN}$ is always admissible;
+\item $\mathsf{EXACT}$ is admissible iff exact competence holds;
+\item $\mathsf{EPSILON}(\varepsilon)$ is admissible iff $\varepsilon$-competence holds.
+\end{itemize}
+Hence claim type and certificate type must match (no cross-typing of uncertified assertions as certified guarantees).
+\leanmeta{\LH{CC84}.}
+\end{proposition}
+
+\begin{definition}[Evidence Object for a Typed Report]\label{def:evidence-object}
+Fix a declared objective family, regime $\Gamma$, solver $Q$, and report type
+$r \in \{\mathsf{ABSTAIN}, \mathsf{EXACT}, \mathsf{EPSILON}(\varepsilon)\}$.
+An \emph{evidence object} for $r$ is a witness that certifies admissibility of
+that report under the declared contract.
+\leanmeta{\LH{IC1}.}
+\end{definition}
+
+\begin{proposition}[Evidence--Admissibility Equivalence]\label{prop:evidence-admissibility-equivalence}
+Under the typed discipline, report admissibility is equivalent to evidence-object existence:
+\[
+\text{Evidence object for }r\ \text{exists}
+\iff
+\text{Claim }r\ \text{is admissible}.
+\]
+\leanmeta{\LH{IC7}.}
+\end{proposition}
+\claimstamp{D\ref{def:evidence-object},P\ref{prop:typed-claim-admissibility},P\ref{prop:evidence-admissibility-equivalence}}{AR}
+
+\begin{definition}[Signaled Typed Report (Guess + Confidence)]\label{def:signaled-typed-report}
+A \emph{signaled typed report} augments the typed report token
+$r\in\{\mathsf{ABSTAIN},\mathsf{EXACT},\mathsf{EPSILON}(\varepsilon)\}$ with:
+\begin{itemize}
+\item an optional guess payload $g$,
+\item self-reflected confidence $p_{\mathrm{self}}\in[0,1]$,
+\item certified confidence $p_{\mathrm{cert}}\in[0,1]$.
+\end{itemize}
+Here $p_{\mathrm{self}}$ is a self-signal, while $p_{\mathrm{cert}}$ is an evidence-gated signal under the declared contract.
+\leanmeta{\LH{IC2}.}
+\end{definition}
+
+\begin{definition}[Signal Consistency Discipline]\label{def:signal-consistency}
+For a signaled typed report $(r,g,p_{\mathrm{self}},p_{\mathrm{cert}})$, require:
+\[
+p_{\mathrm{cert}} > 0 \Rightarrow \exists\ \text{evidence object for }r.
+\]
+\end{definition}
+
+\begin{proposition}[Exact Claims Require Exact Evidence]\label{prop:exact-requires-evidence}
+In the typed claim discipline,
+\[
+\text{ClaimAdmissible}(\mathsf{EXACT})
+\iff
+\exists\ \text{exact evidence object}.
+\]
+Equivalently, admissible exact claims are exactly those with an evidence witness.
+\leanmeta{\LH{IC8},
+\LH{IC9}.}
+\end{proposition}
+
+\begin{proposition}[Certified-Confidence Gate]\label{prop:certified-confidence-gate}
+Under Definition~\ref{def:signal-consistency}, positive certified confidence implies typed admissibility:
+\[
+p_{\mathrm{cert}} > 0 \Rightarrow \text{ClaimAdmissible}(r).
+\]
+Thus certified confidence is not a free scalar; it is evidence-gated by the same typed discipline as the report itself.
+\leanmeta{\LH{IC15},
+\LH{IC14}.}
+\end{proposition}
+
+\begin{proposition}[No Evidence Forces Zero Certified Confidence]\label{prop:no-evidence-zero-certified}
+Under Definition~\ref{def:signal-consistency}, absence of evidence for the reported type forces:
+\[
+\neg\exists\ \text{evidence object for }r
+\Rightarrow
+p_{\mathrm{cert}}=0.
+\]
+\leanmeta{\LH{IC17}.}
+\end{proposition}
+
+\begin{corollary}[Exact-No-Competence Zero-Certified Constraint]\label{cor:exact-no-competence-zero-certified}
+For exact reports, if exact competence is unavailable on the declared regime/objective, then any signal-consistent report must satisfy:
+\[
+p_{\mathrm{cert}} = 0.
+\]
+\leanmeta{\LH{IC16}.}
+\end{corollary}
+\claimstamp{D\ref{def:signaled-typed-report},D\ref{def:signal-consistency},P\ref{prop:exact-requires-evidence},P\ref{prop:certified-confidence-gate},P\ref{prop:no-evidence-zero-certified},C\ref{cor:exact-no-competence-zero-certified}}{AR}
+
+\begin{corollary}[No Uncertified Exact-Exhaustion Claim]\label{cor:no-uncertified-exact-claim}
+If exact competence does not hold on the declared regime/objective, then an $\mathsf{EXACT}$ report is inadmissible.
+\leanmeta{\LH{CC29}.}
+\end{corollary}
+\claimstamp{P\ref{prop:typed-claim-admissibility},C\ref{cor:no-uncertified-exact-claim}}{AR}
+
+\begin{proposition}[Declared-Contract Separation: Selection vs. Validity]\label{prop:declared-contract-selection-validity}
+For solver-side reporting, there are two formally distinct layers:
+\begin{itemize}
+\item \textbf{Declared-contract selection layer:} choosing objective family $(\mathcal{R}_\varepsilon)_{\varepsilon\ge 0}$, regime $\Gamma$, and assumption profile;
+\item \textbf{Validity layer:} once declared, admissibility of $\mathsf{EXACT}/\mathsf{EPSILON}(\varepsilon)/\mathsf{ABSTAIN}$ reports is fixed by certificate-typed rules.
+\end{itemize}
+Thus the framework treats contract selection as an external declaration choice, and then enforces mechanically checked admissibility within that declared contract.
+\leanmeta{\LH{CC84},
+\LH{CC14},
+\LH{CC27}.}
+\end{proposition}
+
+\begin{proof}
+The validity layer is Proposition~\ref{prop:typed-claim-admissibility}: report admissibility is exactly tied to the matching competence certificate type.
+For exact physical claims outside carve-outs, Proposition~\ref{prop:outside-excuses-explicit-assumptions} and Theorem~\ref{thm:claim-integrity-meta} require explicit assumptions, and Corollary~\ref{cor:outside-excuses-no-exact-report} blocks uncertified exact reports under declared non-collapse assumptions.
+Therefore, once the contract is declared, admissibility is mechanically determined by the typed rules and attached assumption profile.
+\end{proof}
+\claimstamp{P\ref{prop:typed-claim-admissibility},P\ref{prop:outside-excuses-explicit-assumptions},T\ref{thm:claim-integrity-meta},C\ref{cor:outside-excuses-no-exact-report}}{DC}
+
+\begin{definition}[Exact-Claim Excuse Carve-Outs]\label{def:exact-claim-excuses}
+For exact physical claims in this framework, we declare four explicit carve-outs:
+\begin{enumerate}
+\item trivial scope (empty in-scope family),
+\item tractable class (exact competence available in the active regime),
+\item stronger oracle/regime shift (the claim is made under strictly stronger access assumptions),
+\item unbounded resources (budget bounds intentionally removed).
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Explicit Hardness-Assumption Profile]\label{def:explicit-hardness-profile}
+An explicit hardness-assumption profile for declared class/regime $(\mathcal{R},\Gamma)$ consists of:
+\begin{itemize}
+\item a non-collapse hypothesis,
+\item a collapse implication from universal exact competence on $(\mathcal{R},\Gamma)$.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Well-Typed Exact Physical Claim Policy]\label{def:exact-claim-welltyped}
+An exact physical claim is \emph{well-typed} only if either:
+\begin{itemize}
+\item at least one carve-out from Definition~\ref{def:exact-claim-excuses} is explicitly declared, or
+\item an explicit hardness-assumption profile (Definition~\ref{def:explicit-hardness-profile}) is explicitly declared.
+\end{itemize}
+\end{definition}
+
+\begin{proposition}[Outside Carve-Outs, Explicit Assumptions Are Required]\label{prop:outside-excuses-explicit-assumptions}
+If an exact physical claim is well-typed (Definition~\ref{def:exact-claim-welltyped}) and no carve-out from Definition~\ref{def:exact-claim-excuses} applies, then an explicit hardness-assumption profile must be present.
+\leanmeta{\LH{CC14}.}
+\end{proposition}
+
+\begin{theorem}[Claim-Integrity Meta-Theorem]\label{thm:claim-integrity-meta}
+For declared class/regime objects, every admissible exact-claim policy outside the carve-outs requires explicit assumptions:
+\[
+\neg\ \text{Excused (Definition~\ref{def:exact-claim-excuses})}
+\ \wedge\
+\text{Well-Typed Exact Claim (Definition~\ref{def:exact-claim-welltyped})}
+\ \Rightarrow\
+\text{Has Explicit Hardness Profile (Definition~\ref{def:explicit-hardness-profile})}.
+\]
+\leanmeta{\LH{CC14}.}
+\end{theorem}
+
+\begin{proof}
+Immediate from Proposition~\ref{prop:outside-excuses-explicit-assumptions}; this is the universally quantified theorem-level restatement over the typed claim/regime objects.
+\end{proof}
+
+\begin{corollary}[Outside Carve-Outs, Declared Hardness Blocks Exact Reports]\label{cor:outside-excuses-no-exact-report}
+If no carve-out applies and the declared hardness-assumption profile holds, then $\mathsf{EXACT}$ reports are inadmissible for every solver on the declared class/regime.
+\leanmeta{\LH{CC27}.}
+\end{corollary}
+\claimstamp{P\ref{prop:outside-excuses-explicit-assumptions},T\ref{thm:claim-integrity-meta},C\ref{cor:outside-excuses-no-exact-report}}{CR}
+
+\begin{proposition}[Integrity--Competence Separation]\label{prop:integrity-competence-separation}
+Integrity and competence are distinct predicates: integrity constrains asserted outputs, while competence adds non-abstaining coverage under resource bounds.
+\leanmeta{\LH{IC5},
+\LH{IC11}.}
+\end{proposition}
+
+\begin{proof}
+Take the always-abstain solver $Q_\bot(x)=\mathsf{ABSTAIN}$ with any polynomial-time checker $V$. Definition~\ref{def:solver-integrity} holds vacuously, so $(Q_\bot,V)$ is integrity-preserving, but it fails Definition~\ref{def:competence-regime} whenever $\mathcal{X}_\Gamma\neq\emptyset$ because coverage fails. Hence integrity does not imply competence. The converse is immediate because competence includes integrity as a conjunct.
+\end{proof}
+
+\begin{definition}[Attempted Competence Failure]\label{def:attempted-competence-failure}
+Fix an exact objective under regime $\Gamma$. A solver state is an \emph{attempted competence failure} if:
+\begin{itemize}
+\item integrity holds (Definition~\ref{def:solver-integrity}),
+\item exact competence was actually attempted for the active scope/objective,
+\item competence on $\Gamma$ fails for that exact objective (Definition~\ref{def:competence-regime}).
+\end{itemize}
+\end{definition}
+
+\begin{proposition}[Attempted-Competence Rationality Matrix]\label{prop:attempted-competence-matrix}
+Let $I,A,C\in\{0,1\}$ denote integrity, attempted exact competence, and competence available in the active regime. Policy verdict for persistent over-specification is:
+\begin{itemize}
+\item if $I=0$: inadmissible,
+\item if $I=1$ and $(A,C)=(1,0)$: conditionally rational,
+\item if $I=1$ and $(A,C)\in\{(0,0),(0,1),(1,1)\}$: irrational for the same verified-cost objective.
+\end{itemize}
+Hence, in the integrity-preserving plane ($I=1$), exactly one cell is rational and three are irrational.
+\leanmeta{\LH{IC13},
+\LH{IC4},
+\LH{IC3}}
+\end{proposition}
+
+This separation plus Proposition~\ref{prop:attempted-competence-matrix} is load-bearing for the regime-conditional trilemma used later: if exact competence is blocked by hardness in a declared regime after an attempted exact procedure, integrity forces one of three responses---abstain, weaken guarantees, or change regime assumptions.\claimstamp{P\ref{prop:attempted-competence-matrix}}{AR}
+
+\paragraph{Mechanized status.}
+This separation is machine-checked in \texttt{DecisionQuotient/IntegrityCompetence.lean} via:
+\texttt{competence\_implies\_integrity} and
+\texttt{integrity\_not\_competent\_of\_nonempty\_scope}; the attempted-competence matrix is mechanized via
+\texttt{overModelVerdict\_rational\_iff},
+\texttt{admissible\_matrix\_counts}, and
+\texttt{admissible\_irrational\_strictly\_more\_than\_rational}.
+
+\begin{proposition}[Integrity-Resource Bound]\label{prop:integrity-resource-bound}
+Let $\Gamma$ be a declared regime whose in-scope family includes all instances of SUFFICIENCY-CHECK and whose declared resource bound is polynomial in the encoding length. If $\Pclass \neq \coNP$, then no certifying solver is simultaneously integrity-preserving and competent on $\Gamma$ for exact sufficiency.
+Equivalently, for every integrity-preserving solver, at least one of the competence conjuncts must fail on $\Gamma$: either full non-abstaining coverage fails or the declared budget bound fails.
+\leanmeta{\LH{IC12},
+\LH{IC10},
+\LH{CC23}.}
+\end{proposition}
+
+\begin{proof}
+By Definition~\ref{def:competence-regime}, competence on $\Gamma$ requires integrity, full in-scope coverage, and budget compliance. Under the coNP-hardness transfer for SUFFICIENCY-CHECK (Theorem~\ref{thm:sufficiency-conp}), universal competence on this scope would induce a polynomial-time collapse to $\Pclass=\coNP$. Therefore, under $\Pclass \neq \coNP$, the full competence predicate cannot hold.
+Since integrity alone is satisfiable (Proposition~\ref{prop:integrity-competence-separation}, via always-abstain), the obstruction is exactly competence coverage/budget under the declared regime.
+\claimstamp{T\ref{thm:sufficiency-conp},P\ref{prop:integrity-competence-separation},P\ref{prop:integrity-resource-bound}}{AR}
+\end{proof}
+
+\begin{proposition}[Declared-Physics No-Universal-Exact-Certifier Schema]\label{prop:physics-no-universal-exact}
+Fix any declared physical/task class representable by relation $\mathcal{R}$ and regime $\Gamma$ in the certifying-solver model. If
+\[
+\big(\exists Q,\ \mathrm{CompetentOn}(\mathcal{R},\Gamma,Q)\big)\ \Rightarrow\ (\Pclass=\coNP),
+\]
+then under $\Pclass\neq\coNP$ there is no universally exact-competent solver for that declared class.
+\leanmeta{\LH{CC12}.}
+\end{proposition}
+
+\begin{corollary}[No Universal Exact-Claim Admissibility in Hardness-Blocked Classes]\label{cor:physics-no-universal-exact-claim}
+Under the same premises as Proposition~\ref{prop:physics-no-universal-exact}, and under the typed-claim discipline of Definition~\ref{def:typed-claim-report}, an $\mathsf{EXACT}$ report is inadmissible for every solver on that declared class.
+Hence admissible reporting must use $\mathsf{ABSTAIN}$ or explicitly weakened guarantees.
+\leanmeta{\LH{CC26}.}
+\end{corollary}
+\claimstamp{P\ref{prop:physics-no-universal-exact},C\ref{cor:physics-no-universal-exact-claim}}{CR}
+
+
+% Include the hardness proofs (already developed)
+\input{hardness_proofs.tex}

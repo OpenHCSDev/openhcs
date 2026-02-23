@@ -7,6 +7,8 @@ Let $C\in\{0,1\}$ denote the truth of a claim ($C=1$ true), with prior
 $p := \Pr[C=1]\in(0,1)$. Let $S$ be the event that the receiver observes a
 particular message-pattern (signal) $s$.
 
+\nolinkurl{Credibility.cheap_talk_bound} \nolinkurl{Credibility.CheapTalk.cheapTalkBound}
+
 Define the emission rates
 \[
 \alpha := \Pr[S \mid C=1],\qquad \beta := \Pr[S \mid C=0].
@@ -68,6 +70,8 @@ For claims $c_1, c_2$ with $M(c_1) < M(c_2)$ (i.e., $p_1 := P(c_1) > p_2 := P(c_
 and identical cheap talk signals $s$ with mimicability $q$:
 \[\Pr[c_1 \mid S] > \Pr[c_2 \mid S]\]
 Higher-magnitude claims receive less credibility from identical signals.
+
+\nolinkurl{Credibility.CheapTalk.magnitude_penalty} \nolinkurl{Credibility.CheapTalk.cheapTalkBound_strictMono_prior}
 \end{theorem}
 
 \begin{proof}
@@ -85,6 +89,8 @@ identical; the prior probability differs.
 \begin{theorem}[Emphasis Penalty]\label{thm:emphasis-penalty}
 Let \(s_1, s_2, ..., s_n\) be cheap talk signals all asserting claim \(c\). There exists \(k^*\) such that for \(n > k^*\): \[\frac{\partial C(c, s_{1..n})}{\partial n} < 0\]
 Additional emphasis \emph{decreases} credibility past a threshold.
+
+\nolinkurl{Credibility.CheapTalk.emphasis_penalty} \nolinkurl{Credibility.CheapTalk.suspicion_mono} \nolinkurl{Credibility.CheapTalk.credibilityWithEmphasis}
 \end{theorem}
 
 \begin{proof}
@@ -115,6 +121,8 @@ emphasis signals desperation.
 Let \(a\) be a cheap talk assertion and \(m\) be a meta-assertion ``assertion \(a\) is credible.''
 Then: \[C(c, a \cup m) \leq C(c, a) + \epsilon\]
 where \(\epsilon \to 0\) as common knowledge of rationality increases.
+
+\nolinkurl{Credibility.CheapTalk.meta_assertion_trap} \nolinkurl{Credibility.CheapTalk.meta_assertion_decreases} \nolinkurl{Credibility.CheapTalk.meta_assertion_boost_nonpositive}
 \end{theorem}
 
 \begin{proof}

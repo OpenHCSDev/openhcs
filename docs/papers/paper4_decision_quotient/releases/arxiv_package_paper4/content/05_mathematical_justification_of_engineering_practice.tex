@@ -35,7 +35,7 @@ Therefore, ``does parameter subset $I$ preserve all behaviors?'' is exactly SUFF
 \end{proof}
 
 \begin{remark}
-This reduction is \emph{parsimonious}: every instance of configuration simplification corresponds bijectively to an instance of SUFFICIENCY-CHECK. The problems are not merely related; they are identical up to encoding.
+This reduction is \emph{parsimonious}: every instance of configuration simplification corresponds bijectively to an instance of SUFFICIENCY-CHECK. The formulations are equivalent up to encoding under this construction.
 \end{remark}
 
 \subsection{Computational Rationality of Over-Modeling}
@@ -126,4 +126,4 @@ These theorems provide mathematical grounding for three widespread engineering b
 
 \textbf{3. ``Include everything'' is a legitimate strategy.} When determining relevance costs $\Omega(2^n)$, including all $n$ parameters costs $O(n)$. For large $n$, this is the rational choice.
 
-These are not merely workarounds or approximations. They are optimal responses under the stated model. The complexity results provide a mathematical lens: over-modeling is not a failure; it is the rational strategy under the model.
+Under the stated model, these behaviors are optimal responses to the verified complexity constraints. The conclusion is model-conditional and does not claim optimality outside the declared assumptions.

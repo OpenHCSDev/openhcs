@@ -2,7 +2,7 @@ We present a Lean 4 formalization of polynomial-time reductions and computationa
 
 \textbf{Formalization contributions.} We develop a reusable framework for expressing Karp reductions, oracle complexity classes, and parameterized hardness in Lean 4. The framework integrates with Mathlib's computability library and provides: (1) bundled reduction types with polynomial-time witnesses; (2) tactics for composing reductions; (3) templates for NP/coNP/\SigmaP{2} membership and hardness proofs.
 
-\textbf{Verified complexity results.} As a case study, we formalize the complexity of the SUFFICIENCY-CHECK problem---determining which coordinates of a decision problem suffice for optimal action. We machine-verify:
+\textbf{Verified complexity results.} As a case study, we formalize the complexity of the SUFFICIENCY-CHECK problem, determining which coordinates of a decision problem suffice for optimal action. We machine-verify:
 \begin{itemize}
 \item \textbf{coNP-completeness} of sufficiency checking via reduction from TAUTOLOGY \cite{cook1971complexity}
 \item \textbf{Inapproximability} within $(1-\varepsilon)\ln n$ via L-reduction from SET-COVER \cite{feige1998threshold}

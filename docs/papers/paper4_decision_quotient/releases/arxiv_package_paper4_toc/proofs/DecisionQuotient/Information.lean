@@ -125,7 +125,7 @@ theorem empty_minimal_sufficient_iff_constant (m : ℕ) [CoordinateSpace S m] [N
     intro s
     apply hsuff
     intro i hi
-    exact (Finset.not_mem_empty i hi).elim
+    exact (by simpa using hi)
   · intro hconst
     constructor
     · intro s s' _
@@ -137,4 +137,3 @@ theorem empty_minimal_sufficient_iff_constant (m : ℕ) [CoordinateSpace S m] [N
       exact (h1.2 h2).elim
 
 end DecisionQuotient
-

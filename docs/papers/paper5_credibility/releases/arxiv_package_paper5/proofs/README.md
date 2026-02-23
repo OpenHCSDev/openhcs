@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Credibility.
 
-- **Lines:** 1511
-- **Theorems:** 72
+- **Lines:** 2057
+- **Theorems:** 82
 - **`sorry` placeholders:** 0
 
 
@@ -31,6 +31,8 @@ lake build
 | `CostlySignals.lean` | CostlySignals |
 | `Impossibility.lean` | Impossibility |
 | `Leverage.lean` | Leverage |
+| `Paper4Bridge.lean` | Paper4Bridge |
+| `Regime.lean` | Regime |
 | `Credibility.lean` | Credibility |
 | `lakefile.lean` | lakefile |
 

@@ -34,9 +34,9 @@ These results establish a fundamental principle of rational decision-making unde
 \textbf{Determining what you need to know is harder than knowing everything.}
 \end{quote}
 
-This is not a metaphor or heuristic observation. It is a mathematical theorem with universal scope \emph{within the formal model}. Any agent facing structured uncertainty (whether a climate scientist, financial analyst, software engineer, or artificial intelligence) faces the same computational constraint when their decision problem fits the coordinate-structured encoding. The ubiquity of over-modeling across domains is not coincidence, laziness, or poor discipline. It is a rational response to intractability in the general case.
+Within the formal model, this is a theorem-level statement about verification cost: identifying sufficient information can be harder than evaluating the full objective. For decision problems that fit the coordinate-structured encoding, over-modeling is a computational response to intractable exact minimization.
 
-The principle has immediate normative force: criticizing engineers for including ``irrelevant'' parameters or demanding minimal models conflicts with computational reality in the general case. The dichotomy theorem (Theorem~\ref{thm:dichotomy}) characterizes when tractability holds; outside those boundaries, over-modeling is not a failure mode---it is the rational strategy under the model.
+The dichotomy theorem (Theorem~\ref{thm:dichotomy}) specifies when tractability holds under the declared regime assumptions. Outside those tractable boundaries, exact minimization is hardness-blocked and over-modeling remains an admissible strategy under the model.
 
 All proofs are machine-checked in Lean 4, ensuring correctness of the core mathematical claims including the reduction mappings and equivalence theorems. Complexity classifications follow from standard complexity-theoretic results (TAUTOLOGY is coNP-complete, $\exists\forall$-SAT is $\Sigma_2^\text{P}$-complete) under the encoding model described in Section~\ref{sec:encoding}.
 
@@ -101,7 +101,7 @@ The result explains phenomena across disciplines \emph{within the scope of the m
 
 The Simplicity Tax Theorem yields the corollary stated above: for any incomplete tool and any $n>0$ use sites, total external work is strictly larger than for a complete tool (Theorem~\ref{thm:complete-dominates}). Therefore, avoiding over-modeling by choosing an incomplete ``simpler'' tool increases total work.
 
-Open questions remain (fixed-parameter tractability, quantum complexity, average-case behavior under natural distributions), but the central question---\emph{is identifying relevance fundamentally hard?}---is answered: yes.
+Open questions remain (fixed-parameter tractability, quantum complexity, average-case behavior under natural distributions), but the central question is answered: \emph{is identifying relevance fundamentally hard?} Yes.
 
 \subsection*{Future Work}
 

@@ -1,16 +1,16 @@
 OpenHCS Paper Build Log
 ========================
 
-Paper: paper2_it - Optimal Encoding Under Coherence Constraints: Rate-Complexity Tradeoffs in Multi-Location Representation Systems
-Package Date: 2026-02-20T21:00:50.247312
-Lean Toolchain: leanprover/lean4:v4.16.0
+Paper: paper2_it - Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability, Converse, and Side Information Bounds
+Package Date: 2026-02-22T22:21:40.410081
+Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 30
-Lines of Code: 9555
-Theorems: 446
-Sorry Placeholders: 3
+Lean Files: 31
+Lines of Code: 9672
+Theorems: 466
+Sorry Placeholders: 0
 
 
 Proof Files:
@@ -20,6 +20,7 @@ Proof Files:
   - Basic.lean
   - Bounds.lean
   - CaseStudies.lean
+  - ClaimClosure.lean
   - Coherence.lean
   - Completeness.lean
   - ContextFormalization.lean

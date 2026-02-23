@@ -7,7 +7,7 @@ package «ssot» where
   ]
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4" @ "a6276f4c6097675b1cf5ebd49b1146b735f38c02"
+  "https://github.com/leanprover-community/mathlib4" @ "a8227f463392ef51e5bd9f68975fe46f5d9057f3"
 
 @[default_target]
 lean_lib «Ssot» where

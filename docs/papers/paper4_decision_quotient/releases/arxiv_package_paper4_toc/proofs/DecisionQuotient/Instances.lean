@@ -55,11 +55,9 @@ instance prodProductSpace (X : Type*) : ProductSpace (X × X) 2 where
     if i = 0 then (q.1, p.2) else (p.1, q.2)
   replace_proj_eq := by
     intro p q i
-    simp only
     by_cases h : i = 0 <;> simp [h]
   replace_proj_ne := by
     intro p q i j hne
-    simp only
     split_ifs with h1 h2
     · -- j = 0, i = 0: contradiction with hne
       omega
@@ -111,4 +109,3 @@ theorem bool_minimalSufficient_unique {A : Type*} {n : ℕ} [DecidableEq (Fin n)
   dp.relevantSet_is_minimal I hI J hJ
 
 end DecisionQuotient
-

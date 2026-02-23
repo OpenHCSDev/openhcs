@@ -1,6 +1,6 @@
-\section{Corollary: Complexity Redistribution Under Incomplete Models}\label{sec:simplicity-tax}
+\section{Conservation Law for Decision-Relevant Coordinates}\label{sec:simplicity-tax}
 
-The load-bearing fact in this section is not the set identity itself; it is the difficulty of shrinking the required set $R(P)$ in the first place. By Theorem~\ref{thm:sufficiency-conp} (and Theorem~\ref{thm:minsuff-conp} for minimization), exact relevance identification is intractable in the worst case under succinct encoding. The identities below therefore quantify how unresolved relevance is redistributed between central and per-site work.
+The load-bearing fact in this section is not the set identity itself; it is the difficulty of shrinking the required set $R(P)$ in the first place. By Theorem~\ref{thm:sufficiency-conp} (and Theorem~\ref{thm:minsuff-conp} for minimization), exact relevance identification is intractable in the worst case under succinct encoding. The identities below therefore quantify how unresolved relevance is redistributed between central and per-site work.\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp}}{S}
 
 \begin{definition}
 Let $R(P)$ be the required dimensions (those affecting $\Opt$) and $A(M)$ the dimensions model $M$ handles natively. The \emph{expressive gap} is $\text{Gap}(M,P) = R(P) \setminus A(M)$.
@@ -14,8 +14,8 @@ The \emph{simplicity tax} is the size of the expressive gap:
 \end{definition}
 
 \begin{theorem}[Redistribution Identity]\label{thm:tax-conservation}
-$|\text{Gap}(M, P)| + |R(P) \cap A(M)| = |R(P)|$. The total cannot be reduced---only redistributed between ``handled natively'' and ``handled externally.''
-\textit{(Lean: \nolinkurl{HardnessDistribution.gap_conservation_card})}
+$|\text{Gap}(M, P)| + |R(P) \cap A(M)| = |R(P)|$. The total cannot be reduced, only redistributed between ``handled natively'' and ``handled externally.''
+\leanmeta{\LH{HD4}}
 \end{theorem}
 
 \begin{proof}
@@ -23,7 +23,7 @@ In the finite-coordinate model this is the exact set-cardinality identity
 \[
 |R\setminus A| + |R\cap A| = |R|,
 \]
-formalized as \nolinkurl{HardnessDistribution.gap_conservation_card}.
+formalized as \LH{HD5}.
 \end{proof}
 
 \begin{remark}[Why this is nontrivial in context]
@@ -35,12 +35,12 @@ For $n$ decision sites:
 \[
 \text{TotalExternalWork} = n \times \text{SimplicityTax}(M, P).
 \]
-\textit{(Lean: \nolinkurl{HardnessDistribution.totalExternalWork_eq_n_mul_gapCard})}
+\leanmeta{\LH{HD21}}
 \end{theorem}
 
 \begin{proof}
 This is by definition of per-site externalization and is mechanized as
-\nolinkurl{HardnessDistribution.totalExternalWork_eq_n_mul_gapCard}.
+\LH{HD12}.
 \end{proof}
 
 \begin{theorem}[Amortization]\label{thm:amortization}
@@ -49,7 +49,7 @@ Let $H_{\text{central}}$ be the one-time cost of using a complete model. There e
 n^* = \left\lfloor \frac{H_{\text{central}}}{\text{SimplicityTax}(M,P)} \right\rfloor
 \]
 such that for $n > n^*$, the complete model has lower total cost.
-\textit{(Lean: \nolinkurl{HardnessDistribution.complete_model_dominates_after_threshold})}
+\leanmeta{\LH{HD3}}
 \end{theorem}
 
 \begin{proof}
@@ -60,29 +60,29 @@ n > \left\lfloor \frac{H_{\text{central}}}{\text{SimplicityTax}} \right\rfloor
 H_{\text{central}} < n\cdot \text{SimplicityTax}
 \]
 is mechanized as
-\nolinkurl{HardnessDistribution.complete_model_dominates_after_threshold}.
+\LH{HD4}.
 \end{proof}
 
 \begin{corollary}[Gap Externalization]\label{cor:gap-externalization}
 If $\text{Gap}(M,P)\neq\emptyset$, then external handling cost scales linearly with the number of decision sites.
-\textit{(Lean: \nolinkurl{HardnessDistribution.totalExternalWork_eq_n_mul_gapCard},
-\nolinkurl{HardnessDistribution.simplicityTax_grows})}
+\leanmeta{\LH{HD21},
+\LH{HD18}}
 \end{corollary}
 
 \begin{proof}
 The exact linear form is
-\nolinkurl{HardnessDistribution.totalExternalWork_eq_n_mul_gapCard}.
+\LH{HD12}.
 When the gap is nonempty (positive tax), monotone growth with $n$ is
-\nolinkurl{HardnessDistribution.simplicityTax_grows}.
+\LH{HD11}.
 \end{proof}
 
 \begin{corollary}[Exact Minimization Criterion]\label{cor:gap-minimization-hard}
 For mechanized Boolean-coordinate instances, ``there exists a sufficient set of size at most $k$'' is equivalent to ``the relevant-coordinate set has cardinality at most $k$.''
-\textit{(Lean: \nolinkurl{Sigma2PHardness.min_sufficient_set_iff_relevant_card})}
+\leanmeta{\LH{S2P2}}
 \end{corollary}
 
 \begin{proof}
-This is \nolinkurl{Sigma2PHardness.min_sufficient_set_iff_relevant_card}.
+This is \LH{S2P2}.
 \end{proof}
 
 Appendix~\ref{app:lean} provides theorem statements and module paths for the corresponding Lean formalization.

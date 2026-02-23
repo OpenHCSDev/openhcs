@@ -1,0 +1,71 @@
+\section{Tractable Special Cases: When You Can Solve It}\label{sec:tractable}
+
+We distinguish the encodings of Section~\ref{sec:encoding}. The tractability results below state the model assumption explicitly.
+Structural insight: hardness dissolves exactly when the full decision boundary $s \mapsto \Opt(s)$ is recoverable in polynomial time from the input representation; the three cases below instantiate this single principle.
+Concretely, each tractable regime corresponds to a specific structural insight (explicit boundary exposure, additive separability, or tree factorization) that removes the hardness witness; this supports reading the general-case hardness as missing structural access in the current representation rather than as an intrinsic semantic barrier.
+
+\begin{theorem}[Tractable Subcases]\label{thm:tractable}
+SUFFICIENCY-CHECK is polynomial-time solvable in the following cases:
+\begin{enumerate}
+\item \textbf{Explicit-state encoding:} The input contains the full utility table over $A \times S$. SUFFICIENCY-CHECK runs in $O(|S|^2|A|)$ time; if $|A|$ is constant, $O(|S|^2)$.
+\item \textbf{Separable utility (any encoding):} $U(a, s) = f(a) + g(s)$.
+\item \textbf{Tree-structured utility with explicit local factors (succinct structured encoding):} There exists a rooted tree on coordinates and local functions $u_i$ such that
+\[
+U(a,s) = \sum_i u_i\bigl(a, s_i, s_{\mathrm{parent}(i)}\bigr),
+\]
+with the root term depending only on $(a, s_{\mathrm{root}})$ and all $u_i$ given explicitly as part of the input.
+\end{enumerate}
+\leanmeta{\LH{CC78},
+\LH{CC79},
+\LH{CC81},
+\LH{CC80}.}
+\end{theorem}
+
+\subsection{Explicit-State Encoding}
+
+\begin{proof}[Proof of Part 1]
+Given the full table of $U(a,s)$, compute $\Opt(s)$ for all $s \in S$ in $O(|S||A|)$ time. For SUFFICIENCY-CHECK on a given $I$, verify that for all pairs $(s,s')$ with $s_I = s'_I$, we have $\Opt(s) = \Opt(s')$. This takes $O(|S|^2|A|)$ time by direct enumeration and is polynomial in the explicit input length. If $|A|$ is constant, the runtime is $O(|S|^2)$.
+\end{proof}
+
+\subsection{Separable Utility}
+
+\begin{proof}[Proof of Part 2]
+If $U(a, s) = f(a) + g(s)$, then:
+\[
+\Opt(s) = \arg\max_{a \in A} [f(a) + g(s)] = \arg\max_{a \in A} f(a)
+\]
+The optimal action is independent of the state. Thus $I = \emptyset$ is always sufficient.
+\end{proof}
+
+\subsection{Tree-Structured Utility}
+
+\begin{proof}[Proof of Part 3]
+Assume the tree decomposition and explicit local tables as stated. For each node $i$ and each value of its parent coordinate, compute the set of actions that are optimal for some assignment of the subtree rooted at $i$. This is a bottom-up dynamic program that combines local tables with child summaries; each table lookup is explicit in the input. A coordinate is relevant if and only if varying its value changes the resulting optimal action set. The total runtime is polynomial in $n$, $|A|$, and the size of the local tables.
+\end{proof}
+
+\subsection{Practical Implications}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Condition} & \textbf{Examples} \\
+\midrule
+Explicit-state encoding & Small or fully enumerated state spaces \\
+Separable utility & Additive costs, linear models \\
+Tree-structured utility & Hierarchies, causal trees \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{proposition}[Heuristic Reusability]\label{prop:heuristic-reusability}
+Let $\mathcal{C}$ be a structure class for which SUFFICIENCY-CHECK is polynomial (Theorem~\ref{thm:tractable}). If membership in $\mathcal{C}$ is decidable in polynomial time, then the combined detect-then-check procedure is a sound, polynomial-time heuristic applicable to all future instances in $\mathcal{C}$.
+For each subcase of Theorem~\ref{thm:tractable}, structure detection is polynomial (under the declared representation assumptions).
+\leanmeta{\LH{CC43},
+\LH{CC6},
+\LH{CC45},
+\LH{CC83}.}
+\end{proposition}
+
+\begin{remark}[Heuristics and Integrity]
+Proposition~\ref{prop:heuristic-reusability} removes the complexity-theoretic obstruction to integrity-preserving action on detectable tractable instances: integrity no longer \emph{forces} abstention. Whether the agent acts still requires competence (Definition~\ref{def:competence-regime}): budget and coverage must also be satisfied. An agent that detects structure class $\mathcal{C}$, applies the corresponding polynomial checker, and abstains when detection fails maintains integrity---it never claims sufficiency without verification. Mistaking the heuristic for the general solution---claiming polynomial-time competence on a coNP-hard problem---violates integrity (Proposition~\ref{prop:integrity-resource-bound}).
+\end{remark}

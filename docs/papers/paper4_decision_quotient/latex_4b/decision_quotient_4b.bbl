@@ -1,0 +1,68 @@
+\begin{thebibliography}{10}
+
+\bibitem{amaldi1998complexity}
+Edoardo Amaldi and Viggo Kann.
+\newblock On the approximability of some maximum spanning tree problems.
+\newblock {\em Theoretical Computer Science}, 196(1-2):3--19, 1998.
+
+\bibitem{blum1997selection}
+Avrim~L. Blum and Pat Langley.
+\newblock Selection of relevant features and examples in machine learning.
+\newblock {\em Artificial Intelligence}, 97(1-2):245--271, 1997.
+
+\bibitem{fisher1922mathematical}
+Ronald~A. Fisher.
+\newblock On the mathematical foundations of theoretical statistics.
+\newblock {\em Philosophical Transactions of the Royal Society of London.
+  Series A}, 222:309--368, 1922.
+
+\bibitem{guyon2003introduction}
+Isabelle Guyon and Andr{\'e} Elisseeff.
+\newblock An introduction to variable and feature selection.
+\newblock {\em Journal of Machine Learning Research}, 3:1157--1182, 2003.
+
+\bibitem{howard1966information}
+Ronald~A. Howard.
+\newblock Information value theory.
+\newblock {\em IEEE Transactions on Systems Science and Cybernetics},
+  2(1):22--26, 1966.
+
+\bibitem{littman1998probplanning}
+Michael~L. Littman, Judy Goldsmith, and Martin Mundhenk.
+\newblock The computational complexity of probabilistic planning.
+\newblock {\em Journal of Artificial Intelligence Research}, 9:1--36, 1998.
+
+\bibitem{milgrom1986price}
+Paul Milgrom and John Roberts.
+\newblock Price and advertising signals of product quality.
+\newblock {\em Journal of Political Economy}, 94(4):796--821, 1986.
+
+\bibitem{mundhenk2000mdp}
+Martin Mundhenk, Judy Goldsmith, Christopher Lusena, and Eric Allender.
+\newblock The complexity of finite-horizon markov decision process problems.
+\newblock {\em Journal of the ACM}, 47(4):681--720, 2000.
+
+\bibitem{myerson1979incentive}
+Roger~B. Myerson.
+\newblock Incentive compatibility and the bargaining problem.
+\newblock {\em Econometrica}, 47(1):61--73, 1979.
+
+\bibitem{papadimitriou1987mdp}
+Christos~H. Papadimitriou and John~N. Tsitsiklis.
+\newblock The complexity of markov decision processes.
+\newblock {\em Mathematics of Operations Research}, 12(3):441--450, 1987.
+
+\bibitem{raiffa1961applied}
+Howard Raiffa and Robert Schlaifer.
+\newblock {\em Applied Statistical Decision Theory}.
+\newblock Division of Research, Graduate School of Business Administration,
+  Harvard University, Boston, MA, 1961.
+\newblock Library records list this imprint; avoid using JSTOR DOI
+  10.2307/2282452 which refers to a journal item, not the book.
+
+\bibitem{spence1973job}
+Michael Spence.
+\newblock Job market signaling.
+\newblock {\em The Quarterly Journal of Economics}, 87(3):355--374, 1973.
+
+\end{thebibliography}

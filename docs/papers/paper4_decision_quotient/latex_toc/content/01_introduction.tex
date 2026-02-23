@@ -1,11 +1,27 @@
 \section{Introduction}\label{sec:introduction}
 
-Consider a decision problem with actions $A$ and states $S = X_1 \times \cdots \times X_n$. A coordinate set $I \subseteq \{1, \ldots, n\}$ is \emph{sufficient} if knowing only coordinates in $I$ determines the optimal action:
+Consider any decision problem $\mathcal{D}$ with actions $A$ and factored state space $S = X_1 \times \cdots \times X_n$. A coordinate set $I \subseteq \{1, \ldots, n\}$ is \emph{sufficient} if knowing only coordinates in $I$ determines the optimal action:
 \[
 s_I = s'_I \implies \Opt(s) = \Opt(s')
 \]
+This is \emph{coordinate sufficiency}, the formalization of \emph{information sufficiency} (whether available information determines the optimal action) over a factored state space.
 
-This paper characterizes the efficient cases of coordinate sufficiency within the formal model:
+In information-theoretic terms, this is a task-conditional coding problem: the object preserved by projection is the decision boundary $s \mapsto \Opt(s)$, not the full source state. The same object appears in classical source-coding and fidelity viewpoints \cite{shannon1948mathematical,shannon1959coding,cover2006elements,slepian1973noiseless}, and in zero-error/confusability structure where exact recoverability depends on graph constraints rather than raw description length \cite{shannon1956zero,korner1973graphs,lovasz1979shannon,csiszar2011information}. The same separation also appears in model selection: short descriptions and certifiable adequacy are distinct \cite{rissanen1978modeling,grunwald2007minimum,li2008introduction,blahut1972computation}.
+
+\paragraph{Compact claim-stamp notation.}
+We use compact provenance stamps of the form \([C:\cdots;R:\cdots]\): claim references are grouped by type
+(\(D/P/C/T/L/R\) for Definition/Proposition/Corollary/Theorem/Lemma/Remark), and regime tags are abbreviated
+(for example \(AR\)=active declared regime, \(DC\)=declared contract, \(CR\)=declared class/regime, \(Qf\)=query-finite, \(Qb\)=query-Boolean).
+Theorem-strength narrative statements are stamped and, where available, paired with compact Lean handle IDs; unstamped narrative remains explanatory or citation-only context.
+
+SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, and ANCHOR-SUFFICIENCY are \emph{meta-problems}: each is parameterized by an arbitrary decision problem $\mathcal{D}$ and asks a structural question about $\mathcal{D}$'s coordinate space. The complexity results therefore apply to every problem with factored state space, not to a specific problem domain.\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p}}{S}
+\leanmeta{\LH{CC61},\LH{CC36},\LH{CC5}.}
+
+\begin{remark}[Universality of the Decision-Problem Tuple]\label{rem:universality}
+The formal object of this paper is the decision-problem tuple $\mathcal{D} = (A, S, U)$: actions, factored states, utility. Within this model family, any problem requiring a choice among alternatives given structured information instantiates the tuple: the alternatives are $A$, the structured information is $S = X_1 \times \cdots \times X_n$, and the objective is $U$. Thus the qualifier ``decision problem'' does not narrow scope \emph{inside the declared coordinate model}. The meta-problem results below are universal over problems representable with this coordinate structure; the $(A, S, U)$ formalism supplies the language for stating the sufficiency predicate.
+\end{remark}
+
+This paper characterizes the complexity landscape of these meta-problems within the formal model:
 
 Section~\ref{sec:encoding} fixes the computational model and input encodings used for all complexity claims.
 Section~\ref{sec:model-contract} gives the model contract and regime tags used to type every strong claim.
@@ -27,22 +43,22 @@ The tractable cases are stated with explicit encoding assumptions (Section~\ref{
 
 \subsection{Hardness--Recovery Reading Map}
 
-Theorems in this paper are intended to be read as hardness/recovery pairs for the same fixed decision relation:
+Theorems in this paper are intended to be read as hardness/recovery pairs for the same fixed decision question:
 \begin{enumerate}
 \item \textbf{Sufficiency checking:} [S] coNP-complete in the general succinct regime (Theorem~\ref{thm:sufficiency-conp}), paired with polynomial-time recovery under explicit-state and structured-access regimes (Theorem~\ref{thm:tractable}).
 \item \textbf{Minimal sufficient sets:} [S] coNP-complete in general (Theorem~\ref{thm:minsuff-conp}), paired with the collapse criterion and relevance-computation recovery route (Theorems~\ref{thm:minsuff-collapse}, \ref{thm:tractable}).
 \item \textbf{Anchor sufficiency:} $\SigmaP{2}$-complete in the general anchored formulation (Theorem~\ref{thm:anchor-sigma2p}); no general polynomial-time recovery condition is established in this model.
 \end{enumerate}
-\textit{(Lean anchors for this map: \nolinkurl{ClaimClosure.sufficiency_conp_complete_conditional},
-\nolinkurl{ClaimClosure.minsuff_conp_complete_conditional},
-\nolinkurl{ClaimClosure.minsuff_collapse_core},
-\nolinkurl{ClaimClosure.anchor_sigma2p_complete_conditional},
-\nolinkurl{ClaimClosure.tractable_subcases_conditional},
-\nolinkurl{Sigma2PHardness.min_sufficient_set_iff_relevant_card}.)}
+\leanmeta{\LH{CC60},
+\LH{CC36},
+\LH{CC34},
+\LH{CC4},
+\LH{CC71},
+\LH{S2P2}.}
 
-An operational criterion follows later from the same chain: once decision-site count exceeds the amortization threshold \(n^*\), avoiding structural identification is more expensive than paying the one-time centralization cost (Theorem~\ref{thm:amortization}).
-\textit{(Lean: \nolinkurl{HardnessDistribution.complete_model_dominates_after_threshold},
-\nolinkurl{HardnessDistribution.totalExternalWork_eq_n_mul_gapCard}.)}
+An operational criterion follows later from the same chain: once decision-site count exceeds the amortization threshold \(n^*\), avoiding structural identification is more expensive than paying the one-time centralization cost (Theorem~\ref{thm:amortization}).\claimstamp{T\ref{thm:amortization}}{LC}
+\leanmeta{\LH{HD3},
+\LH{HD21}.}
 
 \subsection{Landscape Summary}
 
@@ -57,6 +73,8 @@ An operational criterion follows later from the same chain: once decision-site c
 \end{enumerate}
 
 Each condition is stated with its encoding assumption. Outside these regimes, the general problem remains \coNP-hard (Theorem~\ref{thm:sufficiency-conp}).
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:tractable}}{E,S}
+\leanmeta{\LH{CC61},\LH{CC69},\LH{CC70},\LH{CC71}.}
 
 \textbf{When is it intractable?} The general problem is \coNP-complete (Theorem~\ref{thm:sufficiency-conp}), with a separation between explicit-state tractability and succinct worst-case hardness:
 \begin{itemize}
@@ -66,6 +84,8 @@ Each condition is stated with its encoding assumption. Outside these regimes, th
 \end{itemize}
 
 The explicit ETH lower bound is still a succinct worst-case statement; Proposition~\ref{prop:query-regime-obstruction} provides the finite-state query core and Propositions~\ref{prop:query-value-entry-lb}--\ref{prop:oracle-lattice-strict} provide theorem-level Boolean-interface refinements.
+\claimstamp{P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-subproblem-transfer},\ref{prop:query-state-batch-lb},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict}}{Qf,Qb}
+\leanmeta{\LH{CC50},\LH{L9},\LH{L11},\LH{L8},\LH{L21},\LH{L20}.}
 
 \subsection{Main Theorems}
 
@@ -81,17 +101,55 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 % NOTE: Theorem \ref{thm:dichotomy} is an encoding-regime separation; the succinct-side statement is worst-case (there exists a hard family with $k^*=n$).
 
 \item \textbf{Theorem~\ref{thm:tractable}:} Polynomial algorithms for bounded actions, separable utility, tree structure.
+\item \textbf{Theorem~\ref{thm:physical-bridge-bundle}:} physical-system bridge composition (law-objective semantics, behavior-preserving configuration reduction, and required-work lower bound) is proved as one bundled mechanized statement under declared encoding assumptions.
+\item \textbf{Propositions~\ref{prop:time-discrete}--\ref{prop:substrate-unit-time}:} the interface-time model is discrete, each decision event advances time by one unit, run-length equals elapsed interface time, and the unit-time law is substrate-invariant under the declared interface-consistency condition.
 \end{enumerate}
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{thm:dichotomy},\ref{thm:tractable},\ref{thm:physical-bridge-bundle};P\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time}}{E,S,S+ETH,AR}
+\leanmeta{\LH{CC61},\LH{CC36},\LH{CC5},\LH{CC16},\LH{CC69},\LH{CC70},\LH{CC71},\LH{CT4},\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ541}.}
+
+\subsection{Claim-Typing Theorems}
+
+\begin{enumerate}
+\item \textbf{Proposition~\ref{prop:typed-claim-admissibility}:} report admissibility is typed by certificate class (\(\mathsf{ABSTAIN}\), \(\mathsf{EXACT}\), \(\mathsf{EPSILON}(\varepsilon)\)).
+\item \textbf{Proposition~\ref{prop:evidence-admissibility-equivalence}:} first-class evidence-object existence is equivalent to typed report admissibility.
+\item \textbf{Propositions~\ref{prop:empty-sufficient-constant} and \ref{prop:insufficiency-counterexample}:} the \(I=\emptyset\) query is exactly universal constancy of the decision boundary, and non-sufficiency is exactly existence of a counterexample pair.
+\item \textbf{Proposition~\ref{prop:exact-requires-evidence}:} exact admissibility is equivalent to exact evidence existence.
+\item \textbf{Proposition~\ref{prop:certified-confidence-gate} and Corollary~\ref{cor:exact-no-competence-zero-certified}:} certified confidence is evidence-gated; for exact reports in no-competence regimes, certified confidence must be zero.
+\item \textbf{Proposition~\ref{prop:no-evidence-zero-certified}:} under signal consistency, no evidence implies zero certified confidence.
+\item \textbf{Proposition~\ref{prop:abstain-guess-self-signal} and Proposition~\ref{prop:self-confidence-not-certification}:} abstain may carry tentative guesses and self-reflected confidence, but self-confidence alone does not certify exactness.
+\item \textbf{Propositions~\ref{prop:steps-run-scalar}, \ref{prop:no-fraction-without-bound}, \ref{prop:fraction-defined-under-bound}:} scalar step-count witnesses are always exact/falsifiable, while completion percentages are meaningful only under explicit declared bounds.
+\item \textbf{Theorem~\ref{thm:claim-integrity-meta}:} outside declared carve-outs, admissible exact-claim policy requires explicit assumptions.
+\item \textbf{Proposition~\ref{prop:integrity-resource-bound}:} under non-collapse, integrity and exact competence cannot both hold universally on hardness-blocked declared regimes.
+\item \textbf{Proposition~\ref{prop:physics-no-universal-exact} and Corollary~\ref{cor:physics-no-universal-exact-claim}:} schema-level consequence for declared class/regime objects and exact-report inadmissibility.
+\end{enumerate}
+\claimstamp{T\ref{thm:claim-integrity-meta};P\ref{prop:typed-claim-admissibility},\ref{prop:evidence-admissibility-equivalence},\ref{prop:empty-sufficient-constant},\ref{prop:insufficiency-counterexample},\ref{prop:exact-requires-evidence},\ref{prop:certified-confidence-gate},\ref{prop:no-evidence-zero-certified},\ref{prop:abstain-guess-self-signal},\ref{prop:self-confidence-not-certification},\ref{prop:steps-run-scalar},\ref{prop:no-fraction-without-bound},\ref{prop:fraction-defined-under-bound},\ref{prop:integrity-resource-bound},\ref{prop:physics-no-universal-exact};C\ref{cor:exact-no-competence-zero-certified},\ref{cor:physics-no-universal-exact-claim}}{DC,AR}
+\leanmeta{\LH{CC75},\LH{IC2},\LH{DP6},\LH{DP7},\LH{IC35},\LH{IC38},\LH{IC40},\LH{IC46},\LH{IC47},\LH{IC42},\LH{IC44},\LH{IC45},\LH{CC30},\LH{CC15},\LH{CC38}.}
+
+\subsection{Regime Separation Theorems}
+
+\begin{enumerate}
+\item \textbf{Theorem~\ref{thm:dichotomy}:} same-question separation between explicit-state and succinct regimes (with [S+ETH] hard-family lower bound).
+\item \textbf{Proposition~\ref{prop:query-regime-obstruction}:} finite-state Opt-oracle lower bound in [Q\_fin].
+\item \textbf{Propositions~\ref{prop:query-value-entry-lb}--\ref{prop:oracle-lattice-strict}:} Boolean-interface refinements and transfer/strictness in [Q\_bool].
+\end{enumerate}
+\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:query-subproblem-transfer},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict}}{E,S+ETH,Qf,Qb}
+\leanmeta{\LH{CC16},\LH{CC50},\LH{L9},\LH{L8},\LH{L11},\LH{L21},\LH{L20},\LH{L23}.}
 
 \subsection{Machine-Checked Proofs}
 
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 \cite{moura2021lean4} (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets. Complexity class membership (coNP-completeness, $\Sigma_2^P$-completeness) follows by composition with standard complexity-theoretic results.
+The reduction constructions and key equivalence theorems are machine-checked in Lean 4 \cite{Lean2015,demoura2021lean4,mathlib2020,forster2019verified,kunze2019formal} (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets. Complexity class membership (coNP-completeness, $\Sigma_2^P$-completeness) follows by composition with standard complexity-theoretic results.
 
 \paragraph{What is new.}
 We contribute (i) formal definitions of decision-theoretic sufficiency in Lean; (ii) machine-checked proofs of reduction correctness for the TAUTOLOGY and $\exists\forall$-SAT reductions; (iii) a complete complexity landscape for coordinate sufficiency with explicit encoding assumptions; and (iv) a formal separation between structural complexity and representational hardness used to derive theorem-indexed engineering corollaries, including theorem-level typed coverage/completeness closures for the declared static class (Theorems~\ref{thm:regime-coverage}, \ref{thm:typed-completeness-static}). Prior work establishes hardness informally; we formalize the constructions and their regime-typed consequences.
+\claimstamp{T\ref{thm:regime-coverage},\ref{thm:typed-completeness-static},\ref{thm:sufficiency-conp},\ref{thm:anchor-sigma2p}}{CR,S}
+\leanmeta{\LH{CC14},\LH{CC76},\LH{CC61},\LH{CC5}.}
 
 \subsection{Paper Structure}
 
 The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/\(\Sigma_2^P\) completeness and tractable cases stated under explicit encoding assumptions). A second contribution is formal claim typing: Section~\ref{sec:interpretive-foundations} introduces the structural/representational and integrity/competence splits that type-check the applied corollaries.
 
-Section~\ref{sec:foundations}: decision-problem foundations and encoding model. Section~\ref{sec:interpretive-foundations}: structural vs representational hardness; integrity vs competence. Section~\ref{sec:hardness}: hardness proofs. Section~\ref{sec:dichotomy}: regime separation. Section~\ref{sec:tractable}: tractable cases. Section~\ref{sec:engineering-justification}: engineering corollaries by regime. Section~\ref{sec:implications}: software architecture corollaries. Section~\ref{sec:simplicity-tax}: complexity redistribution corollary. Section~\ref{sec:related}: related work. Appendix~\ref{app:lean}: Lean listings.
+Section~\ref{sec:foundations}: decision-problem foundations and encoding model. Section~\ref{sec:interpretive-foundations}: structural vs representational hardness; integrity vs competence. Section~\ref{sec:hardness}: hardness proofs. Section~\ref{sec:dichotomy}: regime separation. Section~\ref{sec:tractable}: tractable cases. Section~\ref{sec:engineering-justification}: regime-conditional corollaries. Section~\ref{sec:implications}: dominance theorems for hardness placement. Section~\ref{sec:simplicity-tax}: conservation law for decision-relevant coordinates. Section~\ref{sec:related}: related work. Appendix~\ref{app:lean}: Lean listings.
+
+Sections~\ref{sec:engineering-justification}--\ref{sec:simplicity-tax} are not applied commentary. Every claim in those sections is a formal corollary, regime-typed by the framework of Section~\ref{sec:interpretive-foundations} and indexed to a machine-checked theorem handle. They complete the complexity landscape by characterizing when exact minimization is rational and when it is not: the rationality matrix (Proposition~\ref{prop:attempted-competence-matrix}), the dominance and conservation theorems (Theorems~\ref{thm:centralization-dominance}, \ref{thm:tax-conservation}), and the amortization threshold (Theorem~\ref{thm:amortization}) are all mechanized in Lean.
+\claimstamp{P\ref{prop:attempted-competence-matrix};T\ref{thm:centralization-dominance},\ref{thm:tax-conservation},\ref{thm:amortization}}{AR,LC}
+\leanmeta{\LH{IC27},\LH{HD1},\LH{HD4},\LH{HD3}.}

@@ -1,0 +1,219 @@
+AUTO-GENERATED COPY/PASTE METADATA
+Generated: 2026-02-23T15:27:31.878393
+
+=== HUMAN COPY/PASTE ===
+
+Title: Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency
+
+Abstract (Unicode, for Zenodo):
+We extend the static decision quotient framework of Paper 4 to stochastic and sequential regimes. Given a decision problem with actions A, factored state space S = X₁ × ⋯ × X_(n), and utility U, we ask: what complexity is required to identify sufficient coordinate sets when (a) the state is drawn from a distribution P, or (b) decisions unfold over time with transitions and observations?
+
+Results:
+
+• Stochastic regime: STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT reduction. Tractable under product distributions, bounded support, log-concave.
+
+• Sequential regime: SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF reduction. Tractable under full observability, bounded horizon, tree structure.
+
+• Regime hierarchy: Static ⊂ Stochastic ⊂ Sequential; coNP ⊂ PP ⊂ PSPACE.
+
+• Substrate cost: The integrity-competence verdict is substrate-independent; trajectories diverge based on substrate cost κ.
+
+• Temporal learning: Bayesian structure detection reduces abstention over time.
+
+• Temporal integrity: Evidence-monotone retractions preserve integrity across sequences.
+
+The reduction constructions are machine-checked in Lean 4 (3288 lines, 124 theorems).
+
+Keywords: computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
+
+Abstract (MathJax, for arXiv):
+We extend the static decision quotient framework of Paper 4 to stochastic and sequential regimes. Given a decision problem with actions $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility $U$, we ask: what complexity is required to identify sufficient coordinate sets when (a) the state is drawn from a distribution $P$, or (b) decisions unfold over time with transitions and observations?
+
+**Results:**
+
+- **Stochastic regime**: STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT reduction. Tractable under product distributions, bounded support, log-concave.
+
+- **Sequential regime**: SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF reduction. Tractable under full observability, bounded horizon, tree structure.
+
+- **Regime hierarchy**: Static $\subset$ Stochastic $\subset$ Sequential; coNP $\subset$ PP $\subset$ PSPACE.
+
+- **Substrate cost**: The integrity-competence verdict is substrate-independent; trajectories diverge based on substrate cost $\kappa$.
+
+- **Temporal learning**: Bayesian structure detection reduces abstention over time.
+
+- **Temporal integrity**: Evidence-monotone retractions preserve integrity across sequences.
+
+The reduction constructions are machine-checked in Lean 4 (3288 lines, 124 theorems).
+
+**Keywords:** computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
+
+arXiv Comments:
+Draft submission. Lean 4 artifact: 3288 lines, 124 theorems/lemmas across 29 files (8 sorry placeholders).
+
+=== MACHINE YAML ===
+paper_id: paper4b
+title: 'Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic
+  Information Sufficiency'
+zenodo:
+  title: 'Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic
+    Information Sufficiency'
+  abstract: 'We extend the static decision quotient framework of Paper 4 to stochastic
+    and sequential regimes. Given a decision problem with actions A, factored state
+    space S = X₁ × ⋯ × X_(n), and utility U, we ask: what complexity is required to
+    identify sufficient coordinate sets when (a) the state is drawn from a distribution
+    P, or (b) decisions unfold over time with transitions and observations?
+
+
+    Results:
+
+
+    • Stochastic regime: STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT reduction.
+    Tractable under product distributions, bounded support, log-concave.
+
+
+    • Sequential regime: SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF
+    reduction. Tractable under full observability, bounded horizon, tree structure.
+
+
+    • Regime hierarchy: Static ⊂ Stochastic ⊂ Sequential; coNP ⊂ PP ⊂ PSPACE.
+
+
+    • Substrate cost: The integrity-competence verdict is substrate-independent; trajectories
+    diverge based on substrate cost κ.
+
+
+    • Temporal learning: Bayesian structure detection reduces abstention over time.
+
+
+    • Temporal integrity: Evidence-monotone retractions preserve integrity across
+    sequences.
+
+
+    The reduction constructions are machine-checked in Lean 4 (3288 lines, 124 theorems).
+
+
+    Keywords: computational complexity, decision theory, stochastic decision problems,
+    POMDPs, polynomial hierarchy, PSPACE'
+arxiv:
+  title: 'Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic
+    Information Sufficiency'
+  abstract: 'We extend the static decision quotient framework of Paper 4 to stochastic
+    and sequential regimes. Given a decision problem with actions $A$, factored state
+    space $S = X_1 \times \cdots \times X_n$, and utility $U$, we ask: what complexity
+    is required to identify sufficient coordinate sets when (a) the state is drawn
+    from a distribution $P$, or (b) decisions unfold over time with transitions and
+    observations?
+
+
+    **Results:**
+
+
+    - **Stochastic regime**: STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT
+    reduction. Tractable under product distributions, bounded support, log-concave.
+
+
+    - **Sequential regime**: SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF
+    reduction. Tractable under full observability, bounded horizon, tree structure.
+
+
+    - **Regime hierarchy**: Static $\subset$ Stochastic $\subset$ Sequential; coNP
+    $\subset$ PP $\subset$ PSPACE.
+
+
+    - **Substrate cost**: The integrity-competence verdict is substrate-independent;
+    trajectories diverge based on substrate cost $\kappa$.
+
+
+    - **Temporal learning**: Bayesian structure detection reduces abstention over
+    time.
+
+
+    - **Temporal integrity**: Evidence-monotone retractions preserve integrity across
+    sequences.
+
+
+    The reduction constructions are machine-checked in Lean 4 (3288 lines, 124 theorems).
+
+
+    **Keywords:** computational complexity, decision theory, stochastic decision problems,
+    POMDPs, polynomial hierarchy, PSPACE'
+  comments: 'Draft submission. Lean 4 artifact: 3288 lines, 124 theorems/lemmas across
+    29 files (8 sorry placeholders).'
+abstract_variants:
+  unicode: 'We extend the static decision quotient framework of Paper 4 to stochastic
+    and sequential regimes. Given a decision problem with actions A, factored state
+    space S = X₁ × ⋯ × X_(n), and utility U, we ask: what complexity is required to
+    identify sufficient coordinate sets when (a) the state is drawn from a distribution
+    P, or (b) decisions unfold over time with transitions and observations?
+
+
+    Results:
+
+
+    • Stochastic regime: STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT reduction.
+    Tractable under product distributions, bounded support, log-concave.
+
+
+    • Sequential regime: SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF
+    reduction. Tractable under full observability, bounded horizon, tree structure.
+
+
+    • Regime hierarchy: Static ⊂ Stochastic ⊂ Sequential; coNP ⊂ PP ⊂ PSPACE.
+
+
+    • Substrate cost: The integrity-competence verdict is substrate-independent; trajectories
+    diverge based on substrate cost κ.
+
+
+    • Temporal learning: Bayesian structure detection reduces abstention over time.
+
+
+    • Temporal integrity: Evidence-monotone retractions preserve integrity across
+    sequences.
+
+
+    The reduction constructions are machine-checked in Lean 4 (3288 lines, 124 theorems).
+
+
+    Keywords: computational complexity, decision theory, stochastic decision problems,
+    POMDPs, polynomial hierarchy, PSPACE'
+  mathjax: 'We extend the static decision quotient framework of Paper 4 to stochastic
+    and sequential regimes. Given a decision problem with actions $A$, factored state
+    space $S = X_1 \times \cdots \times X_n$, and utility $U$, we ask: what complexity
+    is required to identify sufficient coordinate sets when (a) the state is drawn
+    from a distribution $P$, or (b) decisions unfold over time with transitions and
+    observations?
+
+
+    **Results:**
+
+
+    - **Stochastic regime**: STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT
+    reduction. Tractable under product distributions, bounded support, log-concave.
+
+
+    - **Sequential regime**: SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF
+    reduction. Tractable under full observability, bounded horizon, tree structure.
+
+
+    - **Regime hierarchy**: Static $\subset$ Stochastic $\subset$ Sequential; coNP
+    $\subset$ PP $\subset$ PSPACE.
+
+
+    - **Substrate cost**: The integrity-competence verdict is substrate-independent;
+    trajectories diverge based on substrate cost $\kappa$.
+
+
+    - **Temporal learning**: Bayesian structure detection reduces abstention over
+    time.
+
+
+    - **Temporal integrity**: Evidence-monotone retractions preserve integrity across
+    sequences.
+
+
+    The reduction constructions are machine-checked in Lean 4 (3288 lines, 124 theorems).
+
+
+    **Keywords:** computational complexity, decision theory, stochastic decision problems,
+    POMDPs, polynomial hierarchy, PSPACE'

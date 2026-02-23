@@ -1,80 +1,103 @@
 \section*{Mechanized Proofs (Lean 4)}\label{sec:lean}
 
-The core theorems in this paper (capacity, realizability, complexity bounds) are machine-checked in Lean 4. The complete proof corpus (9,369 lines across 29 files, 441 theorems/lemmas, 0 \texttt{sorry} placeholders) is provided in Supplement~A. The entropy and mutual-information results in Section~\ref{sec:info-converse} apply standard information theory (Fano's inequality) and are not separately formalized.
+Core theorem chains in this paper are machine-checked in Lean 4. The current build statistics are:
+\textbf{\LeanTotalLines\ lines across \LeanTotalFiles\ files, \LeanTotalTheorems\ theorem/lemma statements, \LeanTotalSorry\ \texttt{sorry} placeholders.}
 
-\subsection*{Theorem Correspondence}
+\subsection*{Mechanization Contract}
 
-The following table maps core paper theorems to their Lean formalizations:
+To match the paper-4 standard, each theorem-level handle is typed as one of:
+\begin{itemize}
+\item \textbf{Full:} direct Lean theorem support.
+\item \textbf{Full (conditional classical):} Lean closure theorem parameterized by explicit information-theory assumptions.
+\item \textbf{Full (derived/model-level):} theorem-level closure by composition from mechanized cores in the stated model.
+\end{itemize}
 
-\begin{center}
-\begin{tabular}{llp{4.5cm}}
-\toprule
-\textbf{Paper Theorem} & \textbf{Lean Theorem} & \textbf{File} \\
-\midrule
-\multicolumn{3}{l}{\emph{Capacity Theorem (Section~\ref{sec:capacity})}} \\
-Thm.~\ref{thm:dof-one-coherence} & \texttt{dof\_one\_implies\_coherent} & \texttt{Coherence.lean} \\
-Thm.~\ref{thm:dof-gt-one-incoherence} & \texttt{dof\_gt\_one\_incoherence\_possible} & \texttt{Coherence.lean} \\
-Thm.~\ref{thm:coherence-capacity} & \texttt{determinate\_truth\_forces\_ssot} & \texttt{Coherence.lean} \\
-Thm.~\ref{thm:capacity-achievability} & \texttt{dof\_one\_implies\_coherent} & \texttt{Coherence.lean} \\
-Thm.~\ref{thm:capacity-converse} & \texttt{non\_ssot\_permits\_incoherence} & \texttt{Coherence.lean} \\
-Thm.~\ref{thm:oracle-arbitrary} & \texttt{oracle\_arbitrary} & \texttt{Coherence.lean} \\
-\midrule
-\multicolumn{3}{l}{\emph{Side Information (Section~\ref{sec:side-information})}} \\
-Thm.~\ref{thm:side-info} & \texttt{coherence\_restoration\_eq\_dof} & \texttt{Coherence.lean} \\
-\midrule
-\multicolumn{3}{l}{\emph{Realizability (Section~\ref{sec:requirements})}} \\
-Thm.~\ref{thm:timing-forces} & \texttt{structural\_facts\_fixed\_at\_definition} & \texttt{Foundations.lean} \\
-Thm.~\ref{thm:causal-necessary} & \texttt{definition\_hooks\_necessary} & \texttt{Requirements.lean} \\
-Thm.~\ref{thm:provenance-necessary} & \texttt{introspection\_necessary\_for\_verification} & \texttt{Requirements.lean} \\
-Thm.~\ref{thm:independence} & \texttt{both\_requirements\_independent} & \texttt{Requirements.lean} \\
-Thm.~\ref{thm:ssot-iff} & \texttt{model\_completeness} & \texttt{Foundations.lean} \\
-\midrule
-\multicolumn{3}{l}{\emph{Rate-Complexity Bounds (Section~\ref{sec:bounds})}} \\
-Thm.~\ref{thm:upper-bound} & \texttt{ssot\_upper\_bound} & \texttt{Bounds.lean} \\
-Thm.~\ref{thm:lower-bound} & \texttt{non\_ssot\_lower\_bound} & \texttt{Bounds.lean} \\
-Thm.~\ref{thm:unbounded-gap} & \texttt{ssot\_advantage\_unbounded} & \texttt{Bounds.lean} \\
-\bottomrule
-\end{tabular}
-\end{center}
+\paragraph{Classical-assumption handles (explicit in Lean).}
+\begin{itemize}
+\item \nolinkurl{Entropy.ClassicalEntropyAssumptions} (entropy-side classical inequalities)
+\item \nolinkurl{ClaimClosure.ClassicalInfoAssumptions} (Fano / side-information closure assumptions)
+\item \nolinkurl{ClaimClosure.side_information_requirement_conditional}
+\item \nolinkurl{ClaimClosure.fano_converse_conditional}
+\end{itemize}
 
-\subsection*{Verification Summary}
+\subsection*{Complete Claim Coverage Matrix}
 
-\begin{center}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Component} & \textbf{Lines} & \textbf{Theorems} \\
-\midrule
-Core encoding theory (\texttt{SSOT.lean}, \texttt{Coherence.lean}, \texttt{Dof.lean}) & 509 & 29 \\
-Grounded operational semantics (\texttt{AbstractClassSystem.lean}, etc.) & 5,963 & 180 \\
-Encoding theory bridge (\texttt{SSOTGrounded.lean}, \texttt{Foundations.lean}) & 1,184 & 45 \\
-Computational system instantiations (\texttt{Lang*.lean}, \texttt{*Instantiation.lean}) & 1,713 & 187 \\
-\midrule
-\textbf{Total} & \textbf{9,369} & \textbf{441} \\
-\bottomrule
-\end{tabular}
-\end{center}
+\begingroup
+\scriptsize
+\paragraph{Foundations, capacity, and side-information chain.}
+\begin{itemize}
+\item \nolinkurl{thm:oracle-arbitrary}: Full --- \nolinkurl{oracle_arbitrary}.
+\item \nolinkurl{thm:dof-one-coherence}: Full --- \nolinkurl{dof_one_implies_coherent}.
+\item \nolinkurl{thm:dof-gt-one-incoherence}: Full --- \nolinkurl{dof_gt_one_incoherence_possible}.
+\item \nolinkurl{cor:coherence-forces-ssot}: Full --- \nolinkurl{determinate_truth_forces_ssot}.
+\item \nolinkurl{thm:correctness-forcing}: Full --- \nolinkurl{Basic.correctness_forcing}.
+\item \nolinkurl{thm:dof-inconsistency}: Full --- \nolinkurl{Basic.dof_inconsistency_potential}.
+\item \nolinkurl{cor:dof-risk}: Full --- \nolinkurl{Basic.dof_gt_one_inconsistent}.
+\item \nolinkurl{thm:dof-optimal}: Full --- \nolinkurl{Inconsistency.ssot_is_unique_optimum}, \nolinkurl{Inconsistency.ssot_required}.
+\item \nolinkurl{thm:cap-encoding}: Full (conditional) --- \nolinkurl{ClaimClosure.cap_encoding_conditional}.
+\item \nolinkurl{thm:static-flp}: Full --- \nolinkurl{ClaimClosure.static_flp_core}.
+\item \nolinkurl{thm:redundancy-incoherence}: Full --- \nolinkurl{ClaimClosure.redundancy_incoherence_equiv}.
+\item \nolinkurl{thm:coherence-capacity}: Full --- \nolinkurl{determinate_truth_forces_ssot}.
+\item \nolinkurl{thm:capacity-achievability}: Full --- \nolinkurl{ssot_guarantees_coherence}.
+\item \nolinkurl{thm:capacity-converse}: Full --- \nolinkurl{non_ssot_permits_incoherence}.
+\item \nolinkurl{cor:capacity-unique}: Full --- \nolinkurl{Inconsistency.ssot_unique_satisfier}.
+\item \nolinkurl{cor:redundancy-above}: Full --- \nolinkurl{ClaimClosure.redundancy_incoherence_equiv}.
+\item \nolinkurl{thm:rate-incoherence-step}: Full --- \nolinkurl{ClaimClosure.rate_incoherence_step}.
+\item \nolinkurl{thm:design-necessity}: Full --- \nolinkurl{ClaimClosure.design_necessity}.
+\item \nolinkurl{cor:architectural-forcing}: Full (conditional classical) --- \nolinkurl{Inconsistency.resolution_requires_external_choice}, \nolinkurl{ClaimClosure.side_information_requirement_conditional}.
+\item \nolinkurl{thm:incoherence-graph}: Full (derived/model-level) --- \nolinkurl{ClaimClosure.redundancy_incoherence_equiv}, \nolinkurl{ClaimClosure.rate_incoherence_step}.
+\item \nolinkurl{thm:side-info}: Full (conditional classical) --- \nolinkurl{ClaimClosure.side_information_requirement_conditional}.
+\item \nolinkurl{cor:dof1-zero-side}: Full --- \nolinkurl{ClaimClosure.dof1_zero_side_information}.
+\item \nolinkurl{cor:side-info-redundancy}: Full --- \nolinkurl{ClaimClosure.side_information_scales_with_redundancy}.
+\item \nolinkurl{cor:multi-terminal}: Full (derived/model-level) --- \nolinkurl{ClaimClosure.redundancy_incoherence_equiv}, \nolinkurl{ClaimClosure.rate_incoherence_step}.
+\item \nolinkurl{thm:fano-converse}: Full (conditional classical) --- \nolinkurl{ClaimClosure.fano_converse_conditional}.
+\item \nolinkurl{lem:info-dof}: Full (conditional classical) --- \nolinkurl{ClaimClosure.info_dof_conditional}.
+\end{itemize}
+
+\paragraph{Derivation and realizability chain.}
+\begin{itemize}
+\item \nolinkurl{thm:derivation-lattice}: Full (model-level) --- \nolinkurl{recursive_lattice}.
+\item \nolinkurl{thm:dof-antimonotone}: Full (model-level) --- \nolinkurl{complete_mono}, \nolinkurl{completeD_mono}.
+\item \nolinkurl{cor:minimal-dof1}: Full (model-level) --- \nolinkurl{minimal_no_redundant_axes}, \nolinkurl{semantically_minimal_implies_independent}.
+\item \nolinkurl{thm:dof-complexity}: Full (model-level) --- \nolinkurl{resolution_complexity_bound}.
+\item \nolinkurl{thm:ssot-determinate}: Full --- \nolinkurl{dof_one_implies_coherent}.
+\item \nolinkurl{thm:ssot-optimal}: Full --- \nolinkurl{ssot_upper_bound}.
+\item \nolinkurl{thm:ssot-unique}: Full --- \nolinkurl{Inconsistency.ssot_unique_satisfier}.
+\item \nolinkurl{cor:no-redundancy}: Full --- \nolinkurl{dof_gt_one_incoherence_possible}.
+\item \nolinkurl{thm:derivation-excludes}: Full --- \nolinkurl{ClaimClosure.derivation_preserves_coherence_core}.
+\item \nolinkurl{cor:metaprogramming}: Full (derived/model-level) --- \nolinkurl{ClaimClosure.derivation_preserves_coherence_core}, \nolinkurl{dof_one_implies_coherent}.
+\item \nolinkurl{lem:confusability-clique}: Full (conditional classical) --- \nolinkurl{ClaimClosure.fano_converse_conditional}.
+\item \nolinkurl{thm:timing-forces}: Full --- \nolinkurl{structural_facts_fixed_at_definition}.
+\item \nolinkurl{thm:causal-necessary}: Full --- \nolinkurl{definition_hooks_necessary}.
+\item \nolinkurl{thm:provenance-necessary}: Full --- \nolinkurl{introspection_necessary_for_verification}.
+\item \nolinkurl{thm:independence}: Full --- \nolinkurl{both_requirements_independent}, \nolinkurl{both_requirements_independent'}.
+\item \nolinkurl{thm:ssot-iff}: Full --- \nolinkurl{ssot_iff}.
+\item \nolinkurl{thm:generated-second}: Full --- \nolinkurl{generated_file_is_second_encoding}.
+\item \nolinkurl{cor:lang-realizability}: Full --- \nolinkurl{ClaimClosure.language_realizability_criterion}.
+\end{itemize}
+
+\paragraph{Bounds, regimes, and optimization chain.}
+\begin{itemize}
+\item \nolinkurl{thm:upper-bound}: Full --- \nolinkurl{ssot_upper_bound}.
+\item \nolinkurl{thm:lower-bound}: Full --- \nolinkurl{non_ssot_lower_bound}.
+\item \nolinkurl{thm:unbounded-gap}: Full --- \nolinkurl{ssot_advantage_unbounded}.
+\item \nolinkurl{cor:arbitrary-reduction}: Full --- \nolinkurl{ClaimClosure.arbitrary_reduction_factor}.
+\item \nolinkurl{thm:operating-regimes}: Full --- \nolinkurl{ClaimClosure.operating_regimes_partition}.
+\item \nolinkurl{thm:pareto-optimal}: Full --- \nolinkurl{ClaimClosure.pareto_optimality_p1}.
+\item \nolinkurl{cor:no-tradeoff}: Full --- \nolinkurl{ClaimClosure.no_tradeoff_at_p1}.
+\item \nolinkurl{thm:amortized}: Full --- \nolinkurl{ClaimClosure.amortized_complexity_core}.
+\end{itemize}
+\endgroup
 
 \subsection*{Verification Instructions}
 
-To verify locally:
 \begin{enumerate}
-\item Install Lean 4 and Lake: \url{https://leanprover.github.io/}
-\item From the repository root: \texttt{lake build --project proofs}
-\item The build verifies all 441 theorems; there are no \texttt{sorry} placeholders.
+\item Lean-only verification (recommended):
+\nolinkurl{python3 scripts/build_papers.py lean paper2 -q}
+\item Direct Lean build:
+\nolinkurl{cd docs/papers/paper2_ssot/proofs && lake build}
 \end{enumerate}
 
-\subsection*{Proof Architecture}
+\subsection*{Scope Note}
 
-The formalization grounds the abstract encoding theory in operational semantics:
-
-\begin{itemize}
-\item \textbf{Core definitions} (\texttt{SSOT.lean}): DOF as \texttt{Nat}, \texttt{satisfies\_SSOT dof := dof = 1}
-\item \textbf{Coherence} (\texttt{Coherence.lean}): \texttt{EncodingSystem} with \texttt{is\_coherent}/\texttt{is\_incoherent} predicates; achievability and converse proofs
-\item \textbf{Timing trichotomy} (\texttt{Foundations.lean}): \texttt{TimingRelation} type with exhaustiveness proof; derivation mechanism enumeration
-\item \textbf{Realizability} (\texttt{Requirements.lean}): \texttt{LanguageFeatures} structure; necessity proofs for definition hooks and introspection
-\item \textbf{Impossibility} (\texttt{Foundations.lean}): Constructive witnesses showing only \texttt{source\_hooks} achieves SSOT
-\end{itemize}
-
-The key insight: computational system claims (e.g., ``Python achieves DOF = 1'') derive from formalized operational semantics, not boolean flags. The proof chain traces from abstract theorems through \texttt{execute\_class\_statement} to concrete language features.
-
-Full listings, the model correspondence argument, and detailed proof commentary are in Supplement~A.
+Entries marked \textbf{Full (conditional classical)} are machine-checked closure theorems with explicit assumption parameters for standard information-theory statements. This mirrors the conditional-closure style used in paper 4 for source-class and ETH assumptions.

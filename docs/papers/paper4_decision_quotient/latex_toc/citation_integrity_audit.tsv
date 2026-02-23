@@ -1,0 +1,207 @@
+key	status	category	reason	location	title
+CPythonDocs	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	CPython Object Implementation: Object Structure
+Cardelli1985	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	On Understanding Types, Data Abstraction, and Polymorphism
+Codd1990	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Relational Model for Database Management: Version 2
+CoverThomas2006	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Elements of Information Theory
+DNABarcoding	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Biological identifications through DNA barcodes
+Grunwald2007	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Minimum Description Length Principle
+ISBN	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	ISBN Users' Manual
+JVMSpec	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Java Virtual Machine Specification: Chapter 2.5 Runtime Data Areas
+JavaDocs	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Java Object: getClass()
+Kolmogorov1965	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Three Approaches to the Definition of the Concept of Information Quantity
+Lean2015	keep	formalization_prior_work	Supports explicit mechanization/verification lineage claims.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	The Lean Theorem Prover
+LiVitanyi2008	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	An Introduction to Kolmogorov Complexity and Its Applications
+Pierce2002	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Types and Programming Languages
+PythonDocs	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Python Data Model: type()
+RustDocs	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Rust std::any::type\_id
+RustTraitObjects	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Rust Reference: Trait Objects
+Shannon1948	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Mathematical Theory of Communication
+Structural2014	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Certified Programming with Dependent Types
+Tishby2000	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Information Bottleneck Method
+TypeScriptDocs	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	TypeScript Handbook: Type Compatibility
+Welsh1976	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Matroid Theory
+abadi1996theory	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A theory of objects
+abdelgawad2014noop	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	NOOP: A domain-theoretic model for object-oriented programming
+abdelgawad2016nominal	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Why nominal-typing matters in OOP
+ahlswede1989identification	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Identification via Channels
+ahlswede1989identification2	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Identification in the Presence of Feedback---A Discovery of New Capacity Formulas
+akerlof1970market	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Market for ``Lemons'': Quality Uncertainty and the Market Mechanism
+allen1997formal	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Formal Basis for Architectural Connection
+aumann1976agreeing	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Agreeing to Disagree
+aumann1995backward	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Backward induction and common knowledge of rationality
+bachmann2000cbam	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Characterizing, Planning, and Managing Technical Debt
+barrett1996monotonic	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A monotonic superclass linearization for Dylan
+basili1996comparing	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Validation of Object-Oriented Design Metrics as Quality Indicators
+bass2012software	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:3	Software Architecture in Practice
+beck1999extreme	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Extreme Programming Explained: Embrace Change
+beck1999xp	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Extreme Programming Explained: Embrace Change
+bender2021dangers	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	On the Dangers of Stochastic Parrots: Can Language Models Be Too Big?
+berger1971rate	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Rate Distortion Theory: A Mathematical Basis for Data Compression
+bierman2014typescript	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Understanding {TypeScript
+birs2012interactive	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Interactive Information Theory (12w5119)
+blahut1972computation	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Computation of Channel Capacity and Rate-Distortion Functions
+blau2019rethinking	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Rethinking Lossy Compression: The Rate-Distortion-Perception Tradeoff
+blum1967machine	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A machine-independent theory of the complexity of recursive functions
+blum1967size	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	On the Size of Machines
+bobrow1986commonloops	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	CommonLoops: Merging Lisp and Object-Oriented Programming
+boehm1981software	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Software Engineering Economics
+bommasani2021opportunities	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	On the Opportunities and Risks of Foundation Models
+brewer2000cap	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Towards Robust Distributed Systems
+brooks1987no	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:3	No Silver Bullet: Essence and Accidents of Software Engineering
+buhrman2002complexity	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Computational Complexity of Discrete Problems
+burnashev1976data	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Data Transmission over a Discrete Channel with Feedback
+cardelli1988semantics	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A semantics of multiple inheritance
+chickering2004large	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Large-Sample Learning of {Bayesian
+chidamber1994metrics	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Metrics Suite for Object Oriented Design
+cho1987signaling	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Signaling Games and Stable Equilibria
+chugh2012nested	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Nested Refinements: A Logic for Duck Typing
+codd1970relational	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Relational Model of Data for Large Shared Data Banks
+cook1989inheritance	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Inheritance is not subtyping
+cook1990inheritance	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Inheritance is not subtyping
+cook2018complexity	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The {P
+cousot1977abstract	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Abstract Interpretation: A Unified Lattice Model for Static Analysis of Programs by Construction or Approximation of Fixpoints
+cover2006elements	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Elements of Information Theory
+crawford1982strategic	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Strategic Information Transmission
+csiszar2011information	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Information Theory: Coding Theorems for Discrete Memoryless Systems
+cunningham1992wycash	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The WyCash Portfolio Management System
+czarnecki2000generative	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Generative Programming: Methods, Tools, and Applications
+damasevicius2010complexity	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Complexity metrics for metaprograms
+damasevicius2010metrics	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Assessment of the Relative Complexity and Difficulty of Software Development Methods
+dasanayake2017empirical	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Empirical Study on Software Architecture Decision Making in Agile Software Development
+date2003introduction	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	An Introduction to Database Systems
+debruijn1970automath	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Mathematical Language {AUTOMATH
+delaet2010survey	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Survey of System Configuration Tools
+demoura2021lean4	keep	formalization_prior_work	Supports explicit mechanization/verification lineage claims.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	The {Lean
+fagin1995reasoning	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Reasoning About Knowledge
+farrell1987cheap	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Cheap Talk, Coordination, and Entry
+farrell1996cheap	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Cheap Talk
+feige1998threshold	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Threshold of $\ln n$ for Approximating Set Cover
+fisher1922mathematical	keep	decision_information_background	Supports decision-relevance/model-selection background claims tied to prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	On the Mathematical Foundations of Theoretical Statistics
+flanagan2020ruby	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The {Ruby
+flp1985impossibility	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Impossibility of Distributed Consensus with One Faulty Process
+forster2019verified	keep	formalization_prior_work	Supports explicit mechanization/verification lineage claims.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	Verified Programming of {Turing
+fowler1999refactoring	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Refactoring: improving the design of existing code
+fowler2014microservices	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Microservices: a definition of this new architectural term
+gamma1994design	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	Design patterns: elements of reusable object-oriented software
+garlan1993introduction	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	An Introduction to Software Architecture
+garlan1994exploiting	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Exploiting Style in Architectural Design Environments
+garlan1997acme	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	ACME: An Architecture Description Interchange Language
+gil2008whiteoak	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Whiteoak: Introducing structural typing into Java
+gilbert2002cap	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services
+goSpec	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Go Programming Language Specification
+gosling2021java	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The {Java
+gospec2024	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The {Go
+gray1998quantization	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Quantization
+grice1975logic	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Logic and Conversation
+gruenwald2007mdl	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Minimum Description Length Principle
+grunwald2007minimum	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Minimum Description Length Principle
+guyon2003introduction	keep	decision_information_background	Supports decision-relevance/model-selection background claims tied to prose.	docs/papers/paper4_decision_quotient/latex_toc/content/05_mathematical_justification_of_engineering_practice.tex:171	An Introduction to Variable and Feature Selection
+halstead1977elements	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Elements of Software Science
+hansson2005rails	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Rails Doctrine
+hanverdu1993generalization	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Approximation Theory of Output Statistics
+haslbeck2021verified	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Verified Analysis of List Update Algorithms
+heering2003software	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Software Architecture and Software Configuration Management
+heering2015generative	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Generative Software Complexity
+hintikka1962knowledge	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Knowledge and Belief: An Introduction to the Logic of the Two Notions
+hunt1999pragmatic	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Pragmatic Programmer: From Journeyman to Master
+hunt2002vcdiff	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Delta Algorithms: An Empirical Analysis
+jlsErasure	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Java Language Specification, {\S
+juergens2009clones	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Do code clones matter?
+kamenica2011bayesian	keep	decision_information_background	Supports decision-relevance/model-selection background claims tied to prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	Bayesian Persuasion
+kazman2000atam	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	ATAM: Method for Architecture Evaluation
+kiczales1991amop	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Art of the Metaobject Protocol
+kiczales1991art	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Art of the Metaobject Protocol
+koller2009probabilistic	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Probabilistic Graphical Models: Principles and Techniques
+kolmogorov1965three	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Three Approaches to the Quantitative Definition of Information
+korner1973coding	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Coding of an Information Source Having Ambiguous Alphabet and the Entropy of Graphs
+korner1973graphs	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Coding of an Information Source Having Ambiguous Alphabet and the Entropy of Graphs
+kunze2019formal	keep	formalization_prior_work	Supports explicit mechanization/verification lineage claims.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	Formal Small-step Verification of a Call-by-value Lambda Calculus Machine
+lamaison2012duck	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Inferring Useful Static Types for Duck Typed Languages
+lamport1998paxos	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Part-Time Parliament
+lehmann1950completeness	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Completeness, Similar Regions, and Unbiased Estimation
+leroy2009compcert	keep	formalization_prior_work	Supports explicit mechanization/verification lineage claims.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:5	Formal verification of a realistic compiler
+li2008introduction	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	An Introduction to {Kolmogorov
+lipton2009np	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The {P
+liskov1994behavioral	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	A behavioral notion of subtyping
+lovasz1979shannon	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	On the Shannon Capacity of a Graph
+ma2011distributed	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Some Results on Distributed Source Coding for Interactive Function Computation
+mackay2022necessity	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Necessity Specifications for Robustness
+maes1987concepts	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Concepts and Experiments in Computational Reflection
+malayeri2008integrating	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Integrating nominal and structural subtyping
+malayeri2009cz	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	CZ: multiple inheritance without diamonds
+malayeri2009esop	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Is structural subtyping useful? An empirical study
+martin2002agile	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Agile Software Development: Principles, Patterns, and Practices
+martin2008clean	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Clean Code: A Handbook of Agile Software Craftsmanship
+mascolell1995microeconomic	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Microeconomic Theory
+mathlib2020	keep	formalization_prior_work	Supports explicit mechanization/verification lineage claims.	docs/papers/paper4_decision_quotient/latex_toc/content/01_introduction.tex:95	The {Lean
+mccabe1976complexity	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A complexity measure
+mdnPrototypeChain	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Inheritance and the prototype chain
+milgrom1986price	keep	decision_information_background	Supports decision-relevance/model-selection background claims tied to prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	Price and Advertising Signals of Product Quality
+myerson1979incentive	keep	decision_information_background	Supports decision-relevance/model-selection background claims tied to prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	Incentive Compatibility and the Bargaining Problem
+nasa2010error	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Error Cost Escalation Through the Project Life Cycle
+nipkow2002isabelle	keep	formalization_prior_work	Supports explicit mechanization/verification lineage claims.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:5	{Isabelle/HOL
+nipkow2014concrete	keep	formalization_prior_work	Supports explicit mechanization/verification lineage claims.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:5	Concrete Semantics with {Isabelle/HOL
+ocamlObjectsRowVars	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The object layer (OCaml objects; structural object types and row variables)
+ongaro2014raft	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	In Search of an Understandable Consensus Algorithm
+openhcs2025	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	{OpenHCS
+openhcsLeanProofs	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Lean 4 Formalization: Typing Discipline Selection Theorems
+openhcsPR44	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	{UI Anti-Duck-Typing Refactor
+orlitsky1991worst	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Worst-Case Interactive Communication I: Two Messages Are Almost Optimal
+paper1_typing	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Paper 1: Nominal Typing Dominates Structural Typing
+paper1_typing_discipline	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Universal Typing Discipline for Polymorphic Abstraction: Impossibility Theorems and Language Design
+paper2_ssot	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Formal Foundations for the Single Source of Truth Principle
+paper3_leverage	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Paper 3: Leverage Maximization in Software Systems
+paper4_decisionquotient	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Paper 4: The Complexity of Decision-Relevant Uncertainty
+parnas1972criteria	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:3	On the criteria to be used in decomposing systems into modules
+patterson2013computer	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Computer Organization and Design: The Hardware/Software Interface
+pearl1988probabilistic	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Probabilistic Reasoning in Intelligent Systems
+pearl2009causality	keep	decision_information_background	Supports decision-relevance/model-selection background claims tied to prose.	docs/papers/paper4_decision_quotient/latex_toc/content/05_mathematical_justification_of_engineering_practice.tex:171	Causality: Models, Reasoning, and Inference
+pep484	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	{PEP 484
+pep487	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	{PEP 487
+pep544	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	{PEP 544
+pierce2002types	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	Types and programming languages
+pike1984program	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Program Design in the UNIX Environment
+prechelt2000empirical	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	An empirical comparison of seven programming languages
+pythonBuiltinsHasattr	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Built-in Functions: \texttt{hasattr
+rashmi2015multiversion	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Multi-Version Coding---An Information-Theoretic Perspective of Consistent Distributed Storage
+reynolds1983types	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	Types, abstraction and parametric polymorphism
+rissanen1978mdl	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Modeling by Shortest Data Description
+rissanen1978modeling	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Modeling by Shortest Data Description
+rivest1982wom	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	How to Reuse a ``Write-Once'' Memory
+roy2007survey	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A survey on software clone detection research
+runeson2009guidelines	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Guidelines for conducting and reporting case study research in software engineering
+rustref2024	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The {Rust
+scott2015programming	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Programming language pragmatics
+shannon1948	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A mathematical theory of communication
+shannon1948mathematical	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Mathematical Theory of Communication
+shannon1956zero	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Zero-Error Capacity of a Noisy Channel
+shannon1959coding	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Coding Theorems for a Discrete Source with a Fidelity Criterion
+shaw1996software	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:3	Software Architecture: Perspectives on an Emerging Discipline
+shpitser2006identification	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Identification of Joint Interventional Distributions in Recursive Semi-{Markovian
+siek2006gradual	keep	architecture_type_theory_support	Supports type/architecture analogies stated in implications prose.	docs/papers/paper4_decision_quotient/latex_toc/content/06_implications_for_software_architecture.tex:227	Gradual typing for functional languages
+slepian1973noiseless	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Noiseless Coding of Correlated Information Sources
+smith1984reflection	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Reflection and semantics in Lisp
+sobel1985theory	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Theory of Credibility
+sobol2001global	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Global Sensitivity Indices for Nonlinear Mathematical Models and Their {Monte Carlo
+solomonoff1964formal	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	A Formal Theory of Inductive Inference
+spence1973job	keep	decision_information_background	Supports decision-relevance/model-selection background claims tied to prose.	docs/papers/paper4_decision_quotient/latex_toc/content/08_related_work.tex:9	Job Market Signaling
+spirtes2000causation	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Causation, Prediction, and Search
+steinberg1998identification	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	New Converses in the Theory of Identification via Channels
+stevens1974structured	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Structured design
+stroustrup2013cpp	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The {C++
+systemDArxiv	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Nested Refinements for Dynamic Languages
+teyssier2012ordering	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Ordering-Based Search: A Simple and Effective Algorithm for Learning {Bayesian
+tiobe2024	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	{TIOBE
+tsHandbookTypeCompatibility	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Type Compatibility
+tsIssue202	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Nominal typing / nominal types request (Issue \#202)
+tsPR33038	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Proposal/experiment for unique/nominal-ish types (PR \#33038)
+vanrossum2003unifying	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Unifying types and classes in Python 2.2
+veldhuizen2006tradeoffs	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Tradeoffs in metaprogramming
+wadler1990linear	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Linear types can change the world!
+weyuker1988metrics	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Evaluating software complexity measures
+winskel1993semantics	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Formal Semantics of Programming Languages: An Introduction
+witsenhausen1976zero	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	The Zero-Error Side Information Problem and Chromatic Numbers
+wolf1984wom	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Coding for a Write-Once Memory
+wolfowitz1961coding	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Coding Theorems of Information Theory
+xiang2013interactive	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Interactive Schemes in Information Theory and Statistics
+zahavi1975mate	drop	unscoped_or_nonessential	No remaining claim-specific dependence after integrity pass.	-	Mate selection---a selection for a handicap

@@ -1,0 +1,68 @@
+OpenHCS Paper Build Log
+========================
+
+Paper: paper4b - Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency
+Package Date: 2026-02-23T15:27:34.193805
+Lean Toolchain: leanprover/lean4:v4.27.0-rc1
+
+Proof Statistics:
+-----------------
+Lean Files: 29
+Lines of Code: 3288
+Theorems: 124
+Sorry Placeholders: 8
+
+
+Proof Files:
+------------
+  - AlgorithmComplexity.lean
+  - Basic.lean
+  - ClaimClosure.lean
+  - Computation.lean
+  - CrossRegime.lean
+  - Dichotomy.lean
+  - Economics.lean
+  - Finite.lean
+  - Hardness.lean
+  - HardnessDistribution.lean
+  - Hierarchy.lean
+  - Information.lean
+  - Instances.lean
+  - PolynomialReduction.lean
+  - QueryComplexity.lean
+  - Quotient.lean
+  - SubstrateCost.lean
+  - Summary.lean
+  - TemporalIntegrity.lean
+  - TemporalLearning.lean
+  - ThermodynamicLift.lean
+  - BoundedHorizon.lean
+  - BoundedSupport.lean
+  - FullyObservable.lean
+  - ProductDistribution.lean
+  - Tightness.lean
+  - Tractability.lean
+  - Paper4bStochasticSequential.lean
+  - lakefile.lean
+
+================================================================================
+COMPILATION OUTPUT (lake build)
+================================================================================
+
+Build completed successfully (0 jobs).
+
+
+================================================================================
+END COMPILATION OUTPUT
+================================================================================
+
+Build Instructions:
+-------------------
+To verify the proofs compile:
+
+  cd proofs/
+  lake build
+
+All theorems will be machine-verified if compilation succeeds.
+
+Repository: https://github.com/trissim/openhcs

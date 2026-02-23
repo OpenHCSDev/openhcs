@@ -1,15 +1,15 @@
 OpenHCS Paper Build Log
 ========================
 
-Paper: paper4 - Decision Quotient: Formal Semantics of Architectural Choice
-Package Date: 2026-02-20T21:01:05.186370
-Lean Toolchain: leanprover/lean4:v4.16.0
+Paper: paper4 - Verified Polynomial-Time Reductions in Lean 4: Formalizing the Complexity of Decision-Relevant Information
+Package Date: 2026-02-23T15:25:03.902681
+Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 42
-Lines of Code: 7132
-Theorems: 315
+Lean Files: 51
+Lines of Code: 11499
+Theorems: 527
 Sorry Placeholders: 0
 
 
@@ -21,11 +21,13 @@ Proof Files:
   - Complexity.lean
   - ComplexityMain.lean
   - Computation.lean
+  - DecisionGeometry.lean
   - Dichotomy.lean
   - Approximation.lean
   - Elicitation.lean
   - ValueOfInformation.lean
   - Finite.lean
+  - HandleAliases.lean
   - ApproximationHardness.lean
   - ConfigReduction.lean
   - CountingComplexity.lean
@@ -42,6 +44,11 @@ Proof Files:
   - Information.lean
   - Instances.lean
   - IntegrityCompetence.lean
+  - InteriorVerification.lean
+  - PhysicalBudgetCrossover.lean
+  - AccessRegime.lean
+  - Instantiation.lean
+  - PhysicalHardness.lean
   - PolynomialReduction.lean
   - QueryComplexity.lean
   - Quotient.lean
@@ -49,12 +56,14 @@ Proof Files:
   - Reduction_AllCoords.lean
   - Sufficiency.lean
   - Summary.lean
+  - ThermodynamicLift.lean
   - BoundedActions.lean
   - FPT.lean
   - SeparableUtility.lean
   - Tightness.lean
   - TreeStructure.lean
   - Tractable.lean
+  - UniverseObjective.lean
   - DecisionQuotient.lean
   - lakefile.lean
 

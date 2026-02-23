@@ -2,6 +2,7 @@ import DecisionQuotient.Basic
 import DecisionQuotient.Sufficiency
 import DecisionQuotient.Instances
 import DecisionQuotient.Hardness.QBF
+import DecisionQuotient.HardnessDistribution
 import Mathlib.Data.Fin.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Card
@@ -298,6 +299,82 @@ theorem sufficient_iff_relevantFinset_subset {A : Type*} {n : ℕ}
     have hi : i ∈ relevantFinset dp := (mem_relevantFinset_iff dp i).2 hrel
     exact hsub hi
 
+/-! ### Representation Gap ε (first-class object) -/
+
+/-- Representation gap ε between attended coordinates `I` and the minimal sufficient set.
+    This is the symmetric-difference cardinality:
+    attended-but-irrelevant + relevant-but-unattended. -/
+noncomputable def representationGap {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) : ℕ :=
+  (I \ relevantFinset dp).card + (relevantFinset dp \ I).card
+
+/-- ε decomposes as waste plus unhandled-relevant coordinates. -/
+theorem representationGap_eq_waste_plus_missing {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) :
+    representationGap dp I =
+      (I \ relevantFinset dp).card + (relevantFinset dp \ I).card := by
+  rfl
+
+/-- The unhandled-relevant component of ε is exactly `gapCard`. -/
+theorem representationGap_missing_eq_gapCard {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) :
+    (relevantFinset dp \ I).card =
+      HardnessDistribution.gapCard (relevantFinset dp) I := by
+  rfl
+
+/-- Zero representation gap iff the attended set is exactly the relevant set. -/
+theorem representationGap_eq_zero_iff {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) :
+    representationGap dp I = 0 ↔ I = relevantFinset dp := by
+  constructor
+  · intro hgap
+    have hleft_card : (I \ relevantFinset dp).card = 0 :=
+      Nat.eq_zero_of_add_eq_zero_right hgap
+    have hright_card : (relevantFinset dp \ I).card = 0 :=
+      Nat.eq_zero_of_add_eq_zero_left hgap
+    have hleft_empty : I \ relevantFinset dp = ∅ :=
+      (Finset.card_eq_zero).1 hleft_card
+    have hright_empty : relevantFinset dp \ I = ∅ :=
+      (Finset.card_eq_zero).1 hright_card
+    have hI_sub_rel : I ⊆ relevantFinset dp :=
+      (Finset.sdiff_eq_empty_iff_subset).1 hleft_empty
+    have hRel_sub_I : relevantFinset dp ⊆ I :=
+      (Finset.sdiff_eq_empty_iff_subset).1 hright_empty
+    exact Finset.Subset.antisymm hI_sub_rel hRel_sub_I
+  · intro hEq
+    subst hEq
+    simp [representationGap]
+
+/-- Zero representation gap iff the set is minimal sufficient (Boolean-coordinate model). -/
+theorem representationGap_zero_iff_minimalSufficient {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) :
+    representationGap dp I = 0 ↔ dp.isMinimalSufficient I := by
+  constructor
+  · intro hgap
+    have hEq : I = relevantFinset dp := (representationGap_eq_zero_iff dp I).1 hgap
+    subst hEq
+    refine ⟨?_, ?_⟩
+    · exact (sufficient_iff_relevantFinset_subset dp _).2 (Finset.Subset.refl _)
+    · intro J hJ hJsuff
+      have hJsub : J ⊆ relevantFinset dp := (Finset.ssubset_iff_subset_ne.mp hJ).1
+      have hJne : J ≠ relevantFinset dp := (Finset.ssubset_iff_subset_ne.mp hJ).2
+      have hRel_sub_J : relevantFinset dp ⊆ J :=
+        (sufficient_iff_relevantFinset_subset dp J).1 hJsuff
+      have hJeq : J = relevantFinset dp := Finset.Subset.antisymm hJsub hRel_sub_J
+      exact hJne hJeq
+  · intro hmin
+    have hmem : ∀ i : Fin n, i ∈ I ↔ dp.isRelevant i :=
+      dp.minimalSufficient_iff_relevant I hmin
+    have hEq : I = relevantFinset dp := by
+      apply Finset.ext
+      intro i
+      constructor
+      · intro hi
+        exact (mem_relevantFinset_iff dp i).2 ((hmem i).1 hi)
+      · intro hri
+        exact (hmem i).2 ((mem_relevantFinset_iff dp i).1 hri)
+    exact (representationGap_eq_zero_iff dp I).2 hEq
+
 /-- Exact relevance identifiability: candidate coordinates match the full relevant set. -/
 def exactlyIdentifiesRelevant {A : Type*} {n : ℕ}
     (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) : Prop :=
@@ -329,6 +406,51 @@ theorem exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset {A : 
     have hrelSub : relevantFinset dp ⊆ I :=
       (sufficient_iff_relevantFinset_subset dp I).1 hI
     exact Finset.Subset.antisymm hsub hrelSub
+
+/-- Certifying ε = 0 is exactly exact relevance identification. -/
+theorem representationGap_zero_iff_exactlyIdentifiesRelevant {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) :
+    representationGap dp I = 0 ↔ exactlyIdentifiesRelevant dp I := by
+  simpa [exactlyIdentifiesRelevant] using (representationGap_eq_zero_iff dp I)
+
+/-- Certifying ε = 0 is equivalent to sufficiency plus no extra coordinates outside relevance. -/
+theorem representationGap_zero_iff_sufficient_and_subset_relevantFinset {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) :
+    representationGap dp I = 0 ↔
+      dp.isSufficient I ∧ I ⊆ relevantFinset dp := by
+  calc
+    representationGap dp I = 0
+        ↔ exactlyIdentifiesRelevant dp I :=
+      representationGap_zero_iff_exactlyIdentifiesRelevant dp I
+    _ ↔ dp.isSufficient I ∧ I ⊆ relevantFinset dp :=
+      exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset dp I
+
+/-- Certifying ε = 0 requires establishing sufficiency for `I`. -/
+theorem representationGap_zero_implies_sufficient {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) :
+    representationGap dp I = 0 → dp.isSufficient I := by
+  intro hgap
+  exact (representationGap_zero_iff_sufficient_and_subset_relevantFinset dp I).1 hgap |>.1
+
+/-- Exact relevance identification implies ε = 0. -/
+theorem exactlyIdentifiesRelevant_implies_representationGap_zero {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) :
+    exactlyIdentifiesRelevant dp I → representationGap dp I = 0 := by
+  intro hI
+  exact (representationGap_zero_iff_exactlyIdentifiesRelevant dp I).2 hI
+
+/-- Size-bounded ε=0 search collapses to the relevance-cardinality bound. -/
+theorem min_representationGap_zero_iff_relevant_card {A : Type*} {n : ℕ}
+    (dp : DecisionProblem A (Fin n → Bool)) (k : ℕ) :
+    (∃ I : Finset (Fin n), I.card ≤ k ∧ representationGap dp I = 0) ↔
+      (relevantFinset dp).card ≤ k := by
+  constructor
+  · rintro ⟨I, hcard, hgap⟩
+    have hEq : I = relevantFinset dp := (representationGap_eq_zero_iff dp I).1 hgap
+    simpa [hEq] using hcard
+  · intro hcard
+    refine ⟨relevantFinset dp, hcard, ?_⟩
+    exact (representationGap_eq_zero_iff dp _).2 rfl
 
 theorem not_sufficient_of_missing_relevantFinset {A : Type*} {n : ℕ}
     (dp : DecisionProblem A (Fin n → Bool)) (I : Finset (Fin n)) (i : Fin n)

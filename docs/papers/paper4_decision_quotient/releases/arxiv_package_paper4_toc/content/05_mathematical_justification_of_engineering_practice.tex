@@ -1,37 +1,38 @@
-\section{Engineering Corollaries by Regime}\label{sec:engineering-justification}
+\section{Regime-Conditional Corollaries}\label{sec:engineering-justification}
 
 This section derives regime-typed engineering corollaries from the core complexity theorems. Theorem~\ref{thm:config-reduction} maps configuration simplification to SUFFICIENCY-CHECK; Theorems~\ref{thm:sufficiency-conp}, \ref{thm:minsuff-conp}, and \ref{thm:dichotomy} then yield exact minimization consequences under [S] and [S+ETH].
 
 Regime tags used below follow Section~\ref{sec:model-contract}: [S], [S+ETH], [E], [S\_bool].
-Any prescription that requires exact minimization is constrained by these theorem-level bounds.
-Theorem~\ref{thm:overmodel-diagnostic} implies that persistent failure to isolate a minimal sufficient set is a boundary-characterization signal in the current model, not a universal irreducibility claim.
+Any prescription that requires exact minimization is constrained by these theorem-level bounds.\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:dichotomy}}{S,S+ETH}
+Theorem~\ref{thm:overmodel-diagnostic} implies that persistent failure to isolate a minimal sufficient set is a boundary-characterization signal in the current model, not a universal irreducibility claim.\claimstamp{T\ref{thm:overmodel-diagnostic}}{S}
 
 \paragraph{Conditional rationality criterion.}
-For the objective ``minimize verified total cost while preserving integrity,'' over-specification is rational only under \emph{attempted competence failure} in the active regime (Definition~\ref{def:attempted-competence-failure}): if exact irrelevance cannot be certified efficiently after an attempted exact procedure, integrity forbids uncertified exclusion. When exact competence is available in the active regime (e.g., Theorem~\ref{thm:tractable} and the exact-identifiability criterion), persistent over-specification is irrational relative to that objective because proven-irrelevant coordinates can be removed with certified correctness.
-Proposition~\ref{prop:attempted-competence-matrix} makes this explicit: in the integrity-preserving matrix, one cell is rational and three are irrational, so irrationality is the default verdict.
-\textit{(Lean anchors: \nolinkurl{IntegrityCompetence.competence_implies_integrity},
-\nolinkurl{IntegrityCompetence.integrity_not_competent_of_nonempty_scope},
-\nolinkurl{IntegrityCompetence.admissible_matrix_counts},
-\nolinkurl{ClaimClosure.tractable_subcases_conditional},
-\nolinkurl{Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset}.)}
+For the objective ``minimize verified total cost while preserving integrity,'' persistent over-specification is admissible only in the \emph{attempted competence failure} cell (Definition~\ref{def:attempted-competence-failure}): after an attempted exact procedure, if exact irrelevance cannot be certified efficiently, integrity retains uncertified coordinates rather than excluding them.\claimstamp{P\ref{prop:attempted-competence-matrix}}{AR}
+When exact competence is available in the active regime (e.g., Theorem~\ref{thm:tractable} and the exact-identifiability criterion), proven-irrelevant coordinates are removable; persistent over-specification is irrational for that same objective.\claimstamp{T\ref{thm:tractable};P\ref{prop:attempted-competence-matrix}}{E,STR}
+Proposition~\ref{prop:attempted-competence-matrix} makes this explicit: in the integrity-preserving matrix, one cell is rational and three are irrational, so irrationality is the default verdict.\claimstamp{P\ref{prop:attempted-competence-matrix}}{AR}
+\leanmeta{\LH{IC18},
+\LH{IC25},
+\LH{IC7},
+\LH{CC71},
+\LH{S2P1}.}
 
 \begin{remark}[Regime Contract for Engineering Corollaries]
 All claims in this section are formal corollaries under the declared model assumptions.
 \begin{itemize}
-\item Competence claims are indexed by the regime tuple of Definition~\ref{def:competence-regime}; prescriptions are meaningful only relative to feasible resources under that regime (bounded-rationality feasibility discipline) \cite{sep_bounded_rationality}.
-\item Integrity (Definition~\ref{def:solver-integrity}) forbids overclaiming beyond certifiable outputs; $\mathsf{ABSTAIN}$/$\mathsf{UNKNOWN}$ is first-class when certification is unavailable.
-\item Therefore, hardness results imply a regime-conditional trilemma: abstain, weaken guarantees (heuristics/approximation), or change encoding/structural assumptions to recover competence.
+\item Competence claims are indexed by the regime tuple of Definition~\ref{def:competence-regime}; prescriptions are meaningful only relative to feasible resources under that regime (bounded-rationality feasibility discipline) \cite{sep_bounded_rationality,arora2009computational}.\claimstamp{P\ref{prop:integrity-competence-separation}}{AR}
+\item Integrity (Definition~\ref{def:solver-integrity}) forbids overclaiming beyond certifiable outputs; $\mathsf{ABSTAIN}$/$\mathsf{UNKNOWN}$ is first-class when certification is unavailable.\claimstamp{P\ref{prop:integrity-competence-separation}}{AR}
+\item Therefore, hardness results imply a regime-conditional trilemma: abstain, weaken guarantees (heuristics/approximation), or change encoding/structural assumptions to recover competence.\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:dichotomy};P\ref{prop:attempted-competence-matrix}}{S,S+ETH}
 \end{itemize}
 \end{remark}
 
 \subsection{Configuration Simplification is SUFFICIENCY-CHECK}
 
-Real engineering problems reduce directly to the decision problems studied in this paper.
+Because SUFFICIENCY-CHECK is a meta-problem parameterized by an arbitrary decision problem $\mathcal{D}$, real engineering problems with factored configuration spaces are instances of the hardness landscape established above.
 
 \begin{theorem}[C1--C4: Configuration Simplification Reduces to SUFFICIENCY-CHECK]
 \label{thm:config-reduction}
 Given a software system with configuration parameters $P = \{p_1, \ldots, p_n\}$ and observed behaviors $B = \{b_1, \ldots, b_m\}$, the problem of determining whether parameter subset $I \subseteq P$ preserves all behaviors is equivalent to SUFFICIENCY-CHECK.
-\textit{(Lean: \nolinkurl{ConfigReduction.config_sufficiency_iff_behavior_preserving})}
+\leanmeta{\LH{CR1}}
 \end{theorem}
 
 \begin{proof}
@@ -77,8 +78,8 @@ These are exactly the model-contract premises C1--C3 instantiated for configurat
 \begin{theorem}[S: Over-Modeling as Boundary-Signal Corollary]
 \label{thm:overmodel-diagnostic}
 By contraposition of Theorem~\ref{thm:config-reduction}, if no coordinate set can be certified as exactly relevance-identifying (Definition~\ref{def:exact-identifiability}) for the modeled system, then the decision boundary is not completely characterized by the current parameterization.
-\textit{(Lean model-level contrapositive: \nolinkurl{ClaimClosure.no_exact_identifier_implies_not_boundary_characterized},
-\nolinkurl{ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset})}
+\leanmeta{\LH{CC40},
+\LH{CC6}}
 \end{theorem}
 
 \begin{proof}
@@ -110,9 +111,9 @@ Therefore, there exists $n_0$ such that for all $n > n_0$, the finding-vs-mainte
 C_{\text{over}}(k) < C_{\text{find}}(n) + C_{\text{under}}
 \]
 
-Within [S+ETH], persistent over-specification is consistent with unresolved boundary characterization rather than a proof that all included parameters are intrinsically necessary. Conversely, when exact competence is available in the active regime, persistent over-specification is irrational for the same cost-minimization objective.
-\textit{(Lean handles: \nolinkurl{ClaimClosure.cost_asymmetry_eth_conditional},
-\nolinkurl{HardnessDistribution.linear_lt_exponential_plus_constant_eventually}.)}
+Within [S+ETH], persistent over-specification is unresolved boundary characterization, not proof that all included parameters are intrinsically necessary. Conversely, when exact competence is available in the active regime, certifiably irrelevant coordinates are removable; persistence is irrational for the same cost-minimization objective.\claimstamp{T\ref{thm:cost-asymmetry-eth};P\ref{prop:attempted-competence-matrix}}{S+ETH],[tractable active regime}
+\leanmeta{\LH{CC12},
+\LH{HD13}.}
 \end{theorem}
 
 \begin{proof}
@@ -128,7 +129,7 @@ Maintaining $k$ extra parameters incurs:
 Total maintenance cost is $C_{\text{over}}(k) = O(k)$.
 
 The eventual dominance step is mechanized in
-\nolinkurl{HardnessDistribution.linear_lt_exponential_plus_constant_eventually}:
+\LH{HD8}:
 for fixed linear-overhead parameter $k$ and additive constant $C_{\text{under}}$ there is
 $n_0$ such that $k < 2^n + C_{\text{under}}$ for all $n \ge n_0$. Therefore:
 \[
@@ -146,7 +147,7 @@ Assuming $\Pclass \neq \coNP$, there exists no polynomial-time algorithm that:
 \item Identifies the minimal sufficient parameter subset
 \item Guarantees correctness (no false negatives)
 \end{enumerate}
-\textit{(Lean conditional closure: \nolinkurl{ClaimClosure.no_auto_minimize_of_p_neq_conp})}
+\leanmeta{\LH{CC37}}
 \end{corollary}
 
 \begin{proof}
@@ -165,15 +166,15 @@ The practical force of worst-case hardness depends on instance structure, especi
 
 Theorems~\ref{thm:overmodel-diagnostic} and~\ref{thm:cost-asymmetry-eth} yield the following conditional operational consequences:
 
-\textbf{1. Conservative retention under unresolved relevance.} If irrelevance cannot be certified efficiently under the active regime, retaining a superset of parameters is a sound conservative policy.
+\textbf{1. Conservative retention under unresolved relevance.} If irrelevance cannot be certified efficiently under the active regime, the admissible policy is to retain a conservative superset of parameters.\claimstamp{T\ref{thm:overmodel-diagnostic}}{S}
 
-\textbf{2. Heuristic selection as weakened-guarantee mode.} Under [S+ETH], exact global minimization can be exponentially costly in the worst case (Theorem~\ref{thm:cost-asymmetry-eth}); methods such as AIC/BIC/cross-validation therefore fit the ``weaken guarantees'' branch of Definition~\ref{def:competence-regime}.
+\textbf{2. Heuristic selection as weakened-guarantee mode.} Under [S+ETH], exact global minimization can be exponentially costly in the worst case (Theorem~\ref{thm:cost-asymmetry-eth}); methods such as AIC/BIC/cross-validation instantiate the ``weaken guarantees'' branch of Definition~\ref{def:competence-regime} \cite{akaike1974new, schwarz1978estimating, stone1974cross, guyon2003introduction, pearl2009causality}.\claimstamp{T\ref{thm:cost-asymmetry-eth}}{S+ETH}
 
-\textbf{3. Full-parameter inclusion as an \(O(n)\) upper-bound strategy.} Under [S+ETH], if exact minimization is unresolved, including all \(n\) parameters incurs linear maintenance overhead while avoiding false irrelevance claims.
+\textbf{3. Full-parameter inclusion as an \(O(n)\) upper-bound strategy.} Under [S+ETH], if exact minimization is unresolved, including all \(n\) parameters is an \(O(n)\) maintenance upper-bound policy that avoids false irrelevance claims.\claimstamp{T\ref{thm:cost-asymmetry-eth}}{S+ETH}
 
-\textbf{4. Irrationality outside attempted-competence-failure conditions.} If the active regime admits exact competence (tractable structural-access conditions or exact relevance identifiability), or if exact competence was never actually attempted, continued over-specification is not justified by hardness and is irrational relative to the stated objective.
-\textit{(Lean anchors: \nolinkurl{ClaimClosure.tractable_subcases_conditional},
-\nolinkurl{IntegrityCompetence.admissible_irrational_strictly_more_than_rational},
-\nolinkurl{Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset}.)}
+\textbf{4. Irrationality outside attempted-competence-failure conditions.} If the active regime admits exact competence (tractable structural-access conditions or exact relevance identifiability), or if exact competence was never actually attempted, continued over-specification is irrational; hardness no longer justifies it for the stated objective.\claimstamp{T\ref{thm:tractable};P\ref{prop:attempted-competence-matrix}}{TA}
+\leanmeta{\LH{CC71},
+\LH{IC6},
+\LH{S2P1}.}
 
-These corollaries are direct consequences of the hardness/tractability landscape: over-specification is an attempted-competence-failure policy, not a default optimum. To move beyond it, one must either shift to tractable regimes from Theorem~\ref{thm:tractable} or adopt explicit approximation commitments.
+These corollaries are direct consequences of the hardness/tractability landscape: over-specification is an attempted-competence-failure policy, not a default optimum. Outside that cell, the admissible exits are to shift to tractable regimes from Theorem~\ref{thm:tractable} or adopt explicit approximation commitments.\claimstamp{T\ref{thm:tractable};P\ref{prop:attempted-competence-matrix}}{RG}

@@ -87,7 +87,7 @@ The transition point is where $2^{k^*} = N^{k^*/\log N}$ stops being polynomial 
 Under ETH, the lower bound is asymptotically tight in the succinct encoding. The explicit-state upper bound is tight in the sense that it matches enumeration complexity in $N$.
 \end{remark}
 
-This dichotomy explains why some domains admit tractable model selection (few relevant variables) while others require heuristics (many relevant variables). The ETH reduction chain makes precise what ``hard'' means: not merely coNP-complete, but requiring $2^{\Omega(n)}$ time under widely-believed complexity assumptions.
+This dichotomy explains why some domains admit tractable model selection (few relevant variables) while others require heuristics (many relevant variables). In the succinct regime, the reduction chain gives a class-level coNP statement together with a worst-case $2^{\Omega(n)}$ lower bound under the declared ETH assumption.
 
 \begin{remark}[Circuit Model Formalization]
 The ETH lower bound is stated in the succinct circuit encoding of Section~\ref{sec:encoding}, where the utility function $U: A \times S \to \mathbb{R}$ is represented by a Boolean circuit computing $\mathbf{1}[U(a,s) > \theta]$ for threshold comparisons. In this model:

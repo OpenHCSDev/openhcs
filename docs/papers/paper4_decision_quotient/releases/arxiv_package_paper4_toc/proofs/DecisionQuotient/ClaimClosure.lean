@@ -21,6 +21,9 @@ import DecisionQuotient.QueryComplexity
 import DecisionQuotient.Hardness.Sigma2PHardness
 import DecisionQuotient.Hardness.Sigma2PExhaustive.AnchorSufficiency
 import DecisionQuotient.HardnessDistribution
+import DecisionQuotient.IntegrityCompetence
+import DecisionQuotient.PhysicalBudgetCrossover
+import DecisionQuotient.ThermodynamicLift
 import DecisionQuotient.Tractability.BoundedActions
 import DecisionQuotient.Tractability.SeparableUtility
 import DecisionQuotient.Tractability.TreeStructure
@@ -52,6 +55,75 @@ lemma agreeOn_trans {S : Type*} {n : ℕ} [CoordinateSpace S n]
     agreeOn s₁ s₂ I → agreeOn s₂ s₃ I → agreeOn s₁ s₃ I := by
   intro h12 h23 i hi
   exact (h12 i hi).trans (h23 i hi)
+
+/-! ## Bounded-slice irrelevance of a meta-coordinate -/
+
+section BoundedHorizonIrrelevance
+
+variable {A S : Type*} {n : ℕ}
+variable [CoordinateSpace S n]
+
+/-- Relevance restricted to a declared state slice. -/
+def isRelevantOn
+    (dp : DecisionProblem A S) (Scope : Set S) (i : Fin n) : Prop :=
+  ∃ s s' : S,
+    s ∈ Scope ∧
+    s' ∈ Scope ∧
+    (∀ j : Fin n, j ≠ i → CoordinateSpace.proj s j = CoordinateSpace.proj s' j) ∧
+    dp.Opt s ≠ dp.Opt s'
+
+/-- Irrelevance restricted to a declared state slice. -/
+def isIrrelevantOn
+    (dp : DecisionProblem A S) (Scope : Set S) (i : Fin n) : Prop :=
+  ∀ s s' : S,
+    s ∈ Scope →
+    s' ∈ Scope →
+    (∀ j : Fin n, j ≠ i → CoordinateSpace.proj s j = CoordinateSpace.proj s' j) →
+    dp.Opt s = dp.Opt s'
+
+/-- Any declared budget/horizon cut induces a formal in-scope state slice. -/
+def declaredBudgetSlice
+    (Γ : IntegrityCompetence.Regime S) (H : ℕ) : Set S :=
+  { s | s ∈ Γ.inScope ∧ Γ.encLen s ≤ H }
+
+/-- Slice-level irrelevance excludes slice-level relevance. -/
+theorem irrelevantOn_implies_not_relevantOn
+    (dp : DecisionProblem A S) (Scope : Set S) (i : Fin n) :
+    isIrrelevantOn dp Scope i → ¬ isRelevantOn dp Scope i := by
+  intro hIrr hRel
+  rcases hRel with ⟨s, s', hs, hs', hAgree, hNe⟩
+  exact hNe (hIrr s s' hs hs' hAgree)
+
+/-- If optimizer sets are invariant to coordinate `iInf` on the declared slice,
+then `iInf` is irrelevant for that declared task slice. -/
+theorem meta_coordinate_irrelevant_of_invariance_on_declared_slice
+    (dp : DecisionProblem A S)
+    (Γ : IntegrityCompetence.Regime S) (H : ℕ) (iInf : Fin n)
+    (hInv :
+      ∀ s s' : S,
+        s ∈ declaredBudgetSlice Γ H →
+        s' ∈ declaredBudgetSlice Γ H →
+        (∀ j : Fin n, j ≠ iInf → CoordinateSpace.proj s j = CoordinateSpace.proj s' j) →
+        dp.Opt s = dp.Opt s') :
+    isIrrelevantOn dp (declaredBudgetSlice Γ H) iInf := by
+  exact hInv
+
+/-- Declared-slice invariance implies non-relevance of the meta-coordinate. -/
+theorem meta_coordinate_not_relevant_on_declared_slice
+    (dp : DecisionProblem A S)
+    (Γ : IntegrityCompetence.Regime S) (H : ℕ) (iInf : Fin n)
+    (hInv :
+      ∀ s s' : S,
+        s ∈ declaredBudgetSlice Γ H →
+        s' ∈ declaredBudgetSlice Γ H →
+        (∀ j : Fin n, j ≠ iInf → CoordinateSpace.proj s j = CoordinateSpace.proj s' j) →
+        dp.Opt s = dp.Opt s') :
+    ¬ isRelevantOn dp (declaredBudgetSlice Γ H) iInf := by
+  exact (irrelevantOn_implies_not_relevantOn (dp := dp) (Scope := declaredBudgetSlice Γ H) (i := iInf))
+    (meta_coordinate_irrelevant_of_invariance_on_declared_slice
+      (dp := dp) (Γ := Γ) (H := H) (iInf := iInf) hInv)
+
+end BoundedHorizonIrrelevance
 
 /-! ## Proposition `prop:sufficiency-char` (finite-model mechanization) -/
 
@@ -476,6 +548,149 @@ theorem no_auto_minimize_of_p_neq_conp
   intro hPoly
   exact hNeq (hCollapse hPoly)
 
+/-- Packaged integrity-resource closure for sufficiency-style collapse assumptions. -/
+theorem integrity_resource_bound_for_sufficiency
+    {P_eq_coNP PolytimeUniversalCompetence : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hSuffHard : PolytimeUniversalCompetence → P_eq_coNP) :
+    ¬ PolytimeUniversalCompetence :=
+  DecisionQuotient.IntegrityCompetence.integrity_resource_bound hNeq hSuffHard
+
+/-- Declared-physics no-universal-exact-certifier schema:
+if universal exact competence over a declared class would force a collapse,
+then under non-collapse no such universal exact certifier exists. -/
+theorem declared_physics_no_universal_exact_certifier_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Γ : IntegrityCompetence.Regime X)
+    {P_eq_coNP : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse :
+      (∃ Q : IntegrityCompetence.CertifyingSolver X Y W,
+          IntegrityCompetence.CompetentOn R Γ Q) → P_eq_coNP) :
+    ¬ (∃ Q : IntegrityCompetence.CertifyingSolver X Y W,
+          IntegrityCompetence.CompetentOn R Γ Q) :=
+  DecisionQuotient.IntegrityCompetence.integrity_resource_bound hNeq hCollapse
+
+/-- Typed-claim closure of the declared-physics schema:
+under the same hardness/collapse assumptions, exact reports are inadmissible
+for every solver in the declared class. -/
+theorem no_exact_claim_admissible_under_hardness_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    {P_eq_coNP : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse :
+      (∃ Q : IntegrityCompetence.CertifyingSolver X Y W,
+          IntegrityCompetence.CompetentOn R Γ Q) → P_eq_coNP) :
+    ∀ Q : IntegrityCompetence.CertifyingSolver X Y W,
+      ¬ IntegrityCompetence.ClaimAdmissible R Rε Γ Q IntegrityCompetence.ClaimReport.exact := by
+  intro Q
+  have hNoUniversal :
+      ¬ (∃ Q' : IntegrityCompetence.CertifyingSolver X Y W,
+            IntegrityCompetence.CompetentOn R Γ Q') :=
+    DecisionQuotient.IntegrityCompetence.integrity_resource_bound hNeq hCollapse
+  have hNoCompQ : ¬ IntegrityCompetence.CompetentOn R Γ Q := by
+    intro hComp
+    exact hNoUniversal ⟨Q, hComp⟩
+  exact IntegrityCompetence.no_uncertified_exact_claim
+    (R := R) (Rε := Rε) (Γ := Γ) (Q := Q) hNoCompQ
+
+/-- Hardness-blocked regimes force exact certainty inflation:
+exact reports are inadmissible for every solver, hence any exact report is
+evidence-free by the typed evidence equivalence. -/
+theorem exact_certainty_inflation_under_hardness_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    {P_eq_coNP : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse :
+      (∃ Q : IntegrityCompetence.CertifyingSolver X Y W,
+          IntegrityCompetence.CompetentOn R Γ Q) → P_eq_coNP) :
+    ∀ Q : IntegrityCompetence.CertifyingSolver X Y W,
+      IntegrityCompetence.ExactCertaintyInflation R Rε Γ Q := by
+  intro Q
+  have hNoAdm :
+      ¬ IntegrityCompetence.ClaimAdmissible R Rε Γ Q IntegrityCompetence.ClaimReport.exact :=
+    no_exact_claim_admissible_under_hardness_core
+      (R := R) (Rε := Rε) (Γ := Γ)
+      (P_eq_coNP := P_eq_coNP) hNeq hCollapse Q
+  exact (IntegrityCompetence.certaintyInflation_iff_not_admissible
+    (R := R) (Rε := Rε) (Γ := Γ) (Q := Q)
+    (r := IntegrityCompetence.ClaimReport.exact)).2 hNoAdm
+
+/-! ### Explicit-assumption requirement outside declared carve-outs -/
+
+/-- Four declared carve-outs under which exact physical claims may be reported
+without a hardness-profile disclosure in this framework. -/
+inductive ExactClaimExcuse where
+  | trivialScope
+  | tractableClass
+  | strongerOracle
+  | unboundedResources
+  deriving DecidableEq, Repr
+
+/-- A regime is excuse-covered if at least one declared carve-out applies. -/
+def ExcusedBy (excuses : Set ExactClaimExcuse) : Prop :=
+  excuses.Nonempty
+
+/-- Explicit hardness-assumption profile attached to a declared class/regime. -/
+structure ExplicitHardnessAssumptions
+    (X : Type*) (Y : Type*) (W : Type*)
+    (R : Set (X × Y)) (Γ : IntegrityCompetence.Regime X) where
+  P_eq_coNP : Prop
+  nonCollapse : ¬ P_eq_coNP
+  collapseFromUniversalCompetence :
+    (∃ Q : IntegrityCompetence.CertifyingSolver X Y W,
+        IntegrityCompetence.CompetentOn R Γ Q) → P_eq_coNP
+
+/-- Well-typed exact-physical-claim policy:
+either an explicit carve-out is declared, or an explicit hardness profile is
+declared for the class/regime. -/
+def ExactPhysicalClaimWellTyped
+    (X : Type*) (Y : Type*) (W : Type*)
+    (R : Set (X × Y)) (Γ : IntegrityCompetence.Regime X)
+    (excuses : Set ExactClaimExcuse) : Prop :=
+  ExcusedBy excuses ∨ Nonempty (ExplicitHardnessAssumptions X Y W R Γ)
+
+/-- Outside the declared carve-outs, a well-typed exact physical claim requires
+an explicit hardness-assumption profile. -/
+theorem explicit_assumptions_required_of_not_excused_core
+    {X Y W : Type*}
+    (R : Set (X × Y)) (Γ : IntegrityCompetence.Regime X)
+    (excuses : Set ExactClaimExcuse)
+    (hTyped : ExactPhysicalClaimWellTyped X Y W R Γ excuses)
+    (hNoExcuse : ¬ ExcusedBy excuses) :
+    Nonempty (ExplicitHardnessAssumptions X Y W R Γ) := by
+  cases hTyped with
+  | inl hExc =>
+      exact False.elim (hNoExcuse hExc)
+  | inr hAssump =>
+      exact hAssump
+
+/-- If no carve-out applies and the declared hardness profile holds, then exact
+claims are inadmissible for every solver in the class/regime. -/
+theorem no_exact_claim_under_declared_assumptions_unless_excused_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    (excuses : Set ExactClaimExcuse)
+    (hNoExcuse : ¬ ExcusedBy excuses)
+    (A : ExplicitHardnessAssumptions X Y W R Γ) :
+    ∀ Q : IntegrityCompetence.CertifyingSolver X Y W,
+      ¬ IntegrityCompetence.ClaimAdmissible R Rε Γ Q IntegrityCompetence.ClaimReport.exact := by
+  intro Q
+  have _ : ¬ ExcusedBy excuses := hNoExcuse
+  exact no_exact_claim_admissible_under_hardness_core
+    (R := R) (Rε := Rε) (Γ := Γ)
+    (P_eq_coNP := A.P_eq_coNP)
+    A.nonCollapse A.collapseFromUniversalCompetence Q
+
 end ConditionalComposition
 
 /-! ## Complexity-theoretic lift closures (explicitly conditional on standard facts) -/
@@ -605,6 +820,200 @@ theorem dichotomy_conditional
   refine ⟨hExplicit, ?_⟩
   exact hTransfer hEth (fun φ hnt i => all_coords_relevant_of_not_tautology (φ := φ) hnt i)
 
+/-! ### Universal solver framing closure -/
+
+/-- Any deterministic partial map can be framed as a certifying solver for its induced relation. -/
+theorem universal_solver_framing_core
+    {X Y : Type*}
+    (f : X → Option Y) :
+    ∃ Q : IntegrityCompetence.CertifyingSolver X Y PUnit,
+      IntegrityCompetence.SolverIntegrity (IntegrityCompetence.inducedRelation f) Q :=
+  IntegrityCompetence.program_framed_as_solver (X := X) (Y := Y) f
+
+/-- Integrity definition is substrate-parametric:
+the same predicate applies unchanged once a certifying solver pair is declared. -/
+theorem integrity_universal_applicability_core
+    {X Y W : Type*}
+    (R : Set (X × Y)) (Q : IntegrityCompetence.CertifyingSolver X Y W) :
+    IntegrityCompetence.SolverIntegrity R Q ↔
+      ((∀ x y w, Q.solve x = some (y, w) → Q.check x y w) ∧
+       (∀ x y w, Q.check x y w → (x, y) ∈ R)) :=
+  IntegrityCompetence.solverIntegrity_substrate_parametric (X := X) (Y := Y) (W := W) R Q
+
+/-! ### Typed claim discipline closure -/
+
+/-- Typed claim admissibility core:
+abstain is always admissible; exact and ε-claims are admissible iff
+their corresponding certificates hold. -/
+theorem typed_claim_admissibility_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    (Q : IntegrityCompetence.CertifyingSolver X Y W) :
+    IntegrityCompetence.ClaimAdmissible R Rε Γ Q IntegrityCompetence.ClaimReport.abstain ∧
+      (IntegrityCompetence.ClaimAdmissible R Rε Γ Q IntegrityCompetence.ClaimReport.exact ↔
+        IntegrityCompetence.CompetentOn R Γ Q) ∧
+      (∀ ε : ℝ,
+        IntegrityCompetence.ClaimAdmissible R Rε Γ Q (IntegrityCompetence.ClaimReport.epsilon ε) ↔
+          IntegrityCompetence.EpsilonCompetentOn Rε ε Γ Q) := by
+  refine ⟨?_, ?_, ?_⟩
+  · exact IntegrityCompetence.claim_admissible_abstain (R := R) (Rε := Rε) (Γ := Γ) (Q := Q)
+  · exact IntegrityCompetence.claim_admissible_exact_iff (R := R) (Rε := Rε) (Γ := Γ) (Q := Q)
+  · intro ε
+    exact IntegrityCompetence.claim_admissible_epsilon_iff
+      (R := R) (Rε := Rε) (ε := ε) (Γ := Γ) (Q := Q)
+
+/-- No exact certificate implies exact-claim inadmissibility in the typed discipline. -/
+theorem no_uncertified_exact_claim_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    (Q : IntegrityCompetence.CertifyingSolver X Y W)
+    (hNo : ¬ IntegrityCompetence.CompetentOn R Γ Q) :
+    ¬ IntegrityCompetence.ClaimAdmissible R Rε Γ Q IntegrityCompetence.ClaimReport.exact :=
+  IntegrityCompetence.no_uncertified_exact_claim
+    (R := R) (Rε := Rε) (Γ := Γ) (Q := Q) hNo
+
+/-! ### Raw-vs-certified bit accounting closure -/
+
+/-- Structural split of report-level accounting:
+    total certified bits are raw bits plus evidence-gated overhead bits. -/
+theorem certified_total_bits_split_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    (Q : IntegrityCompetence.CertifyingSolver X Y W)
+    (M : IntegrityCompetence.ReportBitModel)
+    (r : IntegrityCompetence.ClaimReport) :
+    IntegrityCompetence.certifiedTotalBits R Rε Γ Q M r =
+      M.rawBits r + IntegrityCompetence.certificationOverheadBits R Rε Γ Q M r :=
+  IntegrityCompetence.certifiedTotalBits_eq_raw_plus_overhead
+    (R := R) (Rε := Rε) (Γ := Γ) (Q := Q) (M := M) (r := r)
+
+/-- Exact-report bit-accounting equivalence:
+    raw-only exact accounting iff exact certainty inflation. -/
+theorem exact_raw_eq_certified_iff_certainty_inflation_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    (Q : IntegrityCompetence.CertifyingSolver X Y W)
+    (M : IntegrityCompetence.ReportBitModel) :
+    IntegrityCompetence.certifiedTotalBits R Rε Γ Q M IntegrityCompetence.ClaimReport.exact =
+      M.rawBits IntegrityCompetence.ClaimReport.exact
+      ↔
+      IntegrityCompetence.ExactCertaintyInflation R Rε Γ Q :=
+  IntegrityCompetence.exact_raw_eq_certifiedTotal_iff_exactCertaintyInflation
+    (R := R) (Rε := Rε) (Γ := Γ) (Q := Q) (M := M)
+
+/-- Exact-report admissibility is equivalent to a strict
+    certified-bit gap above raw bits. -/
+theorem exact_admissible_iff_raw_lt_certified_total_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    (Q : IntegrityCompetence.CertifyingSolver X Y W)
+    (M : IntegrityCompetence.ReportBitModel) :
+    IntegrityCompetence.ClaimAdmissible R Rε Γ Q IntegrityCompetence.ClaimReport.exact
+      ↔
+      M.rawBits IntegrityCompetence.ClaimReport.exact <
+        IntegrityCompetence.certifiedTotalBits R Rε Γ Q M IntegrityCompetence.ClaimReport.exact :=
+  IntegrityCompetence.exact_admissible_iff_raw_lt_certifiedTotal
+    (R := R) (Rε := Rε) (Γ := Γ) (Q := Q) (M := M)
+
+/-- If exact report is inadmissible, exact accounting is raw-only. -/
+theorem exact_raw_only_of_no_exact_admissible_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (Γ : IntegrityCompetence.Regime X)
+    (Q : IntegrityCompetence.CertifyingSolver X Y W)
+    (M : IntegrityCompetence.ReportBitModel)
+    (hNoAdm :
+      ¬ IntegrityCompetence.ClaimAdmissible R Rε Γ Q IntegrityCompetence.ClaimReport.exact) :
+    IntegrityCompetence.certifiedTotalBits R Rε Γ Q M IntegrityCompetence.ClaimReport.exact =
+      M.rawBits IntegrityCompetence.ClaimReport.exact :=
+  IntegrityCompetence.exact_raw_only_of_no_exact_admissible
+    (R := R) (Rε := Rε) (Γ := Γ) (Q := Q) (M := M) hNoAdm
+
+/-- ε-report admissibility is equivalent to a strict
+    certified-bit gap above raw bits. -/
+theorem epsilon_admissible_iff_raw_lt_certified_total_core
+    {X Y W : Type*}
+    (R : Set (X × Y))
+    (Rε : IntegrityCompetence.EpsilonRelation X Y)
+    (ε : ℝ)
+    (Γ : IntegrityCompetence.Regime X)
+    (Q : IntegrityCompetence.CertifyingSolver X Y W)
+    (M : IntegrityCompetence.ReportBitModel) :
+    IntegrityCompetence.ClaimAdmissible R Rε Γ Q (IntegrityCompetence.ClaimReport.epsilon ε)
+      ↔
+      M.rawBits (IntegrityCompetence.ClaimReport.epsilon ε) <
+        IntegrityCompetence.certifiedTotalBits R Rε Γ Q M (IntegrityCompetence.ClaimReport.epsilon ε) :=
+  IntegrityCompetence.epsilon_admissible_iff_raw_lt_certifiedTotal
+    (R := R) (Rε := Rε) (ε := ε) (Γ := Γ) (Q := Q) (M := M)
+
+/-! ### Budgeted physical crossover closure -/
+
+/-- Mechanized crossover core:
+    explicit infeasibility with simultaneous succinct feasibility at a declared budget. -/
+theorem physical_crossover_core
+    (M : PhysicalBudgetCrossover.EncodingSizeModel) (B n : ℕ)
+    (hCross : PhysicalBudgetCrossover.CrossoverAt M B n) :
+    PhysicalBudgetCrossover.ExplicitInfeasible M B n ∧
+      PhysicalBudgetCrossover.SuccinctFeasible M B n :=
+  PhysicalBudgetCrossover.explicit_infeasible_succinct_feasible_of_crossover M B n hCross
+
+/-- Above-cap crossover existence:
+if succinct size is globally capped and explicit size is unbounded,
+then every budget above the cap has a crossover witness. -/
+theorem physical_crossover_above_cap_core
+    (M : PhysicalBudgetCrossover.EncodingSizeModel) (C B : ℕ)
+    (hSucc : PhysicalBudgetCrossover.SuccinctBoundedBy M C)
+    (hExp : PhysicalBudgetCrossover.ExplicitUnbounded M)
+    (hBudget : C ≤ B) :
+    PhysicalBudgetCrossover.HasCrossover M B :=
+  PhysicalBudgetCrossover.has_crossover_of_bounded_succinct_unbounded_explicit
+    M C B hSucc hExp hBudget
+
+/-- Conditional crossover-plus-hardness bundle:
+    representational crossover does not imply exact-certification competence. -/
+theorem physical_crossover_hardness_core
+    (M : PhysicalBudgetCrossover.EncodingSizeModel) (B n : ℕ)
+    {P_eq_coNP ExactCertificationCompetence : Prop}
+    (hCross : PhysicalBudgetCrossover.CrossoverAt M B n)
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse : ExactCertificationCompetence → P_eq_coNP) :
+    PhysicalBudgetCrossover.ExplicitInfeasible M B n ∧
+      PhysicalBudgetCrossover.SuccinctFeasible M B n ∧
+      ¬ ExactCertificationCompetence :=
+  PhysicalBudgetCrossover.crossover_hardness_bundle M B n hCross hNeq hCollapse
+
+/-- Solver-form policy closure at crossover:
+    under integrity + collapse assumptions, abstention or budget failure is forced. -/
+theorem physical_crossover_policy_core
+    {X Y W : Type*}
+    (M : PhysicalBudgetCrossover.EncodingSizeModel) (B n : ℕ)
+    (hCross : PhysicalBudgetCrossover.CrossoverAt M B n)
+    (R : Set (X × Y)) (Γ : IntegrityCompetence.Regime X)
+    {P_eq_coNP : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse :
+      (∃ Q : IntegrityCompetence.CertifyingSolver X Y W,
+          IntegrityCompetence.CompetentOn R Γ Q) → P_eq_coNP)
+    (Q : IntegrityCompetence.CertifyingSolver X Y W)
+    (hIntegrity : IntegrityCompetence.SolverIntegrity R Q) :
+    PhysicalBudgetCrossover.ExplicitInfeasible M B n ∧
+      PhysicalBudgetCrossover.SuccinctFeasible M B n ∧
+      (¬ (∀ x, x ∈ Γ.inScope → ∃ y w, Q.solve x = some (y, w))
+        ∨
+       ¬ (∀ x, x ∈ Γ.inScope → Q.solveCost x ≤ Γ.budget (Γ.encLen x))) :=
+  PhysicalBudgetCrossover.crossover_integrity_policy M B n hCross R Γ hNeq hCollapse Q hIntegrity
+
 /-! ### Cost asymmetry under ETH (conditional closure) -/
 
 /-- Conditional cost-asymmetry closure:
@@ -669,6 +1078,139 @@ theorem tractable_subcases_conditional
     (hAssemble : BoundedCase → SeparableCase → TreeCase → TractableSubcases) :
     TractableSubcases :=
   hAssemble hBounded hSeparable hTree
+
+/-! ### Heuristic reusability bridge -/
+
+/-- A structure class is detectable if membership is decidable via a boolean
+    detector (used as the proxy for polynomial detectability in this layer). -/
+structure StructureDetectable {α : Type*} (C : α → Prop) where
+  detect : α → Bool
+  detect_correct : ∀ x, detect x = true ↔ C x
+
+/-- Any decidable class yields a canonical detector. -/
+def structureDetectable_of_decidable
+    {α : Type*} (C : α → Prop) [DecidablePred C] :
+    StructureDetectable C where
+  detect x := decide (C x)
+  detect_correct x := by simp
+
+/-- Heuristic reusability bridge:
+    if class membership is detectable and class-conditioned checker correctness
+    is known, then detect-then-check yields a correct result on detected
+    instances. -/
+theorem reusable_heuristic_of_detectable
+    {α Result : Type*}
+    (C : α → Prop)
+    (hDetect : StructureDetectable C)
+    (Correct : Result → Prop)
+    (checker : α → Result)
+    (hCorrect : ∀ x, C x → Correct (checker x))
+    (x : α) (hx : hDetect.detect x = true) :
+    Correct (checker x) := by
+  exact hCorrect x ((hDetect.detect_correct x).1 hx)
+
+/-- Bounded-actions class is detectable by checking `|A| ≤ k`. -/
+def bounded_actions_detectable
+    {A S : Type*} [DecidableEq A] [DecidableEq S]
+    [Fintype A] [Fintype S] {n : ℕ} [CoordinateSpace S n]
+    [∀ s s' : S, ∀ I : Finset (Fin n), Decidable (agreeOn s s' I)]
+    (k : ℕ) :
+    StructureDetectable
+      (fun _ : ComputableDecisionProblem A S => Fintype.card A ≤ k) :=
+  structureDetectable_of_decidable (C := fun _ : ComputableDecisionProblem A S => Fintype.card A ≤ k)
+
+/-- Reusable bounded-actions heuristic on detected instances. -/
+theorem bounded_actions_reusable_heuristic
+    {A S : Type*} [DecidableEq A] [DecidableEq S]
+    [Fintype A] [Fintype S] {n : ℕ} [CoordinateSpace S n]
+    [∀ s s' : S, ∀ I : Finset (Fin n), Decidable (agreeOn s s' I)]
+    (k : ℕ) (cdp : ComputableDecisionProblem A S)
+    (hx : (bounded_actions_detectable (A := A) (S := S) (n := n) k).detect cdp = true) :
+    ∃ decide : Finset (Fin n) → Bool,
+      ∀ I, decide I = true ↔ cdp.toAbstract.isSufficient I := by
+  let C : ComputableDecisionProblem A S → Prop := fun _ => Fintype.card A ≤ k
+  let hDetect : StructureDetectable C := bounded_actions_detectable (A := A) (S := S) (n := n) k
+  let checker : ComputableDecisionProblem A S → Prop :=
+    fun x =>
+      ∃ decide : Finset (Fin n) → Bool,
+        ∀ I, decide I = true ↔ x.toAbstract.isSufficient I
+  have hCorrect : ∀ x, C x → checker x := by
+    intro x hxCard
+    exact tractable_bounded_core (A := A) (S := S) (n := n) x k hxCard
+  have hReusable :=
+    reusable_heuristic_of_detectable
+      (C := C) (hDetect := hDetect) (Correct := fun p : Prop => p)
+      (checker := checker) hCorrect cdp hx
+  simpa [checker] using hReusable
+
+/-- Separable-utility class is detectable from a decidable-membership predicate
+    on the witness-bearing class condition. -/
+noncomputable def separable_detectable
+    {A S : Type*} [DecidableEq A] [DecidableEq S] {n : ℕ} [CoordinateSpace S n] :
+    StructureDetectable
+      (fun dp : FiniteDecisionProblem (A := A) (S := S) =>
+        Nonempty (SeparableUtility (dp := dp))) := by
+  classical
+  exact structureDetectable_of_decidable
+    (C := fun dp : FiniteDecisionProblem (A := A) (S := S) =>
+      Nonempty (SeparableUtility (dp := dp)))
+
+/-- Reusable separable-utility heuristic on detected instances. -/
+theorem separable_reusable_heuristic
+    {A S : Type*} [DecidableEq A] [DecidableEq S]
+    {n : ℕ} [CoordinateSpace S n]
+    (dp : FiniteDecisionProblem (A := A) (S := S))
+    (hx : (separable_detectable (A := A) (S := S) (n := n)).detect dp = true) :
+    ∃ algo : Finset (Fin n) → Bool,
+      ∀ I, algo I = true ↔ dp.isSufficient I := by
+  let C : FiniteDecisionProblem (A := A) (S := S) → Prop :=
+    fun x => Nonempty (SeparableUtility (dp := x))
+  let hDetect : StructureDetectable C := separable_detectable (A := A) (S := S) (n := n)
+  let checker : FiniteDecisionProblem (A := A) (S := S) → Prop :=
+    fun x =>
+      ∃ algo : Finset (Fin n) → Bool,
+        ∀ I, algo I = true ↔ x.isSufficient I
+  have hCorrect : ∀ x, C x → checker x := by
+    intro x hxSep
+    exact tractable_separable_core (A := A) (S := S) (n := n) x (Classical.choice hxSep)
+  have hReusable :=
+    reusable_heuristic_of_detectable
+      (C := C) (hDetect := hDetect) (Correct := fun p : Prop => p)
+      (checker := checker) hCorrect dp hx
+  simpa [checker] using hReusable
+
+/-- Tree-structured class is detectable from a decidable-membership predicate. -/
+noncomputable def tree_structure_detectable
+    {n : ℕ} :
+    StructureDetectable (fun deps : Fin n → Finset (Fin n) => TreeStructured deps) := by
+  classical
+  exact structureDetectable_of_decidable
+    (C := fun deps : Fin n → Finset (Fin n) => TreeStructured deps)
+
+/-- Reusable tree-structured heuristic on detected instances. -/
+theorem tree_reusable_heuristic
+    {A S : Type*} [DecidableEq A] [DecidableEq S] [Fintype A] [Fintype S]
+    {n : ℕ} [CoordinateSpace S n]
+    [∀ s s' : S, ∀ I : Finset (Fin n), Decidable (agreeOn s s' I)]
+    (cdp : ComputableDecisionProblem A S)
+    (deps : Fin n → Finset (Fin n))
+    (hx : (tree_structure_detectable (n := n)).detect deps = true) :
+    ∃ algo : Finset (Fin n) → Bool,
+      ∀ I, algo I = true ↔ cdp.toAbstract.isSufficient I := by
+  let C : (Fin n → Finset (Fin n)) → Prop := fun d => TreeStructured d
+  let hDetect : StructureDetectable C := tree_structure_detectable (n := n)
+  let checker : (Fin n → Finset (Fin n)) → Prop :=
+    fun d =>
+      ∃ algo : Finset (Fin n) → Bool,
+        ∀ I, algo I = true ↔ cdp.toAbstract.isSufficient I
+  have hCorrect : ∀ d, C d → checker d := by
+    intro d hd
+    exact tractable_tree_core (A := A) (S := S) (n := n) cdp d hd
+  have hReusable :=
+    reusable_heuristic_of_detectable
+      (C := C) (hDetect := hDetect) (Correct := fun p : Prop => p)
+      (checker := checker) hCorrect deps hx
+  simpa [checker] using hReusable
 
 end ComplexityLifts
 
@@ -801,6 +1343,109 @@ theorem query_obstruction_boolean_corollary
       ¬ (spikeProblem (n := n) s0).isSufficient (∅ : Finset (Fin n)) :=
   emptySufficiency_query_indistinguishable_pair hn Q hQ
 
+/-- Named information-barrier wrapper (Opt-oracle finite-state core). -/
+theorem information_barrier_opt_oracle_core
+    {S : Type*} [Fintype S] [DecidableEq S]
+    (hCard : 2 ≤ Fintype.card S)
+    (Q : Finset S) (hQ : Q.card < Fintype.card S) :
+    ∃ s0 : S,
+      s0 ∉ Q ∧
+      (oracleViewFinite Q (constTrueProblemFinite S) =
+        oracleViewFinite Q (spikeProblemFinite s0)) ∧
+      (constTrueProblemFinite S).isSufficient (∅ : Finset (Fin 1)) ∧
+      ¬ (spikeProblemFinite s0).isSufficient (∅ : Finset (Fin 1)) :=
+  query_obstruction_finite_state_core hCard Q hQ
+
+/-- Named information-barrier wrapper (Boolean value-entry interface). -/
+theorem information_barrier_value_entry_core
+    {n : ℕ} (hn : 0 < n)
+    (Q : Finset (ValueQueryState n))
+    (hQ : Q.card < Fintype.card (Fin n → Bool)) :
+    ∃ s0 : Fin n → Bool,
+      s0 ∉ touchedStates Q ∧
+      (valueEntryView Q (constTrueProblem (n := n)) =
+        valueEntryView Q (spikeProblem (n := n) s0)) ∧
+      (constTrueProblem (n := n)).isSufficient (∅ : Finset (Fin n)) ∧
+      ¬ (spikeProblem (n := n) s0).isSufficient (∅ : Finset (Fin n)) :=
+  emptySufficiency_valueEntry_indistinguishable_pair hn Q hQ
+
+/-- Named information-barrier wrapper (Boolean state-batch interface). -/
+theorem information_barrier_state_batch_core
+    {n : ℕ} (hn : 0 < n)
+    (Q : Finset (StateBatchQuery n))
+    (hQ : Q.card < Fintype.card (Fin n → Bool)) :
+    ∃ s0 : Fin n → Bool,
+      s0 ∉ Q ∧
+      (stateBatchView Q (constTrueProblem (n := n)) =
+        stateBatchView Q (spikeProblem (n := n) s0)) ∧
+      (constTrueProblem (n := n)).isSufficient (∅ : Finset (Fin n)) ∧
+      ¬ (spikeProblem (n := n) s0).isSufficient (∅ : Finset (Fin n)) :=
+  emptySufficiency_stateBatch_indistinguishable_pair hn Q hQ
+
+/-! ### Conditional thermodynamic lift closure -/
+
+/-- Core thermodynamic lift wrapper:
+    bit lower bounds lift to energy and carbon lower bounds. -/
+theorem thermo_energy_carbon_lift_core
+    (M : ThermodynamicLift.ThermoModel)
+    {bitLB bitUsed : ℕ} (hBits : bitLB ≤ bitUsed) :
+    ThermodynamicLift.energyLowerBound M bitLB ≤ ThermodynamicLift.energyLowerBound M bitUsed ∧
+      ThermodynamicLift.carbonLowerBound M bitLB ≤ ThermodynamicLift.carbonLowerBound M bitUsed := by
+  exact ⟨
+    ThermodynamicLift.energy_lower_from_bits_lower M hBits,
+    ThermodynamicLift.carbon_lower_from_bits_lower M hBits
+  ⟩
+
+/-- Eventual-family thermodynamic lift wrapper. -/
+theorem thermo_eventual_lift_core
+    (M : ThermodynamicLift.ThermoModel)
+    (bitLB bitUsed : ℕ → ℕ) (n0 : ℕ)
+    (hBits : ∀ n, n ≥ n0 → bitLB n ≤ bitUsed n) :
+    (∀ n, n ≥ n0 →
+      ThermodynamicLift.energyLowerBound M (bitLB n) ≤
+        ThermodynamicLift.energyLowerBound M (bitUsed n)) ∧
+      (∀ n, n ≥ n0 →
+        ThermodynamicLift.carbonLowerBound M (bitLB n) ≤
+          ThermodynamicLift.carbonLowerBound M (bitUsed n)) :=
+  ThermodynamicLift.eventual_thermo_lift M bitLB bitUsed n0 hBits
+
+/-- Conditional hardness + thermodynamic bundle wrapper. -/
+theorem thermo_hardness_bundle_core
+    {P_eq_coNP ExactCertificationCompetence : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse : ExactCertificationCompetence → P_eq_coNP)
+    (M : ThermodynamicLift.ThermoModel)
+    {bitLB bitUsed : ℕ} (hBits : bitLB ≤ bitUsed) :
+    ¬ ExactCertificationCompetence ∧
+      ThermodynamicLift.energyLowerBound M bitLB ≤ ThermodynamicLift.energyLowerBound M bitUsed ∧
+      ThermodynamicLift.carbonLowerBound M bitLB ≤ ThermodynamicLift.carbonLowerBound M bitUsed :=
+  ThermodynamicLift.hardness_thermo_bundle_conditional hNeq hCollapse M hBits
+
+/-- Mandatory physical-cost core (conditional on positive conversion constants
+and positive irreversible-work lower bound). -/
+theorem thermo_mandatory_cost_core
+    (M : ThermodynamicLift.ThermoModel)
+    {bitLB : ℕ}
+    (hJ : 0 < M.joulesPerBit)
+    (hC : 0 < M.carbonPerJoule)
+    (hBitsPos : 0 < bitLB) :
+    0 < ThermodynamicLift.energyLowerBound M bitLB ∧
+      0 < ThermodynamicLift.carbonLowerBound M bitLB := by
+  exact ThermodynamicLift.mandatory_cost_bundle M hJ hC hBitsPos
+
+/-- Conserved/additive accounting core in the declared linear thermodynamic model. -/
+theorem thermo_conservation_additive_core
+    (M : ThermodynamicLift.ThermoModel)
+    (b₁ b₂ : ℕ) :
+    ThermodynamicLift.energyLowerBound M (b₁ + b₂) =
+      ThermodynamicLift.energyLowerBound M b₁ + ThermodynamicLift.energyLowerBound M b₂ ∧
+      ThermodynamicLift.carbonLowerBound M (b₁ + b₂) =
+        ThermodynamicLift.carbonLowerBound M b₁ + ThermodynamicLift.carbonLowerBound M b₂ := by
+  exact ⟨
+    ThermodynamicLift.energy_lower_additive M b₁ b₂,
+    ThermodynamicLift.carbon_lower_additive M b₁ b₂
+  ⟩
+
 /-- Typed class-completeness closure for the static sufficiency class:
 conditional lifts for class labels + regime-indexed mechanized cores +
 declared regime-family exhaustiveness. -/
@@ -922,6 +1567,108 @@ theorem bridge_boundary_represented_family :
 
 end BridgeBoundary
 
+/-! ## Agent snapshot/process typing over the represented bridge family (`#11`) -/
+
+section AgentSnapshotProcess
+
+/-- Typed agent views used by scope prose:
+`snapshotFixed` models fixed-parameter inference;
+`process*` constructors model online/dynamical update regimes. -/
+inductive AgentRegime where
+  | snapshotFixed
+  | processHorizonExtended
+  | processStochasticCriterion
+  | processTransitionCoupled
+  deriving DecidableEq, Repr
+
+/-- Projection from agent-typing vocabulary to represented bridge classes. -/
+def agentBridgeClass : AgentRegime → BridgeTypedClass
+  | .snapshotFixed => BridgeTypedClass.oneStepDeterministic
+  | .processHorizonExtended => BridgeTypedClass.horizonExtended
+  | .processStochasticCriterion => BridgeTypedClass.stochasticCriterion
+  | .processTransitionCoupled => BridgeTypedClass.transitionCoupled
+
+/-- In the represented family, transfer license is equivalent to snapshot typing. -/
+theorem agent_transfer_licensed_iff_snapshot (r : AgentRegime) :
+    bridgeTransferLicensed (agentBridgeClass r) ↔ r = AgentRegime.snapshotFixed := by
+  cases r <;> simp [agentBridgeClass, bridgeTransferLicensed]
+
+/-- Every process-typed represented class has an explicit bridge-failure witness. -/
+theorem process_bridge_failure_witness
+    (r : AgentRegime) (hr : r ≠ AgentRegime.snapshotFixed) :
+    bridgeFailureWitness (agentBridgeClass r) := by
+  cases r with
+  | snapshotFixed =>
+      cases hr rfl
+  | processHorizonExtended =>
+      simpa [agentBridgeClass] using
+        bridge_failure_witness_non_one_step
+          (c := BridgeTypedClass.horizonExtended) (hc := by decide)
+  | processStochasticCriterion =>
+      simpa [agentBridgeClass] using
+        bridge_failure_witness_non_one_step
+          (c := BridgeTypedClass.stochasticCriterion) (hc := by decide)
+  | processTransitionCoupled =>
+      simpa [agentBridgeClass] using
+        bridge_failure_witness_non_one_step
+          (c := BridgeTypedClass.transitionCoupled) (hc := by decide)
+
+/-- Packaged snapshot/process boundary result used by theorem-indexed prose. -/
+theorem snapshot_vs_process_typed_boundary :
+    bridgeTransferLicensed (agentBridgeClass AgentRegime.snapshotFixed) ∧
+    bridgeFailureWitness (agentBridgeClass AgentRegime.processHorizonExtended) ∧
+    bridgeFailureWitness (agentBridgeClass AgentRegime.processStochasticCriterion) ∧
+    bridgeFailureWitness (agentBridgeClass AgentRegime.processTransitionCoupled) := by
+  refine ⟨by simp [agentBridgeClass, bridgeTransferLicensed], ?_, ?_, ?_⟩
+  · exact process_bridge_failure_witness
+      (r := AgentRegime.processHorizonExtended) (hr := by decide)
+  · exact process_bridge_failure_witness
+      (r := AgentRegime.processStochasticCriterion) (hr := by decide)
+  · exact process_bridge_failure_witness
+      (r := AgentRegime.processTransitionCoupled) (hr := by decide)
+
+end AgentSnapshotProcess
+
+/-! ## Regime simulation abstraction (`#12`) -/
+
+section RegimeSimulation
+
+/-- Generic simulation relation between two regime-typed solver obligations.
+`R₁` simulates `R₂` when any solver for `R₁` induces a solver for `R₂`. -/
+def RegimeSimulation (R₁ R₂ : Prop) : Prop := R₁ → R₂
+
+/-- Generic transfer rule: if `R₁` simulates `R₂`, hardness of `R₂`
+transfers to hardness of `R₁`. -/
+theorem regime_simulation_transfers_hardness
+    {R₁ R₂ : Prop}
+    (hSim : RegimeSimulation R₁ R₂)
+    (hHard₂ : ¬ R₂) :
+    ¬ R₁ := by
+  intro hR₁
+  exact hHard₂ (hSim hR₁)
+
+/-- Restriction-map simulation instance used by subproblem-to-full transfer. -/
+theorem subproblem_transfer_as_regime_simulation
+    {HasFullSolver HasSubSolver : Prop}
+    (hRestrict : HasFullSolver → HasSubSolver) :
+    RegimeSimulation HasFullSolver HasSubSolver :=
+  hRestrict
+
+/-- Oracle-transducer simulation instance: batch-view indistinguishability
+induces value-entry indistinguishability on touched states. -/
+theorem oracle_lattice_transfer_as_regime_simulation
+    {n : ℕ}
+    (Q : Finset (ValueQueryState n))
+    (dp₁ dp₂ : DecisionProblem Bool (Fin n → Bool)) :
+    RegimeSimulation
+      (stateBatchView (Q := touchedStates Q) dp₁ = stateBatchView (Q := touchedStates Q) dp₂)
+      (valueEntryView Q dp₁ = valueEntryView Q dp₂) := by
+  intro hBatch
+  exact valueEntryView_eq_of_stateBatchView_eq_on_touched
+    (Q := Q) (dp₁ := dp₁) (dp₂ := dp₂) hBatch
+
+end RegimeSimulation
+
 /-! ## Subproblem-to-full transfer closure (`#2`) -/
 
 section SubproblemTransfer
@@ -934,8 +1681,9 @@ theorem subproblem_hardness_lifts_to_full
     (hRestrict : HasFullSolver → HasSubSolver)
     (hSubHard : ¬ HasSubSolver) :
     ¬ HasFullSolver := by
-  intro hFull
-  exact hSubHard (hRestrict hFull)
+  exact regime_simulation_transfers_hardness
+    (hSim := subproblem_transfer_as_regime_simulation hRestrict)
+    (hHard₂ := hSubHard)
 
 end SubproblemTransfer
 

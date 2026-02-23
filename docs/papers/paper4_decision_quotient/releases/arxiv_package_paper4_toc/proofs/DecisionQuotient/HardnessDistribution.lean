@@ -18,7 +18,7 @@
   LaTeX reference: Section 6.4 (Hardness Distribution: Right Place vs Wrong Place)
 -/
 
-import Mathlib.Data.Nat.Defs
+import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Rat.Defs
 import Mathlib.Tactic
@@ -71,6 +71,23 @@ def errorSites (S : SolutionArchitecture P) (n : ℕ) : ℕ :=
 def totalDOF (S : SolutionArchitecture P) (n : ℕ) : ℕ :=
   S.centralDOF + n * S.distributedDOF
 
+/-- Canonical required-work observable in this model (at use-site count `n`). -/
+def requiredWork (S : SolutionArchitecture P) (n : ℕ) : ℕ :=
+  totalDOF S n
+
+/-- Canonical hardness lower bound in this model: intrinsic independent work units. -/
+def hardnessLowerBound (P : SpecificationProblem) : ℕ :=
+  P.intrinsicDOF
+
+/-- Degree parameter controlling growth of required work with use-site count. -/
+def workGrowthDegree (S : SolutionArchitecture P) : ℕ :=
+  S.distributedDOF
+
+/-- Required work is affine in the site-count variable with slope `workGrowthDegree`. -/
+theorem requiredWork_eq_affine_in_sites (S : SolutionArchitecture P) (n : ℕ) :
+    requiredWork S n = S.centralDOF + n * workGrowthDegree S := by
+  rfl
+
 def hardnessEfficiency (S : SolutionArchitecture P) (n : ℕ) : ℚ :=
   if _ : totalDOF S n = 0 then 0 else (S.centralDOF : ℚ) / (totalDOF S n : ℚ)
 
@@ -93,6 +110,15 @@ theorem totalDOF_ge_intrinsic (S : SolutionArchitecture P) (n : ℕ) (hn : n ≥
   have hcover : S.centralDOF + S.distributedDOF ≤ S.centralDOF + n * S.distributedDOF :=
     Nat.add_le_add_left hdist S.centralDOF
   exact le_trans S.conservation hcover
+
+/-- Hardness as irreducible required work:
+for any architecture and nonzero site-count, required work is lower-bounded by
+the intrinsic hardness floor. -/
+theorem hardness_is_irreducible_required_work
+    (P : SpecificationProblem) (S : SolutionArchitecture P) (n : ℕ) (hn : n ≥ 1) :
+    hardnessLowerBound P ≤ requiredWork S n := by
+  unfold hardnessLowerBound requiredWork
+  exact totalDOF_ge_intrinsic S n hn
 
 /-! ## Hardness Conservation (Information-Theoretic)
 
@@ -423,6 +449,13 @@ theorem totalDOF_eventually_constant_iff_zero_distributed (S : SolutionArchitect
   constructor
   · exact zero_distributed_of_totalDOF_eventually_constant S
   · exact totalDOF_eventually_constant_of_zero_distributed S
+
+/-- Equivalent growth form:
+zero growth degree is exactly eventual constancy of required work. -/
+theorem workGrowthDegree_zero_iff_eventually_constant (S : SolutionArchitecture P) :
+    workGrowthDegree S = 0 ↔ IsEventuallyConstant (fun n => requiredWork S n) := by
+  unfold workGrowthDegree requiredWork
+  simpa using (totalDOF_eventually_constant_iff_zero_distributed S).symm
 
 /-- A canonical saturating site-cost function in the generalized model. -/
 def saturatingSiteCost (K : ℕ) (n : ℕ) : ℕ :=

@@ -109,7 +109,10 @@ theorem dichotomy_by_relevant_size [DecidableEq (Set A)] [DecidableEq (Fin n)]
     -- The minimal sufficient set size determines complexity class
     (I.card ≤ Nat.log 2 (Fintype.card S)) ∨
     (I.card > Nat.log 2 (Fintype.card S)) :=
-  le_or_lt _ _
+  by
+    by_cases h : I.card ≤ Nat.log 2 (Fintype.card S)
+    · exact Or.inl h
+    · exact Or.inr (lt_of_not_ge h)
 
 /-- Tractable case: If minimal sufficient set is small (logarithmic),
     then checking sufficiency is polynomial in |S| -/
@@ -163,4 +166,3 @@ theorem quotientSize_pos [Fintype S] [Nonempty S] [DecidableEq (Set A)]
   exact Finset.mem_image_of_mem _ (Finset.mem_univ _)
 
 end DecisionQuotient
-

@@ -1,6 +1,6 @@
 # Paper: Credibility: Formal Verification of Architectural Claims
 
-**Status**: TOPLAS-ready | **Lean**: 58 lines, 0 theorems
+**Status**: TOPLAS-ready | **Lean**: 1984 lines, ~50 theorems
 
 ---
 
@@ -23,7 +23,7 @@ These results integrate with the leverage framework (Paper 3): credibility lever
 
 # Paper 5: A Formal Theory of Credibility
 
-**Status**: Draft **Target**: TOPLAS **Lean**: 430 lines, 0 sorry
+**Status**: Draft **Target**: TOPLAS **Lean**: 1984 lines, ~50 theorems, 0 sorry
 
 This paper formalizes why assertions of credibility can *decrease* perceived credibility, proves impossibility bounds on cheap talk, and characterizes the structure of costly signals.
 
@@ -148,6 +148,8 @@ This paper extends the leverage framework (Paper 3) [@paper3_leverage] to episte
 ::: theorem
 []{#thm:cheap-talk-bound label="thm:cheap-talk-bound"} Let $C\in\{0,1\}$ denote the truth of a claim ($C=1$ true), with prior $p := \Pr[C=1]\in(0,1)$. Let $S$ be the event that the receiver observes a particular message-pattern (signal) $s$.
 
+(*Lean:* `Credibility.cheap_talk_bound`, `Credibility.CheapTalk.cheapTalkBound`)
+
 Define the emission rates $$\alpha := \Pr[S \mid C=1],\qquad \beta := \Pr[S \mid C=0].$$ Then the posterior credibility of the claim given observation of $s$ is $$\Pr[C=1 \mid S] \;=\; \frac{p\,\alpha}{p\,\alpha + (1-p)\,\beta}.$$ Equivalently, in odds form, $$\frac{\Pr[C=1 \mid S]}{\Pr[C=0 \mid S]}
 \;=\;
 \frac{p}{1-p}\cdot \frac{\alpha}{\beta}.$$
@@ -175,6 +177,8 @@ then credibility obeys the tight upper bound $$\Pr[C=1 \mid S] \;\le\; \frac{p}{
 
 ::: theorem
 []{#thm:magnitude-penalty label="thm:magnitude-penalty"} For claims $c_1, c_2$ with $M(c_1) < M(c_2)$ (i.e., $p_1 := P(c_1) > p_2 := P(c_2)$) and identical cheap talk signals $s$ with mimicability $q$: $$\Pr[c_1 \mid S] > \Pr[c_2 \mid S]$$ Higher-magnitude claims receive less credibility from identical signals.
+
+(*Lean:* `Credibility.CheapTalk.magnitude_penalty`, `Credibility.CheapTalk.cheapTalkBound_strictMono_prior`)
 :::
 
 ::: proof
@@ -187,6 +191,8 @@ then credibility obeys the tight upper bound $$\Pr[C=1 \mid S] \;\le\; \frac{p}{
 
 ::: theorem
 []{#thm:emphasis-penalty label="thm:emphasis-penalty"} Let $s_1, s_2, ..., s_n$ be cheap talk signals all asserting claim $c$. There exists $k^*$ such that for $n > k^*$: $$\frac{\partial C(c, s_{1..n})}{\partial n} < 0$$ Additional emphasis *decreases* credibility past a threshold.
+
+(*Lean:* `Credibility.CheapTalk.emphasis_penalty`, `Credibility.CheapTalk.suspicion_mono`, `Credibility.CheapTalk.credibilityWithEmphasis`)
 :::
 
 ::: proof
@@ -207,6 +213,8 @@ This is decreasing in $\sigma(n)$, hence decreasing in $n$ for $n > k^*$. ◻
 
 ::: theorem
 []{#thm:meta-assertion-trap label="thm:meta-assertion-trap"} Let $a$ be a cheap talk assertion and $m$ be a meta-assertion "assertion $a$ is credible." Then: $$C(c, a \cup m) \leq C(c, a) + \epsilon$$ where $\epsilon \to 0$ as common knowledge of rationality increases.
+
+(*Lean:* `Credibility.CheapTalk.meta_assertion_trap`, `Credibility.CheapTalk.meta_assertion_decreases`, `Credibility.CheapTalk.meta_assertion_boost_nonpositive`)
 :::
 
 ::: proof
@@ -231,16 +239,16 @@ The signal provides negligible information; $\epsilon \to 0$. ◻
 
 ::: theorem
 []{#thm:costly-signal label="thm:costly-signal"} For costly signal $s$ with cost differential $\Delta = \text{Cost}(s | \bot) - \text{Cost}(s | \top) > 0$: $$\Pr[C=1 \mid S] \to 1 \text{ as } \Delta \to \infty$$ Costly signals can achieve arbitrarily high credibility.
-:::
 
-::: proof
-*Proof.* If $\Delta$ is large, deceptive agents cannot afford to produce $s$, so $\beta := \Pr[S \mid C=0] \to 0$ as $\Delta \to \infty$. Applying Theorem [\[thm:cheap-talk-bound\]](#thm:cheap-talk-bound){reference-type="ref" reference="thm:cheap-talk-bound"} with $\alpha = 1$: $$\Pr[C=1 \mid S] = \frac{p}{p + (1-p)\beta} \to 1 \text{ as } \beta \to 0.$$ ◻
+(*Lean:* `Credibility.CostlySignals.costly_dominates_cheap`, `Credibility.CostlySignals.verified_signal_limit_one`)
 :::
 
 ::: theorem
 []{#thm:verified-signal label="thm:verified-signal"} Let $C\in\{0,1\}$ with prior $p=\Pr[C=1]$. Suppose a verifier produces an acceptance event $A$ such that $$\Pr[A \mid C=1]\ge 1-\varepsilon_T,\qquad \Pr[A \mid C=0]\le \varepsilon_F,$$ for some $\varepsilon_T,\varepsilon_F\in[0,1]$. Then $$\Pr[C=1 \mid A]
 \;\ge\;
 \frac{p(1-\varepsilon_T)}{p(1-\varepsilon_T) + (1-p)\varepsilon_F}.$$ In particular, if $\varepsilon_F\to 0$ and $\varepsilon_T$ is bounded away from $1$, then $\Pr[C=1\mid A]\to 1$.
+
+(*Lean:* `Credibility.CostlySignals.verified_signal_credibility`, `Credibility.CostlySignals.verifiedCredibilityBound`)
 :::
 
 ::: proof
@@ -262,6 +270,8 @@ The signal provides negligible information; $\epsilon \to 0$. ◻
 
 ::: theorem
 []{#thm:proof-ultimate label="thm:proof-ultimate"} Let $s$ be a machine-checked proof of claim $c$. Then: $$\Pr[c \mid s] = 1 - \varepsilon$$ where $\varepsilon$ accounts only for proof assistant bugs.
+
+(*Lean:* `Credibility.CostlySignals.proof_as_ultimate_signal`, `Credibility.CostlySignals.verified_signal_limit_one`)
 :::
 
 ::: proof
@@ -280,6 +290,8 @@ The signal provides negligible information; $\epsilon \to 0$. ◻
 
 ::: theorem
 []{#thm:text-bound label="thm:text-bound"} For any text string $T$ (memory content, assertion, etc.) and high-magnitude claim $c$ with $M(c) > M^*$ (i.e., prior $p < e^{-M^*}$): $$\Pr[c \mid T] < \tau$$ where $\tau < 1$ is determined by the mimicability $q$ and $M^*$. No text achieves full credibility for exceptional claims.
+
+(*Lean:* `Credibility.Impossibility.text_credibility_bound`, `Credibility.Impossibility.high_magnitude_credibility_small`, `Credibility.Impossibility.memory_iteration_futility`)
 :::
 
 ::: proof
@@ -311,6 +323,8 @@ Applying the leverage framework (Paper 3) [@paper3_leverage]:
 **Signal Leverage:** $L_S = \frac{\Delta C}{\text{Words}}$
 
 **Theorem 6.1 (Credibility Leverage).** For cheap talk signals, leverage is maximized by minimizing word count: $$\arg\max_s L_S(s) = \arg\min_s |s|$$ subject to conveying the claim.
+
+(*Lean:* `Credibility.Leverage.brevity_principle`, `Credibility.Leverage.credibility_leverage_minimization`, `Credibility.Leverage.leverage_inverse_effort`)
 
 **Interpretation:** Shorter, terser memory entries achieve higher credibility leverage than verbose explanations. "70k lines, deployed in 3 labs" beats lengthy justification.
 
@@ -510,8 +524,59 @@ The following proofs were developed in Lean 4 [@demoura2021lean4; @mathlib2020].
 ----------------------------------------------------------------------------------------------------
 :::
 
-**Lines:** 430 **Theorems:** \~12 **Sorry placeholders:** 0
+**Lines:** 1984 **Theorems:** ~50 **Sorry placeholders:** 0
 
+
+
+---
+
+## Theorem Index
+
+| Paper Theorem | Lean Definition | Section | Status |
+|--------------|----------------|---------|--------|
+| 2.1 | `Signal` | Basic | ✓ |
+| 2.2 | `isCheapTalk` | Basic | ✓ |
+| 2.3 | `isCostlySignal` | Basic | ✓ |
+| 2.4 | `Prior` | Basic | ✓ |
+| 2.5 | `CredibilityValue` | Basic | ✓ |
+| 2.7 | `DeceptionPrior` | Basic | ✓ |
+| 2.8 | `magnitude` | Basic | ✓ |
+| 2.0c | `domain_independence_math_not_implies_social` | Basic | ✓ |
+| 2.0d | `machine_proof_domain_specificity` | Basic | ✓ |
+| 3.1 | `cheap_talk_bound` | CheapTalk | ✓ |
+| 3.1 | `cheapTalkBound_nonneg` | CheapTalk | ✓ |
+| 3.1 | `cheapTalkBound_pos` | CheapTalk | ✓ |
+| 3.1 | `cheapTalkBound_q_zero` | CheapTalk | ✓ |
+| 3.1 | `cheapTalkBound_q_one` | CheapTalk | ✓ |
+| 3.1 | `cheapTalkBound_le_one` | CheapTalk | ✓ |
+| 3.1 | `cheapTalkBound_lt_one` | CheapTalk | ✓ |
+| 3.2 | `magnitude_penalty` | CheapTalk | ✓ |
+| 3.3 | `emphasis_penalty` | CheapTalk | ✓ |
+| 3.3 | `suspicion_mono` | CheapTalk | ✓ |
+| 3.4 | `meta_assertion_trap` | CheapTalk | ✓ |
+| 3.4 | `meta_assertion_decreases` | CheapTalk | ✓ |
+| 3.4 | `meta_assertion_boost_nonpositive` | CheapTalk | ✓ |
+| 3.4 | `meta_assertion_bounded` | CheapTalk | ✓ |
+| 4.1 | `costly_dominates_cheap` | CostlySignals | ✓ |
+| 4.1 | `verified_signal_credibility` | CostlySignals | ✓ |
+| 4.1 | `verified_signal_limit_one` | CostlySignals | ✓ |
+| 4.2 | `proof_as_ultimate_signal` | CostlySignals | ✓ |
+| 4.2 | `cheapTalk_as_verification` | CostlySignals | ✓ |
+| 5.1 | `text_credibility_bound` | Impossibility | ✓ |
+| 5.1 | `high_magnitude_credibility_small` | Impossibility | ✓ |
+| 5.2 | `memory_iteration_futility` | Impossibility | ✓ |
+| 5.3 | `composition_impossibility` | Impossibility | ✓ |
+| 5.3 | `composition_never_helps` | Impossibility | ✓ |
+| 5.5 | `asymptotic_impossibility` | Impossibility | ✓ |
+| 6.1 | `brevity_principle` | Leverage | ✓ |
+| 6.1 | `credibility_leverage_minimization` | Leverage | ✓ |
+| -- | `regimeBound` | Regime | ✓ |
+| -- | `prior_known_tightens_bound` | Regime | ✓ |
+| -- | `full_bayes_optimal` | Regime | ✓ |
+| -- | `integrity_claims_are_cheap_talk` | Paper4Bridge | ✓ |
+| -- | `competence_demonstrations_are_costly_signals` | Paper4Bridge | ✓ |
+| -- | `abstention_credibility_bound` | Paper4Bridge | ✓ |
+| -- | `demonstration_beats_assertion` | Paper4Bridge | ✓ |
 
 
 
@@ -520,6 +585,7 @@ The following proofs were developed in Lean 4 [@demoura2021lean4; @mathlib2020].
 ## Machine-Checked Proofs
 
 All theorems are formalized in Lean 4:
-- Location: `docs/papers/proofs/paper5_*.lean`
-- Lines: 58
-- Theorems: 0
+- Location: `docs/papers/paper5_credibility/proofs/Credibility/`
+- Total Lines: 1,984
+- Theorems: ~50
+- Sorry placeholders: 0

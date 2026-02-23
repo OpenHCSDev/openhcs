@@ -1,0 +1,43 @@
+\section{Lean 4 Proof Listings}\label{app:lean}
+
+The complete Lean 4 formalization extends the Paper 4 artifact. The mechanization consists of \LeanTotalLines\ lines across \LeanTotalFiles\ files, with \LeanTotalTheorems\ theorem/lemma statements.
+
+\noindent\textbf{Handle IDs.} Inline theorem metadata cites compact IDs (for example, \texttt{CC4}, \texttt{HD2}, \texttt{IC3}) instead of full theorem constants.
+
+\subsection{Lean Handle ID Map}\label{sec:lean-handle-id-map-4b}
+\IfFileExists{content/lean_handle_ids_auto.tex}{
+  \input{content/lean_handle_ids_auto.tex}
+}{
+  \textit{Auto handle-id table not found. Run the paper build script to generate \texttt{content/lean\_handle\_ids\_auto.tex}.}
+}
+
+\subsection{What Is Machine-Checked}
+
+The Lean formalization establishes:
+
+\begin{enumerate}
+\item \textbf{STOCHASTIC-SUFFICIENCY PP-completeness}: Reduction from MAJSAT showing stochastic sufficiency checking is PP-complete.
+
+\item \textbf{SEQUENTIAL-SUFFICIENCY PSPACE-completeness}: Reduction from TQBF showing sequential sufficiency checking is PSPACE-complete.
+
+\item \textbf{Substrate independence theorems}: Formal proofs that the matrix verdict is $\kappa$-independent while trajectories are $\kappa$-dependent.
+
+\item \textbf{Bridge transfer conditions}: Formalized conditions under which sufficiency transfers between regimes.
+\end{enumerate}
+
+\IfFileExists{content/assumption_ledger_auto.tex}{\input{content/assumption_ledger_auto.tex}}{}
+
+\subsection{Complete Claim Coverage Matrix}
+\IfFileExists{content/claim_mapping_auto.tex}{
+  \input{content/claim_mapping_auto.tex}
+}{
+  \textit{Auto claim-mapping table not found. Run the paper build script to generate \texttt{content/claim\_mapping\_auto.tex}.}
+}
+
+\subsection{Claims Not Fully Mechanized}
+
+Entries marked \textbf{Full (conditional)} are explicitly mechanized transfer theorems that depend on standard external complexity facts (e.g., MAJSAT PP-completeness, TQBF PSPACE-completeness), with those dependencies represented as hypotheses in Lean.
+
+\subsection{Verification}
+
+The proofs compile with Lean 4. Run \texttt{lake build} in the proof directory to verify.

@@ -1,8 +1,8 @@
 \section{Encoding-Regime Separation}\label{sec:dichotomy}
 
-The hardness results of Section~\ref{sec:hardness} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family.
+The hardness results of Section~\ref{sec:hardness} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family. The complexity class is a property of the encoding measured against a fixed decision question (Remark~\ref{rem:question-vs-problem}), not a property of the question itself: the same sufficiency question admits polynomial-time algorithms under one encoding and worst-case exponential cost under another.
 
-\paragraph{Model note.} Theorem~\ref{thm:dichotomy} has Part~1 in [E] (time polynomial in $|S|$) and Part~2 in [S+ETH] (time exponential in $n$). Proposition~\ref{prop:query-regime-obstruction} is [Q\_fin] (finite-state Opt-oracle core), while Propositions~\ref{prop:query-value-entry-lb} and~\ref{prop:query-state-batch-lb} are [Q\_bool] interface refinements (value-entry and state-batch). These regimes are defined in Section~\ref{sec:encoding} and are not directly comparable as functions of one numeric input-length parameter.
+\paragraph{Model note.} Theorem~\ref{thm:dichotomy} has Part~1 in [E] (time polynomial in $|S|$) and Part~2 in [S+ETH] (time exponential in $n$). Proposition~\ref{prop:query-regime-obstruction} is [Q\_fin] (finite-state Opt-oracle core), while Propositions~\ref{prop:query-value-entry-lb} and~\ref{prop:query-state-batch-lb} are [Q\_bool] interface refinements (value-entry and state-batch). Relative to Definition~\ref{def:regime-simulation}, Propositions~\ref{prop:query-subproblem-transfer} and~\ref{prop:oracle-lattice-transfer} are explicit simulation-transfer instances. The [E] vs [S+ETH] split in Theorem~\ref{thm:dichotomy} is a same-question encoding/cost-model separation, not a bidirectional simulation claim between those regimes. These regimes are defined in Section~\ref{sec:encoding} and are not directly comparable as functions of one numeric input-length parameter.
 
 \begin{theorem}[Explicit--Succinct Regime Separation]\label{thm:dichotomy}
 Let $\mathcal{D} = (A, X_1, \ldots, X_n, U)$ be a decision problem with $|S| = N$ states. Let $k^*$ be the size of the minimal sufficient set.
@@ -12,9 +12,9 @@ Let $\mathcal{D} = (A, X_1, \ldots, X_n, U)$ be a decision problem with $|S| = N
 
 \item \textbf{[S+ETH] Succinct lower bound (worst case):} Assuming ETH, there exists a family of succinctly encoded instances with $n$ coordinates and minimal sufficient set size $k^* = n$ such that SUFFICIENCY-CHECK requires time $2^{\Omega(n)}$.
 \end{enumerate}
-\textit{(Lean handles: \nolinkurl{ClaimClosure.dichotomy_conditional},
-\nolinkurl{ClaimClosure.explicit_state_upper_core},
-\nolinkurl{ClaimClosure.hard_family_all_coords_core}.)}
+\leanmeta{\LH{CC16},
+\LH{CC23},
+\LH{CC24}.}
 \end{theorem}
 
 \begin{proof}
@@ -24,7 +24,7 @@ Equivalently, for any fixed $I$, the projection map $s\mapsto s_I$ has image siz
 
 \paragraph{Remark (bounded coordinate domains).} In the general model $S=\prod_i X_i$, for a fixed $I$ one always has $|S_I|\le \prod_{i\in I}|X_i|$ (and $|S_I|\le N$). If the coordinate domains are uniformly bounded, $|X_i|\le d$ for all $i$, then $|S_I|\le d^{|I|}$.
 
-\textbf{Part 2 (Succinct ETH lower bound, worst case):} A strengthened version of the TAUTOLOGY reduction used in Theorem~\ref{thm:sufficiency-conp} produces a family of instances in which the minimal sufficient set has size $k^* = n$: given a Boolean formula $\varphi$ over $n$ variables, we construct a decision problem with $n$ coordinates such that if $\varphi$ is not a tautology then \emph{every} coordinate is decision-relevant (thus $k^*=n$). This strengthening is mechanized in Lean (see Appendix~\ref{app:lean}). Under the Exponential Time Hypothesis (ETH) \cite{impagliazzo2001complexity}, TAUTOLOGY requires time $2^{\Omega(n)}$ in the succinct encoding, so SUFFICIENCY-CHECK inherits a $2^{\Omega(n)}$ worst-case lower bound via this reduction.
+\textbf{Part 2 (Succinct ETH lower bound, worst case):} A strengthened version of the TAUTOLOGY reduction used in Theorem~\ref{thm:sufficiency-conp} produces a family of instances in which the minimal sufficient set has size $k^* = n$: given a Boolean formula $\varphi$ over $n$ variables, we construct a decision problem with $n$ coordinates such that if $\varphi$ is not a tautology then \emph{every} coordinate is decision-relevant (thus $k^*=n$). This strengthening is mechanized in Lean (see Appendix~\ref{app:lean}). Under the Exponential Time Hypothesis (ETH) \cite{impagliazzo2001complexity,arora2009computational}, TAUTOLOGY requires time $2^{\Omega(n)}$ in the succinct encoding, so SUFFICIENCY-CHECK inherits a $2^{\Omega(n)}$ worst-case lower bound via this reduction.
 \end{proof}
 
 \begin{corollary}[Regime Separation (by Encoding)]
@@ -45,67 +45,83 @@ Then there exist two decision problems $\mathcal{D}_{\mathrm{yes}},\mathcal{D}_{
 \item $\emptyset$ is not sufficient for $\mathcal{D}_{\mathrm{no}}$.
 \end{itemize}
 Consequently, no deterministic query procedure using fewer than $|S|$ state queries can solve SUFFICIENCY-CHECK on all such instances; the worst-case query complexity is $\Omega(|S|)$.
-\textit{(Lean: \nolinkurl{ClaimClosure.query\_obstruction\_finite\_state\_core},
-\nolinkurl{emptySufficiency_query_indistinguishable_pair_finite},
-\nolinkurl{spikeFinite_empty_not_sufficient}.)}
+\leanmeta{\LH{CC50},
+\LH{L7},
+\LH{L13}.}
 \end{proposition}
 
 \begin{proof}
 This is exactly the finite-state indistinguishability theorem
-\texttt{ClaimClosure.query\_obstruction\_finite\_state\_core}: for any $|Q|<|S|$, there is an unqueried hidden state $s_0$ producing oracle-indistinguishable yes/no instances with opposite truth values on the $I=\emptyset$ subproblem. Since SUFFICIENCY-CHECK contains that subproblem, fewer than $|S|$ queries cannot be correct on both instances, yielding the $\Omega(|S|)$ worst-case lower bound.
+\LH{CC4}. For any $|Q|<|S|$, there is an unqueried hidden state $s_0$ producing oracle-indistinguishable yes/no instances with opposite truth values on the $I=\emptyset$ subproblem. Since SUFFICIENCY-CHECK contains that subproblem, fewer than $|S|$ queries cannot be correct on both instances, yielding the $\Omega(|S|)$ worst-case lower bound.
 \end{proof}
+
+\begin{corollary}[Information Barrier in Query Regimes]\label{cor:information-barrier-query}
+For the fixed sufficiency question, finite query interfaces induce an information barrier:
+\begin{itemize}
+\item [Q\_fin] (Opt-oracle): with $|Q|<|S|$, there exist yes/no instances indistinguishable on all queried states but with opposite truth values on the $I=\emptyset$ subproblem.
+\item [Q\_bool] value-entry and state-batch interfaces preserve the same obstruction at cardinality $<2^n$.
+\end{itemize}
+Hence the barrier is representational-access based: without querying enough of the hidden state support, exact certification is blocked by indistinguishability rather than by search-strategy choice.
+\leanmeta{\LH{CC27},
+\LH{CC29},
+\LH{CC28}.}
+\end{corollary}
 
 \begin{corollary}[Boolean-Coordinate Instantiation]\label{cor:query-obstruction-bool}
 In the Boolean-coordinate state space $S=\{0,1\}^n$, Proposition~\ref{prop:query-regime-obstruction} yields the familiar $\Omega(2^n)$ worst-case query lower bound for Opt-oracle access.
-\textit{(Lean wrapper: \nolinkurl{ClaimClosure.query\_obstruction\_boolean\_corollary};
-core: \nolinkurl{emptySufficiency_query_indistinguishable_pair}.)}
+\leanmeta{\LH{CC49};
+core: \LH{L6}.}
 \end{corollary}
 
 \begin{proposition}[Value-Entry Query Lower Bound]\label{prop:query-value-entry-lb}
 In the mechanized Boolean value-entry query submodel [Q\_bool], for any deterministic procedure using fewer than $2^n$ value-entry queries $(a,s)\mapsto U(a,s)$, there exist two queried-value-indistinguishable instances with opposite truth values for SUFFICIENCY-CHECK on the $I=\emptyset$ subproblem. Therefore worst-case value-entry query complexity is also $\Omega(2^n)$.
-\textit{(Lean: \nolinkurl{emptySufficiency_valueEntry_indistinguishable_pair},
-\nolinkurl{touchedStates_card_le_query_card}.)}
+\leanmeta{\LH{L9},
+\LH{L19}.}
 \end{proposition}
 
 \begin{proof}
-The theorem \texttt{emptySufficiency\_valueEntry\_indistinguishable\_pair} constructs, for any query set of cardinality $<2^n$, an unqueried hidden state $s_0$ and a yes/no instance pair that agree on all queried values but disagree on $\emptyset$-sufficiency. The auxiliary bound \texttt{touchedStates\_card\_le\_query\_card} ensures that fewer than $2^n$ value-entry queries cannot cover all states, so the indistinguishability argument applies in the worst case.
+The theorem \LH{L2} constructs, for any query set of cardinality $<2^n$, an unqueried hidden state $s_0$ and a yes/no instance pair that agree on all queried values but disagree on $\emptyset$-sufficiency. The auxiliary bound \LH{L6} ensures that fewer than $2^n$ value-entry queries cannot cover all states, so the indistinguishability argument applies in the worst case.
 \end{proof}
 
 \begin{proposition}[Subproblem-to-Full Transfer Rule]\label{prop:query-subproblem-transfer}
 If every full-problem solver induces a solver for a fixed subproblem, then any lower bound for that subproblem lifts to the full problem.
-\textit{(Lean closure: \nolinkurl{ClaimClosure.subproblem_hardness_lifts_to_full}.)}
+\leanmeta{\LH{CC58},
+\LH{CC59},
+\LH{CC52}.}
 \end{proposition}
+
+This is the restriction-map instance of Definition~\ref{def:regime-simulation}: a solver for the full regime induces one for the restricted subproblem regime, so lower bounds transfer.
 
 \begin{proposition}[Randomized Robustness (Seedwise)]\label{prop:query-randomized-robustness}
 In [Q\_bool], for any query set with cardinality $<2^n$, the indistinguishable yes/no pair from Proposition~\ref{prop:query-regime-obstruction} forces one decoding error \emph{per random seed} for any seed-indexed decoder from oracle transcripts.
 Consequently, finite-support randomization does not remove the obstruction: averaging preserves a constant error floor on the hard pair.
-\textit{(Lean: \nolinkurl{indistinguishable_pair_forces_one_error},
-\nolinkurl{indistinguishable_pair_forces_one_error_per_seed},
-\nolinkurl{decode_error_sum_two_labels}.)}
+\leanmeta{\LH{L11},
+\LH{L12},
+\LH{L5}.}
 \end{proposition}
 
 \begin{proposition}[Randomized Robustness (Weighted Form)]\label{prop:query-randomized-weighted}
 For any finite-support seed weighting $\mu$, the same hard pair satisfies a weighted identity:
 the weighted sum of yes-error and no-error equals total seed weight. Hence randomization cannot collapse both errors simultaneously.
-\textit{(Lean: \nolinkurl{weighted_seed_error_identity},
-\nolinkurl{weighted_seed_half_floor}.)}
+\leanmeta{\LH{L23},
+\LH{L24}.}
 \end{proposition}
 
 \begin{proposition}[State-Batch Query Lower Bound]\label{prop:query-state-batch-lb}
 In [Q\_bool], the same $\Omega(2^n)$ lower bound holds for a state-batch oracle that returns the full Boolean-action utility tuple at each queried state.
-\textit{(Lean: \nolinkurl{emptySufficiency_stateBatch_indistinguishable_pair},
-\nolinkurl{stateBatchView_eq_if_hidden_untouched}.)}
+\leanmeta{\LH{L8},
+\LH{L14}.}
 \end{proposition}
 
 \begin{proposition}[Finite-State Empty-Subproblem Generalization]\label{prop:query-finite-state-generalization}
 The empty-subproblem indistinguishability lower-bound core extends from Boolean-vector state spaces to any finite state type with at least two states.
-\textit{(Lean: \nolinkurl{emptySufficiency_query_indistinguishable_pair_finite},
-\nolinkurl{spikeFinite_empty_not_sufficient}.)}
+\leanmeta{\LH{L7},
+\LH{L13}.}
 \end{proposition}
 
 \begin{proposition}[Adversary-Family Tightness by Full Scan]\label{prop:query-tightness-full-scan}
 For the const/spike adversary family used in the query lower bounds, querying all states distinguishes the pair; thus the lower-bound family is tight up to constant factors under full-state scan.
-\textit{(Lean: \nolinkurl{full_query_distinguishes_const_spike_finite}.)}
+\leanmeta{\LH{L10}.}
 \end{proposition}
 
 \begin{proposition}[Weighted Query-Cost Transfer]\label{prop:query-weighted-transfer}
@@ -114,23 +130,119 @@ Any cardinality lower bound $|Q|\geq L$ lifts to weighted cost:
 \[
 \sum_{q\in Q} w(q)\ \ge\ w_{\min}\cdot L.
 \]
-\textit{(Lean: \nolinkurl{weightedQueryCost_ge_min_mul_card},
-\nolinkurl{weightedQueryCost_ge_min_mul_of_card_lb}.)}
+\leanmeta{\LH{L21},
+\LH{L22}.}
 \end{proposition}
 
 \begin{proposition}[Oracle-Lattice Transfer: Batch $\Rightarrow$ Entry]\label{prop:oracle-lattice-transfer}
 In [Q\_bool], agreement on state-batch oracle views over touched states implies agreement on all value-entry views for the corresponding entry-query set.
-\textit{(Lean: \nolinkurl{valueEntryView_eq_of_stateBatchView_eq_on_touched}.)}
+\leanmeta{\LH{L20},
+\LH{CC43}.}
 \end{proposition}
+
+This is the oracle-transducer instance of Definition~\ref{def:regime-simulation}: batch transcripts induce entry transcripts while preserving indistinguishability for the target sufficiency question.
 
 \begin{proposition}[Oracle-Lattice Strictness: Opt vs Value Entries]\label{prop:oracle-lattice-strict}
 `Opt`-oracle views are strictly coarser than value-entry views: there exist instances with identical `Opt` views but distinguishable value entries.
-\textit{(Lean witness: \nolinkurl{const_vs_scaled_opt_view_equal},
-\nolinkurl{const_vs_scaled_value_entry_diff_at_true}.)}
+\leanmeta{\LH{L3},
+\LH{L4}.}
 \end{proposition}
 
 \begin{remark}[Instantiation of Definitions~\ref{def:structural-complexity} and~\ref{def:representational-hardness}]
 Theorem~\ref{thm:dichotomy} and Propositions~\ref{prop:query-regime-obstruction}--\ref{prop:query-value-entry-lb} keep the structural problem fixed (same sufficiency relation) and separate representational hardness by access regime: explicit-state access exposes the boundary $s \mapsto \Opt(s)$, finite-state query access already yields $\Omega(|S|)$ lower bounds at the Opt-oracle level (Boolean instantiation: $\Omega(2^n)$), value-entry/state-batch interfaces preserve the obstruction in [Q\_bool], and succinct access can hide structure enough to force ETH-level worst-case cost on a hard family.
 \end{remark}
 
-This regime-typed landscape identifies tractability under [E], a finite-state query lower-bound core under [Q\_fin] with Boolean interface refinements under [Q\_bool], and worst-case intractability under [S+ETH] for the same underlying decision relation.
+This regime-typed landscape identifies tractability under [E], a finite-state query lower-bound core under [Q\_fin] with Boolean interface refinements under [Q\_bool], and worst-case intractability under [S+ETH] for the same underlying decision question.
+
+The structural reason for this separation is enumerable access. Under the explicit-state encoding, the mapping $s \mapsto \Opt(s)$ is directly inspectable and sufficiency verification reduces to scanning state pairs, at cost polynomial in $|S|$. Under succinct encoding, the circuit compresses an exponential state space into polynomial size; universal verification over that compressed domain, namely ``for all $s, s'$ with $s_I = s'_I$, does $\Opt(s) = \Opt(s')$?'', carries worst-case cost exponential in $n$, because the domain the circuit compressed away cannot be reconstructed without undoing the compression.
+
+\subsection{Budgeted Physical Crossover}
+The [E] vs [S] split can be typed against an explicit physical budget. Let $E(n)$ and $S(n)$ denote explicit and succinct representation sizes for the same decision question at scale parameter $n$, and let $B$ be a hard representation budget.
+
+\begin{proposition}[Budgeted Crossover Witness]\label{prop:budgeted-crossover}
+If $E(n) > B$ and $S(n) \le B$ for some $n$, then explicit representation is infeasible at $(B,n)$ while succinct representation remains feasible at $(B,n)$.
+\leanmeta{\LH{CC45},
+\LH{PBC1}.}
+\end{proposition}
+
+\begin{proof}
+This is exactly the definitional split encoded in \LH{PBC1}: explicit infeasibility is $B < E(n)$ and succinct feasibility is $S(n)\le B$. The theorem \LH{CC2} returns both conjuncts.
+\end{proof}
+
+\begin{proposition}[Above-Cap Crossover Existence]\label{prop:crossover-above-cap}
+Assume there is a global succinct-size cap $C$ and explicit size is unbounded:
+\[
+\forall n,\ S(n)\le C,\qquad
+\forall B,\ \exists n,\ B < E(n).
+\]
+Then for every budget $B\ge C$, there exists a crossover witness at budget $B$.
+\leanmeta{\LH{CC44},
+\LH{PBC2}.}
+\end{proposition}
+
+\begin{proof}
+Fix $B\ge C$. By unboundedness of $E$, choose $n$ with $B < E(n)$. By the cap assumption, $S(n)\le C\le B$, so $(B,n)$ is a crossover witness. The mechanized closure theorem is \LH{CC1}.
+\end{proof}
+
+\begin{proposition}[Crossover Does Not Imply Exact-Certification Competence]\label{prop:crossover-not-certification}
+Fix any collapse schema ``exact certification competence $\Rightarrow$ complexity collapse'' for the target exact-certification predicate. Under the corresponding non-collapse assumption, exact-certification competence is impossible even when a budgeted crossover witness exists.
+\leanmeta{\LH{CC46}.}
+\end{proposition}
+
+\begin{proof}
+The mechanized theorem \LH{CC3} bundles the crossover split with the same logical closure used in Proposition~\ref{prop:integrity-resource-bound}: representational feasibility and certification hardness are distinct predicates.
+\end{proof}
+
+\begin{proposition}[Crossover Policy Closure Under Integrity]\label{prop:crossover-policy}
+In the certifying-solver model (Definitions~\ref{def:solver-integrity}--\ref{def:competence-regime}), assume:
+\begin{itemize}
+\item a budgeted crossover witness at $(B,n)$,
+\item the same collapse implication as Proposition~\ref{prop:integrity-resource-bound},
+\item a solver that is integrity-preserving for the declared relation.
+\end{itemize}
+Then either full in-scope non-abstaining coverage fails, or declared budget compliance fails.
+Equivalently, in uncertified hardness-blocked regions, integrity is compatible with $\mathsf{ABSTAIN}/\mathsf{UNKNOWN}$ but not with unconditional exact-competence claims.
+\leanmeta{\LH{CC47}.}
+\end{proposition}
+
+\subsection{Thermodynamic Lift in Declared Model}
+The crossover and hardness statements are complexity-theoretic.
+The thermodynamic lift follows the same assumption discipline as the rest of the paper:
+claims are exactly those derivable from the declared conversion model and declared bit-operation lower-bound premises.
+
+\begin{proposition}[Bit-to-Energy/Carbon Lift]\label{prop:thermo-lift}
+Fix a declared thermodynamic conversion model with constants $(\lambda,\rho)$ where $\lambda$ lower-bounds energy per irreversible bit operation and $\rho$ lower-bounds carbon per joule. If a bit-operation lower bound $b_{\mathrm{LB}} \le b_{\mathrm{used}}$ holds, then:
+\[
+E_{\mathrm{LB}}=\lambda b_{\mathrm{LB}} \le \lambda b_{\mathrm{used}},\qquad
+C_{\mathrm{LB}}=\rho E_{\mathrm{LB}} \le \rho(\lambda b_{\mathrm{used}}).
+\]
+\leanmeta{\LH{CC65},
+\LH{CC66}.}
+\end{proposition}
+
+\begin{proposition}[Hardness--Thermodynamics Bundle]\label{prop:thermo-hardness-bundle}
+Under the same non-collapse/collapse schema used by Proposition~\ref{prop:integrity-resource-bound}, exact-certification competence is impossible; combined with a declared bit-operation lower bound, this yields simultaneous lower bounds on energy and carbon in the declared conversion model.
+\leanmeta{\LH{CC67}.}
+\end{proposition}
+
+\begin{proposition}[Mandatory Physical Cost]\label{prop:thermo-mandatory-cost}
+Within the declared linear thermodynamic model, if
+\[
+\lambda > 0,\quad \rho > 0,\quad b_{\mathrm{LB}} > 0,
+\]
+then both lower bounds are strictly positive:
+\[
+E_{\mathrm{LB}}=\lambda b_{\mathrm{LB}} > 0,\qquad
+C_{\mathrm{LB}}=\rho E_{\mathrm{LB}} > 0.
+\]
+\leanmeta{\LH{CC68}.}
+\end{proposition}
+
+\begin{proposition}[Conserved Additive Accounting]\label{prop:thermo-conservation-additive}
+Within the same declared linear model, lower-bound accounting is additive over composed bit-operation lower bounds:
+\[
+E_{\mathrm{LB}}(b_1+b_2)=E_{\mathrm{LB}}(b_1)+E_{\mathrm{LB}}(b_2),\qquad
+C_{\mathrm{LB}}(b_1+b_2)=C_{\mathrm{LB}}(b_1)+C_{\mathrm{LB}}(b_2).
+\]
+\leanmeta{\LH{CC64}.}
+\end{proposition}

@@ -1,0 +1,2137 @@
+% References for Paper 4: Decision Quotient and Computational Complexity
+
+@book{papadimitriou1994complexity,
+  title={Computational Complexity},
+  author={Papadimitriou, Christos H.},
+  year={1994},
+  publisher={Addison-Wesley},
+  doi = {10.1109/ccc.1996.507662},
+}
+
+@article{blum1997selection,
+  title={Selection of Relevant Features and Examples in Machine Learning},
+  author={Blum, Avrim L. and Langley, Pat},
+  journal={Artificial Intelligence},
+  volume={97},
+  number={1-2},
+  pages={245--271},
+  year={1997},
+  publisher={Elsevier},
+  doi = {10.1016/s0004-3702(97)00063-5},
+}
+
+@article{amaldi1998complexity,
+  title={On the Approximability of Some Maximum Spanning Tree Problems},
+  author={Amaldi, Edoardo and Kann, Viggo},
+  journal={Theoretical Computer Science},
+  volume={196},
+  number={1-2},
+  pages={3--19},
+  year={1998},
+  publisher={Elsevier},
+  doi = {10.1016/s0304-3975(97)00195-5},
+}
+
+@article{howard1966information,
+  title={Information Value Theory},
+  author={Howard, Ronald A.},
+  journal={IEEE Transactions on Systems Science and Cybernetics},
+  volume={2},
+  number={1},
+  pages={22--26},
+  year={1966},
+  publisher={IEEE},
+}
+
+@inproceedings{moura2021lean4,
+  title={The Lean 4 Theorem Prover and Programming Language},
+  author={de Moura, Leonardo and Ullrich, Sebastian},
+  booktitle={International Conference on Automated Deduction},
+  pages={625--635},
+  year={2021},
+  organization={Springer},
+}
+
+@inproceedings{cook1971complexity,
+  title={The Complexity of Theorem-Proving Procedures},
+  author={Cook, Stephen A.},
+  booktitle={Proceedings of the Third Annual ACM Symposium on Theory of Computing},
+  pages={151--158},
+  year={1971},
+  publisher={ACM},
+  doi = {10.7551/mitpress/12274.003.0036},
+}
+
+@inproceedings{karp1972reducibility,
+  title={Reducibility Among Combinatorial Problems},
+  author={Karp, Richard M.},
+  booktitle={Complexity of Computer Computations},
+  pages={85--103},
+  year={1972},
+  publisher={Springer},
+  doi = {10.1007/978-1-4684-2001-2_9},
+}
+
+@article{stockmeyer1976polynomial,
+  title={The Polynomial-Time Hierarchy},
+  author={Stockmeyer, Larry J.},
+  journal={Theoretical Computer Science},
+  volume={3},
+  number={1},
+  pages={1--22},
+  year={1976},
+  publisher={Elsevier},
+  doi = {10.1007/1-84628-477-5_10},
+}
+
+@article{impagliazzo2001complexity,
+  title={On the Complexity of $k$-SAT},
+  author={Impagliazzo, Russell and Paturi, Ramamohan},
+  journal={Journal of Computer and System Sciences},
+  volume={62},
+  number={2},
+  pages={367--375},
+  year={2001},
+  publisher={Elsevier},
+  doi = {10.1109/ccc.1999.766282},
+}
+
+@book{arora2009computational,
+  title={Computational Complexity: A Modern Approach},
+  author={Arora, Sanjeev and Barak, Boaz},
+  year={2009},
+  publisher={Cambridge University Press},
+  doi={10.1017/CBO9780511804090},
+}
+
+@article{papadimitriou1987mdp,
+  title={The Complexity of Markov Decision Processes},
+  author={Papadimitriou, Christos H. and Tsitsiklis, John N.},
+  journal={Mathematics of Operations Research},
+  volume={12},
+  number={3},
+  pages={441--450},
+  year={1987},
+  doi={10.1287/moor.12.3.441}
+}
+
+@article{mundhenk2000mdp,
+  title={The Complexity of Finite-Horizon Markov Decision Process Problems},
+  author={Mundhenk, Martin and Goldsmith, Judy and Lusena, Christopher and Allender, Eric},
+  journal={Journal of the ACM},
+  volume={47},
+  number={4},
+  pages={681--720},
+  year={2000},
+  doi={10.1145/347476.347480}
+}
+
+@article{littman1998probplanning,
+  title={The Computational Complexity of Probabilistic Planning},
+  author={Littman, Michael L. and Goldsmith, Judy and Mundhenk, Martin},
+  journal={Journal of Artificial Intelligence Research},
+  volume={9},
+  pages={1--36},
+  year={1998},
+  doi={10.1613/jair.505}
+}
+
+@inproceedings{dobzinski2012query,
+  title={From Query Complexity to Computational Complexity},
+  author={Dobzinski, Shahar and Vondr{\'a}k, Jan},
+  booktitle={Proceedings of the 44th ACM Symposium on Theory of Computing},
+  pages={1107--1116},
+  year={2012},
+  doi={10.1145/2213977.2214096}
+}
+
+@book{savage1954foundations,
+  title={The Foundations of Statistics},
+  author={Savage, Leonard J.},
+  year={1954},
+  publisher={John Wiley \& Sons},
+}
+
+@book{raiffa1961applied,
+  title={Applied Statistical Decision Theory},
+  author={Raiffa, Howard and Schlaifer, Robert},
+  year={1961},
+  publisher={Harvard University Press},
+  doi = {10.2307/2282452},
+}
+
+@book{pearl1988probabilistic,
+  title={Probabilistic Reasoning in Intelligent Systems},
+  author={Pearl, Judea},
+  year={1988},
+  publisher={Morgan Kaufmann},
+  doi = {10.1016/c2009-0-27609-4},
+}
+
+@book{koller2009probabilistic,
+  title={Probabilistic Graphical Models: Principles and Techniques},
+  author={Koller, Daphne and Friedman, Nir},
+  year={2009},
+  publisher={MIT Press},
+  isbn={978-0262013192},
+}
+
+@article{akaike1974new,
+  title={A New Look at the Statistical Model Identification},
+  author={Akaike, Hirotugu},
+  journal={IEEE Transactions on Automatic Control},
+  volume={19},
+  number={6},
+  pages={716--723},
+  year={1974},
+  doi = {10.1109/tac.1974.1100705},
+}
+
+@article{schwarz1978estimating,
+  title={Estimating the Dimension of a Model},
+  author={Schwarz, Gideon},
+  journal={The Annals of Statistics},
+  volume={6},
+  number={2},
+  pages={461--464},
+  year={1978},
+  publisher={Institute of Mathematical Statistics},
+  doi = {10.1214/aos/1176344136},
+}
+
+@article{stone1974cross,
+  title={Cross-validatory choice and assessment of statistical predictions},
+  author={Stone, Mervyn},
+  journal={Journal of the Royal Statistical Society: Series B (Methodological)},
+  volume={36},
+  number={2},
+  pages={111--133},
+  year={1974},
+  publisher={Royal Statistical Society},
+  doi={10.1111/j.2517-6161.1974.tb00994.x},
+}
+
+@inproceedings{chickering2004large,
+  title={Large-Sample Learning of {Bayesian} Networks is {NP}-Hard},
+  author={Chickering, David Maxwell and Heckerman, David and Meek, Christopher},
+  booktitle={Journal of Machine Learning Research},
+  volume={5},
+  pages={1287--1330},
+  year={2004}
+}
+
+@article{teyssier2012ordering,
+  title={Ordering-Based Search: A Simple and Effective Algorithm for Learning {Bayesian} Networks},
+  author={Teyssier, Marc and Koller, Daphne},
+  journal={arXiv preprint arXiv:1207.1429},
+  year={2012}
+}
+
+@book{nipkow2014concrete,
+  title={Concrete Semantics with {Isabelle/HOL}},
+  author={Nipkow, Tobias and Klein, Gerwin},
+  year={2014},
+  publisher={Springer},
+  doi={10.1007/978-3-319-10542-0}
+}
+
+@misc{cook2018complexity,
+  title={The {P} versus {NP} Problem},
+  author={Cook, Stephen A.},
+  year={2018},
+  note={Millennium Prize Problems, Clay Mathematics Institute},
+  url={https://www.claymath.org/millennium-problems/p-vs-np-problem}
+}
+
+@article{mcconnell2010certifying,
+  title={Certifying Algorithms},
+  author={McConnell, Ross M. and Mehlhorn, Kurt and N{\"a}her, Stefan and Schweitzer, Pascal},
+  journal={Computer Science Review},
+  volume={5},
+  number={2},
+  pages={119--161},
+  year={2011},
+  doi={10.1016/j.cosrev.2010.09.009}
+}
+
+@inproceedings{necula1997proof,
+  title={Proof-Carrying Code},
+  author={Necula, George C.},
+  booktitle={Proceedings of the 24th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+  pages={106--119},
+  year={1997},
+  publisher={ACM},
+  doi={10.1145/263699.263712}
+}
+
+@misc{sep_bounded_rationality,
+  title={Bounded Rationality},
+  howpublished={Stanford Encyclopedia of Philosophy},
+  note={\url{https://plato.stanford.edu/entries/bounded-rationality/}, accessed 2026-02-20},
+  year={2024}
+}
+
+@article{fisher1922mathematical,
+  title={On the Mathematical Foundations of Theoretical Statistics},
+  author={Fisher, Ronald A.},
+  journal={Philosophical Transactions of the Royal Society of London. Series A},
+  volume={222},
+  pages={309--368},
+  year={1922},
+  publisher={Royal Society},
+  doi={10.1098/rsta.1922.0009}
+}
+
+@article{lehmann1950completeness,
+  title={Completeness, Similar Regions, and Unbiased Estimation},
+  author={Lehmann, Erich L. and Scheff{\'e}, Henry},
+  journal={Sankhyā: The Indian Journal of Statistics},
+  volume={10},
+  number={4},
+  pages={305--340},
+  year={1950},
+  publisher={JSTOR}
+}
+
+@book{pearl2009causality,
+  title={Causality: Models, Reasoning, and Inference},
+  author={Pearl, Judea},
+  year={2009},
+  edition={2nd},
+  publisher={Cambridge University Press},
+  doi={10.1017/CBO9780511803161}
+}
+
+@book{spirtes2000causation,
+  title={Causation, Prediction, and Search},
+  author={Spirtes, Peter and Glymour, Clark and Scheines, Richard},
+  year={2000},
+  edition={2nd},
+  publisher={MIT Press},
+  isbn={978-0262194402}
+}
+
+@article{shpitser2006identification,
+  title={Identification of Joint Interventional Distributions in Recursive Semi-{Markovian} Causal Models},
+  author={Shpitser, Ilya and Pearl, Judea},
+  journal={Proceedings of the National Conference on Artificial Intelligence},
+  volume={21},
+  number={2},
+  pages={1219--1226},
+  year={2006},
+  publisher={AAAI Press}
+}
+
+@article{rissanen1978modeling,
+  title={Modeling by Shortest Data Description},
+  author={Rissanen, Jorma},
+  journal={Automatica},
+  volume={14},
+  number={5},
+  pages={465--471},
+  year={1978},
+  publisher={Elsevier},
+  doi={10.1016/0005-1098(78)90005-5}
+}
+
+@book{grunwald2007minimum,
+  title={The Minimum Description Length Principle},
+  author={Gr{\"u}nwald, Peter D.},
+  year={2007},
+  publisher={MIT Press},
+  isbn={978-0262072816}
+}
+
+@book{li2008introduction,
+  title={An Introduction to {Kolmogorov} Complexity and Its Applications},
+  author={Li, Ming and Vit{\'a}nyi, Paul},
+  year={2008},
+  edition={3rd},
+  publisher={Springer},
+  doi={10.1007/978-0-387-49820-1}
+}
+
+@article{sobol2001global,
+  title={Global Sensitivity Indices for Nonlinear Mathematical Models and Their {Monte Carlo} Estimates},
+  author={Sobol, Ilya M.},
+  journal={Mathematics and Computers in Simulation},
+  volume={55},
+  number={1-3},
+  pages={271--280},
+  year={2001},
+  publisher={Elsevier},
+  doi={10.1016/S0378-4754(00)00270-6}
+}
+
+@article{guyon2003introduction,
+  title={An Introduction to Variable and Feature Selection},
+  author={Guyon, Isabelle and Elisseeff, Andr{\'e}},
+  journal={Journal of Machine Learning Research},
+  volume={3},
+  pages={1157--1182},
+  year={2003}
+}
+
+@inproceedings{forster2019verified,
+  title={Verified Programming of {Turing} Machines in {Coq}},
+  author={Forster, Yannick and Heiter, Edith and Smolka, Gert},
+  booktitle={Proceedings of the 8th ACM SIGPLAN International Conference on Certified Programs and Proofs},
+  pages={114--127},
+  year={2019},
+  organization={ACM},
+  doi={10.1145/3293880.3294092}
+}
+
+@inproceedings{kunze2019formal,
+  title={Formal Small-step Verification of a Call-by-value Lambda Calculus Machine},
+  author={Kunze, Fabian and Smolka, Gert and Forster, Yannick},
+  booktitle={Asian Symposium on Programming Languages and Systems},
+  pages={264--283},
+  year={2019},
+  organization={Springer},
+  doi={10.1007/978-3-030-34175-6_14}
+}
+
+@book{nipkow2002isabelle,
+  title={{Isabelle/HOL}: A Proof Assistant for Higher-Order Logic},
+  author={Nipkow, Tobias and Paulson, Lawrence C. and Wenzel, Markus},
+  year={2002},
+  publisher={Springer},
+  doi={10.1007/3-540-45949-9}
+}
+
+@inproceedings{haslbeck2021verified,
+  title={Verified Analysis of List Update Algorithms},
+  author={Haslbeck, Maximilian P. L. and Nipkow, Tobias},
+  booktitle={Journal of Automated Reasoning},
+  volume={65},
+  pages={117--156},
+  year={2021},
+  publisher={Springer},
+  doi={10.1007/s10817-020-09563-2}
+}
+
+@article{mathlib2020,
+  title={The {Lean} Mathematical Library},
+  author={{The mathlib Community}},
+  journal={Proceedings of the 9th ACM SIGPLAN International Conference on Certified Programs and Proofs},
+  pages={367--381},
+  year={2020},
+  doi={10.1145/3372885.3373824}
+}
+
+@article{lipton2009np,
+  title={The {P}={NP} Question and {Gödel's} Lost Letter},
+  author={Lipton, Richard J.},
+  journal={Communications of the ACM},
+  volume={52},
+  number={5},
+  pages={31--33},
+  year={2009},
+  doi={10.1145/1506409.1506420}
+}
+
+@article{feige1998threshold,
+  title={A Threshold of $\ln n$ for Approximating Set Cover},
+  author={Feige, Uriel},
+  journal={Journal of the ACM},
+  volume={45},
+  number={4},
+  pages={634--652},
+  year={1998},
+  doi={10.1145/285055.285059}
+}
+
+@article{cardelli1988semantics,
+  title={A semantics of multiple inheritance},
+  author={Cardelli, Luca},
+  journal={Information and computation},
+  volume={76},
+  number={2-3},
+  pages={138--164},
+  year={1988},
+  publisher={Elsevier},
+  doi = {10.1007/3-540-13346-1_2},
+}
+
+@inproceedings{malayeri2008integrating,
+  title={Integrating nominal and structural subtyping},
+  author={Malayeri, Donna and Aldrich, Jonathan},
+  booktitle={European Conference on Object-Oriented Programming},
+  pages={260--284},
+  year={2008},
+  organization={Springer},
+  doi = {10.1007/978-3-540-70592-5_12},
+}
+
+@inproceedings{malayeri2009cz,
+  title={CZ: multiple inheritance without diamonds},
+  author={Malayeri, Donna and Aldrich, Jonathan},
+  booktitle={Proceedings of the 24th ACM SIGPLAN conference on Object oriented programming systems languages and applications},
+  pages={21--40},
+  year={2009},
+  doi = {10.21236/ada512432},
+}
+
+@article{abdelgawad2014noop,
+  title={NOOP: A domain-theoretic model for object-oriented programming},
+  author={Abdelgawad, Walid Taha},
+  journal={Electronic Notes in Theoretical Computer Science},
+  volume={301},
+  pages={3--21},
+  year={2014},
+  publisher={Elsevier},
+  doi = {10.1016/j.entcs.2014.01.002},
+}
+
+@misc{abdelgawad2016nominal,
+  title={Why nominal-typing matters in OOP},
+  author={Abdelgawad, Walid Taha},
+  year={2016},
+  howpublished={arXiv preprint arXiv:1602.01047},
+}
+
+@article{liskov1994behavioral,
+  title={A behavioral notion of subtyping},
+  author={Liskov, Barbara H and Wing, Jeannette M},
+  journal={ACM Transactions on Programming Languages and Systems (TOPLAS)},
+  volume={16},
+  number={6},
+  pages={1811--1841},
+  year={1994},
+  publisher={ACM New York, NY, USA},
+  doi = {10.1145/197320.197383},
+}
+
+@inproceedings{barrett1996monotonic,
+  title={A monotonic superclass linearization for Dylan},
+  author={Barrett, Kim and Cassels, Bob and Haahr, Paul and Moon, David A and Playford, Keith and Withington, P Tucker},
+  booktitle={Proceedings of the 11th ACM SIGPLAN conference on Object-oriented programming, systems, languages, and applications},
+  pages={69--82},
+  year={1996},
+  doi = {10.1145/236338.236343},
+}
+
+@inproceedings{cook1990inheritance,
+  title={Inheritance is not subtyping},
+  author={Cook, William R and Hill, Walter and Canning, Peter S},
+  booktitle={Proceedings of the 17th ACM SIGPLAN-SIGACT symposium on Principles of programming languages},
+  pages={125--135},
+  year={1990},
+}
+
+@inproceedings{gil2008whiteoak,
+  title={Whiteoak: Introducing structural typing into Java},
+  author={Gil, Joseph and Maman, Itay},
+  booktitle={Proceedings of the 23rd ACM SIGPLAN conference on Object-oriented programming systems languages and applications},
+  pages={73--90},
+  year={2008},
+  doi = {10.1145/1449955.1449771},
+}
+
+@article{siek2006gradual,
+  title={Gradual typing for functional languages},
+  author={Siek, Jeremy G and Taha, Walid},
+  journal={Scheme and Functional Programming Workshop},
+  volume={6},
+  pages={81--92},
+  year={2006},
+}
+
+@article{veldhuizen2006tradeoffs,
+  title={Tradeoffs in metaprogramming},
+  author={Veldhuizen, Todd L},
+  journal={ACM SIGPLAN Notices},
+  volume={41},
+  number={7},
+  pages={34--40},
+  year={2006},
+  publisher={ACM New York, NY, USA},
+  doi = {10.1145/1111542.1111569},
+}
+
+@article{damasevicius2010complexity,
+  title={Complexity metrics for metaprograms},
+  author={Dama{\v{s}}evi{\v{c}}ius, Robertas and {\v{S}}tuikys, Vytautas},
+  journal={Computer Science and Information Systems},
+  volume={7},
+  number={4},
+  pages={769--787},
+  year={2010},
+}
+
+@book{pierce2002types,
+  title={Types and programming languages},
+  author={Pierce, Benjamin C},
+  year={2002},
+  publisher={MIT press},
+}
+
+@inproceedings{wadler1990linear,
+  title={Linear types can change the world!},
+  author={Wadler, Philip},
+  booktitle={Programming concepts and methods},
+  volume={3},
+  pages={5},
+  year={1990},
+  organization={Citeseer},
+}
+
+@article{blum1967machine,
+  title={A machine-independent theory of the complexity of recursive functions},
+  author={Blum, Manuel},
+  journal={Journal of the ACM (JACM)},
+  volume={14},
+  number={2},
+  pages={322--336},
+  year={1967},
+  publisher={ACM New York, NY, USA},
+  doi = {10.1145/321386.321395},
+}
+
+@misc{pep544,
+  title        = {{PEP 544} -- Protocols: Structural subtyping (static duck typing)},
+  author       = {Ivannikov, Ivan and others},
+  howpublished = {Python Enhancement Proposals},
+  year         = {2017},
+  note         = {Online: peps.python.org/pep-0544/}
+}
+
+@misc{pep484,
+  title        = {{PEP 484} -- Type Hints},
+  author       = {van Rossum, Guido and others},
+  howpublished = {Python Enhancement Proposals},
+  year         = {2014},
+  note         = {Online: peps.python.org/pep-0484/}
+}
+
+@misc{pythonBuiltinsHasattr,
+  title        = {Built-in Functions: \texttt{hasattr}},
+  author       = {{Python Software Foundation}},
+  howpublished = {Python documentation},
+  note         = {Online: docs.python.org},
+  year         = {n.d.}
+}
+
+@inproceedings{bierman2014typescript,
+  title     = {Understanding {TypeScript}},
+  author    = {Bierman, Gavin M. and Abadi, Mart{\'\i}n and Torgersen, Mads},
+  booktitle = {ECOOP},
+  year      = {2014}
+}
+
+@misc{tsHandbookTypeCompatibility,
+  title        = {Type Compatibility},
+  author       = {{TypeScript Team}},
+  howpublished = {TypeScript Handbook},
+  note         = {Online: typescriptlang.org/docs/handbook/type-compatibility.html},
+  year         = {n.d.}
+}
+
+@misc{tsIssue202,
+  title        = {Nominal typing / nominal types request (Issue \#202)},
+  author       = {{microsoft/TypeScript contributors}},
+  howpublished = {GitHub issue},
+  year         = {2014},
+  note         = {Online: github.com/microsoft/TypeScript/issues/202}
+}
+
+@misc{tsPR33038,
+  title        = {Proposal/experiment for unique/nominal-ish types (PR \#33038)},
+  author       = {{microsoft/TypeScript contributors}},
+  howpublished = {GitHub pull request},
+  year         = {2019},
+  note         = {Online: github.com/microsoft/TypeScript/pull/33038}
+}
+
+@misc{jlsErasure,
+  title        = {The Java Language Specification, {\S}4.6 Type Erasure},
+  author       = {{Oracle}},
+  howpublished = {Java SE Specification},
+  year         = {2014},
+  note         = {Online: docs.oracle.com/javase/specs/jls/}
+}
+
+@misc{goSpec,
+  title        = {The Go Programming Language Specification},
+  author       = {{The Go Authors}},
+  howpublished = {Language specification},
+  year         = {n.d.},
+  note         = {Online: go.dev/ref/spec}
+}
+
+@misc{mdnPrototypeChain,
+  title        = {Inheritance and the prototype chain},
+  author       = {{MDN contributors}},
+  howpublished = {MDN Web Docs},
+  year         = {n.d.},
+  note         = {Online: developer.mozilla.org}
+}
+
+@inproceedings{chugh2012nested,
+  title     = {Nested Refinements: A Logic for Duck Typing},
+  author    = {Chugh, Ravi and Rondon, Patrick M. and Jhala, Ranjit},
+  booktitle = {POPL},
+  year      = {2012},
+  doi = {10.1145/2103621.2103686},
+}
+
+@misc{systemDArxiv,
+  title        = {Nested Refinements for Dynamic Languages},
+  author       = {Chugh, Ravi and Rondon, Patrick M. and Jhala, Ranjit},
+  howpublished = {arXiv preprint},
+  year         = {2011},
+  note         = {arXiv:1103.5055}
+}
+
+@phdthesis{lamaison2012duck,
+  title  = {Inferring Useful Static Types for Duck Typed Languages},
+  author = {Lamaison, Antoine},
+  school = {Imperial College London},
+  year   = {2012}
+}
+
+@article{blum1967size,
+  title   = {On the Size of Machines},
+  author  = {Blum, Manuel},
+  journal = {Information and Control},
+  volume  = {11},
+  number  = {3},
+  year    = {1967}
+}
+
+@article{damasevicius2010metrics,
+  title   = {Assessment of the Relative Complexity and Difficulty of Software Development Methods},
+  author  = {Dama{\v{s}}evi{\v{c}}ius, Robertas and {\v{S}}tuikys, Vytautas},
+  journal = {Information Technology and Control},
+  year    = {2010}
+}
+
+@misc{ocamlObjectsRowVars,
+  title        = {The object layer (OCaml objects; structural object types and row variables)},
+  author       = {{INRIA / OCaml documentation contributors}},
+  howpublished = {OCaml documentation},
+  year         = {n.d.},
+  note         = {Online: caml.inria.fr}
+}
+
+@book{abadi1996theory,
+  title={A theory of objects},
+  author={Abadi, Mart{\'\i}n and Cardelli, Luca},
+  year={1996},
+  publisher={Springer}
+}
+
+@inproceedings{reynolds1983types,
+  title={Types, abstraction and parametric polymorphism},
+  author={Reynolds, John C},
+  booktitle={Information processing},
+  volume={83},
+  pages={513--523},
+  year={1983}
+}
+
+@inproceedings{malayeri2009esop,
+  title={Is structural subtyping useful? An empirical study},
+  author={Malayeri, Donna and Aldrich, Jonathan},
+  booktitle={Programming Languages and Systems: 18th European Symposium on Programming, ESOP 2009},
+  pages={95--111},
+  year={2009},
+  publisher={Springer}
+}
+
+@misc{openhcs2025,
+  author = {Simas, Tristan},
+  title = {{OpenHCS}: Open-Source High-Content Screening Platform},
+  year = {2025},
+  howpublished = {Software, GitHub repository},
+  url = {https://github.com/trissim/openhcs},
+  note = {Version 0.1.0. Available at: \url{https://github.com/trissim/openhcs}}
+}
+
+@misc{openhcsPR44,
+  author = {Simas, Tristan},
+  title = {{UI Anti-Duck-Typing Refactor}: {ABC}-Based Architecture ({PR} \#44)},
+  year = {2025},
+  howpublished = {GitHub pull request},
+  url = {https://github.com/trissim/openhcs/pull/44},
+  note = {Merged November 29, 2025. Available at: \url{https://github.com/trissim/openhcs/pull/44}}
+}
+
+@misc{openhcsLeanProofs,
+  author = {Simas, Tristan},
+  title = {Lean 4 Formalization: Typing Discipline Selection Theorems},
+  year = {2025},
+  howpublished = {Supplementary material},
+  note = {6300+ lines, 190+ theorems, 0 \texttt{sorry} placeholders. Included with paper submission.}
+}
+
+@misc{paper2_ssot,
+  title={Formal Foundations for the Single Source of Truth Principle},
+  author={Anonymous},
+  year={2025},
+  howpublished={Zenodo},
+  doi={10.5281/zenodo.18141366},
+  note={Paper 2 of this series. Proves coherence impossibility theorems for programming languages.}
+}
+
+@book{gamma1994design,
+  title={Design patterns: elements of reusable object-oriented software},
+  author={Gamma, Erich and Helm, Richard and Johnson, Ralph and Vlissides, John},
+  year={1994},
+  publisher={Pearson Education}
+}
+
+@book{boehm1981software,
+  title={Software Engineering Economics},
+  author={Boehm, Barry W.},
+  year={1981},
+  publisher={Prentice Hall},
+  note={Provides data on cost of error fixing vs development phase -- earlier detection is cheaper (10x-100x cost multiplier for late vs early detection)}
+}
+
+@techreport{nasa2010error,
+  title={Error Cost Escalation Through the Project Life Cycle},
+  author={{NASA IV\&V Facility}},
+  year={2010},
+  institution={NASA},
+  type={Technical Report},
+  url={https://ntrs.nasa.gov/api/citations/20100036670/downloads/20100036670.pdf},
+  note={Updated figures on relative error correction costs: bugs found at requirements/design time cost 1x to fix; at testing 10x; post-release 50x-100x}
+}
+
+@article{Shannon1948,
+  author = {Shannon, Claude E.},
+  title = {A Mathematical Theory of Communication},
+  journal = {Bell System Technical Journal},
+  year = {1948},
+  volume = {27},
+  pages = {379--423}
+}
+
+@article{ahlswede1989identification,
+  author = {Ahlswede, Rudolf and Dueck, Gunter},
+  title = {Identification via Channels},
+  journal = {IEEE Transactions on Information Theory},
+  year = {1989},
+  volume = {35},
+  number = {1},
+  pages = {15--29}
+}
+
+@book{CoverThomas2006,
+  author = {Cover, Thomas M. and Thomas, Joy A.},
+  title = {Elements of Information Theory},
+  edition = {2nd},
+  publisher = {Wiley-Interscience},
+  year = {2006}
+}
+
+@article{Kolmogorov1965,
+  author = {Kolmogorov, Andrey N.},
+  title = {Three Approaches to the Definition of the Concept of Information Quantity},
+  journal = {Problems of Information Transmission},
+  year = {1965},
+  volume = {1},
+  pages = {1--7}
+}
+
+@book{Welsh1976,
+  author = {Welsh, Dominic J. A.},
+  title = {Matroid Theory},
+  publisher = {Academic Press},
+  year = {1976}
+}
+
+@article{Pierce2002,
+  author = {Pierce, Benjamin C.},
+  title = {Types and Programming Languages},
+  publisher = {MIT Press},
+  year = {2002}
+}
+
+@article{Cardelli1985,
+  author = {Cardelli, Luca and Wegner, Peter},
+  title = {On Understanding Types, Data Abstraction, and Polymorphism},
+  journal = {ACM Computing Surveys},
+  year = {1985},
+  volume = {17},
+  number = {4},
+  pages = {471--523}
+}
+
+@inproceedings{Structural2014,
+  author = {Chlipala, Adam},
+  title = {Certified Programming with Dependent Types},
+  publisher = {MIT Press},
+  year = {2013}
+}
+
+@article{Lean2015,
+  author = {de Moura, Leonardo and Kong, Soonho and Avigad, Jeremy and van Doorn, Floris and von Raumer, Jakob},
+  title = {The Lean Theorem Prover},
+  journal = {arXiv preprint arXiv:1503.02065},
+  year = {2015}
+}
+
+@article{Tishby2000,
+  author = {Tishby, Naftali and Pereira, Fernando C. and Bialek, William},
+  title = {The Information Bottleneck Method},
+  journal = {arXiv preprint physics/0004057},
+  year = {2000}
+}
+
+@book{Grunwald2007,
+  author = {Grünwald, Peter D.},
+  title = {The Minimum Description Length Principle},
+  publisher = {MIT Press},
+  year = {2007}
+}
+
+@book{LiVitanyi2008,
+  author = {Li, Ming and Vitányi, Paul M. B.},
+  title = {An Introduction to Kolmogorov Complexity and Its Applications},
+  edition = {3rd},
+  publisher = {Springer},
+  year = {2008}
+}
+
+@misc{PythonDocs,
+  author = {Python Software Foundation},
+  title = {Python Data Model: type()},
+  howpublished = {\url{https://docs.python.org/3/reference/datamodel.html}},
+  year = {2024}
+}
+
+@misc{CPythonDocs,
+  author = {Python Software Foundation},
+  title = {CPython Object Implementation: Object Structure},
+  howpublished = {\url{https://github.com/python/cpython/blob/main/Include/object.h}},
+  year = {2024}
+}
+
+@misc{JavaDocs,
+  author = {Oracle},
+  title = {Java Object: getClass()},
+  howpublished = {\url{https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#getClass--}},
+  year = {2024}
+}
+
+@misc{TypeScriptDocs,
+  author = {Microsoft},
+  title = {TypeScript Handbook: Type Compatibility},
+  howpublished = {\url{https://www.typescriptlang.org/docs/handbook/type-compatibility.html}},
+  year = {2024}
+}
+
+@misc{RustDocs,
+  author = {Rust Foundation},
+  title = {Rust std::any::type\_id},
+  howpublished = {\url{https://doc.rust-lang.org/std/any/fn.type_id.html}},
+  year = {2024}
+}
+
+@article{shannon1959coding,
+  author = {Shannon, Claude E.},
+  title = {Coding Theorems for a Discrete Source with a Fidelity Criterion},
+  journal = {IRE National Convention Record},
+  volume = {7},
+  pages = {142--163},
+  year = {1959}
+}
+
+@book{berger1971rate,
+  author = {Berger, Toby},
+  title = {Rate Distortion Theory: A Mathematical Basis for Data Compression},
+  publisher = {Prentice-Hall},
+  year = {1971}
+}
+
+@inproceedings{cousot1977abstract,
+  author = {Cousot, Patrick and Cousot, Radhia},
+  title = {Abstract Interpretation: A Unified Lattice Model for Static Analysis of Programs by Construction or Approximation of Fixpoints},
+  booktitle = {Proceedings of the 4th ACM SIGACT-SIGPLAN Symposium on Principles of Programming Languages},
+  pages = {238--252},
+  year = {1977}
+}
+
+@article{buhrman2002complexity,
+  author = {Buhrman, Harry and Fortnow, Lance and Koucký, Michal and Loff, Bruno},
+  title = {Computational Complexity of Discrete Problems},
+  journal = {Bulletin of the EATCS},
+  volume = {77},
+  pages = {42--56},
+  year = {2002}
+}
+
+@misc{JVMSpec,
+  author = {Oracle},
+  title = {The Java Virtual Machine Specification: Chapter 2.5 Runtime Data Areas},
+  howpublished = {\url{https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-2.html}},
+  year = {2024}
+}
+
+@misc{RustTraitObjects,
+  author = {Rust Foundation},
+  title = {The Rust Reference: Trait Objects},
+  howpublished = {\url{https://doc.rust-lang.org/reference/types/trait-object.html}},
+  year = {2024}
+}
+
+@misc{DNABarcoding,
+  author = {Hebert, Paul D. N. and Cywinska, Alina and Ball, Shelley L. and deWaard, Jeremy R.},
+  title = {Biological identifications through DNA barcodes},
+  journal = {Proceedings of the Royal Society B},
+  volume = {270},
+  pages = {313--321},
+  year = {2003}
+}
+
+@book{ISBN,
+  author = {{International ISBN Agency}},
+  title = {ISBN Users' Manual},
+  edition = {7th},
+  publisher = {International ISBN Agency},
+  year = {2017}
+}
+
+@book{Codd1990,
+  author = {Codd, Edgar F.},
+  title = {The Relational Model for Database Management: Version 2},
+  publisher = {Addison-Wesley},
+  year = {1990}
+}
+
+@article{ahlswede1989identification2,
+  author = {Ahlswede, Rudolf and Dueck, Gunter},
+  title = {Identification in the Presence of Feedback---A Discovery of New Capacity Formulas},
+  journal = {IEEE Transactions on Information Theory},
+  year = {1989},
+  volume = {35},
+  number = {1},
+  pages = {30--36}
+}
+
+@article{hanverdu1993generalization,
+  author = {Han, Te Sun and Verd{\'u}, Sergio},
+  title = {Approximation Theory of Output Statistics},
+  journal = {IEEE Transactions on Information Theory},
+  year = {1993},
+  volume = {39},
+  number = {3},
+  pages = {752--772}
+}
+
+@article{steinberg1998identification,
+  author = {Steinberg, Yossef},
+  title = {New Converses in the Theory of Identification via Channels},
+  journal = {IEEE Transactions on Information Theory},
+  year = {1998},
+  volume = {44},
+  number = {3},
+  pages = {984--998}
+}
+
+@book{csiszar2011information,
+  author = {Csisz{\'a}r, Imre and K{\"o}rner, J{\'a}nos},
+  title = {Information Theory: Coding Theorems for Discrete Memoryless Systems},
+  publisher = {Cambridge University Press},
+  edition = {2nd},
+  year = {2011}
+}
+
+@article{blahut1972computation,
+  author = {Blahut, Richard E.},
+  title = {Computation of Channel Capacity and Rate-Distortion Functions},
+  journal = {IEEE Transactions on Information Theory},
+  year = {1972},
+  volume = {18},
+  number = {4},
+  pages = {460--473}
+}
+
+@article{gray1998quantization,
+  author = {Gray, Robert M. and Neuhoff, David L.},
+  title = {Quantization},
+  journal = {IEEE Transactions on Information Theory},
+  year = {1998},
+  volume = {44},
+  number = {6},
+  pages = {2325--2383}
+}
+
+@article{blau2019rethinking,
+  author = {Blau, Yochai and Michaeli, Tomer},
+  title = {Rethinking Lossy Compression: The Rate-Distortion-Perception Tradeoff},
+  journal = {Proceedings of the 36th International Conference on Machine Learning},
+  year = {2019},
+  pages = {675--685}
+}
+
+@article{burnashev1976data,
+  author = {Burnashev, Marat V.},
+  title = {Data Transmission over a Discrete Channel with Feedback},
+  journal = {Problemy Peredachi Informatsii},
+  year = {1976},
+  volume = {12},
+  number = {4},
+  pages = {10--30}
+}
+
+@article{wolfowitz1961coding,
+  author = {Wolfowitz, Jacob},
+  title = {Coding Theorems of Information Theory},
+  publisher = {Springer},
+  year = {1961}
+}
+
+@article{korner1973coding,
+  author = {K{\"o}rner, J{\'a}nos},
+  title = {Coding of an Information Source Having Ambiguous Alphabet and the Entropy of Graphs},
+  journal = {6th Prague Conference on Information Theory},
+  year = {1973},
+  pages = {411--425}
+}
+
+@article{witsenhausen1976zero,
+  author = {Witsenhausen, Hans S.},
+  title = {The Zero-Error Side Information Problem and Chromatic Numbers},
+  journal = {IEEE Transactions on Information Theory},
+  year = {1976},
+  volume = {22},
+  number = {5},
+  pages = {592--593}
+}
+
+@article{orlitsky1991worst,
+  author = {Orlitsky, Alon},
+  title = {Worst-Case Interactive Communication I: Two Messages Are Almost Optimal},
+  journal = {IEEE Transactions on Information Theory},
+  year = {1991},
+  volume = {37},
+  number = {4},
+  pages = {994--1009}
+}
+
+@book{hunt1999pragmatic,
+  title={The Pragmatic Programmer: From Journeyman to Master},
+  author={Hunt, Andrew and Thomas, David},
+  year={1999},
+  publisher={Addison-Wesley Professional},
+  doi = {10.1109/ms.2000.895178},
+}
+
+@book{kiczales1991art,
+  title={The Art of the Metaobject Protocol},
+  author={Kiczales, Gregor and des Rivi{\`e}res, Jim and Bobrow, Daniel G},
+  year={1991},
+  publisher={MIT press},
+}
+
+@article{parnas1972criteria,
+  title={On the criteria to be used in decomposing systems into modules},
+  author={Parnas, David L},
+  journal={Communications of the ACM},
+  volume={15},
+  number={12},
+  pages={1053--1058},
+  year={1972},
+  publisher={ACM New York, NY, USA},
+  doi = {10.21236/ad0773837},
+}
+
+@book{winskel1993semantics,
+  title={The Formal Semantics of Programming Languages: An Introduction},
+  author={Winskel, Glynn},
+  year={1993},
+  publisher={MIT press},
+  doi = {10.7551/mitpress/3054.001.0001},
+}
+
+@inproceedings{smith1984reflection,
+  title={Reflection and semantics in Lisp},
+  author={Smith, Brian Cantwell},
+  booktitle={Proceedings of the 11th ACM SIGACT-SIGPLAN symposium on Principles of programming languages},
+  pages={23--35},
+  year={1984},
+  doi = {10.1145/800017.800513},
+}
+
+@misc{vanrossum2003unifying,
+  title={Unifying types and classes in Python 2.2},
+  author={van Rossum, Guido},
+  year={2003},
+  howpublished={\url{https://www.python.org/doc/newstyle/}}
+}
+
+@article{mccabe1976complexity,
+  title={A complexity measure},
+  author={McCabe, Thomas J},
+  journal={IEEE Transactions on software Engineering},
+  volume={SE-2},
+  number={4},
+  pages={308--320},
+  year={1976},
+  publisher={IEEE},
+}
+
+@article{stevens1974structured,
+  title={Structured design},
+  author={Stevens, Wayne P and Myers, Glenford J and Constantine, Larry L},
+  journal={IBM systems journal},
+  volume={13},
+  number={2},
+  pages={115--139},
+  year={1974},
+  publisher={IBM},
+  doi = {10.1007/springerreference_25824},
+}
+
+@book{fowler1999refactoring,
+  title={Refactoring: improving the design of existing code},
+  author={Fowler, Martin},
+  year={1999},
+  publisher={Addison-Wesley Professional},
+  doi = {10.1007/3-540-45672-4_31},
+}
+
+@article{leroy2009compcert,
+  title={Formal verification of a realistic compiler},
+  author={Leroy, Xavier},
+  journal={Communications of the ACM},
+  volume={52},
+  number={7},
+  pages={107--115},
+  year={2009},
+  publisher={ACM},
+  doi = {10.1145/1538788.1538814},
+}
+
+@book{scott2015programming,
+  title={Programming language pragmatics},
+  author={Scott, Michael L},
+  year={2015},
+  publisher={Morgan Kaufmann},
+  doi = {10.1016/b978-0-12-374514-9.00040-9},
+}
+
+@article{prechelt2000empirical,
+  title={An empirical comparison of seven programming languages},
+  author={Prechelt, Lutz},
+  journal={Computer},
+  volume={33},
+  number={10},
+  pages={23--29},
+  year={2000},
+  publisher={IEEE},
+  doi = {10.1109/2.876288},
+}
+
+@book{beck1999xp,
+  title={Extreme Programming Explained: Embrace Change},
+  author={Beck, Kent},
+  year={1999},
+  publisher={Addison-Wesley Professional},
+}
+
+@misc{pep487,
+  title={{PEP 487} -- Simpler customisation of class creation},
+  author={Teich, Martin and Hettinger, Raymond and Selivanov, Yury},
+  howpublished={Python Enhancement Proposals},
+  year={2016},
+  note={Online: peps.python.org/pep-0487/},
+}
+
+@misc{tiobe2024,
+  title={{TIOBE} Index for Programming Languages},
+  author={{TIOBE Software BV}},
+  howpublished={TIOBE Programming Community Index},
+  year={2024},
+  note={Online: tiobe.com/tiobe-index/},
+}
+
+@inproceedings{juergens2009clones,
+  title={Do code clones matter?},
+  author={Juergens, Elmar and Deissenboeck, Florian and Hummel, Benjamin and Wagner, Stefan},
+  booktitle={Proceedings of the 31st International Conference on Software Engineering},
+  pages={485--495},
+  year={2009},
+  organization={IEEE},
+  doi={10.1109/ICSE.2009.5070547},
+}
+
+@article{runeson2009guidelines,
+  title={Guidelines for conducting and reporting case study research in software engineering},
+  author={Runeson, Per and H{\"o}st, Martin},
+  journal={Empirical Software Engineering},
+  volume={14},
+  number={2},
+  pages={131--164},
+  year={2009},
+  publisher={Springer},
+  doi={10.1007/s10664-008-9102-8},
+}
+
+@article{weyuker1988metrics,
+  title={Evaluating software complexity measures},
+  author={Weyuker, Elaine J},
+  journal={IEEE Transactions on Software Engineering},
+  volume={14},
+  number={9},
+  pages={1357--1365},
+  year={1988},
+  publisher={IEEE},
+  doi={10.1109/32.6178},
+}
+
+@book{czarnecki2000generative,
+  title={Generative Programming: Methods, Tools, and Applications},
+  author={Czarnecki, Krzysztof and Eisenecker, Ulrich W},
+  year={2000},
+  publisher={Addison-Wesley Professional},
+}
+
+@article{roy2007survey,
+  title={A survey on software clone detection research},
+  author={Roy, Chanchal K and Cordy, James R},
+  journal={School of Computing TR 2007-541, Queen's University},
+  volume={115},
+  pages={64--68},
+  year={2007},
+}
+
+@inproceedings{demoura2021lean4,
+  title={The {Lean} 4 theorem prover and programming language},
+  author={de Moura, Leonardo and Ullrich, Sebastian},
+  booktitle={Automated Deduction -- CADE 28},
+  pages={625--635},
+  year={2021},
+  organization={Springer},
+  doi={10.1007/978-3-030-79876-5_37},
+}
+
+@book{gosling2021java,
+  title={The {Java} Language Specification, {Java SE} 17 Edition},
+  author={Gosling, James and Joy, Bill and Steele, Guy and Bracha, Gilad and Buckley, Alex and Smith, Daniel and Bierman, Gavin},
+  year={2021},
+  publisher={Oracle America, Inc.},
+  note={Online: docs.oracle.com/javase/specs/},
+}
+
+@book{stroustrup2013cpp,
+  title={The {C++} Programming Language},
+  author={Stroustrup, Bjarne},
+  edition={4th},
+  year={2013},
+  publisher={Addison-Wesley Professional},
+}
+
+@misc{gospec2024,
+  title={The {Go} Programming Language Specification},
+  author={{The Go Authors}},
+  howpublished={Language specification},
+  year={2024},
+  note={Online: go.dev/ref/spec},
+}
+
+@misc{rustref2024,
+  title={The {Rust} Reference},
+  author={{The Rust Team}},
+  howpublished={Language reference},
+  year={2024},
+  note={Online: doc.rust-lang.org/reference/},
+}
+
+@book{flanagan2020ruby,
+  title={The {Ruby} Programming Language},
+  author={Flanagan, David and Matsumoto, Yukihiro},
+  year={2008},
+  publisher={O'Reilly Media},
+}
+
+@misc{paper1_typing_discipline,
+  author = {Simas, Tristan},
+  title = {A Universal Typing Discipline for Polymorphic Abstraction: Impossibility Theorems and Language Design},
+  year = {2026},
+  publisher = {Zenodo},
+  doi = {10.5281/zenodo.18123532},
+  url = {https://zenodo.org/records/18123532},
+  note = {Machine-checked proofs in Lean 4. Available at: \url{https://zenodo.org/records/18123532}}
+}
+
+@inproceedings{cook1989inheritance,
+  title={Inheritance is not subtyping},
+  author={Cook, William R and Hill, Walter and Canning, Peter S},
+  booktitle={Proceedings of the 17th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+  pages={125--135},
+  year={1989},
+  organization={ACM},
+  doi={10.1145/96709.96721}
+}
+
+@article{heering2015generative,
+  title={Generative Software Complexity},
+  author={Heering, Jan},
+  journal={Science of Computer Programming},
+  volume={97},
+  pages={82--85},
+  year={2015},
+  publisher={Elsevier},
+  doi={10.1016/j.scico.2014.06.004},
+  note={Proposes Kolmogorov complexity to measure software structure; the shortest generator for a set of programs indicates maximal complexity reduction}
+}
+
+@incollection{heering2003software,
+  title={Software Architecture and Software Configuration Management},
+  author={Heering, Jan},
+  booktitle={Software Configuration Management},
+  series={Lecture Notes in Computer Science},
+  volume={2649},
+  pages={1--16},
+  year={2003},
+  publisher={Springer},
+  note={Introduces generative complexity as structural complexity measure for software}
+}
+
+@article{rissanen1978mdl,
+  title={Modeling by Shortest Data Description},
+  author={Rissanen, Jorma},
+  journal={Automatica},
+  volume={14},
+  number={5},
+  pages={465--471},
+  year={1978},
+  publisher={Elsevier},
+  doi={10.1016/0005-1098(78)90005-5},
+  note={Foundational paper on Minimum Description Length (MDL) principle: total description = model + data given model; optimal model minimizes this sum}
+}
+
+@book{gruenwald2007mdl,
+  title={The Minimum Description Length Principle},
+  author={Gr{\"u}nwald, Peter D.},
+  year={2007},
+  publisher={MIT Press},
+  note={Comprehensive treatment of MDL; DOF=1 (SSOT) can be framed as the MDL-optimal representation for redundant facts}
+}
+
+@article{rashmi2015multiversion,
+  title={Multi-Version Coding---An Information-Theoretic Perspective of Consistent Distributed Storage},
+  author={Rashmi, K. V. and Shah, Nihar B. and Ramchandran, Kannan and Gu, Dikang},
+  journal={IEEE Transactions on Information Theory},
+  volume={63},
+  number={6},
+  pages={4111--4128},
+  year={2017},
+  publisher={IEEE},
+  doi={10.1109/TIT.2017.2695219},
+  note={Information-theoretic framework for consistent distributed storage; proves inevitable storage cost for consistency guarantees}
+}
+
+@inproceedings{rivest1982wom,
+  title={How to Reuse a ``Write-Once'' Memory},
+  author={Rivest, Ronald L. and Shamir, Adi},
+  booktitle={Proceedings of the 14th Annual ACM Symposium on Theory of Computing},
+  pages={105--113},
+  year={1982},
+  organization={ACM},
+  doi={10.1145/800070.802182},
+  note={Foundational paper on write-once memory codes; capacity for $t$ writes is $\log_2(t+1)$ bits per cell}
+}
+
+@article{wolf1984wom,
+  title={Coding for a Write-Once Memory},
+  author={Wolf, Jack K. and others},
+  journal={AT\&T Bell Laboratories Technical Journal},
+  volume={63},
+  number={6},
+  pages={1089--1112},
+  year={1984},
+  publisher={Wiley},
+  doi={10.1002/j.1538-7305.1984.tb00115.x},
+  note={Extends WOM codes; establishes capacity results for irreversible storage}
+}
+
+@article{slepian1973noiseless,
+  title={Noiseless Coding of Correlated Information Sources},
+  author={Slepian, David and Wolf, Jack K.},
+  journal={IEEE Transactions on Information Theory},
+  volume={19},
+  number={4},
+  pages={471--480},
+  year={1973},
+  publisher={IEEE},
+  doi={10.1109/TIT.1973.1055037},
+  note={Distributed source coding with side information; decoder uses correlated information to reduce required rate}
+}
+
+@article{shannon1948mathematical,
+  title={A Mathematical Theory of Communication},
+  author={Shannon, Claude E.},
+  journal={Bell System Technical Journal},
+  volume={27},
+  number={3},
+  pages={379--423},
+  year={1948},
+  publisher={Wiley},
+  doi={10.1002/j.1538-7305.1948.tb01338.x},
+  note={Foundational paper establishing information theory; source coding and channel capacity}
+}
+
+@article{shannon1956zero,
+  title={Zero-Error Capacity of a Noisy Channel},
+  author={Shannon, Claude E.},
+  journal={IRE Transactions on Information Theory},
+  volume={2},
+  number={3},
+  pages={8--19},
+  year={1956},
+  publisher={IEEE},
+  doi={10.1109/TIT.1956.1053680},
+  note={Introduces zero-error capacity; fundamental limit for error-free communication over noisy channels}
+}
+
+@book{cover2006elements,
+  title={Elements of Information Theory},
+  author={Cover, Thomas M. and Thomas, Joy A.},
+  edition={2nd},
+  year={2006},
+  publisher={Wiley-Interscience},
+  doi={10.1002/047174882X},
+  note={Comprehensive textbook covering rate-distortion theory, source coding, channel coding}
+}
+
+@article{korner1973graphs,
+  title={Coding of an Information Source Having Ambiguous Alphabet and the Entropy of Graphs},
+  author={K{\"o}rner, J{\'a}nos},
+  journal={Transactions of the 6th Prague Conference on Information Theory},
+  pages={411--425},
+  year={1973},
+  note={Zero-error source coding; graph entropy characterizes zero-error capacity}
+}
+
+@article{lovasz1979shannon,
+  title={On the Shannon Capacity of a Graph},
+  author={Lov{\'a}sz, L{\'a}szl{\'o}},
+  journal={IEEE Transactions on Information Theory},
+  volume={25},
+  number={1},
+  pages={1--7},
+  year={1979},
+  publisher={IEEE},
+  doi={10.1109/TIT.1979.1055985},
+  note={Theta function bounds Shannon capacity; foundational for zero-error information theory}
+}
+
+@inproceedings{brewer2000cap,
+  title={Towards Robust Distributed Systems},
+  author={Brewer, Eric A.},
+  booktitle={Proceedings of the 19th Annual ACM Symposium on Principles of Distributed Computing},
+  year={2000},
+  organization={ACM},
+  note={Keynote introducing CAP conjecture: Consistency, Availability, Partition tolerance---pick two}
+}
+
+@article{gilbert2002cap,
+  title={Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services},
+  author={Gilbert, Seth and Lynch, Nancy},
+  journal={ACM SIGACT News},
+  volume={33},
+  number={2},
+  pages={51--59},
+  year={2002},
+  publisher={ACM},
+  doi={10.1145/564585.564601},
+  note={Formal proof of CAP theorem}
+}
+
+@article{flp1985impossibility,
+  title={Impossibility of Distributed Consensus with One Faulty Process},
+  author={Fischer, Michael J. and Lynch, Nancy A. and Paterson, Michael S.},
+  journal={Journal of the ACM},
+  volume={32},
+  number={2},
+  pages={374--382},
+  year={1985},
+  publisher={ACM},
+  doi={10.1145/3149.214121},
+  note={FLP impossibility: deterministic consensus impossible in async systems with one failure}
+}
+
+@article{lamport1998paxos,
+  title={The Part-Time Parliament},
+  author={Lamport, Leslie},
+  journal={ACM Transactions on Computer Systems},
+  volume={16},
+  number={2},
+  pages={133--169},
+  year={1998},
+  publisher={ACM},
+  doi={10.1145/279227.279229},
+  note={Paxos consensus algorithm; achieves consistency under partial failure}
+}
+
+@inproceedings{ongaro2014raft,
+  title={In Search of an Understandable Consensus Algorithm},
+  author={Ongaro, Diego and Ousterhout, John},
+  booktitle={Proceedings of the 2014 USENIX Annual Technical Conference},
+  pages={305--319},
+  year={2014},
+  organization={USENIX},
+  note={Raft consensus algorithm; designed for understandability}
+}
+
+@misc{birs2012interactive,
+  title={Interactive Information Theory (12w5119)},
+  author={{Banff International Research Station}},
+  howpublished={Workshop Report},
+  year={2012},
+  note={Workshop on interactive IT: source coding, channel coding, directed information; \url{https://www.birs.ca/events/2012/5-day-workshops/12w5119}}
+}
+
+@article{ma2011distributed,
+  title={Some Results on Distributed Source Coding for Interactive Function Computation},
+  author={Ma, Nan and Ishwar, Prakash},
+  journal={IEEE Transactions on Information Theory},
+  volume={57},
+  number={9},
+  pages={6180--6195},
+  year={2011},
+  publisher={IEEE},
+  doi={10.1109/TIT.2011.2161916},
+  note={Interactive distributed source coding; shows interaction can reduce rate for function computation}
+}
+
+@phdthesis{xiang2013interactive,
+  title={Interactive Schemes in Information Theory and Statistics},
+  author={Xiang, Yu},
+  year={2013},
+  school={University of California, Berkeley},
+  note={Interactive information theory; feedback channels, distributed inference}
+}
+
+@article{delaet2010survey,
+  title={A Survey of System Configuration Tools},
+  author={Delaet, Thomas and Joosen, Wouter and Van de Craen, Jan},
+  journal={Proceedings of the 24th Large Installation System Administration Conference (LISA)},
+  year={2010},
+  organization={USENIX},
+  note={Survey of configuration management systems; coherence challenges in multi-file configurations}
+}
+
+@article{hunt2002vcdiff,
+  title={Delta Algorithms: An Empirical Analysis},
+  author={Hunt, James J. and Vo, Kiem-Phong and Tichy, Walter F.},
+  journal={ACM Transactions on Software Engineering and Methodology},
+  volume={7},
+  number={2},
+  pages={192--214},
+  year={1998},
+  publisher={ACM},
+  doi={10.1145/279310.279321},
+  note={Delta compression for version control; coherence under branch divergence}
+}
+
+@article{chidamber1994metrics,
+  title={A Metrics Suite for Object Oriented Design},
+  author={Chidamber, Shyam R. and Kemerer, Chris F.},
+  journal={IEEE Transactions on Software Engineering},
+  volume={20},
+  number={6},
+  pages={476--493},
+  year={1994},
+  publisher={IEEE},
+  doi = {10.1145/117954.117970}
+}
+
+@book{halstead1977elements,
+  title={Elements of Software Science},
+  author={Halstead, Maurice H.},
+  year={1977},
+  publisher={Elsevier}
+}
+
+@article{maes1987concepts,
+  title={Concepts and Experiments in Computational Reflection},
+  author={Maes, Pattie},
+  journal={ACM SIGPLAN Notices},
+  volume={22},
+  number={12},
+  pages={147--155},
+  year={1987},
+  publisher={ACM},
+  doi = {10.1145/38765.38821}
+}
+
+@article{bobrow1986commonloops,
+  title={CommonLoops: Merging Lisp and Object-Oriented Programming},
+  author={Bobrow, Daniel G. and Kahn, Kenneth and Kiczales, Gregor and Masinter, Larry and Stefik, Mark and Zdybel, Frank},
+  journal={ACM SIGPLAN Notices},
+  volume={21},
+  number={11},
+  pages={17--29},
+  year={1986},
+  publisher={ACM},
+  doi = {10.1145/28697.28700}
+}
+
+@book{kiczales1991amop,
+  title={The Art of the Metaobject Protocol},
+  author={Kiczales, Gregor and des Rivi{\`e}res, Jim and Bobrow, Daniel G.},
+  year={1991},
+  publisher={MIT Press}
+}
+
+@article{basili1996comparing,
+  title={A Validation of Object-Oriented Design Metrics as Quality Indicators},
+  author={Basili, Victor R. and Briand, Lionel C. and Melo, Walc{\'e}lio L.},
+  journal={IEEE Transactions on Software Engineering},
+  volume={22},
+  number={10},
+  pages={751--761},
+  year={1996},
+  publisher={IEEE},
+  doi = {10.1109/32.544352}
+}
+
+@book{martin2008clean,
+  title={Clean Code: A Handbook of Agile Software Craftsmanship},
+  author={Martin, Robert C.},
+  year={2008},
+  publisher={Prentice Hall},
+  doi = {10.1108/03684920910973252}
+}
+
+@article{brooks1987no,
+  title={No Silver Bullet: Essence and Accidents of Software Engineering},
+  author={Brooks, Frederick P.},
+  journal={Computer},
+  volume={20},
+  number={4},
+  pages={10--19},
+  year={1987},
+  publisher={IEEE},
+  doi = {10.1109/mc.1987.1663532},
+}
+
+@inproceedings{dasanayake2017empirical,
+  title={Empirical Study on Software Architecture Decision Making in Agile Software Development},
+  author={Dasanayake, S. and Markkula, J. and Abrahamsson, P. and Scandurra, P.},
+  booktitle={Proceedings of the 21st International Conference on Evaluation and Assessment in Software Engineering},
+  pages={250--259},
+  year={2017},
+  doi={10.1145/3084226.3084251}
+}
+
+@inproceedings{cunningham1992wycash,
+  title={The WyCash Portfolio Management System},
+  author={Cunningham, Ward},
+  booktitle={OOPSLA '92 Addendum to the Proceedings},
+  pages={29--30},
+  year={1992},
+  organization={ACM},
+  doi={10.1145/157709.157715}
+}
+
+@misc{hansson2005rails,
+  title={The Rails Doctrine},
+  author={Hansson, David Heinemeier},
+  year={2005},
+  howpublished={\url{https://rubyonrails.org/doctrine}}
+}
+
+@misc{fowler2014microservices,
+  title={Microservices: a definition of this new architectural term},
+  author={Fowler, Martin and Lewis, James},
+  year={2014},
+  howpublished={\url{https://martinfowler.com/articles/microservices.html}}
+}
+
+@article{allen1997formal,
+  title={A Formal Basis for Architectural Connection},
+  author={Allen, Robert and Garlan, David},
+  journal={ACM Transactions on Software Engineering and Methodology (TOSEM)},
+  volume={6},
+  number={3},
+  pages={213--249},
+  year={1997},
+  publisher={ACM},
+  doi={10.1145/258077.258078}
+}
+
+@inproceedings{garlan1997acme,
+  title={ACME: An Architecture Description Interchange Language},
+  author={Garlan, David and Monroe, Robert T. and Wile, David},
+  booktitle={Proceedings of CASCON '97},
+  pages={169--183},
+  year={1997}
+}
+
+@inproceedings{garlan1994exploiting,
+  title={Exploiting Style in Architectural Design Environments},
+  author={Garlan, David and Allen, Robert and Ockerbloom, John},
+  booktitle={Proceedings of the 2nd ACM SIGSOFT Symposium on Foundations of Software Engineering},
+  pages={175--188},
+  year={1994},
+  doi={10.1145/193173.193215}
+}
+
+@techreport{kazman2000atam,
+  title={ATAM: Method for Architecture Evaluation},
+  author={Kazman, Rick and Klein, Mark and Clements, Paul},
+  year={2000},
+  institution={Carnegie Mellon University, Software Engineering Institute},
+  number={CMU/SEI-2000-TR-004},
+  doi={10.21236/ADA382629}
+}
+
+@techreport{bachmann2000cbam,
+  title={Characterizing, Planning, and Managing Technical Debt},
+  author={Bachmann, Felix and Bass, Len and Heitmeyer, Constance},
+  year={2000},
+  institution={Software Engineering Institute}
+}
+
+@book{bass2012software,
+  title={Software Architecture in Practice},
+  author={Bass, Len and Clements, Paul and Kazman, Rick},
+  year={2012},
+  publisher={Addison-Wesley Professional}
+}
+
+@book{shaw1996software,
+  title={Software Architecture: Perspectives on an Emerging Discipline},
+  author={Shaw, Mary and Garlan, David},
+  year={1996},
+  publisher={Prentice Hall}
+}
+
+@book{beck1999extreme,
+  title={Extreme Programming Explained: Embrace Change},
+  author={Beck, Kent},
+  year={1999},
+  publisher={Addison-Wesley Professional}
+}
+
+@book{martin2002agile,
+  title={Agile Software Development: Principles, Patterns, and Practices},
+  author={Martin, Robert C.},
+  year={2002},
+  publisher={Prentice Hall}
+}
+
+@article{codd1970relational,
+  title={A Relational Model of Data for Large Shared Data Banks},
+  author={Codd, Edgar F.},
+  journal={Communications of the ACM},
+  volume={13},
+  number={6},
+  pages={377--387},
+  year={1970},
+  publisher={ACM},
+  doi={10.1145/362384.362685}
+}
+
+@book{date2003introduction,
+  title={An Introduction to Database Systems},
+  author={Date, Christopher J.},
+  year={2003},
+  publisher={Pearson Education}
+}
+
+@article{pike1984program,
+  title={Program Design in the UNIX Environment},
+  author={Pike, Rob and Kernighan, Brian W.},
+  journal={AT\&T Bell Laboratories Technical Journal},
+  volume={63},
+  number={8},
+  pages={1595--1605},
+  year={1984}
+}
+
+@book{patterson2013computer,
+  title={Computer Organization and Design: The Hardware/Software Interface},
+  author={Patterson, David A. and Hennessy, John L.},
+  year={2013},
+  publisher={Morgan Kaufmann},
+  note={Discusses RAID and reliability formulas}
+}
+
+@inproceedings{garlan1993introduction,
+  title={An Introduction to Software Architecture},
+  author={Garlan, David and Shaw, Mary},
+  booktitle={Advances in Software Engineering and Knowledge Engineering},
+  volume={1},
+  pages={1--39},
+  year={1993},
+  publisher={World Scientific}
+}
+
+@misc{mackay2022necessity,
+  title={Necessity Specifications for Robustness},
+  author={Mackay, Julian and Drossopoulou, Sophia and Noble, James and Eisenbach, Susan},
+  year={2022},
+  howpublished={Zenodo},
+  doi={10.5281/zenodo.7087913},
+  note={Coq mechanization of necessity specifications for module robustness}
+}
+
+@article{crawford1982strategic,
+  title={Strategic Information Transmission},
+  author={Crawford, Vincent P. and Sobel, Joel},
+  journal={Econometrica},
+  volume={50},
+  number={6},
+  pages={1431--1451},
+  year={1982},
+  doi={10.2307/1913390},
+  url={https://www.jstor.org/stable/1913390}
+}
+
+@article{farrell1987cheap,
+  title={Cheap Talk, Coordination, and Entry},
+  author={Farrell, Joseph},
+  journal={The RAND Journal of Economics},
+  volume={18},
+  number={1},
+  pages={34--39},
+  year={1987},
+  doi={10.2307/2555552},
+  url={https://www.jstor.org/stable/2555552}
+}
+
+@article{spence1973job,
+  title={Job Market Signaling},
+  author={Spence, Michael},
+  journal={The Quarterly Journal of Economics},
+  volume={87},
+  number={3},
+  pages={355--374},
+  year={1973},
+  publisher={Oxford University Press},
+  doi={10.2307/1882010}
+}
+
+@article{cho1987signaling,
+  title={Signaling Games and Stable Equilibria},
+  author={Cho, In-Koo and Kreps, David M.},
+  journal={The Quarterly Journal of Economics},
+  volume={102},
+  number={2},
+  pages={179--221},
+  year={1987},
+  doi={10.2307/1885060}
+}
+
+@article{farrell1996cheap,
+  title={Cheap Talk},
+  author={Farrell, Joseph and Rabin, Matthew},
+  journal={Journal of Economic Perspectives},
+  volume={10},
+  number={3},
+  pages={103--118},
+  year={1996},
+  doi={10.1257/jep.10.3.103}
+}
+
+@article{sobel1985theory,
+  title={A Theory of Credibility},
+  author={Sobel, Joel},
+  journal={The Review of Economic Studies},
+  volume={52},
+  number={4},
+  pages={557--573},
+  year={1985},
+  doi={10.2307/2297732}
+}
+
+@article{milgrom1986price,
+  title={Price and Advertising Signals of Product Quality},
+  author={Milgrom, Paul and Roberts, John},
+  journal={Journal of Political Economy},
+  volume={94},
+  number={4},
+  pages={796--821},
+  year={1986},
+  doi={10.1086/261408}
+}
+
+@article{zahavi1975mate,
+  title={Mate selection---a selection for a handicap},
+  author={Zahavi, Amotz},
+  journal={Journal of Theoretical Biology},
+  volume={53},
+  number={1},
+  pages={205--214},
+  year={1975},
+  doi={10.1016/0022-5193(75)90111-3}
+}
+
+@incollection{grice1975logic,
+  title={Logic and Conversation},
+  author={Grice, H. Paul},
+  booktitle={Syntax and Semantics, Volume 3: Speech Acts},
+  editor={Cole, Peter and Morgan, Jerry L.},
+  pages={41--58},
+  year={1975},
+  publisher={Academic Press}
+}
+
+@book{hintikka1962knowledge,
+  title={Knowledge and Belief: An Introduction to the Logic of the Two Notions},
+  author={Hintikka, Jaakko},
+  year={1962},
+  publisher={Cornell University Press}
+}
+
+@book{fagin1995reasoning,
+  title={Reasoning About Knowledge},
+  author={Fagin, Ronald and Halpern, Joseph Y and Moses, Yoram and Vardi, Moshe Y},
+  year={1995},
+  publisher={MIT Press}
+}
+
+@article{kamenica2011bayesian,
+  title={Bayesian Persuasion},
+  author={Kamenica, Emir and Gentzkow, Matthew},
+  journal={American Economic Review},
+  volume={101},
+  number={6},
+  pages={2590--2615},
+  year={2011},
+  doi={10.1257/aer.101.6.2590}
+}
+
+@article{aumann1976agreeing,
+  title={Agreeing to Disagree},
+  author={Aumann, Robert J},
+  journal={The Annals of Statistics},
+  volume={4},
+  number={6},
+  pages={1236--1239},
+  year={1976},
+  publisher={Institute of Mathematical Statistics},
+  doi={10.1214/aos/1176343654}
+}
+
+@article{akerlof1970market,
+  title={The Market for ``Lemons'': Quality Uncertainty and the Market Mechanism},
+  author={Akerlof, George A},
+  journal={The Quarterly Journal of Economics},
+  volume={84},
+  number={3},
+  pages={488--500},
+  year={1970},
+  doi={10.2307/1882725}
+}
+
+@article{shannon1948,
+  title={A mathematical theory of communication},
+  author={Shannon, Claude E},
+  journal={Bell System Technical Journal},
+  volume={27},
+  number={3},
+  pages={379--423},
+  year={1948},
+  doi={10.1002/j.1538-7305.1948.tb01338.x}
+}
+
+@article{aumann1995backward,
+  title={Backward induction and common knowledge of rationality},
+  author={Aumann, Robert J.},
+  journal={Games and Economic Behavior},
+  volume={8},
+  number={1},
+  pages={6--19},
+  year={1995},
+  doi={10.1016/S0899-8256(05)80015-6}
+}
+
+@incollection{debruijn1970automath,
+  title={The Mathematical Language {AUTOMATH}, Its Usage, and Some of Its Extensions},
+  author={de Bruijn, N. G.},
+  booktitle={Symposium on Automatic Demonstration},
+  series={Lecture Notes in Mathematics},
+  volume={125},
+  pages={29--61},
+  year={1970},
+  publisher={Springer},
+  doi={10.1007/BFb0060623}
+}
+
+@misc{paper1_typing,
+  title={Paper 1: Nominal Typing Dominates Structural Typing},
+  author={Anonymous},
+  year={2025},
+  note={Technical report}
+}
+
+@misc{paper3_leverage,
+  title={Paper 3: Leverage Maximization in Software Systems},
+  author={Anonymous},
+  year={2025},
+  note={Technical report}
+}
+
+@misc{paper4_decisionquotient,
+  title={Paper 4: The Complexity of Decision-Relevant Uncertainty},
+  author={Anonymous},
+  year={2025},
+  note={Technical report}
+}
+
+@article{bommasani2021opportunities,
+  title={On the Opportunities and Risks of Foundation Models},
+  author={Bommasani, Rishi and Hudson, Drew A. and Adeli, Ehsan and others},
+  journal={arXiv preprint arXiv:2108.07258},
+  year={2021}
+}
+
+@inproceedings{bender2021dangers,
+  title={On the Dangers of Stochastic Parrots: Can Language Models Be Too Big?},
+  author={Bender, Emily M. and Gebru, Timnit and McMillan-Major, Angelina and Shmitchell, Shmargaret},
+  booktitle={Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency},
+  pages={610--623},
+  year={2021},
+  doi={10.1145/3442188.3445922}
+}
+
+@article{myerson1979incentive,
+  title={Incentive Compatibility and the Bargaining Problem},
+  author={Myerson, Roger B.},
+  journal={Econometrica},
+  volume={47},
+  number={1},
+  pages={61--73},
+  year={1979},
+  doi={10.2307/1912346}
+}
+
+@book{mascolell1995microeconomic,
+  title={Microeconomic Theory},
+  author={Mas-Colell, Andreu and Whinston, Michael D. and Green, Jerry R.},
+  year={1995},
+  publisher={Oxford University Press}
+}
+
+@article{kolmogorov1965three,
+  title={Three Approaches to the Quantitative Definition of Information},
+  author={Kolmogorov, Andrey N.},
+  journal={Problems of Information Transmission},
+  volume={1},
+  number={1},
+  pages={1--7},
+  year={1965},
+  note={Foundational paper defining algorithmic (Kolmogorov) complexity}
+}
+
+@article{solomonoff1964formal,
+  title={A Formal Theory of Inductive Inference},
+  author={Solomonoff, Ray J.},
+  journal={Information and Control},
+  volume={7},
+  number={1--2},
+  pages={1--22, 224--254},
+  year={1964},
+  doi={10.1016/S0019-9958(64)90131-7},
+  note={Independent discovery of algorithmic complexity; connects to inductive inference}
+}

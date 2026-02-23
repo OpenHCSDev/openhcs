@@ -1,0 +1,50 @@
+\documentclass[11pt]{article}
+\usepackage{pentalogy-preamble}
+\IfFileExists{content/lean_stats.tex}{\input{content/lean_stats.tex}}{}
+
+\title{Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency}
+\author{
+  Tristan Simas\\
+  McGill University\\
+  \texttt{tristan.simas@mail.mcgill.ca}
+}
+\date{\today}
+
+% Keep claim stamps and Lean tags inline and wrap-friendly.
+\newcommand{\claimstamp}[2]{\allowbreak{\scriptsize\textit{[C:#1;R:#2]}}}
+\newcommand{\leanmeta}[1]{\allowbreak{\scriptsize\textit{(L: #1)}}}
+\providecommand{\LH}[1]{\hyperlink{lh:#1}{\texttt{#1}}}
+
+\begin{document}
+\maketitle
+
+\begingroup
+\footnotesize
+\noindent\textcopyright\ 2026 Tristan Simas.
+This work is licensed under CC BY 4.0.
+License: \url{https://creativecommons.org/licenses/by/4.0/}
+\par
+\noindent Zenodo DOI: \href{https://doi.org/10.5281/zenodo.18140965}{10.5281/zenodo.18140965}
+\par
+\endgroup
+
+\begin{abstract}
+\input{content/abstract.tex}
+\end{abstract}
+
+\input{content/01_introduction.tex}
+\input{content/02_stochastic.tex}
+\input{content/03_sequential.tex}
+\input{content/04_regime_hierarchy.tex}
+\input{content/05_substrate_cost.tex}
+\input{content/06_temporal_learning.tex}
+\input{content/07_temporal_integrity.tex}
+\input{content/08_cross_regime.tex}
+\input{content/08_related_work.tex}
+\input{content/09_conclusion.tex}
+\input{content/10_lean_4_proof_listings.tex}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

@@ -1,7 +1,14 @@
-/-
+/-!
   Credibility/Basic.lean
 
   Core definitions for credibility theory (Paper 5 Section 2)
+
+  IMPORTANT FLAG: This file defines the distinction between CHEAP TALK and COSTLY SIGNALS.
+  - Cheap talk: production cost is INDEPENDENT of truth value (can be faked)
+  - Costly signals: production cost is HIGHER when false (cannot be faked cheaply)
+
+  The credibility bounds in this framework apply ONLY to cheap talk.
+  Costly signals can escape these bounds - see CostlySignals.lean.
 
   Definitions:
     2.0a Mathematical Credibility
@@ -18,6 +25,11 @@
     2.8 Magnitude
 -/
 
+/-!
+  CRITICAL: The cheap talk bound (Theorem 3.1) ONLY applies to signals where
+  cost(truth) = cost(falsity). This is the key distinction that determines
+  whether credibility bounds apply.
+-/
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Order.Monotone.Basic
@@ -108,11 +120,29 @@ structure Signal where
 
 /-! ## Definition 2.2: Cheap Talk -/
 
+/-!
+  CRITICAL: Cheap talk is defined as cost INDEPENDENT of truth value.
+  This is why credibility bounds apply - a liar can produce the same signal
+  as an honest agent at equal cost.
+  
+  IMPORTANT: Not all signals are cheap talk. If cost depends on truth, it's
+  a costly signal (Definition 2.3), which can escape credibility bounds.
+-/
+
 /-- A signaling situation is cheap talk if cost is independent of truth -/
 def isCheapTalk (costIfTrue costIfFalse : ℝ) : Prop :=
   costIfTrue = costIfFalse
 
 /-! ## Definition 2.3: Costly Signal -/
+
+/-!
+  CRITICAL: Costly signals have TRUTH-DEPENDENT cost.
+  This is how you escape the cheap talk bound - if faking is more expensive
+  than telling the truth, the signal carries information.
+  
+  IMPORTANT: This is the escape hatch from Theorem 3.1's bounds.
+  See CostlySignals.lean for how costly signals achieve higher credibility.
+-/
 
 /-- A signaling situation is costly if false claims cost more -/
 def isCostlySignal (costIfTrue costIfFalse : ℝ) : Prop :=
@@ -136,6 +166,15 @@ structure Prior (α : Type*) where
   prob_le_one : ∀ a, prob a ≤ 1
 
 /-! ## Definition 2.5: Credibility -/
+
+/-!
+  CRITICAL: Credibility is defined as POSTERIOR PROBABILITY after Bayesian updating.
+  This is not a subjective "trust" measure - it's a precise mathematical object.
+  
+  IMPORTANT: This definition assumes the receiver knows the sender's cost structure.
+  If the receiver doesn't know whether the signal is cheap talk or costly,
+  the analysis differs (see Regime.lean).
+-/
 
 /-- A credibility value is a probability in [0, 1].
     This enforces proper probability semantics for all credibility computations. -/
@@ -292,6 +331,15 @@ lemma magnitude_mono {p q : ℝ} (hp : 0 < p) (hq : 0 < q) (hpq : p < q) :
 
 /-! ## Bayes' Rule formulation -/
 
+/-!
+  CRITICAL: All credibility calculations in this framework derive from Bayes' rule.
+  The "cheap talk bound" is simply the application of Bayes' rule to the case
+  where cost(truth) = cost(falsity).
+  
+  This is not a complex derivation - it's applying the definition.
+  The insight lies in recognizing which signals are cheap talk, not in the math.
+-/
+
 /-- Posterior probability via Bayes' rule -/
 noncomputable def bayesPosterior (prior likelihood marginal : ℝ) 
     (h_marginal_pos : 0 < marginal) : ℝ :=
@@ -303,7 +351,16 @@ noncomputable def binaryMarginal (prior likelihoodTrue likelihoodFalse : ℝ) : 
 
 /-! ## Cheap Talk Credibility -/
 
-/-- Posterior credibility via Bayes' rule (Theorem 3.1).
+/-!
+  CRITICAL: This is Theorem 3.1 in the paper.
+  
+  The cheap talk bound p/(p + (1-p)q) is derived from Bayes' rule by setting:
+  - α = P(signal | true) = 1 (truthful senders always signal)
+  - β = P(signal | false) = q (deceivers mimic with probability q)
+  
+  IMPORTANT: This bound ONLY applies when the signal is cheap talk.
+  If the signal is costly (cost depends on truth), see CostlySignals.lean.
+-/
 
     Given:
     - prior p = P(C=1)

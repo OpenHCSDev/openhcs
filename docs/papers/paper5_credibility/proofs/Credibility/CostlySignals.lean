@@ -10,6 +10,19 @@ import Mathlib.Tactic
 
   Theorems 4.1-4.2: Costly Signal Characterization
 
+  IMPORTANT FLAG: This file shows how to ESCAPE the cheap talk bounds.
+  
+  The key insight: if a signal costs MORE to produce when false than when true,
+  then deceivers cannot afford to produce it, so it carries information.
+  
+  This is how you achieve high credibility:
+  - NOT by asserting more (that's cheap talk - see CheapTalk.lean)
+  - But by making the signal EXPENSIVE to fake
+  
+  Examples:
+  - PhD from MIT: expensive to get, cheap to claim → costly signal
+  - Lean proof: expensive to produce, impossible to fake → maximally costly
+  
   Key results:
   - Costly signals can achieve arbitrarily high credibility (as cost differential → ∞)
   - Verified signals (like Lean proofs) drive credibility to 1
@@ -88,13 +101,19 @@ theorem cheapTalk_is_bayesian (p q : ℝ) :
   simp only [cheapTalkBound, posteriorCredibility, mul_one]
 
 /-!
-## Costly Signal Credibility
+  ## Costly Signal Credibility
 
-Costly signals achieve higher credibility than cheap talk because
-deceptive agents cannot afford to produce them. As the cost differential
-increases, the false positive rate β → 0, driving credibility → 1.
-
-This is formalized via verifiedCredibilityBound from Basic.lean.
+  CRITICAL: This is how you escape the cheap talk bound.
+  
+  Costly signals achieve higher credibility than cheap talk because
+  deceptive agents cannot afford to produce them. As the cost differential
+  increases, the false positive rate β → 0, driving credibility → 1.
+  
+  This is formalized via verifiedCredibilityBound from Basic.lean.
+  
+  IMPORTANT: This is the ESCAPE HATCH from Theorem 3.1's bounds.
+  If you can make your signal costly to fake, you are not subject to
+  the cheap talk bound.
 -/
 
 /-- Costly signals dominate cheap talk: lower false positive rate means higher credibility.
@@ -151,6 +170,21 @@ theorem snr_improves_credibility
   exact h_snr
 
 /-! ## Theorem 4.1a: Verified Signals -/
+
+/-!
+  CRITICAL: This is the main escape from cheap talk bounds.
+  
+  A verifier (like Lean) with:
+  - High true positive rate (accepts true claims)
+  - Low false positive rate (rejects false claims)
+  
+  yields credibility approaching 1 as false positive rate → 0.
+  
+  IMPORTANT: This is why machine-checked proofs are maximally credible.
+  A Lean proof with 0 sorry is a verified signal with ε_F ≈ 0.
+  
+  See Theorem 4.2 (proof_as_ultimate_signal) for the formal statement.
+-/
 
 /-- Verified signal credibility (Theorem 4.1a).
 

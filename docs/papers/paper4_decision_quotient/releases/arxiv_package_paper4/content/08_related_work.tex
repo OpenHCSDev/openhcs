@@ -19,6 +19,16 @@ The complexity of decision-making has been studied extensively. Papadimitriou~\c
 \paragraph{Closest prior work and novelty.}
 Closest to our contribution is the literature on feature selection and model selection hardness, which proves NP-hardness of selecting informative feature subsets and inapproximability for minimum feature sets~\cite{blum1997selection, amaldi1998complexity}. Those results analyze predictive relevance or compression objectives. We study decision relevance and show coNP-completeness for sufficiency checking, a different quantifier structure (universal verification) with distinct proof techniques and a full hardness/tractability landscape under explicit encoding assumptions, mechanized in Lean 4. The formalization aspect is also novel: prior work establishes hardness on paper, while we provide machine-checked reductions with explicit polynomial bounds.
 
+\subsection{Succinct Representations and Regime Separation}
+
+Representation-sensitive complexity is established in planning and decision-process theory: classical and compactly represented MDP/planning problems exhibit sharp complexity shifts under different input models~\cite{papadimitriou1987mdp,mundhenk2000mdp,littman1998probplanning}. Our explicit-vs-succinct separation aligns with this broader principle.
+
+The distinction in this paper is the object and scope of the classification: we classify \emph{decision relevance} (sufficiency, anchor sufficiency, and minimum sufficient sets) for a fixed decision relation, with theorem-level regime typing and mechanized reduction chains.
+
+\subsection{Oracle and Query-Access Lower Bounds}
+
+Query-access lower bounds are a standard source of computational hardness transfer~\cite{dobzinski2012query}. Our \texttt{[Q\_fin]} and \texttt{[Q\_bool]} results are in this tradition, but specialized to the same sufficiency predicate used throughout the paper: they establish access-obstruction lower bounds while keeping the underlying decision relation fixed across regimes.
+
 \subsection{Feature Selection Complexity}
 
 In machine learning, feature selection asks which input features are relevant for prediction. Blum and Langley~\cite{blum1997selection} survey the field, noting hardness in general settings. Amaldi and Kann~\cite{amaldi1998complexity} proved that finding minimum feature sets for linear classifiers is NP-hard, and established inapproximability bounds: no polynomial-time algorithm approximates the minimum feature set within factor $2^{\log^{1-\epsilon} n}$ unless NP $\subseteq$ DTIME$(n^{\text{polylog } n})$.
@@ -70,3 +80,6 @@ This explains why practitioners use sampling-based sensitivity analysis rather t
 Statistical model selection (AIC~\cite{akaike1974new}, BIC~\cite{schwarz1978estimating}, cross-validation~\cite{stone1974cross}) provides practical heuristics for choosing among models. Our results provide theoretical justification: optimal model selection is intractable, so heuristics are necessary.
 
 The Simplicity Tax Theorem (Section~\ref{sec:simplicity-tax}) adds a warning: model selection heuristics that favor ``simpler'' models incur hidden costs when the true model is complex. The simplicity preference fallacy (choosing low-parameter models without accounting for per-site costs) is the decision-theoretic formalization of overfitting-by-underfitting.
+
+\paragraph{Three-axis integration.}
+To our knowledge, prior work treats these pillars separately: representation-sensitive hardness, query-access lower bounds, and certifying soundness disciplines. This paper integrates all three for the same decision-relevance object in one regime-typed and machine-checked framework.

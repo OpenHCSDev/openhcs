@@ -1,15 +1,15 @@
 OpenHCS Paper Build Log
 ========================
 
-Paper: paper5 - Credibility: Formal Verification of Architectural Claims
-Package Date: 2026-02-21T14:52:33.895318
+Paper: paper5 - A Formal Theory of Credibility: Why Assertions of Trustworthiness Decrease Trust
+Package Date: 2026-02-22T22:22:23.265901
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 8
-Lines of Code: 1511
-Theorems: 72
+Lean Files: 10
+Lines of Code: 2057
+Theorems: 82
 Sorry Placeholders: 0
 
 
@@ -21,6 +21,8 @@ Proof Files:
   - CostlySignals.lean
   - Impossibility.lean
   - Leverage.lean
+  - Paper4Bridge.lean
+  - Regime.lean
   - Credibility.lean
   - lakefile.lean
 

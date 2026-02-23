@@ -33,6 +33,7 @@ import hashlib
 @dataclass(frozen=True)
 class ArxivConfig:
     """Immutable arXiv packaging configuration."""
+
     include_build_log: bool = True
     include_lean_source: bool = True
     include_build_config: bool = True
@@ -51,15 +52,20 @@ class ArxivConfig:
 @dataclass(frozen=True)
 class PaperMeta:
     """Immutable paper metadata. Represents a single paper's configuration."""
-    paper_id: str           # e.g., "paper1"
-    name: str               # e.g., "Typing Discipline"
-    full_name: str          # Full paper title
-    dir_name: str           # e.g., "paper1_typing_discipline"
-    latex_dir: str          # Relative to paper dir, typically "latex"
-    latex_file: str         # Main .tex file name
-    venue: str              # Target venue, e.g., "JSAIT", "TOPLAS"
+
+    paper_id: str  # e.g., "paper1"
+    name: str  # e.g., "Typing Discipline"
+    full_name: str  # Full paper title
+    dir_name: str  # e.g., "paper1_typing_discipline"
+    latex_dir: str  # Relative to paper dir, typically "latex"
+    latex_file: str  # Main .tex file name
+    venue: str  # Target venue, e.g., "JSAIT", "TOPLAS"
     proofs_dir: str = "proofs"
+    module_root: str = ""  # Lean module root (auto-derived if empty)
     archive_prefix: str = ""
+    lean_dependencies: Tuple[
+        str, ...
+    ] = ()  # Other papers whose Lean to include in releases
     assumption_ledger_sources: Tuple[str, ...] = ()
     claim_mapping_file: str = ""
     arxiv_comments: str = ""
@@ -76,7 +82,9 @@ class PaperMeta:
             latex_file=d["latex_file"],
             venue=d.get("venue", "Draft"),
             proofs_dir=d.get("proofs_dir", "proofs"),
+            module_root=d.get("module_root", ""),
             archive_prefix=d.get("archive_prefix", ""),
+            lean_dependencies=tuple(d.get("lean_dependencies", [])),
             assumption_ledger_sources=tuple(d.get("assumption_ledger_sources", [])),
             claim_mapping_file=d.get("claim_mapping_file", ""),
             arxiv_comments=d.get("arxiv_comments", ""),
@@ -87,6 +95,7 @@ class PaperMeta:
 @dataclass(frozen=True)
 class LeanStats:
     """Computed Lean proof statistics for a paper."""
+
     line_count: int
     theorem_count: int
     sorry_count: int
@@ -96,6 +105,7 @@ class LeanStats:
 @dataclass(frozen=True)
 class LeanFileStats:
     """Per-file Lean proof statistics."""
+
     line_count: int
     theorem_count: int
     sorry_count: int
@@ -188,8 +198,8 @@ class PaperBuilder:
 
         if errors:
             raise ValueError(
-                f"Paper structure validation failed:\n" +
-                "\n".join(f"  - {e}" for e in errors)
+                f"Paper structure validation failed:\n"
+                + "\n".join(f"  - {e}" for e in errors)
             )
 
     def _get_paper_meta(self, paper_id: str) -> PaperMeta:
@@ -231,6 +241,42 @@ class PaperBuilder:
         path.write_text(content, encoding="utf-8")
         created_files.append(path)
 
+    def _compact_lean_handle(self, handle: str) -> str:
+        """Render long Lean handles with compact namespace prefixes."""
+        if "." not in handle:
+            return handle
+        full_prefix, remainder = handle.split(".", 1)
+        short_prefix = self._compact_lean_prefix(full_prefix)
+        if short_prefix:
+            return short_prefix + "." + remainder
+        return handle
+
+    def _compact_lean_prefix(self, full_prefix: str) -> str:
+        """Compact a Lean namespace prefix to a stable short code.
+
+        Strategy:
+        derive initials from CamelCase segments deterministically.
+        """
+        # Split CamelCase / PascalCase into lexical chunks, keep alnum.
+        chunks = re.findall(r"[A-Z][a-z0-9]*|[a-z]+|[0-9]+", full_prefix)
+        initials_parts: List[str] = []
+        for chunk in chunks:
+            if not chunk:
+                continue
+            head = chunk[0]
+            if not head.isalpha():
+                continue
+            tail_digits = "".join(ch for ch in chunk[1:] if ch.isdigit())
+            initials_parts.append(head.upper() + tail_digits)
+        initials = "".join(initials_parts)
+        if initials:
+            return initials
+
+        cleaned = re.sub(r"[^A-Za-z0-9]+", "", full_prefix)
+        if cleaned:
+            return cleaned[:3].upper()
+        return full_prefix
+
     def _to_pascal_case(self, raw: str) -> str:
         """Convert an arbitrary identifier to a Lean-safe PascalCase module root."""
         tokens = [tok for tok in re.split(r"[^A-Za-z0-9]+", raw) if tok]
@@ -254,7 +300,9 @@ class PaperBuilder:
         """Find an existing Lean toolchain pin from current papers, or use a safe fallback."""
         candidate_paths: List[Path] = []
         for meta in self.papers.values():
-            candidate_paths.append(self.papers_dir / meta.dir_name / meta.proofs_dir / "lean-toolchain")
+            candidate_paths.append(
+                self.papers_dir / meta.dir_name / meta.proofs_dir / "lean-toolchain"
+            )
 
         for path in candidate_paths:
             if not path.exists():
@@ -273,7 +321,9 @@ class PaperBuilder:
         )
         candidate_paths: List[Path] = []
         for meta in self.papers.values():
-            candidate_paths.append(self.papers_dir / meta.dir_name / meta.proofs_dir / "lakefile.lean")
+            candidate_paths.append(
+                self.papers_dir / meta.dir_name / meta.proofs_dir / "lakefile.lean"
+            )
 
         for path in candidate_paths:
             if not path.exists():
@@ -284,23 +334,19 @@ class PaperBuilder:
                 return match.group(0)
 
         return (
-            'require mathlib from git\n'
+            "require mathlib from git\n"
             '  "https://github.com/leanprover-community/mathlib4" @ "master"'
         )
 
     def _latex_main_template(self, meta: PaperMeta) -> str:
         """Generate a self-contained LaTeX starter file for a new paper variant."""
         return f"""\\documentclass[11pt]{{article}}
-\\usepackage[utf8]{{inputenc}}
-\\usepackage[T1]{{fontenc}}
-\\usepackage{{amsmath,amssymb,amsthm}}
-\\usepackage{{geometry}}
-\\usepackage{{hyperref}}
-\\usepackage{{url}}
-\\geometry{{margin=1in}}
+\\usepackage{{paper-preamble}}
 
 % Auto-generated scaffold. Replace with venue-specific preamble as needed.
 \\IfFileExists{{content/lean_stats.tex}}{{\\input{{content/lean_stats.tex}}}}{{}}
+\\providecommand{{\\claimstamp}}[2]{{\\allowbreak{{\\scriptsize\\textit{{[C:#1;R:#2]}}}}}}
+\\providecommand{{\\leanmeta}}[1]{{\\allowbreak{{\\scriptsize\\textit{{(L: #1)}}}}}}
 
 \\title{{{meta.full_name}}}
 \\author{{Anonymous Author\\\\Anonymous Institution\\\\\\texttt{{anonymous@example.com}}}}
@@ -337,10 +383,7 @@ This is scaffold content for \\texttt{{{meta.paper_id}}}. Replace it with your p
 
     def _references_template(self) -> str:
         """Generate an empty bibliography placeholder."""
-        return (
-            "% Auto-generated scaffold bibliography.\n"
-            "% Add BibTeX entries here.\n"
-        )
+        return "% Auto-generated scaffold bibliography.\n% Add BibTeX entries here.\n"
 
     def _proofs_readme_template(self, meta: PaperMeta) -> str:
         """Generate README for scaffolded Lean proofs."""
@@ -418,13 +461,20 @@ This directory was scaffolded by `scripts/build_papers.py scaffold {meta.paper_i
             )
 
         source_main_content = source_main.read_text(encoding="utf-8", errors="replace")
-        main_content = self._replace_first_latex_title(source_main_content, meta.full_name)
+        main_content = self._replace_first_latex_title(
+            source_main_content, meta.full_name
+        )
         files_to_write: List[Tuple[Path, str]] = [
             (latex_dir / meta.latex_file, main_content),
         ]
 
         # Skip generated files; they are rebuilt automatically by the pipeline.
-        generated_content = {"lean_stats.tex", "claim_mapping_auto.tex", "assumption_ledger_auto.tex"}
+        generated_content = {
+            "lean_stats.tex",
+            "claim_mapping_auto.tex",
+            "assumption_ledger_auto.tex",
+            "proof_hardness_index_auto.tex",
+        }
         source_content_dir = source_latex_dir / "content"
         copied_content = False
         if source_content_dir.exists():
@@ -432,7 +482,10 @@ This directory was scaffolded by `scripts/build_papers.py scaffold {meta.paper_i
                 if source_file.name in generated_content:
                     continue
                 files_to_write.append(
-                    (content_dir / source_file.name, source_file.read_text(encoding="utf-8", errors="replace"))
+                    (
+                        content_dir / source_file.name,
+                        source_file.read_text(encoding="utf-8", errors="replace"),
+                    )
                 )
                 copied_content = True
 
@@ -440,22 +493,32 @@ This directory was scaffolded by `scripts/build_papers.py scaffold {meta.paper_i
             files_to_write.extend(
                 [
                     (content_dir / "abstract.tex", self._latex_abstract_template(meta)),
-                    (content_dir / "01_introduction.tex", self._latex_intro_template(meta)),
+                    (
+                        content_dir / "01_introduction.tex",
+                        self._latex_intro_template(meta),
+                    ),
                 ]
             )
 
         source_references = source_latex_dir / "references.bib"
         if source_references.exists():
             files_to_write.append(
-                (latex_dir / "references.bib", source_references.read_text(encoding="utf-8", errors="replace"))
+                (
+                    latex_dir / "references.bib",
+                    source_references.read_text(encoding="utf-8", errors="replace"),
+                )
             )
         else:
-            files_to_write.append((latex_dir / "references.bib", self._references_template()))
+            files_to_write.append(
+                (latex_dir / "references.bib", self._references_template())
+            )
 
         print(f"[scaffold] {paper_id}: deriving LaTeX scaffold from {source_id}")
         return files_to_write
 
-    def _lakefile_template(self, package_name: str, module_root: str, mathlib_require: str) -> str:
+    def _lakefile_template(
+        self, package_name: str, module_root: str, mathlib_require: str
+    ) -> str:
         """Generate a minimal lakefile pinned to the repository's current mathlib source."""
         return f"""import Lake
 open Lake DSL
@@ -486,7 +549,9 @@ theorem scaffold_sanity : True := by
 end {module_root}
 """
 
-    def scaffold_paper(self, paper_id: str, overwrite: bool = False) -> Dict[str, List[Path]]:
+    def scaffold_paper(
+        self, paper_id: str, overwrite: bool = False
+    ) -> Dict[str, List[Path]]:
         """Create required folder/file boilerplate for a paper entry in papers.yaml."""
         meta = self._get_paper_meta(paper_id)
         paper_dir = self._get_paper_dir(paper_id)
@@ -501,17 +566,33 @@ end {module_root}
         created_files: List[Path] = []
         skipped_files: List[Path] = []
 
-        for directory in [paper_dir, latex_dir, content_dir, proofs_dir, releases_dir, markdown_dir]:
+        for directory in [
+            paper_dir,
+            latex_dir,
+            content_dir,
+            proofs_dir,
+            releases_dir,
+            markdown_dir,
+        ]:
             if not directory.exists():
                 directory.mkdir(parents=True, exist_ok=True)
                 created_dirs.append(directory)
 
-        module_root = self._to_pascal_case(meta.dir_name)
+        module_root = (
+            meta.module_root
+            if meta.module_root
+            else self._to_pascal_case(meta.dir_name)
+        )
         package_name = self._to_package_name(meta.dir_name)
         lean_toolchain = self._discover_template_lean_toolchain()
         mathlib_require = self._discover_template_mathlib_require()
 
-        files_to_write = self._build_derived_latex_scaffold(paper_id, meta, latex_dir, content_dir)
+        # Copy preamble from shared (SSOT)
+        shared_preamble = self.papers_dir / "shared" / "paper-preamble.sty"
+
+        files_to_write = self._build_derived_latex_scaffold(
+            paper_id, meta, latex_dir, content_dir
+        )
         if files_to_write is None:
             files_to_write = [
                 (latex_dir / meta.latex_file, self._latex_main_template(meta)),
@@ -519,14 +600,29 @@ end {module_root}
                 (content_dir / "01_introduction.tex", self._latex_intro_template(meta)),
                 (latex_dir / "references.bib", self._references_template()),
             ]
+
+        # Always copy preamble from shared (SSOT) - use "COPY" marker
+        if shared_preamble.exists():
+            files_to_write.append((latex_dir / "paper-preamble.sty", "COPY"))
         if overwrite or not proofs_dir_was_nonempty:
             files_to_write.extend(
                 [
                     (proofs_dir / "README.md", self._proofs_readme_template(meta)),
                     (proofs_dir / "lean-toolchain", f"{lean_toolchain}\n"),
-                    (proofs_dir / "lakefile.lean", self._lakefile_template(package_name, module_root, mathlib_require)),
-                    (proofs_dir / f"{module_root}.lean", self._lean_root_template(module_root)),
-                    (proofs_dir / module_root / "Basic.lean", self._lean_basic_template(module_root)),
+                    (
+                        proofs_dir / "lakefile.lean",
+                        self._lakefile_template(
+                            package_name, module_root, mathlib_require
+                        ),
+                    ),
+                    (
+                        proofs_dir / f"{module_root}.lean",
+                        self._lean_root_template(module_root),
+                    ),
+                    (
+                        proofs_dir / module_root / "Basic.lean",
+                        self._lean_basic_template(module_root),
+                    ),
                 ]
             )
         else:
@@ -536,17 +632,41 @@ end {module_root}
             )
 
         for path, content in files_to_write:
-            self._write_text_file(
-                path,
-                content,
-                overwrite=overwrite,
-                created_files=created_files,
-                skipped_files=skipped_files,
-            )
+            if content == "COPY":
+                # Copy from source (shared preamble)
+                src = self.papers_dir / "shared" / path.name
+                if src.exists():
+                    import shutil
 
-        print(f"[scaffold] {paper_id}: created {len(created_dirs)} dirs, {len(created_files)} files")
+                    shutil.copy2(src, path)
+                    created_files.append(path)
+                else:
+                    print(f"[scaffold] WARNING: shared source not found: {src}")
+            else:
+                self._write_text_file(
+                    path,
+                    content,
+                    overwrite=overwrite,
+                    created_files=created_files,
+                    skipped_files=skipped_files,
+                )
+
+        print(
+            f"[scaffold] {paper_id}: created {len(created_dirs)} dirs, {len(created_files)} files"
+        )
         if skipped_files:
             print(f"[scaffold] {paper_id}: skipped {len(skipped_files)} existing files")
+
+        # Initialize generated artifacts so scaffolded papers compile with the
+        # same metadata infrastructure as regular build targets.
+        self._sync_shared_preambles(paper_id)
+        self._write_latex_lean_stats(paper_id)
+        self._write_assumption_ledger_auto(paper_id)
+        self._write_lean_handle_ids_auto(paper_id)
+        self._rewrite_content_lean_handles_to_ids(paper_id)
+        self._normalize_and_fill_claimstamps(paper_id)
+        self._write_claim_mapping_auto(paper_id)
+        self._write_proof_hardness_index_auto(paper_id)
 
         return {
             "created_dirs": created_dirs,
@@ -578,7 +698,9 @@ end {module_root}
             return ordered_unique
 
         # Fail-loud fallback: preserve prior behavior if includes cannot be discovered.
-        print(f"[build-md] Warning: no includes parsed from {main_tex.name}; falling back to content/*.tex")
+        print(
+            f"[build-md] Warning: no includes parsed from {main_tex.name}; falling back to content/*.tex"
+        )
         content_dir = self._get_content_dir(paper_id)
         fallback = sorted(content_dir.glob("*.tex"))
         return [f for f in fallback if f.name != "abstract.tex"]
@@ -592,12 +714,14 @@ end {module_root}
         begin = re.search(r"\\begin\{document\}", content)
         if not begin:
             return content
-        end = re.search(r"\\end\{document\}", content[begin.end():])
+        end = re.search(r"\\end\{document\}", content[begin.end() :])
         if not end:
-            return content[begin.end():]
-        return content[begin.end(): begin.end() + end.start()]
+            return content[begin.end() :]
+        return content[begin.end() : begin.end() + end.start()]
 
-    def _resolve_include_path(self, parent_dir: Path, include_target: str, search_root: Path) -> Path:
+    def _resolve_include_path(
+        self, parent_dir: Path, include_target: str, search_root: Path
+    ) -> Path:
         """Resolve a LaTeX \\input/\\include target to a concrete .tex path.
 
         LaTeX resolves includes relative to the current file and the main working
@@ -710,6 +834,93 @@ end {module_root}
                 continue
             lean_files.append(lean_file)
         return sorted(lean_files)
+
+    def _collect_lean_dependency_closure(self, paper_id: str) -> List[str]:
+        """Return transitive Lean dependencies for `paper_id` in topological order."""
+        ordered: List[str] = []
+        seen: Set[str] = set()
+        active: Set[str] = set()
+
+        def visit(pid: str) -> None:
+            meta = self._get_paper_meta(pid)
+            for dep in meta.lean_dependencies:
+                if dep not in self.papers:
+                    raise ValueError(
+                        f"Unknown lean dependency '{dep}' declared by {pid}"
+                    )
+                if dep in active:
+                    cycle = " -> ".join(list(active) + [dep])
+                    raise ValueError(f"Lean dependency cycle detected: {cycle}")
+                if dep in seen:
+                    continue
+                active.add(dep)
+                visit(dep)
+                active.remove(dep)
+                seen.add(dep)
+                ordered.append(dep)
+
+        visit(paper_id)
+        return ordered
+
+    def _iter_lean_roots_for_paper(self, paper_id: str) -> List[Tuple[str, Path]]:
+        """Return `(source_paper_id, proofs_dir)` for paper + transitive dependencies."""
+        roots: List[Tuple[str, Path]] = []
+        roots.append((paper_id, self._get_paper_proofs_dir(paper_id)))
+        for dep in self._collect_lean_dependency_closure(paper_id):
+            roots.append((dep, self._get_paper_proofs_dir(dep)))
+        return roots
+
+    def _derive_module_roots_from_lakefile(self, proofs_dir: Path) -> List[str]:
+        """Derive module roots from `lean_lib` globs in a paper's lakefile."""
+        lakefile = proofs_dir / "lakefile.lean"
+        if not lakefile.exists():
+            return []
+        text = lakefile.read_text(encoding="utf-8", errors="replace")
+        roots: List[str] = []
+        for m in re.findall(r"globs\s*:=\s*#\[\s*\.submodules\s+`([A-Za-z0-9_'.]+)\s*\]", text):
+            root = m.strip()
+            if root and root not in roots:
+                roots.append(root)
+        return roots
+
+    def _derive_module_roots(self, paper_id: str) -> List[str]:
+        """Derive importable top-level Lean module roots for a paper."""
+        meta = self._get_paper_meta(paper_id)
+        proofs_dir = self._get_paper_proofs_dir(paper_id)
+        roots: List[str] = []
+
+        # 1) Explicit metadata root, if provided.
+        if meta.module_root:
+            roots.append(meta.module_root)
+
+        # 2) Lake globs are the canonical build roots.
+        for root in self._derive_module_roots_from_lakefile(proofs_dir):
+            if root not in roots:
+                roots.append(root)
+
+        # 3) Fallback: top-level Lean files (excluding config-only files).
+        skip = {"lakefile.lean", "PrintAxioms.lean", "check_axioms.lean"}
+        for top in sorted(proofs_dir.glob("*.lean")):
+            if top.name in skip:
+                continue
+            stem = top.stem
+            if re.fullmatch(r"[A-Z][A-Za-z0-9_']*", stem):
+                if stem not in roots:
+                    roots.append(stem)
+
+        return roots
+
+    def _files_identical(self, left: Path, right: Path) -> bool:
+        """Return True iff two files have the same bytes."""
+        if not left.exists() or not right.exists():
+            return False
+        if left.stat().st_size != right.stat().st_size:
+            return False
+        h1 = hashlib.sha256()
+        h2 = hashlib.sha256()
+        h1.update(left.read_bytes())
+        h2.update(right.read_bytes())
+        return h1.digest() == h2.digest()
 
     def _strip_lean_comments(self, content: str) -> str:
         """Strip Lean line and nested block comments for token counting."""
@@ -826,6 +1037,33 @@ end {module_root}
         proofs_dir = self._get_paper_proofs_dir(paper_id)
         return self._compute_lean_file_stats(proofs_dir)
 
+    def _sync_shared_preambles(self, paper_id: str) -> None:
+        """Ensure shared LaTeX preambles are present in the active paper LaTeX dir.
+
+        This is structural SSOT sync, not one-off scaffolding:
+        build/release commands should always compile against the shared preamble set.
+        """
+        meta = self._get_paper_meta(paper_id)
+        latex_dir = self._get_paper_dir(paper_id) / meta.latex_dir
+        if not latex_dir.exists():
+            return
+
+        shared_dir = self.papers_dir / "shared"
+        shared_files = ["paper-preamble.sty", "pentalogy-preamble.sty"]
+        for name in shared_files:
+            src = shared_dir / name
+            if not src.exists():
+                continue
+            dst = latex_dir / name
+            if dst.exists():
+                try:
+                    if src.samefile(dst):
+                        continue
+                except FileNotFoundError:
+                    pass
+            # Always refresh from SSOT to avoid stale/local drift.
+            shutil.copy2(src, dst)
+
     def _lean_macro_suffix(self, module_path: str) -> str:
         """Convert a relative Lean module path to a LaTeX-safe macro suffix."""
         digit_words = {
@@ -892,11 +1130,19 @@ end {module_root}
         for module_path in sorted(file_stats.keys()):
             suffix = suffix_map[module_path]
             stats = file_stats[module_path]
-            lines.append(f"\\providecommand{{\\LeanLines{suffix}}}{{{stats.line_count}}}")
-            lines.append(f"\\providecommand{{\\LeanTheorems{suffix}}}{{{stats.theorem_count}}}")
-            lines.append(f"\\providecommand{{\\LeanSorry{suffix}}}{{{stats.sorry_count}}}")
+            lines.append(
+                f"\\providecommand{{\\LeanLines{suffix}}}{{{stats.line_count}}}"
+            )
+            lines.append(
+                f"\\providecommand{{\\LeanTheorems{suffix}}}{{{stats.theorem_count}}}"
+            )
+            lines.append(
+                f"\\providecommand{{\\LeanSorry{suffix}}}{{{stats.sorry_count}}}"
+            )
 
-        (content_dir / "lean_stats.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        (content_dir / "lean_stats.tex").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
 
     def _iter_claim_closure_sources(self, paper_id: str) -> List[Path]:
         """Return ClaimClosure Lean sources for assumption-ledger extraction."""
@@ -940,21 +1186,27 @@ end {module_root}
         for idx, match in enumerate(matches):
             bundle_name = match.group(1)
             body_start = match.end()
-            body_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(content)
+            body_end = (
+                matches[idx + 1].start() if idx + 1 < len(matches) else len(content)
+            )
             body = content[body_start:body_end]
             fields: List[str] = []
             for raw_line in body.splitlines():
                 line = raw_line.strip()
                 if not line:
                     continue
-                if re.match(r"^(?:theorem|lemma|def|class|structure|namespace|end)\b", line):
+                if re.match(
+                    r"^(?:theorem|lemma|def|class|structure|namespace|end)\b", line
+                ):
                     break
                 field_match = re.match(r"^([A-Za-z0-9_']+)\s*:\s*(.+)$", line)
                 if not field_match:
                     continue
                 field_name = field_match.group(1)
                 field_type = re.sub(r"\s+", " ", field_match.group(2)).strip()
-                fields.append(f"{field_name} : {field_type}" if field_type else field_name)
+                fields.append(
+                    f"{field_name} : {field_type}" if field_type else field_name
+                )
             bundles[bundle_name] = fields
         return bundles
 
@@ -1014,10 +1266,12 @@ end {module_root}
             lines.append(rf"\item \nolinkurl{{{source_label}}}")
         lines.append(r"\end{itemize}")
 
-        lines.extend([
-            r"\paragraph{Assumption bundles and fields.}",
-            r"\begin{itemize}",
-        ])
+        lines.extend(
+            [
+                r"\paragraph{Assumption bundles and fields.}",
+                r"\begin{itemize}",
+            ]
+        )
         if all_bundles:
             for bundle_name in sorted(all_bundles.keys()):
                 lines.append(rf"\item \nolinkurl{{{bundle_name}}}")
@@ -1031,76 +1285,709 @@ end {module_root}
             lines.append(r"\item (No assumption bundles parsed.)")
         lines.append(r"\end{itemize}")
 
-        lines.extend([
-            r"\paragraph{Conditional closure handles.}",
-            r"\begin{itemize}",
-        ])
+        lines.extend(
+            [
+                r"\paragraph{Conditional closure handles.}",
+                r"\begin{itemize}",
+            ]
+        )
         if all_conditional_handles:
             for handle in sorted(all_conditional_handles):
-                lines.append(rf"\item \nolinkurl{{{handle}}}")
+                lines.append(rf"\item \nolinkurl{{{self._compact_lean_handle(handle)}}}")
         else:
             lines.append(r"\item (No conditional theorem handles parsed.)")
         lines.append(r"\end{itemize}")
 
         out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    def _extract_claim_label_to_lean_handles(self, paper_id: str) -> Dict[str, List[str]]:
-        """Extract mapping from theorem-style labels to inline Lean handles.
+    def _read_existing_lean_handle_rows(
+        self, paper_id: str
+    ) -> List[Tuple[str, str]]:
+        """Read existing `(ID, handle)` rows from `lean_handle_ids_auto.tex`."""
+        content_dir = self._get_content_dir(paper_id)
+        map_file = content_dir / "lean_handle_ids_auto.tex"
+        if not map_file.exists():
+            return []
 
-        Source heuristic:
-        - scan theorem/proposition/corollary/lemma blocks in content/*.tex
-        - collect `\\label{thm:...|prop:...|cor:...|lem:...}` inside each block
-        - collect non-paper-handle `\\nolinkurl{...}` entries inside each block as Lean support
+        text = map_file.read_text(encoding="utf-8", errors="replace")
+        code_pattern = re.compile(r"\\text(?:tt|sf)\{([^}]+)\}")
+        handle_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
+        rows: List[Tuple[str, str]] = []
+        for raw_line in text.splitlines():
+            if "&" not in raw_line or r"\nolinkurl{" not in raw_line:
+                continue
+            code_match = code_pattern.search(raw_line)
+            handle_match = handle_pattern.search(raw_line)
+            if not code_match or not handle_match:
+                continue
+            code = code_match.group(1).strip()
+            handle = handle_match.group(1).strip().replace(r"\_", "_")
+            if code and handle:
+                rows.append((code, handle))
+        return rows
+
+    def _extract_declared_lean_handles(
+        self, paper_id: str, include_dependencies: bool = True
+    ) -> Set[str]:
+        """Extract declared Lean constants from theorem/def/class-style declarations.
+
+        When `include_dependencies` is true, this scans the paper's transitive
+        Lean dependency closure so handle extraction is derived from the full
+        proof graph rather than only the local proofs tree.
+        """
+        roots: List[Tuple[str, Path]]
+        if include_dependencies:
+            roots = self._iter_lean_roots_for_paper(paper_id)
+        else:
+            roots = [(paper_id, self._get_paper_proofs_dir(paper_id))]
+
+        decl_pattern = re.compile(
+            r"\b(?:theorem|lemma|def|abbrev|class|structure)\s+([A-Za-z_][A-Za-z0-9_'.]*)"
+        )
+        namespace_pattern = re.compile(r"^\s*namespace\s+([A-Za-z0-9_'.]+)\s*$")
+        end_pattern = re.compile(r"^\s*end(?:\s+[A-Za-z0-9_'.]+)?\s*$")
+
+        handles: Set[str] = set()
+        for _, proofs_dir in roots:
+            if not proofs_dir.exists():
+                continue
+            for lean_file in self._iter_paper_lean_files(proofs_dir):
+                content = lean_file.read_text(encoding="utf-8", errors="replace")
+                stripped = self._strip_lean_comments(content)
+                namespace_stack: List[str] = []
+
+                for raw_line in stripped.splitlines():
+                    line = raw_line.strip()
+                    if not line:
+                        continue
+
+                    ns_match = namespace_pattern.match(line)
+                    if ns_match:
+                        namespace_stack.append(ns_match.group(1))
+                        continue
+
+                    if end_pattern.match(line):
+                        if namespace_stack:
+                            namespace_stack.pop()
+                        continue
+
+                    decl_match = decl_pattern.search(line)
+                    if not decl_match:
+                        continue
+
+                    name = decl_match.group(1)
+                    if "." in name:
+                        handles.add(name)
+                        continue
+
+                    if namespace_stack:
+                        ns_parts: List[str] = []
+                        for ns in namespace_stack:
+                            ns_parts.extend([part for part in ns.split(".") if part])
+                        ns_prefix = ".".join(ns_parts)
+                        handles.add(f"{ns_prefix}.{name}" if ns_prefix else name)
+                    else:
+                        handles.add(name)
+
+        return handles
+
+    def _extract_referenced_lean_handles_from_content(self, paper_id: str) -> Set[str]:
+        """Extract explicit Lean handles referenced in paper content via `\\nolinkurl{...}`."""
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return set()
+
+        generated_files = {
+            "lean_stats.tex",
+            "assumption_ledger_auto.tex",
+            "claim_mapping_auto.tex",
+            "lean_handle_ids_auto.tex",
+            "proof_hardness_index_auto.tex",
+        }
+        paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
+        handles: Set[str] = set()
+
+        for tex_file in sorted(content_dir.glob("*.tex")):
+            if tex_file.name in generated_files:
+                continue
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            for raw in re.findall(r"\\nolinkurl\{([^}]+)\}", text):
+                handle = raw.strip().replace(r"\_", "_")
+                if not handle:
+                    continue
+                if paper_handle_pattern.match(handle):
+                    continue
+                if handle.endswith(".lean"):
+                    continue
+                if "." not in handle and "_" not in handle:
+                    continue
+                handles.add(handle)
+
+        return handles
+
+    def _extract_lh_ids_from_content(self, paper_id: str) -> Set[str]:
+        """Extract compact Lean-handle IDs referenced via `\\LH{...}` in content."""
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return set()
+
+        ids: Set[str] = set()
+        for tex_file in sorted(content_dir.glob("*.tex")):
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            ids.update(m.strip() for m in re.findall(r"\\LH\{([^}]+)\}", text))
+        return {code for code in ids if code}
+
+    def _extract_alias_code_map_from_handle_aliases(
+        self, paper_id: str, include_dependencies: bool = True
+    ) -> Dict[str, str]:
+        """Derive canonical compact ID -> handle mapping from HandleAliases.lean.
+
+        This keeps `\\LH{...}` IDs stable even when prose no longer contains
+        full `\\nolinkurl{...}` handles.
+        """
+        roots: List[Tuple[str, Path]]
+        if include_dependencies:
+            roots = self._iter_lean_roots_for_paper(paper_id)
+        else:
+            roots = [(paper_id, self._get_paper_proofs_dir(paper_id))]
+
+        ident_pattern = re.compile(r"^[A-Za-z_][A-Za-z0-9_']*$")
+
+        def parse_alias_file(alias_file: Path) -> Dict[str, str]:
+            text = alias_file.read_text(encoding="utf-8", errors="replace")
+            stripped = self._strip_lean_comments(text)
+            local_map: Dict[str, str] = {}
+            counters: Dict[str, int] = {}
+            namespace_stack: List[str] = []
+            lines = stripped.splitlines()
+            i = 0
+
+            while i < len(lines):
+                line = lines[i].strip()
+                if not line:
+                    i += 1
+                    continue
+
+                ns_match = re.match(r"^namespace\s+([A-Za-z0-9_']+)\s*$", line)
+                if ns_match:
+                    namespace_stack.append(ns_match.group(1))
+                    i += 1
+                    continue
+
+                end_match = re.match(r"^end(?:\s+([A-Za-z0-9_']+))?\s*$", line)
+                if end_match:
+                    end_ns = end_match.group(1)
+                    if end_ns and namespace_stack:
+                        while namespace_stack and namespace_stack[-1] != end_ns:
+                            namespace_stack.pop()
+                        if namespace_stack and namespace_stack[-1] == end_ns:
+                            namespace_stack.pop()
+                    elif namespace_stack:
+                        namespace_stack.pop()
+                    i += 1
+                    continue
+
+                if line.startswith("export ") and "(" in line and namespace_stack:
+                    current_ns = namespace_stack[-1]
+                    # Ignore top-level namespace; compact IDs are tied to sub-namespaces.
+                    if current_ns == "DecisionQuotient":
+                        i += 1
+                        continue
+
+                    src_match = re.match(r"^export\s+([A-Za-z0-9_'.]+)\s*\(", line)
+                    if not src_match:
+                        i += 1
+                        continue
+                    source_ns = src_match.group(1)
+
+                    depth = line.count("(") - line.count(")")
+                    body = line.split("(", 1)[1]
+                    j = i + 1
+                    while depth > 0 and j < len(lines):
+                        seg = lines[j]
+                        depth += seg.count("(") - seg.count(")")
+                        body += "\n" + seg
+                        j += 1
+
+                    if ")" in body:
+                        body = body.rsplit(")", 1)[0]
+
+                    names: List[str] = []
+                    for raw in body.splitlines():
+                        token = raw.strip()
+                        if ident_pattern.fullmatch(token):
+                            names.append(token)
+
+                    seen: Set[str] = set()
+                    ordered_names: List[str] = []
+                    for name in names:
+                        if name in seen:
+                            continue
+                        seen.add(name)
+                        ordered_names.append(name)
+
+                    for name in ordered_names:
+                        idx = counters.get(current_ns, 0) + 1
+                        counters[current_ns] = idx
+                        local_map[f"{current_ns}{idx}"] = f"{source_ns}.{name}"
+
+                    i = j
+                    continue
+
+                i += 1
+
+            return local_map
+
+        code_to_handle: Dict[str, str] = {}
+        # Prefer paper-local aliases, then fill missing IDs from dependencies.
+        for _, proofs_dir in roots:
+            if not proofs_dir.exists():
+                continue
+            alias_files = sorted(proofs_dir.rglob("HandleAliases.lean"))
+            for alias_file in alias_files:
+                local_map = parse_alias_file(alias_file)
+                for code, handle in local_map.items():
+                    if code not in code_to_handle:
+                        code_to_handle[code] = handle
+
+        return code_to_handle
+
+    def _assign_compact_handle_ids(
+        self, handles: Set[str], existing_rows: List[Tuple[str, str]]
+    ) -> Dict[str, str]:
+        """Assign stable compact IDs to Lean handles, preserving prior assignments."""
+        handle_to_code: Dict[str, str] = {}
+        used_codes: Set[str] = set()
+
+        # Preserve existing assignments when they are non-conflicting.
+        for code, handle in existing_rows:
+            if handle in handle_to_code:
+                continue
+            if code in used_codes:
+                continue
+            handle_to_code[handle] = code
+            used_codes.add(code)
+
+        # Track next index per code prefix from existing assignments.
+        next_index: Dict[str, int] = {}
+        for code in used_codes:
+            match = re.match(r"^([A-Za-z]+)(\d+)$", code)
+            if not match:
+                continue
+            prefix = match.group(1)
+            index = int(match.group(2))
+            next_index[prefix] = max(next_index.get(prefix, 0), index)
+
+        # Assign IDs to any new handles.
+        for handle in sorted(handles):
+            if handle in handle_to_code:
+                continue
+
+            group = handle.split(".", 1)[0] if "." in handle else "L"
+            prefix = self._compact_lean_prefix(group) or "H"
+            index = next_index.get(prefix, 0) + 1
+            code = f"{prefix}{index}"
+            while code in used_codes:
+                index += 1
+                code = f"{prefix}{index}"
+
+            next_index[prefix] = index
+            used_codes.add(code)
+            handle_to_code[handle] = code
+
+        return handle_to_code
+
+    def _write_lean_handle_ids_auto(self, paper_id: str) -> None:
+        """Write compact Lean-handle ID table used by `\\LH{...}` references."""
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return
+
+        out_file = content_dir / "lean_handle_ids_auto.tex"
+        existing_rows = self._read_existing_lean_handle_rows(paper_id)
+        referenced_handles = self._extract_referenced_lean_handles_from_content(paper_id)
+        referenced_ids = self._extract_lh_ids_from_content(paper_id)
+        declared_handles = self._extract_declared_lean_handles(
+            paper_id, include_dependencies=True
+        )
+
+        # If this paper was scaffolded from another paper (for example, paper4b
+        # from paper4_toc), inherit missing ID->handle rows from the source map.
+        # This preserves stable short IDs referenced in prose.
+        meta = self._get_paper_meta(paper_id)
+        inherited_by_code: Dict[str, str] = {}
+        source_id = meta.scaffold_from.strip()
+        if source_id and source_id in self.papers:
+            inherited_by_code = self._read_lean_handle_id_map(source_id)
+
+        existing_by_code: Dict[str, str] = {code: handle for code, handle in existing_rows}
+        # Backfill any missing referenced IDs from scaffold and HandleAliases
+        # maps. This runs even for existing tables to prevent ID-map drift.
+        for code in referenced_ids:
+            inherited = inherited_by_code.get(code)
+            if inherited and code not in existing_by_code:
+                existing_by_code[code] = inherited
+
+        alias_by_code = self._extract_alias_code_map_from_handle_aliases(
+            paper_id, include_dependencies=True
+        )
+        for code in referenced_ids:
+            alias = alias_by_code.get(code)
+            if alias and code not in existing_by_code:
+                existing_by_code[code] = alias
+
+        existing_rows = sorted(existing_by_code.items())
+
+        candidate_handles = set(declared_handles) | set(referenced_handles)
+        # Preserve existing rows that still correspond to known handles.
+        preserved_rows = [
+            (code, handle)
+            for code, handle in existing_rows
+            if code in referenced_ids or handle in candidate_handles
+        ]
+        preserved_handles = {handle for _, handle in preserved_rows}
+
+        # Single derived universe: local references + declared proof graph handles.
+        all_handles = set(declared_handles) | set(referenced_handles) | preserved_handles
+
+        handle_to_code = self._assign_compact_handle_ids(all_handles, preserved_rows)
+        code_to_handle = {code: handle for handle, code in handle_to_code.items()}
+
+        def sort_key(code: str) -> Tuple[str, int, str]:
+            match = re.match(r"^([A-Za-z]+)(\d+)$", code)
+            if not match:
+                return (code, 10**9, code)
+            return (match.group(1), int(match.group(2)), code)
+
+        lines: List[str] = [
+            "% Auto-generated by scripts/build_papers.py. Do not edit manually.",
+            f"% Generated: {datetime.now().isoformat()}",
+            r"\begingroup",
+            r"\small",
+            r"\setlength{\tabcolsep}{4pt}",
+            r"\renewcommand{\arraystretch}{0.95}",
+            r"\urlstyle{same}",
+            r"\begin{longtable}{@{}l>{\raggedright\arraybackslash}p{0.90\linewidth}@{}}",
+            r"\toprule",
+            r"ID & Full Lean handle \\",
+            r"\midrule",
+            r"\endfirsthead",
+            r"\toprule",
+            r"ID & Full Lean handle (continued) \\",
+            r"\midrule",
+            r"\endhead",
+        ]
+
+        if code_to_handle:
+            for code in sorted(code_to_handle.keys(), key=sort_key):
+                handle = code_to_handle[code]
+                escaped = handle.replace("_", r"\_")
+                lines.append(
+                    rf"\hypertarget{{lh:{code}}}{{\textsf{{{code}}}}} & \nolinkurl{{{escaped}}} \\"
+                )
+        else:
+            lines.append(r"\multicolumn{2}{@{}l@{}}{\textit{No Lean handles parsed yet.}} \\")
+
+        lines.extend([r"\bottomrule", r"\end{longtable}", r"\endgroup", ""])
+        out_file.write_text("\n".join(lines), encoding="utf-8")
+
+    def _rewrite_content_lean_handles_to_ids(self, paper_id: str) -> None:
+        """Rewrite inline `\\nolinkurl{...}` Lean handles to compact `\\LH{...}` IDs.
+
+        This keeps prose readable and clickable without requiring manual conversion
+        in each paper's content files.
+        """
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return
+
+        id_to_handle = self._read_lean_handle_id_map(paper_id)
+        if not id_to_handle:
+            return
+        handle_to_id = {handle: code for code, handle in id_to_handle.items()}
+
+        generated_files = {
+            "lean_stats.tex",
+            "assumption_ledger_auto.tex",
+            "claim_mapping_auto.tex",
+            "lean_handle_ids_auto.tex",
+            "proof_hardness_index_auto.tex",
+        }
+        nolink_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
+        leanmeta_prefix_pattern = re.compile(r"(\\leanmeta\{)\s*Lean handles:\s*")
+
+        for tex_file in sorted(content_dir.glob("*.tex")):
+            if tex_file.name in generated_files:
+                continue
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            normalized = leanmeta_prefix_pattern.sub(r"\1", text)
+
+            def repl(match: re.Match[str]) -> str:
+                raw = match.group(1).strip()
+                handle = raw.replace(r"\_", "_")
+                code = handle_to_id.get(handle)
+                if code is None:
+                    return match.group(0)
+                return rf"\LH{{{code}}}"
+
+            rewritten = nolink_pattern.sub(repl, normalized)
+            if rewritten != text:
+                tex_file.write_text(rewritten, encoding="utf-8")
+
+    def _claim_ref_code_for_label(self, label: str) -> str:
+        """Return compact claim-ref code by label prefix."""
+        normalized = label.strip().lower()
+        if normalized.startswith(("thm:", "th:")):
+            return "T"
+        if normalized.startswith("prop:"):
+            return "P"
+        if normalized.startswith("cor:"):
+            return "C"
+        if normalized.startswith(("def:", "definition:")):
+            return "D"
+        if normalized.startswith(("lem:", "lemma:")):
+            return "L"
+        if normalized.startswith(("ax:", "axiom:")):
+            return "A"
+        if normalized.startswith(("conj:", "conjecture:")):
+            return "J"
+        return "R"
+
+    def _normalize_claimstamp_refs(self, derived: str) -> str:
+        """Normalize verbose theorem references to compact `X\\ref{...}` style."""
+        normalized = derived
+        replacements = [
+            (r"(?:Theorem|Thm\.?)\s*~?\s*\\ref\{([^}]+)\}", r"T\\ref{\1}"),
+            (r"(?:Proposition|Prop\.?)\s*~?\s*\\ref\{([^}]+)\}", r"P\\ref{\1}"),
+            (r"(?:Corollary|Cor\.?)\s*~?\s*\\ref\{([^}]+)\}", r"C\\ref{\1}"),
+            (r"(?:Definition|Def\.?)\s*~?\s*\\ref\{([^}]+)\}", r"D\\ref{\1}"),
+            (r"(?:Lemma|Lem\.?)\s*~?\s*\\ref\{([^}]+)\}", r"L\\ref{\1}"),
+            (r"(?:Axiom|Ax\.?)\s*~?\s*\\ref\{([^}]+)\}", r"A\\ref{\1}"),
+            (r"(?:Conjecture|Conj\.?)\s*~?\s*\\ref\{([^}]+)\}", r"J\\ref{\1}"),
+        ]
+        for pattern, replacement in replacements:
+            normalized = re.sub(pattern, replacement, normalized)
+        normalized = normalized.replace("~", "")
+        normalized = re.sub(r"\s*,\s*", ",", normalized)
+        normalized = re.sub(r"\s*;\s*", ";", normalized)
+        normalized = re.sub(r"\s+", " ", normalized).strip(" ,;")
+        return normalized
+
+    def _normalize_claimstamp_regime(self, regime: str) -> str:
+        """Normalize regime tags to compact notation (e.g., `AR`, `S+ETH`)."""
+        raw = regime.strip()
+        if not raw:
+            return ""
+        if raw.startswith("[") and raw.endswith("]"):
+            raw = raw[1:-1].strip()
+        # Treat bracket wrappers as presentation-only and tolerate malformed mixes.
+        raw = raw.replace("[", "").replace("]", "")
+
+        # Canonical phrase -> compact code.
+        phrase_map = {
+            "active declared regime": "AR",
+            "declared contract": "DC",
+            "declared class/regime": "CR",
+            "declared task/regime": "TR",
+            "declared decision model": "DM",
+            "represented adjacent class": "RA",
+            "tractable active regime": "TA",
+            "regime-typed": "RG",
+            "structured": "STR",
+            "identifiable": "ID",
+            "bounded horizon": "BH",
+            "fully observable": "FO",
+            "counterexample": "CE",
+            "p = product distribution": "PD",
+            "bounded support": "BS",
+            "deterministic": "DET",
+        }
+
+        # Normalize delimiters before tokenization.
+        text = raw.replace(" vs ", ",")
+        text = text.replace("][", "],[").replace("], [", "],[")
+        parts = [p.strip() for p in re.split(r"\s*[,;]\s*", text) if p.strip()]
+        compact_parts: List[str] = []
+        seen: Set[str] = set()
+        for part in parts:
+            token = part.strip()
+            if token.startswith("[") and token.endswith("]"):
+                token = token[1:-1].strip()
+            if token.lower().startswith("r="):
+                token = token[2:].strip()
+
+            lowered = token.lower()
+            mapped = phrase_map.get(lowered)
+            if mapped is None:
+                # Preserve explicit symbolic assumptions (e.g., P != coNP, S+ETH).
+                if any(ch in token for ch in ("\\", "$", "+", "=", "<", ">", "!", "_")):
+                    mapped = token
+                elif re.fullmatch(r"[A-Z0-9]+", token):
+                    mapped = token
+                else:
+                    mapped = token
+
+            if mapped and mapped not in seen:
+                compact_parts.append(mapped)
+                seen.add(mapped)
+
+        return ",".join(compact_parts)
+
+    def _extract_label_to_regime_from_claimstamps(
+        self, paper_id: str
+    ) -> Dict[str, str]:
+        """Extract label -> regime mapping from claimstamps in a source paper."""
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return {}
+
+        claimstamp_pattern = re.compile(
+            r"\\claimstamp\{((?:[^{}]|\\ref\{[^}]+\})*)\}\{([^}]*)\}",
+            re.DOTALL,
+        )
+        ref_pattern = re.compile(r"\\ref\{([^}]+)\}")
+        mapping: Dict[str, str] = {}
+        for tex_file in sorted(content_dir.glob("*.tex")):
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            for first_arg, second_arg in claimstamp_pattern.findall(text):
+                labels = ref_pattern.findall(first_arg)
+                if len(labels) != 1:
+                    continue
+                label = labels[0].strip()
+                if not label:
+                    continue
+                regime = self._normalize_claimstamp_regime(second_arg)
+                if regime and label not in mapping:
+                    mapping[label] = regime
+        return mapping
+
+    def _extract_label_to_hardness_tags_from_claimstamps(
+        self, paper_id: str
+    ) -> Dict[str, List[str]]:
+        """Extract claim-label -> normalized regime/hardness tags from claimstamps.
+
+        Unlike `_extract_label_to_regime_from_claimstamps`, this function keeps
+        multi-label stamps and accumulates all tags seen for each label so the
+        generated hardness index can be derived from the same claim metadata.
         """
         content_dir = self._get_content_dir(paper_id)
         if not content_dir.exists():
             return {}
 
-        block_pattern = re.compile(
-            r"\\begin\{(theorem|proposition|corollary|lemma)\}(.*?)\\end\{\1\}",
+        generated_files = {
+            "lean_stats.tex",
+            "assumption_ledger_auto.tex",
+            "claim_mapping_auto.tex",
+            "lean_handle_ids_auto.tex",
+            "proof_hardness_index_auto.tex",
+        }
+        claimstamp_pattern = re.compile(
+            r"\\claimstamp\{((?:[^{}]|\\ref\{[^}]+\})*)\}\{([^}]*)\}",
             re.DOTALL,
         )
-        label_pattern = re.compile(r"\\label\{((?:thm|cor|lem|prop):[^}]+)\}")
-        nolink_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
+        ref_pattern = re.compile(r"\\ref\{([^}]+)\}")
         paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
 
-        mapping: Dict[str, Set[str]] = {}
+        label_to_tags: Dict[str, Set[str]] = {}
+        fallback_multi: Dict[str, Set[str]] = {}
         for tex_file in sorted(content_dir.glob("*.tex")):
+            if tex_file.name in generated_files:
+                continue
             text = tex_file.read_text(encoding="utf-8", errors="replace")
-            for match in block_pattern.finditer(text):
-                block_text = match.group(0)
-                labels = label_pattern.findall(block_text)
+            for first_arg, second_arg in claimstamp_pattern.findall(text):
+                labels = [lab.strip() for lab in ref_pattern.findall(first_arg)]
                 if not labels:
                     continue
-                handles = []
-                for h in nolink_pattern.findall(block_text):
-                    if paper_handle_pattern.match(h):
-                        continue
-                    # Keep declaration-like handles, drop bare module/file mentions.
-                    if h.endswith(".lean"):
-                        continue
-                    if "." not in h and "_" not in h:
-                        continue
-                    handles.append(h)
+                normalized = self._normalize_claimstamp_regime(second_arg)
+                tags = [tok.strip() for tok in normalized.split(",") if tok.strip()]
+                if not tags:
+                    continue
+                dest = label_to_tags if len(labels) == 1 else fallback_multi
                 for label in labels:
-                    mapping.setdefault(label, set()).update(handles)
+                    if not paper_handle_pattern.match(label):
+                        continue
+                    dest.setdefault(label, set()).update(tags)
 
-        return {k: sorted(v) for k, v in mapping.items()}
+        # Only fall back to multi-label aggregate stamps when no theorem-local tag exists.
+        for label, tags in fallback_multi.items():
+            if label not in label_to_tags:
+                label_to_tags[label] = set(tags)
 
-    def _write_claim_mapping_auto(self, paper_id: str) -> None:
-        """Write auto-generated claim coverage matrix from inline theorem anchors."""
-        meta = self._get_paper_meta(paper_id)
-        latex_dir = self._get_paper_dir(paper_id) / meta.latex_dir
-        content_dir = latex_dir / "content"
+        return {
+            label: sorted(tags)
+            for label, tags in sorted(label_to_tags.items(), key=lambda kv: kv[0])
+        }
+
+    def _derive_hardness_profile(self, tags: List[str]) -> str:
+        """Derive a compact hardness profile label from normalized regime tags."""
+        tag_set = set(tags)
+        profiles: List[str] = []
+
+        def add_profile(name: str) -> None:
+            if name not in profiles:
+                profiles.append(name)
+
+        if "S" in tag_set:
+            add_profile("succinct-hard")
+        if any("ETH" in tag for tag in tag_set):
+            add_profile("exp-lb-conditional")
+        if "Qf" in tag_set or "Qb" in tag_set:
+            add_profile("query-lb")
+        if "E" in tag_set or "TA" in tag_set or "STR" in tag_set:
+            add_profile("tractable-structured")
+        if "LC" in tag_set:
+            add_profile("cost-growth")
+
+        if not profiles:
+            return "unspecified"
+        return ",".join(profiles)
+
+    def _write_proof_hardness_index_auto(self, paper_id: str) -> None:
+        """Write auto-generated proof hardness index from claim labels/tags."""
+        content_dir = self._get_content_dir(paper_id)
         if not content_dir.exists():
             return
 
-        out_file = content_dir / "claim_mapping_auto.tex"
+        out_file = content_dir / "proof_hardness_index_auto.tex"
         claim_labels = sorted(self._extract_paper_claim_labels(paper_id))
-        claim_to_handles = self._extract_claim_label_to_lean_handles(paper_id)
+        if not claim_labels:
+            out_file.write_text(
+                "% Auto-generated by scripts/build_papers.py. No claim labels found.\n",
+                encoding="utf-8",
+            )
+            return
 
-        mapped_count = sum(1 for label in claim_labels if claim_to_handles.get(label))
-        has_unmapped = mapped_count < len(claim_labels)
+        claim_to_handles = self._extract_claim_label_to_lean_handles(paper_id)
+        label_to_tags = self._extract_label_to_hardness_tags_from_claimstamps(paper_id)
+        id_to_handle = self._read_lean_handle_id_map(paper_id)
+        handle_to_id = {handle: code for code, handle in id_to_handle.items()}
+
+        rows: List[Tuple[str, str, str, str]] = []
+        profile_counts: Dict[str, int] = {}
+        for label in claim_labels:
+            tags = label_to_tags.get(label, [])
+            profile = self._derive_hardness_profile(tags)
+            profile_counts[profile] = profile_counts.get(profile, 0) + 1
+
+            tags_cell = ",".join(tags) if tags else "-"
+            handles = claim_to_handles.get(label, [])
+            if handles:
+                support_items: List[str] = []
+                for handle in handles:
+                    code = handle_to_id.get(handle)
+                    if code is not None:
+                        support_items.append(rf"\LH{{{code}}}")
+                    else:
+                        compact = self._compact_lean_handle(handle).replace("_", r"\_")
+                        support_items.append(rf"\nolinkurl{{{compact}}}")
+                support_cell = ", ".join(support_items)
+            else:
+                support_cell = r"\emph{(no derived Lean handle found)}"
+
+            rows.append((label, profile, tags_cell, support_cell))
+
+        rows.sort(key=lambda row: (row[1], row[0]))
+
         lines: List[str] = [
             "% Auto-generated by scripts/build_papers.py. Do not edit manually.",
             f"% Generated: {datetime.now().isoformat()}",
@@ -1109,44 +1996,362 @@ end {module_root}
             r"\scriptsize",
             r"\sloppy",
             r"\setlength{\tabcolsep}{4pt}",
-            (
-                r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.11\linewidth}>{\raggedright\arraybackslash}p{0.42\linewidth}>{\raggedright\arraybackslash}p{0.23\linewidth}@{}}"
-                if has_unmapped
-                else r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.62\linewidth}@{}}"
-            ),
+            r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}p{0.40\linewidth}@{}}",
             r"\toprule",
-            (
-                r"\textbf{Paper handle} & \textbf{Status} & \textbf{Lean support} & \textbf{Notes} \\"
-                if has_unmapped
-                else r"\textbf{Paper handle} & \textbf{Status} & \textbf{Lean support} \\"
-            ),
+            r"\textbf{Paper handle} & \textbf{Hardness profile} & \textbf{Regime tags} & \textbf{Lean support} \\",
+            r"\midrule",
+        ]
+
+        for label, profile, tags_cell, support_cell in rows:
+            lines.append(
+                rf"\nolinkurl{{{label}}} & \nolinkurl{{{profile}}} & \nolinkurl{{{tags_cell}}} & {support_cell} \\"
+            )
+
+        lines.extend([r"\bottomrule", r"\end{longtable}", r"\endgroup", ""])
+        summary_parts = [
+            f"{name}={profile_counts[name]}" for name in sorted(profile_counts.keys())
+        ]
+        lines.append(
+            rf"\noindent\textit{{Auto summary: indexed {len(rows)} claims by hardness profile ({'; '.join(summary_parts)}).}}"
+        )
+        out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def _normalize_and_fill_claimstamps(self, paper_id: str) -> None:
+        """Normalize claimstamp notation and fill empty claim-block placeholders.
+
+        This enforces compact, paper-wide consistent tags:
+        - `Prop.~\\ref{...}` -> `P\\ref{...}` (similarly for other theorem classes)
+        - empty claim-block stamps derive from the claim label
+        - empty regime tags inherit from scaffold source when available, else `RG`
+        """
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return
+
+        meta = self._get_paper_meta(paper_id)
+        source_regimes: Dict[str, str] = {}
+        source_id = meta.scaffold_from.strip()
+        if source_id and source_id in self.papers:
+            source_regimes = self._extract_label_to_regime_from_claimstamps(source_id)
+
+        generated_files = {
+            "lean_stats.tex",
+            "assumption_ledger_auto.tex",
+            "claim_mapping_auto.tex",
+            "lean_handle_ids_auto.tex",
+            "proof_hardness_index_auto.tex",
+        }
+        claimstamp_pattern = re.compile(
+            r"\\claimstamp\{((?:[^{}]|\\ref\{[^}]+\})*)\}\{([^}]*)\}",
+            re.DOTALL,
+        )
+        claim_block_pattern = re.compile(
+            r"(\\begin\{claim\}\{[^{}]*\}\{([^{}]+)\})(.*?)(\\end\{claim\})",
+            re.DOTALL,
+        )
+        generic_first_pattern = re.compile(
+            r"^\s*(?:Thm\.?|Theorem|Prop\.?|Proposition|Cor\.?|Corollary|Def\.?|Definition|Lemma|Lem\.?|Axiom|Ax\.?|Conjecture|Conj\.?)\s*\.?\s*$"
+        )
+
+        for tex_file in sorted(content_dir.glob("*.tex")):
+            if tex_file.name in generated_files:
+                continue
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+
+            # Pass 1: normalize existing stamps.
+            def normalize_stamp(match: re.Match[str]) -> str:
+                first = self._normalize_claimstamp_refs(match.group(1))
+                second = self._normalize_claimstamp_regime(match.group(2))
+                return rf"\claimstamp{{{first}}}{{{second}}}"
+
+            rewritten = claimstamp_pattern.sub(normalize_stamp, text)
+
+            # Pass 2: fill empty/generic claim-block stamps using local label.
+            def fill_block(match: re.Match[str]) -> str:
+                begin, label, body, end = match.group(1), match.group(2), match.group(3), match.group(4)
+                normalized_label = label.strip()
+
+                def fill_first_stamp(stamp_match: re.Match[str]) -> str:
+                    first = stamp_match.group(1).strip()
+                    second = stamp_match.group(2).strip()
+
+                    if not first or generic_first_pattern.fullmatch(first):
+                        code = self._claim_ref_code_for_label(normalized_label)
+                        first = rf"{code}\ref{{{normalized_label}}}"
+
+                    if not second:
+                        second = source_regimes.get(normalized_label, "RG")
+
+                    return rf"\claimstamp{{{first}}}{{{second}}}"
+
+                filled_body, _ = claimstamp_pattern.subn(fill_first_stamp, body, count=1)
+                return begin + filled_body + end
+
+            rewritten = claim_block_pattern.sub(fill_block, rewritten)
+
+            if rewritten != text:
+                tex_file.write_text(rewritten, encoding="utf-8")
+
+    def _extract_claim_label_to_lean_handles(
+        self, paper_id: str, include_dependencies: bool = True
+    ) -> Dict[str, List[str]]:
+        """Extract mapping from theorem-style labels to inline Lean handles.
+
+        Source heuristic:
+        - scan theorem/proposition/corollary/lemma blocks in content/*.tex
+        - collect `\\label{thm:...|prop:...|cor:...|lem:...}` inside each block
+        - collect non-paper-handle `\\nolinkurl{...}` entries and `\\LH{...}` IDs
+          inside each block as Lean support
+        - additionally support claim-style blocks:
+          `\\begin{claim}{Title}{prop:...} ... \\end{claim}`
+        - attach immediately-following `\\leanmeta{...}` blocks to the claim/theorem
+          that precedes them
+        """
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return {}
+
+        id_to_handle = self._read_lean_handle_id_map(paper_id)
+
+        block_pattern = re.compile(
+            r"\\begin\{(theorem|proposition|corollary|lemma)\}(.*?)\\end\{\1\}",
+            re.DOTALL,
+        )
+        claim_pattern = re.compile(
+            r"\\begin\{claim\}\{[^{}]*\}\{((?:thm|cor|lem|prop):[^{}]+)\}(.*?)\\end\{claim\}",
+            re.DOTALL,
+        )
+        label_pattern = re.compile(r"\\label\{((?:thm|cor|lem|prop):[^}]+)\}")
+        nolink_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
+        lh_pattern = re.compile(r"\\LH\{([^}]+)\}")
+        paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
+
+        def extract_handles_from_text(fragment: str) -> List[str]:
+            handles: List[str] = []
+            for h in nolink_pattern.findall(fragment):
+                h = h.replace(r"\_", "_")
+                if paper_handle_pattern.match(h):
+                    continue
+                # Keep declaration-like handles, drop bare module/file mentions.
+                if h.endswith(".lean"):
+                    continue
+                if "." not in h and "_" not in h:
+                    continue
+                handles.append(h)
+            for handle_id in lh_pattern.findall(fragment):
+                resolved = id_to_handle.get(handle_id.strip())
+                if resolved:
+                    handles.append(resolved)
+            return handles
+
+        def extract_following_leanmeta_handles(text: str, start_idx: int) -> List[str]:
+            """Extract handles from consecutive `\\leanmeta{...}` blocks after a claim."""
+            handles: List[str] = []
+            i = start_idx
+            n = len(text)
+            prefix = r"\leanmeta{"
+            while i < n:
+                while i < n and text[i].isspace():
+                    i += 1
+                if not text.startswith(prefix, i):
+                    break
+                j = i + len(prefix)
+                depth = 1
+                while j < n and depth > 0:
+                    ch = text[j]
+                    if ch == "{":
+                        depth += 1
+                    elif ch == "}":
+                        depth -= 1
+                    j += 1
+                if depth != 0:
+                    break
+                handles.extend(extract_handles_from_text(text[i:j]))
+                i = j
+            return handles
+
+        local_mapping: Dict[str, Set[str]] = {}
+        for tex_file in sorted(content_dir.glob("*.tex")):
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            for match in block_pattern.finditer(text):
+                block_text = match.group(0)
+                labels = label_pattern.findall(block_text)
+                if not labels:
+                    continue
+                handles = extract_handles_from_text(
+                    block_text
+                ) + extract_following_leanmeta_handles(text, match.end())
+                for label in labels:
+                    local_mapping.setdefault(label, set()).update(handles)
+            for match in claim_pattern.finditer(text):
+                label = match.group(1)
+                block_text = match.group(0)
+                handles = extract_handles_from_text(
+                    block_text
+                ) + extract_following_leanmeta_handles(text, match.end())
+                local_mapping.setdefault(label, set()).update(handles)
+
+        if not include_dependencies:
+            return {k: sorted(v) for k, v in local_mapping.items()}
+
+        claim_labels = self._extract_paper_claim_labels(paper_id)
+        merged: Dict[str, Set[str]] = {
+            label: set(local_mapping.get(label, set())) for label in claim_labels
+        }
+        for label, handles in local_mapping.items():
+            merged.setdefault(label, set()).update(handles)
+
+        source_ids: List[str] = []
+        meta = self._get_paper_meta(paper_id)
+        source_id = meta.scaffold_from.strip()
+        if source_id and source_id in self.papers:
+            source_ids.append(source_id)
+        for dep in self._collect_lean_dependency_closure(paper_id):
+            if dep not in source_ids:
+                source_ids.append(dep)
+
+        for source in source_ids:
+            # Prefer a pre-generated matrix (already derived and normalized).
+            source_map = self._read_claim_mapping_table_handles(source)
+            if not source_map:
+                # Fallback to direct extraction from source content.
+                source_map = self._extract_claim_label_to_lean_handles(
+                    source, include_dependencies=False
+                )
+            for label in claim_labels:
+                if merged.get(label):
+                    continue
+                source_handles = source_map.get(label, [])
+                if source_handles:
+                    merged.setdefault(label, set()).update(source_handles)
+
+        return {k: sorted(v) for k, v in merged.items()}
+
+    def _read_lean_handle_id_map(self, paper_id: str) -> Dict[str, str]:
+        """Read generated Lean-handle ID map: LH code -> full Lean handle."""
+        content_dir = self._get_content_dir(paper_id)
+        map_file = content_dir / "lean_handle_ids_auto.tex"
+        if not map_file.exists():
+            return {}
+
+        text = map_file.read_text(encoding="utf-8", errors="replace")
+        id_to_handle: Dict[str, str] = {}
+        # Format-robust parse:
+        # - ID cell may use \texttt{ID} or \textsf{ID}
+        # - handle cell may be wrapped (e.g., {\footnotesize\nolinkurl{...}})
+        # - optional \hypertarget prefixes may appear before the ID cell
+        code_pattern = re.compile(r"\\text(?:tt|sf)\{([^}]+)\}")
+        handle_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
+        for raw_line in text.splitlines():
+            if "&" not in raw_line or r"\nolinkurl{" not in raw_line:
+                continue
+            code_match = code_pattern.search(raw_line)
+            handle_match = handle_pattern.search(raw_line)
+            if not code_match or not handle_match:
+                continue
+            code = code_match.group(1).strip()
+            handle = handle_match.group(1).strip().replace(r"\_", "_")
+            if code and handle:
+                id_to_handle[code] = handle
+        return id_to_handle
+
+    def _read_claim_mapping_table_handles(self, paper_id: str) -> Dict[str, List[str]]:
+        """Read label->handles from an existing `claim_mapping_auto.tex` table."""
+        content_dir = self._get_content_dir(paper_id)
+        mapping_file = content_dir / "claim_mapping_auto.tex"
+        if not mapping_file.exists():
+            return {}
+
+        text = mapping_file.read_text(encoding="utf-8", errors="replace")
+        paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
+        mapping: Dict[str, Set[str]] = {}
+
+        for raw_line in text.splitlines():
+            if "&" not in raw_line or r"\nolinkurl{" not in raw_line:
+                continue
+            nolinks = [
+                s.strip().replace(r"\_", "_")
+                for s in re.findall(r"\\nolinkurl\{([^}]+)\}", raw_line)
+            ]
+            if not nolinks:
+                continue
+            label = nolinks[0]
+            if not paper_handle_pattern.match(label):
+                continue
+            supports = [h for h in nolinks[1:] if h and not paper_handle_pattern.match(h)]
+            if supports:
+                mapping.setdefault(label, set()).update(supports)
+
+        return {label: sorted(handles) for label, handles in mapping.items()}
+
+    def _write_claim_mapping_auto(self, paper_id: str) -> None:
+        """Write auto-generated claim coverage matrix from derived theorem anchors."""
+        meta = self._get_paper_meta(paper_id)
+        latex_dir = self._get_paper_dir(paper_id) / meta.latex_dir
+        content_dir = latex_dir / "content"
+        if not content_dir.exists():
+            return
+
+        out_file = content_dir / "claim_mapping_auto.tex"
+        claim_labels = sorted(self._extract_paper_claim_labels(paper_id))
+        local_claim_to_handles = self._extract_claim_label_to_lean_handles(
+            paper_id, include_dependencies=False
+        )
+        claim_to_handles = self._extract_claim_label_to_lean_handles(
+            paper_id, include_dependencies=True
+        )
+
+        full_count = 0
+        derived_count = 0
+        unmapped_count = 0
+        lines: List[str] = [
+            "% Auto-generated by scripts/build_papers.py. Do not edit manually.",
+            f"% Generated: {datetime.now().isoformat()}",
+            rf"% Paper: {paper_id}",
+            r"\begingroup",
+            r"\scriptsize",
+            r"\sloppy",
+            r"\setlength{\tabcolsep}{4pt}",
+            r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.24\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.60\linewidth}@{}}",
+            r"\toprule",
+            r"\textbf{Paper handle} & \textbf{Status} & \textbf{Lean support} \\",
             r"\midrule",
         ]
 
         for label in claim_labels:
             handles = claim_to_handles.get(label, [])
-            status = "Full" if handles else "Unmapped"
+            local_handles = local_claim_to_handles.get(label, [])
+            if local_handles:
+                status = "Full"
+                full_count += 1
+            elif handles:
+                status = "Derived"
+                derived_count += 1
+            else:
+                status = "Unmapped"
+                unmapped_count += 1
             if handles:
-                support = ", ".join(rf"\nolinkurl{{{h}}}" for h in handles)
-                note = ""
+                support = ", ".join(
+                    rf"\nolinkurl{{{self._compact_lean_handle(h)}}}" for h in handles
+                )
             else:
-                support = r"\emph{(no inline Lean handle found)}"
-                note = r"No theorem-local Lean anchor detected; add inline \nolinkurl{...} in the corresponding claim block."
-            if has_unmapped:
-                lines.append(rf"\nolinkurl{{{label}}} & {status} & {support} & {note} \\")
-            else:
-                lines.append(rf"\nolinkurl{{{label}}} & {status} & {support} \\")
+                support = r"\emph{(no derived Lean handle found)}"
+            lines.append(rf"\nolinkurl{{{label}}} & {status} & {support} \\")
 
         lines.extend([r"\bottomrule", r"\end{longtable}", r"\endgroup", ""])
-        if has_unmapped:
+        if derived_count > 0 or unmapped_count > 0:
             lines.extend(
                 [
-                    r"\noindent\textit{Notes: Full rows are auto-extracted from inline theorem-local Lean anchors.}",
+                    r"\noindent\textit{Notes:}",
+                    r"\noindent\textit{(1) Full rows come from theorem-local inline anchors in this paper.}",
+                    r"\noindent\textit{(2) Derived rows are filled by dependency/scaffold claim-handle derivation (same paper-handle label across proof dependencies).}",
+                    r"\noindent\textit{(3) Unmapped means no local anchor and no derivable dependency support were found.}",
                     "",
                 ]
             )
+        mapped_total = full_count + derived_count
         lines.append(
-            rf"\noindent\textit{{Auto summary: mapped {mapped_count}/{len(claim_labels)} theorem-level handles from inline anchors.}}"
+            rf"\noindent\textit{{Auto summary: mapped {mapped_total}/{len(claim_labels)} (full={full_count}, derived={derived_count}, unmapped={unmapped_count}).}}"
         )
         out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -1163,9 +2368,9 @@ end {module_root}
         }
         for module_path, stats in file_stats.items():
             suffix = suffix_map[module_path]
-            replacements[fr"\LeanLines{suffix}"] = str(stats.line_count)
-            replacements[fr"\LeanTheorems{suffix}"] = str(stats.theorem_count)
-            replacements[fr"\LeanSorry{suffix}"] = str(stats.sorry_count)
+            replacements[rf"\LeanLines{suffix}"] = str(stats.line_count)
+            replacements[rf"\LeanTheorems{suffix}"] = str(stats.theorem_count)
+            replacements[rf"\LeanSorry{suffix}"] = str(stats.sorry_count)
 
         # Replace longest keys first so specific file macros win over prefixes.
         for macro in sorted(replacements.keys(), key=len, reverse=True):
@@ -1278,9 +2483,14 @@ end {module_root}
         if not latex_file.exists():
             raise FileNotFoundError(f"LaTeX file not found: {latex_file}")
 
+        self._sync_shared_preambles(paper_id)
         self._write_latex_lean_stats(paper_id)
         self._write_assumption_ledger_auto(paper_id)
+        self._write_lean_handle_ids_auto(paper_id)
+        self._rewrite_content_lean_handles_to_ids(paper_id)
+        self._normalize_and_fill_claimstamps(paper_id)
         self._write_claim_mapping_auto(paper_id)
+        self._write_proof_hardness_index_auto(paper_id)
         self._update_paper_date(latex_file)
 
         print(f"[build] Building {paper_id} LaTeX...")
@@ -1288,10 +2498,19 @@ end {module_root}
         # Full build cycle for proper citation/reference resolution
         aux_name = latex_file.stem
         build_steps = [
-            (["pdflatex", "-interaction=nonstopmode", latex_file.name], "pdflatex (1/3)"),
+            (
+                ["pdflatex", "-interaction=nonstopmode", latex_file.name],
+                "pdflatex (1/3)",
+            ),
             (["bibtex", aux_name], "bibtex"),
-            (["pdflatex", "-interaction=nonstopmode", latex_file.name], "pdflatex (2/3)"),
-            (["pdflatex", "-interaction=nonstopmode", latex_file.name], "pdflatex (3/3)"),
+            (
+                ["pdflatex", "-interaction=nonstopmode", latex_file.name],
+                "pdflatex (2/3)",
+            ),
+            (
+                ["pdflatex", "-interaction=nonstopmode", latex_file.name],
+                "pdflatex (3/3)",
+            ),
         ]
 
         for cmd, step_name in build_steps:
@@ -1310,7 +2529,9 @@ end {module_root}
                 if verbose:
                     if result.stdout:
                         print(result.stdout)
-                print(f"[build] {step_name} had warnings/errors (exit {result.returncode})")
+                print(
+                    f"[build] {step_name} had warnings/errors (exit {result.returncode})"
+                )
 
         # Copy PDF to releases/ (INVARIANT 3)
         # Use variant-specific naming to avoid conflicts
@@ -1334,7 +2555,9 @@ end {module_root}
         raw_meta = raw_papers.get(paper_id, {})
         sub_fmt = raw_meta.get("submission_format")
         if not sub_fmt:
-            print(f"[build] {paper_id} has no submission_format in papers.yaml, skipping.")
+            print(
+                f"[build] {paper_id} has no submission_format in papers.yaml, skipping."
+            )
             return
 
         latex_flag = sub_fmt["latex_flag"]
@@ -1348,9 +2571,14 @@ end {module_root}
         if not latex_file.exists():
             raise FileNotFoundError(f"LaTeX file not found: {latex_file}")
 
+        self._sync_shared_preambles(paper_id)
         self._write_latex_lean_stats(paper_id)
         self._write_assumption_ledger_auto(paper_id)
+        self._write_lean_handle_ids_auto(paper_id)
+        self._rewrite_content_lean_handles_to_ids(paper_id)
+        self._normalize_and_fill_claimstamps(paper_id)
         self._write_claim_mapping_auto(paper_id)
+        self._write_proof_hardness_index_auto(paper_id)
         self._update_paper_date(latex_file)
 
         print(f"[build] Building {paper_id} submission PDF ({description})...")
@@ -1361,10 +2589,34 @@ end {module_root}
 
         aux_name = job_name
         build_steps = [
-            (["pdflatex", "-interaction=nonstopmode", f"-jobname={job_name}", tex_input], "pdflatex (1/3)"),
+            (
+                [
+                    "pdflatex",
+                    "-interaction=nonstopmode",
+                    f"-jobname={job_name}",
+                    tex_input,
+                ],
+                "pdflatex (1/3)",
+            ),
             (["bibtex", aux_name], "bibtex"),
-            (["pdflatex", "-interaction=nonstopmode", f"-jobname={job_name}", tex_input], "pdflatex (2/3)"),
-            (["pdflatex", "-interaction=nonstopmode", f"-jobname={job_name}", tex_input], "pdflatex (3/3)"),
+            (
+                [
+                    "pdflatex",
+                    "-interaction=nonstopmode",
+                    f"-jobname={job_name}",
+                    tex_input,
+                ],
+                "pdflatex (2/3)",
+            ),
+            (
+                [
+                    "pdflatex",
+                    "-interaction=nonstopmode",
+                    f"-jobname={job_name}",
+                    tex_input,
+                ],
+                "pdflatex (3/3)",
+            ),
         ]
 
         for cmd, step_name in build_steps:
@@ -1382,7 +2634,9 @@ end {module_root}
                 if verbose:
                     if result.stdout:
                         print(result.stdout)
-                print(f"[build] {step_name} had warnings/errors (exit {result.returncode})")
+                print(
+                    f"[build] {step_name} had warnings/errors (exit {result.returncode})"
+                )
 
         # Copy submission PDF to releases/
         pdf_src = latex_dir / f"{job_name}.pdf"
@@ -1410,7 +2664,11 @@ end {module_root}
         print(f"[build-md] Building {paper_id}: {meta.name}...")
         self._write_latex_lean_stats(paper_id)
         self._write_assumption_ledger_auto(paper_id)
+        self._write_lean_handle_ids_auto(paper_id)
+        self._rewrite_content_lean_handles_to_ids(paper_id)
+        self._normalize_and_fill_claimstamps(paper_id)
         self._write_claim_mapping_auto(paper_id)
+        self._write_proof_hardness_index_auto(paper_id)
 
         # Discover files from main LaTeX include order
         content_files = self._discover_content_files(paper_id)
@@ -1425,7 +2683,9 @@ end {module_root}
         self.build_copy_paste_metadata(paper_id)
         print(f"[build-md] {paper_id} → {out_file.relative_to(self.repo_root)}")
 
-    def _extract_braced_command_argument(self, content: str, command: str) -> str | None:
+    def _extract_braced_command_argument(
+        self, content: str, command: str
+    ) -> str | None:
         """Extract the first braced argument for a LaTeX command.
 
         Supports optional square-bracket argument: \\command[...]{...}
@@ -1472,13 +2732,21 @@ end {module_root}
         if depth != 0:
             return None
 
-        return content[arg_start:i - 1]
+        return content[arg_start : i - 1]
 
     def _latex_inline_to_plain(self, text: str) -> str:
         """Convert a LaTeX inline snippet to plain text."""
         try:
             result = subprocess.run(
-                ["pandoc", "-f", "latex", "-t", "plain", "--wrap=none", "--columns=100"],
+                [
+                    "pandoc",
+                    "-f",
+                    "latex",
+                    "-t",
+                    "plain",
+                    "--wrap=none",
+                    "--columns=100",
+                ],
                 input=text,
                 capture_output=True,
                 text=True,
@@ -1528,7 +2796,9 @@ end {module_root}
             return None
 
         content = abstract_file.read_text(encoding="utf-8", errors="replace")
-        match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", content, re.DOTALL)
+        match = re.search(
+            r"\\begin\{abstract\}(.*?)\\end\{abstract\}", content, re.DOTALL
+        )
         if match:
             content = match.group(1)
 
@@ -1560,7 +2830,9 @@ end {module_root}
         text = re.sub(r"\[\s*\\*\s*\]\(#.*?\)", "", text)
         text = re.sub(r"\{reference-type=\"ref\"[^}]*\}", "", text)
         text = re.sub(r"\[D:[^\[]*\[R=[^\]]+\]\]", "", text)
-        text = re.sub(r"\[(?:sec|thm|prop|cor|lem|app|rem|eq|fig|tab):[^\]]+\]", "", text)
+        text = re.sub(
+            r"\[(?:sec|thm|prop|cor|lem|app|rem|eq|fig|tab):[^\]]+\]", "", text
+        )
         text = re.sub(r"\[R=[^\]]+\]", "", text)
         text = re.sub(r"\[D:[^\]]+\]", "", text)
         text = re.sub(r"\[R:[^\]]+\]", "", text)
@@ -1586,7 +2858,11 @@ end {module_root}
             capture_output=True,
             text=True,
         )
-        plain = result.stdout if result.returncode == 0 and result.stdout.strip() else latex_input
+        plain = (
+            result.stdout
+            if result.returncode == 0 and result.stdout.strip()
+            else latex_input
+        )
 
         plain = self._clean_metadata_reference_tokens(plain)
         return self._normalize_plaintext_block(plain)
@@ -1598,12 +2874,24 @@ end {module_root}
         prepared = self._prepend_markdown_macro_prelude(prepared)
 
         result = subprocess.run(
-            ["pandoc", "-f", "latex", "-t", "markdown+tex_math_dollars", "--wrap=none", "--columns=100"],
+            [
+                "pandoc",
+                "-f",
+                "latex",
+                "-t",
+                "markdown+tex_math_dollars",
+                "--wrap=none",
+                "--columns=100",
+            ],
             input=prepared,
             capture_output=True,
             text=True,
         )
-        mathjax = result.stdout if result.returncode == 0 and result.stdout.strip() else latex_input
+        mathjax = (
+            result.stdout
+            if result.returncode == 0 and result.stdout.strip()
+            else latex_input
+        )
 
         # Expand common project macros to MathJax-safe forms.
         mathjax = re.sub(r"\\SigmaP\{([^}]+)\}", r"\\Sigma_{\1}^{P}", mathjax)
@@ -1627,12 +2915,24 @@ end {module_root}
                 return cache[expr]
 
             result = subprocess.run(
-                ["pandoc", "-f", "latex", "-t", "plain", "--wrap=none", "--columns=100"],
+                [
+                    "pandoc",
+                    "-f",
+                    "latex",
+                    "-t",
+                    "plain",
+                    "--wrap=none",
+                    "--columns=100",
+                ],
                 input=f"${expr}$",
                 capture_output=True,
                 text=True,
             )
-            converted = result.stdout.strip() if result.returncode == 0 and result.stdout.strip() else expr
+            converted = (
+                result.stdout.strip()
+                if result.returncode == 0 and result.stdout.strip()
+                else expr
+            )
             converted = re.sub(r"\s+", " ", converted).strip()
             cache[expr] = converted
             return converted
@@ -1707,7 +3007,9 @@ end {module_root}
         # multiple paper IDs point at the same directory.
         legacy_path = releases_dir / f"arxiv_abstract_{meta.dir_name}.md"
         sibling_ids = sorted(
-            pid for pid, sibling_meta in self.papers.items() if sibling_meta.dir_name == meta.dir_name
+            pid
+            for pid, sibling_meta in self.papers.items()
+            if sibling_meta.dir_name == meta.dir_name
         )
         if len(sibling_ids) == 1:
             legacy_path.write_text("\n".join(primary_lines), encoding="utf-8")
@@ -1720,8 +3022,7 @@ end {module_root}
                 "",
             ]
             redirect_lines.extend(
-                f"- `arxiv_abstract_{sibling_id}.md`"
-                for sibling_id in sibling_ids
+                f"- `arxiv_abstract_{sibling_id}.md`" for sibling_id in sibling_ids
             )
             redirect_lines.append("")
             legacy_path.write_text("\n".join(redirect_lines), encoding="utf-8")
@@ -1768,7 +3069,9 @@ end {module_root}
                 "mathjax": abstract_mathjax,
             },
         }
-        machine_yaml = yaml.safe_dump(payload, sort_keys=False, allow_unicode=True).strip()
+        machine_yaml = yaml.safe_dump(
+            payload, sort_keys=False, allow_unicode=True
+        ).strip()
 
         lines = [
             "AUTO-GENERATED COPY/PASTE METADATA",
@@ -1829,7 +3132,9 @@ end {module_root}
 
             # Abstract
             f.write("## Abstract\n\n")
-            abstract_file = next((p for p in content_files if p.name == "abstract.tex"), None)
+            abstract_file = next(
+                (p for p in content_files if p.name == "abstract.tex"), None
+            )
             if abstract_file and abstract_file.exists():
                 # Try extracting from \begin{abstract}...\end{abstract} first,
                 # fall back to raw file content if no environment found
@@ -1842,7 +3147,9 @@ end {module_root}
                         extract_env="abstract",
                     )
                 else:
-                    self._convert_latex_to_markdown(abstract_file, f, paper_id=meta.paper_id)
+                    self._convert_latex_to_markdown(
+                        abstract_file, f, paper_id=meta.paper_id
+                    )
             else:
                 f.write("_Abstract not available._\n\n")
 
@@ -1855,12 +3162,13 @@ end {module_root}
             # Footer
             f.write("\n\n---\n\n## Machine-Checked Proofs\n\n")
             f.write(f"All theorems are formalized in Lean 4:\n")
-            proofs_rel = self._get_paper_proofs_dir(meta.paper_id).relative_to(self.repo_root)
+            proofs_rel = self._get_paper_proofs_dir(meta.paper_id).relative_to(
+                self.repo_root
+            )
             f.write(f"- Location: `{proofs_rel}/`\n")
             f.write(f"- Lines: {lean_stats.line_count}\n")
             f.write(f"- Theorems: {lean_stats.theorem_count}\n")
             f.write(f"- `sorry` placeholders: {lean_stats.sorry_count}\n")
-
 
     def _convert_latex_to_markdown(
         self,
@@ -1881,7 +3189,7 @@ end {module_root}
         content = tex_file.read_text(encoding="utf-8", errors="replace")
         if extract_env:
             # Extract content from environment before converting
-            pattern = rf'\\begin\{{{extract_env}\}}(.*?)\\end\{{{extract_env}\}}'
+            pattern = rf"\\begin\{{{extract_env}\}}(.*?)\\end\{{{extract_env}\}}"
             match = re.search(pattern, content, re.DOTALL)
             if not match:
                 out_file.write(f"_Content not found in {tex_file.name}_\n\n")
@@ -1993,9 +3301,13 @@ end {module_root}
 
         labels: Set[str] = set()
         label_pattern = re.compile(r"\\label\{((?:thm|cor|lem|prop):[^}]+)\}")
+        claim_label_pattern = re.compile(
+            r"\\begin\{claim\}\{[^{}]*\}\{((?:thm|cor|lem|prop):[^{}]+)\}"
+        )
         for tex_file in sorted(content_dir.glob("*.tex")):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             labels.update(label_pattern.findall(text))
+            labels.update(claim_label_pattern.findall(text))
         return labels
 
     def _extract_mapped_claim_labels(self, mapping_file: Path) -> Set[str]:
@@ -2010,9 +3322,15 @@ end {module_root}
             labels.update(re.findall(pattern, text))
         return labels
 
-    def check_claim_coverage(self, paper_id: str, fail_on_missing: bool = False) -> Dict[str, object]:
+    def check_claim_coverage(
+        self, paper_id: str, fail_on_missing: bool = False
+    ) -> Dict[str, object]:
         """Check label coverage between paper claims and Lean mapping appendix."""
+        self._write_lean_handle_ids_auto(paper_id)
+        self._rewrite_content_lean_handles_to_ids(paper_id)
+        self._normalize_and_fill_claimstamps(paper_id)
         self._write_claim_mapping_auto(paper_id)
+        self._write_proof_hardness_index_auto(paper_id)
         claim_labels = self._extract_paper_claim_labels(paper_id)
         mapping_file = self._get_claim_mapping_file(paper_id)
 
@@ -2030,7 +3348,15 @@ end {module_root}
                 "extra_labels": [],
             }
 
-        mapped_labels = self._extract_mapped_claim_labels(mapping_file)
+        # Keep a single source of truth for auto-generated mapping files:
+        # use direct label->handle extraction, not rendered table parsing.
+        if mapping_file.name == "claim_mapping_auto.tex":
+            label_to_handles = self._extract_claim_label_to_lean_handles(paper_id)
+            mapped_labels = {
+                label for label, handles in label_to_handles.items() if handles
+            }
+        else:
+            mapped_labels = self._extract_mapped_claim_labels(mapping_file)
         missing_labels = sorted(claim_labels - mapped_labels)
         extra_labels = sorted(mapped_labels - claim_labels)
 
@@ -2065,24 +3391,27 @@ end {module_root}
     def _update_paper_date(self, tex_file: Path):
         """Update publication date in LaTeX file using regex for correct replacement."""
         import re
+
         year = datetime.now().strftime("%Y")
         try:
-            content = tex_file.read_text(encoding='utf-8')
+            content = tex_file.read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            content = tex_file.read_text(encoding='latin-1')
+            content = tex_file.read_text(encoding="latin-1")
 
         # Normalize to compile-time date in LaTeX sources.
-        content = re.sub(r'\\date\{[^}]*\}', r'\\date{\\today}', content)
+        content = re.sub(r"\\date\{[^}]*\}", r"\\date{\\today}", content)
         content = re.sub(
-            r'Manuscript received [^.\\n]*\.',
-            r'Manuscript received \\today.',
+            r"Manuscript received [^.\\n]*\.",
+            r"Manuscript received \\today.",
             content,
         )
 
         # Keep explicit year fields in sync with build year where present.
-        content = re.sub(r'\\copyrightyear\{[^}]*\}', f'\\\\copyrightyear{{{year}}}', content)
-        content = re.sub(r'\\acmYear\{[^}]*\}', f'\\\\acmYear{{{year}}}', content)
-        tex_file.write_text(content, encoding='utf-8')
+        content = re.sub(
+            r"\\copyrightyear\{[^}]*\}", f"\\\\copyrightyear{{{year}}}", content
+        )
+        content = re.sub(r"\\acmYear\{[^}]*\}", f"\\\\acmYear{{{year}}}", content)
+        tex_file.write_text(content, encoding="utf-8")
 
     def package_arxiv(self, paper_id: str):
         """
@@ -2096,7 +3425,14 @@ end {module_root}
 
         For variants (e.g., paper1_jsait), uses variant-specific staging directory.
         """
+        self._sync_shared_preambles(paper_id)
         self._write_latex_lean_stats(paper_id)
+        self._write_assumption_ledger_auto(paper_id)
+        self._write_lean_handle_ids_auto(paper_id)
+        self._rewrite_content_lean_handles_to_ids(paper_id)
+        self._normalize_and_fill_claimstamps(paper_id)
+        self._write_claim_mapping_auto(paper_id)
+        self._write_proof_hardness_index_auto(paper_id)
         metadata_file = self.build_copy_paste_metadata(paper_id)
 
         # Phase 1: Validate all required files exist (fail-loud)
@@ -2127,7 +3463,9 @@ end {module_root}
         # Phase 4: Create compressed archives
         tar_path, zip_path = self._create_archive(paper_id, package_dir)
 
-        print(f"[arxiv] {paper_id} → {tar_path.relative_to(self.repo_root)}, {zip_path.name}")
+        print(
+            f"[arxiv] {paper_id} → {tar_path.relative_to(self.repo_root)}, {zip_path.name}"
+        )
         return tar_path
 
     def _validate_and_get_pdf(self, paper_id: str) -> Path:
@@ -2218,8 +3556,13 @@ end {module_root}
     def _copy_lean_proofs(self, paper_id: str, package_dir: Path) -> None:
         """Copy Lean proofs for specific paper to package directory.
 
-        Uses the paper's own proofs directory (paper_dir/proofs/).
-        Copies all .lean files and config, generates README.
+        Includes:
+        - The paper's own proofs directory
+        - Lean files from transitive lean_dependencies
+
+        Dependency files are inlined into the package proofs graph by relative
+        path (with conflict-safe fallback), so bridge imports resolve without
+        manual per-paper path patching.
         """
         proofs_dir = self._get_paper_proofs_dir(paper_id)
 
@@ -2230,27 +3573,122 @@ end {module_root}
         lean_dest = package_dir / "proofs"
         lean_dest.mkdir(parents=True, exist_ok=True)
 
-        # Copy all .lean files from the paper's proofs directory
-        paper_files = []
-        for f in self._iter_paper_lean_files(proofs_dir):
-            # Compute relative path
-            rel_path = f.relative_to(proofs_dir)
-            dest_file = lean_dest / rel_path
-            dest_file.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(f, dest_file)
-            paper_files.append(f)
+        dep_ids = self._collect_lean_dependency_closure(paper_id)
+        roots: List[Tuple[str, Path]] = [(paper_id, proofs_dir)]
+        roots.extend((dep_id, self._get_paper_proofs_dir(dep_id)) for dep_id in dep_ids)
 
-        # Copy config files
+        paper_files: List[Path] = []
+        dep_file_count = 0
+        copied_count = 0
+        identical_skips = 0
+        conflict_fallbacks = 0
+
+        for source_paper_id, source_dir in roots:
+            if not source_dir.exists():
+                print(
+                    f"[arxiv]   Warning: dependency {source_paper_id} has no proofs dir, skipping..."
+                )
+                continue
+
+            for src_file in self._iter_paper_lean_files(source_dir):
+                rel_path = src_file.relative_to(source_dir)
+                dest_file = lean_dest / rel_path
+                dest_file.parent.mkdir(parents=True, exist_ok=True)
+
+                if dest_file.exists():
+                    if self._files_identical(src_file, dest_file):
+                        identical_skips += 1
+                        continue
+                    fallback_dest = lean_dest / f"dep_{source_paper_id}" / rel_path
+                    fallback_dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src_file, fallback_dest)
+                    conflict_fallbacks += 1
+                    copied_count += 1
+                else:
+                    shutil.copy2(src_file, dest_file)
+                    copied_count += 1
+
+                if source_paper_id == paper_id:
+                    paper_files.append(src_file)
+                else:
+                    dep_file_count += 1
+
+        # Copy config files from main paper
         config_files = ["lean-toolchain", "lake-manifest.json"]
         for fname in config_files:
             src = proofs_dir / fname
             if src.exists():
                 shutil.copy2(src, lean_dest / fname)
 
+        self._rewrite_packaged_lakefile_srcdirs(lean_dest / "lakefile.lean")
+        self._write_dependency_bridge_module(paper_id, lean_dest, dep_ids)
+
         # Generate README (correct by construction)
         self._generate_proofs_readme(paper_id, paper_files, lean_dest)
 
-        print(f"[arxiv]   Lean proofs: {len(paper_files)} files")
+        for dep_paper_id in dep_ids:
+            dep_proofs_dir = self._get_paper_proofs_dir(dep_paper_id)
+            if dep_proofs_dir.exists():
+                dep_count = len(self._iter_paper_lean_files(dep_proofs_dir))
+                print(f"[arxiv]   Dependency {dep_paper_id}: {dep_count} files")
+
+        total_files = len(paper_files) + dep_file_count
+        print(
+            f"[arxiv]   Lean proofs: {len(paper_files)} local + {dep_file_count} dependency files "
+            f"(copied={copied_count}, identical-skips={identical_skips}, conflict-fallbacks={conflict_fallbacks})"
+        )
+
+    def _rewrite_packaged_lakefile_srcdirs(self, lakefile_path: Path) -> None:
+        """Rewrite external `srcDir := \"../...\"` entries for package-local builds."""
+        if not lakefile_path.exists():
+            return
+        text = lakefile_path.read_text(encoding="utf-8", errors="replace")
+        rewritten = re.sub(r'srcDir\s*:=\s*"\.\./[^"]+"', 'srcDir := "."', text)
+        if rewritten != text:
+            lakefile_path.write_text(rewritten, encoding="utf-8")
+
+    def _write_dependency_bridge_module(
+        self, paper_id: str, lean_dest: Path, dep_ids: List[str]
+    ) -> None:
+        """Generate a bridge module that imports dependency module roots."""
+        if not dep_ids:
+            return
+
+        host_roots = self._derive_module_roots(paper_id)
+        if not host_roots:
+            return
+        host_root = host_roots[0]
+
+        dep_imports: List[str] = []
+        for dep_id in dep_ids:
+            for root in self._derive_module_roots(dep_id):
+                if root not in dep_imports:
+                    dep_imports.append(root)
+        if not dep_imports:
+            return
+
+        bridge_rel = Path(*host_root.split(".")) / "DependencyBridge.lean"
+        bridge_file = lean_dest / bridge_rel
+        bridge_file.parent.mkdir(parents=True, exist_ok=True)
+
+        lines: List[str] = [
+            "-- Auto-generated by scripts/build_papers.py. Do not edit manually.",
+            "-- Dependency bridge imports to inline transitive proof machinery.",
+        ]
+        for root in dep_imports:
+            lines.append(f"import {root}")
+        lines.extend(
+            [
+                "",
+                f"namespace {host_root}",
+                "",
+                "-- Marker module: importing this namespace also imports dependency roots.",
+                "",
+                f"end {host_root}",
+                "",
+            ]
+        )
+        bridge_file.write_text("\n".join(lines), encoding="utf-8")
 
     def _copy_experiments(self, paper_id: str, package_dir: Path) -> None:
         """Copy experiments directory if present.
@@ -2277,21 +3715,26 @@ end {module_root}
         if copied_count > 0:
             print(f"[arxiv]   Experiments: {copied_count} files")
 
-    def _generate_paper_lakefile(self, paper_id: str, paper_files: list, lean_dest: Path) -> None:
+    def _generate_paper_lakefile(
+        self, paper_id: str, paper_files: list, lean_dest: Path
+    ) -> None:
         """Generate paper-specific lakefile from actual proof files."""
         meta = self._get_paper_meta(paper_id)
 
         # Extract lib names from filenames (paper4_Basic.lean -> paper4_Basic)
         lib_names = [f.stem for f in paper_files]
 
-        lib_entries = "\n".join([
-            f'''lean_lib «{name}» where
+        lib_entries = "\n".join(
+            [
+                f"""lean_lib «{name}» where
   moreLeanArgs := moreLeanArgs
   weakLeanArgs := weakLeanArgs
-''' for name in lib_names
-        ])
+"""
+                for name in lib_names
+            ]
+        )
 
-        lakefile_content = f'''import Lake
+        lakefile_content = f"""import Lake
 open Lake DSL
 
 -- {meta.name} - Lean 4 Formalization
@@ -2316,27 +3759,31 @@ package «{meta.dir_name}» where
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git"
 
-{lib_entries}'''
+{lib_entries}"""
 
         (lean_dest / "lakefile.lean").write_text(lakefile_content)
 
-    def _generate_proofs_readme(self, paper_id: str, paper_files: list, lean_dest: Path) -> None:
+    def _generate_proofs_readme(
+        self, paper_id: str, paper_files: list, lean_dest: Path
+    ) -> None:
         """Generate README for proofs directory from actual proof files."""
         meta = self._get_paper_meta(paper_id)
         lean_stats = self._get_lean_stats(paper_id)
 
         # Build file table
-        file_rows = "\n".join([
-            f"| `{f.name}` | {f.stem.replace(paper_id + '_', '')} |"
-            for f in paper_files
-        ])
+        file_rows = "\n".join(
+            [
+                f"| `{f.name}` | {f.stem.replace(paper_id + '_', '')} |"
+                for f in paper_files
+            ]
+        )
         sorry_summary = (
             "0 `sorry` placeholders."
             if lean_stats.sorry_count == 0
             else f"{lean_stats.sorry_count} `sorry` placeholders."
         )
 
-        readme_content = f'''# {meta.name} - Lean 4 Formalization
+        readme_content = f"""# {meta.name} - Lean 4 Formalization
 
 ## Overview
 
@@ -2375,7 +3822,7 @@ MIT License - See main repository for details.
 
 ---
 *Auto-generated by build_papers.py*
-'''
+"""
 
         (lean_dest / "README.md").write_text(readme_content)
 
@@ -2392,7 +3839,9 @@ MIT License - See main repository for details.
         proofs_dir = self._get_paper_proofs_dir(paper_id)
         paper_lean_files = self._iter_paper_lean_files(proofs_dir)
         lean_toolchain = proofs_dir / "lean-toolchain"
-        toolchain_version = lean_toolchain.read_text().strip() if lean_toolchain.exists() else "unknown"
+        toolchain_version = (
+            lean_toolchain.read_text().strip() if lean_toolchain.exists() else "unknown"
+        )
 
         log_content = f"""OpenHCS Paper Build Log
 ========================
@@ -2472,7 +3921,9 @@ Repository: https://github.com/trissim/openhcs
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for file_path in package_dir.rglob("*"):
                 if file_path.is_file():
-                    arcname = str(Path(archive_prefix) / file_path.relative_to(package_dir))
+                    arcname = str(
+                        Path(archive_prefix) / file_path.relative_to(package_dir)
+                    )
                     zf.write(file_path, arcname)
 
         return tar_path, zip_path
@@ -2489,9 +3940,9 @@ Repository: https://github.com/trissim/openhcs
         For variants (e.g., paper1_jsait), only build Lean once (shared proofs).
         """
         meta = self._get_paper_meta(paper_id)
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"[release] Building {paper_id}: {meta.name}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # For variants, only build Lean if it's the base paper
         is_variant = paper_id != meta.dir_name.replace("_", "").lower()
@@ -2500,7 +3951,9 @@ Repository: https://github.com/trissim/openhcs
         if not is_variant:
             self.build_lean(paper_id, verbose=verbose)
         else:
-            print(f"[release] Skipping Lean build for variant {paper_id} (shared proofs)")
+            print(
+                f"[release] Skipping Lean build for variant {paper_id} (shared proofs)"
+            )
 
         self.build_latex(paper_id, verbose=verbose)
         self.build_markdown(paper_id)
@@ -2512,7 +3965,9 @@ Repository: https://github.com/trissim/openhcs
             self.check_axioms(paper_id, verbose=verbose)
 
         releases_dir = self._get_releases_dir(paper_id)
-        print(f"\n[release] ✓ {paper_id} complete → {releases_dir.relative_to(self.repo_root)}/")
+        print(
+            f"\n[release] ✓ {paper_id} complete → {releases_dir.relative_to(self.repo_root)}/"
+        )
 
     def check_axioms(self, paper_id: str, verbose: bool = True) -> dict:
         """Check what axioms each theorem in a paper depends on.
@@ -2550,7 +4005,9 @@ Repository: https://github.com/trissim/openhcs
                 content = lean_file.read_text(encoding="latin-1")
 
             # Find theorem/lemma declarations
-            for match in re.finditer(r"^(theorem|lemma)\s+(\w+['\w]*)", content, re.MULTILINE):
+            for match in re.finditer(
+                r"^(theorem|lemma)\s+(\w+['\w]*)", content, re.MULTILINE
+            ):
                 thm_name = match.group(2)
                 theorems.append((module_name, thm_name))
 
@@ -2579,7 +4036,10 @@ Repository: https://github.com/trissim/openhcs
         for module, thms in sorted(by_module.items()):
             # Create temp file with #print axioms commands
             import tempfile
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".lean", delete=False) as f:
+
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".lean", delete=False
+            ) as f:
                 f.write(f"import {module}\n\n")
                 for thm in thms:
                     # Try with module prefix
@@ -2630,7 +4090,9 @@ Repository: https://github.com/trissim/openhcs
 
                 # Retry unknown theorems without module prefix
                 if unknown_thms:
-                    with tempfile.NamedTemporaryFile(mode="w", suffix=".lean", delete=False) as f2:
+                    with tempfile.NamedTemporaryFile(
+                        mode="w", suffix=".lean", delete=False
+                    ) as f2:
                         f2.write(f"import {module}\n")
                         f2.write(f"open {module.split('.')[-1]} in\n")
                         for unk in unknown_thms:
@@ -2783,7 +4245,7 @@ Examples:
   python scripts/build_papers.py submission paper1_jsait  # Build JSAIT review PDF
   python scripts/build_papers.py metadata paper4_toc      # Generate Zenodo/arXiv copy-paste metadata
   python scripts/build_papers.py scaffold paper6   # Create boilerplate from papers.yaml entry
-"""
+""",
     )
     parser.add_argument(
         "build_type",
@@ -2810,12 +4272,14 @@ Examples:
         help="Which paper id from papers.yaml, or all (default: all)",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Show detailed output from build commands",
     )
     parser.add_argument(
-        "-q", "--quiet",
+        "-q",
+        "--quiet",
         action="store_true",
         help="Minimal output (errors only)",
     )

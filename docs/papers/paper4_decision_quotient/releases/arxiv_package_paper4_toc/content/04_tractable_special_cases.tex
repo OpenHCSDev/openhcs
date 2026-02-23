@@ -15,10 +15,10 @@ U(a,s) = \sum_i u_i\bigl(a, s_i, s_{\mathrm{parent}(i)}\bigr),
 \]
 with the root term depending only on $(a, s_{\mathrm{root}})$ and all $u_i$ given explicitly as part of the input.
 \end{enumerate}
-\textit{(Lean handles: \nolinkurl{ClaimClosure.tractable_bounded_core},
-\nolinkurl{ClaimClosure.tractable_separable_core},
-\nolinkurl{ClaimClosure.tractable_tree_core},
-\nolinkurl{ClaimClosure.tractable_subcases_conditional}.)}
+\leanmeta{\LH{CC69},
+\LH{CC70},
+\LH{CC72},
+\LH{CC71}.}
 \end{theorem}
 
 \subsection{Explicit-State Encoding}
@@ -56,3 +56,16 @@ Tree-structured utility & Hierarchies, causal trees \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\begin{proposition}[Heuristic Reusability]\label{prop:heuristic-reusability}
+Let $\mathcal{C}$ be a structure class for which SUFFICIENCY-CHECK is polynomial (Theorem~\ref{thm:tractable}). If membership in $\mathcal{C}$ is decidable in polynomial time, then the combined detect-then-check procedure is a sound, polynomial-time heuristic applicable to all future instances in $\mathcal{C}$.
+For each subcase of Theorem~\ref{thm:tractable}, structure detection is polynomial (under the declared representation assumptions).
+\leanmeta{\LH{CC53},
+\LH{CC7},
+\LH{CC55},
+\LH{CC74}.}
+\end{proposition}
+
+\begin{remark}[Heuristics and Integrity]
+Proposition~\ref{prop:heuristic-reusability} removes the complexity-theoretic obstruction to integrity-preserving action on detectable tractable instances: integrity no longer \emph{forces} abstention. Whether the agent acts still requires competence (Definition~\ref{def:competence-regime}): budget and coverage must also be satisfied. An agent that detects structure class $\mathcal{C}$, applies the corresponding polynomial checker, and abstains when detection fails maintains integrity; it never claims sufficiency without verification. Mistaking the heuristic for the general solution, claiming polynomial-time competence on a coNP-hard problem, violates integrity (Proposition~\ref{prop:integrity-resource-bound}).
+\end{remark}

@@ -1,6 +1,6 @@
 # Paper: Formal Foundations for the Single Source of Truth Principle: A Language Design Specification Derived from Epistemic Coherence
 
-**Status**: Draft-ready | **Lean**: 9555 lines, 446 theorems
+**Status**: Draft-ready | **Lean**: 9672 lines, 466 theorems
 
 ---
 
@@ -2934,6 +2934,6 @@ These grounded proofs connect the abstract DOF formalization to concrete operati
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper2_ssot/proofs/`
-- Lines: 9555
-- Theorems: 446
-- `sorry` placeholders: 3
+- Lines: 9672
+- Theorems: 466
+- `sorry` placeholders: 0

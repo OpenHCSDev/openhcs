@@ -5,12 +5,14 @@ A property is in-scope semantic iff it is computable by an admissible strategy t
 
 We adopt $\Phi$ as the complete observation universe for this paper: to claim applicability to a concrete runtime one must either (i) exhibit mappings from each runtime observable into $\Phi$, or (ii) enforce the admissibility constraints (no external registries, no reflection, no preprocessing/amortization). Under either condition the theorems apply without qualification.
 
-\begin{proposition}[Observational Quotient]
+\begin{proposition}[Observational Quotient]\label{prop:observational-quotient}
 For any admissible strategy using only $\Phi$, the entire interaction transcript (and hence the output) depends only on $\alpha(v)$. Equivalently, any in-scope semantic property $P$ factors through $\alpha$: there exists $\tilde{P}$ with $P(v) = \tilde{P}(\alpha(v))$ for all $v$.
+\textit{(Lean: \nolinkurl{observer_factors}.)}
 \end{proposition}
 
-\begin{corollary}[Why ``ad hoc'' = adding an axis/tag]
+\begin{corollary}[Why ``ad hoc'' = adding an axis/tag]\label{cor:ad-hoc-add-axis}
 If two values $v, w$ satisfy $\alpha(v) = \alpha(w)$, then no admissible $\Phi$-only strategy can distinguish them with zero error. Any mechanism that does distinguish such pairs must introduce additional information not present in $\alpha$ (equivalently, refine the axis map by adding a new axis/tag).
+\textit{(Lean: \nolinkurl{shape_cannot_distinguish}.)}
 \end{corollary}
 
 \subsection{Query Families and Distinguishing Sets}
@@ -50,8 +52,10 @@ No further assumptions are required within this theory (i.e., beyond the fixed o
 Let $E = \Phi\;(=\mathcal{Q})$ be the ground set of primitive queries (attribute predicates). Let $\mathcal{B} \subseteq 2^E$ be the family of minimal distinguishing sets.
 \end{definition}
 
-\begin{lemma}[Basis exchange]
+\begin{lemma}[Basis exchange]\label{lem:basis-exchange}
 For any $B_1, B_2 \in \mathcal{B}$ and any $q \in B_1 \setminus B_2$, there exists $q' \in B_2 \setminus B_1$ such that $(B_1 \setminus \{q\}) \cup \{q'\} \in \mathcal{B}$.
+\textit{(Lean: \nolinkurl{orthogonal_exchange},
+\nolinkurl{orthogonal_implies_exchange}.)}
 \end{lemma}
 
 \begin{proof}
@@ -66,8 +70,10 @@ For exchange, take $q \in \text{cl}(X \cup \{q'\}) \setminus \text{cl}(X)$. Sinc
 Minimal distinguishing sets are exactly the bases of the matroid defined by this closure operator. The closure component is machine-checked in \texttt{AxisClosure}; the exchange/equicardinality component and the closure-to-matroid bridge used for distinguishing-dimension well-definedness are machine-checked in \texttt{axis\_framework.lean}.
 \end{proof}
 
-\begin{theorem}[Matroid bases]
+\begin{theorem}[Matroid bases]\label{thm:matroid-bases}
 $\mathcal{B}$ is the set of bases of a matroid on ground set $E$.
+\textit{(Lean: \nolinkurl{matroid_basis_equicardinality},
+\nolinkurl{orthogonal_implies_exchange}.)}
 \end{theorem}
 
 \begin{proof}
@@ -82,14 +88,17 @@ The \emph{distinguishing dimension} of a classification system is the common car
 Let $n := |\mathcal{I}|$ be the ambient number of available attributes. Clearly $d \le n$, and there exist worst-case families with $d = n$.
 \end{remark}
 
-\begin{corollary}[Well-defined distinguishing dimension]
+\begin{corollary}[Well-defined distinguishing dimension]\label{cor:well-defined-distinguishing-dimension}
 All minimal distinguishing sets have equal cardinality. Thus the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}) is well-defined.
+\textit{(Lean: \nolinkurl{matroid_basis_equicardinality},
+\nolinkurl{closureInducedBasisEquicardinality}.)}
 \end{corollary}
 
 \subsection{Implications for Witness Cost}
 
-\begin{corollary}[Lower bound on attribute-only witness cost]
+\begin{corollary}[Lower bound on attribute-only witness cost]\label{cor:attribute-only-witness-lb}
 For any attribute-only observer, $W(\text{class-identity}) \geq d$ where $d$ is the distinguishing dimension.
+\textit{(Lean: \nolinkurl{adversary_forces_n_minus_1_queries}.)}
 \end{corollary}
 
 \begin{proof}

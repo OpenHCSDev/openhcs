@@ -3,8 +3,14 @@
 
   Proofs for the cheap-talk section (Theorems 3.1-3.4).
 
+  IMPORTANT FLAG: These theorems ONLY apply to CHEAP TALK signals.
+  A signal is cheap talk iff isCheapTalk(costIfTrue, costIfFalse) holds.
+  
   Key result: Cheap talk credibility is bounded by p/(p + (1-p)q)
   where p = prior, q = mimicability (probability deceptive sender mimics signal).
+  
+  To escape these bounds, see CostlySignals.lean - costly signals can achieve
+  arbitrarily high credibility because faking is expensive.
 -/
 
 import Credibility.Basic
@@ -13,6 +19,20 @@ import Mathlib.Tactic
 namespace Credibility
 
 /-! ## Theorem 3.1: The Cheap Talk Bound -/
+
+/-!
+  CRITICAL: This is the main theorem of Paper 5.
+  
+  For CHEAP TALK signals (cost independent of truth):
+  P(C=1 | S) ≤ p / (p + (1-p)q)
+  
+  where:
+  - p = prior probability of true claim
+  - q = mimicability (probability deceiver can fake the signal)
+  
+  IMPORTANT: This bound is TIGHT - equality holds when α=1, β=q.
+  But it ONLY applies to cheap talk. Costly signals escape this bound.
+-/
 
 /-- The cheap talk bound is nonnegative when prior and mimicability are valid. -/
 lemma cheapTalkBound_nonneg (p q : ℝ)
@@ -135,6 +155,17 @@ theorem magnitude_penalty (p_small p_large q : ℝ)
   exact cheapTalkBound_strictMono_prior q hq hq' h1 h2 h
 
 /-! ## Theorem 3.3: Emphasis Penalty -/
+
+/-!
+  CRITICAL: Adding MORE assertions DECREASES credibility past a threshold.
+  
+  This is counterintuitive but follows from the suspicion function:
+  - Honest agents don't need to over-assert
+  - Deceptive agents over-assert to compensate
+  - Therefore, more assertions = higher suspicion = lower credibility
+  
+  This is why "Trust me" backfires - excessive emphasis signals desperation.
+-/
 
 /-- Suspicion increases with number of assertions. -/
 noncomputable def suspicion (baseSuspicion : ℝ) (n : ℕ) : ℝ :=
@@ -266,13 +297,52 @@ theorem emphasis_penalty (prior baseSuspicion : ℝ)
 
 /-! ## Theorem 3.4: Meta-Assertion Trap -/
 
-/-- Theorem 3.4: Meta-assertions provide negligible credibility boost.
-    A meta-assertion m about assertion a is itself cheap talk,
-    so C(c, a ∪ m) ≤ C(c, a) + ε where ε → 0. -/
-theorem meta_assertion_trap (prior q ε : ℝ) (hε : 0 ≤ ε) :
-    cheapTalkBound prior q - cheapTalkBound prior q ≤ ε := by
-  have : cheapTalkBound prior q - cheapTalkBound prior q = 0 := by ring
-  linarith
+/-!
+  CRITICAL: Meta-assertions about credibility are themselves cheap talk.
+  
+  "My claim is credible" has the same cost regardless of whether it's true.
+  Therefore, meta-assertions cannot escape the cheap talk bound.
+  
+  IMPORTANT: This is recursive - asserting that your assertion is credible
+  is itself a cheap talk assertion that is bounded.
+  
+  This is why you can't solve credibility problems by adding more assertions.
+  See Impossibility.lean for the formal proof.
+-/
+
+/-- Theorem 3.4 (strengthened): Meta-assertions cannot exceed base credibility.
+    
+    CRITICAL: A meta-assertion about claim c has mimicability at least as high
+    as the base assertion. Therefore, the credibility with meta-assertion
+    cannot exceed the credibility without it.
+    
+    Formally: if q_meta ≥ q_base (meta is at least as mimickable), 
+    then C(c, a ∪ m) ≤ C(c, a) -/
+theorem meta_assertion_trap (prior q_base q_meta : ℝ)
+    (hp : 0 < prior) (hp' : prior < 1)
+    (hq_base : 0 ≤ q_base) (hq_meta : 0 ≤ q_meta)
+    (h_q_ge : q_meta ≥ q_base) :
+    cheapTalkBound prior q_meta ≤ cheapTalkBound prior q_base :=
+  cheapTalkBound_antitone_mimicability prior hp hp' hq_base hq_meta h_q_ge
+
+/-- Corollary: Meta-assertions strictly decrease credibility when mimicability increases.
+    If meta-assertion is more mimickable than base assertion, credibility drops. -/
+theorem meta_assertion_decreases (prior q_base q_meta : ℝ)
+    (hp : 0 < prior) (hp' : prior < 1)
+    (hq_base : 0 < q_base) (hq_base' : q_base ≤ 1)
+    (hq_meta : 0 < q_meta) (hq_meta' : q_meta ≤ 1)
+    (h_q_strict : q_meta > q_base) :
+    cheapTalkBound prior q_meta < cheapTalkBound prior q_base :=
+  cheapTalkBound_strict_antitone_mimicability prior hp hp' 
+    ⟨hq_base, hq_base'⟩ ⟨hq_meta, hq_meta'⟩ h_q_strict
+
+/-- Meta-assertion boost is nonpositive: C(c, a ∪ m) - C(c, a) ≤ 0 -/
+theorem meta_assertion_boost_nonpositive (prior q_base q_meta : ℝ)
+    (hp : 0 < prior) (hp' : prior < 1)
+    (hq_base : 0 ≤ q_base) (hq_meta : 0 ≤ q_meta)
+    (h_q_ge : q_meta ≥ q_base) :
+    cheapTalkBound prior q_meta - cheapTalkBound prior q_base ≤ 0 :=
+  sub_nonpos.mpr (meta_assertion_trap prior q_base q_meta hp hp' hq_base hq_meta h_q_ge)
 
 /-- Stronger form: meta-assertions are subject to the same bound recursively.
     Higher mimicability q means lower credibility. -/
@@ -280,7 +350,7 @@ theorem meta_assertion_bounded (prior q_base q_meta : ℝ)
     (hp : 0 < prior) (hp' : prior < 1)
     (hq_base_nonneg : 0 ≤ q_base) (hq_meta_nonneg : 0 ≤ q_meta)
     (hq_meta : q_meta ≥ q_base) :
-    cheapTalkBound prior q_meta ≤ cheapTalkBound prior q_base := by
-  exact cheapTalkBound_antitone_mimicability prior hp hp' hq_base_nonneg hq_meta_nonneg hq_meta
+    cheapTalkBound prior q_meta ≤ cheapTalkBound prior q_base :=
+  meta_assertion_trap prior q_base q_meta hp hp' hq_base_nonneg hq_meta_nonneg hq_meta
 
 end Credibility

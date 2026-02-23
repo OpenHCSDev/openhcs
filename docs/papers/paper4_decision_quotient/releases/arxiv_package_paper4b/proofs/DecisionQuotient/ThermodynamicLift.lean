@@ -1,0 +1,148 @@
+/-
+  Paper 4: Decision-Relevant Uncertainty
+
+  ThermodynamicLift.lean
+
+  Conditional complexity-to-thermodynamics bridge:
+  - lifts bit-operation lower bounds to energy/carbon lower bounds
+  - composes with integrity-resource closure assumptions
+
+  Scope discipline: these are conditional theorems over declared conversion
+  constants and lower-bound hypotheses, not unconditional physical laws.
+-/
+
+import DecisionQuotient.IntegrityCompetence
+
+namespace DecisionQuotient
+namespace ThermodynamicLift
+
+open DecisionQuotient.IntegrityCompetence
+
+/-- Declared thermodynamic conversion model (discrete lower-bound form). -/
+structure ThermoModel where
+  /-- Lower-bound energy cost per irreversible bit-operation unit. -/
+  joulesPerBit : ℕ
+  /-- Lower-bound carbon cost per joule (e.g., grams-CO2e per joule unit). -/
+  carbonPerJoule : ℕ
+
+/-- Energy lower bound induced by a lower bound on irreversible bit operations. -/
+def energyLowerBound (M : ThermoModel) (bitOpsLB : ℕ) : ℕ :=
+  M.joulesPerBit * bitOpsLB
+
+/-- Carbon lower bound induced by the same bit-operation lower bound. -/
+def carbonLowerBound (M : ThermoModel) (bitOpsLB : ℕ) : ℕ :=
+  M.carbonPerJoule * energyLowerBound M bitOpsLB
+
+/-- Mandatory cost (energy): under positive per-bit conversion and positive
+lower-bounded irreversible work, energy lower bound is strictly positive. -/
+theorem energy_lower_mandatory
+    (M : ThermoModel) {b : ℕ}
+    (hJ : 0 < M.joulesPerBit) (hb : 0 < b) :
+    0 < energyLowerBound M b := by
+  unfold energyLowerBound
+  exact Nat.mul_pos hJ hb
+
+/-- Mandatory cost (carbon): under positive per-joule conversion and positive
+energy lower bound, carbon lower bound is strictly positive. -/
+theorem carbon_lower_mandatory
+    (M : ThermoModel) {b : ℕ}
+    (hρ : 0 < M.carbonPerJoule)
+    (hEnergy : 0 < energyLowerBound M b) :
+    0 < carbonLowerBound M b := by
+  unfold carbonLowerBound
+  exact Nat.mul_pos hρ hEnergy
+
+/-- Mandatory cost bundle directly from positive conversion constants and
+positive lower-bounded irreversible work. -/
+theorem mandatory_cost_bundle
+    (M : ThermoModel) {b : ℕ}
+    (hJ : 0 < M.joulesPerBit)
+    (hC : 0 < M.carbonPerJoule)
+    (hb : 0 < b) :
+    0 < energyLowerBound M b ∧ 0 < carbonLowerBound M b := by
+  refine ⟨energy_lower_mandatory M hJ hb, ?_⟩
+  exact carbon_lower_mandatory M hC (energy_lower_mandatory M hJ hb)
+
+/-- Additive conservation in the declared linear model (energy). -/
+theorem energy_lower_additive
+    (M : ThermoModel) (b₁ b₂ : ℕ) :
+    energyLowerBound M (b₁ + b₂) =
+      energyLowerBound M b₁ + energyLowerBound M b₂ := by
+  unfold energyLowerBound
+  exact Nat.mul_add M.joulesPerBit b₁ b₂
+
+/-- Additive conservation in the declared linear model (carbon). -/
+theorem carbon_lower_additive
+    (M : ThermoModel) (b₁ b₂ : ℕ) :
+    carbonLowerBound M (b₁ + b₂) =
+      carbonLowerBound M b₁ + carbonLowerBound M b₂ := by
+  unfold carbonLowerBound
+  rw [energy_lower_additive]
+  exact Nat.mul_add M.carbonPerJoule
+    (energyLowerBound M b₁) (energyLowerBound M b₂)
+
+/-- Monotone lift: bit-operation lower bounds imply energy lower bounds. -/
+theorem energy_lower_from_bits_lower
+    (M : ThermoModel) {b₁ b₂ : ℕ} (hBits : b₁ ≤ b₂) :
+    energyLowerBound M b₁ ≤ energyLowerBound M b₂ := by
+  exact Nat.mul_le_mul_left M.joulesPerBit hBits
+
+/-- Monotone lift: bit-operation lower bounds imply carbon lower bounds. -/
+theorem carbon_lower_from_bits_lower
+    (M : ThermoModel) {b₁ b₂ : ℕ} (hBits : b₁ ≤ b₂) :
+    carbonLowerBound M b₁ ≤ carbonLowerBound M b₂ := by
+  unfold carbonLowerBound
+  exact Nat.mul_le_mul_left M.carbonPerJoule
+    (energy_lower_from_bits_lower M hBits)
+
+/-- Eventual family lift: asymptotic bit lower bounds transfer to energy/carbon. -/
+theorem eventual_thermo_lift
+    (M : ThermoModel) (bitLB bitUsed : ℕ → ℕ) (n0 : ℕ)
+    (hBits : ∀ n, n ≥ n0 → bitLB n ≤ bitUsed n) :
+    (∀ n, n ≥ n0 → energyLowerBound M (bitLB n) ≤ energyLowerBound M (bitUsed n)) ∧
+    (∀ n, n ≥ n0 → carbonLowerBound M (bitLB n) ≤ carbonLowerBound M (bitUsed n)) := by
+  constructor
+  · intro n hn
+    exact energy_lower_from_bits_lower M (hBits n hn)
+  · intro n hn
+    exact carbon_lower_from_bits_lower M (hBits n hn)
+
+/-- Conditional bundle with hardness-closure:
+    if exact competence collapses complexity classes, then under non-collapse
+    exact competence is impossible; with any declared bit lower bound this
+    simultaneously yields energy and carbon lower bounds. -/
+theorem hardness_thermo_bundle_conditional
+    {P_eq_coNP ExactCertificationCompetence : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse : ExactCertificationCompetence → P_eq_coNP)
+    (M : ThermoModel)
+    {bitLB bitUsed : ℕ} (hBits : bitLB ≤ bitUsed) :
+    ¬ ExactCertificationCompetence ∧
+      energyLowerBound M bitLB ≤ energyLowerBound M bitUsed ∧
+      carbonLowerBound M bitLB ≤ carbonLowerBound M bitUsed := by
+  refine ⟨?_, energy_lower_from_bits_lower M hBits, carbon_lower_from_bits_lower M hBits⟩
+  exact integrity_resource_bound (P_eq_coNP := P_eq_coNP)
+    (PolytimeUniversalCompetence := ExactCertificationCompetence) hNeq hCollapse
+
+/-- Conditional mandatory+conserved bundle in the declared linear model. -/
+theorem mandatory_conserved_bundle_conditional
+    (M : ThermoModel)
+    {b : ℕ}
+    (hJ : 0 < M.joulesPerBit)
+    (hC : 0 < M.carbonPerJoule)
+    (hb : 0 < b)
+    (b₁ b₂ : ℕ) :
+    0 < energyLowerBound M b ∧
+      0 < carbonLowerBound M b ∧
+      energyLowerBound M (b₁ + b₂) =
+        energyLowerBound M b₁ + energyLowerBound M b₂ ∧
+      carbonLowerBound M (b₁ + b₂) =
+        carbonLowerBound M b₁ + carbonLowerBound M b₂ := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · exact energy_lower_mandatory M hJ hb
+  · exact carbon_lower_mandatory M hC (energy_lower_mandatory M hJ hb)
+  · exact energy_lower_additive M b₁ b₂
+  · exact carbon_lower_additive M b₁ b₂
+
+end ThermodynamicLift
+end DecisionQuotient
