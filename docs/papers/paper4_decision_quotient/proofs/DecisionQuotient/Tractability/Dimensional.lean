@@ -394,43 +394,52 @@ theorem orbitType_eq_iff {k d : ℕ} (s s' : DimensionalStateSpace k d) :
         (Finset.filter (fun i => s.state i = v) Finset.univ).card =
         (Finset.filter (fun i => s'.state i = v) Finset.univ).card := by
       intro v
-      have hv : v ∈ Finset.univ := Finset.mem_univ v
       have hmem : (v, (Finset.filter (fun i => s.state i = v) Finset.univ).card) ∈ s.orbitType := by
         unfold DimensionalStateSpace.orbitType
         simp only [Finset.mem_image, Finset.mem_univ, true_and]
-        use v
-      have hmem' : (v, (Finset.filter (fun i => s.state i = v) Finset.univ).card) ∈ s'.orbitType := by
-        rw [h] at hmem; exact hmem
-      unfold DimensionalStateSpace.orbitType at hmem'
-      simp only [Finset.mem_image, Finset.mem_univ, true_and] at hmem'
-      rcases hmem' with ⟨v', _, heq⟩
+        exact ⟨v, Finset.mem_univ v, rfl⟩
+      rw [h] at hmem
+      unfold DimensionalStateSpace.orbitType at hmem
+      simp only [Finset.mem_image, Finset.mem_univ, true_and] at hmem
+      obtain ⟨v', _, heq⟩ := hmem
       simp only [Prod.ext_iff] at heq
       exact heq.2
     let fiberBijections (v : Fin k) :
         {i : Fin d // s.state i = v} ≃ {i : Fin d // s'.state i = v} := by
       have heq : Fintype.card {i : Fin d // s.state i = v} = Fintype.card {i : Fin d // s'.state i = v} := by
-        simp only [Fintype.card_fin]
-        repeat rw [Finset.card_filter, Finset.card_univ, Fintype.card_fin]
+        simp only [Fintype.card_fin, Finset.card_filter, Finset.card_univ]
         exact hcard v
       exact Fintype.equivOfCardEq heq
-    let σ : Equiv.Perm (Fin d) := by
-      refine Equiv.ofBijective (fun i => (fiberBijections ⟨s.state i, s.state i.2⟩ ⟨i, rfl⟩) : Fin d) ?_
-      constructor
-      · intro i j hij
-        have hprop := (fiberBijections ⟨s.state i, s.state i.2⟩ ⟨i, rfl⟩).property
-        simp only [Equiv.coe_toEmbedding, Equiv.coe_toEmbedding] at hprop
-        have := (fiberBijections ⟨s.state i, s.state i.2⟩).injective (Subtype.ext_iff_val.mpr hij)
-        exact Subtype.ext_iff_val.mp this
-      · intro j
-        have hvj : s'.state j = ⟨s'.state j, s'.state j.2⟩ := rfl
-        have hvj' : (⟨s'.state j, s'.state j.2⟩ : Fin k) = s'.state j := rfl
-        obtain ⟨i, hi⟩ := (fiberBijections ⟨s'.state j, s'.state j.2⟩).symm.surjective ⟨j, rfl⟩
-        exact ⟨i, Subtype.ext_iff_val.mp hi⟩
+    let f : Fin d → Fin d := fun i => fiberBijections (s.state i) ⟨i, rfl⟩
+    have hf_inj : Function.Injective f := by
+      intro i j hij
+      have hij' : (fiberBijections (s.state i) ⟨i, rfl⟩ : Fin d) = (fiberBijections (s.state j) ⟨j, rfl⟩ : Fin d) := hij
+      have hprop_i := (fiberBijections (s.state i) ⟨i, rfl⟩).property
+      have hprop_j := (fiberBijections (s.state j) ⟨j, rfl⟩).property
+      simp only at hprop_i hprop_j
+      have : s.state i = s.state j := by
+        have := congrArg s'.state hij
+        simp only [hprop_i, hprop_j] at this
+        exact this
+      rw [this] at hij'
+      have hinj := (fiberBijections (s.state i)).injective (Subtype.ext.mpr hij')
+      exact Subtype.ext_iff.mp hinj
+    have hf_surj : Function.Surjective f := by
+      intro j
+      have hvj : s'.state j = s'.state j := rfl
+      obtain ⟨⟨i, hi⟩, heq⟩ := (fiberBijections (s'.state j)).symm.surjective ⟨j, hvj⟩
+      use i
+      simp only [Equiv.coe_symm_apply] at heq
+      simp only [f]
+      have : s.state i = s'.state j := hi
+      subst this
+      simp [heq]
+    let σ : CoordinatePermutation d := Equiv.ofBijective f ⟨hf_inj, hf_surj⟩
     use σ
     ext i
     unfold DimensionalStateSpace.permute
-    simp only [Equiv.Perm.coe_mk, Equiv.coe_ofBijective]
-    exact (fiberBijections ⟨s.state i, s.state i.2⟩ ⟨i, rfl⟩).property.symm
+    simp only [Equiv.coe_ofBijective, f]
+    exact (fiberBijections (s.state i) ⟨i, rfl⟩).property.symm
   · intro ⟨σ, hσ⟩
     rw [hσ]
     exact (orbitType_permute s σ).symm
