@@ -1,6 +1,7 @@
 import DecisionQuotient.Basic
 import DecisionQuotient.Sufficiency
 import DecisionQuotient.Instances
+import DecisionQuotient.QueryComplexity
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Fintype.Basic
@@ -135,17 +136,9 @@ lemma exists_coord_not_mem {n : ℕ} (I : Finset (Fin n)) (hI : I.card < n) :
     simpa [hcard] using hI
   exact (Nat.lt_irrefl n) hI'
 
-def flipAt {n : ℕ} (s : BinaryState n) (j : Fin n) : BinaryState n :=
-  fun i => if i = j then !s i else s i
-
-lemma flipAt_ne {n : ℕ} (s : BinaryState n) (j : Fin n) :
-    flipAt s j ≠ s := by
-  intro h
-  by_cases hsj : s j
-  · have h' := congrArg (fun f => f j) h
-    simpa [flipAt, hsj] using h'
-  · have h' := congrArg (fun f => f j) h
-    simpa [flipAt, hsj] using h'
+-- Use flipAt from QueryComplexity (BinaryState n = Fin n → Bool)
+-- lemma flipAt_ne {n : ℕ} (s : BinaryState n) (j : Fin n) :
+--     flipAt s j ≠ s := by
 
 lemma agreeOn_flipAt {n : ℕ} (s : BinaryState n) (I : Finset (Fin n)) (j : Fin n)
     (hj : j ∉ I) :

@@ -784,8 +784,28 @@ The key insight: in a tree, each element of J \ I that "blocks" must map to
 a distinct element of I (its unique parent). Since |J \ I| elements each need
 a distinct blocker in I, and the tree structure ensures this mapping is injective,
 we get |J \ I| ≤ |I|, which contradicts |J| > |I| when J is independent. -/
-axiom tree_implies_exchange {A : AxisSet} (htree : TreeDerivability A) :
-    exchangeProperty A
+theorem tree_implies_exchange {A : AxisSet} (htree : TreeDerivability A) :
+    exchangeProperty A := by
+  unfold exchangeProperty
+  intro I J hJnodup hIsub hJsub hIind hJind hlen
+  -- Since |I| < |J|, there exists x ∈ J \ I
+  have hJdiffI : ∃ x, x ∈ J ∧ x ∉ I := by
+    by_contra hnot
+    push_neg at hnot
+    have : J ⊆ I := by
+      intro x hxJ
+      have := hnot x
+      contrapose this
+      intro h
+      exact ⟨hxJ, h⟩
+    have : J.length ≤ I.length := length_le_of_subset_nodup hJnodup (List.subset_of_eq this)
+    linarith
+  obtain ⟨x, hxJ, hxI⟩ := hJdiffI
+  use x
+  constructor
+  · exact hxJ
+  -- Show x :: I is independent
+  sorry
 
 /-- Matroid structure on axis sets (with Nodup requirement). -/
 structure AxisMatroid where
