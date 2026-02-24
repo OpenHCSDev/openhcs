@@ -1,4 +1,4 @@
-/-
+/-!
   Paper 4: Decision-Relevant Uncertainty
   
   Reduction.lean - Formal coNP-Completeness Proof
@@ -14,8 +14,16 @@
   - Assignment s has Opt = {accept} iff φ(s) = true
   
   Then: φ is tautology ⟺ I = ∅ is sufficient in D_φ
--/
 
+  ## Triviality Level
+  NONTRIVIAL: This is a core hardness proof - the main complexity-theoretic
+  contribution showing coNP-completeness of SUFFICIENCY-CHECK.
+
+  ## Dependencies
+  - Depends on: Basic.lean, Sufficiency.lean
+  - Used by: ClaimClosure.lean (closure of hardness results)
+-/
+  
 import DecisionQuotient.Basic
 import DecisionQuotient.Sufficiency
 import Mathlib.Data.Fintype.Basic

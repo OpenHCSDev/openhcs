@@ -1,12 +1,20 @@
-/-
+/-!
   Paper 4: Decision-Relevant Uncertainty
   
   Instances.lean - Concrete ProductSpace Instances
   
   This file provides concrete instantiations of the ProductSpace class,
   proving the abstraction is not vacuous and can be applied to real types.
--/
 
+  ## Triviality Level
+  TRIVIAL: This provides concrete examples. The work is in defining the
+  instances, not in proving deep theorems.
+
+  ## Dependencies
+  - Depends on: Sufficiency.lean
+  - Used by: QueryComplexity.lean, other proof files
+-/
+  
 import DecisionQuotient.Sufficiency
 import Mathlib.Data.Fin.Basic
 import Mathlib.Logic.Function.Basic

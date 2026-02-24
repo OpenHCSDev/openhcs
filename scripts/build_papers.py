@@ -1918,8 +1918,88 @@ end {module_root}
             for label, tags in sorted(label_to_tags.items(), key=lambda kv: kv[0])
         }
 
-    def _derive_hardness_profile(self, tags: List[str]) -> str:
-        """Derive a compact hardness profile label from normalized regime tags."""
+    def _derive_hardness_profile(self, label: str, tags: List[str]) -> str:
+        """Derive a compact hardness profile label from deterministic rules + tags.
+
+        Priority:
+        1) Explicit per-label profile overrides (deterministic, paper-handle keyed)
+        2) Explicit per-label exclusions from hardness profiling (`unspecified`)
+        3) Regime-tag fallback classifier
+        """
+        deterministic_profile_by_label: Dict[str, str] = {
+            # query-lb
+            "cor:information-barrier-query": "query-lb",
+            "cor:query-obstruction-bool": "query-lb",
+            "prop:query-finite-state-generalization": "query-lb",
+            "prop:query-randomized-robustness": "query-lb",
+            "prop:query-randomized-weighted": "query-lb",
+            "prop:query-tightness-full-scan": "query-lb",
+            "prop:query-weighted-transfer": "query-lb",
+            # tractable-structured
+            "cor:practice-bounded": "tractable-structured",
+            "cor:practice-structured": "tractable-structured",
+            "cor:practice-tree": "tractable-structured",
+            "prop:heuristic-reusability": "tractable-structured",
+            "prop:interior-verification-tractable": "tractable-structured",
+            "cor:interior-singleton-certificate": "tractable-structured",
+            # cost-growth
+            "cor:gap-externalization": "cost-growth",
+            "cor:generalized-eventual-dominance": "cost-growth",
+            "cor:linear-positive-no-saturation": "cost-growth",
+            "cor:right-wrong-hardness": "cost-growth",
+            "cor:type-system-threshold": "cost-growth",
+            "prop:dominance-modes": "cost-growth",
+            "prop:generalized-assumption-boundary": "cost-growth",
+            "prop:hardness-conservation": "cost-growth",
+            "prop:hardness-efficiency-interpretation": "cost-growth",
+            "thm:generalized-dominance": "cost-growth",
+            "thm:generalized-saturation-possible": "cost-growth",
+            "thm:linear-saturation-iff-zero": "cost-growth",
+            "prop:thermo-conservation-additive": "cost-growth",
+            "prop:thermo-lift": "cost-growth",
+            "prop:thermo-hardness-bundle": "cost-growth",
+            "prop:thermo-mandatory-cost": "cost-growth",
+            # succinct-hard
+            "cor:exact-identifiability": "succinct-hard",
+            "cor:gap-minimization-hard": "succinct-hard",
+            "cor:practice-diagnostic": "succinct-hard",
+            "cor:overmodel-diagnostic-implication": "succinct-hard",
+            "cor:no-auto-minimize": "succinct-hard",
+            "prop:sufficiency-char": "succinct-hard",
+            # exp-lb-conditional
+            "prop:budgeted-crossover": "exp-lb-conditional",
+            "prop:crossover-above-cap": "exp-lb-conditional",
+            "prop:crossover-not-certification": "exp-lb-conditional",
+            "prop:crossover-policy": "exp-lb-conditional",
+        }
+
+        force_unspecified_labels: Set[str] = {
+            # Integrity/admissibility/reporting
+            "prop:evidence-admissibility-equivalence",
+            "prop:exact-requires-evidence",
+            "prop:certified-confidence-gate",
+            "prop:steps-run-scalar",
+            "prop:self-confidence-not-certification",
+            "thm:exact-certified-gap-iff-admissible",
+            # Bridge/type transport
+            "prop:bridge-transfer-scope",
+            "prop:one-step-bridge",
+            "thm:bridge-boundary-represented",
+            "prop:snapshot-process-typing",
+            "prop:law-instance-objective-bridge",
+            "thm:physical-bridge-bundle",
+            # Definitional equivalence
+            "prop:minimal-relevant-equiv",
+            "prop:set-to-selector",
+            "prop:zero-epsilon-reduction",
+            "prop:insufficiency-counterexample",
+        }
+
+        if label in deterministic_profile_by_label:
+            return deterministic_profile_by_label[label]
+        if label in force_unspecified_labels:
+            return "unspecified"
+
         tag_set = set(tags)
         profiles: List[str] = []
 
@@ -1966,7 +2046,7 @@ end {module_root}
         profile_counts: Dict[str, int] = {}
         for label in claim_labels:
             tags = label_to_tags.get(label, [])
-            profile = self._derive_hardness_profile(tags)
+            profile = self._derive_hardness_profile(label, tags)
             profile_counts[profile] = profile_counts.get(profile, 0) + 1
 
             tags_cell = ",".join(tags) if tags else "-"

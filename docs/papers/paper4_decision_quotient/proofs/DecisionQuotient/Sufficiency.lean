@@ -1,4 +1,4 @@
-/-
+/-!
   Paper 4: Decision-Relevant Uncertainty
 
   Sufficiency.lean - Coordinate Sufficiency and Feature Selection
@@ -10,6 +10,15 @@
   - Sufficient set I: knowing coordinates in I determines Opt
   - Minimal sufficient set: smallest such I
   - Relevant coordinate: a coordinate that can change Opt
+
+  ## Triviality Level
+  NONTRIVIAL: This defines the core mathematical objects (sufficiency, relevance)
+  that the entire paper builds on. These are NOT trivial - they are the
+  fundamental definitions that enable all complexity proofs.
+
+  ## Dependencies
+  - Depends on: Basic.lean (core definitions)
+  - Used by: ClaimClosure.lean, Reduction.lean, all hardness proofs
 -/
 
 import DecisionQuotient.Basic
