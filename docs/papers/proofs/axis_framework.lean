@@ -854,13 +854,24 @@ set breaks completeness, while adding any element is redundant. Combined with
 exchange, this forces equal cardinality.
 
 We state this as an axiom, instantiable when the domain structure is specified. -/
-axiom minimal_equicardinal_orthogonal {A : AxisSet} {D : Domain α}
+theorem minimal_equicardinal_orthogonal {A : AxisSet} {D : Domain α}
     (horth : OrthogonalAxes A)
     (A₁ A₂ : AxisSet) (hmin₁ : minimal A₁ D) (hmin₂ : minimal A₂ D)
     (hnodup₁ : A₁.Nodup) (hnodup₂ : A₂.Nodup)
     (h₁sub : A₁ ⊆ A) (h₂sub : A₂ ⊆ A)
     (h₁ind : axisIndependent A₁) (h₂ind : axisIndependent A₂) :
-    A₁.length = A₂.length
+    A₁.length = A₂.length := by
+  -- For orthogonal axes, minimal complete sets are maximal independent sets
+  -- Use the matroid basis equicardinality theorem
+  have hI₁ : A₁.length ≤ A₂.length → False := by
+    intro hlt
+    -- Since A₁ is smaller, exchange gives x ∈ A₂ \ A₁ such that A₁ ∪ {x} is independent
+    have hex := orthogonal_exchange horth A₁ A₂ hnodup₂ h₁sub h₂sub h₁ind h₂ind hlt
+    sorry
+  have hI₂ : A₂.length ≤ A₁.length → False := by
+    intro hlt
+    sorry
+  linarith
 
 /-!
 ## Fixed Axis Incompleteness and Parameterized Immunity

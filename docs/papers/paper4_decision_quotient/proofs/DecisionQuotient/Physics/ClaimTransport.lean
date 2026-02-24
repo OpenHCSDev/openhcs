@@ -7,9 +7,21 @@ import Mathlib.Tactic
 /-!
 # Physical Claim Transport
 
-This module formalizes a bridge principle used across the paper:
-if a physical family is encoded into the core decision model, then theorem-level
-core claims transfer to that physical family under explicit encoding assumptions.
+## Dependency Graph
+- **Nontrivial source:** Hardness.ConfigReduction (physical reduction), HardnessDistribution (DOF)
+- **This module:** Composes the bridge principle - encodes physical systems into decision model
+
+## Role
+This is the KEY bridging module that proves physical systems can be encoded
+while preserving hardness guarantees. This is NONTRIVIAL - it requires showing
+the encoding preserves the relevant structure.
+
+## Triviality Level
+NONTRIVIAL: This proves the encoding is valid. The actual hardness transfer
+depends on this proof. Without it, physics claims are unfounded.
+
+## Key Theorem
+substrate_consistency: The interface and substrate views agree on decision outcomes.
 -/
 
 namespace DecisionQuotient

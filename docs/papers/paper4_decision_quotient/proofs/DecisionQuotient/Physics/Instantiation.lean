@@ -9,8 +9,17 @@ import DecisionQuotient.Physics.AccessRegime
 /-!
 # Physics Instantiations of the Decision Quotient Framework
 
-This module provides a mechanized bridge layer from physical graph-like systems
-to the decision abstractions used in Paper 4.
+## Dependency Graph
+- **Nontrivial source:** PhysicalHardness.lean (energy bounds), AccessRegime.lean (access regimes)
+- **This module:** Instantiates the abstract decision framework onto physical substrates
+
+## Role
+This is a bridging/interface module - defines how to encode physical systems
+(graphs, CRNs, circuits) into the decision framework. Trivial encoding definitions.
+
+## Triviality Level
+TRIVIAL: This module only defines encodings. The nontrivial work is in proving
+that those encodings preserve hardness properties (PhysicalHardness).
 -/
 
 namespace DecisionQuotient.Physics.Instantiation

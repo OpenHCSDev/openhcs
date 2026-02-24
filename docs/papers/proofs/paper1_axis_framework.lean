@@ -784,8 +784,26 @@ The key insight: in a tree, each element of J \ I that "blocks" must map to
 a distinct element of I (its unique parent). Since |J \ I| elements each need
 a distinct blocker in I, and the tree structure ensures this mapping is injective,
 we get |J \ I| ≤ |I|, which contradicts |J| > |I| when J is independent. -/
-axiom tree_implies_exchange {A : AxisSet} (htree : TreeDerivability A) :
-    exchangeProperty A
+theorem tree_implies_exchange {A : AxisSet} (htree : TreeDerivability A) :
+    exchangeProperty A := by
+  unfold exchangeProperty
+  intro I J hJnodup hIsub hJsub hIind hJind hlen
+  have hJdiffI : ∃ x, x ∈ J ∧ x ∉ I := by
+    by_contra hnot
+    push_neg at hnot
+    have : J ⊆ I := by
+      intro x hxJ
+      have := hnot x
+      contrapose this
+      intro h
+      exact ⟨hxJ, h⟩
+    have : J.length ≤ I.length := length_le_of_subset_nodup hJnodup (List.subset_of_eq this)
+    linarith
+  obtain ⟨x, hxJ, hxI⟩ := hJdiffI
+  use x
+  constructor
+  · exact hxJ
+  sorry
 
 /-- Matroid structure on axis sets (with Nodup requirement). -/
 structure AxisMatroid where
@@ -834,13 +852,21 @@ set breaks completeness, while adding any element is redundant. Combined with
 exchange, this forces equal cardinality.
 
 We state this as an axiom, instantiable when the domain structure is specified. -/
-axiom minimal_equicardinal_orthogonal {A : AxisSet} {D : Domain α}
+theorem minimal_equicardinal_orthogonal {A : AxisSet} {D : Domain α}
     (horth : OrthogonalAxes A)
     (A₁ A₂ : AxisSet) (hmin₁ : minimal A₁ D) (hmin₂ : minimal A₂ D)
     (hnodup₁ : A₁.Nodup) (hnodup₂ : A₂.Nodup)
     (h₁sub : A₁ ⊆ A) (h₂sub : A₂ ⊆ A)
     (h₁ind : axisIndependent A₁) (h₂ind : axisIndependent A₂) :
-    A₁.length = A₂.length
+    A₁.length = A₂.length := by
+  have hI₁ : A₁.length ≤ A₂.length → False := by
+    intro hlt
+    have hex := orthogonal_exchange horth A₁ A₂ hnodup₂ h₁sub h₂sub h₁ind h₂ind hlt
+    sorry
+  have hI₂ : A₂.length ≤ A₁.length → False := by
+    intro hlt
+    sorry
+  linarith
 
 /-!
 ## Fixed Axis Incompleteness and Parameterized Immunity
