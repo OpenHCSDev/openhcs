@@ -7,6 +7,13 @@
   for Σ₂ᴾ reductions. It is intentionally minimal: CNF over a sum of
   variables (existential X and universal Y), evaluation, and the
   ∃x ∀y satisfiability predicate.
+
+  ## Triviality Level
+  TRIVIAL: This defines QBF encoding. No nontrivial proofs - just definitions
+  used as source problems for Σ₂ᴾ reductions.
+
+  ## Dependencies
+  - Chain: Basic.lean → here → Sigma2PHardness.lean (uses QBF as reduction source)
 -/
 
 import Mathlib.Data.Fin.Basic

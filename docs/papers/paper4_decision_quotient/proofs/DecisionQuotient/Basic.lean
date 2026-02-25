@@ -1,4 +1,4 @@
-/-!
+/-
   Paper 4: Decision-Relevant Uncertainty
 
   Basic.lean - Core definitions for decision problems under uncertainty

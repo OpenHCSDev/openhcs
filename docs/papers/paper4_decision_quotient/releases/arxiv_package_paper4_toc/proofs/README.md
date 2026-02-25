@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Decision Quotient (ToC).
 
-- **Lines:** 11932
-- **Theorems:** 553
+- **Lines:** 16353
+- **Theorems:** 727
 - **`sorry` placeholders:** 0
 
 
@@ -57,10 +57,18 @@ lake build
 | `InteriorVerification.lean` | InteriorVerification |
 | `PhysicalBudgetCrossover.lean` | PhysicalBudgetCrossover |
 | `AccessRegime.lean` | AccessRegime |
+| `ClaimTransport.lean` | ClaimTransport |
+| `DecisionEquivalence.lean` | DecisionEquivalence |
 | `DecisionTime.lean` | DecisionTime |
+| `DiscreteSpacetime.lean` | DiscreteSpacetime |
+| `HeisenbergStrong.lean` | HeisenbergStrong |
 | `Instantiation.lean` | Instantiation |
+| `IntegrityEquilibrium.lean` | IntegrityEquilibrium |
+| `MolecularIntegrity.lean` | MolecularIntegrity |
+| `PhysicalCore.lean` | PhysicalCore |
 | `PhysicalHardness.lean` | PhysicalHardness |
 | `PhysicalIncompleteness.lean` | PhysicalIncompleteness |
+| `Uncertainty.lean` | Uncertainty |
 | `PolynomialReduction.lean` | PolynomialReduction |
 | `QueryComplexity.lean` | QueryComplexity |
 | `Quotient.lean` | Quotient |
@@ -70,12 +78,14 @@ lake build
 | `Summary.lean` | Summary |
 | `ThermodynamicLift.lean` | ThermodynamicLift |
 | `BoundedActions.lean` | BoundedActions |
+| `Dimensional.lean` | Dimensional |
 | `FPT.lean` | FPT |
 | `SeparableUtility.lean` | SeparableUtility |
 | `Tightness.lean` | Tightness |
 | `TreeStructure.lean` | TreeStructure |
 | `Tractable.lean` | Tractable |
 | `UniverseObjective.lean` | UniverseObjective |
+| `WitnessCheckingDuality.lean` | WitnessCheckingDuality |
 | `DecisionQuotient.lean` | DecisionQuotient |
 | `lakefile.lean` | lakefile |
 

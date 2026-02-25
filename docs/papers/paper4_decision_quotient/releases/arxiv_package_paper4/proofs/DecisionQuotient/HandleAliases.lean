@@ -1,6 +1,13 @@
 /-
   Compact Lean-handle aliases used in paper prose/tables.
   Implemented as namespace-level exports to preserve exact theorem constants.
+
+  ## Triviality Level
+  TRIVIAL: This is purely a re-export file. No proofs whatsoever.
+
+  ## Dependencies
+  - Chain: Depends on all main modules but exports them under simpler names
+  - The nontrivial work is in the imported modules (ClaimClosure, Sigma2PHardness, etc.)
 -/
 
 import DecisionQuotient.Basic
@@ -13,6 +20,15 @@ import DecisionQuotient.Hardness.ConfigReduction
 import DecisionQuotient.InteriorVerification
 import DecisionQuotient.DecisionGeometry
 import DecisionQuotient.UniverseObjective
+import DecisionQuotient.Physics.Instantiation
+import DecisionQuotient.Physics.AccessRegime
+import DecisionQuotient.Physics.PhysicalHardness
+import DecisionQuotient.Physics.DecisionTime
+import DecisionQuotient.Physics.PhysicalIncompleteness
+import DecisionQuotient.Physics.ClaimTransport
+import DecisionQuotient.Physics.Uncertainty
+import DecisionQuotient.Physics.HeisenbergStrong
+import DecisionQuotient.WitnessCheckingDuality
 
 namespace DecisionQuotient
 
@@ -172,12 +188,18 @@ export DecisionQuotient.HardnessDistribution (
   linear_lt_exponential_plus_constant_eventually
   native_dominates_manual
   no_positive_slope_linear_represents_saturating
+  requiredWork
+  requiredWork_eq_affine_in_sites
   right_dominates_wrong
   saturatingSiteCost_eventually_constant
   simplicityTax_grows
+  hardnessLowerBound
+  hardness_is_irreducible_required_work
   totalDOF_eventually_constant_iff_zero_distributed
   totalDOF_ge_intrinsic
   totalExternalWork_eq_n_mul_gapCard
+  workGrowthDegree
+  workGrowthDegree_zero_iff_eventually_constant
 )
 end HD
 
@@ -210,8 +232,17 @@ end S2P
 namespace PBC
 export DecisionQuotient.PhysicalBudgetCrossover (
   CrossoverAt
+  SuccinctInfeasible
+  SuccinctUnbounded
   explicit_infeasible_succinct_feasible_of_crossover
+  exists_least_crossover_point
   has_crossover_of_bounded_succinct_unbounded_explicit
+  explicit_eventual_infeasibility_of_monotone_and_witness
+  crossover_eventually_of_eventual_split
+  payoff_threshold_explicit_vs_succinct
+  no_universal_survivor_without_succinct_bound
+  policy_closure_at_divergence
+  policy_closure_beyond_divergence
 )
 end PBC
 
@@ -265,6 +296,166 @@ export DecisionQuotient.DecisionProblem (
   edgeOnComplement_iff_not_sufficient
 )
 end DG
+
+namespace DT
+export DecisionQuotient.Physics.DecisionTime (
+  TimedState
+  DecisionProcess
+  tick
+  DecisionEvent
+  TimeUnitStep
+  time_is_discrete
+  time_coordinate_falsifiable
+  tick_increments_time
+  tick_decision_witness
+  tick_is_decision_event
+  decision_event_implies_time_unit
+  decision_taking_place_is_unit_of_time
+  decision_event_iff_eq_tick
+  run
+  run_time_exact
+  run_elapsed_time_eq_ticks
+  decisionTrace
+  decisionTrace_length_eq_ticks
+  decision_count_equals_elapsed_time
+  SubstrateKind
+  SubstrateModel
+  substrate_step_realizes_decision_event
+  substrate_step_is_time_unit
+  time_unit_law_substrate_invariant
+)
+end DT
+
+namespace PI
+export DecisionQuotient.Physics.PhysicalIncompleteness (
+  UniverseModel
+  PhysicallyInstantiated
+  no_surjective_instantiation_of_card_gap
+  physical_incompleteness_of_card_gap
+  physical_incompleteness_of_bounds
+  under_resolution_implies_collision
+  under_resolution_implies_decision_collision
+)
+end PI
+
+namespace CT
+export DecisionQuotient.Physics.ClaimTransport (
+  PhysicalEncoding
+  physical_claim_lifts_from_core
+  physical_claim_lifts_from_core_conditional
+  physical_counterexample_yields_core_counterexample
+  physical_counterexample_invalidates_core_rule
+  no_physical_counterexample_of_core_theorem
+  LawGapInstance
+  lawGapEncoding
+  lawGapPhysicalClaim
+  law_gap_physical_claim_holds
+  no_law_gap_counterexample
+  physical_bridge_bundle
+)
+end CT
+
+namespace IN
+export DecisionQuotient.Physics.Instantiation (
+  Geometry
+  Dynamics
+  Circuit
+  geometry_plus_dynamics_is_circuit
+  DecisionInterpretation
+  DecisionCircuit
+  Molecule
+  Reaction
+  ReactionOutcome
+  MoleculeGeometry
+  MoleculeDynamics
+  MoleculeCircuit
+  MoleculeAsCircuit
+  MoleculeAsDecisionCircuit
+  molecule_decision_preserves_geometry
+  molecule_decision_preserves_dynamics
+  asDecisionCircuit
+  asDecisionCircuit_preserves_circuit
+  Configuration
+  EnergyLandscape
+  k_Boltzmann
+  LandauerBound
+  law_objective_schema
+  law_opt_eq_feasible_of_gap
+  law_opt_singleton_of_deterministic
+)
+end IN
+
+namespace ARG
+export PhysicalComplexity.AccessRegime (
+  PhysicalDevice
+  AccessRegime
+  RegimeEval
+  RegimeSample
+  RegimeProof
+  RegimeWithCertificate
+  RegimeEvalOn
+  RegimeSampleOn
+  RegimeProofOn
+  RegimeWithCertificateOn
+  HardUnderEval
+  AuditableWithCertificate
+  certificate_upgrades_regime
+  certificate_upgrades_regime_on
+  physical_succinct_certification_hard
+  certificate_amortizes_hardness
+  regime_upgrade_with_certificate
+  regime_upgrade_with_certificate_on
+  AccessChannelLaw
+  FiveWayMeet
+)
+end ARG
+
+namespace PH
+export PhysicalComplexity (
+  k_Boltzmann
+  PhysicalComputer
+  bit_energy_cost
+  Landauer_bound
+  InstanceSize
+  ComputationalRequirement
+  coNP_requirement
+  coNP_physically_impossible
+  coNP_not_in_P_physically
+  sufficiency_physically_impossible
+)
+end PH
+
+namespace UQ
+export DecisionQuotient.Physics.Uncertainty (
+  binaryIdentityProblem
+  binaryIdentityProblem_opt_true
+  binaryIdentityProblem_opt_false
+  exists_decision_problem_with_nontrivial_opt
+  PhysicalNontrivialOptAssumption
+  exists_decision_problem_with_nontrivial_opt_of_physical
+)
+end UQ
+
+namespace HS
+export DecisionQuotient.Physics.HeisenbergStrong (
+  NoisyPhysicalEncoding
+  HeisenbergStrongBinding
+  strong_binding_implies_core_nontrivial
+  strong_binding_yields_core_encoding_witness
+  strong_binding_implies_physical_nontrivial_opt_assumption
+  strong_binding_implies_nontrivial_opt_via_uncertainty
+)
+end HS
+
+namespace WD
+export DecisionQuotient (
+  witnessBudgetEmpty
+  checkingBudgetPairs
+  checking_witnessing_duality_budget
+  no_sound_checker_below_witness_budget
+  checking_time_ge_witness_budget
+)
+end WD
 
 namespace UO
 export DecisionQuotient (

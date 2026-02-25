@@ -10,6 +10,13 @@ import Mathlib.Tactic
   - universe transition laws induce feasibility sets over actions,
   - utilities can be defined directly from those laws,
   - with a strict allowed-vs-blocked gap, optimal actions are exactly feasible actions.
+
+  ## Triviality Level
+  TRIVIAL: This defines law-induced objectives. The nontrivial work is in
+  using these to prove hardness results.
+
+  ## Dependencies
+  - Chain: Basic.lean → here → Instantiation.lean (physics encoding)
 -/
 
 namespace DecisionQuotient

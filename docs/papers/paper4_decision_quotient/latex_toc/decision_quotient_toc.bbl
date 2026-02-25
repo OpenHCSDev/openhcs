@@ -41,6 +41,13 @@ Charles~H. Bennett.
 \newblock {\em Studies in History and Philosophy of Science Part B: Studies in
   History and Philosophy of Modern Physics}, 34(3):501--510, 2003.
 
+\bibitem{berut2012experimental}
+Antoine B{\'e}rut, Artak Arakelyan, Arshak Petrosyan, Sergio Ciliberto, Raoul
+  Dillenschneider, and Eric Lutz.
+\newblock Experimental verification of landauer's principle linking information
+  and thermodynamics.
+\newblock {\em Nature}, 483(7388):187--189, 2012.
+
 \bibitem{blahut1972computation}
 Richard~E. Blahut.
 \newblock Computation of channel capacity and rate-distortion functions.
@@ -50,6 +57,20 @@ Richard~E. Blahut.
 Avrim~L. Blum and Pat Langley.
 \newblock Selection of relevant features and examples in machine learning.
 \newblock {\em Artificial Intelligence}, 97(1-2):245--271, 1997.
+
+\bibitem{bodlaender1993tourist}
+Hans~L. Bodlaender.
+\newblock A tourist guide through treewidth.
+\newblock {\em Acta Cybernetica}, 11(1-2):1--21, 1993.
+
+\bibitem{boltzmann1877beziehung}
+Ludwig Boltzmann.
+\newblock {\"U}ber die beziehung zwischen dem zweiten hauptsatze der
+  mechanischen w{\"a}rmetheorie und der wahrscheinlichkeitsrechnung respektive
+  den s{\"a}tzen {\"u}ber das w{\"a}rmegleichgewicht.
+\newblock {\em Wiener Berichte}, 76:373--435, 1877.
+\newblock Establishes $S = k \ln W$ and the statistical foundation of
+  thermodynamics.
 
 \bibitem{brooks1987no}
 Frederick~P. Brooks.
@@ -70,6 +91,13 @@ Luca Cardelli and Peter Wegner.
 David~Maxwell Chickering, David Heckerman, and Christopher Meek.
 \newblock Large-sample learning of {Bayesian} networks is {NP}-hard.
 \newblock {\em Journal of Machine Learning Research}, 5:1287--1330, 2004.
+
+\bibitem{cichocki2016tensor}
+Andrzej Cichocki, Namgil Lee, Ivan Oseledets, Anh-Huy Phan, Qibin Zhao, and
+  Danilo~P. Mandic.
+\newblock {\em Tensor Networks for Dimensionality Reduction and Large-Scale
+  Optimization}, volume~9.
+\newblock Now Publishers, 2016.
 
 \bibitem{cover2006elements}
 Thomas~M. Cover and Joy~A. Thomas.
@@ -101,6 +129,12 @@ Shahar Dobzinski and Jan Vondr{\'a}k.
 \newblock In {\em Proceedings of the 44th ACM Symposium on Theory of
   Computing}, pages 1107--1116, 2012.
 
+\bibitem{einstein1905electrodynamics}
+Albert Einstein.
+\newblock Zur elektrodynamik bewegter k{\"o}rper.
+\newblock {\em Annalen der Physik}, 322(10):891--921, 1905.
+\newblock English: On the Electrodynamics of Moving Bodies.
+
 \bibitem{flamml2013complexity}
 Rolf Fagerberg, Christoph Flamm, Daniel Merkle, Philipp Peters, and Peter~F.
   Stadler.
@@ -118,6 +152,11 @@ Yannick Forster, Fabian Kunze, and Maxi Wuttke.
 \newblock Verified programming of {Turing} machines in {Coq}.
 \newblock In {\em Proceedings of the 9th ACM SIGPLAN International Conference
   on Certified Programs and Proofs (CPP 2020)}, pages 114--128. ACM, 2020.
+
+\bibitem{freuder1990complexity}
+Eugene~C. Freuder.
+\newblock Complexity of $k$-tree structured constraint satisfaction problems.
+\newblock {\em Proceedings of AAAI}, pages 4--9, 1990.
 
 \bibitem{gamma1994design}
 Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides.
@@ -158,10 +197,27 @@ Russell Impagliazzo and Ramamohan Paturi.
 \newblock On the complexity of $k$-sat.
 \newblock {\em Journal of Computer and System Sciences}, 62(2):367--375, 2001.
 
+\bibitem{jaynes1957information}
+Edwin~T. Jaynes.
+\newblock Information theory and statistical mechanics.
+\newblock {\em Physical Review}, 106(4):620--630, 1957.
+\newblock Information-theoretic foundation of statistical mechanics.
+
 \bibitem{kamenica2011bayesian}
 Emir Kamenica and Matthew Gentzkow.
 \newblock Bayesian persuasion.
 \newblock {\em American Economic Review}, 101(6):2590--2615, 2011.
+
+\bibitem{kittel1980thermal}
+Charles Kittel and Herbert Kroemer.
+\newblock {\em Thermal Physics}.
+\newblock W. H. Freeman, 2nd edition, 1980.
+\newblock Standard reference for $kT$ as thermal energy scale.
+
+\bibitem{kolda2009tensor}
+Tamara~G. Kolda and Brett~W. Bader.
+\newblock Tensor decompositions and applications.
+\newblock {\em SIAM Review}, 51(3):455--500, 2009.
 
 \bibitem{koller2009probabilistic}
 Daphne Koller and Nir Friedman.
@@ -225,6 +281,13 @@ Paul Milgrom and John Roberts.
 \newblock Price and advertising signals of product quality.
 \newblock {\em Journal of Political Economy}, 94(4):796--821, 1986.
 
+\bibitem{minkowski1908space}
+Hermann Minkowski.
+\newblock Raum und zeit.
+\newblock In {\em Physikalische Zeitschrift}, volume~10, pages 75--88, 1909.
+\newblock Address delivered at the 80th Assembly of German Natural Scientists,
+  Cologne, 21 September 1908.
+
 \bibitem{mundhenk2000mdp}
 Martin Mundhenk, Judy Goldsmith, Christopher Lusena, and Eric Allender.
 \newblock The complexity of finite-horizon markov decision process problems.
@@ -241,6 +304,13 @@ George~C. Necula.
 \newblock In {\em Proceedings of the 24th ACM SIGPLAN-SIGACT Symposium on
   Principles of Programming Languages}, pages 106--119. ACM, 1997.
 
+\bibitem{neukart2025thermodynamic}
+Florian Neukart and Valerii Vinokur.
+\newblock Thermodynamic duality and computational complexity in spin-glass
+  systems.
+\newblock {\em arXiv preprint arXiv:2501.XXXXX}, 2025.
+\newblock Preprint.
+
 \bibitem{nipkow2014concrete}
 Tobias Nipkow and Gerwin Klein.
 \newblock {\em Concrete Semantics with {Isabelle/HOL}}.
@@ -250,6 +320,13 @@ Tobias Nipkow and Gerwin Klein.
 Tobias Nipkow, Lawrence~C. Paulson, and Markus Wenzel.
 \newblock {\em {Isabelle/HOL}: A Proof Assistant for Higher-Order Logic}.
 \newblock Springer, 2002.
+
+\bibitem{noether1918invariante}
+Emmy Noether.
+\newblock Invariante variationsprobleme.
+\newblock {\em Nachrichten von der Gesellschaft der Wissenschaften zu
+  G{\"o}ttingen, Mathematisch-Physikalische Klasse}, pages 235--257, 1918.
+\newblock Noether's theorem: continuous symmetries imply conservation laws.
 
 \bibitem{onuchic1997protein}
 Jose~Nelson Onuchic, Zaida Luthey-Schulten, and Peter~G. Wolynes.
@@ -272,6 +349,14 @@ David~L Parnas.
 \newblock On the criteria to be used in decomposing systems into modules.
 \newblock {\em Communications of the ACM}, 15(12):1053--1058, 1972.
 
+\bibitem{pauli1925zusammenhang}
+Wolfgang Pauli.
+\newblock {\"U}ber den zusammenhang des abschlusses der elektronengruppen im
+  atom mit der komplexstruktur der spektren.
+\newblock {\em Zeitschrift f{\"u}r Physik}, 31(1):765--783, 1925.
+\newblock Pauli exclusion principle: no two fermions occupy identical quantum
+  states.
+
 \bibitem{pearl2009causality}
 Judea Pearl.
 \newblock {\em Causality: Models, Reasoning, and Inference}.
@@ -281,6 +366,13 @@ Judea Pearl.
 Benjamin~C Pierce.
 \newblock {\em Types and programming languages}.
 \newblock MIT press, 2002.
+
+\bibitem{planck1899irreversible}
+Max Planck.
+\newblock {\"U}ber irreversible strahlungsvorg{\"a}nge.
+\newblock {\em Sitzungsberichte der K{\"o}niglich Preu{\ss}ischen Akademie der
+  Wissenschaften zu Berlin}, pages 440--480, 1899.
+\newblock Introduced Planck units.
 
 \bibitem{raiffa1961applied}
 Howard Raiffa and Robert Schlaifer.
@@ -300,10 +392,22 @@ Jorma Rissanen.
 \newblock Modeling by shortest data description.
 \newblock {\em Automatica}, 14(5):465--471, 1978.
 
+\bibitem{sakurai2017modern}
+Jun~John Sakurai and Jim Napolitano.
+\newblock {\em Modern Quantum Mechanics}.
+\newblock Cambridge University Press, 2nd edition, 2017.
+\newblock Standard reference for angular momentum quantization and spherical
+  harmonics.
+
 \bibitem{savage1954foundations}
 Leonard~J. Savage.
 \newblock {\em The Foundations of Statistics}.
 \newblock John Wiley \& Sons, 1954.
+
+\bibitem{schrodinger1926undulatory}
+Erwin Schr{\"o}dinger.
+\newblock An undulatory theory of the mechanics of atoms and molecules.
+\newblock {\em Physical Review}, 28(6):1049--1070, 1926.
 
 \bibitem{schwarz1978estimating}
 Gideon Schwarz.
@@ -352,6 +456,11 @@ Tristan Simas.
 David Slepian and Jack~K. Wolf.
 \newblock Noiseless coding of correlated information sources.
 \newblock {\em IEEE Transactions on Information Theory}, 19(4):471--480, 1973.
+
+\bibitem{snyder1947quantized}
+Hartland~S. Snyder.
+\newblock Quantized space-time.
+\newblock {\em Physical Review}, 71(1):38--41, 1947.
 
 \bibitem{spence1973job}
 Michael Spence.

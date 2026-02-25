@@ -26,13 +26,20 @@ This paper establishes the computational complexity of coordinate sufficiency pr
 \item Full intermediate query-access lower bounds are formalized as a finite-state Opt-oracle core ($\Omega(|S|)$, Boolean instantiation $\Omega(2^n)$) plus Boolean-interface refinements for value-entry and state-batch access, with explicit subproblem-to-full transfer, weighted randomized robustness, and oracle-lattice transfer/strictness closures (Propositions~\ref{prop:query-regime-obstruction}--\ref{prop:oracle-lattice-strict})
 \item Tractable subcases exist for explicit-state encoding, separable utility, and tree-structured utility with explicit local factors (Theorem~\ref{thm:tractable})
 \item Discrete-time interface semantics are formalized: time is $\mathbb{N}$-valued, decision events are exactly one-tick transitions, run length equals elapsed time, and substrate-consistent realizations preserve the same one-unit event law (Propositions~\ref{prop:time-discrete}--\ref{prop:substrate-unit-time})
+\item Physical-system transport is formalized: encoded physical claims are derived from core rules through explicit assumption transfer, physical counterexamples map to encoded core failures, and the bundled bridge theorem composes law semantics, reduction equivalence, and required-work lower bounds (Proposition~\ref{prop:physical-claim-transport}, Corollary~\ref{cor:physical-counterexample-core-failure}, Theorem~\ref{thm:physical-bridge-bundle})
 \end{itemize}
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{thm:dichotomy},\ref{thm:tractable},\ref{thm:physical-bridge-bundle};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:query-subproblem-transfer},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time},\ref{prop:physical-claim-transport};C\ref{cor:physical-counterexample-core-failure}}{E,S,S+ETH,Qf,Qb,AR}
+\leanmeta{\LH{CC61},\LH{CC36},\LH{CC5},\LH{CC16},\LH{CC69},\LH{CC50},\LH{L9},\LH{L8},\LH{L11},\LH{L21},\LH{L20},\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ541},\LH{CT6},\LH{CT8},\LH{CT4}.}
 
 These results place the problem of identifying decision-relevant coordinates at the first and second levels of the polynomial hierarchy.
 
 Beyond classification, the paper contributes a formal claim-typing framework (Section~\ref{sec:interpretive-foundations}): structural complexity is a property of the fixed decision question, while representational hardness is regime-conditional access cost. This is why encoding-regime changes can move practical hardness without changing the underlying semantics.
+\claimstamp{P\ref{prop:sufficiency-char};T\ref{thm:typed-completeness-static}}{AR}
+\leanmeta{\LH{CC62},\LH{CC76}.}
 
 The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (see Appendix~\ref{app:lean} for proof listings). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets; complexity classifications (coNP-completeness, $\SigmaP{2}$-completeness) follow by composition with standard complexity-theoretic results (TAUTOLOGY is \coNP-complete, $\exists\forall$-SAT is $\SigmaP{2}$-complete). The strengthened gadget showing that non-tautologies yield instances with \emph{all coordinates relevant} is also formalized.
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{thm:dichotomy}}{S,S+ETH}
+\leanmeta{\LH{CC61},\LH{CC36},\LH{CC5},\LH{CC16},\LH{CC24}.}
 
 \subsection*{Complexity Characterization}
 
@@ -45,10 +52,13 @@ The results provide precise complexity characterizations within the formal model
 
 \item \textbf{Encoding-regime separation.} Under [E], SUFFICIENCY-CHECK is polynomial in $|S|$. Under [S+ETH], there exist succinct worst-case instances (with $k^*=n$) requiring $2^{\Omega(n)}$ time. Under [Q\_fin], the Opt-oracle core has $\Omega(|S|)$ worst-case query complexity (Boolean instantiation $\Omega(2^n)$), and under [Q\_bool] the value-entry/state-batch refinements preserve the obstruction with weighted-cost transfer closures.
 \end{enumerate}
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:query-subproblem-transfer}}{E,S,S+ETH,Qf,Qb}
+\leanmeta{\LH{CC61},\LH{CC16},\LH{CC50},\LH{L9},\LH{L8},\LH{L11}.}
 
 \subsection*{The Complexity Redistribution Corollary}
 
 Section~\ref{sec:simplicity-tax} develops a quantitative consequence: when a problem requires $k$ dimensions and a model handles only $j < k$ natively, the remaining $k - j$ dimensions must be handled externally at each decision site. For $n$ sites, total external work is $(k-j) \times n$.\claimstamp{T\ref{thm:tax-grows}}{LC}
+\leanmeta{\LH{HD21}.}
 
 The set identity is elementary; its operational content comes from composition with the hardness results on exact relevance minimization. This redistribution corollary is formalized in Lean 4 (\texttt{HardnessDistribution.lean}), proving:
 \begin{itemize}
@@ -56,6 +66,8 @@ The set identity is elementary; its operational content comes from composition w
 \item Dominance: complete models have lower total work than incomplete models
 \item Amortization: there exists a threshold $n^*$ beyond which higher-dimensional models have lower total cost
 \end{itemize}
+\claimstamp{T\ref{thm:tax-conservation},\ref{thm:centralization-dominance},\ref{thm:amortization}}{LC}
+\leanmeta{\LH{HD4},\LH{HD1},\LH{HD3},\LH{HD21}.}
 
 \subsection*{Open Questions}
 
@@ -78,29 +90,30 @@ The practical corollaries are regime-indexed and theorem-indexed:
 \item \textbf{[S+ETH] hard families:} exact minimization inherits exponential worst-case cost (Theorem~\ref{thm:dichotomy} together with Theorem~\ref{thm:sufficiency-conp}).
 \item \textbf{[S\_bool] mechanized criterion:} minimization reduces to relevance-cardinality constraints (Corollary~\ref{cor:practice-diagnostic}).
 \item \textbf{Redistribution consequences:} omitted native coverage externalizes work with explicit growth/amortization laws (Theorems~\ref{thm:tax-conservation}--\ref{thm:amortization}).
+\item \textbf{Physical-system instantiation:} once a physical class is encoded into the declared decision interface, the same regime-typed hardness/tractability map and integrity constraints apply to that class (Section~\ref{sec:physical-transport}).\claimstamp{P\ref{prop:physical-claim-transport};C\ref{cor:physical-counterexample-core-failure};T\ref{thm:physical-bridge-bundle}}{AR}\leanmeta{\LH{CT6},\LH{CT8},\LH{CT4}.}
 \end{itemize}
 
-Hence the design choice is typed: enforce a tractable regime, or adopt weakened guarantees with explicit verification boundaries.\claimstamp{T\ref{thm:tractable},\ref{thm:dichotomy}}{RG}
-Equivalently, under the attempted-competence matrix, over-specification is rational only in attempted-competence-failure cells; once exact competence is available in the active regime (or no attempted exact competence was made), persistent over-specification is irrational for the same verified-cost objective.\claimstamp{P\ref{prop:attempted-competence-matrix}}{AR}
-By Proposition~\ref{prop:attempted-competence-matrix}, the integrity-preserving matrix contains 3 irrational cells and 1 rational cell.\claimstamp{P\ref{prop:attempted-competence-matrix}}{AR}
+Hence the design choice is typed: enforce a tractable regime, or adopt weakened guarantees with explicit verification boundaries.\claimstamp{T\ref{thm:tractable},\ref{thm:dichotomy}}{RG}\leanmeta{\LH{CC71},\LH{CC16}.}
+Equivalently, under the attempted-competence matrix, over-specification is rational only in attempted-competence-failure cells; once exact competence is available in the active regime (or no attempted exact competence was made), persistent over-specification is irrational for the same verified-cost objective.\claimstamp{P\ref{prop:attempted-competence-matrix}}{AR}\leanmeta{\LH{IC27}.}
+By Proposition~\ref{prop:attempted-competence-matrix}, the integrity-preserving matrix contains 3 irrational cells and 1 rational cell.\claimstamp{P\ref{prop:attempted-competence-matrix}}{AR}\leanmeta{\LH{IC27}.}
 
 \subsection*{Epistemic Alignment Implications for Agent Training}
 
 Within this paper's formalism, epistemic alignment is a claim-discipline property: outputs are asserted only when certifiable, and otherwise emitted as abstain reports (optionally carrying tentative guesses and self-reflected confidence under zero certified confidence).
-Formally, this is the integrity/competence split of Section~\ref{sec:interpretive-foundations}, not a full value-alignment claim.\claimstamp{D\ref{def:solver-integrity},\ref{def:competence-regime};P\ref{prop:integrity-competence-separation}}{TR}
+Formally, this is the integrity/competence split of Section~\ref{sec:interpretive-foundations}, not a full value-alignment claim.\claimstamp{D\ref{def:solver-integrity},\ref{def:competence-regime};P\ref{prop:integrity-competence-separation}}{TR}\leanmeta{\LH{IC18}.}
 
 \paragraph{Truth-Objective Abstention Requirement.}
 If a solver-agent declares a truth-preserving objective for claims about relation $\mathcal{R}$ in regime $\Gamma$, uncertified outputs are admissible only as $\mathsf{ABSTAIN}/\mathsf{UNKNOWN}$ rather than asserted answers.
-Under the signal discipline, this includes abstain-with-guess/self-confidence reports while keeping certification evidence-gated.\claimstamp{D\ref{def:signaled-typed-report},\ref{def:signal-consistency};P\ref{prop:certified-confidence-gate},\ref{prop:abstain-guess-self-signal};C\ref{cor:exact-no-competence-zero-certified}}{AR}
-Equivalently, training policies that suppress abstention in uncertified regions violate the typed claim discipline under the declared task model.\claimstamp{D\ref{def:solver-integrity};P\ref{prop:integrity-competence-separation},\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{AR}
+Under the signal discipline, this includes abstain-with-guess/self-confidence reports while keeping certification evidence-gated.\claimstamp{D\ref{def:signaled-typed-report},\ref{def:signal-consistency};P\ref{prop:certified-confidence-gate},\ref{prop:abstain-guess-self-signal};C\ref{cor:exact-no-competence-zero-certified}}{AR}\leanmeta{\LH{IC46},\LH{IC38},\LH{IC41}.}
+Equivalently, training policies that suppress abstention in uncertified regions violate the typed claim discipline under the declared task model.\claimstamp{D\ref{def:solver-integrity};P\ref{prop:integrity-competence-separation},\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{AR}\leanmeta{\LH{IC18},\LH{CC30},\LH{IC27}.}
 
 This yields a training doctrine for solver-agents under declared tasks/regimes:
 \begin{enumerate}
 \item Treat $\mathsf{ABSTAIN}/\mathsf{UNKNOWN}$ as first-class admissible outputs, not errors.\claimstamp{D\ref{def:solver-integrity}}{TR}
-\item For signaled reports, maintain two channels: self-reflected confidence may be emitted, but certified confidence is positive only with evidence.\claimstamp{D\ref{def:signal-consistency};P\ref{prop:certified-confidence-gate},\ref{prop:self-confidence-not-certification}}{AR}
-\item Treat runtime disclosure as scalar-witnessed: always emit exact step-count, and emit completion percentage only when a declared bound exists.\claimstamp{P\ref{prop:steps-run-scalar},\ref{prop:no-fraction-without-bound},\ref{prop:fraction-defined-under-bound}}{AR}
-\item Optimize competent coverage subject to integrity constraints, rather than optimizing answer-rate alone.\claimstamp{D\ref{def:competence-regime};P\ref{prop:integrity-competence-separation}}{AR}
-\item In hardness-blocked regimes, abstention or explicit guarantee-weakening is structurally required unless regime assumptions are changed.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{S,S+ETH}
+\item For signaled reports, maintain two channels: self-reflected confidence may be emitted, but certified confidence is positive only with evidence.\claimstamp{D\ref{def:signal-consistency};P\ref{prop:certified-confidence-gate},\ref{prop:self-confidence-not-certification}}{AR}\leanmeta{\LH{IC38},\LH{IC47}.}
+\item Treat runtime disclosure as scalar-witnessed: always emit exact step-count, and emit completion percentage only when a declared bound exists.\claimstamp{P\ref{prop:steps-run-scalar},\ref{prop:no-fraction-without-bound},\ref{prop:fraction-defined-under-bound}}{AR}\leanmeta{\LH{IC42},\LH{IC35},\LH{IC44}.}
+\item Optimize competent coverage subject to integrity constraints, rather than optimizing answer-rate alone.\claimstamp{D\ref{def:competence-regime};P\ref{prop:integrity-competence-separation}}{AR}\leanmeta{\LH{IC18}.}
+\item In hardness-blocked regimes, abstention or explicit guarantee-weakening is structurally required unless regime assumptions are changed.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{S,S+ETH}\leanmeta{\LH{CC16},\LH{CC30},\LH{IC27}.}
 \end{enumerate}
 
 Operationally, a reporting schema consistent with this framework tracks at least five quantities: integrity violations, competent non-abstaining coverage on the declared scope, abstention quality under regime shift, the calibration gap between self-reflected and certified confidence channels, and scalar runtime witness distributions (with bound-qualified fraction semantics when bounds are declared). This is consistent with bounded-rationality feasibility discipline under declared resource models \cite{sep_bounded_rationality,arora2009computational}.

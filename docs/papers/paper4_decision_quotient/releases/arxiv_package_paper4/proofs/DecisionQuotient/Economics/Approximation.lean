@@ -2,6 +2,10 @@
   Paper 4: Decision-Relevant Uncertainty
 
   Economics/Approximation.lean - Approximation algorithms for VOI/DQ
+
+  ## Triviality Level
+  TRIVIAL — exposes an FPTAS-style wrapper: the proof uses the exactDQ
+  definition directly. Closest nontrivial content: `DecisionQuotient.Hardness.ApproximationHardness`.
 -/
 
 import DecisionQuotient.Hardness.ApproximationHardness

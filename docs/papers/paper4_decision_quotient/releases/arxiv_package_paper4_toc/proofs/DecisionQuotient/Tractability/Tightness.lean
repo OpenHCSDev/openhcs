@@ -3,6 +3,11 @@
 
   Tractability/Tightness.lean - Tightness of Tractability Conditions
 
+  ## Triviality Level
+  NONTRIVIAL — combines reductions from `DecisionQuotient.Reduction` to show
+  necessity of tractability conditions. Closest nontrivial proofs: `tautology_iff_sufficient`
+  and `reduction_not_separable` (DecisionQuotient.Reduction and this file).
+
   We prove that each tractability condition is NECESSARY:
   - Removing bounded actions yields coNP-hard instances
   - Removing separable utility yields coNP-hard instances

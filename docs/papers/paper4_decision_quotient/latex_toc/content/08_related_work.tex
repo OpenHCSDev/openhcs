@@ -47,13 +47,50 @@ For matter-only dynamics, the law-induced objective specialization is mechanized
 
 The interface-time semantics are also explicit and mechanized: timed states are $\mathbb{N}$-indexed, one decision event is exactly one tick, run length equals elapsed interface time, and this unit-time law is invariant across substrate tags under interface-consistency assumptions.\claimstamp{P\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time}}{AR}\leanmeta{\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ534},\LH{DQ541},\LH{DQ549}.}
 
-Regime-side interface machinery is also formalized as typed access objects with an explicit simulation preorder and certificate-upgrade statements. The access-channel and five-way composition theorems are encoded as assumption-explicit composition laws rather than informal metaphors.\leanmeta{\LH{PC10}, \LH{PC12}, \LH{PC15}, \LH{PC17}, \LH{PC19}, \LH{PC20}, \LH{PC21}.}
+Regime-side interface machinery is also formalized as typed access objects with an explicit simulation preorder and certificate-upgrade statements. The access-channel and five-way composition theorems are encoded as assumption-explicit composition laws rather than informal metaphors.\claimstamp{P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}\leanmeta{\LH{PC10}, \LH{PC12}, \LH{PC15}, \LH{PC17}, \LH{PC19}, \LH{PC20}, \LH{PC21}.}
 
 \subsection{Thermodynamic Costs and Landauer's Principle}
 
 The thermodynamic lift in Section~\ref{sec:dichotomy} converts declared bit-operation lower bounds into declared energy/carbon lower bounds via linear conversion constants. In this artifact, those conversion consequences are mechanized conditionally through Propositions~\ref{prop:thermo-lift}, \ref{prop:thermo-hardness-bundle}, \ref{prop:thermo-mandatory-cost}, and \ref{prop:thermo-conservation-additive}. Landauer's principle and reversible-computation context~\cite{landauer1961irreversibility,bennett2003notes} define the physical assumption set; the constants are declared premises, not Lean-derived constants.\claimstamp{P\ref{prop:thermo-lift},\ref{prop:thermo-hardness-bundle},\ref{prop:thermo-mandatory-cost},\ref{prop:thermo-conservation-additive}}{AR}\leanmeta{\LH{CC65},\LH{CC66},\LH{CC67},\LH{CC68},\LH{CC64}.}
 
+\paragraph{Physics assumptions decompose into regime tags.}
+The paper does not create domain-specific tags for physics assumptions. Instead, every physics assumption decomposes into the same regime tags used throughout the paper. This uniformity is the formal statement that physics assumptions are not epistemically privileged---they are declared assumptions, tracked with the same discipline as the paper's own complexity-theoretic assumptions.
+
+\begin{table}[h]
+\centering
+\caption{Physics-Assumption-to-Regime-Tag Decomposition}
+\label{tab:physics-regime-decomposition}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Physics Assumption} & \textbf{Regime Decomposition} & \textbf{Justification} \\
+\midrule
+Landauer bound ($E \ge kT\ln 2$) & [AR], [H=cost-growth] & Declared law; yields cost lower bounds \\
+Lorentz invariance & [AR] & Declared physical symmetry \\
+Discrete state space & [Q\_fin], [AR] & Finite-state core; declared assumption \\
+Thermodynamic constants ($\lambda, \rho$) & [AR], [H=cost-growth] & Declared conversion model \\
+Planck scale ($\ell_P$) & [AR] & Declared physical constant \\
+Physical-to-core encoding ($E$) & [AR] & Declared encoding map \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The decomposition in Table~\ref{tab:physics-regime-decomposition} makes explicit what the paper already practices: physics assumptions are declared premises in the [AR] (axiomatic regime) sense, and when they yield cost lower bounds, they inherit [H=cost-growth]. The finite-state query core [Q\_fin] captures the discrete-state assumption underlying the computational model. No physics assumption receives a special domain tag; all decompose into the existing regime taxonomy.\claimstamp{P\ref{prop:thermo-lift},\ref{prop:landauer-constraint},\ref{prop:lorentz-discrete},\ref{prop:discrete-state-time};T\ref{thm:physical-bridge-bundle}}{AR,H=cost-growth,Q\_fin}
+
 Coupling this to integrity yields a mechanized policy condition: when exact competence is hardness-blocked in the declared regime, integrity requires abstention or explicitly weakened guarantees (Propositions~\ref{prop:integrity-resource-bound}, \ref{prop:attempted-competence-matrix}). A stronger behavioral claim such as ``abstention is globally utility-optimal for every objective'' is \emph{not} currently mechanized and remains objective-dependent.\claimstamp{P\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{AR}\leanmeta{\LH{IC26},\LH{IC24},\LH{CC30},\LH{IC27},\LH{IC7},\LH{IC6}.}
+
+\subsection{Neukart--Vinokur Thermodynamic Duality}
+
+Neukart and Vinokur~\cite{neukart2025thermodynamic} propose a thermodynamic duality $dU = T\,dS - p\,dV + \lambda\,dC$ where $C$ is a ``complexity coordinate'' associated with computational irreversibility in spin-glass systems. Corollary~\ref{cor:neukart-vinokur} derives their duality as a specialization of our thermodynamic lift (Proposition~\ref{prop:thermo-lift}) under declared $\lambda > 0$.
+\claimstamp{C\ref{cor:neukart-vinokur};P\ref{prop:thermo-lift}}{AR}
+\leanmeta{\LH{CC65},\LH{CC50}.}
+
+Their spin-glass phase transitions become regime-specific instances: our [S+ETH] hard families with $k^* = n$ witness their ``complexity potential'' via explicit TAUTOLOGY reduction (Theorem~\ref{thm:dichotomy}). Physical transport via $E:\mathcal{P}\to\mathcal{D}$ extends to arbitrary substrates, not only quantum or spin systems (Theorem~\ref{thm:physical-bridge-bundle}).
+\claimstamp{T\ref{thm:dichotomy},\ref{thm:physical-bridge-bundle}}{S+ETH,AR}
+\leanmeta{\LH{CC16},\LH{CT4}.}
+
+Thus Neukart--Vinokur $\subseteq$ [AR] regime: declared $\lambda,\rho > 0$, explicit encoding $E:\mathcal{P}\to\mathcal{D}$ $\Rightarrow$ their thermodynamic duality holds by assumption transfer through our \coNP-complete core (Proposition~\ref{prop:physical-claim-transport}).
+\claimstamp{P\ref{prop:physical-claim-transport}}{AR}
+\leanmeta{\LH{PC10}.}
 
 \subsection{Feature Selection}
 

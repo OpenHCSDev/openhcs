@@ -1,10 +1,14 @@
 \section{Dominance Theorems for Hardness Placement}\label{sec:implications}
 
 Regime for this section: the mechanized Boolean-coordinate model [S\_bool] plus the architecture cost model defined below. The centralization-vs-distribution framing follows established software-architecture criteria about modular decomposition and long-run maintenance tradeoffs \cite{parnas1972criteria, brooks1987no, bass2012software, shaw1996software}.
+Although phrased in software terms, the formal objects are substrate-agnostic: the same hardness-placement and amortization equations apply to physical architectures (for example, centralized vs distributed sensing/actuation computation) once mapped into the same coordinate/cost model.
+\claimstamp{P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle},\ref{thm:centralization-dominance},\ref{thm:tax-conservation},\ref{thm:amortization}}{AR,LC}
+\leanmeta{\LH{CT6},\LH{CT4},\LH{HD1},\LH{HD4},\LH{HD3}.}
 
 \subsection{Over-Specification as Diagnostic Signal}
 
 \begin{corollary}[Persistent Over-Specification]\label{cor:overmodel-diagnostic-implication}
+\claimstamp{C\ref{cor:overmodel-diagnostic-implication}}{H=succinct-hard}
 In the mechanized Boolean-coordinate model, if a coordinate is relevant and omitted from a candidate set $I$, then $I$ is not sufficient.
 \leanmeta{\LH{S2P6}}
 \end{corollary}
@@ -14,6 +18,7 @@ This is the contrapositive of \LH{S2P3}.
 \end{proof}
 
 \begin{corollary}[Exact Relevance Identifiability Criterion]\label{cor:exact-identifiability}
+\claimstamp{C\ref{cor:exact-identifiability}}{H=succinct-hard}
 In the mechanized Boolean-coordinate model, for any candidate set $I$:
 \[
 I \text{ is exactly relevance-identifying}
@@ -32,7 +37,7 @@ with $R_{\mathrm{rel}}=\texttt{relevantFinset}$.
 
 \begin{remark}[Over-Specification Is Regime-Conditional, Not Default]\label{rem:overmodel-conditional}
 In this paper's formal typing, persistent over-specification is admissible only under attempted competence failure: after an attempted exact procedure, exact relevance competence remains unavailable in the active regime, so integrity retains uncertified coordinates (Section~\ref{sec:interpretive-foundations}; Section~\ref{sec:engineering-justification}).\claimstamp{P\ref{prop:attempted-competence-matrix}}{AR}
-Once exact competence is available in the active regime (Corollaries~\ref{cor:practice-bounded}--\ref{cor:practice-tree} together with Corollary~\ref{cor:exact-identifiability}), certifiably irrelevant coordinates are removable; persistent over-specification is irrational for the same objective (verified total-cost minimization).\claimstamp{T\ref{thm:tractable};P\ref{prop:attempted-competence-matrix}}{TA}
+Once exact competence is available in the active regime (Corollaries~\ref{cor:practice-bounded}--\ref{cor:practice-symmetry} together with Corollary~\ref{cor:exact-identifiability}), certifiably irrelevant coordinates are removable; persistent over-specification is irrational for the same objective (verified total-cost minimization).\claimstamp{T\ref{thm:tractable};P\ref{prop:attempted-competence-matrix}}{TA}
 \leanmeta{\LH{IC18},
 \LH{IC25},
 \LH{IC7},
@@ -63,6 +68,7 @@ The denominator $|B|$ is shared. Thus $\mathrm{ADQ}(I) < \mathrm{ADQ}(J)$ is equ
 \subsection{Corollaries for Practice}
 
 \begin{corollary}[Cardinality Criterion for Exact Minimization]\label{cor:practice-diagnostic}
+\claimstamp{C\ref{cor:practice-diagnostic}}{H=succinct-hard}
 In the mechanized Boolean-coordinate model, existence of a sufficient set of size at most $k$ is equivalent to the relevance set having cardinality at most $k$.
 \leanmeta{\LH{S2P2}}
 \end{corollary}
@@ -72,6 +78,7 @@ By \LH{S2P2}, sufficiency of size $\le k$ is equivalent to a relevance-cardinali
 \end{proof}
 
 \begin{corollary}[Bounded-Regime Tractability]\label{cor:practice-bounded}
+\claimstamp{C\ref{cor:practice-bounded}}{H=tractable-structured}
 When the bounded-action or explicit-state conditions of Theorem~\ref{thm:tractable} hold, minimal modeling can be solved in polynomial time in the stated input size.
 \leanmeta{\LH{L15}}
 \end{corollary}
@@ -81,6 +88,7 @@ This is the bounded-regime branch of Theorem~\ref{thm:tractable}, mechanized as 
 \end{proof}
 
 \begin{corollary}[Separable-Utility Tractability]\label{cor:practice-structured}
+\claimstamp{C\ref{cor:practice-structured}}{H=tractable-structured}
 When utility is separable with explicit factors, sufficiency checking is polynomial in the explicit-state regime.
 \leanmeta{\LH{L16}}
 \end{corollary}
@@ -90,12 +98,43 @@ This is the separable-utility branch of Theorem~\ref{thm:tractable}, mechanized 
 \end{proof}
 
 \begin{corollary}[Tree-Structured Tractability]\label{cor:practice-tree}
+\claimstamp{C\ref{cor:practice-tree}}{H=tractable-structured}
 When utility factors form a tree structure with explicit local factors, sufficiency checking is polynomial in the explicit-state regime.
 \leanmeta{\LH{L17}}
 \end{corollary}
 
 \begin{proof}
 This is the tree-factor branch of Theorem~\ref{thm:tractable}, mechanized as \LH{L5}.
+\end{proof}
+
+\begin{corollary}[Low-Tensor-Rank Tractability]\label{cor:practice-tensor}
+\claimstamp{C\ref{cor:practice-tensor}}{H=tractable-structured}
+When utility has tensor rank $R$ with explicit factor decomposition $U(a,s) = \sum_{r=1}^R w_r f_r(a) \prod_{i=1}^n g_{ri}(s_i)$, sufficiency checking is polynomial in $|A| \cdot R \cdot n$.
+\leanmeta{\LH{CC71}}
+\end{corollary}
+
+\begin{proof}
+This is the low-tensor-rank branch of Theorem~\ref{thm:tractable}, mechanized as \LH{CC71}.
+\end{proof}
+
+\begin{corollary}[Bounded-Treewidth Tractability]\label{cor:practice-treewidth}
+\claimstamp{C\ref{cor:practice-treewidth}}{H=tractable-structured}
+When utility decomposes as pairwise interactions on a graph of treewidth $w$, sufficiency checking is polynomial in $n \cdot k^{w+1}$.
+\leanmeta{\LH{CC73},\LH{CC75}}
+\end{corollary}
+
+\begin{proof}
+This is the bounded-treewidth branch of Theorem~\ref{thm:tractable}, mechanized as \LH{CC73}.
+\end{proof}
+
+\begin{corollary}[Coordinate-Symmetry Tractability]\label{cor:practice-symmetry}
+\claimstamp{C\ref{cor:practice-symmetry}}{H=tractable-structured}
+When state space is $S = [k]^d$ with coordinate-permutation-invariant utility, sufficiency checking is polynomial in $\binom{d+k-1}{k-1}^2 \cdot |A|$, which is polynomial in $d$ for fixed $k$.
+\leanmeta{\LH{CC72}}
+\end{corollary}
+
+\begin{proof}
+This is the coordinate-symmetry branch of Theorem~\ref{thm:tractable}, mechanized as \LH{CC72}.
 \end{proof}
 
 \begin{corollary}[Mechanized Hard Family]\label{cor:practice-unstructured}
@@ -120,6 +159,7 @@ For $n$ use sites, total realized hardness is:
 \end{definition}
 
 \begin{proposition}[Baseline Lower-Bound Principle]\label{prop:hardness-conservation}
+\claimstamp{P\ref{prop:hardness-conservation}}{H=cost-growth}
 For any problem family $P$ measured by $H(P;n)$ above, any solution architecture $S$ and any number of use sites $n \ge 1$, if $H_{\text{total}}(S)$ is measured in the same worst-case step units over the same input family, then:
 \[
 H_{\text{total}}(S) = H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S) \geq H(P;n).
@@ -139,6 +179,7 @@ The \emph{hardness efficiency} of solution $S$ with $n$ use sites is:
 \end{definition}
 
 \begin{proposition}[Efficiency Equivalence]\label{prop:hardness-efficiency-interpretation}
+\claimstamp{P\ref{prop:hardness-efficiency-interpretation}}{H=cost-growth}
 For fixed $n$ and positive total hardness, larger $\eta(S,n)$ is equivalent to a larger central share of realized hardness.
 \leanmeta{\LH{HD10}}
 \end{proposition}
@@ -185,6 +226,7 @@ H_{\text{total}}(S_{\mathrm{right}}) < H_{\text{total}}(S_{\mathrm{wrong}})
 \end{proof}
 
 \begin{corollary}[Right-Place vs Wrong-Place Hardness]\label{cor:right-wrong-hardness}
+\claimstamp{C\ref{cor:right-wrong-hardness}}{H=cost-growth}
 In the linear model, a right-hardness architecture strictly dominates a wrong-hardness architecture once use-site count exceeds central one-time hardness. Formally, for architectures $S_{\mathrm{right}}, S_{\mathrm{wrong}}$ over the same problem family, if $S_{\mathrm{right}}$ has right hardness, $S_{\mathrm{wrong}}$ has wrong hardness, and $n > H_{\mathrm{central}}(S_{\mathrm{right}})$, then
 \[
 H_{\mathrm{central}}(S_{\mathrm{right}}) + n\,H_{\mathrm{distributed}}(S_{\mathrm{right}})
@@ -199,6 +241,7 @@ This is the mechanized theorem \LH{HD10}.
 \end{proof}
 
 \begin{proposition}[Dominance Modes]\label{prop:dominance-modes}
+\claimstamp{P\ref{prop:dominance-modes}}{H=cost-growth}
 This section uses two linear-model dominance modes plus generalized nonlinear dominance and boundary modes:
 \begin{enumerate}
 \item \textbf{Strict threshold dominance:} Corollary~\ref{cor:right-wrong-hardness} gives strict inequality once $n > H_{\mathrm{central}}(S_{\mathrm{right}})$.
@@ -227,6 +270,7 @@ Manual implementation & Low (no new concepts) & High (reimplement per site) \\
 The table is schematic; the formal statement is Corollary~\ref{cor:type-system-threshold}. The type-theoretic intuition behind this instantiation is consistent with classic accounts of abstraction and static interface guarantees \cite{Cardelli1985, reynolds1983types, pierce2002types, liskov1994behavioral, siek2006gradual, gamma1994design}.
 
 \begin{corollary}[Type-System Threshold]\label{cor:type-system-threshold}
+\claimstamp{C\ref{cor:type-system-threshold}}{H=cost-growth}
 For the formal native-vs-manual architecture instance, native support has lower total realized cost for all
 \[
 n > H_{\mathrm{baseline}}(P),
@@ -254,6 +298,7 @@ A cost function $f : \mathbb{N}\to\mathbb{N}$ is \emph{eventually saturating} if
 \end{definition}
 
 \begin{theorem}[Generalized Dominance by Growth Separation]\label{thm:generalized-dominance}
+\claimstamp{T\ref{thm:generalized-dominance}}{H=cost-growth}
 Let
 \[
 H_{\text{total}}^{\mathrm{gen}}(S,n)=H_{\text{central}}(S)+C_S(n).
@@ -282,6 +327,7 @@ This is exactly the mechanized theorem
 \end{proof}
 
 \begin{corollary}[Eventual Generalized Dominance]\label{cor:generalized-eventual-dominance}
+\claimstamp{C\ref{cor:generalized-eventual-dominance}}{H=cost-growth}
 If condition (1) above holds and there exists $N$ such that condition (2) holds for all $m\ge N$, then there exists $N_0$ such that for all $n\ge N_0$,
 \[
 H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{right}},n)
@@ -297,6 +343,7 @@ Immediate from
 \end{proof}
 
 \begin{proposition}[Generalized Assumption Boundary]\label{prop:generalized-assumption-boundary}
+\claimstamp{P\ref{prop:generalized-assumption-boundary}}{H=cost-growth}
 In the generalized model, strict right-vs-wrong dominance is not unconditional. There are explicit counterexamples:
 \begin{enumerate}
 \item If wrong-side growth lower bounds are dropped, right-side strict dominance can fail for all $n$.
@@ -311,6 +358,7 @@ This is exactly the pair of mechanized boundary theorems listed above.
 \end{proof}
 
 \begin{theorem}[Linear Model: Saturation iff Zero Distributed Hardness]\label{thm:linear-saturation-iff-zero}
+\claimstamp{T\ref{thm:linear-saturation-iff-zero}}{H=cost-growth}
 In the linear model of this section,
 \[
 H_{\text{total}}(S,n)=H_{\text{central}}(S)+n\cdot H_{\text{distributed}}(S),
@@ -324,6 +372,7 @@ This is exactly the mechanized equivalence theorem above.
 \end{proof}
 
 \begin{theorem}[Generalized Model: Saturation is Possible]\label{thm:generalized-saturation-possible}
+\claimstamp{T\ref{thm:generalized-saturation-possible}}{H=cost-growth}
 There exists a generalized site-cost model with eventual saturation. In particular, for
 \[
 C_K(n)=\begin{cases}
@@ -341,6 +390,7 @@ This is the explicit construction mechanized in Lean.
 \end{proof}
 
 \begin{corollary}[Positive Linear Slope Cannot Represent Saturation]\label{cor:linear-positive-no-saturation}
+\claimstamp{C\ref{cor:linear-positive-no-saturation}}{H=cost-growth}
 No positive-slope linear per-site model can represent the saturating family above for all $n$.
 \leanmeta{\LH{HD15}}
 \end{corollary}

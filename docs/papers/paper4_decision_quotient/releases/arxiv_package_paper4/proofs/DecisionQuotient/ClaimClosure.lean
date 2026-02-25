@@ -10,6 +10,15 @@
   - One-step deterministic bridge
   - Over-modeling diagnostic contrapositive (in the Boolean model)
   - Conditional no-auto-minimization corollary logic
+
+  ## Triviality Level
+  NONTRIVIAL: This composes the core hardness results into paper-level claims.
+  It takes individual proofs and shows how they combine to establish
+  the paper's main theses.
+
+  ## Dependencies
+  - Depends on: Sufficiency, Instances, Computation, Reduction, QueryComplexity
+  - Used by: PhysicalHardness.lean (physics translation)
 -/
 
 import DecisionQuotient.Sufficiency

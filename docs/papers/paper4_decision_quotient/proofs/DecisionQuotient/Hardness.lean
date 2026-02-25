@@ -16,6 +16,14 @@
   
   NOTE: Full complexity-theoretic proofs are in LaTeX (TAUTOLOGY reduction and
   the Σ₂ᴾ upper bound). This file formalizes the problem structure and tractable subcases.
+
+  ## Triviality Level
+  NONTRIVIAL: This is a core hardness file. The main results (coNP-complete,
+  Σ₂ᴾ) are nontrivial complexity classifications.
+
+  ## Dependencies
+  - Chain: Basic.lean → Sufficiency.lean → [NONTRIVIAL: Reduction.lean coNP proof] → here
+  - Also imports: Sigma2PHardness.lean (Σ₂ᴾ proofs), CoveringLowerBound.lean
 -/
 
 import DecisionQuotient.Sufficiency
@@ -208,6 +216,19 @@ theorem certificate_lower_bound_for_I_empty_summary {n : ℕ}
       (∃ s s', agreeOn s s' (∅ : Finset (Fin n)) ∧ Opt s ≠ Opt s') ∧
       (∀ p ∈ P, agreeOn p.1 p.2 (∅ : Finset (Fin n)) → Opt p.1 = Opt p.2) :=
   certificate_lower_bound_for_I_empty (hn := hn) P hP
+
+/-- Checking-witnessing duality:
+    any sound finite witness family for empty-set insufficiency must have
+    size at least `2^(n-1)`. -/
+theorem checking_witnessing_duality_summary {n : ℕ}
+    (hn : 1 ≤ n)
+    (P : Finset (BinaryState n × BinaryState n))
+    (hSound :
+      ∀ Opt : BinaryState n → Bool,
+        (∃ s s', agreeOn s s' (∅ : Finset (Fin n)) ∧ Opt s ≠ Opt s') →
+        ∃ p ∈ P, Opt p.1 ≠ Opt p.2) :
+    2 ^ (n - 1) ≤ P.card :=
+  checking_witnessing_duality (hn := hn) P hSound
 
 /-- Polynomial-size corollary: if `|P| ≤ n^3` and `n^3 < 2^(n-1)`,
     then the same adversarial Opt exists. -/

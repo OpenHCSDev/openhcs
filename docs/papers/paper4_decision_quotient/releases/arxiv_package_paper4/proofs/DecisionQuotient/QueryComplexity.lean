@@ -9,6 +9,14 @@
 
   This is a genuine lower bound result that demonstrates the inherent hardness
   of the sufficiency-checking problem.
+
+  ## Triviality Level
+  NONTRIVIAL: This is a core lower bound proof. It shows exponential lower
+  bound for sufficiency checking - a key hardness result.
+
+  ## Dependencies
+  - Depends on: Sufficiency.lean, Instances.lean
+  - Used by: ClaimClosure.lean (proof composition)
 -/
 
 import DecisionQuotient.Sufficiency

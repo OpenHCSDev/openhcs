@@ -23,7 +23,7 @@ We present a Lean 4 formalization of polynomial-time reductions and computationa
 
 All complexity claims use the input encodings fixed in Section.
 
-The formalization comprises 11499 lines of Lean 4 with 527 machine-verified theorems/lemmas across 51 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
+The formalization comprises 13391 lines of Lean 4 with 597 machine-verified theorems/lemmas across 58 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
 
 **Practical corollaries.** The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/$\Sigma_2^P$ completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle *determining what you need to know is harder than knowing everything*. This implies that over-modeling is rational under the model and that "simpler" incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
 
@@ -51,7 +51,7 @@ Verified complexity results. As a case study, we formalize the complexity of the
 
 All complexity claims use the input encodings fixed in Section.
 
-The formalization comprises 11499 lines of Lean 4 with 527 machine-verified theorems/lemmas across 51 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
+The formalization comprises 13391 lines of Lean 4 with 597 machine-verified theorems/lemmas across 58 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
 
 Practical corollaries. The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/Σ₂^(P) completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle determining what you need to know is harder than knowing everything. This implies that over-modeling is rational under the model and that “simpler” incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
 

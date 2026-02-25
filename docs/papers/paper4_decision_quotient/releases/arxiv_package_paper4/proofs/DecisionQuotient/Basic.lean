@@ -7,6 +7,14 @@
   - DecisionProblem: (A, S, U) where A is alternatives, S is states, U is utility
   - Opt: S → Set A (the optimizer map)
   - DecisionEquiv: s ∼ s' ⟺ Opt(s) = Opt(s')
+
+  ## Triviality Level
+  TRIVIAL: This file defines basic typeclasses and structures. The definitions
+  themselves are not the contribution - the novel work is in how they're used.
+
+  ## Dependencies
+  - Depends on: Mathlib only
+  - Used by: ALL other modules (foundational)
 -/
 
 import Mathlib.Data.Set.Basic

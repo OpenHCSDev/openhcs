@@ -9,9 +9,18 @@
 
   This module deliberately avoids universal recursion/imperative claims.
   It states only budgeted representation facts and conditional closure lemmas.
+
+  ## Triviality Level
+  TRIVIAL: This defines budget crossover primitives. The nontrivial work is
+  in proving the hardness/competence results that use these primitives.
+
+  ## Dependencies
+  - Chain: IntegrityCompetence.lean (definitions) → here
+  - Used by: ClaimClosure.lean for budget-aware closure proofs
 -/
 
 import Mathlib.Data.Set.Basic
+import Mathlib.Data.Nat.Find
 import DecisionQuotient.IntegrityCompetence
 
 namespace DecisionQuotient
@@ -52,6 +61,14 @@ def SuccinctBoundedBy (M : EncodingSizeModel) (C : ℕ) : Prop :=
 def ExplicitUnbounded (M : EncodingSizeModel) : Prop :=
   ∀ B : ℕ, ∃ n : ℕ, B < M.explicitSize n
 
+/-- Succinct encoding infeasible at budget `B` and size parameter `n`. -/
+def SuccinctInfeasible (M : EncodingSizeModel) (B n : ℕ) : Prop :=
+  B < M.succinctSize n
+
+/-- Succinct-size unboundedness: every budget is eventually exceeded. -/
+def SuccinctUnbounded (M : EncodingSizeModel) : Prop :=
+  ∀ B : ℕ, ∃ n : ℕ, B < M.succinctSize n
+
 /-- Core split-feasibility lemma: crossover implies infeasible-vs-feasible split. -/
 theorem explicit_infeasible_succinct_feasible_of_crossover
     (M : EncodingSizeModel) (B n : ℕ)
@@ -65,6 +82,22 @@ theorem has_crossover_of_witness
     (hCross : CrossoverAt M B n) :
     HasCrossover M B := by
   exact ⟨n, hCross⟩
+
+/-- Least divergence point at a fixed budget:
+if crossover exists, there is a least `ncrit` where it first appears. -/
+theorem exists_least_crossover_point
+    (M : EncodingSizeModel) (B : ℕ)
+    (hCross : HasCrossover M B) :
+    ∃ ncrit : ℕ,
+      CrossoverAt M B ncrit ∧
+      ∀ m : ℕ, m < ncrit → ¬ CrossoverAt M B m := by
+  classical
+  refine ⟨Nat.find hCross, ?_⟩
+  refine ⟨Nat.find_spec hCross, ?_⟩
+  intro m hm
+  intro hCrossM
+  have hle : Nat.find hCross ≤ m := Nat.find_min' hCross hCrossM
+  exact (Nat.not_le_of_lt hm) hle
 
 /-- If succinct size is globally bounded by `C` and explicit size is unbounded,
 then any budget `B ≥ C` admits a crossover witness. -/
@@ -87,6 +120,48 @@ theorem crossover_for_all_budgets_above_cap
     ∀ B : ℕ, C ≤ B → HasCrossover M B := by
   intro B hB
   exact has_crossover_of_bounded_succinct_unbounded_explicit M C B hSucc hExp hB
+
+/-- Eventual explicit infeasibility from monotone growth and one over-budget witness. -/
+theorem explicit_eventual_infeasibility_of_monotone_and_witness
+    (M : EncodingSizeModel) (B n₀ : ℕ)
+    (hMono : Monotone M.explicitSize)
+    (hAt : B < M.explicitSize n₀) :
+    ∀ n : ℕ, n ≥ n₀ → ExplicitInfeasible M B n := by
+  intro n hn
+  exact lt_of_lt_of_le hAt (hMono hn)
+
+/-- Payoff-threshold form:
+if after `n₀` explicit is infeasible and succinct is feasible, then every
+`n ≥ n₀` is a crossover point. -/
+theorem crossover_eventually_of_eventual_split
+    (M : EncodingSizeModel) (B n₀ : ℕ)
+    (hExpAfter : ∀ n : ℕ, n ≥ n₀ → ExplicitInfeasible M B n)
+    (hSuccAfter : ∀ n : ℕ, n ≥ n₀ → SuccinctFeasible M B n) :
+    ∀ n : ℕ, n ≥ n₀ → CrossoverAt M B n := by
+  intro n hn
+  exact ⟨hExpAfter n hn, hSuccAfter n hn⟩
+
+/-- Alias used for prose: the eventual split is exactly the payoff threshold. -/
+theorem payoff_threshold_explicit_vs_succinct
+    (M : EncodingSizeModel) (B n₀ : ℕ)
+    (hExpAfter : ∀ n : ℕ, n ≥ n₀ → ExplicitInfeasible M B n)
+    (hSuccAfter : ∀ n : ℕ, n ≥ n₀ → SuccinctFeasible M B n) :
+    ∀ n : ℕ, n ≥ n₀ → CrossoverAt M B n :=
+  crossover_eventually_of_eventual_split M B n₀ hExpAfter hSuccAfter
+
+/-- Without a succinct bound, there is no universal survivor:
+for each fixed budget, both encodings become infeasible at some size. -/
+theorem no_universal_survivor_without_succinct_bound
+    (M : EncodingSizeModel)
+    (hExp : ExplicitUnbounded M)
+    (hSucc : SuccinctUnbounded M) :
+    ∀ B : ℕ,
+      (∃ n : ℕ, ExplicitInfeasible M B n) ∧
+      (∃ n : ℕ, SuccinctInfeasible M B n) := by
+  intro B
+  rcases hExp B with ⟨nE, hE⟩
+  rcases hSucc B with ⟨nS, hS⟩
+  exact ⟨⟨nE, hE⟩, ⟨nS, hS⟩⟩
 
 /-- Crossover + hardness-closure bundle:
     representational crossover can coexist with exact-certification obstruction. -/
@@ -122,6 +197,43 @@ theorem crossover_integrity_policy
   refine ⟨hCross.1, hCross.2, ?_⟩
   exact integrity_forces_abstention (R := R) (Γ := Γ)
     (P_eq_coNP := P_eq_coNP) hNeq hCollapse Q hIntegrity
+
+/-- Named alias: policy closure exactly at the divergence point. -/
+theorem policy_closure_at_divergence
+    {X : Type u} {Y : Type v} {W : Type w}
+    (M : EncodingSizeModel) (B ncrit : ℕ)
+    (hCross : CrossoverAt M B ncrit)
+    (R : Set (X × Y)) (Γ : Regime X)
+    {P_eq_coNP : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse : (∃ Q : CertifyingSolver X Y W, CompetentOn R Γ Q) → P_eq_coNP)
+    (Q : CertifyingSolver X Y W)
+    (hIntegrity : SolverIntegrity R Q) :
+    ExplicitInfeasible M B ncrit ∧ SuccinctFeasible M B ncrit ∧
+      (¬ (∀ x, x ∈ Γ.inScope → ∃ y w, Q.solve x = some (y, w))
+        ∨
+       ¬ (∀ x, x ∈ Γ.inScope → Q.solveCost x ≤ Γ.budget (Γ.encLen x))) :=
+  crossover_integrity_policy M B ncrit hCross R Γ hNeq hCollapse Q hIntegrity
+
+/-- If a crossover split holds for all `n ≥ n₀`, policy closure holds for all
+such `n` under the same integrity-resource collapse assumption. -/
+theorem policy_closure_beyond_divergence
+    {X : Type u} {Y : Type v} {W : Type w}
+    (M : EncodingSizeModel) (B n₀ : ℕ)
+    (hCrossAfter : ∀ n : ℕ, n ≥ n₀ → CrossoverAt M B n)
+    (R : Set (X × Y)) (Γ : Regime X)
+    {P_eq_coNP : Prop}
+    (hNeq : ¬ P_eq_coNP)
+    (hCollapse : (∃ Q : CertifyingSolver X Y W, CompetentOn R Γ Q) → P_eq_coNP)
+    (Q : CertifyingSolver X Y W)
+    (hIntegrity : SolverIntegrity R Q) :
+    ∀ n : ℕ, n ≥ n₀ →
+      ExplicitInfeasible M B n ∧ SuccinctFeasible M B n ∧
+        (¬ (∀ x, x ∈ Γ.inScope → ∃ y w, Q.solve x = some (y, w))
+          ∨
+         ¬ (∀ x, x ∈ Γ.inScope → Q.solveCost x ≤ Γ.budget (Γ.encLen x))) := by
+  intro n hn
+  exact crossover_integrity_policy M B n (hCrossAfter n hn) R Γ hNeq hCollapse Q hIntegrity
 
 end PhysicalBudgetCrossover
 end DecisionQuotient

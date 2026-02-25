@@ -1,4 +1,4 @@
-/-!
+/-
   Paper 4: Decision-Relevant Uncertainty
 
   Dichotomy.lean - The Complexity Dichotomy Theorem

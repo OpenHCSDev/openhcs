@@ -1,3 +1,19 @@
+/-
+  Paper 4: Decision-Relevant Uncertainty
+
+  Hardness/ConfigReduction.lean - Configuration Space Reductions
+
+  This module formalizes reductions from configuration/state spaces.
+  Used for physical system encodings.
+
+  ## Triviality Level
+  TRIVIAL: This defines configuration reduction framework. No nontrivial proofs -
+  used as infrastructure for physics encodings.
+
+  ## Dependencies
+  - Chain: Sufficiency.lean → here → ClaimTransport.lean (physics bridge)
+-/
+
 import DecisionQuotient.Sufficiency
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Option.Basic

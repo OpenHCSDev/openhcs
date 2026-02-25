@@ -2,6 +2,10 @@
   Paper 4: Decision-Relevant Uncertainty
 
   Tractability/SeparableUtility.lean - Separable utilities admit efficient checks
+
+  ## Triviality Level
+  TRIVIAL — straightforward algebraic reasoning over `FiniteDecisionProblem`.
+  Closest nontrivial dependency: `DecisionQuotient.Finite` for the DP interface.
 -/
 
 import DecisionQuotient.Finite

@@ -1,6 +1,13 @@
 /-
   Compact Lean-handle aliases used in paper prose/tables.
   Implemented as namespace-level exports to preserve exact theorem constants.
+
+  ## Triviality Level
+  TRIVIAL: This is purely a re-export file. No proofs whatsoever.
+
+  ## Dependencies
+  - Chain: Depends on all main modules but exports them under simpler names
+  - The nontrivial work is in the imported modules (ClaimClosure, Sigma2PHardness, etc.)
 -/
 
 import DecisionQuotient.Basic
@@ -19,6 +26,9 @@ import DecisionQuotient.Physics.PhysicalHardness
 import DecisionQuotient.Physics.DecisionTime
 import DecisionQuotient.Physics.PhysicalIncompleteness
 import DecisionQuotient.Physics.ClaimTransport
+import DecisionQuotient.Physics.Uncertainty
+import DecisionQuotient.Physics.HeisenbergStrong
+import DecisionQuotient.WitnessCheckingDuality
 
 namespace DecisionQuotient
 
@@ -222,8 +232,17 @@ end S2P
 namespace PBC
 export DecisionQuotient.PhysicalBudgetCrossover (
   CrossoverAt
+  SuccinctInfeasible
+  SuccinctUnbounded
   explicit_infeasible_succinct_feasible_of_crossover
+  exists_least_crossover_point
   has_crossover_of_bounded_succinct_unbounded_explicit
+  explicit_eventual_infeasibility_of_monotone_and_witness
+  crossover_eventually_of_eventual_split
+  payoff_threshold_explicit_vs_succinct
+  no_universal_survivor_without_succinct_bound
+  policy_closure_at_divergence
+  policy_closure_beyond_divergence
 )
 end PBC
 
@@ -314,6 +333,8 @@ export DecisionQuotient.Physics.PhysicalIncompleteness (
   no_surjective_instantiation_of_card_gap
   physical_incompleteness_of_card_gap
   physical_incompleteness_of_bounds
+  under_resolution_implies_collision
+  under_resolution_implies_decision_collision
 )
 end PI
 
@@ -403,6 +424,38 @@ export PhysicalComplexity (
   sufficiency_physically_impossible
 )
 end PH
+
+namespace UQ
+export DecisionQuotient.Physics.Uncertainty (
+  binaryIdentityProblem
+  binaryIdentityProblem_opt_true
+  binaryIdentityProblem_opt_false
+  exists_decision_problem_with_nontrivial_opt
+  PhysicalNontrivialOptAssumption
+  exists_decision_problem_with_nontrivial_opt_of_physical
+)
+end UQ
+
+namespace HS
+export DecisionQuotient.Physics.HeisenbergStrong (
+  NoisyPhysicalEncoding
+  HeisenbergStrongBinding
+  strong_binding_implies_core_nontrivial
+  strong_binding_yields_core_encoding_witness
+  strong_binding_implies_physical_nontrivial_opt_assumption
+  strong_binding_implies_nontrivial_opt_via_uncertainty
+)
+end HS
+
+namespace WD
+export DecisionQuotient (
+  witnessBudgetEmpty
+  checkingBudgetPairs
+  checking_witnessing_duality_budget
+  no_sound_checker_below_witness_budget
+  checking_time_ge_witness_budget
+)
+end WD
 
 namespace UO
 export DecisionQuotient (

@@ -2,6 +2,11 @@
   Paper 4: Decision-Relevant Uncertainty
 
   Economics/Elicitation.lean - Polynomial-time elicitation mechanisms
+
+  ## Triviality Level
+  TRIVIAL — simple constructions over the finite decision problem interface.
+  Closest nontrivial definitions/lemmas used: `FiniteDecisionProblem.mem_optimalActions_iff`
+  (DecisionQuotient.Finite).
 -/
 
 import DecisionQuotient.Finite

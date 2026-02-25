@@ -8,6 +8,14 @@
 
   Key insight: Either the quotient has tractable structure (polynomial)
   or checking sufficiency is coNP-complete.
+
+  ## Triviality Level
+  NONTRIVIAL: This is a central theorem of the paper. The dichotomy proof
+  is the main complexity classification result.
+
+  ## Dependencies
+  - Depends on: Sufficiency.lean, Hardness.lean
+  - Used by: PhysicalIncompleteness.lean (trivial cardinality consequence)
 -/
 
 import DecisionQuotient.Sufficiency

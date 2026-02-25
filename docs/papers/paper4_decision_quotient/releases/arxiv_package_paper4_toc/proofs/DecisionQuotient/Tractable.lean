@@ -13,10 +13,15 @@
      every coordinate set is sufficient.
   
   3. Coordinate independence: If Opt depends on coordinates independently,
-     sufficiency checking decomposes.
+
+  ## Triviality Level
+  TRIVIAL: This identifies tractable special cases. The nontrivial work is
+  proving the general hardness result.
+
+  ## Dependencies
+  - Chain: Sufficiency.lean (core) → here (special cases)
 -/
 
-import DecisionQuotient.Basic
 import DecisionQuotient.Sufficiency
 import DecisionQuotient.Computation
 import Mathlib.Order.Monotone.Basic

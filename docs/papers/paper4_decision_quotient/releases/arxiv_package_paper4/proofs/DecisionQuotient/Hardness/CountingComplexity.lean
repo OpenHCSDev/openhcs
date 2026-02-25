@@ -4,6 +4,12 @@
   Hardness/CountingComplexity.lean
 
   Reduction from #SAT to decision-quotient computation.
+
+  ## Triviality Level
+  NONTRIVIAL: This is a hardness result - shows #P-hardness transfers to decision quotient.
+
+  ## Dependencies
+  - Chain: Finite.lean → SAT.lean → here (#SAT reduction)
 -/
 
 import DecisionQuotient.Finite

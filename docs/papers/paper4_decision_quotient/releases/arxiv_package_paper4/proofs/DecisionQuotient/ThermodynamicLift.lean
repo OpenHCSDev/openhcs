@@ -9,6 +9,13 @@
 
   Scope discipline: these are conditional theorems over declared conversion
   constants and lower-bound hypotheses, not unconditional physical laws.
+
+  ## Triviality Level
+  TRIVIAL: This is derivation of physical consequences from complexity bounds.
+  The nontrivial work is in the complexity proofs.
+
+  ## Dependencies
+  - Chain: ClaimClosure.lean (hardness) → IntegrityCompetence.lean → here
 -/
 
 import DecisionQuotient.IntegrityCompetence

@@ -16,6 +16,12 @@ import Mathlib.Tactic.Ring
   we can construct an Opt function that makes a fixed I insufficient while every
   pair in P agrees on Opt. This is a certificate lower bound, not a coNP
   separation.
+
+  ## Triviality Level
+  NONTRIVIAL: This is a core hardness proof - certificate lower bound for MINIMUM-SUFFICIENT-SET.
+
+  ## Dependencies
+  - Chain: Sufficiency.lean + QueryComplexity.lean → here (certificate lower bound)
 -/
 
 namespace DecisionQuotient
@@ -27,10 +33,6 @@ set_option linter.unnecessarySimpa false
 abbrev BinaryState (n : ℕ) := Fin n → Bool
 
 instance (n : ℕ) : CoordinateSpace (BinaryState n) n := by
-  infer_instance
-
-instance (n : ℕ) : Fintype (BinaryState n) := by
-  dsimp [BinaryState]
   infer_instance
 
 @[simp] lemma proj_binary_state {n : ℕ} (s : BinaryState n) (i : Fin n) :
@@ -80,7 +82,7 @@ lemma endpoints_card_le {n : ℕ} (P : Finset (BinaryState n × BinaryState n)) 
     _ = 2 * P.card := by simp [Nat.two_mul, Nat.mul_comm]
 
 lemma card_binary_state (n : ℕ) : Fintype.card (BinaryState n) = 2 ^ n := by
-  simp [BinaryState, Fintype.card_fun, Fintype.card_fin, Fintype.card_bool]
+  simp [BinaryState, Fintype.card_fin, Fintype.card_bool]
 
 lemma exists_not_mem_of_card_lt_univ {α : Type*} [Fintype α] [DecidableEq α]
     {s : Finset α} (h : s.card < (Finset.univ : Finset α).card) :
@@ -94,9 +96,9 @@ lemma exists_not_mem_of_card_lt_univ {α : Type*} [Fintype α] [DecidableEq α]
     intro x hx; exact Finset.mem_univ x
   have hEq : s = (Finset.univ : Finset α) := Finset.Subset.antisymm hsup hsub
   have hcard : s.card = (Finset.univ : Finset α).card := by
-    simp [hEq]
+    exact congrArg Finset.card hEq
   have hcontra : ¬ s.card < (Finset.univ : Finset α).card := by
-    simp [hcard]
+    exact Nat.not_lt_of_ge (le_of_eq hcard.symm)
   exact hcontra h
 
 lemma exists_state_not_in_endpoints {n : ℕ} (P : Finset (BinaryState n × BinaryState n))
@@ -111,12 +113,18 @@ lemma exists_state_not_in_endpoints {n : ℕ} (P : Finset (BinaryState n × Bina
       | zero => cases hn
       | succ n =>
           simp [Nat.pow_succ, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc]
-    simpa [hpow] using h'
+    exact hpow ▸ h'
   have hcard_end : (endpoints P).card < (Finset.univ : Finset (BinaryState n)).card := by
     have hle : (endpoints P).card ≤ 2 * P.card := endpoints_card_le P
     have hlt : (endpoints P).card < 2 ^ n := lt_of_le_of_lt hle hP2
-    simpa [card_binary_state] using hlt
-  simpa using (exists_not_mem_of_card_lt_univ (s := endpoints P) hcard_end)
+    have hcard_univ : (Finset.univ : Finset (BinaryState n)).card = 2 ^ n := by
+      calc
+        (Finset.univ : Finset (BinaryState n)).card = Fintype.card (BinaryState n) :=
+          Finset.card_univ
+        _ = 2 ^ n := card_binary_state n
+    rw [hcard_univ]
+    exact hlt
+  exact exists_not_mem_of_card_lt_univ (s := endpoints P) hcard_end
 
 lemma exists_coord_not_mem {n : ℕ} (I : Finset (Fin n)) (hI : I.card < n) :
     ∃ j : Fin n, j ∉ I := by
@@ -135,17 +143,15 @@ lemma exists_coord_not_mem {n : ℕ} (I : Finset (Fin n)) (hI : I.card < n) :
     simpa [hcard] using hI
   exact (Nat.lt_irrefl n) hI'
 
-def flipAt {n : ℕ} (s : BinaryState n) (j : Fin n) : BinaryState n :=
-  fun i => if i = j then !s i else s i
+private def flipAt {n : ℕ} (s : BinaryState n) (j : Fin n) : BinaryState n :=
+  fun i => if i = j then !(s i) else s i
 
-lemma flipAt_ne {n : ℕ} (s : BinaryState n) (j : Fin n) :
+private lemma flipAt_ne {n : ℕ} (s : BinaryState n) (j : Fin n) :
     flipAt s j ≠ s := by
-  intro h
-  by_cases hsj : s j
-  · have h' := congrArg (fun f => f j) h
-    simpa [flipAt, hsj] using h'
-  · have h' := congrArg (fun f => f j) h
-    simpa [flipAt, hsj] using h'
+  intro hEq
+  have hj : flipAt s j j = s j := congrArg (fun f => f j) hEq
+  have hnot : !(s j) = s j := by simpa [flipAt] using hj
+  cases hs : s j <;> simp [hs] at hnot
 
 lemma agreeOn_flipAt {n : ℕ} (s : BinaryState n) (I : Finset (Fin n)) (j : Fin n)
     (hj : j ∉ I) :
@@ -232,6 +238,35 @@ theorem certificate_lower_bound_for_I_empty {n : ℕ}
   have hI : (∅ : Finset (Fin n)).card < n := by
     simpa using (Nat.lt_of_lt_of_le (Nat.zero_lt_one) hn)
   simpa using (certificate_lower_bound_for_I (I := (∅ : Finset (Fin n))) hn hI P hP)
+
+/-- Checking-witnessing duality on the empty-set sufficiency core.
+
+If a finite witness family `P` is claimed to be sound for refuting empty-set
+sufficiency (it always contains a disagreeing pair whenever insufficiency
+holds), then `|P|` must be at least `2^(n-1)`.
+
+Interpretation:
+- witness budget `W(n) := 2^(n-1)`
+- checking budget `T(n) := |P|`
+- therefore `T(n) ≥ W(n)`. -/
+theorem checking_witnessing_duality {n : ℕ}
+    (hn : 1 ≤ n)
+    (P : Finset (BinaryState n × BinaryState n))
+    (hSound :
+      ∀ Opt : BinaryState n → Bool,
+        (∃ s s', agreeOn s s' (∅ : Finset (Fin n)) ∧ Opt s ≠ Opt s') →
+        ∃ p ∈ P, Opt p.1 ≠ Opt p.2) :
+    2 ^ (n - 1) ≤ P.card := by
+  by_contra hNotGe
+  have hSmall : P.card < 2 ^ (n - 1) := Nat.lt_of_not_ge hNotGe
+  rcases certificate_lower_bound_for_I_empty (hn := hn) P hSmall with
+    ⟨Opt, ⟨s, s', hAgree, hNe⟩, hPairs⟩
+  rcases hSound Opt ⟨s, s', hAgree, hNe⟩ with ⟨p, hpP, hpNe⟩
+  have hAgreeEmpty : agreeOn p.1 p.2 (∅ : Finset (Fin n)) := by
+    intro i hi
+    exact (False.elim (by simpa using hi))
+  have hpEq : Opt p.1 = Opt p.2 := hPairs p hpP hAgreeEmpty
+  exact hpNe hpEq
 
 private lemma succ_cube (n : ℕ) : (n + 1) ^ 3 = n ^ 3 + 3 * n ^ 2 + 3 * n + 1 := by
   ring

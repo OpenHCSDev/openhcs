@@ -1,4 +1,4 @@
-/-!
+/-
   Paper 4: Decision-Relevant Uncertainty
   
   Reduction.lean - Formal coNP-Completeness Proof

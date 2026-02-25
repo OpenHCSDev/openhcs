@@ -1,4 +1,4 @@
-/-!
+/-
   Paper 4: Decision Quotient
 
   HardnessDistribution.lean - Hardness distribution grounded in Papers 2-4

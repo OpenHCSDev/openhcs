@@ -1,4 +1,4 @@
-/-!
+/-
   Paper 4: Decision-Relevant Uncertainty
 
   Sufficiency.lean - Coordinate Sufficiency and Feature Selection
@@ -33,7 +33,7 @@ namespace DecisionQuotient
 
 /-- A coordinate projection from a product state space.
     For S = X₁ × ... × Xₙ, proj I s returns the tuple (sᵢ)_{i ∈ I} -/
-class CoordinateSpace (S : Type*) (n : ℕ) where
+class CoordinateSpace (S : Type*) (n : outParam ℕ) where
   /-- The i-th coordinate type -/
   Coord : Fin n → Type*
   /-- Project to coordinate i -/

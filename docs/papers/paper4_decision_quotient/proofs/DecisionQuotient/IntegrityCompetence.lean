@@ -10,6 +10,14 @@
   LaTeX references:
   - Definition: certifying solver / solver integrity / competence under regime
   - Proposition: Integrity--Competence Separation
+
+  ## Triviality Level
+  TRIVIAL: This formalizes definitions from the paper. The definitions 
+  themselves are not the contribution - they're used to state the nontrivial results.
+
+  ## Dependencies
+  - Chain: Basic.lean → [depends on paper definitions] → here
+  - Used by: ClaimClosure.lean for regime competence proofs
 -/
 
 import Mathlib.Data.Set.Basic

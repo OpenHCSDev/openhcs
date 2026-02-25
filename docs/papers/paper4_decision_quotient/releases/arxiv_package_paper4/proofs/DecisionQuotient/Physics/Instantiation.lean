@@ -9,8 +9,17 @@ import DecisionQuotient.Physics.AccessRegime
 /-!
 # Physics Instantiations of the Decision Quotient Framework
 
-This module provides a mechanized bridge layer from physical graph-like systems
-to the decision abstractions used in Paper 4.
+## Dependency Graph
+- **Nontrivial source:** PhysicalHardness.lean (energy bounds), AccessRegime.lean (access regimes)
+- **This module:** Instantiates the abstract decision framework onto physical substrates
+
+## Role
+This is a bridging/interface module - defines how to encode physical systems
+(graphs, CRNs, circuits) into the decision framework. Trivial encoding definitions.
+
+## Triviality Level
+TRIVIAL: This module only defines encodings. The nontrivial work is in proving
+that those encodings preserve hardness properties (PhysicalHardness).
 -/
 
 namespace DecisionQuotient.Physics.Instantiation
@@ -83,6 +92,31 @@ def MoleculeAsDecisionCircuit {Atom : Type u} (m : Molecule Atom) :
   { geometry := MoleculeGeometry m
     dynamics := MoleculeDynamics
     interpretation := { interpret := fun _ => ReactionOutcome.noReaction } }
+
+/-- A molecule's decision-circuit view preserves its circuit geometry. -/
+theorem molecule_decision_preserves_geometry {Atom : Type u} (m : Molecule Atom) :
+    (MoleculeAsDecisionCircuit m).geometry = (MoleculeAsCircuit m).geometry := by
+  rfl
+
+/-- A molecule's decision-circuit view preserves its circuit dynamics. -/
+theorem molecule_decision_preserves_dynamics {Atom : Type u} (m : Molecule Atom) :
+    (MoleculeAsDecisionCircuit m).dynamics = (MoleculeAsCircuit m).dynamics := by
+  rfl
+
+/-- Any circuit becomes a decision circuit once an interpretation map is declared. -/
+def asDecisionCircuit
+    (C : Circuit α β) (I : DecisionInterpretation β γ) :
+    DecisionCircuit α β γ :=
+  { geometry := C.geometry
+    dynamics := C.dynamics
+    interpretation := I }
+
+/-- Conversion to a decision circuit preserves the underlying circuit structure. -/
+theorem asDecisionCircuit_preserves_circuit
+    (C : Circuit α β) (I : DecisionInterpretation β γ) :
+    (asDecisionCircuit C I).geometry = C.geometry ∧
+    (asDecisionCircuit C I).dynamics = C.dynamics := by
+  constructor <;> rfl
 
 /-- Configuration object for energy-landscape style models. -/
 structure Configuration where

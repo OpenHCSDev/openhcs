@@ -1,16 +1,23 @@
 import Mathlib.Data.Fintype.Card
 import Mathlib.Data.Set.Basic
 import Mathlib.Tactic
+import DecisionQuotient.Dichotomy
 
 /-!
 # Physical Incompleteness of Instantiation
 
-Core statement:
-if the logical possibility space is strictly larger than the physically
-instantiable state space, then some logical possibility is not physically
-instantiated.
+## Dependency Graph
+- **Nontrivial source:** Dichotomy theorem (encoding-regime separation)
+- **This module:** Cardinality triviality - if logical > physical, some logical
+  is not physical. This is a consequence of the dichotomy, not a core proof.
 
-This is an impossibility theorem (cardinality obstruction), not a hardness claim.
+## Role
+This is a trivial cardinality argument. The nontrivial content is the dichotomy
+theorem in Dichotomy.lean which establishes the encoding regimes.
+
+## Triviality Level
+TRIVIAL — cardinality and finiteness arguments. Closest nontrivial source: `Dichotomy.dichotomy`
+(DecisionQuotient.Dichotomy).
 -/
 
 namespace DecisionQuotient
@@ -72,6 +79,38 @@ theorem physical_incompleteness_of_bounds
   have hCardGap : Fintype.card U.PhysicalState < Fintype.card U.LogicalPossibility := by
     exact lt_of_le_of_lt hPhys (lt_of_lt_of_le hGap hLog)
   exact physical_incompleteness_of_card_gap U hCardGap
+
+/-- Under-resolution collision theorem:
+if the representation alphabet is strictly smaller than the logical space,
+some two distinct logical possibilities must share the same code. -/
+theorem under_resolution_implies_collision
+    {Logical Code : Type*}
+    [Fintype Logical] [Fintype Code]
+    (encode : Logical → Code)
+    (hUnder : Fintype.card Code < Fintype.card Logical) :
+    ∃ ℓ₁ ℓ₂ : Logical, ℓ₁ ≠ ℓ₂ ∧ encode ℓ₁ = encode ℓ₂ := by
+  have hNotInj : ¬ Function.Injective encode := by
+    intro hInj
+    have hLe : Fintype.card Logical ≤ Fintype.card Code :=
+      Fintype.card_le_of_injective encode hInj
+    exact (Nat.not_lt_of_ge hLe) hUnder
+  by_contra hNoCollision
+  have hInj : Function.Injective encode := by
+    intro a b hab
+    by_contra hne
+    exact hNoCollision ⟨a, b, hne, hab⟩
+  exact hNotInj hInj
+
+/-- Decision-facing alias:
+if a decision representation is under-resolved, distinct logical states are
+forced to collide at the representation level. -/
+theorem under_resolution_implies_decision_collision
+    {Logical Code : Type*}
+    [Fintype Logical] [Fintype Code]
+    (repr : Logical → Code)
+    (hUnder : Fintype.card Code < Fintype.card Logical) :
+    ∃ s s' : Logical, s ≠ s' ∧ repr s = repr s' :=
+  under_resolution_implies_collision repr hUnder
 
 end PhysicalIncompleteness
 end Physics

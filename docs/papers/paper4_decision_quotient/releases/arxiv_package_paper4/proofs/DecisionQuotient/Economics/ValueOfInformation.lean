@@ -2,6 +2,11 @@
   Paper 4: Decision-Relevant Uncertainty
 
   Economics/ValueOfInformation.lean - VOI definitions and complexity claims
+
+  ## Triviality Level
+  TRIVIAL — definitions and straightforward lemmas about VOI computation.
+  Closest nontrivial sources: `DecisionQuotient.Hardness.ApproximationHardness` and
+  `DecisionQuotient.Finite` for finite DP interfaces.
 -/
 
 import DecisionQuotient.Finite

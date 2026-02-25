@@ -22,6 +22,7 @@ import DecisionQuotient.Tractability.BoundedActions
 import DecisionQuotient.Tractability.SeparableUtility
 import DecisionQuotient.Tractability.TreeStructure
 import DecisionQuotient.Tractability.FPT
+import DecisionQuotient.Tractability.Dimensional
 import DecisionQuotient.QueryComplexity
 import DecisionQuotient.Reduction
 import DecisionQuotient.Dichotomy
@@ -29,8 +30,15 @@ import DecisionQuotient.Information
 import DecisionQuotient.IntegrityCompetence
 import DecisionQuotient.PhysicalBudgetCrossover
 import DecisionQuotient.ThermodynamicLift
+import DecisionQuotient.Physics.AccessRegime
+import DecisionQuotient.Physics.PhysicalHardness
+import DecisionQuotient.Physics.Instantiation
 import DecisionQuotient.Physics.DecisionTime
 import DecisionQuotient.Physics.PhysicalIncompleteness
+import DecisionQuotient.Physics.ClaimTransport
+import DecisionQuotient.Physics.PhysicalCore
+import DecisionQuotient.Physics.Uncertainty
+import DecisionQuotient.Physics.HeisenbergStrong
 import DecisionQuotient.ClaimClosure
 import DecisionQuotient.InteriorVerification
 import DecisionQuotient.HandleAliases
@@ -38,3 +46,4 @@ import DecisionQuotient.Economics.ValueOfInformation
 import DecisionQuotient.Economics.Elicitation
 import DecisionQuotient.Economics.Approximation
 import DecisionQuotient.ComplexityMain
+import DecisionQuotient.WitnessCheckingDuality

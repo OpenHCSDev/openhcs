@@ -91,7 +91,7 @@ papers:
 
   paper4_toc:
     name: "Decision Quotient (ToC)"
-    full_name: "Computational Complexity of Information Sufficiency"
+    full_name: "Computational Complexity of Physical Information Sufficiency"
     dir: "paper4_decision_quotient"
     latex_dir: "latex_toc"
     latex_file: "decision_quotient_toc.tex"

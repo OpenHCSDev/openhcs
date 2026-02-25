@@ -1,3 +1,20 @@
+/-
+  Paper 4: Decision-Relevant Uncertainty
+
+  Hardness/Sigma2PExhaustive/VectorE_CoNP.lean
+
+  This file packages the structural collapse for MSS on Boolean product spaces:
+  MSS (∃ I, |I| ≤ k ∧ sufficient) is equivalent to a cardinality bound on the
+  relevant coordinate set. This gives coNP-style certificates (witnesses of
+  relevance) and blocks Σ₂ᴾ-hardness for this model unless PH collapses.
+
+  ## Triviality Level
+  NONTRIVIAL: This is a core hardness result - shows coNP structure for Boolean cubes.
+
+  ## Dependencies
+  - Chain: Sigma2PHardness.lean → here (collapse proof)
+-/
+
 import DecisionQuotient.Hardness.Sigma2PHardness
 
 namespace DecisionQuotient

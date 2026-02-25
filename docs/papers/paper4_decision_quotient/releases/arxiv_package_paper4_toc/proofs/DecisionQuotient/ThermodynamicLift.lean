@@ -9,6 +9,13 @@
 
   Scope discipline: these are conditional theorems over declared conversion
   constants and lower-bound hypotheses, not unconditional physical laws.
+
+  ## Triviality Level
+  TRIVIAL: This is derivation of physical consequences from complexity bounds.
+  The nontrivial work is in the complexity proofs.
+
+  ## Dependencies
+  - Chain: ClaimClosure.lean (hardness) → IntegrityCompetence.lean → here
 -/
 
 import DecisionQuotient.IntegrityCompetence
@@ -143,6 +150,65 @@ theorem mandatory_conserved_bundle_conditional
   · exact carbon_lower_mandatory M hC (energy_lower_mandatory M hJ hb)
   · exact energy_lower_additive M b₁ b₂
   · exact carbon_lower_additive M b₁ b₂
+
+/-! ### Neukart–Vinokur Thermodynamic Duality as Special Case
+
+Neukart and Vinokur (2025) propose dU = T·dS - p·dV + λ·dC where C is a
+"complexity coordinate." Under our declared model, this follows as a
+specialization: let C = bitLB from query obstruction, then dU ≥ λ·dC
+with λ = joulesPerBit > 0 declared per Landauer.
+
+The derivation is trivial given our framework: their λ·dC is exactly
+our energyLowerBound when C is identified with bit-operation count.
+-/
+
+/-- Neukart–Vinokur complexity coordinate: identified with bit-operation lower bound. -/
+abbrev complexityCoordinate := ℕ
+
+/-- Neukart–Vinokur λ parameter: identified with joules-per-bit conversion constant. -/
+def nvLambda (M : ThermoModel) : ℕ := M.joulesPerBit
+
+/-- Neukart–Vinokur thermodynamic duality: dU ≥ λ·dC.
+    This is exactly the energy lower bound from Proposition thermo-lift. -/
+theorem neukart_vinokur_duality
+    (M : ThermoModel) (C : complexityCoordinate) :
+    energyLowerBound M C = nvLambda M * C := by
+  rfl
+
+/-- Neukart–Vinokur mandatory positive cost: λ > 0 ∧ dC > 0 → dU > 0. -/
+theorem neukart_vinokur_mandatory
+    (M : ThermoModel) {C : complexityCoordinate}
+    (hLam : 0 < nvLambda M) (hC : 0 < C) :
+    0 < energyLowerBound M C := by
+  exact energy_lower_mandatory M hLam hC
+
+/-- Neukart–Vinokur monotonicity: C₁ ≤ C₂ → λ·C₁ ≤ λ·C₂. -/
+theorem neukart_vinokur_monotone
+    (M : ThermoModel) {C₁ C₂ : complexityCoordinate} (hC : C₁ ≤ C₂) :
+    energyLowerBound M C₁ ≤ energyLowerBound M C₂ := by
+  exact energy_lower_from_bits_lower M hC
+
+/-- Neukart–Vinokur additivity: λ·(C₁ + C₂) = λ·C₁ + λ·C₂. -/
+theorem neukart_vinokur_additive
+    (M : ThermoModel) (C₁ C₂ : complexityCoordinate) :
+    energyLowerBound M (C₁ + C₂) =
+      energyLowerBound M C₁ + energyLowerBound M C₂ := by
+  exact energy_lower_additive M C₁ C₂
+
+/-- Full Neukart–Vinokur bundle: under positive λ and positive complexity work,
+    the thermodynamic duality holds with mandatory, monotone, and additive properties. -/
+theorem neukart_vinokur_bundle
+    (M : ThermoModel) {C : complexityCoordinate}
+    (hLam : 0 < nvLambda M) (hC : 0 < C)
+    (C₁ C₂ : complexityCoordinate) (hMono : C₁ ≤ C₂) :
+    energyLowerBound M C = nvLambda M * C ∧
+    0 < energyLowerBound M C ∧
+    energyLowerBound M C₁ ≤ energyLowerBound M C₂ ∧
+    energyLowerBound M (C₁ + C₂) = energyLowerBound M C₁ + energyLowerBound M C₂ := by
+  exact ⟨neukart_vinokur_duality M C,
+         neukart_vinokur_mandatory M hLam hC,
+         neukart_vinokur_monotone M hMono,
+         neukart_vinokur_additive M C₁ C₂⟩
 
 end ThermodynamicLift
 end DecisionQuotient

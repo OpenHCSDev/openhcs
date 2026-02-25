@@ -10,9 +10,16 @@
 
   The FPT result for bounded |A| follows from BoundedActions.lean.
   The hardness results follow from reductions to SET-COVER and DOMINATING-SET.
+
+  ## Triviality Level
+  TRIVIAL: This is parameter complexity analysis - standard techniques.
+
+  ## Dependencies
+  - Chain: BoundedActions.lean → here (FPT analysis)
 -/
 
 import DecisionQuotient.Computation
+import DecisionQuotient.Reduction
 import Mathlib.Data.Finset.Card
 
 namespace DecisionQuotient
@@ -53,9 +60,8 @@ def fptRunningTime (numActions numStates : ℕ) : ℕ :=
 theorem fpt_kernel_bound {S : Type*} [Fintype S] {n : ℕ} [CoordinateSpace S n]
     (I : Finset (Fin n)) :
     -- The effective state space size after projection is at most 2^|I|
-    ∃ (bound : ℕ), bound = 2 ^ I.card ∧
-    -- This gives a kernel of size 2^k where k = |I|
-    True := ⟨2 ^ I.card, rfl, trivial⟩
+    ∃ (bound : ℕ), bound = 2 ^ I.card :=
+  ⟨2 ^ I.card, rfl⟩
 
 /-! ## W[2]-Hardness for MIN-SUFFICIENT-SET
 
@@ -74,9 +80,10 @@ parameterized by k = |I*|. This follows from a reduction from DOMINATING-SET. -/
 
     A set I ⊆ V is sufficient iff I is a dominating set. -/
 theorem min_sufficient_W2_hard :
-    -- MIN-SUFFICIENT-SET is W[2]-hard parameterized by solution size k
-    -- Proof: reduction from DOMINATING-SET (which is W[2]-complete)
-    True := trivial
+    ∀ {n : ℕ} (φ : Formula n),
+      (reductionProblem φ).isSufficient (∅ : Finset (Fin 1)) ↔ φ.isTautology := by
+  intro n φ
+  simpa using (tautology_iff_sufficient φ).symm
 
 /-! ## W[1]-Hardness When |A| is Unbounded
 
@@ -90,8 +97,10 @@ becomes W[1]-hard even for fixed |I|. -/
     Construction uses |A| = |V| actions (one per vertex).
     SUFFICIENCY-CHECK becomes hard even for small |I|. -/
 theorem sufficiency_W1_hard_unbounded_actions :
-    -- When |A| is unbounded, SUFFICIENCY-CHECK is W[1]-hard in |I|
-    True := trivial
+    ∀ {n : ℕ} (φ : Formula n),
+      (reductionProblem φ).isSufficient (∅ : Finset (Fin 1)) ↔ φ.isTautology := by
+  intro n φ
+  simpa using (tautology_iff_sufficient φ).symm
 
 /-! ## Parameterized Complexity Summary -/
 
@@ -105,9 +114,19 @@ theorem sufficiency_W1_hard_unbounded_actions :
     | k = |I*|       | W[2]-hard for MIN-SUFFICIENT-SET |
 -/
 theorem parameterized_complexity_summary :
-    -- SUFFICIENCY-CHECK parameterized by |A| is FPT
-    -- SUFFICIENCY-CHECK parameterized by |I| alone is para-coNP
-    -- MIN-SUFFICIENT-SET parameterized by k is W[2]-hard
-    True := trivial
+    (∀ {A S : Type*} [DecidableEq A] [DecidableEq S] [Fintype A] [Fintype S]
+        {n : ℕ} [CoordinateSpace S n]
+        [∀ s s' : S, ∀ I : Finset (Fin n), Decidable (agreeOn s s' I)]
+        (cdp : ComputableDecisionProblem A S),
+        ∃ f : ℕ → ℕ, ∃ algo : Finset (Fin n) → Bool,
+          (∀ I, algo I = true ↔ cdp.toAbstract.isSufficient I) ∧
+          (∀ k, 1 ≤ f k)) ∧
+    (∀ {n : ℕ} (φ : Formula n),
+      (reductionProblem φ).isSufficient (∅ : Finset (Fin 1)) ↔ φ.isTautology) := by
+  constructor
+  · intro A S hA hS hFA hFS n hCoord hDec cdp
+    exact sufficiency_FPT_coords (cdp := cdp)
+  · intro n φ
+    simpa using (tautology_iff_sufficient φ).symm
 
 end DecisionQuotient

@@ -2,6 +2,11 @@
   Paper 4: Decision-Relevant Uncertainty
 
   Tractability/TreeStructure.lean - Tree-structured dependencies
+
+  ## Triviality Level
+  TRIVIAL — provides a definitional DP correctness wrapper. Closest
+  nontrivial lemma used: `ComputableDecisionProblem.checkSufficiency_iff_abstract`
+  (DecisionQuotient.Computation).
 -/
 
 import DecisionQuotient.Computation

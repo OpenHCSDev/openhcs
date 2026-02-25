@@ -12,6 +12,12 @@
   - Total: O(|S|² · k²)
 
   When k is a constant, this is O(|S|²) - polynomial in input size.
+
+  ## Triviality Level
+  TRIVIAL: This is algorithmic analysis - polynomial bound derivation.
+
+  ## Dependencies
+  - Chain: Sufficiency.lean → here (special case)
 -/
 
 import DecisionQuotient.Finite

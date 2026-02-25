@@ -10,6 +10,14 @@
   - Definition of polynomial-time reduction
   - Reduction from sufficiency checking to set comparison
   - Transitivity of polynomial reductions
+
+  ## Triviality Level
+  TRIVIAL: This wraps standard library reducibility. The nontrivial work is
+  in the specific reduction proofs (Reduction.lean).
+
+  ## Dependencies
+  - Chain: AlgorithmComplexity.lean (complexity bounds) → here
+  - The nontrivial work is in Reduction.lean (TAUTOLOGY reduction)
 -/
 
 import DecisionQuotient.AlgorithmComplexity

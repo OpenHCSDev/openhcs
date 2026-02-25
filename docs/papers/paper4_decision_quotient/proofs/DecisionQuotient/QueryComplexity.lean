@@ -1,4 +1,4 @@
-/-!
+/-
   Paper 4: Decision-Relevant Uncertainty
 
   QueryComplexity.lean - Query Complexity Lower Bounds

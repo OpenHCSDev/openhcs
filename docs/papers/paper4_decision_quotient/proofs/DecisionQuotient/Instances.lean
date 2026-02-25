@@ -1,4 +1,4 @@
-/-!
+/-
   Paper 4: Decision-Relevant Uncertainty
   
   Instances.lean - Concrete ProductSpace Instances

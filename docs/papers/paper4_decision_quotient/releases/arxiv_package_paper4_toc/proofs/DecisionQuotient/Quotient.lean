@@ -8,6 +8,13 @@
   Any other abstraction φ: S → T that preserves Opt must factor through π: S → Q.
 
   This is the core mathematical contribution - Q is universal.
+
+  ## Triviality Level
+  NONTRIVIAL: This is Theorem A - the universal property of the quotient.
+  This is a key mathematical result of the paper.
+
+  ## Dependencies
+  - Chain: Basic.lean (Opt definition) → here (proves universal property)
 -/
 
 import DecisionQuotient.Basic

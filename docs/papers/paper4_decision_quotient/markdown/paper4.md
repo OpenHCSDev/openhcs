@@ -1,6 +1,6 @@
 # Paper: Verified Polynomial-Time Reductions in Lean 4: Formalizing the Complexity of Decision-Relevant Information
 
-**Status**: Draft-ready | **Lean**: 11499 lines, 527 theorems
+**Status**: Draft-ready | **Lean**: 13391 lines, 597 theorems
 
 ---
 
@@ -24,7 +24,7 @@ We present a Lean 4 formalization of polynomial-time reductions and computationa
 
 All complexity claims use the input encodings fixed in Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}.
 
-The formalization comprises 11499 lines of Lean 4 with 527 machine-verified theorems/lemmas across 51 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
+The formalization comprises 13391 lines of Lean 4 with 597 machine-verified theorems/lemmas across 58 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
 
 **Practical corollaries.** The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/$\Sigma_2^P$ completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle *determining what you need to know is harder than knowing everything*. This implies that over-modeling is rational under the model and that "simpler" incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
 
@@ -78,9 +78,9 @@ The primary contribution is theoretical: a formalized reduction framework and a 
 ::: center
   **Metric**                                                 **Value**
   ----------------------- --------------------------------------------
-  Lines of Lean 4                                                11499
-  Theorems/lemmas                                                  527
-  Proof files                                                       51
+  Lines of Lean 4                                                13391
+  Theorems/lemmas                                                  597
+  Proof files                                                       58
   Reduction proofs          5 (SAT, TAUTOLOGY, SET-COVER, ETH, W\[2\])
   External dependencies           Mathlib (computability, data.finset)
   `sorry` count                                                      0
@@ -229,7 +229,7 @@ Each theorem includes verification metadata:
     #print axioms sufficiency_coNP_complete  -- axiom dependencies
     #eval Nat.repr (countSorry `sufficiency_coNP_complete)  -- 0
 
-The build log (included in the artifact) records successful compilation of all 527 theorem/lemma statements with 0 `sorry` placeholders.
+The build log (included in the artifact) records successful compilation of all 597 theorem/lemma statements with 0 `sorry` placeholders.
 
 
 # Formal Foundations {#sec:foundations}
@@ -1186,7 +1186,7 @@ Mathlib's computability library [@mathlib2020] provides primitive recursive fun
 
 #### The verification gap.
 
-Published complexity proofs occasionally contain errors [@lipton2009np]. Machine verification eliminates this uncertainty. Our contribution demonstrates that complexity reductions are amenable to formalization with reasonable effort (11499 lines for the full reduction suite).
+Published complexity proofs occasionally contain errors [@lipton2009np]. Machine verification eliminates this uncertainty. Our contribution demonstrates that complexity reductions are amenable to formalization with reasonable effort (13391 lines for the full reduction suite).
 
 ## Computational Decision Theory
 
@@ -1383,11 +1383,11 @@ Keep the mathematical content ("sufficiency is the same as tautology under this 
 
 ## Formalization Size
 
--   Total Lean lines: 11499
+-   Total Lean lines: 13391
 
--   Theorem/lemma statements: 527
+-   Theorem/lemma statements: 597
 
--   Proof files: 51
+-   Proof files: 58
 
 -   `sorry` placeholders: 0
 
@@ -1549,7 +1549,7 @@ The Lean proofs are straightforward applications of definitions and standard com
 
 3.  **Complexity dichotomy.** Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} separates logarithmic and linear regimes: polynomial behavior when the minimal sufficient set has size $O(\log |S|)$, and exponential lower bounds under ETH when it has size $\Omega(n)$. Intermediate regimes are not ruled out by the lower-bound statement.
 
-**What machine-checking guarantees.** The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic combinatorics and complexity definitions). 0 `sorry` placeholders means 0 unproven claims. The 11499 lines establish a verified chain from basic definitions (decision problems, coordinate spaces, polynomial reductions) to the final theorems (hardness results, dichotomy, tractable cases). Reviewers need not trust our informal explanations; they run `lake build` and verify the proofs themselves.
+**What machine-checking guarantees.** The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic combinatorics and complexity definitions). 0 `sorry` placeholders means 0 unproven claims. The 13391 lines establish a verified chain from basic definitions (decision problems, coordinate spaces, polynomial reductions) to the final theorems (hardness results, dichotomy, tractable cases). Reviewers need not trust our informal explanations; they run `lake build` and verify the proofs themselves.
 
 **Comparison to informal complexity arguments.** Prior work on model selection complexity (Chickering et al. [@chickering2004large], Teyssier & Koller [@teyssier2012ordering]) presents compelling informal arguments but lacks machine-checked proofs. Our contribution is not new *wisdom*; the insight that model selection is hard is old. Our contribution is *formalization*: making "coordinate sufficiency" precise enough to mechanize, constructing verified reductions, and proving the complexity results hold for the formalized definitions.
 
@@ -1557,7 +1557,7 @@ This follows the tradition of verified complexity theory: just as Nipkow & Klein
 
 ## Module Structure
 
-The formalization consists of 51 files organized as follows:
+The formalization consists of 58 files organized as follows:
 
 -   `Basic.lean` -- Core definitions (DecisionProblem, CoordinateSet, Projection)
 
@@ -1608,11 +1608,11 @@ The formalization consists of 51 files organized as follows:
 
 ## Verification Status
 
--   Total lines: 11499
+-   Total lines: 13391
 
--   Theorems/lemmas: 527
+-   Theorems/lemmas: 597
 
--   Files: 51
+-   Files: 58
 
 -   Status: All proofs compile with 0 `sorry`
 
@@ -1748,6 +1748,6 @@ The "cover important axes" heuristic only works if you *correctly identify* whic
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 11499
-- Theorems: 527
+- Lines: 13391
+- Theorems: 597
 - `sorry` placeholders: 0

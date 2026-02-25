@@ -29,6 +29,15 @@ import DecisionQuotient.Information
 import DecisionQuotient.IntegrityCompetence
 import DecisionQuotient.PhysicalBudgetCrossover
 import DecisionQuotient.ThermodynamicLift
+import DecisionQuotient.Physics.AccessRegime
+import DecisionQuotient.Physics.PhysicalHardness
+import DecisionQuotient.Physics.Instantiation
+import DecisionQuotient.Physics.DecisionTime
+import DecisionQuotient.Physics.PhysicalIncompleteness
+import DecisionQuotient.Physics.ClaimTransport
+import DecisionQuotient.Physics.PhysicalCore
+import DecisionQuotient.Physics.Uncertainty
+import DecisionQuotient.Physics.HeisenbergStrong
 import DecisionQuotient.ClaimClosure
 import DecisionQuotient.InteriorVerification
 import DecisionQuotient.HandleAliases
@@ -36,3 +45,4 @@ import DecisionQuotient.Economics.ValueOfInformation
 import DecisionQuotient.Economics.Elicitation
 import DecisionQuotient.Economics.Approximation
 import DecisionQuotient.ComplexityMain
+import DecisionQuotient.WitnessCheckingDuality

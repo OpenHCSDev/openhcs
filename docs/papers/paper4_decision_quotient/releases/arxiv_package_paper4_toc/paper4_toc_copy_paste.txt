@@ -1,401 +1,245 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-02-23T18:11:43.442075
+Generated: 2026-02-24T20:11:15.281192
 
 === HUMAN COPY/PASTE ===
 
-Title: Computational Complexity of Information Sufficiency
+Title: Computational Complexity of Physical Information Sufficiency
 
 Abstract (Unicode, for Zenodo):
-We characterize the computational complexity of information sufficiency as a meta-problem: given an arbitrary decision problem 𝒟 with action set A, factored state space S = X₁ × ⋯ × X_(n), and utility U: A × S → ℚ, does a candidate coordinate set I carry enough information to act optimally? Formally, I is sufficient if s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized by an arbitrary 𝒟, and any problem requiring a choice among alternatives under structured information instantiates the (A, S, U) tuple, the complexity results apply to every problem with factored state space, not to a specific problem domain (e.g., configuration simplification where parameters are coordinates and behavior-preservation is sufficiency).
+We study physical information sufficiency as a decision-theoretic meta-problem. For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × X_(n), a coordinate set I is sufficient when
+s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′).
+This asks whether projected information preserves the full optimal-action correspondence.
 
-Information-theoretically, this is task-conditional compression: the target is preservation of the optimal-action map rather than full-state reconstruction. This places the framework at the interface of source coding and zero-error confusability structure, while separating short report length from certifiable exactness in the MDL/Kolmogorov sense.
+Complexity landscape.
 
-The landscape in the formal model:
+• SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete. Informally, this gap separates verification (checking whether a given coordinate set suffices) from discovery (finding a grounding under which the optimal action is determined), and suggests the latter is structurally harder unless the polynomial hierarchy collapses.
 
-• General case: SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete.
+• Under explicit-state encoding, polynomial-time algorithms hold for bounded actions, separable utility, and tree-structured utility.
 
-• Tractable cases: Polynomial-time for bounded action sets under the explicit-state encoding; separable utilities (U = f + g) under any encoding; and tree-structured utility with explicit local factors.
+• Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case families with k^(*) = n requiring 2^(Ω(n)) time.
 
-• Encoding-regime separation: Polynomial-time under the explicit-state encoding (polynomial in |S|). Under ETH, there exist succinctly encoded worst-case instances witnessed by a strengthened Lean-mechanized reduction gadget from the paper’s SAT/TAUTOLOGY hardness spine with k^(*) = n for which SUFFICIENCY-CHECK requires 2^(Ω(n)) time.
+• Under query access, the finite-state core has worst-case Opt-oracle complexity Ω(|S|), with Boolean value-entry and state-batch refinements preserving the obstruction.
 
-• Intermediate query-access lower bounds: In the finite-state query core, SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable yes/no pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized Boolean interface refinements show the same obstruction for value-entry and state-batch access, including finite-support randomized robustness and oracle-lattice transfer/strictness statements.
+Physical grounding. The paper formalizes a physical-to-core encoding E: 𝒫 → 𝒟 and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
 
-The tractable cases are stated with explicit encoding assumptions. Together, these results answer the question “when is decision-relevant information identifiable efficiently?” within the stated regimes. Complexity classification is a property of the encoding regime measured against a fixed decision question: the same sufficiency predicate is polynomial-time under explicit-state access and worst-case exponential under succinct encoding. At the structural level, the apparent ∃∀ form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion sufficient(I) ⇔ Relevant ⊆ I. Within this regime-typed framework, under a declared objective contract, over-modeling is admissible only under integrity-preserving attempted-competence-failure conditions (roughly: after an attempted exact procedure, exact competence remains unavailable in the active regime); outside that cell, persistent over-modeling is irrational for the same objective. The report layer is now formally non-binary: abstention can carry a tentative guess and self-reflected confidence, while certified confidence is evidence-gated by typed admissibility; positive certified confidence implies admissibility, and exact reports without exact competence force zero certified confidence. For progress semantics, the framework distinguishes confidence percentages from runtime witnesses: scalar step-count is always well-defined/falsifiable, while completion percentage is defined only under an explicit declared bound. For temporal semantics, interface time is formalized as a discrete ℕ index; one decision event is exactly one time-unit transition, and run length equals elapsed interface time.
+All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
-The contribution has two levels: (i) a complete complexity landscape for the core decision-relevant problems in the static sufficiency class defined by the model contract (coNP/Σ₂^(P) completeness and tractable regimes under explicit encoding assumptions), and (ii) a formal regime-typing framework that separates structural complexity from representational hardness and yields theorem-indexed engineering corollaries.
-
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (11932 lines, 553 theorem/lemma statements); complexity classifications follow by composition with standard results .
-
-Keywords: computational complexity, decision theory, polynomial hierarchy, tractability dichotomy, Lean 4
+Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
 
 Abstract (MathJax, for arXiv):
-We characterize the computational complexity of *information sufficiency* as a *meta-problem*: given an arbitrary decision problem $\mathcal{D}$ with action set $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility $U: A \times S \to \mathbb{Q}$, does a candidate coordinate set $I$ carry enough information to act optimally? Formally, $I$ is *sufficient* if $s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$. Because the problems below are parameterized by an arbitrary $\mathcal{D}$, and any problem requiring a choice among alternatives under structured information instantiates the $(A, S, U)$ tuple, the complexity results apply to every problem with factored state space, not to a specific problem domain (e.g., configuration simplification where parameters are coordinates and behavior-preservation is sufficiency).
+We study physical information sufficiency as a decision-theoretic meta-problem. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, a coordinate set $I$ is sufficient when $$s_I=s'_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s').$$ This asks whether projected information preserves the full optimal-action correspondence.
 
-Information-theoretically, this is task-conditional compression: the target is preservation of the optimal-action map rather than full-state reconstruction. This places the framework at the interface of source coding and zero-error confusability structure [@shannon1948mathematical; @cover2006elements; @shannon1956zero; @korner1973graphs; @lovasz1979shannon], while separating short report length from certifiable exactness in the MDL/Kolmogorov sense [@rissanen1978modeling; @grunwald2007minimum; @li2008introduction].
+Complexity landscape.
 
-**The landscape in the formal model:**
+- SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete. Informally, this gap separates verification (checking whether a given coordinate set suffices) from discovery (finding a grounding under which the optimal action is determined), and suggests the latter is structurally harder unless the polynomial hierarchy collapses.
 
-- **General case:** SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete.
+- Under explicit-state encoding, polynomial-time algorithms hold for bounded actions, separable utility, and tree-structured utility.
 
-- **Tractable cases:** Polynomial-time for bounded action sets under the explicit-state encoding; separable utilities ($U = f + g$) under any encoding; and tree-structured utility with explicit local factors.
+- Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case families with $k^*=n$ requiring $2^{\Omega(n)}$ time.
 
-- **Encoding-regime separation:** Polynomial-time under the explicit-state encoding (polynomial in $|S|$). Under ETH, there exist succinctly encoded worst-case instances witnessed by a strengthened Lean-mechanized reduction gadget from the paper's SAT/TAUTOLOGY hardness spine with $k^*=n$ for which SUFFICIENCY-CHECK requires $2^{\Omega(n)}$ time.
+- Under query access, the finite-state core has worst-case Opt-oracle complexity $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving the obstruction.
 
-- **Intermediate query-access lower bounds:** In the finite-state query core, SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity $\Omega(|S|)$ via indistinguishable yes/no pairs for the $I=\emptyset$ subproblem (Boolean instantiation: $\Omega(2^n)$); mechanized Boolean interface refinements show the same obstruction for value-entry and state-batch access, including finite-support randomized robustness and oracle-lattice transfer/strictness statements.
+Physical grounding. The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$ and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
+All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
-The tractable cases are stated with explicit encoding assumptions. Together, these results answer the question "when is decision-relevant information identifiable efficiently?" within the stated regimes. Complexity classification is a property of the encoding regime measured against a fixed decision question: the same sufficiency predicate is polynomial-time under explicit-state access and worst-case exponential under succinct encoding. At the structural level, the apparent $\exists\forall$ form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion $\text{sufficient}(I) \iff \text{Relevant} \subseteq I$. Within this regime-typed framework, under a declared objective contract, over-modeling is admissible only under integrity-preserving attempted-competence-failure conditions (roughly: after an attempted exact procedure, exact competence remains unavailable in the active regime); outside that cell, persistent over-modeling is irrational for the same objective. The report layer is now formally non-binary: abstention can carry a tentative guess and self-reflected confidence, while certified confidence is evidence-gated by typed admissibility; positive certified confidence implies admissibility, and exact reports without exact competence force zero certified confidence. For progress semantics, the framework distinguishes confidence percentages from runtime witnesses: scalar step-count is always well-defined/falsifiable, while completion percentage is defined only under an explicit declared bound. For temporal semantics, interface time is formalized as a discrete $\mathbb{N}$ index; one decision event is exactly one time-unit transition, and run length equals elapsed interface time.
-The contribution has two levels: (i) a complete complexity landscape for the core decision-relevant problems in the static sufficiency class defined by the model contract (coNP/$\Sigma_2^P$ completeness and tractable regimes under explicit encoding assumptions), and (ii) a formal regime-typing framework that separates structural complexity from representational hardness and yields theorem-indexed engineering corollaries.
-
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (11932 lines, 553 theorem/lemma statements); complexity classifications follow by composition with standard results .
-
-**Keywords:** computational complexity, decision theory, polynomial hierarchy, tractability dichotomy, Lean 4
+Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
 
 arXiv Comments:
-Theory of Computing submission. Lean 4 artifact: 11932 lines, 553 theorems/lemmas across 53 files (0 sorry placeholders).
+Theory of Computing submission. Lean 4 artifact: 16353 lines, 727 theorems/lemmas across 63 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper4_toc
-title: Computational Complexity of Information Sufficiency
+title: Computational Complexity of Physical Information Sufficiency
 zenodo:
-  title: Computational Complexity of Information Sufficiency
-  abstract: 'We characterize the computational complexity of information sufficiency
-    as a meta-problem: given an arbitrary decision problem 𝒟 with action set A, factored
-    state space S = X₁ × ⋯ × X_(n), and utility U: A × S → ℚ, does a candidate coordinate
-    set I carry enough information to act optimally? Formally, I is sufficient if
-    s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized
-    by an arbitrary 𝒟, and any problem requiring a choice among alternatives under
-    structured information instantiates the (A, S, U) tuple, the complexity results
-    apply to every problem with factored state space, not to a specific problem domain
-    (e.g., configuration simplification where parameters are coordinates and behavior-preservation
-    is sufficiency).
+  title: Computational Complexity of Physical Information Sufficiency
+  abstract: 'We study physical information sufficiency as a decision-theoretic meta-problem.
+    For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × X_(n), a coordinate set
+    I is sufficient when
+
+    s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′).
+
+    This asks whether projected information preserves the full optimal-action correspondence.
 
 
-    Information-theoretically, this is task-conditional compression: the target is
-    preservation of the optimal-action map rather than full-state reconstruction.
-    This places the framework at the interface of source coding and zero-error confusability
-    structure, while separating short report length from certifiable exactness in
-    the MDL/Kolmogorov sense.
+    Complexity landscape.
 
 
-    The landscape in the formal model:
+    • SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete;
+    ANCHOR-SUFFICIENCY is Σ₂^(P)-complete. Informally, this gap separates verification
+    (checking whether a given coordinate set suffices) from discovery (finding a grounding
+    under which the optimal action is determined), and suggests the latter is structurally
+    harder unless the polynomial hierarchy collapses.
 
 
-    • General case: SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete.
+    • Under explicit-state encoding, polynomial-time algorithms hold for bounded actions,
+    separable utility, and tree-structured utility.
 
 
-    • Tractable cases: Polynomial-time for bounded action sets under the explicit-state
-    encoding; separable utilities (U = f + g) under any encoding; and tree-structured
-    utility with explicit local factors.
+    • Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case
+    families with k^(*) = n requiring 2^(Ω(n)) time.
 
 
-    • Encoding-regime separation: Polynomial-time under the explicit-state encoding
-    (polynomial in |S|). Under ETH, there exist succinctly encoded worst-case instances
-    witnessed by a strengthened Lean-mechanized reduction gadget from the paper’s
-    SAT/TAUTOLOGY hardness spine with k^(*) = n for which SUFFICIENCY-CHECK requires
-    2^(Ω(n)) time.
+    • Under query access, the finite-state core has worst-case Opt-oracle complexity
+    Ω(|S|), with Boolean value-entry and state-batch refinements preserving the obstruction.
 
 
-    • Intermediate query-access lower bounds: In the finite-state query core, SUFFICIENCY-CHECK
-    has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable yes/no
-    pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized Boolean
-    interface refinements show the same obstruction for value-entry and state-batch
-    access, including finite-support randomized robustness and oracle-lattice transfer/strictness
-    statements.
+    Physical grounding. The paper formalizes a physical-to-core encoding E: 𝒫 → 𝒟
+    and a transport rule: declared physical assumptions transfer to core assumptions,
+    and core claims lift back to encoded physical instances. Encoded physical counterexamples
+    induce core failures on the encoded slice. Discrete-time interface semantics (decision
+    event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon
+    lower bounds under declared constants) are formalized in the same assumption-typed
+    framework.
 
 
-    The tractable cases are stated with explicit encoding assumptions. Together, these
-    results answer the question “when is decision-relevant information identifiable
-    efficiently?” within the stated regimes. Complexity classification is a property
-    of the encoding regime measured against a fixed decision question: the same sufficiency
-    predicate is polynomial-time under explicit-state access and worst-case exponential
-    under succinct encoding. At the structural level, the apparent ∃∀ form of MINIMUM-SUFFICIENT-SET
-    collapses to a coNP characterization via the criterion sufficient(I) ⇔ Relevant
-    ⊆ I. Within this regime-typed framework, under a declared objective contract,
-    over-modeling is admissible only under integrity-preserving attempted-competence-failure
-    conditions (roughly: after an attempted exact procedure, exact competence remains
-    unavailable in the active regime); outside that cell, persistent over-modeling
-    is irrational for the same objective. The report layer is now formally non-binary:
-    abstention can carry a tentative guess and self-reflected confidence, while certified
-    confidence is evidence-gated by typed admissibility; positive certified confidence
-    implies admissibility, and exact reports without exact competence force zero certified
-    confidence. For progress semantics, the framework distinguishes confidence percentages
-    from runtime witnesses: scalar step-count is always well-defined/falsifiable,
-    while completion percentage is defined only under an explicit declared bound.
-    For temporal semantics, interface time is formalized as a discrete ℕ index; one
-    decision event is exactly one time-unit transition, and run length equals elapsed
-    interface time.
+    All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma
+    statements). Complexity-class completeness follows by composition with standard
+    complexity results; regime-dependent and physical-transport consequences are proved
+    as assumption-explicit closures.
 
 
-    The contribution has two levels: (i) a complete complexity landscape for the core
-    decision-relevant problems in the static sufficiency class defined by the model
-    contract (coNP/Σ₂^(P) completeness and tractable regimes under explicit encoding
-    assumptions), and (ii) a formal regime-typing framework that separates structural
-    complexity from representational hardness and yields theorem-indexed engineering
-    corollaries.
-
-
-    The reduction constructions and key equivalence theorems are machine-checked in
-    Lean 4 (11932 lines, 553 theorem/lemma statements); complexity classifications
-    follow by composition with standard results .
-
-
-    Keywords: computational complexity, decision theory, polynomial hierarchy, tractability
-    dichotomy, Lean 4'
+    Keywords: computational complexity, physical information, decision theory, polynomial
+    hierarchy, formal verification'
 arxiv:
-  title: Computational Complexity of Information Sufficiency
-  abstract: 'We characterize the computational complexity of *information sufficiency*
-    as a *meta-problem*: given an arbitrary decision problem $\mathcal{D}$ with action
-    set $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility
-    $U: A \times S \to \mathbb{Q}$, does a candidate coordinate set $I$ carry enough
-    information to act optimally? Formally, $I$ is *sufficient* if $s_I = s''_I \implies
-    \operatorname{Opt}(s) = \operatorname{Opt}(s'')$. Because the problems below are
-    parameterized by an arbitrary $\mathcal{D}$, and any problem requiring a choice
-    among alternatives under structured information instantiates the $(A, S, U)$ tuple,
-    the complexity results apply to every problem with factored state space, not to
-    a specific problem domain (e.g., configuration simplification where parameters
-    are coordinates and behavior-preservation is sufficiency).
+  title: Computational Complexity of Physical Information Sufficiency
+  abstract: 'We study physical information sufficiency as a decision-theoretic meta-problem.
+    For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$,
+    a coordinate set $I$ is sufficient when $$s_I=s''_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s'').$$
+    This asks whether projected information preserves the full optimal-action correspondence.
 
 
-    Information-theoretically, this is task-conditional compression: the target is
-    preservation of the optimal-action map rather than full-state reconstruction.
-    This places the framework at the interface of source coding and zero-error confusability
-    structure [@shannon1948mathematical; @cover2006elements; @shannon1956zero; @korner1973graphs;
-    @lovasz1979shannon], while separating short report length from certifiable exactness
-    in the MDL/Kolmogorov sense [@rissanen1978modeling; @grunwald2007minimum; @li2008introduction].
+    Complexity landscape.
 
 
-    **The landscape in the formal model:**
+    - SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete;
+    ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete. Informally, this gap separates
+    verification (checking whether a given coordinate set suffices) from discovery
+    (finding a grounding under which the optimal action is determined), and suggests
+    the latter is structurally harder unless the polynomial hierarchy collapses.
 
 
-    - **General case:** SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is
-    $\Sigma_{2}^{P}$-complete.
+    - Under explicit-state encoding, polynomial-time algorithms hold for bounded actions,
+    separable utility, and tree-structured utility.
 
 
-    - **Tractable cases:** Polynomial-time for bounded action sets under the explicit-state
-    encoding; separable utilities ($U = f + g$) under any encoding; and tree-structured
-    utility with explicit local factors.
+    - Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case
+    families with $k^*=n$ requiring $2^{\Omega(n)}$ time.
 
 
-    - **Encoding-regime separation:** Polynomial-time under the explicit-state encoding
-    (polynomial in $|S|$). Under ETH, there exist succinctly encoded worst-case instances
-    witnessed by a strengthened Lean-mechanized reduction gadget from the paper''s
-    SAT/TAUTOLOGY hardness spine with $k^*=n$ for which SUFFICIENCY-CHECK requires
-    $2^{\Omega(n)}$ time.
+    - Under query access, the finite-state core has worst-case Opt-oracle complexity
+    $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving
+    the obstruction.
 
 
-    - **Intermediate query-access lower bounds:** In the finite-state query core,
-    SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity $\Omega(|S|)$ via
-    indistinguishable yes/no pairs for the $I=\emptyset$ subproblem (Boolean instantiation:
-    $\Omega(2^n)$); mechanized Boolean interface refinements show the same obstruction
-    for value-entry and state-batch access, including finite-support randomized robustness
-    and oracle-lattice transfer/strictness statements.
+    Physical grounding. The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$
+    and a transport rule: declared physical assumptions transfer to core assumptions,
+    and core claims lift back to encoded physical instances. Encoded physical counterexamples
+    induce core failures on the encoded slice. Discrete-time interface semantics (decision
+    event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon
+    lower bounds under declared constants) are formalized in the same assumption-typed
+    framework.
+
+    All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma
+    statements). Complexity-class completeness follows by composition with standard
+    complexity results; regime-dependent and physical-transport consequences are proved
+    as assumption-explicit closures.
 
 
-    The tractable cases are stated with explicit encoding assumptions. Together, these
-    results answer the question "when is decision-relevant information identifiable
-    efficiently?" within the stated regimes. Complexity classification is a property
-    of the encoding regime measured against a fixed decision question: the same sufficiency
-    predicate is polynomial-time under explicit-state access and worst-case exponential
-    under succinct encoding. At the structural level, the apparent $\exists\forall$
-    form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion
-    $\text{sufficient}(I) \iff \text{Relevant} \subseteq I$. Within this regime-typed
-    framework, under a declared objective contract, over-modeling is admissible only
-    under integrity-preserving attempted-competence-failure conditions (roughly: after
-    an attempted exact procedure, exact competence remains unavailable in the active
-    regime); outside that cell, persistent over-modeling is irrational for the same
-    objective. The report layer is now formally non-binary: abstention can carry a
-    tentative guess and self-reflected confidence, while certified confidence is evidence-gated
-    by typed admissibility; positive certified confidence implies admissibility, and
-    exact reports without exact competence force zero certified confidence. For progress
-    semantics, the framework distinguishes confidence percentages from runtime witnesses:
-    scalar step-count is always well-defined/falsifiable, while completion percentage
-    is defined only under an explicit declared bound. For temporal semantics, interface
-    time is formalized as a discrete $\mathbb{N}$ index; one decision event is exactly
-    one time-unit transition, and run length equals elapsed interface time.
-
-    The contribution has two levels: (i) a complete complexity landscape for the core
-    decision-relevant problems in the static sufficiency class defined by the model
-    contract (coNP/$\Sigma_2^P$ completeness and tractable regimes under explicit
-    encoding assumptions), and (ii) a formal regime-typing framework that separates
-    structural complexity from representational hardness and yields theorem-indexed
-    engineering corollaries.
-
-
-    The reduction constructions and key equivalence theorems are machine-checked in
-    Lean 4 (11932 lines, 553 theorem/lemma statements); complexity classifications
-    follow by composition with standard results .
-
-
-    **Keywords:** computational complexity, decision theory, polynomial hierarchy,
-    tractability dichotomy, Lean 4'
-  comments: 'Theory of Computing submission. Lean 4 artifact: 11932 lines, 553 theorems/lemmas
-    across 53 files (0 sorry placeholders).'
+    Keywords: computational complexity, physical information, decision theory, polynomial
+    hierarchy, formal verification'
+  comments: 'Theory of Computing submission. Lean 4 artifact: 16353 lines, 727 theorems/lemmas
+    across 63 files (0 sorry placeholders).'
 abstract_variants:
-  unicode: 'We characterize the computational complexity of information sufficiency
-    as a meta-problem: given an arbitrary decision problem 𝒟 with action set A, factored
-    state space S = X₁ × ⋯ × X_(n), and utility U: A × S → ℚ, does a candidate coordinate
-    set I carry enough information to act optimally? Formally, I is sufficient if
-    s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′). Because the problems below are parameterized
-    by an arbitrary 𝒟, and any problem requiring a choice among alternatives under
-    structured information instantiates the (A, S, U) tuple, the complexity results
-    apply to every problem with factored state space, not to a specific problem domain
-    (e.g., configuration simplification where parameters are coordinates and behavior-preservation
-    is sufficiency).
+  unicode: 'We study physical information sufficiency as a decision-theoretic meta-problem.
+    For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × X_(n), a coordinate set
+    I is sufficient when
+
+    s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′).
+
+    This asks whether projected information preserves the full optimal-action correspondence.
 
 
-    Information-theoretically, this is task-conditional compression: the target is
-    preservation of the optimal-action map rather than full-state reconstruction.
-    This places the framework at the interface of source coding and zero-error confusability
-    structure, while separating short report length from certifiable exactness in
-    the MDL/Kolmogorov sense.
+    Complexity landscape.
 
 
-    The landscape in the formal model:
+    • SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete;
+    ANCHOR-SUFFICIENCY is Σ₂^(P)-complete. Informally, this gap separates verification
+    (checking whether a given coordinate set suffices) from discovery (finding a grounding
+    under which the optimal action is determined), and suggests the latter is structurally
+    harder unless the polynomial hierarchy collapses.
 
 
-    • General case: SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete.
+    • Under explicit-state encoding, polynomial-time algorithms hold for bounded actions,
+    separable utility, and tree-structured utility.
 
 
-    • Tractable cases: Polynomial-time for bounded action sets under the explicit-state
-    encoding; separable utilities (U = f + g) under any encoding; and tree-structured
-    utility with explicit local factors.
+    • Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case
+    families with k^(*) = n requiring 2^(Ω(n)) time.
 
 
-    • Encoding-regime separation: Polynomial-time under the explicit-state encoding
-    (polynomial in |S|). Under ETH, there exist succinctly encoded worst-case instances
-    witnessed by a strengthened Lean-mechanized reduction gadget from the paper’s
-    SAT/TAUTOLOGY hardness spine with k^(*) = n for which SUFFICIENCY-CHECK requires
-    2^(Ω(n)) time.
+    • Under query access, the finite-state core has worst-case Opt-oracle complexity
+    Ω(|S|), with Boolean value-entry and state-batch refinements preserving the obstruction.
 
 
-    • Intermediate query-access lower bounds: In the finite-state query core, SUFFICIENCY-CHECK
-    has worst-case Opt-oracle query complexity Ω(|S|) via indistinguishable yes/no
-    pairs for the I = ∅ subproblem (Boolean instantiation: Ω(2^(n))); mechanized Boolean
-    interface refinements show the same obstruction for value-entry and state-batch
-    access, including finite-support randomized robustness and oracle-lattice transfer/strictness
-    statements.
+    Physical grounding. The paper formalizes a physical-to-core encoding E: 𝒫 → 𝒟
+    and a transport rule: declared physical assumptions transfer to core assumptions,
+    and core claims lift back to encoded physical instances. Encoded physical counterexamples
+    induce core failures on the encoded slice. Discrete-time interface semantics (decision
+    event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon
+    lower bounds under declared constants) are formalized in the same assumption-typed
+    framework.
 
 
-    The tractable cases are stated with explicit encoding assumptions. Together, these
-    results answer the question “when is decision-relevant information identifiable
-    efficiently?” within the stated regimes. Complexity classification is a property
-    of the encoding regime measured against a fixed decision question: the same sufficiency
-    predicate is polynomial-time under explicit-state access and worst-case exponential
-    under succinct encoding. At the structural level, the apparent ∃∀ form of MINIMUM-SUFFICIENT-SET
-    collapses to a coNP characterization via the criterion sufficient(I) ⇔ Relevant
-    ⊆ I. Within this regime-typed framework, under a declared objective contract,
-    over-modeling is admissible only under integrity-preserving attempted-competence-failure
-    conditions (roughly: after an attempted exact procedure, exact competence remains
-    unavailable in the active regime); outside that cell, persistent over-modeling
-    is irrational for the same objective. The report layer is now formally non-binary:
-    abstention can carry a tentative guess and self-reflected confidence, while certified
-    confidence is evidence-gated by typed admissibility; positive certified confidence
-    implies admissibility, and exact reports without exact competence force zero certified
-    confidence. For progress semantics, the framework distinguishes confidence percentages
-    from runtime witnesses: scalar step-count is always well-defined/falsifiable,
-    while completion percentage is defined only under an explicit declared bound.
-    For temporal semantics, interface time is formalized as a discrete ℕ index; one
-    decision event is exactly one time-unit transition, and run length equals elapsed
-    interface time.
+    All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma
+    statements). Complexity-class completeness follows by composition with standard
+    complexity results; regime-dependent and physical-transport consequences are proved
+    as assumption-explicit closures.
 
 
-    The contribution has two levels: (i) a complete complexity landscape for the core
-    decision-relevant problems in the static sufficiency class defined by the model
-    contract (coNP/Σ₂^(P) completeness and tractable regimes under explicit encoding
-    assumptions), and (ii) a formal regime-typing framework that separates structural
-    complexity from representational hardness and yields theorem-indexed engineering
-    corollaries.
+    Keywords: computational complexity, physical information, decision theory, polynomial
+    hierarchy, formal verification'
+  mathjax: 'We study physical information sufficiency as a decision-theoretic meta-problem.
+    For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$,
+    a coordinate set $I$ is sufficient when $$s_I=s''_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s'').$$
+    This asks whether projected information preserves the full optimal-action correspondence.
 
 
-    The reduction constructions and key equivalence theorems are machine-checked in
-    Lean 4 (11932 lines, 553 theorem/lemma statements); complexity classifications
-    follow by composition with standard results .
+    Complexity landscape.
 
 
-    Keywords: computational complexity, decision theory, polynomial hierarchy, tractability
-    dichotomy, Lean 4'
-  mathjax: 'We characterize the computational complexity of *information sufficiency*
-    as a *meta-problem*: given an arbitrary decision problem $\mathcal{D}$ with action
-    set $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility
-    $U: A \times S \to \mathbb{Q}$, does a candidate coordinate set $I$ carry enough
-    information to act optimally? Formally, $I$ is *sufficient* if $s_I = s''_I \implies
-    \operatorname{Opt}(s) = \operatorname{Opt}(s'')$. Because the problems below are
-    parameterized by an arbitrary $\mathcal{D}$, and any problem requiring a choice
-    among alternatives under structured information instantiates the $(A, S, U)$ tuple,
-    the complexity results apply to every problem with factored state space, not to
-    a specific problem domain (e.g., configuration simplification where parameters
-    are coordinates and behavior-preservation is sufficiency).
+    - SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete;
+    ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete. Informally, this gap separates
+    verification (checking whether a given coordinate set suffices) from discovery
+    (finding a grounding under which the optimal action is determined), and suggests
+    the latter is structurally harder unless the polynomial hierarchy collapses.
 
 
-    Information-theoretically, this is task-conditional compression: the target is
-    preservation of the optimal-action map rather than full-state reconstruction.
-    This places the framework at the interface of source coding and zero-error confusability
-    structure [@shannon1948mathematical; @cover2006elements; @shannon1956zero; @korner1973graphs;
-    @lovasz1979shannon], while separating short report length from certifiable exactness
-    in the MDL/Kolmogorov sense [@rissanen1978modeling; @grunwald2007minimum; @li2008introduction].
+    - Under explicit-state encoding, polynomial-time algorithms hold for bounded actions,
+    separable utility, and tree-structured utility.
 
 
-    **The landscape in the formal model:**
+    - Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case
+    families with $k^*=n$ requiring $2^{\Omega(n)}$ time.
 
 
-    - **General case:** SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is
-    $\Sigma_{2}^{P}$-complete.
+    - Under query access, the finite-state core has worst-case Opt-oracle complexity
+    $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving
+    the obstruction.
 
 
-    - **Tractable cases:** Polynomial-time for bounded action sets under the explicit-state
-    encoding; separable utilities ($U = f + g$) under any encoding; and tree-structured
-    utility with explicit local factors.
+    Physical grounding. The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$
+    and a transport rule: declared physical assumptions transfer to core assumptions,
+    and core claims lift back to encoded physical instances. Encoded physical counterexamples
+    induce core failures on the encoded slice. Discrete-time interface semantics (decision
+    event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon
+    lower bounds under declared constants) are formalized in the same assumption-typed
+    framework.
+
+    All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma
+    statements). Complexity-class completeness follows by composition with standard
+    complexity results; regime-dependent and physical-transport consequences are proved
+    as assumption-explicit closures.
 
 
-    - **Encoding-regime separation:** Polynomial-time under the explicit-state encoding
-    (polynomial in $|S|$). Under ETH, there exist succinctly encoded worst-case instances
-    witnessed by a strengthened Lean-mechanized reduction gadget from the paper''s
-    SAT/TAUTOLOGY hardness spine with $k^*=n$ for which SUFFICIENCY-CHECK requires
-    $2^{\Omega(n)}$ time.
-
-
-    - **Intermediate query-access lower bounds:** In the finite-state query core,
-    SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity $\Omega(|S|)$ via
-    indistinguishable yes/no pairs for the $I=\emptyset$ subproblem (Boolean instantiation:
-    $\Omega(2^n)$); mechanized Boolean interface refinements show the same obstruction
-    for value-entry and state-batch access, including finite-support randomized robustness
-    and oracle-lattice transfer/strictness statements.
-
-
-    The tractable cases are stated with explicit encoding assumptions. Together, these
-    results answer the question "when is decision-relevant information identifiable
-    efficiently?" within the stated regimes. Complexity classification is a property
-    of the encoding regime measured against a fixed decision question: the same sufficiency
-    predicate is polynomial-time under explicit-state access and worst-case exponential
-    under succinct encoding. At the structural level, the apparent $\exists\forall$
-    form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion
-    $\text{sufficient}(I) \iff \text{Relevant} \subseteq I$. Within this regime-typed
-    framework, under a declared objective contract, over-modeling is admissible only
-    under integrity-preserving attempted-competence-failure conditions (roughly: after
-    an attempted exact procedure, exact competence remains unavailable in the active
-    regime); outside that cell, persistent over-modeling is irrational for the same
-    objective. The report layer is now formally non-binary: abstention can carry a
-    tentative guess and self-reflected confidence, while certified confidence is evidence-gated
-    by typed admissibility; positive certified confidence implies admissibility, and
-    exact reports without exact competence force zero certified confidence. For progress
-    semantics, the framework distinguishes confidence percentages from runtime witnesses:
-    scalar step-count is always well-defined/falsifiable, while completion percentage
-    is defined only under an explicit declared bound. For temporal semantics, interface
-    time is formalized as a discrete $\mathbb{N}$ index; one decision event is exactly
-    one time-unit transition, and run length equals elapsed interface time.
-
-    The contribution has two levels: (i) a complete complexity landscape for the core
-    decision-relevant problems in the static sufficiency class defined by the model
-    contract (coNP/$\Sigma_2^P$ completeness and tractable regimes under explicit
-    encoding assumptions), and (ii) a formal regime-typing framework that separates
-    structural complexity from representational hardness and yields theorem-indexed
-    engineering corollaries.
-
-
-    The reduction constructions and key equivalence theorems are machine-checked in
-    Lean 4 (11932 lines, 553 theorem/lemma statements); complexity classifications
-    follow by composition with standard results .
-
-
-    **Keywords:** computational complexity, decision theory, polynomial hierarchy,
-    tractability dichotomy, Lean 4'
+    Keywords: computational complexity, physical information, decision theory, polynomial
+    hierarchy, formal verification'

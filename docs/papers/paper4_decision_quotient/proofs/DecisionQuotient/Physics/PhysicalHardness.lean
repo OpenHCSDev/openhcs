@@ -16,6 +16,11 @@ import DecisionQuotient.ClaimClosure
 ## Role
 This module is NOT the core hardness proof. It translates the complexity results
 from ClaimClosure into physical consequences using declared physics axioms.
+
+## Triviality Level
+NONTRIVIAL — interprets nontrivial complexity lower bounds as physical
+constraints. Closest nontrivial proofs referenced: `ClaimClosure.sufficiency_conp_complete_conditional`
+and `ClaimClosure.anchor_sigma2p_complete_conditional` (DecisionQuotient.ClaimClosure).
 -/
 
 namespace PhysicalComplexity

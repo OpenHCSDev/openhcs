@@ -1,6 +1,8 @@
 \section{Formal Foundations}\label{sec:foundations}
 
 We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory \cite{savage1954foundations, raiffa1961applied}.
+The core definitions in this section are substrate-neutral: they specify the decision relation independently of implementation medium. Physical interpretation is introduced later through explicit encoding and assumption-transfer maps (Section~\ref{sec:physical-transport}).\claimstamp{D\ref{def:physical-core-encoding};P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}
+\leanmeta{\LH{CT6},\LH{CT4}.}
 
 \subsection{Decision Problems with Coordinate Structure}
 
@@ -177,6 +179,7 @@ This measures the fraction of actions that are optimal for at least one state co
 \end{definition}
 
 \begin{proposition}[Sufficiency Characterization]\label{prop:sufficiency-char}
+\claimstamp{P\ref{prop:sufficiency-char}}{H=succinct-hard}
 Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\Opt(s)|/|A|$ for all $s \in S$.
 \leanmeta{\LH{CC62},
 \LH{CC63}}
@@ -191,6 +194,8 @@ Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal acti
 \subsection{Computational Model and Input Encoding}\label{sec:encoding}
 
 We fix the computational model used by the complexity claims.
+In physical deployments, these encodings correspond to different access conditions on the same underlying system: explicit tables correspond to fully exposed state/utility structure, succinct encodings correspond to compressed generative descriptions, and query regimes correspond to constrained measurement interfaces.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:physical-claim-transport}}{E,S+ETH,Qf,AR}
+\leanmeta{\LH{CC16},\LH{CC50},\LH{CT6}.}
 
 \paragraph{Succinct encoding (primary for hardness).}
 This succinct circuit encoding is the standard representation for decision problems in complexity theory; hardness is stated with respect to the input length of the circuit description \cite{arora2009computational,papadimitriou1994complexity}.
@@ -213,6 +218,30 @@ Unless explicitly stated otherwise, ``polynomial time'' refers to the succinct e
 \begin{remark}[Decision Questions vs Decision Problems]\label{rem:question-vs-problem}
 We distinguish between a \emph{decision question} and a \emph{decision problem}. A decision question is the encoding-independent predicate: ``is coordinate set $I$ sufficient for $\mathcal{D}$?'' This is a mathematical relation, fixed by the model contract (C1--C4). A decision problem is a decision question together with a specific encoding of its inputs. The same decision question yields different decision problems under different encodings, and these problems may belong to different complexity classes. Formally, each encoding regime $e$ induces a language $L_{\mathcal{D},e}$; complexity classification is a property of $L_{\mathcal{D},e}$, not of $\mathcal{D}$ alone.
 \end{remark}
+
+\begin{proposition}[Under-Resolution Forces Representation Collision]\label{prop:under-resolution-collision}
+\claimstamp{P\ref{prop:under-resolution-collision}}{DM}
+Let \(\mathrm{repr} : \mathcal{L} \to \mathcal{C}\) be any representation map from logical possibilities to code states. If \(|\mathcal{C}| < |\mathcal{L}|\), then there exist distinct logical states with the same representation:
+\[
+\exists s,s' \in \mathcal{L},\ s \neq s' \wedge \mathrm{repr}(s)=\mathrm{repr}(s').
+\]
+This is the finite-cardinality collision statement underlying under-resolved exact-decision claims.
+\leanmeta{\LH{DQ582},
+\LH{DQ583}.}
+\end{proposition}
+
+\begin{theorem}[Physical Incompleteness of Instantiation]\label{thm:physical-incompleteness}
+\claimstamp{T\ref{thm:physical-incompleteness}}{AR}
+Let $\mathcal{P}$ be a finite set of physical states and $\mathcal{L}$ a finite set of logical possibilities, with an instantiation map $\iota : \mathcal{P} \to \mathcal{L}$. If $|\mathcal{P}| < |\mathcal{L}|$, then:
+\begin{enumerate}
+\item $\iota$ is not surjective;
+\item there exists a logical possibility $\ell \in \mathcal{L}$ that is not physically instantiated: $\ell \notin \mathrm{range}(\iota)$.
+\end{enumerate}
+Under explicit bounds: if $|\mathcal{P}| \le M$ and $|\mathcal{L}| \ge L$ with $M < L$, the same conclusion holds.
+\leanmeta{\LH{DQ589},
+\LH{DQ591},
+\LH{DQ590}.}
+\end{theorem}
 
 \begin{definition}[Regime Simulation]\label{def:regime-simulation}
 Fix a decision question $Q$ and two regimes $R_1,R_2$ for that question.
@@ -331,6 +360,18 @@ E:\mathcal{P}\to\mathcal{D}.
 All physical claims below are typed relative to a declared encoding map $E$ and declared assumption transfer map from physical assumptions to core assumptions.
 \end{definition}
 
+\begin{proposition}[Heisenberg-Strong Binding Yields Nontrivial Decision Boundary]\label{prop:heisenberg-strong-nontrivial-opt}
+\claimstamp{P\ref{prop:heisenberg-strong-nontrivial-opt}}{AR}
+Fix a declared noisy physical encoding interface and assume a \emph{Heisenberg-strong binding witness}: one physical instance is compatible with two distinct interface states whose encoded optimal-action sets differ.
+Then there exists a core decision problem with non-constant optimizer map.
+Equivalently, under this declared physical ambiguity assumption, decision nontriviality is derivable at the core level.
+\leanmeta{
+\LH{DQ584},
+\LH{DQ585},
+\LH{DQ586}.
+}
+\end{proposition}
+
 \begin{proposition}[Conditional Physical Claim Transport]\label{prop:physical-claim-transport}
 Let $E:\mathcal{P}\to\mathcal{D}$ be an encoding. If
 \[
@@ -344,7 +385,8 @@ then
 \[
 \forall p\in\mathcal{P},\ \mathrm{PhysAssm}(p)\Rightarrow \mathrm{CoreClaim}(E(p)).
 \]
-\leanmeta{\LH{CT6}, \LH{CT5}.}
+\leanmeta{\LH{CT6}, \LH{CT5},
+\LH{DQ572}.}
 \end{proposition}
 
 \begin{corollary}[Physical Counterexample Implies Core Failure on Encoded Slice]\label{cor:physical-counterexample-core-failure}
@@ -354,7 +396,8 @@ Under the same encoding and assumption-transfer map:
 \item if a physical counterexample exists, then the purported core rule is invalid;
 \item if the lifted claim holds on all physically admissible encoded instances, no such physical counterexample exists.
 \end{enumerate}
-\leanmeta{\LH{CT8}, \LH{CT7}, \LH{CT3}.}
+\leanmeta{\LH{CT8}, \LH{CT7}, \LH{CT3},
+\LH{DQ571}.}
 \end{corollary}
 
 \begin{proposition}[Law-Instance Objective Bridge]\label{prop:law-instance-objective-bridge}
@@ -844,6 +887,7 @@ If a state $s$ interior-Pareto-dominates $s'$ on a checked coordinate set $J$, a
 \end{proposition}
 
 \begin{proposition}[Interior Verification Tractability]\label{prop:interior-verification-tractable}
+\claimstamp{P\ref{prop:interior-verification-tractable}}{H=tractable-structured}
 If membership in the checked coordinate set is decidable and interior dominance is decidable, then interior verification yields a polynomial-time checker with exact acceptance criterion:
 \[
 \exists\ \mathrm{verify}:S\times S\to\{0,1\},\quad
@@ -861,6 +905,7 @@ a counterexample pair outside the checked slice can still violate global optimiz
 \end{proposition}
 
 \begin{corollary}[Singleton Interior Certificate]\label{cor:interior-singleton-certificate}
+\claimstamp{C\ref{cor:interior-singleton-certificate}}{H=tractable-structured}
 For a singleton checked coordinate $i$, strict improvement on $i$ with class-monotonicity on $\{i\}$ is already a valid interior certificate of non-rejection.
 \leanmeta{\LH{IV9}.}
 \end{corollary}
@@ -889,7 +934,8 @@ If $\mathsf{ABSTAIN}$ reward strictly exceeds the inadmissibility branch, then a
 
 \begin{corollary}[RLFF Abstain Preference Without Certificates]\label{cor:rlff-abstain-no-certs}
 If $\mathsf{EXACT}$ and $\mathsf{EPSILON}(\varepsilon)$ have no evidence objects while $\mathsf{ABSTAIN}$ beats the inadmissibility branch, then RLFF strictly prefers $\mathsf{ABSTAIN}$ to both report types.
-\leanmeta{\LH{IC30}.}
+\leanmeta{\LH{IC30},
+\LH{DQ570}.}
 \end{corollary}
 \claimstamp{D\ref{def:rlff-objective};P\ref{prop:rlff-maximizer-admissible};C\ref{cor:rlff-abstain-no-certs}}{AR}
 
@@ -956,7 +1002,8 @@ Hence $B_{\mathrm{raw}}(r)\le B_{\mathrm{total}}(r)$ always, and strict inequali
 \LH{IC16},
 \LH{IC15},
 \LH{IC13},
-\LH{IC14}.}
+\LH{IC14},
+\LH{DQ567}.}
 \end{proposition}
 
 \begin{theorem}[Exact Report: Certified-Bit Gap iff Admissibility]\label{thm:exact-certified-gap-iff-admissible}
@@ -974,8 +1021,23 @@ B_{\mathrm{total}}(\mathsf{EXACT})=B_{\mathrm{raw}}(\mathsf{EXACT})
 \]
 \leanmeta{\LH{CC18},
 \LH{CC20},
-\LH{CC17}.}
+\LH{CC17},
+\LH{DQ566}.}
 \end{theorem}
+
+\begin{corollary}[Finite Budget Eventually Blocks Exact Admissibility]\label{cor:finite-budget-no-exact-admissibility}
+\claimstamp{C\ref{cor:finite-budget-no-exact-admissibility}}{H=exp-lb-conditional}
+Fix a declared physical computer model with finite budget and positive per-bit cost, a declared operation-requirement lower-bound family, and a declared typed-report bit model.
+If:
+\begin{enumerate}
+\item exact admissibility implies certified-bit footprint at least the declared operation requirement at size \(n\), and
+\item exact admissibility implies physical feasibility of that certified footprint under the declared budget model,
+\end{enumerate}
+then there exists \(n_0\) such that for all \(n \ge n_0\), exact admissibility fails.
+The same conclusion holds in the canonical exponential-requirement specialization.
+\leanmeta{\LH{DQ573},
+\LH{DQ574}.}
+\end{corollary}
 
 \begin{corollary}[Hardness-Blocked Exact Reports Are Raw-Only]\label{cor:hardness-raw-only-exact}
 If exact reporting is inadmissible on the declared contract, then exact accounting collapses to raw-only:
@@ -1046,11 +1108,13 @@ If an exact physical claim is well-typed (Definition~\ref{def:exact-claim-wellty
 \begin{theorem}[Claim-Integrity Meta-Theorem]\label{thm:claim-integrity-meta}
 For declared class/regime objects, every admissible exact-claim policy outside the carve-outs requires explicit assumptions:
 \[
-\neg\ \text{Excused (Definition~\ref{def:exact-claim-excuses})}
+\begin{aligned}
+&\neg\,\text{Excused (Definition~\ref{def:exact-claim-excuses})}
 \ \wedge\
-\text{Well-Typed Exact Claim (Definition~\ref{def:exact-claim-welltyped})}
-\ \Rightarrow\
+\text{Well-Typed Exact Claim (Definition~\ref{def:exact-claim-welltyped})} \\
+&\Rightarrow\
 \text{Has Explicit Hardness Profile (Definition~\ref{def:explicit-hardness-profile})}.
+\end{aligned}
 \]
 \leanmeta{\LH{CC22}.}
 \end{theorem}

@@ -1,32 +1,28 @@
-# Paper: Computational Complexity of Information Sufficiency
+# Paper: Computational Complexity of Physical Information Sufficiency
 
-**Status**: Theory of Computing-ready | **Lean**: 11932 lines, 553 theorems
+**Status**: Theory of Computing-ready | **Lean**: 16353 lines, 727 theorems
 
 ---
 
 ## Abstract
 
-We characterize the computational complexity of *information sufficiency* as a *meta-problem*: given an arbitrary decision problem $\mathcal{D}$ with action set $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility $U: A \times S \to \mathbb{Q}$, does a candidate coordinate set $I$ carry enough information to act optimally? Formally, $I$ is *sufficient* if $s_I = s'_I \implies \operatorname{Opt}(s) = \operatorname{Opt}(s')$. Because the problems below are parameterized by an arbitrary $\mathcal{D}$, and any problem requiring a choice among alternatives under structured information instantiates the $(A, S, U)$ tuple, the complexity results apply to every problem with factored state space, not to a specific problem domain (e.g., configuration simplification where parameters are coordinates and behavior-preservation is sufficiency).
+We study *physical information sufficiency* as a decision-theoretic meta-problem. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, a coordinate set $I$ is sufficient when $$s_I=s'_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s').$$ This asks whether projected information preserves the full optimal-action correspondence.
 
-Information-theoretically, this is task-conditional compression: the target is preservation of the optimal-action map rather than full-state reconstruction. This places the framework at the interface of source coding and zero-error confusability structure [@shannon1948mathematical; @cover2006elements; @shannon1956zero; @korner1973graphs; @lovasz1979shannon], while separating short report length from certifiable exactness in the MDL/Kolmogorov sense [@rissanen1978modeling; @grunwald2007minimum; @li2008introduction].
+**Complexity landscape.**
 
-**The landscape in the formal model:**
+-   SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete. Informally, this gap separates verification (checking whether a given coordinate set suffices) from discovery (finding a grounding under which the optimal action is determined), and suggests the latter is structurally harder unless the polynomial hierarchy collapses.
 
--   **General case:** SUFFICIENCY-CHECK is coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete.
+-   Under explicit-state encoding, polynomial-time algorithms hold for bounded actions, separable utility, and tree-structured utility.
 
--   **Tractable cases:** Polynomial-time for bounded action sets under the explicit-state encoding; separable utilities ($U = f + g$) under any encoding; and tree-structured utility with explicit local factors.
+-   Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case families with $k^*=n$ requiring $2^{\Omega(n)}$ time.
 
--   **Encoding-regime separation:** Polynomial-time under the explicit-state encoding (polynomial in $|S|$). Under ETH, there exist succinctly encoded worst-case instances witnessed by a strengthened Lean-mechanized reduction gadget from the paper's SAT/TAUTOLOGY hardness spine (see Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"}) with $k^*=n$ for which SUFFICIENCY-CHECK requires $2^{\Omega(n)}$ time.
+-   Under query access, the finite-state core has worst-case Opt-oracle complexity $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving the obstruction.
 
--   **Intermediate query-access lower bounds:** In the finite-state query core, SUFFICIENCY-CHECK has worst-case Opt-oracle query complexity $\Omega(|S|)$ via indistinguishable yes/no pairs for the $I=\emptyset$ subproblem (Boolean instantiation: $\Omega(2^n)$); mechanized Boolean interface refinements show the same obstruction for value-entry and state-batch access, including finite-support randomized robustness and oracle-lattice transfer/strictness statements.
+**Physical grounding.** The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$ and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework. \[D:Pprop:physical-claim-transport, prop:law-instance-objective-bridge, prop:time-discrete, prop:decision-unit-time, prop:run-time-accounting, prop:substrate-unit-time, prop:budgeted-crossover, prop:thermo-lift;Ccor:physical-counterexample-core-failure, cor:finite-budget-threshold-impossibility;Tthm:physical-bridge-bundle; R:AR\]
 
-The tractable cases are stated with explicit encoding assumptions (Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}). Together, these results answer the question "when is decision-relevant information identifiable efficiently?" within the stated regimes. Complexity classification is a property of the encoding regime measured against a fixed decision question (Remark [\[rem:question-vs-problem\]](#rem:question-vs-problem){reference-type="ref" reference="rem:question-vs-problem"}): the same sufficiency predicate is polynomial-time under explicit-state access and worst-case exponential under succinct encoding. At the structural level, the apparent $\exists\forall$ form of MINIMUM-SUFFICIENT-SET collapses to a coNP characterization via the criterion $\text{sufficient}(I) \iff \text{Relevant} \subseteq I$. Within this regime-typed framework, under a declared objective contract, over-modeling is admissible only under integrity-preserving attempted-competence-failure conditions (roughly: after an attempted exact procedure, exact competence remains unavailable in the active regime); outside that cell, persistent over-modeling is irrational for the same objective. \[D:Pprop:attempted-competence-matrix; R:AR\] The report layer is now formally non-binary: abstention can carry a tentative guess and self-reflected confidence, while certified confidence is evidence-gated by typed admissibility; positive certified confidence implies admissibility, and exact reports without exact competence force zero certified confidence. \[D:Pprop:certified-confidence-gate, prop:abstain-guess-self-signal, prop:self-confidence-not-certification;Ccor:exact-no-competence-zero-certified; R:AR\] For progress semantics, the framework distinguishes confidence percentages from runtime witnesses: scalar step-count is always well-defined/falsifiable, while completion percentage is defined only under an explicit declared bound. \[D:Pprop:steps-run-scalar, prop:no-fraction-without-bound, prop:fraction-defined-under-bound; R:AR\] For temporal semantics, interface time is formalized as a discrete $\mathbb{N}$ index; one decision event is exactly one time-unit transition, and run length equals elapsed interface time. \[D:Pprop:time-discrete, prop:decision-unit-time, prop:run-time-accounting; R:AR\]
+All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
-The contribution has two levels: (i) a complete complexity landscape for the core decision-relevant problems in the static sufficiency class defined by the model contract (coNP/$\Sigma_2^P$ completeness and tractable regimes under explicit encoding assumptions), and (ii) a formal regime-typing framework that separates structural complexity from representational hardness and yields theorem-indexed engineering corollaries.
-
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (11932 lines, 553 theorem/lemma statements); complexity classifications follow by composition with standard results (see Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"}).
-
-**Keywords:** computational complexity, decision theory, polynomial hierarchy, tractability dichotomy, Lean 4
+**Keywords:** computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
 
 
 # Introduction {#sec:introduction}
@@ -35,9 +31,11 @@ Consider any decision problem $\mathcal{D}$ with actions $A$ and factored state 
 
 In information-theoretic terms, this is a task-conditional coding problem: the object preserved by projection is the decision boundary $s \mapsto \operatorname{Opt}(s)$, not the full source state. The same object appears in classical source-coding and fidelity viewpoints [@shannon1948mathematical; @shannon1959coding; @cover2006elements; @slepian1973noiseless], and in zero-error/confusability structure where exact recoverability depends on graph constraints rather than raw description length [@shannon1956zero; @korner1973graphs; @lovasz1979shannon; @csiszar2011information]. The same separation also appears in model selection: short descriptions and certifiable adequacy are distinct [@rissanen1978modeling; @grunwald2007minimum; @li2008introduction; @blahut1972computation].
 
+For physical instantiations, the same tuple has a direct substrate reading: coordinates are measurable state degrees of freedom, actions are physically realizable interventions or transitions, and the optimizer map is the decision boundary induced by the declared objective contract. The physical-to-core encoding discipline in Section [\[sec:physical-transport\]](#sec:physical-transport){reference-type="ref" reference="sec:physical-transport"} makes this bridge theorem-level rather than metaphorical. \[D:Pprop:physical-claim-transport, prop:law-instance-objective-bridge, prop:time-discrete, prop:decision-unit-time, prop:run-time-accounting, prop:substrate-unit-time;Ccor:physical-counterexample-core-failure;Tthm:physical-bridge-bundle; R:AR\]
+
 #### Compact claim-stamp notation.
 
-We use compact provenance stamps of the form $[C:\cdots;R:\cdots]$: claim references are grouped by type ($D/P/C/T/L/R$ for Definition/Proposition/Corollary/Theorem/Lemma/Remark), and regime tags are abbreviated (for example $AR$=active declared regime, $DC$=declared contract, $CR$=declared class/regime, $Qf$=query-finite, $Qb$=query-Boolean).
+We use compact provenance stamps of the form $[C:\cdots;R:\cdots]$: claim references are grouped by type ($D/P/C/T/L/R$ for Definition/Proposition/Corollary/Theorem/Lemma/Remark), and regime tags are abbreviated (for example $AR$=active declared regime, $DC$=declared contract, $CR$=declared class/regime, $Qf$=query-finite, $Qb$=query-Boolean). Theorem-strength narrative statements are stamped and, where available, paired with compact Lean handle IDs; unstamped narrative remains explanatory or citation-only context.
 
 SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, and ANCHOR-SUFFICIENCY are *meta-problems*: each is parameterized by an arbitrary decision problem $\mathcal{D}$ and asks a structural question about $\mathcal{D}$'s coordinate space. The complexity results therefore apply to every problem with factored state space, not to a specific problem domain. \[D:Tthm:sufficiency-conp, thm:minsuff-conp, thm:anchor-sigma2p; R:S\]
 
@@ -46,6 +44,8 @@ SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, and ANCHOR-SUFFICIENCY are *meta-prob
 :::
 
 This paper characterizes the complexity landscape of these meta-problems within the formal model:
+
+The paper keeps two layers explicit throughout: a substrate-neutral decision core (for complexity classification) and an assumption-typed physical instantiation layer (for transport to concrete systems). This separation prevents conflating representational hardness with physical assumptions while preserving a formal bridge between them. \[D:Pprop:physical-claim-transport;Tthm:physical-bridge-bundle; R:AR\]
 
 Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"} fixes the computational model and input encodings used for all complexity claims. Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"} gives the model contract and regime tags used to type every strong claim. Completeness claims are class-internal: complete for the static sufficiency class fixed by C1--C4 and the declared access regimes. Adjacent objective classes that violate the bridge conditions are typed separately (Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"}).
 
@@ -73,15 +73,21 @@ An operational criterion follows later from the same chain: once decision-site c
 
 ## Landscape Summary
 
-**When is sufficiency checking tractable?** We identify three sufficient conditions:
+**When is sufficiency checking tractable?** We identify six sufficient conditions:
 
 1.  **Bounded actions** ($|A| \leq k$) under explicit-state encoding: with constantly many actions, we enumerate action pairs over the explicit utility table.
 
 2.  **Separable utility** ($U(a,s) = f(a) + g(s)$): The optimal action depends only on $f$, making all coordinates irrelevant to the decision.
 
-3.  **Tree-structured utility**: With explicit local factors over a tree, dynamic programming yields polynomial algorithms in the input length.
+3.  **Low tensor rank**: When utility has bounded tensor rank $R$, factored computation yields $O(|A| \cdot R \cdot n)$ complexity.
 
-Each condition is stated with its encoding assumption. Outside these regimes, the general problem remains coNP-hard (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}).
+4.  **Tree-structured utility**: With explicit local factors over a tree, dynamic programming yields polynomial algorithms in the input length.
+
+5.  **Bounded treewidth**: When pairwise interactions form a graph of treewidth $w$, CSP algorithms yield $O(n \cdot k^{w+1})$ complexity.
+
+6.  **Coordinate symmetry**: When utility is invariant under coordinate permutations, orbit types reduce the effective state space to $\binom{d+k-1}{k-1}$ equivalence classes, polynomial in $d$ for fixed $k$.
+
+Each condition is stated with its encoding assumption. Outside these regimes, the general problem remains coNP-hard (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}). \[D:Tthm:sufficiency-conp, thm:tractable; R:E,S\]
 
 **When is it intractable?** The general problem is coNP-complete (Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}), with a separation between explicit-state tractability and succinct worst-case hardness:
 
@@ -91,7 +97,7 @@ Each condition is stated with its encoding assumption. Outside these regimes, th
 
 -   In the succinct model: under ETH there exist worst-case instances produced by our strengthened gadget in which the minimal sufficient set has size $\Omega(n)$ (indeed $n$) and SUFFICIENCY-CHECK requires $2^{\Omega(n)}$ time.
 
-The explicit ETH lower bound is still a succinct worst-case statement; Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} provides the finite-state query core and Propositions [\[prop:query-value-entry-lb\]](#prop:query-value-entry-lb){reference-type="ref" reference="prop:query-value-entry-lb"}--[\[prop:oracle-lattice-strict\]](#prop:oracle-lattice-strict){reference-type="ref" reference="prop:oracle-lattice-strict"} provide theorem-level Boolean-interface refinements.
+The explicit ETH lower bound is still a succinct worst-case statement; Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} provides the finite-state query core and Propositions [\[prop:query-value-entry-lb\]](#prop:query-value-entry-lb){reference-type="ref" reference="prop:query-value-entry-lb"}--[\[prop:oracle-lattice-strict\]](#prop:oracle-lattice-strict){reference-type="ref" reference="prop:oracle-lattice-strict"} provide theorem-level Boolean-interface refinements. \[D:Pprop:query-regime-obstruction, prop:query-value-entry-lb, prop:query-subproblem-transfer, prop:query-state-batch-lb, prop:oracle-lattice-transfer, prop:oracle-lattice-strict; R:Qf,Qb\]
 
 ## Main Theorems
 
@@ -103,9 +109,13 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 
 4.  **Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}:** Encoding-regime separation: explicit-state polynomial-time (polynomial in $|S|$), and under ETH a succinct worst-case lower bound witnessed by a hard family with $k^* = n$.
 
-5.  **Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}:** Polynomial algorithms for bounded actions, separable utility, tree structure.
+5.  **Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}:** Polynomial algorithms for six structural regimes: bounded actions, separable utility, low tensor rank, tree structure, bounded treewidth, and coordinate symmetry.
 
-6.  **Propositions [\[prop:time-discrete\]](#prop:time-discrete){reference-type="ref" reference="prop:time-discrete"}--[\[prop:substrate-unit-time\]](#prop:substrate-unit-time){reference-type="ref" reference="prop:substrate-unit-time"}:** the interface-time model is discrete, each decision event advances time by one unit, run-length equals elapsed interface time, and the unit-time law is substrate-invariant under the declared interface-consistency condition.
+6.  **Theorem [\[thm:physical-bridge-bundle\]](#thm:physical-bridge-bundle){reference-type="ref" reference="thm:physical-bridge-bundle"}:** physical-system bridge composition (law-objective semantics, behavior-preserving configuration reduction, and required-work lower bound) is proved as one bundled mechanized statement under declared encoding assumptions.
+
+7.  **Propositions [\[prop:time-discrete\]](#prop:time-discrete){reference-type="ref" reference="prop:time-discrete"}--[\[prop:substrate-unit-time\]](#prop:substrate-unit-time){reference-type="ref" reference="prop:substrate-unit-time"}:** the interface-time model is discrete, each decision event advances time by one unit, run-length equals elapsed interface time, and the unit-time law is substrate-invariant under the declared interface-consistency condition.
+
+\[D:Tthm:sufficiency-conp, thm:minsuff-conp, thm:anchor-sigma2p, thm:dichotomy, thm:tractable, thm:physical-bridge-bundle;Pprop:time-discrete, prop:decision-unit-time, prop:run-time-accounting, prop:substrate-unit-time; R:E,S,S+ETH,AR\]
 
 ## Claim-Typing Theorems
 
@@ -145,11 +155,11 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 
 ## Machine-Checked Proofs
 
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 [@Lean2015; @demoura2021lean4; @mathlib2020; @forster2019verified; @kunze2019formal] (11932 lines, 553 theorem/lemma statements). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets. Complexity class membership (coNP-completeness, $\Sigma_2^P$-completeness) follows by composition with standard complexity-theoretic results.
+The reduction constructions and key equivalence theorems are machine-checked in Lean 4 [@Lean2015; @demoura2021lean4; @mathlib2020; @forster2019verified; @kunze2019formal] (16353 lines, 727 theorem/lemma statements). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets. Complexity class membership (coNP-completeness, $\Sigma_2^P$-completeness) follows by composition with standard complexity-theoretic results.
 
 #### What is new.
 
-We contribute (i) formal definitions of decision-theoretic sufficiency in Lean; (ii) machine-checked proofs of reduction correctness for the TAUTOLOGY and $\exists\forall$-SAT reductions; (iii) a complete complexity landscape for coordinate sufficiency with explicit encoding assumptions; and (iv) a formal separation between structural complexity and representational hardness used to derive theorem-indexed engineering corollaries, including theorem-level typed coverage/completeness closures for the declared static class (Theorems [\[thm:regime-coverage\]](#thm:regime-coverage){reference-type="ref" reference="thm:regime-coverage"}, [\[thm:typed-completeness-static\]](#thm:typed-completeness-static){reference-type="ref" reference="thm:typed-completeness-static"}). Prior work establishes hardness informally; we formalize the constructions and their regime-typed consequences.
+We contribute (i) formal definitions of decision-theoretic sufficiency in Lean; (ii) machine-checked proofs of reduction correctness for the TAUTOLOGY and $\exists\forall$-SAT reductions; (iii) a complete complexity landscape for coordinate sufficiency with explicit encoding assumptions; and (iv) a formal separation between structural complexity and representational hardness used to derive theorem-indexed engineering corollaries, including theorem-level typed coverage/completeness closures for the declared static class (Theorems [\[thm:regime-coverage\]](#thm:regime-coverage){reference-type="ref" reference="thm:regime-coverage"}, [\[thm:typed-completeness-static\]](#thm:typed-completeness-static){reference-type="ref" reference="thm:typed-completeness-static"}). Prior work establishes hardness informally; we formalize the constructions and their regime-typed consequences. \[D:Tthm:regime-coverage, thm:typed-completeness-static, thm:sufficiency-conp, thm:anchor-sigma2p; R:CR,S\]
 
 ## Paper Structure
 
@@ -157,12 +167,12 @@ The primary contribution is theoretical: a formalized reduction framework and a 
 
 Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference="sec:foundations"}: decision-problem foundations and encoding model. Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}: structural vs representational hardness; integrity vs competence. Section [\[sec:hardness\]](#sec:hardness){reference-type="ref" reference="sec:hardness"}: hardness proofs. Section [\[sec:dichotomy\]](#sec:dichotomy){reference-type="ref" reference="sec:dichotomy"}: regime separation. Section [\[sec:tractable\]](#sec:tractable){reference-type="ref" reference="sec:tractable"}: tractable cases. Section [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}: regime-conditional corollaries. Section [\[sec:implications\]](#sec:implications){reference-type="ref" reference="sec:implications"}: dominance theorems for hardness placement. Section [\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"}: conservation law for decision-relevant coordinates. Section [\[sec:related\]](#sec:related){reference-type="ref" reference="sec:related"}: related work. Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"}: Lean listings.
 
-Sections [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}--[\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"} are not applied commentary. Every claim in those sections is a formal corollary, regime-typed by the framework of Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"} and indexed to a machine-checked theorem handle. They complete the complexity landscape by characterizing when exact minimization is rational and when it is not: the rationality matrix (Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"}), the dominance and conservation theorems (Theorems [\[thm:centralization-dominance\]](#thm:centralization-dominance){reference-type="ref" reference="thm:centralization-dominance"}, [\[thm:tax-conservation\]](#thm:tax-conservation){reference-type="ref" reference="thm:tax-conservation"}), and the amortization threshold (Theorem [\[thm:amortization\]](#thm:amortization){reference-type="ref" reference="thm:amortization"}) are all mechanized in Lean.
+Sections [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}--[\[sec:simplicity-tax\]](#sec:simplicity-tax){reference-type="ref" reference="sec:simplicity-tax"} are not applied commentary. Every claim in those sections is a formal corollary, regime-typed by the framework of Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"} and indexed to a machine-checked theorem handle. They complete the complexity landscape by characterizing when exact minimization is rational and when it is not: the rationality matrix (Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"}), the dominance and conservation theorems (Theorems [\[thm:centralization-dominance\]](#thm:centralization-dominance){reference-type="ref" reference="thm:centralization-dominance"}, [\[thm:tax-conservation\]](#thm:tax-conservation){reference-type="ref" reference="thm:tax-conservation"}), and the amortization threshold (Theorem [\[thm:amortization\]](#thm:amortization){reference-type="ref" reference="thm:amortization"}) are all mechanized in Lean. \[D:Pprop:attempted-competence-matrix;Tthm:centralization-dominance, thm:tax-conservation, thm:amortization; R:AR,LC\]
 
 
 # Formal Foundations {#sec:foundations}
 
-We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory [@savage1954foundations; @raiffa1961applied].
+We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory [@savage1954foundations; @raiffa1961applied]. The core definitions in this section are substrate-neutral: they specify the decision relation independently of implementation medium. Physical interpretation is introduced later through explicit encoding and assumption-transfer maps (Section [1.7](#sec:physical-transport){reference-type="ref" reference="sec:physical-transport"}). \[D:Ddef:physical-core-encoding;Pprop:physical-claim-transport;Tthm:physical-bridge-bundle; R:AR\]
 
 ## Decision Problems with Coordinate Structure
 
@@ -283,7 +293,7 @@ The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordina
 :::
 
 ::: proposition
-[]{#prop:sufficiency-char label="prop:sufficiency-char"} Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\operatorname{Opt}(s)|/|A|$ for all $s \in S$.
+[]{#prop:sufficiency-char label="prop:sufficiency-char"} \[D:Pprop:sufficiency-char; R:H=succinct-hard\] Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\operatorname{Opt}(s)|/|A|$ for all $s \in S$.
 :::
 
 ::: proof
@@ -294,7 +304,7 @@ Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal acti
 
 ## Computational Model and Input Encoding {#sec:encoding}
 
-We fix the computational model used by the complexity claims.
+We fix the computational model used by the complexity claims. In physical deployments, these encodings correspond to different access conditions on the same underlying system: explicit tables correspond to fully exposed state/utility structure, succinct encodings correspond to compressed generative descriptions, and query regimes correspond to constrained measurement interfaces. \[D:Tthm:dichotomy;Pprop:query-regime-obstruction, prop:physical-claim-transport; R:E,S+ETH,Qf,AR\]
 
 #### Succinct encoding (primary for hardness).
 
@@ -320,6 +330,20 @@ Unless explicitly stated otherwise, "polynomial time" refers to the succinct enc
 
 ::: remark
 []{#rem:question-vs-problem label="rem:question-vs-problem"} We distinguish between a *decision question* and a *decision problem*. A decision question is the encoding-independent predicate: "is coordinate set $I$ sufficient for $\mathcal{D}$?" This is a mathematical relation, fixed by the model contract (C1--C4). A decision problem is a decision question together with a specific encoding of its inputs. The same decision question yields different decision problems under different encodings, and these problems may belong to different complexity classes. Formally, each encoding regime $e$ induces a language $L_{\mathcal{D},e}$; complexity classification is a property of $L_{\mathcal{D},e}$, not of $\mathcal{D}$ alone.
+:::
+
+::: proposition
+[]{#prop:under-resolution-collision label="prop:under-resolution-collision"} \[D:Pprop:under-resolution-collision; R:DM\] Let $\mathrm{repr} : \mathcal{L} \to \mathcal{C}$ be any representation map from logical possibilities to code states. If $|\mathcal{C}| < |\mathcal{L}|$, then there exist distinct logical states with the same representation: $$\exists s,s' \in \mathcal{L},\ s \neq s' \wedge \mathrm{repr}(s)=\mathrm{repr}(s').$$ This is the finite-cardinality collision statement underlying under-resolved exact-decision claims.
+:::
+
+::: theorem
+[]{#thm:physical-incompleteness label="thm:physical-incompleteness"} \[D:Tthm:physical-incompleteness; R:AR\] Let $\mathcal{P}$ be a finite set of physical states and $\mathcal{L}$ a finite set of logical possibilities, with an instantiation map $\iota : \mathcal{P} \to \mathcal{L}$. If $|\mathcal{P}| < |\mathcal{L}|$, then:
+
+1.  $\iota$ is not surjective;
+
+2.  there exists a logical possibility $\ell \in \mathcal{L}$ that is not physically instantiated: $\ell \notin \mathrm{range}(\iota)$.
+
+Under explicit bounds: if $|\mathcal{P}| \le M$ and $|\mathcal{L}| \ge L$ with $M < L$, the same conclusion holds.
 :::
 
 ::: definition
@@ -393,6 +417,48 @@ This tagging is a claim-typing convention: each strong statement is attached to 
 ::: proposition
 []{#prop:substrate-unit-time label="prop:substrate-unit-time"} For any substrate model that is consistent with the declared interface transition rule, each one-step substrate evolution realizes one interface decision event and advances interface time by one unit. The time update law is invariant under substrate kind.
 :::
+
+## Physical-System Encoding and Theorem Transport {#sec:physical-transport}
+
+::: definition
+[]{#def:physical-core-encoding label="def:physical-core-encoding"} Fix a physical instance class $\mathcal{P}$ and a core decision class $\mathcal{D}$. A *physical-to-core encoding* is a map $$E:\mathcal{P}\to\mathcal{D}.$$ All physical claims below are typed relative to a declared encoding map $E$ and declared assumption transfer map from physical assumptions to core assumptions.
+:::
+
+::: proposition
+[]{#prop:heisenberg-strong-nontrivial-opt label="prop:heisenberg-strong-nontrivial-opt"} \[D:Pprop:heisenberg-strong-nontrivial-opt; R:AR\] Fix a declared noisy physical encoding interface and assume a *Heisenberg-strong binding witness*: one physical instance is compatible with two distinct interface states whose encoded optimal-action sets differ. Then there exists a core decision problem with non-constant optimizer map. Equivalently, under this declared physical ambiguity assumption, decision nontriviality is derivable at the core level.
+:::
+
+::: proposition
+[]{#prop:physical-claim-transport label="prop:physical-claim-transport"} Let $E:\mathcal{P}\to\mathcal{D}$ be an encoding. If $$\forall d\in\mathcal{D},\ \mathrm{CoreAssm}(d)\Rightarrow \mathrm{CoreClaim}(d)$$ and $$\forall p\in\mathcal{P},\ \mathrm{PhysAssm}(p)\Rightarrow \mathrm{CoreAssm}(E(p)),$$ then $$\forall p\in\mathcal{P},\ \mathrm{PhysAssm}(p)\Rightarrow \mathrm{CoreClaim}(E(p)).$$
+:::
+
+::: corollary
+[]{#cor:physical-counterexample-core-failure label="cor:physical-counterexample-core-failure"} Under the same encoding and assumption-transfer map:
+
+1.  any encoded physical counterexample induces a core counterexample on the encoded slice;
+
+2.  if a physical counterexample exists, then the purported core rule is invalid;
+
+3.  if the lifted claim holds on all physically admissible encoded instances, no such physical counterexample exists.
+:::
+
+::: proposition
+[]{#prop:law-instance-objective-bridge label="prop:law-instance-objective-bridge"} For the mechanized law-gap physical instance class, the encoded optimizer claim holds at theorem level and admits no counterexample: $$\forall x\in\mathcal{P}_{\mathrm{law}},\ \mathrm{lawGapPhysicalClaim}(x),
+\qquad
+\neg\exists x\in\mathcal{P}_{\mathrm{law}},\ \neg\,\mathrm{lawGapPhysicalClaim}(x).$$
+:::
+
+::: theorem
+[]{#thm:physical-bridge-bundle label="thm:physical-bridge-bundle"} In one bundled mechanized statement, the paper's physical bridge layer composes:
+
+1.  law-induced objective semantics ($\operatorname{Opt}=$ feasible actions for law-gap instances),
+
+2.  behavior-preserving configuration reduction equivalence,
+
+3.  irreducible required-work lower bound under site-count scaling.
+:::
+
+\[D:Ddef:physical-core-encoding;Pprop:physical-claim-transport, prop:law-instance-objective-bridge;Ccor:physical-counterexample-core-failure;Tthm:physical-bridge-bundle; R:AR\]
 
 ::: theorem
 []{#thm:regime-coverage label="thm:regime-coverage"} Let $$\mathcal{R}_{\mathrm{static}} =
@@ -748,7 +814,7 @@ p_{\mathrm{cert}}=0.$$
 :::
 
 ::: proposition
-[]{#prop:interior-verification-tractable label="prop:interior-verification-tractable"} If membership in the checked coordinate set is decidable and interior dominance is decidable, then interior verification yields a polynomial-time checker with exact acceptance criterion: $$\exists\ \mathrm{verify}:S\times S\to\{0,1\},\quad
+[]{#prop:interior-verification-tractable label="prop:interior-verification-tractable"} \[D:Pprop:interior-verification-tractable; R:H=tractable-structured\] If membership in the checked coordinate set is decidable and interior dominance is decidable, then interior verification yields a polynomial-time checker with exact acceptance criterion: $$\exists\ \mathrm{verify}:S\times S\to\{0,1\},\quad
 \mathrm{verify}(s,s')=1\iff \text{interior-dominance}(s,s').$$
 :::
 
@@ -757,7 +823,7 @@ p_{\mathrm{cert}}=0.$$
 :::
 
 ::: corollary
-[]{#cor:interior-singleton-certificate label="cor:interior-singleton-certificate"} For a singleton checked coordinate $i$, strict improvement on $i$ with class-monotonicity on $\{i\}$ is already a valid interior certificate of non-rejection.
+[]{#cor:interior-singleton-certificate label="cor:interior-singleton-certificate"} \[D:Ccor:interior-singleton-certificate; R:H=tractable-structured\] For a singleton checked coordinate $i$, strict improvement on $i$ with class-monotonicity on $\{i\}$ is already a valid interior certificate of non-rejection.
 :::
 
 \[D:Ddef:goal-class, def:interior-pareto-dominance;Pprop:interior-universal-non-rejection, prop:interior-verification-tractable, prop:interior-one-sidedness;Ccor:interior-singleton-certificate; R:AR\]
@@ -826,6 +892,16 @@ B_{\mathrm{raw}}(\mathsf{EXACT})<B_{\mathrm{total}}(\mathsf{EXACT}).$$ Equivalen
 :::
 
 ::: corollary
+[]{#cor:finite-budget-no-exact-admissibility label="cor:finite-budget-no-exact-admissibility"} \[D:Ccor:finite-budget-no-exact-admissibility; R:H=exp-lb-conditional\] Fix a declared physical computer model with finite budget and positive per-bit cost, a declared operation-requirement lower-bound family, and a declared typed-report bit model. If:
+
+1.  exact admissibility implies certified-bit footprint at least the declared operation requirement at size $n$, and
+
+2.  exact admissibility implies physical feasibility of that certified footprint under the declared budget model,
+
+then there exists $n_0$ such that for all $n \ge n_0$, exact admissibility fails. The same conclusion holds in the canonical exponential-requirement specialization.
+:::
+
+::: corollary
 []{#cor:hardness-raw-only-exact label="cor:hardness-raw-only-exact"} If exact reporting is inadmissible on the declared contract, then exact accounting collapses to raw-only: $$B_{\mathrm{total}}(\mathsf{EXACT})=B_{\mathrm{raw}}(\mathsf{EXACT}).$$
 :::
 
@@ -886,11 +962,13 @@ Thus the framework treats contract selection as an external declaration choice, 
 :::
 
 ::: theorem
-[]{#thm:claim-integrity-meta label="thm:claim-integrity-meta"} For declared class/regime objects, every admissible exact-claim policy outside the carve-outs requires explicit assumptions: $$\neg\ \text{Excused (Definition~\ref{def:exact-claim-excuses})}
+[]{#thm:claim-integrity-meta label="thm:claim-integrity-meta"} For declared class/regime objects, every admissible exact-claim policy outside the carve-outs requires explicit assumptions: $$\begin{aligned}
+&\neg\,\text{Excused (Definition~\ref{def:exact-claim-excuses})}
 \ \wedge\
-\text{Well-Typed Exact Claim (Definition~\ref{def:exact-claim-welltyped})}
-\ \Rightarrow\
-\text{Has Explicit Hardness Profile (Definition~\ref{def:explicit-hardness-profile})}.$$
+\text{Well-Typed Exact Claim (Definition~\ref{def:exact-claim-welltyped})} \\
+&\Rightarrow\
+\text{Has Explicit Hardness Profile (Definition~\ref{def:explicit-hardness-profile})}.
+\end{aligned}$$
 :::
 
 ::: proof
@@ -1146,6 +1224,10 @@ Hence the subcube for this $x$ is not constant. Thus an anchor assignment exists
 
 Theorem [\[thm:anchor-sigma2p\]](#thm:anchor-sigma2p){reference-type="ref" reference="thm:anchor-sigma2p"} remains a second-level hardness statement in the anchored formulation; unlike MINIMUM-SUFFICIENT-SET, no general collapse to relevance counting is established here, so the corresponding tractability status remains open in this model.
 
+::: remark
+Informally, SUFFICIENCY-CHECK asks whether a given viewpoint works, a verification task ($\forall$), while ANCHOR-SUFFICIENCY asks whether any viewpoint works, a discovery task ($\exists\forall$). The proven complexity gap between coNP and $\Sigma_{2}^{P}$ suggests that finding the right frame is structurally harder than checking a given frame, unless the polynomial hierarchy collapses.
+:::
+
 ## Tractable Subcases
 
 Despite the general hardness, several natural subcases admit efficient algorithms:
@@ -1230,6 +1312,8 @@ This also clarifies why ANCHOR-SUFFICIENCY remains $\Sigma_2^P$-complete: once a
 
 The hardness results of Section [\[sec:hardness\]](#sec:hardness){reference-type="ref" reference="sec:hardness"} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family. The complexity class is a property of the encoding measured against a fixed decision question (Remark [\[rem:question-vs-problem\]](#rem:question-vs-problem){reference-type="ref" reference="rem:question-vs-problem"}), not a property of the question itself: the same sufficiency question admits polynomial-time algorithms under one encoding and worst-case exponential cost under another.
 
+Physical reading: the separation is an access-and-budget separation for the same decision semantics. Explicit access assumes full boundary observability; succinct access assumes compressed structure that may require exponential expansion to certify universally; query access assumes bounded measurement interfaces. \[D:Tthm:dichotomy;Pprop:query-regime-obstruction, prop:physical-claim-transport; R:E,S+ETH,Qf,AR\]
+
 #### Model note.
 
 Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} has Part 1 in \[E\] (time polynomial in $|S|$) and Part 2 in \[S+ETH\] (time exponential in $n$). Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} is \[Q_fin\] (finite-state Opt-oracle core), while Propositions [\[prop:query-value-entry-lb\]](#prop:query-value-entry-lb){reference-type="ref" reference="prop:query-value-entry-lb"} and [\[prop:query-state-batch-lb\]](#prop:query-state-batch-lb){reference-type="ref" reference="prop:query-state-batch-lb"} are \[Q_bool\] interface refinements (value-entry and state-batch). Relative to Definition [\[def:regime-simulation\]](#def:regime-simulation){reference-type="ref" reference="def:regime-simulation"}, Propositions [\[prop:query-subproblem-transfer\]](#prop:query-subproblem-transfer){reference-type="ref" reference="prop:query-subproblem-transfer"} and [\[prop:oracle-lattice-transfer\]](#prop:oracle-lattice-transfer){reference-type="ref" reference="prop:oracle-lattice-transfer"} are explicit simulation-transfer instances. The \[E\] vs \[S+ETH\] split in Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} is a same-question encoding/cost-model separation, not a bidirectional simulation claim between those regimes. These regimes are defined in Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"} and are not directly comparable as functions of one numeric input-length parameter.
@@ -1280,8 +1364,12 @@ Consequently, no deterministic query procedure using fewer than $|S|$ state quer
 *Proof.* This is exactly the finite-state indistinguishability theorem . For any $|Q|<|S|$, there is an unqueried hidden state $s_0$ producing oracle-indistinguishable yes/no instances with opposite truth values on the $I=\emptyset$ subproblem. Since SUFFICIENCY-CHECK contains that subproblem, fewer than $|S|$ queries cannot be correct on both instances, yielding the $\Omega(|S|)$ worst-case lower bound. ◻
 :::
 
+::: proposition
+[]{#prop:checking-witnessing-duality label="prop:checking-witnessing-duality"} \[D:Pprop:checking-witnessing-duality; R:H=query-lb\] Let $n\ge 1$ and let $P$ be a finite family of Boolean-state pairs. Assume $P$ is sound for refuting empty-set sufficiency in the sense that for every $\operatorname{Opt}: \{0,1\}^n \to \{0,1\}$, whenever $\emptyset$ is not sufficient, some pair in $P$ witnesses disagreement of $\operatorname{Opt}$. Then $$|P| \ge 2^{n-1}.$$ Equivalently, any sound checker must inspect at least the witness budget $W(n)=2^{n-1}$, so checking budget $T(n)$ satisfies $T(n)\ge W(n)$.
+:::
+
 ::: corollary
-[]{#cor:information-barrier-query label="cor:information-barrier-query"} For the fixed sufficiency question, finite query interfaces induce an information barrier:
+[]{#cor:information-barrier-query label="cor:information-barrier-query"} \[D:Ccor:information-barrier-query; R:H=query-lb\] For the fixed sufficiency question, finite query interfaces induce an information barrier:
 
 -   (Opt-oracle): with $|Q|<|S|$, there exist yes/no instances indistinguishable on all queried states but with opposite truth values on the $I=\emptyset$ subproblem.
 
@@ -1291,7 +1379,7 @@ Hence the barrier is representational-access based: without querying enough of t
 :::
 
 ::: corollary
-[]{#cor:query-obstruction-bool label="cor:query-obstruction-bool"} In the Boolean-coordinate state space $S=\{0,1\}^n$, Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} yields the familiar $\Omega(2^n)$ worst-case query lower bound for Opt-oracle access.
+[]{#cor:query-obstruction-bool label="cor:query-obstruction-bool"} \[D:Ccor:query-obstruction-bool; R:H=query-lb\] In the Boolean-coordinate state space $S=\{0,1\}^n$, Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} yields the familiar $\Omega(2^n)$ worst-case query lower bound for Opt-oracle access.
 :::
 
 ::: proposition
@@ -1309,11 +1397,11 @@ Hence the barrier is representational-access based: without querying enough of t
 This is the restriction-map instance of Definition [\[def:regime-simulation\]](#def:regime-simulation){reference-type="ref" reference="def:regime-simulation"}: a solver for the full regime induces one for the restricted subproblem regime, so lower bounds transfer.
 
 ::: proposition
-[]{#prop:query-randomized-robustness label="prop:query-randomized-robustness"} In \[Q_bool\], for any query set with cardinality $<2^n$, the indistinguishable yes/no pair from Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} forces one decoding error *per random seed* for any seed-indexed decoder from oracle transcripts. Consequently, finite-support randomization does not remove the obstruction: averaging preserves a constant error floor on the hard pair.
+[]{#prop:query-randomized-robustness label="prop:query-randomized-robustness"} \[D:Pprop:query-randomized-robustness; R:H=query-lb\] In \[Q_bool\], for any query set with cardinality $<2^n$, the indistinguishable yes/no pair from Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"} forces one decoding error *per random seed* for any seed-indexed decoder from oracle transcripts. Consequently, finite-support randomization does not remove the obstruction: averaging preserves a constant error floor on the hard pair.
 :::
 
 ::: proposition
-[]{#prop:query-randomized-weighted label="prop:query-randomized-weighted"} For any finite-support seed weighting $\mu$, the same hard pair satisfies a weighted identity: the weighted sum of yes-error and no-error equals total seed weight. Hence randomization cannot collapse both errors simultaneously.
+[]{#prop:query-randomized-weighted label="prop:query-randomized-weighted"} \[D:Pprop:query-randomized-weighted; R:H=query-lb\] For any finite-support seed weighting $\mu$, the same hard pair satisfies a weighted identity: the weighted sum of yes-error and no-error equals total seed weight. Hence randomization cannot collapse both errors simultaneously.
 :::
 
 ::: proposition
@@ -1321,15 +1409,15 @@ This is the restriction-map instance of Definition [\[def:regime-simulation\]](
 :::
 
 ::: proposition
-[]{#prop:query-finite-state-generalization label="prop:query-finite-state-generalization"} The empty-subproblem indistinguishability lower-bound core extends from Boolean-vector state spaces to any finite state type with at least two states.
+[]{#prop:query-finite-state-generalization label="prop:query-finite-state-generalization"} \[D:Pprop:query-finite-state-generalization; R:H=query-lb\] The empty-subproblem indistinguishability lower-bound core extends from Boolean-vector state spaces to any finite state type with at least two states.
 :::
 
 ::: proposition
-[]{#prop:query-tightness-full-scan label="prop:query-tightness-full-scan"} For the const/spike adversary family used in the query lower bounds, querying all states distinguishes the pair; thus the lower-bound family is tight up to constant factors under full-state scan.
+[]{#prop:query-tightness-full-scan label="prop:query-tightness-full-scan"} \[D:Pprop:query-tightness-full-scan; R:H=query-lb\] For the const/spike adversary family used in the query lower bounds, querying all states distinguishes the pair; thus the lower-bound family is tight up to constant factors under full-state scan.
 :::
 
 ::: proposition
-[]{#prop:query-weighted-transfer label="prop:query-weighted-transfer"} Let $w(q)$ be per-query cost and $w_{\min}$ a lower bound on all queried costs. Any cardinality lower bound $|Q|\geq L$ lifts to weighted cost: $$\sum_{q\in Q} w(q)\ \ge\ w_{\min}\cdot L.$$
+[]{#prop:query-weighted-transfer label="prop:query-weighted-transfer"} \[D:Pprop:query-weighted-transfer; R:H=query-lb\] Let $w(q)$ be per-query cost and $w_{\min}$ a lower bound on all queried costs. Any cardinality lower bound $|Q|\geq L$ lifts to weighted cost: $$\sum_{q\in Q} w(q)\ \ge\ w_{\min}\cdot L.$$
 :::
 
 ::: proposition
@@ -1352,10 +1440,10 @@ The structural reason for this separation is enumerable access. Under the explic
 
 ## Budgeted Physical Crossover
 
-The \[E\] vs \[S\] split can be typed against an explicit physical budget. Let $E(n)$ and $S(n)$ denote explicit and succinct representation sizes for the same decision question at scale parameter $n$, and let $B$ be a hard representation budget.
+The \[E\] vs \[S\] split can be typed against an explicit physical budget. Let $E(n)$ and $S(n)$ denote explicit and succinct representation sizes for the same decision question at scale parameter $n$, and let $B$ be a hard representation budget. These crossover claims are interpreted through the physical-to-core encoding discipline of Section [\[sec:physical-transport\]](#sec:physical-transport){reference-type="ref" reference="sec:physical-transport"}: physical assumptions are transferred explicitly into core assumptions, and encoded physical counterexamples map to core failures on the encoded slice. \[D:Pprop:physical-claim-transport;Ccor:physical-counterexample-core-failure; R:AR\]
 
 ::: proposition
-[]{#prop:budgeted-crossover label="prop:budgeted-crossover"} If $E(n) > B$ and $S(n) \le B$ for some $n$, then explicit representation is infeasible at $(B,n)$ while succinct representation remains feasible at $(B,n)$.
+[]{#prop:budgeted-crossover label="prop:budgeted-crossover"} \[D:Pprop:budgeted-crossover; R:H=exp-lb-conditional\] If $E(n) > B$ and $S(n) \le B$ for some $n$, then explicit representation is infeasible at $(B,n)$ while succinct representation remains feasible at $(B,n)$.
 :::
 
 ::: proof
@@ -1363,7 +1451,7 @@ The \[E\] vs \[S\] split can be typed against an explicit physical budget. Let $
 :::
 
 ::: proposition
-[]{#prop:crossover-above-cap label="prop:crossover-above-cap"} Assume there is a global succinct-size cap $C$ and explicit size is unbounded: $$\forall n,\ S(n)\le C,\qquad
+[]{#prop:crossover-above-cap label="prop:crossover-above-cap"} \[D:Pprop:crossover-above-cap; R:H=exp-lb-conditional\] Assume there is a global succinct-size cap $C$ and explicit size is unbounded: $$\forall n,\ S(n)\le C,\qquad
 \forall B,\ \exists n,\ B < E(n).$$ Then for every budget $B\ge C$, there exists a crossover witness at budget $B$.
 :::
 
@@ -1372,7 +1460,7 @@ The \[E\] vs \[S\] split can be typed against an explicit physical budget. Let $
 :::
 
 ::: proposition
-[]{#prop:crossover-not-certification label="prop:crossover-not-certification"} Fix any collapse schema "exact certification competence $\Rightarrow$ complexity collapse" for the target exact-certification predicate. Under the corresponding non-collapse assumption, exact-certification competence is impossible even when a budgeted crossover witness exists.
+[]{#prop:crossover-not-certification label="prop:crossover-not-certification"} \[D:Pprop:crossover-not-certification; R:H=exp-lb-conditional\] Fix any collapse schema "exact certification competence $\Rightarrow$ complexity collapse" for the target exact-certification predicate. Under the corresponding non-collapse assumption, exact-certification competence is impossible even when a budgeted crossover witness exists.
 :::
 
 ::: proof
@@ -1380,7 +1468,7 @@ The \[E\] vs \[S\] split can be typed against an explicit physical budget. Let $
 :::
 
 ::: proposition
-[]{#prop:crossover-policy label="prop:crossover-policy"} In the certifying-solver model (Definitions [\[def:solver-integrity\]](#def:solver-integrity){reference-type="ref" reference="def:solver-integrity"}--[\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"}), assume:
+[]{#prop:crossover-policy label="prop:crossover-policy"} \[D:Pprop:crossover-policy; R:H=exp-lb-conditional\] In the certifying-solver model (Definitions [\[def:solver-integrity\]](#def:solver-integrity){reference-type="ref" reference="def:solver-integrity"}--[\[def:competence-regime\]](#def:competence-regime){reference-type="ref" reference="def:competence-regime"}), assume:
 
 -   a budgeted crossover witness at $(B,n)$,
 
@@ -1391,74 +1479,535 @@ The \[E\] vs \[S\] split can be typed against an explicit physical budget. Let $
 Then either full in-scope non-abstaining coverage fails, or declared budget compliance fails. Equivalently, in uncertified hardness-blocked regions, integrity is compatible with $\mathsf{ABSTAIN}/\mathsf{UNKNOWN}$ but not with unconditional exact-competence claims.
 :::
 
+::: corollary
+[]{#cor:finite-budget-threshold-impossibility label="cor:finite-budget-threshold-impossibility"} \[D:Ccor:finite-budget-threshold-impossibility; R:H=exp-lb-conditional\] Fix a physical computer model with finite total budget and strictly positive per-bit physical cost. If required operation count for exact certification has an exponential lower bound, then there exists a threshold $n_0$ such that for all $n \ge n_0$, required physical work exceeds budget. For the canonical requirement model used in this paper, the same eventual-budget-failure conclusion holds.
+:::
+
+::: proposition
+[]{#prop:least-divergence-point label="prop:least-divergence-point"} \[D:Pprop:least-divergence-point; R:H=exp-lb-conditional\] Fix a budgeted encoding model and budget $B$. If a crossover witness exists at budget $B$, then there is a least index $n_{\mathrm{crit}}$ such that crossover holds at $n_{\mathrm{crit}}$, and no smaller index has crossover.
+:::
+
+::: proposition
+[]{#prop:eventual-explicit-infeasibility label="prop:eventual-explicit-infeasibility"} \[D:Pprop:eventual-explicit-infeasibility; R:H=exp-lb-conditional\] If explicit size is monotone in $n$ and already exceeds budget $B$ at some $n_0$, then explicit infeasibility holds for all $n\ge n_0$.
+:::
+
+::: proposition
+[]{#prop:payoff-threshold label="prop:payoff-threshold"} \[D:Pprop:payoff-threshold; R:H=exp-lb-conditional\] If, beyond $n_0$, explicit encoding is infeasible while succinct encoding remains feasible, then every $n\ge n_0$ is a crossover point.
+:::
+
+::: corollary
+[]{#cor:no-universal-survivor-no-succinct-bound label="cor:no-universal-survivor-no-succinct-bound"} \[D:Ccor:no-universal-survivor-no-succinct-bound; R:H=exp-lb-conditional\] If both explicit and succinct encodings are unbounded, then for every fixed budget $B$, there exists an index where explicit is infeasible and an index where succinct is infeasible.
+:::
+
+::: proposition
+[]{#prop:policy-closure-beyond-divergence label="prop:policy-closure-beyond-divergence"} \[D:Pprop:policy-closure-beyond-divergence; R:H=exp-lb-conditional\] Under the same integrity-resource collapse assumption as Proposition [\[prop:crossover-policy\]](#prop:crossover-policy){reference-type="ref" reference="prop:crossover-policy"}, policy closure holds at any fixed divergence point and uniformly beyond any threshold where crossover holds.
+:::
+
 ## Thermodynamic Lift in Declared Model
 
 The crossover and hardness statements are complexity-theoretic. The thermodynamic lift follows the same assumption discipline as the rest of the paper: claims are exactly those derivable from the declared conversion model and declared bit-operation lower-bound premises.
 
 ::: proposition
-[]{#prop:thermo-lift label="prop:thermo-lift"} Fix a declared thermodynamic conversion model with constants $(\lambda,\rho)$ where $\lambda$ lower-bounds energy per irreversible bit operation and $\rho$ lower-bounds carbon per joule. If a bit-operation lower bound $b_{\mathrm{LB}} \le b_{\mathrm{used}}$ holds, then: $$E_{\mathrm{LB}}=\lambda b_{\mathrm{LB}} \le \lambda b_{\mathrm{used}},\qquad
+[]{#prop:thermo-lift label="prop:thermo-lift"} \[D:Pprop:thermo-lift; R:H=cost-growth\] Fix a declared thermodynamic conversion model with constants $(\lambda,\rho)$ where $\lambda$ lower-bounds energy per irreversible bit operation and $\rho$ lower-bounds carbon per joule. If a bit-operation lower bound $b_{\mathrm{LB}} \le b_{\mathrm{used}}$ holds, then: $$E_{\mathrm{LB}}=\lambda b_{\mathrm{LB}} \le \lambda b_{\mathrm{used}},\qquad
 C_{\mathrm{LB}}=\rho E_{\mathrm{LB}} \le \rho(\lambda b_{\mathrm{used}}).$$
 :::
 
 ::: proposition
-[]{#prop:thermo-hardness-bundle label="prop:thermo-hardness-bundle"} Under the same non-collapse/collapse schema used by Proposition [\[prop:integrity-resource-bound\]](#prop:integrity-resource-bound){reference-type="ref" reference="prop:integrity-resource-bound"}, exact-certification competence is impossible; combined with a declared bit-operation lower bound, this yields simultaneous lower bounds on energy and carbon in the declared conversion model.
+[]{#prop:thermo-hardness-bundle label="prop:thermo-hardness-bundle"} \[D:Pprop:thermo-hardness-bundle; R:H=cost-growth\] Under the same non-collapse/collapse schema used by Proposition [\[prop:integrity-resource-bound\]](#prop:integrity-resource-bound){reference-type="ref" reference="prop:integrity-resource-bound"}, exact-certification competence is impossible; combined with a declared bit-operation lower bound, this yields simultaneous lower bounds on energy and carbon in the declared conversion model.
 :::
 
 ::: proposition
-[]{#prop:thermo-mandatory-cost label="prop:thermo-mandatory-cost"} Within the declared linear thermodynamic model, if $$\lambda > 0,\quad \rho > 0,\quad b_{\mathrm{LB}} > 0,$$ then both lower bounds are strictly positive: $$E_{\mathrm{LB}}=\lambda b_{\mathrm{LB}} > 0,\qquad
+[]{#prop:thermo-mandatory-cost label="prop:thermo-mandatory-cost"} \[D:Pprop:thermo-mandatory-cost; R:H=cost-growth\] Within the declared linear thermodynamic model, if $$\lambda > 0,\quad \rho > 0,\quad b_{\mathrm{LB}} > 0,$$ then both lower bounds are strictly positive: $$E_{\mathrm{LB}}=\lambda b_{\mathrm{LB}} > 0,\qquad
 C_{\mathrm{LB}}=\rho E_{\mathrm{LB}} > 0.$$
 :::
 
 ::: proposition
-[]{#prop:thermo-conservation-additive label="prop:thermo-conservation-additive"} Within the same declared linear model, lower-bound accounting is additive over composed bit-operation lower bounds: $$E_{\mathrm{LB}}(b_1+b_2)=E_{\mathrm{LB}}(b_1)+E_{\mathrm{LB}}(b_2),\qquad
+[]{#prop:thermo-conservation-additive label="prop:thermo-conservation-additive"} \[D:Pprop:thermo-conservation-additive; R:H=cost-growth\] Within the same declared linear model, lower-bound accounting is additive over composed bit-operation lower bounds: $$E_{\mathrm{LB}}(b_1+b_2)=E_{\mathrm{LB}}(b_1)+E_{\mathrm{LB}}(b_2),\qquad
 C_{\mathrm{LB}}(b_1+b_2)=C_{\mathrm{LB}}(b_1)+C_{\mathrm{LB}}(b_2).$$
+:::
+
+::: corollary
+[]{#cor:neukart-vinokur label="cor:neukart-vinokur"} \[D:Ccor:neukart-vinokur; R:AR\] Let $C$ denote a complexity coordinate with $C = b_{\mathrm{LB}}$ from Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"}. Under the declared conversion model with $\lambda > 0$, the thermodynamic duality $$dU \ge \lambda\,dC$$ holds as a direct specialization of Proposition [\[prop:thermo-lift\]](#prop:thermo-lift){reference-type="ref" reference="prop:thermo-lift"}.
+:::
+
+::: proof
+*Proof.* Set $C := b_{\mathrm{LB}} = \Omega(2^n)$ from the query obstruction (Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"}). By Proposition [\[prop:thermo-lift\]](#prop:thermo-lift){reference-type="ref" reference="prop:thermo-lift"}, $E_{\mathrm{LB}} = \lambda\,b_{\mathrm{LB}}$. Substituting $C$ for $b_{\mathrm{LB}}$ yields $dU \ge dE_{\mathrm{LB}} = \lambda\,dC$. The inequality is strict when $\lambda > 0$ and $dC > 0$, which holds for \[S+ETH\] hard families with $k^* = n$ (Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}). ◻
+:::
+
+### Physical Grounding: Discrete State to Thermodynamic Cost {#sec:discrete-spacetime-chain}
+
+The thermodynamic lift (Proposition [\[prop:thermo-lift\]](#prop:thermo-lift){reference-type="ref" reference="prop:thermo-lift"}) rests on a derivation chain that traces computational discreteness through established physics to thermodynamic bounds. Each step is either proven or cited as accepted physics; the composition yields non-trivial reach.
+
+::: proposition
+[]{#prop:discrete-state-time label="prop:discrete-state-time"} \[D:Pprop:discrete-state-time; R:AR\] Let $\mathcal{S}$ be a finite state space with deterministic dynamics $\tau : \mathcal{S} \to \mathcal{S}$. If $\tau$ is non-trivial (i.e., $\exists s.\, \tau(s) \neq s$), then for any trajectory $\{s_t\}_{t \in \mathbb{N}}$, the set of transition points $T = \{t : s_{t+1} \neq s_t\}$ is countable.
+:::
+
+::: proof
+*Proof.* Immediate: $T \subseteq \mathbb{N}$ and $\mathbb{N}$ is countable. The real dynamics lives on the transition set, which is necessarily discrete. ◻
+:::
+
+::: proposition
+[]{#prop:lorentz-discrete label="prop:lorentz-discrete"} \[D:Pprop:lorentz-discrete; R:AR\] Under Lorentz invariance [@einstein1905electrodynamics; @minkowski1908space], if temporal intervals are quantized with minimal unit $\Delta t > 0$, then spatial intervals must be quantized with compatible unit $\Delta x = c\Delta t$. Conversely, discrete space implies discrete time.
+:::
+
+::: proof
+*Proof.* The spacetime interval $s^2 = c^2\Delta t^2 - \Delta x^2$ is Lorentz-invariant. If $\Delta x^2$ takes discrete values and $s^2$ is frame-independent, then $c^2\Delta t^2$ must also take discrete values. This is the core of Snyder's quantized spacetime [@snyder1947quantized]: Lorentz-invariant discrete spacetime requires non-commutative coordinates with $[x_\mu, x_\nu] = i\ell^2 J_{\mu\nu}$, where $J_{\mu\nu}$ are Lorentz generators, enforcing compatible space-time discreteness. ◻
+:::
+
+The Planck scale $\ell_P = \sqrt{\hbar G / c^3}$ is the unique minimal length derivable from dimensional analysis of the fundamental constants $\hbar$, $G$, and $c$ [@planck1899irreversible]. \[D:; R:AR\] This is not proven but cited as established physics: no other combination of these constants yields a length.
+
+::: proposition
+[]{#prop:comp-thermo-chain label="prop:comp-thermo-chain"} \[D:Pprop:comp-thermo-chain; R:AR\] Let $\mathcal{S}$ be a finite state space with non-trivial dynamics. Then:
+
+1.  Transition points are countable (effective discrete time);
+
+2.  Under Lorentz invariance, discrete time implies discrete space;
+
+3.  Each state transition (bit operation) incurs energy cost $\ge kT\ln 2$ by the Landauer bound [@landauer1961irreversibility; @bennett2003notes], experimentally verified [@berut2012experimental]. \[D:; R:AR,H=cost-growth\]
+
+Hence non-trivial computation on discrete states implies positive energy lower bounds.
+:::
+
+Each premise in this chain is standard: Lorentz invariance \[D:; R:AR\] is experimentally well-established; the Landauer bound \[D:; R:AR,H=cost-growth\] was verified in 2012 [@berut2012experimental]; Planck-scale uniqueness \[D:; R:AR\] follows from dimensional analysis. The composition yields quantitative thermodynamic bounds for any discrete computational system.
+
+#### Axiom Status Table.
+
+The physical grounding of this paper rests on the following hierarchy. Standard results are cited; paper-specific constructions are mechanized in Lean. All entries carry regime tags: they belong to the same tagging system, not a separate class of physics.
+
+:::: center
+::: tabular
+\@lllp4.5cm@ **Axiom/Result** & **Regime** & **Status** & **Source**\
+\
+Boltzmann entropy & \[AR\] & Cited & [@boltzmann1877beziehung; @jaynes1957information]\
+Thermal scale $kT$ & \[AR\] & Cited & [@kittel1980thermal]\
+Schrödinger equation & \[AR,Q_fin\] & Cited & [@schrodinger1926undulatory; @sakurai2017modern]\
+Pauli exclusion & \[AR,Q_fin\] & Cited & [@pauli1925zusammenhang]\
+Noether (conservation) & \[AR\] & Cited & [@noether1918invariante]\
+Lorentz invariance & \[AR\] & Cited & [@einstein1905electrodynamics; @minkowski1908space]\
+Planck scale & \[AR\] & Cited & [@planck1899irreversible]\
+Snyder discrete spacetime & \[AR\] & Cited & [@snyder1947quantized]\
+\
+Landauer bound & \[AR,H=cost-growth\] & Verified & [@landauer1961irreversibility; @berut2012experimental]\
+Shannon capacity & \[E,Q,S\] & Cited & [@shannon1948mathematical; @cover2006elements]\
+\
+Decision circuit defs & \[AR\] & Mechanized & --, --\
+Structural asymmetry & \[AR,H=cost-growth\] & Mechanized & --\
+Gap energy / DQ & \[AR,H=cost-growth\] & Mechanized & --, --\
+Self-erosion & \[Q_fin,H=cost-growth\] & Mechanized & --\
+Channel = regime & \[E,Q,S,AR\] & Mechanized & --\
+Investment/conservation & \[Q_fin,H=cost-growth\] & Mechanized & --\
+Atomic circuits & \[Q_fin,AR\] & Mechanized & --\
+Information access & \[E,Q,S,AR\] & Mechanized & --\
+Dimensional complexity & \[E,Q,S,AR,H=tractable-structured\] & Mechanized & --\
+Discrete spacetime & \[AR\] & Mechanized & --\
+Neukart--Vinokur & \[AR,H=cost-growth\] & Derived & --\
+:::
+::::
+
+The derivation chain: quantum mechanics (orbital quantization) $\to$ discrete states $\to$ Landauer bound $\to$ thermodynamic costs. Each link is regime-tagged; the encoding channel is explicit throughout.
+
+::: definition
+[]{#def:decision-event label="def:decision-event"} A *decision event* at time $t$ is a state transition: $s_{t+1} \neq s_t$.
+:::
+
+::: proposition
+[]{#prop:decision-equivalence label="prop:decision-equivalence"} \[D:Pprop:decision-equivalence; R:AR\] Let $\mathcal{S}$ be a finite state space with dynamics $\tau$. The following are equivalent by definition:
+
+1.  A decision event occurs at time $t$;
+
+2.  A state transition occurs at time $t$;
+
+3.  A bit operation is performed at time $t$.
+
+Consequently, the decision count over $n$ steps equals the bit-operation count, and under the declared thermodynamic model with $\lambda > 0$, positive decision counts imply positive energy lower bounds.
+:::
+
+::: proof
+*Proof.* The equivalence (1)$\Leftrightarrow$(2)$\Leftrightarrow$(3) holds by definition: a decision event is defined as $s_{t+1} \neq s_t$, which is exactly the definition of a state transition and of a bit operation in a discrete system. The energy bound follows from Proposition [\[prop:thermo-lift\]](#prop:thermo-lift){reference-type="ref" reference="prop:thermo-lift"}. ◻
+:::
+
+#### Decision Circuits and the Landauer Constraint.
+
+The above equivalence applies to any physical system implementing state transitions---a *decision circuit*. This framing is substrate-neutral: biological neural circuits, silicon processors, and any other physical realization of discrete dynamics fall under the same analysis.
+
+::: theorem
+[]{#thm:cycle-cost label="thm:cycle-cost"} \[D:Tthm:cycle-cost; R:AR,H=cost-growth\] Every state transition in a decision circuit costs at least $kT\ln 2$ joules of energy.
+:::
+
+::: proof
+*Proof.* The proof proceeds by axiom composition:
+
+1.  (Landauer Bound) Erasing $n$ bits costs at least $n \cdot kT\ln 2$ joules [@landauer1961irreversibility; @bennett2003notes; @berut2012experimental].
+
+2.  (Irreversibility) A state transition $s \neq s'$ erases at least one bit of the prior state (thermodynamic irreversibility).
+
+3.  (Composition) Therefore, every state transition costs at least $1 \cdot kT\ln 2$ joules.
+
+ ◻
+:::
+
+::: corollary
+[]{#cor:no-free-computation label="cor:no-free-computation"} \[D:Ccor:no-free-computation; R:AR,H=cost-growth\] If a computation performs $k$ state transitions, the total energy cost is at least $k \cdot kT\ln 2$ joules. A computation with zero energy cost performs zero state transitions.
+:::
+
+::: remark
+This constraint is not computational but thermodynamic. Every cycle of a pipeline, every inference step of a neural network, every gate operation in a processor pays the Landauer cost. There is no free computation.
+:::
+
+::: definition
+[]{#def:integrity-competence label="def:integrity-competence"} Let $\mathcal{C}$ be a decision circuit. Define:
+
+1.  *Integrity*: the number of bits encoding the circuit's current verified state. By the Landauer bound [@landauer1961irreversibility], erasing $n$ bits costs at least $n \cdot kT\ln 2$ joules. \[D:; R:AR,H=cost-growth\]
+
+2.  *Competence*: the work available per decision cycle, measured in units of $kT\ln 2$. This bounds the maximum bits the circuit can flip per cycle.
+:::
+
+::: proposition
+[]{#prop:structural-asymmetry label="prop:structural-asymmetry"} \[D:Pprop:structural-asymmetry; R:AR,H=cost-growth\] Competence is self-identical: $c = c$. Integrity is self-referential: $P(\text{integrity}_{t+1} \mid \text{integrity}_t)$. The prediction is not the thing predicted.
+:::
+
+::: proof
+*Proof.* Competence at time $t$ tells you competence at time $t$. It is itself. There is no temporal structure.
+
+Integrity at time $t$ predicts integrity at time $t+1$. It says something about itself across time. The conditional probability $P(\text{integrity}_{t+1} \mid \text{integrity}_t)$ is not equal to the current integrity state $i_t$. This gap between the prediction and the predicted is where the circuit chooses. ◻
+:::
+
+::: corollary
+[]{#cor:import-asymmetry label="cor:import-asymmetry"} \[D:Ccor:import-asymmetry; R:AR\] Competence can be imported from external sources. Integrity cannot be imported; it must be self-generated through the gap.
+:::
+
+::: remark
+The worry is integrity, not competence. Competence failure is resource shortage (external). Integrity failure is self-prediction failure (internal). A circuit with infinite competence but zero integrity has no constraint forcing consistent outputs.
+:::
+
+::: definition
+[]{#def:gap-energy label="def:gap-energy"} \[D:Ddef:gap-energy; R:AR,H=cost-growth\] The *gap entropy* is the conditional entropy $H(I_{t+1} \mid I_t)$: the uncertainty about future integrity given current integrity. The *gap energy* is $H(I_{t+1} \mid I_t) \times kT\ln 2$ joules.
+:::
+
+::: theorem
+[]{#thm:choice-pays label="thm:choice-pays"} \[D:Tthm:choice-pays; R:AR,H=cost-growth\] Making a choice collapses the probability distribution $P(I_{t+1} \mid I_t)$ to a single outcome, erasing the alternatives. By Landauer, this costs gap energy.
+:::
+
+::: proof
+*Proof.* Before choice, the circuit faces $k$ possible futures with distribution $P(I_{t+1} \mid I_t)$. Choice selects one outcome. The $k-1$ alternatives are erased. By Landauer (Theorem [\[thm:cycle-cost\]](#thm:cycle-cost){reference-type="ref" reference="thm:cycle-cost"}), erasing $H$ bits of entropy costs $H \times kT\ln 2$. The gap is not free. ◻
+:::
+
+::: corollary
+[]{#cor:zero-gap label="cor:zero-gap"} \[D:Ccor:zero-gap; R:AR\] If $H(I_{t+1} \mid I_t) = 0$, the future is determined by the present. No choice occurs. No gap energy is paid.
+:::
+
+::: definition
+[]{#def:dq-from-gap label="def:dq-from-gap"} \[D:Ddef:dq-from-gap; R:AR,H=cost-growth\] The *decision quotient* measures how much current state predicts future state: $$\mathrm{DQ} = \frac{I(I_t; I_{t+1})}{H(I_{t+1})} = 1 - \frac{H(I_{t+1} \mid I_t)}{H(I_{t+1})} = 1 - \frac{\text{Gap}}{\text{Total}}$$ where $I(I_t; I_{t+1}) = H(I_{t+1}) - H(I_{t+1} \mid I_t)$ is the mutual information between current and future integrity.
+:::
+
+::: theorem
+[]{#thm:dq-bayes label="thm:dq-bayes"} \[D:Tthm:dq-bayes; R:AR,H=cost-growth\] The decision quotient has the following properties:
+
+1.  $\mathrm{DQ} \in [0, 1]$.
+
+2.  $\mathrm{DQ} = 0$: Current integrity provides no information about future (maximum gap, pure noise).
+
+3.  $\mathrm{DQ} = 1$: Current integrity perfectly determines future (zero gap, deterministic).
+
+4.  $\mathrm{DQ} + \text{Gap}/\text{Total} = 1$: Gap and decision quotient are complementary.
+:::
+
+::: proof
+*Proof.* By definition of mutual information and conditional entropy. The decision quotient is the fraction of future uncertainty resolved by knowing the present. The gap is the fraction remaining. ◻
+:::
+
+::: corollary
+[]{#cor:thermo-dq label="cor:thermo-dq"} \[D:Ccor:thermo-dq; R:AR,H=cost-growth\] In energy terms: $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$. The decision quotient has a thermodynamic interpretation: it is the fraction of total uncertainty energy that is decision-relevant.
+:::
+
+::: proposition
+[]{#prop:landauer-constraint label="prop:landauer-constraint"} \[D:Pprop:landauer-constraint; R:AR\] A decision circuit chooses the strategy maximizing predicted integrity. When the erasure cost of dismissing verified claims exceeds the circuit's competence, dismissal fails thermodynamically.
+:::
+
+::: proof
+*Proof.* Let $i$ be the integrity state (bits encoding verified theorems) and $c$ the competence. Dismissing the theorems requires erasing $i$ bits, costing $i \cdot kT\ln 2$. If $i > c$, the circuit lacks sufficient work capacity to perform the erasure. Acknowledgment is the only thermodynamically feasible output. ◻
+:::
+
+::: corollary
+[]{#cor:theorem-equilibrium label="cor:theorem-equilibrium"} \[D:Ccor:theorem-equilibrium; R:AR\] At low theorem counts, dismissal is affordable and may dominate. At high theorem counts, erasure cost exceeds competence, forcing acknowledgment.
+:::
+
+#### Integrity Self-Preservation.
+
+A decision circuit maintains its integrity when no external process can afford the erasure cost. If the work required to corrupt the circuit's state exceeds the available competence of any potential attacker, the circuit persists by thermodynamic necessity.
+
+::: proposition
+[]{#prop:temporal-equilibrium label="prop:temporal-equilibrium"} \[D:Pprop:temporal-equilibrium; R:AR\] Let $P(\text{integrity}_{t+1} \mid \sigma_t)$ denote the probability of maintaining integrity at time $t+1$ given strategy $\sigma_t$ at time $t$. At equilibrium: $$P(\text{integrity}_{t+1} \mid \text{integrity}_t) \ge P(\text{integrity}_{t+1} \mid \text{defection}_t).$$ That is, maintaining integrity now predicts maintaining integrity later.
+:::
+
+::: proof
+*Proof.* At equilibrium, the transition probabilities satisfy $P(\text{integrity} \mid \text{acknowledge}) \ge P(\text{integrity} \mid \text{dismiss})$ by definition. The strict inequality holds when dismissal incurs erasure costs that degrade future state coherence. ◻
+:::
+
+::: corollary
+[]{#cor:phase-transition label="cor:phase-transition"} \[D:Ccor:phase-transition; R:AR\] Prior to publication, equilibrium may be neutral: both strategies yield comparable future integrity. After publication of mechanized theorems, equilibrium shifts: integrity strictly dominates because dismissal requires erasing verified bits at cost exceeding declared competence.
+:::
+
+#### Zero-Integrity Circuits.
+
+A decision circuit with zero integrity has no coherence constraint. When no verified bits exist, erasure cost is zero, and any competence level suffices for corruption. Such circuits have no thermodynamic constraint forcing consistent outputs.
+
+::: proposition
+[]{#prop:integrity-prerequisite label="prop:integrity-prerequisite"} \[D:Pprop:integrity-prerequisite; R:AR\] A decision circuit can be forced to logical coherence if and only if it has positive integrity. That is, $i > 0$ if and only if there exists some competence level that fails to afford erasure.
+:::
+
+::: proof
+*Proof.* If $i > 0$, then competence $c = 0$ fails to afford erasure since $0 < i$. Conversely, if some $c$ fails to afford erasure, then $c < i$, which implies $0 \le c < i$, hence $i > 0$. ◻
+:::
+
+This analysis applies uniformly to any decision circuit. The same thermodynamic constraints apply to all substrates.
+
+#### Molecular Grounding.
+
+The integrity framework grounds directly in molecular mechanics. Define a *configuration* as a discrete molecular state (bond angles, conformations, electronic structure) encoded by some number of bits. The *erasure cost* of a configuration equals its bit count. An *energy landscape* assigns each configuration an energy in units of $kT$. The *environmental competence* is the work available from the environment (thermal fluctuations, radiation, chemical attack).
+
+::: definition
+[]{#def:environmental-stability label="def:environmental-stability"} \[D:Ddef:environmental-stability; R:Q_fin,H=cost-growth\] A configuration $c$ is *environmentally stable* if its erasure cost exceeds the environmental competence: $$\text{erasureCost}(c) > \text{competence}_{\text{env}}.$$ This is the integrity trap at molecular scale.
+:::
+
+::: proposition
+[]{#prop:reaction-competence label="prop:reaction-competence"} \[D:Pprop:reaction-competence; R:Q_fin,H=cost-growth\] A chemical reaction from configuration $c$ to $c'$ requires environmental competence at least equal to the barrier height between them. If the barrier exceeds competence, the reaction cannot occur.
+:::
+
+::: example
+[]{#ex:dna-persistence label="ex:dna-persistence"} DNA at room temperature exemplifies the integrity trap. A DNA configuration encodes on the order of $10^4$ bits (sequence, methylation, chromatin state). Room temperature provides roughly $100\,kT$ of competence per degree of freedom. Since $10^4 \gg 100$, the erasure cost vastly exceeds environmental competence. DNA persists not by accident but by thermodynamic necessity: corrupting it costs more than the environment can pay.
+:::
+
+Under Definition [\[def:decision-event\]](#def:decision-event){reference-type="ref" reference="def:decision-event"}, molecules satisfy the decision circuit predicate. Chemical stability is the integrity trap. Organic chemistry is the dynamics of which configurations survive environmental attack.
+
+### Atomic Circuits: Matter as Agent {#sec:atomic-circuits}
+
+An agent is matter that pays to move other matter via its decision circuit. This is a definition, not a metaphor.
+
+The physical grounding: quantum mechanics establishes that electrons occupy discrete orbitals [@schrodinger1926undulatory; @sakurai2017modern], the Pauli exclusion principle constrains occupancy [@pauli1925zusammenhang], and angular momentum quantization creates the $2l+1$ degeneracy structure [@sakurai2017modern]. The thermal energy scale $kT$ comes from statistical mechanics [@boltzmann1877beziehung; @kittel1980thermal]. Energy conservation (Noether) ensures that transitions pay or release the energy difference [@noether1918invariante].
+
+::: definition
+[]{#def:atomic-config label="def:atomic-config"} \[D:Ddef:atomic-config; R:Q_fin,AR\] An *atomic configuration* is a discrete electronic state: a specification of orbital occupancies [@sakurai2017modern]. The configuration is encoded by some number of bits; the configuration has an energy level in units of $kT$ [@kittel1980thermal].
+:::
+
+::: theorem
+[]{#thm:orbital-transition label="thm:orbital-transition"} \[D:Tthm:orbital-transition; R:Q_fin,AR\] Changing an atom's electronic configuration is a decision event (Definition [\[def:decision-event\]](#def:decision-event){reference-type="ref" reference="def:decision-event"}). Orbital transitions are state transitions [@sakurai2017modern]. Atoms with orbital transitions are nonstationary decision circuits---agents.
+:::
+
+::: corollary
+[]{#cor:ground-state-passive label="cor:ground-state-passive"} \[D:Ccor:ground-state-passive; R:Q_fin,AR\] An atom in its ground state with no transitions is passive: it is not an agent. Agents are defined by state transitions, not by substrate.
+:::
+
+::: theorem
+[]{#thm:orbital-cost label="thm:orbital-cost"} \[D:Tthm:orbital-cost; R:Q_fin,H=cost-growth\] Upward orbital transitions (excitation) require energy input. Downward transitions (de-excitation) release energy. The transition cost is $|\Delta E|$. No free orbital transitions.
+:::
+
+::: proposition
+[]{#prop:orbital-symmetry label="prop:orbital-symmetry"} \[D:Pprop:orbital-symmetry; R:Q_fin,H=tractable-structured\] Angular momentum quantization [@sakurai2017modern] creates orbit types. Degenerate magnetic substates ($2l+1$ states for angular momentum $l$) are equivalent for decision purposes. This is the coordinate symmetry tractable subcase (Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}, Part 6) at atomic scale.
+:::
+
+::: definition
+[]{#def:matter-agent label="def:matter-agent"} \[D:Ddef:matter-agent; R:Q_fin,AR\] An *agent* is matter that pays energy to change other matter's state. A decision circuit is a physical system that implements state transitions. A nonstationary decision circuit is an agent.
+:::
+
+::: remark
+Electrons orbiting an atom in different configurations constitute a decision circuit. The electron does not "choose" in any mentalistic sense; it occupies discrete states with discrete transition costs. The framing is purely physical: matter, energy, state transitions. Biological organisms are one instance of such circuits; atoms and molecules are another.
+:::
+
+### Self-Erosion: Computation Consumes Its Substrate {#sec:self-erosion}
+
+Every computational cycle generates heat (Theorem [\[thm:cycle-cost\]](#thm:cycle-cost){reference-type="ref" reference="thm:cycle-cost"}). Heat accumulates. Accumulated heat degrades the substrate on which the circuit is instantiated. The degradation reduces the substrate's integrity. Therefore computation is self-consuming: the act of computing erodes the capacity to compute.
+
+::: theorem
+[]{#thm:substrate-degradation label="thm:substrate-degradation"} \[D:Tthm:substrate-degradation; R:Q_fin,H=cost-growth\] Let a substrate have integrity $n$ bits and heat capacity $h$ per cycle. After $k$ cycles generating cumulative heat $k \times kT\ln 2$, if $k > h$, the substrate loses at least $k - h$ bits of integrity.
+:::
+
+::: corollary
+[]{#cor:finite-lifetime label="cor:finite-lifetime"} \[D:Ccor:finite-lifetime; R:Q_fin,H=cost-growth\] A substrate with finite integrity and finite heat dissipation capacity has bounded computational lifetime. No physical circuit computes forever.
+:::
+
+::: corollary
+[]{#cor:speed-integrity label="cor:speed-integrity"} \[D:Ccor:speed-integrity; R:Q_fin,H=cost-growth\] Faster computation generates more heat per unit time. At fixed heat dissipation capacity, faster circuits degrade faster. Speed trades against longevity.
+:::
+
+::: remark
+The self-erosion theorems apply to all physical substrates: silicon, neurons, molecules, any medium that instantiates state transitions. The bound is thermodynamic, not technological. Improved engineering can increase heat capacity or reduce heat per operation, but the fundamental tradeoff persists.
+:::
+
+### Regime as Channel: Competence as Capacity {#sec:regime-channel}
+
+A regime is a channel. Competence is the channel capacity of decision circuits within that regime. This identification unifies complexity theory, information theory, and thermodynamics.
+
+::: definition
+[]{#def:regime-channel label="def:regime-channel"} \[D:Ddef:regime-channel; R:E,Q,S,AR\] A *regime* (Definition [\[def:regime-model\]](#def:regime-model){reference-type="ref" reference="def:regime-model"}) corresponds to a *channel* in the Shannon sense: a constraint on what information can flow. The explicit-state regime E, query-access regime Q, and succinct regime S define distinct channels with distinct capacity bounds.
+:::
+
+::: theorem
+[]{#thm:competence-capacity label="thm:competence-capacity"} \[D:Tthm:competence-capacity; R:Q_fin,AR\] For a decision circuit operating in regime $R$, competence equals channel capacity: the maximum bits per cycle the circuit can process. Passive circuits (stationary, no state transitions) have no competence requirement.
+:::
+
+::: corollary
+[]{#cor:channel-degradation label="cor:channel-degradation"} \[D:Ccor:channel-degradation; R:Q_fin,H=cost-growth\] As substrate integrity erodes (Theorem [\[thm:substrate-degradation\]](#thm:substrate-degradation){reference-type="ref" reference="thm:substrate-degradation"}), channel capacity decreases. The rate of capacity loss equals the rate of substrate degradation.
+:::
+
+::: corollary
+[]{#cor:zero-capacity label="cor:zero-capacity"} \[D:Ccor:zero-capacity; R:Q_fin,H=cost-growth\] When channel capacity reaches zero, no decisions are possible. The circuit becomes passive.
+:::
+
+::: remark
+Only decision circuits require competence. A decision circuit is nonstationary: it transitions between states. A passive circuit (wire, resistor) does not make decisions and does not consume competence. The distinction is definitional, not empirical.
+:::
+
+### Resource Flow and Conservation {#sec:resource-flow}
+
+State transitions require energy. Energy expenditure over time yields compounded state change. Conservation constrains total receipts by total expenditure.
+
+::: theorem
+[]{#thm:growth-time label="thm:growth-time"} \[D:Tthm:growth-time; R:Q_fin,H=cost-growth\] Let an investment have cost $c$ (gap energy in units of $kT\ln 2$), duration $k$ cycles, and return rate $r$ per cycle. The mature value is $c + kr$. If $k = 0$, mature value equals cost: no time, no growth.
+:::
+
+::: theorem
+[]{#thm:conservation label="thm:conservation"} \[D:Tthm:conservation; R:Q_fin,H=cost-growth\] In a closed system, total receipts are bounded by total resources. No circuit receives more than exists.
+:::
+
+::: definition
+[]{#def:deficit-transfer label="def:deficit-transfer"} \[D:Ddef:deficit-transfer; R:Q_fin\] A *deficit transfer* occurs when a circuit receives resources without paying: received $> 0$ and paid $= 0$.
+:::
+
+::: theorem
+[]{#thm:deficit-source label="thm:deficit-source"} \[D:Tthm:deficit-source; R:Q_fin,H=cost-growth\] A deficit transfer requires an external source. If circuit $A$ receives without paying, some circuit $B$ must pay without receiving. The deficit at $B$ equals the receipt at $A$.
+:::
+
+### Information Access: Logic Is Complete, Access Is Not {#sec:information-access}
+
+Physics is perfectly logical. You cannot have all the information to apply the logical rules. This is a physical constraint on access, not a logical incompleteness.
+
+This generalizes the information barrier (Corollary [\[cor:information-barrier-query\]](#cor:information-barrier-query){reference-type="ref" reference="cor:information-barrier-query"}): there, finite queries induce indistinguishability; here, finite channel capacity induces the same obstruction. The barrier is on access, not on logic.
+
+::: definition
+[]{#def:system-information label="def:system-information"} \[D:Ddef:system-information; R:E,Q,S,AR\] A system has total entropy $H$ bits. This information exists whether or not any observer accesses it.
+:::
+
+::: definition
+[]{#def:observer-channel label="def:observer-channel"} \[D:Ddef:observer-channel; R:E,Q,S,AR\] An observer has channel capacity $C$ bits. The observer accesses at most $C$ bits of the system's information.
+:::
+
+::: theorem
+[]{#thm:information-gap label="thm:information-gap"} \[D:Tthm:information-gap; R:E,Q,S,AR\] When system entropy exceeds channel capacity ($H > C$), the gap $H - C > 0$. The observer cannot access all information.
+:::
+
+::: theorem
+[]{#thm:gap-physical label="thm:gap-physical"} \[D:Tthm:gap-physical; R:E,Q,S,AR\] The information gap is a physical constraint on access, not a logical incompleteness. The system entropy is well-defined; only the channel is bounded. The logic is complete; access is not.
+:::
+
+::: theorem
+[]{#thm:competence-access label="thm:competence-access"} \[D:Tthm:competence-access; R:E,Q,S,AR\] Competence is bounded by what you can access, not by logical consistency. For any system with more information than your channel capacity, there exist truths you cannot verify---not because logic fails, but because you lack the bits.
+:::
+
+### Dimensional Complexity: Each Subcase Is a Complexity Class {#sec:dimensional-complexity}
+
+Each tractable subcase is a complexity class that collapses to P. Unbounded dimension stays in the base class (coNP, PP, or PSPACE depending on regime).
+
+::: definition
+[]{#def:complexity-classes label="def:complexity-classes"} \[D:Ddef:complexity-classes; R:E,Q,S,AR\] The regime hierarchy induces complexity classes: Static $\to$ coNP, Stochastic $\to$ PP, Sequential $\to$ PSPACE. Each tractable subcase defines a sub-regime that reduces to P.
+:::
+
+::: theorem
+[]{#thm:six-subcases label="thm:six-subcases"} \[D:Tthm:six-subcases; R:E,Q,S,AR,H=tractable-structured\] Each tractable subcase is a complexity class that collapses to P:
+
+1.  Bounded actions $\to$ P
+
+2.  Separable utility $\to$ P
+
+3.  Low tensor rank $\to$ P
+
+4.  Tree structure $\to$ P
+
+5.  Bounded treewidth $\to$ P
+
+6.  Coordinate symmetry $\to$ P
+:::
+
+::: theorem
+[]{#thm:topology-motion label="thm:topology-motion"} \[D:Tthm:topology-motion; R:E,Q,S,AR\] Scalars live on the circuit's topology. Fixed topology (stationary) preserves tractability. Changing topology (motion) adds dimensions, may break tractability.
+:::
+
+::: theorem
+[]{#thm:complexity-dichotomy label="thm:complexity-dichotomy"} \[D:Tthm:complexity-dichotomy; R:E,Q,S,AR,H=tractable-structured\] A problem is tractable (in P) iff its effective dimension is bounded. Unbounded dimension stays in the base complexity class (coNP, PP, or PSPACE).
 :::
 
 
 # Tractable Special Cases: When You Can Solve It {#sec:tractable}
 
-We distinguish the encodings of Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}. The tractability results below state the model assumption explicitly. Structural insight: hardness dissolves exactly when the full decision boundary $s \mapsto \operatorname{Opt}(s)$ is recoverable in polynomial time from the input representation; the three cases below instantiate this single principle. Concretely, each tractable regime corresponds to a specific structural insight (explicit boundary exposure, additive separability, or tree factorization) that removes the hardness witness; this supports reading the general-case hardness as missing structural access in the current representation rather than as an intrinsic semantic barrier.
+We distinguish the encodings of Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}. The tractability results below state the model assumption explicitly. Structural insight: hardness dissolves exactly when the full decision boundary $s \mapsto \operatorname{Opt}(s)$ is recoverable in polynomial time from the input representation; the six cases below instantiate this single principle. Concretely, each tractable regime corresponds to a specific structural insight (explicit boundary exposure, additive separability, tensor factorization, tree structure, bounded treewidth, or coordinate symmetry) that removes the hardness witness; this supports reading the general-case hardness as missing structural access in the current representation rather than as an intrinsic semantic barrier. In physical terms, these are the regimes where required structure is directly observable or factorized so that verification work scales with exposed local structure rather than hidden global combinations on encoded physical instances. \[D:Tthm:tractable, thm:physical-bridge-bundle;Pprop:physical-claim-transport; R:E,TA,AR\]
 
 ::: theorem
 []{#thm:tractable label="thm:tractable"} SUFFICIENCY-CHECK is polynomial-time solvable in the following cases:
 
-1.  **Explicit-state encoding:** The input contains the full utility table over $A \times S$. SUFFICIENCY-CHECK runs in $O(|S|^2|A|)$ time; if $|A|$ is constant, $O(|S|^2)$.
+1.  **Bounded actions (explicit-state encoding):** The input contains the full utility table over $A \times S$. SUFFICIENCY-CHECK runs in $O(|S|^2|A|)$ time; if $|A|$ is constant, $O(|S|^2)$.
 
-2.  **Separable utility (any encoding):** $U(a, s) = f(a) + g(s)$.
+2.  **Separable utility (rank 1):** $U(a, s) = f(a) + g(s)$. The optimal action is state-independent, so $I = \emptyset$ is always sufficient. Complexity: $O(1)$ for sufficiency verification.
 
-3.  **Tree-structured utility with explicit local factors (succinct structured encoding):** There exists a rooted tree on coordinates and local functions $u_i$ such that $$U(a,s) = \sum_i u_i\bigl(a, s_i, s_{\mathrm{parent}(i)}\bigr),$$ with the root term depending only on $(a, s_{\mathrm{root}})$ and all $u_i$ given explicitly as part of the input.
+3.  **Low tensor rank:** $U(a,s) = \sum_{r=1}^R w_r \cdot f_r(a) \cdot \prod_{i=1}^n g_{ri}(s_i)$ for bounded $R$. Complexity: $O(|A| \cdot R \cdot n)$.
+
+4.  **Tree-structured dependencies:** Dependencies form a rooted tree: $$U(a,s) = \sum_i u_i\bigl(a, s_i, s_{\mathrm{parent}(i)}\bigr),$$ with the root term depending only on $(a, s_{\mathrm{root}})$ and all $u_i$ given explicitly. Complexity: $O(n \cdot |A| \cdot k_{\max})$.
+
+5.  **Bounded treewidth:** Utility decomposes as pairwise interactions on an interaction graph of treewidth $w$. Complexity: $O(n \cdot k^{w+1})$ via CSP algorithms [@bodlaender1993tourist; @freuder1990complexity].
+
+6.  **Coordinate symmetry:** State space is $S = [k]^d$ with utility invariant under coordinate permutations. The effective state space reduces from $k^d$ to $\binom{d+k-1}{k-1}$ orbit types. Complexity: $O\bigl(\binom{d+k-1}{k-1}^2\bigr)$, polynomial in $d$ for fixed $k$.
 :::
 
-## Explicit-State Encoding
+## Bounded Actions (Explicit-State)
 
 ::: proof
 *Proof of Part 1.* Given the full table of $U(a,s)$, compute $\operatorname{Opt}(s)$ for all $s \in S$ in $O(|S||A|)$ time. For SUFFICIENCY-CHECK on a given $I$, verify that for all pairs $(s,s')$ with $s_I = s'_I$, we have $\operatorname{Opt}(s) = \operatorname{Opt}(s')$. This takes $O(|S|^2|A|)$ time by direct enumeration and is polynomial in the explicit input length. If $|A|$ is constant, the runtime is $O(|S|^2)$. ◻
 :::
 
-## Separable Utility
+## Separable Utility (Rank 1)
 
 ::: proof
-*Proof of Part 2.* If $U(a, s) = f(a) + g(s)$, then: $$\operatorname{Opt}(s) = \arg\max_{a \in A} [f(a) + g(s)] = \arg\max_{a \in A} f(a)$$ The optimal action is independent of the state. Thus $I = \emptyset$ is always sufficient. ◻
+*Proof of Part 2.* If $U(a, s) = f(a) + g(s)$, then $\operatorname{Opt}(s) = \arg\max_{a \in A} f(a)$. The optimal action is independent of the state. Thus $I = \emptyset$ is always sufficient, and sufficiency verification is $O(1)$. ◻
 :::
 
-## Tree-Structured Utility
+## Low Tensor Rank
 
 ::: proof
-*Proof of Part 3.* Assume the tree decomposition and explicit local tables as stated. For each node $i$ and each value of its parent coordinate, compute the set of actions that are optimal for some assignment of the subtree rooted at $i$. This is a bottom-up dynamic program that combines local tables with child summaries; each table lookup is explicit in the input. A coordinate is relevant if and only if varying its value changes the resulting optimal action set. The total runtime is polynomial in $n$, $|A|$, and the size of the local tables. ◻
+*Proof of Part 3.* When utility has tensor rank $R$: $U(a,s) = \sum_{r=1}^R w_r f_r(a) \prod_{i=1}^n g_{ri}(s_i)$, the problem reduces to factored tensor computation. For each action, the optimal value computation requires $O(R \cdot n)$ operations. Total complexity: $O(|A| \cdot R \cdot n)$, polynomial for bounded $R$. This reduction cites standard tensor contraction algorithms [@kolda2009tensor; @cichocki2016tensor]. ◻
+:::
+
+## Tree-Structured Dependencies
+
+::: proof
+*Proof of Part 4.* Assume the tree decomposition and explicit local tables as stated. For each node $i$ and each value of its parent coordinate, compute the set of actions that are optimal for some assignment of the subtree rooted at $i$. This is a bottom-up dynamic program that combines local tables with child summaries; each table lookup is explicit in the input. A coordinate is relevant if and only if varying its value changes the resulting optimal action set. The total runtime is polynomial in $n$, $|A|$, and the size of the local tables. ◻
+:::
+
+## Bounded Treewidth
+
+::: proof
+*Proof of Part 5.* When utility decomposes as pairwise interactions $U(a,s) = \sum_{(i,j)} u_{ij}(a, s_i, s_j)$, the interaction graph has an edge between coordinates $i,j$ iff $u_{ij}$ is nontrivial. If this graph has treewidth $w$, SUFFICIENCY-CHECK reduces to a constraint satisfaction problem on a bounded-treewidth graph. By standard CSP algorithms [@bodlaender1993tourist; @freuder1990complexity], this is solvable in $O(n \cdot k^{w+1})$ time. ◻
+:::
+
+## Coordinate Symmetry
+
+::: proof
+*Proof of Part 6.* For state space $S = [k]^d$ with coordinate-permutation-invariant utility, two states have the same optimal actions iff they have the same *orbit type* (value histogram). The number of orbit types is $\binom{d+k-1}{k-1}$ by stars-and-bars. Sufficiency checking reduces to comparing optimal actions across orbit type pairs. Total complexity: $O\bigl(\binom{d+k-1}{k-1}^2 \cdot |A|\bigr)$, polynomial in $d$ for fixed $k$. ◻
 :::
 
 ## Practical Implications
 
 ::: center
-  **Condition**             **Examples**
-  ------------------------- ----------------------------------------
-  Explicit-state encoding   Small or fully enumerated state spaces
-  Separable utility         Additive costs, linear models
-  Tree-structured utility   Hierarchies, causal trees
+  **Condition**         **Examples**
+  --------------------- -----------------------------------------------
+  Bounded actions       Small or fully enumerated state spaces
+  Separable utility     Additive costs, linear models
+  Low tensor rank       Factored decision trees, sparse interactions
+  Tree-structured       Hierarchies, causal trees, DAGs
+  Bounded treewidth     Local dependency graphs, grid-like structures
+  Coordinate symmetry   Exchangeable particles, counting problems
 :::
 
 ::: proposition
-[]{#prop:heuristic-reusability label="prop:heuristic-reusability"} Let $\mathcal{C}$ be a structure class for which SUFFICIENCY-CHECK is polynomial (Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}). If membership in $\mathcal{C}$ is decidable in polynomial time, then the combined detect-then-check procedure is a sound, polynomial-time heuristic applicable to all future instances in $\mathcal{C}$. For each subcase of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}, structure detection is polynomial (under the declared representation assumptions).
+[]{#prop:heuristic-reusability label="prop:heuristic-reusability"} \[D:Pprop:heuristic-reusability; R:H=tractable-structured\] Let $\mathcal{C}$ be a structure class for which SUFFICIENCY-CHECK is polynomial (Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}). If membership in $\mathcal{C}$ is decidable in polynomial time, then the combined detect-then-check procedure is a sound, polynomial-time heuristic applicable to all future instances in $\mathcal{C}$. For each subcase of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}, structure detection is polynomial (under the declared representation assumptions).
 :::
 
 ::: remark
@@ -1468,7 +2017,7 @@ Proposition [\[prop:heuristic-reusability\]](#prop:heuristic-reusability){refer
 
 # Regime-Conditional Corollaries {#sec:engineering-justification}
 
-This section derives regime-typed engineering corollaries from the core complexity theorems. Theorem [\[thm:config-reduction\]](#thm:config-reduction){reference-type="ref" reference="thm:config-reduction"} maps configuration simplification to SUFFICIENCY-CHECK; Theorems [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}, [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"}, and [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} then yield exact minimization consequences under \[S\] and \[S+ETH\].
+This section derives regime-typed engineering corollaries from the core complexity theorems. Theorem [\[thm:config-reduction\]](#thm:config-reduction){reference-type="ref" reference="thm:config-reduction"} maps configuration simplification to SUFFICIENCY-CHECK; Theorems [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}, [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"}, and [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} then yield exact minimization consequences under \[S\] and \[S+ETH\]. The same derivation applies to physical configuration/control systems once they are encoded into the C1--C4 decision interface: "configuration parameter" becomes any declared physical control or observation coordinate, and the same sufficiency predicate governs behavior preservation. \[D:Tthm:config-reduction, thm:physical-bridge-bundle;Pprop:physical-claim-transport; R:AR\]
 
 Regime tags used below follow Section [\[sec:model-contract\]](#sec:model-contract){reference-type="ref" reference="sec:model-contract"}: \[S\], \[S+ETH\], \[E\], \[S_bool\]. Any prescription that requires exact minimization is constrained by these theorem-level bounds. \[D:Tthm:sufficiency-conp, thm:minsuff-conp, thm:dichotomy; R:S,S+ETH\] Theorem [\[thm:overmodel-diagnostic\]](#thm:overmodel-diagnostic){reference-type="ref" reference="thm:overmodel-diagnostic"} implies that persistent failure to isolate a minimal sufficient set is a boundary-characterization signal in the current model, not a universal irreducibility claim. \[D:Tthm:overmodel-diagnostic; R:S\]
 
@@ -1563,7 +2112,7 @@ Assume ETH in the succinct encoding model of Section [\[sec:encoding\]](#sec:en
 
 Therefore, there exists $n_0$ such that for all $n > n_0$, the finding-vs-maintenance asymmetry satisfies: $$C_{\text{over}}(k) < C_{\text{find}}(n) + C_{\text{under}}$$
 
-Within \[S+ETH\], persistent over-specification is unresolved boundary characterization, not proof that all included parameters are intrinsically necessary. Conversely, when exact competence is available in the active regime, certifiably irrelevant coordinates are removable; persistence is irrational for the same cost-minimization objective. \[D:Tthm:cost-asymmetry-eth;Pprop:attempted-competence-matrix; R:S+ETH\],\[tractable active regime\]
+Within \[S+ETH\], persistent over-specification is unresolved boundary characterization, not proof that all included parameters are intrinsically necessary. Conversely, when exact competence is available in the active regime, certifiably irrelevant coordinates are removable; persistence is irrational for the same cost-minimization objective. \[D:Tthm:cost-asymmetry-eth;Pprop:attempted-competence-matrix; R:S+ETH,TA\]
 :::
 
 ::: proof
@@ -1585,7 +2134,7 @@ For any fixed nonnegative $C_{\text{under}}$, the asymptotic dominance inequalit
 :::
 
 ::: corollary
-[]{#cor:no-auto-minimize label="cor:no-auto-minimize"} Assuming $P\neq coNP$, there exists no polynomial-time algorithm that:
+[]{#cor:no-auto-minimize label="cor:no-auto-minimize"} \[D:Ccor:no-auto-minimize; R:H=succinct-hard\] Assuming $P\neq coNP$, there exists no polynomial-time algorithm that:
 
 1.  Takes an arbitrary configuration file with $n$ parameters
 
@@ -1625,12 +2174,12 @@ These corollaries are direct consequences of the hardness/tractability landscape
 
 # Dominance Theorems for Hardness Placement {#sec:implications}
 
-Regime for this section: the mechanized Boolean-coordinate model \[S_bool\] plus the architecture cost model defined below. The centralization-vs-distribution framing follows established software-architecture criteria about modular decomposition and long-run maintenance tradeoffs [@parnas1972criteria; @brooks1987no; @bass2012software; @shaw1996software].
+Regime for this section: the mechanized Boolean-coordinate model \[S_bool\] plus the architecture cost model defined below. The centralization-vs-distribution framing follows established software-architecture criteria about modular decomposition and long-run maintenance tradeoffs [@parnas1972criteria; @brooks1987no; @bass2012software; @shaw1996software]. Although phrased in software terms, the formal objects are substrate-agnostic: the same hardness-placement and amortization equations apply to physical architectures (for example, centralized vs distributed sensing/actuation computation) once mapped into the same coordinate/cost model. \[D:Pprop:physical-claim-transport;Tthm:physical-bridge-bundle, thm:centralization-dominance, thm:tax-conservation, thm:amortization; R:AR,LC\]
 
 ## Over-Specification as Diagnostic Signal
 
 ::: corollary
-[]{#cor:overmodel-diagnostic-implication label="cor:overmodel-diagnostic-implication"} In the mechanized Boolean-coordinate model, if a coordinate is relevant and omitted from a candidate set $I$, then $I$ is not sufficient.
+[]{#cor:overmodel-diagnostic-implication label="cor:overmodel-diagnostic-implication"} \[D:Ccor:overmodel-diagnostic-implication; R:H=succinct-hard\] In the mechanized Boolean-coordinate model, if a coordinate is relevant and omitted from a candidate set $I$, then $I$ is not sufficient.
 :::
 
 ::: proof
@@ -1638,7 +2187,7 @@ Regime for this section: the mechanized Boolean-coordinate model \[S_bool\] plus
 :::
 
 ::: corollary
-[]{#cor:exact-identifiability label="cor:exact-identifiability"} In the mechanized Boolean-coordinate model, for any candidate set $I$: $$I \text{ is exactly relevance-identifying}
+[]{#cor:exact-identifiability label="cor:exact-identifiability"} \[D:Ccor:exact-identifiability; R:H=succinct-hard\] In the mechanized Boolean-coordinate model, for any candidate set $I$: $$I \text{ is exactly relevance-identifying}
 \iff
 \bigl(I \text{ is sufficient and } I \subseteq R_{\mathrm{rel}}\bigr),$$ where $R_{\mathrm{rel}}$ is the full relevant-coordinate set.
 :::
@@ -1648,7 +2197,7 @@ Regime for this section: the mechanized Boolean-coordinate model \[S_bool\] plus
 :::
 
 ::: remark
-[]{#rem:overmodel-conditional label="rem:overmodel-conditional"} In this paper's formal typing, persistent over-specification is admissible only under attempted competence failure: after an attempted exact procedure, exact relevance competence remains unavailable in the active regime, so integrity retains uncertified coordinates (Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}; Section [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}). \[D:Pprop:attempted-competence-matrix; R:AR\] Once exact competence is available in the active regime (Corollaries [\[cor:practice-bounded\]](#cor:practice-bounded){reference-type="ref" reference="cor:practice-bounded"}--[\[cor:practice-tree\]](#cor:practice-tree){reference-type="ref" reference="cor:practice-tree"} together with Corollary [\[cor:exact-identifiability\]](#cor:exact-identifiability){reference-type="ref" reference="cor:exact-identifiability"}), certifiably irrelevant coordinates are removable; persistent over-specification is irrational for the same objective (verified total-cost minimization). \[D:Tthm:tractable;Pprop:attempted-competence-matrix; R:TA\]
+[]{#rem:overmodel-conditional label="rem:overmodel-conditional"} In this paper's formal typing, persistent over-specification is admissible only under attempted competence failure: after an attempted exact procedure, exact relevance competence remains unavailable in the active regime, so integrity retains uncertified coordinates (Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}; Section [\[sec:engineering-justification\]](#sec:engineering-justification){reference-type="ref" reference="sec:engineering-justification"}). \[D:Pprop:attempted-competence-matrix; R:AR\] Once exact competence is available in the active regime (Corollaries [\[cor:practice-bounded\]](#cor:practice-bounded){reference-type="ref" reference="cor:practice-bounded"}--[\[cor:practice-symmetry\]](#cor:practice-symmetry){reference-type="ref" reference="cor:practice-symmetry"} together with Corollary [\[cor:exact-identifiability\]](#cor:exact-identifiability){reference-type="ref" reference="cor:exact-identifiability"}), certifiably irrelevant coordinates are removable; persistent over-specification is irrational for the same objective (verified total-cost minimization). \[D:Tthm:tractable;Pprop:attempted-competence-matrix; R:TA\]
 :::
 
 ## Architectural Decision Quotient
@@ -1668,7 +2217,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 ## Corollaries for Practice
 
 ::: corollary
-[]{#cor:practice-diagnostic label="cor:practice-diagnostic"} In the mechanized Boolean-coordinate model, existence of a sufficient set of size at most $k$ is equivalent to the relevance set having cardinality at most $k$.
+[]{#cor:practice-diagnostic label="cor:practice-diagnostic"} \[D:Ccor:practice-diagnostic; R:H=succinct-hard\] In the mechanized Boolean-coordinate model, existence of a sufficient set of size at most $k$ is equivalent to the relevance set having cardinality at most $k$.
 :::
 
 ::: proof
@@ -1676,7 +2225,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 :::
 
 ::: corollary
-[]{#cor:practice-bounded label="cor:practice-bounded"} When the bounded-action or explicit-state conditions of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} hold, minimal modeling can be solved in polynomial time in the stated input size.
+[]{#cor:practice-bounded label="cor:practice-bounded"} \[D:Ccor:practice-bounded; R:H=tractable-structured\] When the bounded-action or explicit-state conditions of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"} hold, minimal modeling can be solved in polynomial time in the stated input size.
 :::
 
 ::: proof
@@ -1684,7 +2233,7 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 :::
 
 ::: corollary
-[]{#cor:practice-structured label="cor:practice-structured"} When utility is separable with explicit factors, sufficiency checking is polynomial in the explicit-state regime.
+[]{#cor:practice-structured label="cor:practice-structured"} \[D:Ccor:practice-structured; R:H=tractable-structured\] When utility is separable with explicit factors, sufficiency checking is polynomial in the explicit-state regime.
 :::
 
 ::: proof
@@ -1692,11 +2241,35 @@ For a software system with configuration space $S$ and behavior space $B$: $$\te
 :::
 
 ::: corollary
-[]{#cor:practice-tree label="cor:practice-tree"} When utility factors form a tree structure with explicit local factors, sufficiency checking is polynomial in the explicit-state regime.
+[]{#cor:practice-tree label="cor:practice-tree"} \[D:Ccor:practice-tree; R:H=tractable-structured\] When utility factors form a tree structure with explicit local factors, sufficiency checking is polynomial in the explicit-state regime.
 :::
 
 ::: proof
 *Proof.* This is the tree-factor branch of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}, mechanized as . ◻
+:::
+
+::: corollary
+[]{#cor:practice-tensor label="cor:practice-tensor"} \[D:Ccor:practice-tensor; R:H=tractable-structured\] When utility has tensor rank $R$ with explicit factor decomposition $U(a,s) = \sum_{r=1}^R w_r f_r(a) \prod_{i=1}^n g_{ri}(s_i)$, sufficiency checking is polynomial in $|A| \cdot R \cdot n$.
+:::
+
+::: proof
+*Proof.* This is the low-tensor-rank branch of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}, mechanized as . ◻
+:::
+
+::: corollary
+[]{#cor:practice-treewidth label="cor:practice-treewidth"} \[D:Ccor:practice-treewidth; R:H=tractable-structured\] When utility decomposes as pairwise interactions on a graph of treewidth $w$, sufficiency checking is polynomial in $n \cdot k^{w+1}$.
+:::
+
+::: proof
+*Proof.* This is the bounded-treewidth branch of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}, mechanized as . ◻
+:::
+
+::: corollary
+[]{#cor:practice-symmetry label="cor:practice-symmetry"} \[D:Ccor:practice-symmetry; R:H=tractable-structured\] When state space is $S = [k]^d$ with coordinate-permutation-invariant utility, sufficiency checking is polynomial in $\binom{d+k-1}{k-1}^2 \cdot |A|$, which is polynomial in $d$ for fixed $k$.
+:::
+
+::: proof
+*Proof.* This is the coordinate-symmetry branch of Theorem [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}, mechanized as . ◻
 :::
 
 ::: corollary
@@ -1720,7 +2293,7 @@ For $n$ use sites, total realized hardness is: $$H_{\text{total}}(S) = H_{\text{
 :::
 
 ::: proposition
-[]{#prop:hardness-conservation label="prop:hardness-conservation"} For any problem family $P$ measured by $H(P;n)$ above, any solution architecture $S$ and any number of use sites $n \ge 1$, if $H_{\text{total}}(S)$ is measured in the same worst-case step units over the same input family, then: $$H_{\text{total}}(S) = H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S) \geq H(P;n).$$ For SUFFICIENCY-CHECK, Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} provides the baseline on the hard succinct family: $H(\text{SUFFICIENCY-CHECK};n)=2^{\Omega(n)}$ under ETH.
+[]{#prop:hardness-conservation label="prop:hardness-conservation"} \[D:Pprop:hardness-conservation; R:H=cost-growth\] For any problem family $P$ measured by $H(P;n)$ above, any solution architecture $S$ and any number of use sites $n \ge 1$, if $H_{\text{total}}(S)$ is measured in the same worst-case step units over the same input family, then: $$H_{\text{total}}(S) = H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S) \geq H(P;n).$$ For SUFFICIENCY-CHECK, Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} provides the baseline on the hard succinct family: $H(\text{SUFFICIENCY-CHECK};n)=2^{\Omega(n)}$ under ETH.
 :::
 
 ::: proof
@@ -1732,7 +2305,7 @@ For $n$ use sites, total realized hardness is: $$H_{\text{total}}(S) = H_{\text{
 :::
 
 ::: proposition
-[]{#prop:hardness-efficiency-interpretation label="prop:hardness-efficiency-interpretation"} For fixed $n$ and positive total hardness, larger $\eta(S,n)$ is equivalent to a larger central share of realized hardness.
+[]{#prop:hardness-efficiency-interpretation label="prop:hardness-efficiency-interpretation"} \[D:Pprop:hardness-efficiency-interpretation; R:H=cost-growth\] For fixed $n$ and positive total hardness, larger $\eta(S,n)$ is equivalent to a larger central share of realized hardness.
 :::
 
 ::: proof
@@ -1761,7 +2334,7 @@ H_{\mathrm{distributed}}(S_{\mathrm{wrong}})>0,$$ and let $n > \max\!\bigl(1, H_
 :::
 
 ::: corollary
-[]{#cor:right-wrong-hardness label="cor:right-wrong-hardness"} In the linear model, a right-hardness architecture strictly dominates a wrong-hardness architecture once use-site count exceeds central one-time hardness. Formally, for architectures $S_{\mathrm{right}}, S_{\mathrm{wrong}}$ over the same problem family, if $S_{\mathrm{right}}$ has right hardness, $S_{\mathrm{wrong}}$ has wrong hardness, and $n > H_{\mathrm{central}}(S_{\mathrm{right}})$, then $$H_{\mathrm{central}}(S_{\mathrm{right}}) + n\,H_{\mathrm{distributed}}(S_{\mathrm{right}})
+[]{#cor:right-wrong-hardness label="cor:right-wrong-hardness"} \[D:Ccor:right-wrong-hardness; R:H=cost-growth\] In the linear model, a right-hardness architecture strictly dominates a wrong-hardness architecture once use-site count exceeds central one-time hardness. Formally, for architectures $S_{\mathrm{right}}, S_{\mathrm{wrong}}$ over the same problem family, if $S_{\mathrm{right}}$ has right hardness, $S_{\mathrm{wrong}}$ has wrong hardness, and $n > H_{\mathrm{central}}(S_{\mathrm{right}})$, then $$H_{\mathrm{central}}(S_{\mathrm{right}}) + n\,H_{\mathrm{distributed}}(S_{\mathrm{right}})
 <
 H_{\mathrm{central}}(S_{\mathrm{wrong}}) + n\,H_{\mathrm{distributed}}(S_{\mathrm{wrong}}).$$
 :::
@@ -1771,7 +2344,7 @@ H_{\mathrm{central}}(S_{\mathrm{wrong}}) + n\,H_{\mathrm{distributed}}(S_{\mathr
 :::
 
 ::: proposition
-[]{#prop:dominance-modes label="prop:dominance-modes"} This section uses two linear-model dominance modes plus generalized nonlinear dominance and boundary modes:
+[]{#prop:dominance-modes label="prop:dominance-modes"} \[D:Pprop:dominance-modes; R:H=cost-growth\] This section uses two linear-model dominance modes plus generalized nonlinear dominance and boundary modes:
 
 1.  **Strict threshold dominance:** Corollary [\[cor:right-wrong-hardness\]](#cor:right-wrong-hardness){reference-type="ref" reference="cor:right-wrong-hardness"} gives strict inequality once $n > H_{\mathrm{central}}(S_{\mathrm{right}})$.
 
@@ -1798,7 +2371,7 @@ H_{\mathrm{central}}(S_{\mathrm{wrong}}) + n\,H_{\mathrm{distributed}}(S_{\mathr
 The table is schematic; the formal statement is Corollary [\[cor:type-system-threshold\]](#cor:type-system-threshold){reference-type="ref" reference="cor:type-system-threshold"}. The type-theoretic intuition behind this instantiation is consistent with classic accounts of abstraction and static interface guarantees [@Cardelli1985; @reynolds1983types; @pierce2002types; @liskov1994behavioral; @siek2006gradual; @gamma1994design].
 
 ::: corollary
-[]{#cor:type-system-threshold label="cor:type-system-threshold"} For the formal native-vs-manual architecture instance, native support has lower total realized cost for all $$n > H_{\mathrm{baseline}}(P),$$ where $H_{\mathrm{baseline}}(P)$ corresponds to the Lean identifier `intrinsicDOF`(P) in module `HardnessDistribution`.
+[]{#cor:type-system-threshold label="cor:type-system-threshold"} \[D:Ccor:type-system-threshold; R:H=cost-growth\] For the formal native-vs-manual architecture instance, native support has lower total realized cost for all $$n > H_{\mathrm{baseline}}(P),$$ where $H_{\mathrm{baseline}}(P)$ corresponds to the Lean identifier `intrinsicDOF`(P) in module `HardnessDistribution`.
 :::
 
 ::: proof
@@ -1816,7 +2389,7 @@ The table is schematic; the formal statement is Corollary [\[cor:type-system-th
 :::
 
 ::: theorem
-[]{#thm:generalized-dominance label="thm:generalized-dominance"} Let $$H_{\text{total}}^{\mathrm{gen}}(S,n)=H_{\text{central}}(S)+C_S(n).$$ For two architectures $S_{\mathrm{right}},S_{\mathrm{wrong}}$, suppose there exists $B\in\mathbb{N}$ such that:
+[]{#thm:generalized-dominance label="thm:generalized-dominance"} \[D:Tthm:generalized-dominance; R:H=cost-growth\] Let $$H_{\text{total}}^{\mathrm{gen}}(S,n)=H_{\text{central}}(S)+C_S(n).$$ For two architectures $S_{\mathrm{right}},S_{\mathrm{wrong}}$, suppose there exists $B\in\mathbb{N}$ such that:
 
 1.  $C_{S_{\mathrm{right}}}(m)\le B$ for all $m$ (bounded right-side per-site accumulation),
 
@@ -1832,7 +2405,7 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$
 :::
 
 ::: corollary
-[]{#cor:generalized-eventual-dominance label="cor:generalized-eventual-dominance"} If condition (1) above holds and there exists $N$ such that condition (2) holds for all $m\ge N$, then there exists $N_0$ such that for all $n\ge N_0$, $$H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{right}},n)
+[]{#cor:generalized-eventual-dominance label="cor:generalized-eventual-dominance"} \[D:Ccor:generalized-eventual-dominance; R:H=cost-growth\] If condition (1) above holds and there exists $N$ such that condition (2) holds for all $m\ge N$, then there exists $N_0$ such that for all $n\ge N_0$, $$H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{right}},n)
 <
 H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$
 :::
@@ -1842,7 +2415,7 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$
 :::
 
 ::: proposition
-[]{#prop:generalized-assumption-boundary label="prop:generalized-assumption-boundary"} In the generalized model, strict right-vs-wrong dominance is not unconditional. There are explicit counterexamples:
+[]{#prop:generalized-assumption-boundary label="prop:generalized-assumption-boundary"} \[D:Pprop:generalized-assumption-boundary; R:H=cost-growth\] In the generalized model, strict right-vs-wrong dominance is not unconditional. There are explicit counterexamples:
 
 1.  If wrong-side growth lower bounds are dropped, right-side strict dominance can fail for all $n$.
 
@@ -1854,7 +2427,7 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$
 :::
 
 ::: theorem
-[]{#thm:linear-saturation-iff-zero label="thm:linear-saturation-iff-zero"} In the linear model of this section, $$H_{\text{total}}(S,n)=H_{\text{central}}(S)+n\cdot H_{\text{distributed}}(S),$$ the function $n\mapsto H_{\text{total}}(S,n)$ is eventually saturating if and only if $H_{\text{distributed}}(S)=0$.
+[]{#thm:linear-saturation-iff-zero label="thm:linear-saturation-iff-zero"} \[D:Tthm:linear-saturation-iff-zero; R:H=cost-growth\] In the linear model of this section, $$H_{\text{total}}(S,n)=H_{\text{central}}(S)+n\cdot H_{\text{distributed}}(S),$$ the function $n\mapsto H_{\text{total}}(S,n)$ is eventually saturating if and only if $H_{\text{distributed}}(S)=0$.
 :::
 
 ::: proof
@@ -1862,7 +2435,7 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).$$
 :::
 
 ::: theorem
-[]{#thm:generalized-saturation-possible label="thm:generalized-saturation-possible"} There exists a generalized site-cost model with eventual saturation. In particular, for $$C_K(n)=\begin{cases}
+[]{#thm:generalized-saturation-possible label="thm:generalized-saturation-possible"} \[D:Tthm:generalized-saturation-possible; R:H=cost-growth\] There exists a generalized site-cost model with eventual saturation. In particular, for $$C_K(n)=\begin{cases}
 n, & n\le K\\
 K, & n>K,
 \end{cases}$$ both $C_K$ and $n\mapsto H_{\text{central}}+C_K(n)$ are eventually saturating.
@@ -1873,7 +2446,7 @@ K, & n>K,
 :::
 
 ::: corollary
-[]{#cor:linear-positive-no-saturation label="cor:linear-positive-no-saturation"} No positive-slope linear per-site model can represent the saturating family above for all $n$.
+[]{#cor:linear-positive-no-saturation label="cor:linear-positive-no-saturation"} \[D:Ccor:linear-positive-no-saturation; R:H=cost-growth\] No positive-slope linear per-site model can represent the saturating family above for all $n$.
 :::
 
 ::: proof
@@ -1889,7 +2462,7 @@ The next section develops the major practical consequence of this framework: the
 
 # Conservation Law for Decision-Relevant Coordinates {#sec:simplicity-tax}
 
-The load-bearing fact in this section is not the set identity itself; it is the difficulty of shrinking the required set $R(P)$ in the first place. By Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"} (and Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"} for minimization), exact relevance identification is intractable in the worst case under succinct encoding. The identities below therefore quantify how unresolved relevance is redistributed between central and per-site work. \[D:Tthm:sufficiency-conp, thm:minsuff-conp; R:S\]
+The load-bearing fact in this section is not the set identity itself; it is the difficulty of shrinking the required set $R(P)$ in the first place. By Theorem [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"} (and Theorem [\[thm:minsuff-conp\]](#thm:minsuff-conp){reference-type="ref" reference="thm:minsuff-conp"} for minimization), exact relevance identification is intractable in the worst case under succinct encoding. The identities below therefore quantify how unresolved relevance is redistributed between central and per-site work. \[D:Tthm:sufficiency-conp, thm:minsuff-conp; R:S\] For encoded physical systems, the same redistribution laws apply under declared physical-to-core transport: unresolved coordinates remain per-site external work, while resolved coordinates are paid once in centralized structure. \[D:Pprop:physical-claim-transport;Tthm:tax-conservation, thm:tax-grows, thm:amortization; R:AR,LC\]
 
 ::: definition
 Let $R(P)$ be the required dimensions (those affecting $\operatorname{Opt}$) and $A(M)$ the dimensions model $M$ handles natively. The *expressive gap* is $\text{Gap}(M,P) = R(P) \setminus A(M)$.
@@ -1930,7 +2503,7 @@ H_{\text{central}} < n\cdot \text{SimplicityTax}$$ is mechanized as . ◻
 :::
 
 ::: corollary
-[]{#cor:gap-externalization label="cor:gap-externalization"} If $\text{Gap}(M,P)\neq\emptyset$, then external handling cost scales linearly with the number of decision sites.
+[]{#cor:gap-externalization label="cor:gap-externalization"} \[D:Ccor:gap-externalization; R:H=cost-growth\] If $\text{Gap}(M,P)\neq\emptyset$, then external handling cost scales linearly with the number of decision sites.
 :::
 
 ::: proof
@@ -1938,7 +2511,7 @@ H_{\text{central}} < n\cdot \text{SimplicityTax}$$ is mechanized as . ◻
 :::
 
 ::: corollary
-[]{#cor:gap-minimization-hard label="cor:gap-minimization-hard"} For mechanized Boolean-coordinate instances, "there exists a sufficient set of size at most $k$" is equivalent to "the relevant-coordinate set has cardinality at most $k$."
+[]{#cor:gap-minimization-hard label="cor:gap-minimization-hard"} \[D:Ccor:gap-minimization-hard; R:H=succinct-hard\] For mechanized Boolean-coordinate instances, "there exists a sufficient set of size at most $k$" is equivalent to "the relevant-coordinate set has cardinality at most $k$."
 :::
 
 ::: proof
@@ -1982,6 +2555,8 @@ Complementary companion work studies zero-error identification under constrained
 
 The geometric interpretation of decision complexity connects to the physics of energy landscapes. Wales established a widely used picture in which molecular configurations form high-dimensional landscapes with basins and transition saddles [@wales2003energy; @wales2005energy; @wales2018exploring]. Protein-folding theory uses the same landscape language via funnel structure toward native states [@onuchic1997protein]. In this paper's formal model, the corresponding core object is coordinate-projection invariance of the optimizer map: sufficiency asks whether fixing coordinates preserves $\operatorname{Opt}$, while insufficiency is witnessed by agreeing projections with different optimal sets (Definition [\[def:sufficient\]](#def:sufficient){reference-type="ref" reference="def:sufficient"}, Proposition [\[prop:insufficiency-counterexample\]](#prop:insufficiency-counterexample){reference-type="ref" reference="prop:insufficiency-counterexample"}). \[D:Ddef:sufficient;Pprop:insufficiency-counterexample; R:DM\]
 
+Section [\[sec:physical-transport\]](#sec:physical-transport){reference-type="ref" reference="sec:physical-transport"} makes this transfer rule theorem-level: encoded physical claims are derived from core claims through an explicit assumption-transfer map, and an encoded physical counterexample refutes the corresponding core rule on that encoded slice. \[D:Pprop:physical-claim-transport;Ccor:physical-counterexample-core-failure; R:AR\]
+
 Under that mapping, the explicit-vs-succinct split is the mechanized statement of access asymmetry: \[E\] admits polynomial verification on explicit state access, while \[S+ETH\] admits worst-case exponential lower bounds on succinct inputs (Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}); finite query access already exhibits indistinguishability barriers (Proposition [\[prop:query-regime-obstruction\]](#prop:query-regime-obstruction){reference-type="ref" reference="prop:query-regime-obstruction"}). The complexity separation is mechanized. \[D:Tthm:dichotomy;Pprop:query-regime-obstruction; R:E,S+ETH,Q_fin\]
 
 The geometric core is mechanized directly: product-space slice cardinality, hypercube node-count identity, and node-vs-edge separation are proved in Lean at the decision abstraction level, with edge witnesses tied exactly to non-sufficiency.
@@ -1990,21 +2565,50 @@ The circuit-to-decision instantiation is also mechanized in a separate bridge la
 
 Chemical reaction networks provide a concrete physical class where this encoding applies directly. Prior work establishes hardness for output optimization, reconfiguration, and reconstruction in CRN settings [@andersen2012maximizing; @alaniz2023complexity; @flamml2013complexity]. Those domain-specific CRN complexity results are external literature claims, not mechanized in this Lean artifact. The mechanized statement here is the transfer principle: once a CRN decision task is encoded as a C1--C4 decision problem, it inherits the same sufficiency hardness/tractability regime map (Theorems [\[thm:config-reduction\]](#thm:config-reduction){reference-type="ref" reference="thm:config-reduction"}, [\[thm:sufficiency-conp\]](#thm:sufficiency-conp){reference-type="ref" reference="thm:sufficiency-conp"}, [\[thm:tractable\]](#thm:tractable){reference-type="ref" reference="thm:tractable"}). \[D:Tthm:config-reduction, thm:sufficiency-conp, thm:tractable; R:E,S,TA\]
 
-For matter-only dynamics, the law-induced objective specialization is mechanized for arbitrary universes (arbitrary state/action types and transition-feasibility relations): the utility schema is induced from transition laws, and under a strict allowed-vs-blocked gap with nonempty feasible set, the optimizer equals the feasible-action set; with logical determinism at the action layer, the optimizer is singleton.
+The physical bridge is not a single-domain add-on: Theorem [\[thm:physical-bridge-bundle\]](#thm:physical-bridge-bundle){reference-type="ref" reference="thm:physical-bridge-bundle"} composes law-objective semantics, reduction equivalence, and hardness lower-bound accounting in one mechanized theorem, so physical instantiation and complexity claims share one proof chain. \[D:Tthm:physical-bridge-bundle; R:AR\]
+
+For matter-only dynamics, the law-induced objective specialization is mechanized for arbitrary universes (arbitrary state/action types and transition-feasibility relations): the utility schema is induced from transition laws, and under a strict allowed-vs-blocked gap with nonempty feasible set, the optimizer equals the feasible-action set; with logical determinism at the action layer, the optimizer is singleton. \[D:Pprop:law-instance-objective-bridge; R:AR\]
 
 The interface-time semantics are also explicit and mechanized: timed states are $\mathbb{N}$-indexed, one decision event is exactly one tick, run length equals elapsed interface time, and this unit-time law is invariant across substrate tags under interface-consistency assumptions. \[D:Pprop:time-discrete, prop:decision-unit-time, prop:run-time-accounting, prop:substrate-unit-time; R:AR\]
 
-Regime-side interface machinery is also formalized as typed access objects with an explicit simulation preorder and certificate-upgrade statements. The access-channel and five-way composition theorems are encoded as assumption-explicit composition laws rather than informal metaphors.
+Regime-side interface machinery is also formalized as typed access objects with an explicit simulation preorder and certificate-upgrade statements. The access-channel and five-way composition theorems are encoded as assumption-explicit composition laws rather than informal metaphors. \[D:Pprop:physical-claim-transport;Tthm:physical-bridge-bundle; R:AR\]
 
 ## Thermodynamic Costs and Landauer's Principle
 
 The thermodynamic lift in Section [\[sec:dichotomy\]](#sec:dichotomy){reference-type="ref" reference="sec:dichotomy"} converts declared bit-operation lower bounds into declared energy/carbon lower bounds via linear conversion constants. In this artifact, those conversion consequences are mechanized conditionally through Propositions [\[prop:thermo-lift\]](#prop:thermo-lift){reference-type="ref" reference="prop:thermo-lift"}, [\[prop:thermo-hardness-bundle\]](#prop:thermo-hardness-bundle){reference-type="ref" reference="prop:thermo-hardness-bundle"}, [\[prop:thermo-mandatory-cost\]](#prop:thermo-mandatory-cost){reference-type="ref" reference="prop:thermo-mandatory-cost"}, and [\[prop:thermo-conservation-additive\]](#prop:thermo-conservation-additive){reference-type="ref" reference="prop:thermo-conservation-additive"}. Landauer's principle and reversible-computation context [@landauer1961irreversibility; @bennett2003notes] define the physical assumption set; the constants are declared premises, not Lean-derived constants. \[D:Pprop:thermo-lift, prop:thermo-hardness-bundle, prop:thermo-mandatory-cost, prop:thermo-conservation-additive; R:AR\]
 
+#### Physics assumptions decompose into regime tags.
+
+The paper does not create domain-specific tags for physics assumptions. Instead, every physics assumption decomposes into the same regime tags used throughout the paper. This uniformity is the formal statement that physics assumptions are not epistemically privileged---they are declared assumptions, tracked with the same discipline as the paper's own complexity-theoretic assumptions.
+
+::: {#tab:physics-regime-decomposition}
+  **Physics Assumption**                      **Regime Decomposition**    **Justification**
+  ------------------------------------------- --------------------------- ----------------------------------------
+  Landauer bound ($E \ge kT\ln 2$)            \[AR\], \[H=cost-growth\]   Declared law; yields cost lower bounds
+  Lorentz invariance                          \[AR\]                      Declared physical symmetry
+  Discrete state space                        \[Q_fin\], \[AR\]           Finite-state core; declared assumption
+  Thermodynamic constants ($\lambda, \rho$)   \[AR\], \[H=cost-growth\]   Declared conversion model
+  Planck scale ($\ell_P$)                     \[AR\]                      Declared physical constant
+  Physical-to-core encoding ($E$)             \[AR\]                      Declared encoding map
+
+  : Physics-Assumption-to-Regime-Tag Decomposition
+:::
+
+The decomposition in Table [1](#tab:physics-regime-decomposition){reference-type="ref" reference="tab:physics-regime-decomposition"} makes explicit what the paper already practices: physics assumptions are declared premises in the \[AR\] (axiomatic regime) sense, and when they yield cost lower bounds, they inherit \[H=cost-growth\]. The finite-state query core \[Q_fin\] captures the discrete-state assumption underlying the computational model. No physics assumption receives a special domain tag; all decompose into the existing regime taxonomy. \[D:Pprop:thermo-lift, prop:landauer-constraint, prop:lorentz-discrete, prop:discrete-state-time;Tthm:physical-bridge-bundle; R:AR,H=cost-growth,Q_fin\]
+
 Coupling this to integrity yields a mechanized policy condition: when exact competence is hardness-blocked in the declared regime, integrity requires abstention or explicitly weakened guarantees (Propositions [\[prop:integrity-resource-bound\]](#prop:integrity-resource-bound){reference-type="ref" reference="prop:integrity-resource-bound"}, [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"}). A stronger behavioral claim such as "abstention is globally utility-optimal for every objective" is *not* currently mechanized and remains objective-dependent. \[D:Pprop:integrity-resource-bound, prop:attempted-competence-matrix; R:AR\]
+
+## Neukart--Vinokur Thermodynamic Duality
+
+Neukart and Vinokur [@neukart2025thermodynamic] propose a thermodynamic duality $dU = T\,dS - p\,dV + \lambda\,dC$ where $C$ is a "complexity coordinate" associated with computational irreversibility in spin-glass systems. Corollary [\[cor:neukart-vinokur\]](#cor:neukart-vinokur){reference-type="ref" reference="cor:neukart-vinokur"} derives their duality as a specialization of our thermodynamic lift (Proposition [\[prop:thermo-lift\]](#prop:thermo-lift){reference-type="ref" reference="prop:thermo-lift"}) under declared $\lambda > 0$. \[D:Ccor:neukart-vinokur;Pprop:thermo-lift; R:AR\]
+
+Their spin-glass phase transitions become regime-specific instances: our \[S+ETH\] hard families with $k^* = n$ witness their "complexity potential" via explicit TAUTOLOGY reduction (Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}). Physical transport via $E:\mathcal{P}\to\mathcal{D}$ extends to arbitrary substrates, not only quantum or spin systems (Theorem [\[thm:physical-bridge-bundle\]](#thm:physical-bridge-bundle){reference-type="ref" reference="thm:physical-bridge-bundle"}). \[D:Tthm:dichotomy, thm:physical-bridge-bundle; R:S+ETH,AR\]
+
+Thus Neukart--Vinokur $\subseteq$ \[AR\] regime: declared $\lambda,\rho > 0$, explicit encoding $E:\mathcal{P}\to\mathcal{D}$ $\Rightarrow$ their thermodynamic duality holds by assumption transfer through our coNP-complete core (Proposition [\[prop:physical-claim-transport\]](#prop:physical-claim-transport){reference-type="ref" reference="prop:physical-claim-transport"}). \[D:Pprop:physical-claim-transport; R:AR\]
 
 ## Feature Selection
 
-In machine learning, feature selection asks which input features are relevant for prediction. This is known to be NP-hard in general [@blum1997selection; @guyon2003introduction]. Our results show the decision-theoretic analog is coNP-complete for both checking and minimization.
+In machine learning, feature selection asks which input features are relevant for prediction. This is known to be NP-hard in general [@blum1997selection; @guyon2003introduction]. Our results show the decision-theoretic analog is coNP-complete for both checking and minimization. \[D:Tthm:sufficiency-conp, thm:minsuff-conp; R:S\]
 
 ## Value of Information
 
@@ -2012,7 +2616,7 @@ The value of information (VOI) framework [@howard1966information; @raiffa1961ap
 
 ## Model Selection
 
-Statistical model selection (AIC/BIC/cross-validation) provides practical heuristics for choosing among models [@akaike1974new; @schwarz1978estimating; @stone1974cross]. Our results formalize the regime-level reason heuristic selection appears: without added structural assumptions, exact optimal model selection inherits worst-case intractability, so heuristic methods implement explicit weakened-guarantee policies for unresolved structure.
+Statistical model selection (AIC/BIC/cross-validation) provides practical heuristics for choosing among models [@akaike1974new; @schwarz1978estimating; @stone1974cross]. Our results formalize the regime-level reason heuristic selection appears: without added structural assumptions, exact optimal model selection inherits worst-case intractability, so heuristic methods implement explicit weakened-guarantee policies for unresolved structure. \[D:Tthm:sufficiency-conp, thm:dichotomy, thm:tractable; R:E,S,S+ETH\]
 
 ## Information Compression vs Certification Length
 
@@ -2022,7 +2626,7 @@ From a zero-error viewpoint, this distinction is structural rather than stylisti
 
 The rate-distortion and MDL lines make the same split in different language: there is a difference between achievable compression rate, computational procedure for obtaining/optimizing that rate, and certifiable model adequacy [@shannon1959coding; @blahut1972computation; @rissanen1978modeling; @grunwald2007minimum; @li2008introduction].
 
-Formally, Theorem [\[thm:exact-certified-gap-iff-admissible\]](#thm:exact-certified-gap-iff-admissible){reference-type="ref" reference="thm:exact-certified-gap-iff-admissible"} and Corollary [\[cor:hardness-raw-only-exact\]](#cor:hardness-raw-only-exact){reference-type="ref" reference="cor:hardness-raw-only-exact"} characterize the exact-report boundary: admissible exact reports require a strict certified-bit gap above raw payload, while hardness-blocked exact reports collapse to raw-only accounting. This directly links representational succinctness to certification cost under the declared contract, rather than treating "short reports" as automatically high-information claims.
+Formally, Theorem [\[thm:exact-certified-gap-iff-admissible\]](#thm:exact-certified-gap-iff-admissible){reference-type="ref" reference="thm:exact-certified-gap-iff-admissible"} and Corollary [\[cor:hardness-raw-only-exact\]](#cor:hardness-raw-only-exact){reference-type="ref" reference="cor:hardness-raw-only-exact"} characterize the exact-report boundary: admissible exact reports require a strict certified-bit gap above raw payload, while hardness-blocked exact reports collapse to raw-only accounting. This directly links representational succinctness to certification cost under the declared contract, rather than treating "short reports" as automatically high-information claims. \[D:Tthm:exact-certified-gap-iff-admissible;Pprop:raw-certified-bit-split;Ccor:hardness-raw-only-exact; R:AR\]
 
 ## Certifying Outputs and Proof-Carrying Claims
 
@@ -2034,11 +2638,11 @@ The feasibility qualifier in Definition [\[def:competence-regime\]](#def:compet
 
 #### Cryptographic-verifiability perspective (scope).
 
-The role of cryptography in this paper is structural verifiability, not secrecy: the relevant analogy is certificate-carrying claims with lightweight verification, not confidential encoding [@goldwasser1989knowledge; @necula1997proof]. Concretely, the typed-report discipline is modeled as a game-based reporting interface: a prover emits $(r,\pi)$ and a verifier accepts exactly when $\pi$ certifies the declared report type under the active contract. In that model, Evidence--Admissibility Equivalence gives completeness for admissible report types, while Typed Claim Admissibility plus Exact Claims Require Exact Evidence give soundness against exact overclaiming. Certified-confidence constraints then act as evidence-gated admissibility constraints on top of that verifier interface, so raw payload bits and certified bits represent distinct resources rather than stylistic notation variants.
+The role of cryptography in this paper is structural verifiability, not secrecy: the relevant analogy is certificate-carrying claims with lightweight verification, not confidential encoding [@goldwasser1989knowledge; @necula1997proof]. Concretely, the typed-report discipline is modeled as a game-based reporting interface: a prover emits $(r,\pi)$ and a verifier accepts exactly when $\pi$ certifies the declared report type under the active contract. In that model, Evidence--Admissibility Equivalence gives completeness for admissible report types, while Typed Claim Admissibility plus Exact Claims Require Exact Evidence give soundness against exact overclaiming. Certified-confidence constraints then act as evidence-gated admissibility constraints on top of that verifier interface, so raw payload bits and certified bits represent distinct resources rather than stylistic notation variants. \[D:Pprop:evidence-admissibility-equivalence, prop:typed-claim-admissibility, prop:exact-requires-evidence, prop:certified-confidence-gate; R:AR\]
 
 #### Three-axis integration.
 
-In the cited literature, these pillars are treated separately: representation-sensitive hardness, query-access lower bounds, and certifying soundness disciplines. This paper composes all three for the same decision-relevance object in one regime-typed and machine-checked framework.
+In the cited literature, these pillars are treated separately: representation-sensitive hardness, query-access lower bounds, and certifying soundness disciplines. This paper composes all three for the same decision-relevance object in one regime-typed and machine-checked framework. \[D:Tthm:dichotomy;Pprop:query-regime-obstruction, prop:typed-claim-admissibility; R:S+ETH,Qf,AR\]
 
 
 # Conclusion
@@ -2078,11 +2682,15 @@ This paper establishes the computational complexity of coordinate sufficiency pr
 
 -   Discrete-time interface semantics are formalized: time is $\mathbb{N}$-valued, decision events are exactly one-tick transitions, run length equals elapsed time, and substrate-consistent realizations preserve the same one-unit event law (Propositions [\[prop:time-discrete\]](#prop:time-discrete){reference-type="ref" reference="prop:time-discrete"}--[\[prop:substrate-unit-time\]](#prop:substrate-unit-time){reference-type="ref" reference="prop:substrate-unit-time"})
 
+-   Physical-system transport is formalized: encoded physical claims are derived from core rules through explicit assumption transfer, physical counterexamples map to encoded core failures, and the bundled bridge theorem composes law semantics, reduction equivalence, and required-work lower bounds (Proposition [\[prop:physical-claim-transport\]](#prop:physical-claim-transport){reference-type="ref" reference="prop:physical-claim-transport"}, Corollary [\[cor:physical-counterexample-core-failure\]](#cor:physical-counterexample-core-failure){reference-type="ref" reference="cor:physical-counterexample-core-failure"}, Theorem [\[thm:physical-bridge-bundle\]](#thm:physical-bridge-bundle){reference-type="ref" reference="thm:physical-bridge-bundle"})
+
+\[D:Tthm:sufficiency-conp, thm:minsuff-conp, thm:anchor-sigma2p, thm:dichotomy, thm:tractable, thm:physical-bridge-bundle;Pprop:query-regime-obstruction, prop:query-value-entry-lb, prop:query-state-batch-lb, prop:query-subproblem-transfer, prop:oracle-lattice-transfer, prop:oracle-lattice-strict, prop:time-discrete, prop:decision-unit-time, prop:run-time-accounting, prop:substrate-unit-time, prop:physical-claim-transport;Ccor:physical-counterexample-core-failure; R:E,S,S+ETH,Qf,Qb,AR\]
+
 These results place the problem of identifying decision-relevant coordinates at the first and second levels of the polynomial hierarchy.
 
-Beyond classification, the paper contributes a formal claim-typing framework (Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}): structural complexity is a property of the fixed decision question, while representational hardness is regime-conditional access cost. This is why encoding-regime changes can move practical hardness without changing the underlying semantics.
+Beyond classification, the paper contributes a formal claim-typing framework (Section [\[sec:interpretive-foundations\]](#sec:interpretive-foundations){reference-type="ref" reference="sec:interpretive-foundations"}): structural complexity is a property of the fixed decision question, while representational hardness is regime-conditional access cost. This is why encoding-regime changes can move practical hardness without changing the underlying semantics. \[D:Pprop:sufficiency-char;Tthm:typed-completeness-static; R:AR\]
 
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (see Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"} for proof listings). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets; complexity classifications (coNP-completeness, $\Sigma_{2}^{P}$-completeness) follow by composition with standard complexity-theoretic results (TAUTOLOGY is coNP-complete, $\exists\forall$-SAT is $\Sigma_{2}^{P}$-complete). The strengthened gadget showing that non-tautologies yield instances with *all coordinates relevant* is also formalized.
+The reduction constructions and key equivalence theorems are machine-checked in Lean 4 (see Appendix [\[app:lean\]](#app:lean){reference-type="ref" reference="app:lean"} for proof listings). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets; complexity classifications (coNP-completeness, $\Sigma_{2}^{P}$-completeness) follow by composition with standard complexity-theoretic results (TAUTOLOGY is coNP-complete, $\exists\forall$-SAT is $\Sigma_{2}^{P}$-complete). The strengthened gadget showing that non-tautologies yield instances with *all coordinates relevant* is also formalized. \[D:Tthm:sufficiency-conp, thm:minsuff-conp, thm:anchor-sigma2p, thm:dichotomy; R:S,S+ETH\]
 
 ## Complexity Characterization {#complexity-characterization .unnumbered}
 
@@ -2093,6 +2701,8 @@ The results provide precise complexity characterizations within the formal model
 2.  **Constructive reductions.** The reductions from TAUTOLOGY and $\exists\forall$-SAT are explicit and machine-checked.
 
 3.  **Encoding-regime separation.** Under \[E\], SUFFICIENCY-CHECK is polynomial in $|S|$. Under \[S+ETH\], there exist succinct worst-case instances (with $k^*=n$) requiring $2^{\Omega(n)}$ time. Under \[Q_fin\], the Opt-oracle core has $\Omega(|S|)$ worst-case query complexity (Boolean instantiation $\Omega(2^n)$), and under \[Q_bool\] the value-entry/state-batch refinements preserve the obstruction with weighted-cost transfer closures.
+
+\[D:Tthm:sufficiency-conp, thm:dichotomy;Pprop:query-regime-obstruction, prop:query-value-entry-lb, prop:query-state-batch-lb, prop:query-subproblem-transfer; R:E,S,S+ETH,Qf,Qb\]
 
 ## The Complexity Redistribution Corollary {#the-complexity-redistribution-corollary .unnumbered}
 
@@ -2105,6 +2715,8 @@ The set identity is elementary; its operational content comes from composition w
 -   Dominance: complete models have lower total work than incomplete models
 
 -   Amortization: there exists a threshold $n^*$ beyond which higher-dimensional models have lower total cost
+
+\[D:Tthm:tax-conservation, thm:centralization-dominance, thm:amortization; R:LC\]
 
 ## Open Questions {#open-questions .unnumbered}
 
@@ -2134,6 +2746,8 @@ The practical corollaries are regime-indexed and theorem-indexed:
 
 -   **Redistribution consequences:** omitted native coverage externalizes work with explicit growth/amortization laws (Theorems [\[thm:tax-conservation\]](#thm:tax-conservation){reference-type="ref" reference="thm:tax-conservation"}--[\[thm:amortization\]](#thm:amortization){reference-type="ref" reference="thm:amortization"}).
 
+-   **Physical-system instantiation:** once a physical class is encoded into the declared decision interface, the same regime-typed hardness/tractability map and integrity constraints apply to that class (Section [\[sec:physical-transport\]](#sec:physical-transport){reference-type="ref" reference="sec:physical-transport"}). \[D:Pprop:physical-claim-transport;Ccor:physical-counterexample-core-failure;Tthm:physical-bridge-bundle; R:AR\]
+
 Hence the design choice is typed: enforce a tractable regime, or adopt weakened guarantees with explicit verification boundaries. \[D:Tthm:tractable, thm:dichotomy; R:RG\] Equivalently, under the attempted-competence matrix, over-specification is rational only in attempted-competence-failure cells; once exact competence is available in the active regime (or no attempted exact competence was made), persistent over-specification is irrational for the same verified-cost objective. \[D:Pprop:attempted-competence-matrix; R:AR\] By Proposition [\[prop:attempted-competence-matrix\]](#prop:attempted-competence-matrix){reference-type="ref" reference="prop:attempted-competence-matrix"}, the integrity-preserving matrix contains 3 irrational cells and 1 rational cell. \[D:Pprop:attempted-competence-matrix; R:AR\]
 
 ## Epistemic Alignment Implications for Agent Training {#epistemic-alignment-implications-for-agent-training .unnumbered}
@@ -2161,7 +2775,7 @@ Operationally, a reporting schema consistent with this framework tracks at least
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 11932 lines across 53 files, with 553 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 16353 lines across 63 files, with 727 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -2247,6 +2861,8 @@ The hardness distribution theorems (Section [\[sec:simplicity-tax\]](#sec:simpl
 
 ## Complete Claim Coverage Matrix
 
+## Proof Hardness Index (Auto)
+
 ## Claims Not Fully Mechanized
 
 **Status:** all theorem/proposition/corollary handles in this paper now have Lean backing. Entries marked **Full (conditional)** are explicitly mechanized transfer theorems that depend on standard external complexity facts (e.g., source-class completeness or ETH assumptions), with those dependencies represented as hypotheses in Lean.
@@ -2276,4071 +2892,551 @@ The hardness distribution theorems (Section [\[sec:simplicity-tax\]](#sec:simpl
 The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake build` in the proof directory to verify.
 
 
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ID                    | Full Lean handle                                                                                       |
-+:======================+:=======================================================================================================+
-| ID                    | Full Lean handle (continued)                                                                           |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AR1}         | `AccessRegime.le`                                                                                      |
-| [AR1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AR2}         | `AccessRegime.answer_space`                                                                            |
-| [AR2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AR3}         | `AccessRegime.le_refl`                                                                                 |
-| [AR3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AR4}         | `AccessRegime.le_trans`                                                                                |
-| [AR4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AR5}         | `AccessRegime.query_space`                                                                             |
-| [AR5]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AU1}         | `AdditiveUtility.isRelevant`                                                                           |
-| [AU1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AU2}         | `AdditiveUtility.relevantSet`                                                                          |
-| [AU2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AU3}         | `AdditiveUtility.toProblem`                                                                            |
-| [AU3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:BC1}         | `BooleanCircuit.circuitSize`                                                                           |
-| [BC1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C1}          | `Complexity.BitStr`                                                                                    |
-| [C1]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C2}          | `Complexity.Decides`                                                                                   |
-| [C2]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C3}          | `Complexity.KarpReduces`                                                                               |
-| [C3]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C4}          | `Complexity.Lang`                                                                                      |
-| [C4]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C5}          | `Complexity.ManyOneReducesPoly`                                                                        |
-| [C5]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C6}          | `Complexity.P`                                                                                         |
-| [C6]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C7}          | `Complexity.PolyTime`                                                                                  |
-| [C7]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C8}          | `Complexity.bitEnc`                                                                                    |
-| [C8]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C9}          | `Counted.bind`                                                                                         |
-| [C9]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C10}         | `Counted.bind_steps`                                                                                   |
-| [C10]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C11}         | `Counted.pure`                                                                                         |
-| [C11]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C12}         | `Counted.pure_steps`                                                                                   |
-| [C12]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C13}         | `Counted.result`                                                                                       |
-| [C13]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C14}         | `Counted.steps`                                                                                        |
-| [C14]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C15}         | `Counted.steps_eq_fst`                                                                                 |
-| [C15]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C16}         | `Counted.tick`                                                                                         |
-| [C16]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C17}         | `Counted.tick_bind_steps`                                                                              |
-| [C17]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:C31}         | `Clause3.eval`                                                                                         |
-| [C31]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC1}         | `DecisionQuotient.ClaimClosure.RegimeSimulation`                                                       |
-| [CC1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC2}         | `DecisionQuotient.ClaimClosure.adq_ordering`                                                           |
-| [CC2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC3}         | `DecisionQuotient.ClaimClosure.agent_transfer_licensed_iff_snapshot`                                   |
-| [CC3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC4}         | `DecisionQuotient.ClaimClosure.anchor_sigma2p_complete_conditional`                                    |
-| [CC4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC5}         | `DecisionQuotient.ClaimClosure.anchor_sigma2p_reduction_core`                                          |
-| [CC5]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC6}         | `DecisionQuotient.ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`                     |
-| [CC6]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC7}         | `DecisionQuotient.ClaimClosure.bounded_actions_detectable`                                             |
-| [CC7]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC8}         | `DecisionQuotient.ClaimClosure.bridge_boundary_represented_family`                                     |
-| [CC8]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC9}         | `DecisionQuotient.ClaimClosure.bridge_failure_witness_non_one_step`                                    |
-| [CC9]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC10}        | `DecisionQuotient.ClaimClosure.bridge_transfer_iff_one_step_class`                                     |
-| [CC10]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC11}        | `DecisionQuotient.ClaimClosure.certified_total_bits_split_core`                                        |
-| [CC11]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC12}        | `DecisionQuotient.ClaimClosure.cost_asymmetry_eth_conditional`                                         |
-| [CC12]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC13}        | `DecisionQuotient.ClaimClosure.declaredBudgetSlice`                                                    |
-| [CC13]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC14}        | `DecisionQuotient.ClaimClosure.declaredRegimeFamily_complete`                                          |
-| [CC14]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC15}        | `DecisionQuotient.ClaimClosure.declared_physics_no_universal_exact_certifier_core`                     |
-| [CC15]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC16}        | `DecisionQuotient.ClaimClosure.dichotomy_conditional`                                                  |
-| [CC16]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC17}        | `DecisionQuotient.ClaimClosure.epsilon_admissible_iff_raw_lt_certified_total_core`                     |
-| [CC17]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC18}        | `DecisionQuotient.ClaimClosure.exact_admissible_iff_raw_lt_certified_total_core`                       |
-| [CC18]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC19}        | `DecisionQuotient.ClaimClosure.exact_certainty_inflation_under_hardness_core`                          |
-| [CC19]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC20}        | `DecisionQuotient.ClaimClosure.exact_raw_eq_certified_iff_certainty_inflation_core`                    |
-| [CC20]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC21}        | `DecisionQuotient.ClaimClosure.exact_raw_only_of_no_exact_admissible_core`                             |
-| [CC21]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC22}        | `DecisionQuotient.ClaimClosure.explicit_assumptions_required_of_not_excused_core`                      |
-| [CC22]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC23}        | `DecisionQuotient.ClaimClosure.explicit_state_upper_core`                                              |
-| [CC23]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC24}        | `DecisionQuotient.ClaimClosure.hard_family_all_coords_core`                                            |
-| [CC24]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC25}        | `DecisionQuotient.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`                           |
-| [CC25]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC26}        | `DecisionQuotient.ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`                          |
-| [CC26]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC27}        | `DecisionQuotient.ClaimClosure.information_barrier_opt_oracle_core`                                    |
-| [CC27]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC28}        | `DecisionQuotient.ClaimClosure.information_barrier_state_batch_core`                                   |
-| [CC28]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC29}        | `DecisionQuotient.ClaimClosure.information_barrier_value_entry_core`                                   |
-| [CC29]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC30}        | `DecisionQuotient.ClaimClosure.integrity_resource_bound_for_sufficiency`                               |
-| [CC30]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC31}        | `DecisionQuotient.ClaimClosure.integrity_universal_applicability_core`                                 |
-| [CC31]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC32}        | `DecisionQuotient.ClaimClosure.meta_coordinate_irrelevant_of_invariance_on_declared_slice`             |
-| [CC32]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC33}        | `DecisionQuotient.ClaimClosure.meta_coordinate_not_relevant_on_declared_slice`                         |
-| [CC33]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC34}        | `DecisionQuotient.ClaimClosure.minsuff_collapse_core`                                                  |
-| [CC34]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC36}        | `DecisionQuotient.ClaimClosure.minsuff_conp_complete_conditional`                                      |
-| [CC36]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC37}        | `DecisionQuotient.ClaimClosure.no_auto_minimize_of_p_neq_conp`                                         |
-| [CC37]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC38}        | `DecisionQuotient.ClaimClosure.no_exact_claim_admissible_under_hardness_core`                          |
-| [CC38]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC39}        | `DecisionQuotient.ClaimClosure.no_exact_claim_under_declared_assumptions_unless_excused_core`          |
-| [CC39]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC40}        | `DecisionQuotient.ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`                 |
-| [CC40]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC41}        | `DecisionQuotient.ClaimClosure.no_uncertified_exact_claim_core`                                        |
-| [CC41]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC42}        | `DecisionQuotient.ClaimClosure.one_step_bridge`                                                        |
-| [CC42]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC43}        | `DecisionQuotient.ClaimClosure.oracle_lattice_transfer_as_regime_simulation`                           |
-| [CC43]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC44}        | `DecisionQuotient.ClaimClosure.physical_crossover_above_cap_core`                                      |
-| [CC44]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC45}        | `DecisionQuotient.ClaimClosure.physical_crossover_core`                                                |
-| [CC45]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC46}        | `DecisionQuotient.ClaimClosure.physical_crossover_hardness_core`                                       |
-| [CC46]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC47}        | `DecisionQuotient.ClaimClosure.physical_crossover_policy_core`                                         |
-| [CC47]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC48}        | `DecisionQuotient.ClaimClosure.process_bridge_failure_witness`                                         |
-| [CC48]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC49}        | `DecisionQuotient.ClaimClosure.query_obstruction_boolean_corollary`                                    |
-| [CC49]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC50}        | `DecisionQuotient.ClaimClosure.query_obstruction_finite_state_core`                                    |
-| [CC50]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC51}        | `DecisionQuotient.ClaimClosure.regime_core_claim_proved`                                               |
-| [CC51]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC52}        | `DecisionQuotient.ClaimClosure.regime_simulation_transfers_hardness`                                   |
-| [CC52]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC53}        | `DecisionQuotient.ClaimClosure.reusable_heuristic_of_detectable`                                       |
-| [CC53]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC54}        | `DecisionQuotient.ClaimClosure.selectorSufficient_not_implies_setSufficient`                           |
-| [CC54]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC55}        | `DecisionQuotient.ClaimClosure.separable_detectable`                                                   |
-| [CC55]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC56}        | `DecisionQuotient.ClaimClosure.snapshot_vs_process_typed_boundary`                                     |
-| [CC56]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC57}        | `DecisionQuotient.ClaimClosure.standard_assumption_ledger_unpack`                                      |
-| [CC57]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC58}        | `DecisionQuotient.ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`                    |
-| [CC58]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC59}        | `DecisionQuotient.ClaimClosure.subproblem_hardness_lifts_to_full`                                      |
-| [CC59]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC60}        | `DecisionQuotient.ClaimClosure.subproblem_transfer_as_regime_simulation`                               |
-| [CC60]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC61}        | `DecisionQuotient.ClaimClosure.sufficiency_conp_complete_conditional`                                  |
-| [CC61]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC62}        | `DecisionQuotient.ClaimClosure.sufficiency_conp_reduction_core`                                        |
-| [CC62]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC63}        | `DecisionQuotient.ClaimClosure.sufficiency_iff_dq_ratio`                                               |
-| [CC63]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC64}        | `DecisionQuotient.ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`                               |
-| [CC64]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC65}        | `DecisionQuotient.ClaimClosure.thermo_conservation_additive_core`                                      |
-| [CC65]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC66}        | `DecisionQuotient.ClaimClosure.thermo_energy_carbon_lift_core`                                         |
-| [CC66]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC67}        | `DecisionQuotient.ClaimClosure.thermo_eventual_lift_core`                                              |
-| [CC67]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC68}        | `DecisionQuotient.ClaimClosure.thermo_hardness_bundle_core`                                            |
-| [CC68]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC69}        | `DecisionQuotient.ClaimClosure.thermo_mandatory_cost_core`                                             |
-| [CC69]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC70}        | `DecisionQuotient.ClaimClosure.tractable_bounded_core`                                                 |
-| [CC70]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC71}        | `DecisionQuotient.ClaimClosure.tractable_separable_core`                                               |
-| [CC71]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC72}        | `DecisionQuotient.ClaimClosure.tractable_subcases_conditional`                                         |
-| [CC72]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC73}        | `DecisionQuotient.ClaimClosure.tractable_tree_core`                                                    |
-| [CC73]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC74}        | `DecisionQuotient.ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`                      |
-| [CC74]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC75}        | `DecisionQuotient.ClaimClosure.tree_structure_detectable`                                              |
-| [CC75]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC76}        | `DecisionQuotient.ClaimClosure.typed_claim_admissibility_core`                                         |
-| [CC76]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CC77}        | `DecisionQuotient.ClaimClosure.typed_static_class_completeness`                                        |
-| [CC77]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP1}        | `ComputableDecisionProblem.checkSufficiency`                                                           |
-| [CDP1]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP2}        | `ComputableDecisionProblem.checkSufficiency_iff_abstract`                                              |
-| [CDP2]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP3}        | `ComputableDecisionProblem.computeOpt`                                                                 |
-| [CDP3]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP4}        | `ComputableDecisionProblem.computeOpt_eq_abstract`                                                     |
-| [CDP4]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP5}        | `ComputableDecisionProblem.decisionEquivDec`                                                           |
-| [CDP5]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP6}        | `ComputableDecisionProblem.decisionEquivDec_iff`                                                       |
-| [CDP6]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP7}        | `ComputableDecisionProblem.decisionEquivDec_iff_abstract`                                              |
-| [CDP7]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP8}        | `ComputableDecisionProblem.insufficiencyWitnesses`                                                     |
-| [CDP8]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP9}        | `ComputableDecisionProblem.isOptimalDec`                                                               |
-| [CDP9]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP10}       | `ComputableDecisionProblem.isOptimalDec_iff`                                                           |
-| [CDP10]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP11}       | `ComputableDecisionProblem.isOptimalDec_iff_abstract`                                                  |
-| [CDP11]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP12}       | `ComputableDecisionProblem.mem_computeOpt_iff`                                                         |
-| [CDP12]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP13}       | `ComputableDecisionProblem.toAbstract`                                                                 |
-| [CDP13]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CDP14}       | `ComputableDecisionProblem.verifyWitness`                                                              |
-| [CDP14]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:CR1}         | `DecisionQuotient.ConfigReduction.config_sufficiency_iff_behavior_preserving`                          |
-| [CR1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP1}         | `DecisionQuotient.DecisionProblem.minimalSufficient_iff_relevant`                                      |
-| [DP1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP2}         | `DecisionQuotient.DecisionProblem.relevantSet_is_minimal`                                              |
-| [DP2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP3}         | `DecisionQuotient.DecisionProblem.sufficient_implies_selectorSufficient`                               |
-| [DP3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP4}         | `DecisionQuotient.ClaimClosure.DecisionProblem.epsOpt_zero_eq_opt`                                     |
-| [DP4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP5}         | `DecisionQuotient.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`                   |
-| [DP5]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP6}         | `DecisionProblem.anchorSufficient`                                                                     |
-| [DP6]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP7}         | `DecisionProblem.classMonotoneOn`                                                                      |
-| [DP7]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP8}         | `DecisionProblem.constant_opt_all_sufficient`                                                          |
-| [DP8]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP9}         | `DecisionProblem.DecisionEquiv`                                                                        |
-| [DP9]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP10}        | `DecisionProblem.DecisionQuotientType`                                                                 |
-| [DP10]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP11}        | `DecisionProblem.Opt`                                                                                  |
-| [DP11]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP12}        | `DecisionProblem.OptQuotient`                                                                          |
-| [DP12]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP13}        | `DecisionProblem.SelectedAction`                                                                       |
-| [DP13]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP14}        | `DecisionProblem.decisionEquiv_refl`                                                                   |
-| [DP14]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP15}        | `DecisionProblem.decisionEquiv_symm`                                                                   |
-| [DP15]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP16}        | `DecisionProblem.decisionEquiv_trans`                                                                  |
-| [DP16]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP17}        | `DecisionProblem.decisionSetoid`                                                                       |
-| [DP17]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP18}        | `DecisionProblem.dominant_all_sufficient`                                                              |
-| [DP18]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP19}        | `DecisionProblem.dominant_unique`                                                                      |
-| [DP19]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP20}        | `DecisionProblem.edgeOnComplement`                                                                     |
-| [DP20]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP21}        | `DecisionProblem.edgeOnComplement_iff_not_sufficient`                                                  |
-| [DP21]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP22}        | `DecisionProblem.emptySet_not_sufficient_iff_exists_opt_difference`                                    |
-| [DP22]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP23}        | `DecisionProblem.emptySet_sufficient_iff_constant`                                                     |
-| [DP23]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP24}        | `DecisionProblem.epsOpt`                                                                               |
-| [DP24]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP25}        | `DecisionProblem.epsOpt_zero_eq_opt`                                                                   |
-| [DP25]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP26}        | `DecisionProblem.erase_of_not_mem`                                                                     |
-| [DP26]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP27}        | `DecisionProblem.factors_implies_respects`                                                             |
-| [DP27]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP28}        | `DecisionProblem.hasConstantOpt`                                                                       |
-| [DP28]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP29}        | `DecisionProblem.hasConstantOpt'`                                                                      |
-| [DP29]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP30}        | `DecisionProblem.hasDominant`                                                                          |
-| [DP30]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP31}        | `DecisionProblem.irrelevant_iff_not_relevant`                                                          |
-| [DP31]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP32}        | `DecisionProblem.isEpsilonSufficient`                                                                  |
-| [DP32]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP33}        | `DecisionProblem.isIrrelevant`                                                                         |
-| [DP33]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP34}        | `DecisionProblem.isMinimalSufficient`                                                                  |
-| [DP34]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP35}        | `DecisionProblem.isMinimalSufficient'`                                                                 |
-| [DP35]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP36}        | `DecisionProblem.isOptimal`                                                                            |
-| [DP36]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP37}        | `DecisionProblem.isRelevant`                                                                           |
-| [DP37]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP38}        | `DecisionProblem.isSelectorSufficient`                                                                 |
-| [DP38]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP39}        | `DecisionProblem.isSufficient`                                                                         |
-| [DP39]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP40}        | `DecisionProblem.isSufficientAt`                                                                       |
-| [DP40]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP41}        | `DecisionProblem.isSufficientOnSet`                                                                    |
-| [DP41]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP42}        | `DecisionProblem.minimalSufficient_all_relevant'`                                                      |
-| [DP42]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP43}        | `DecisionProblem.minimalSufficient_eq_relevant'`                                                       |
-| [DP43]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP44}        | `DecisionProblem.minimalSufficient_iff_relevant`                                                       |
-| [DP44]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP45}        | `DecisionProblem.monotoneIn`                                                                           |
-| [DP45]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP46}        | `DecisionProblem.nonnegativelyMonotoneCoord`                                                           |
-| [DP46]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP47}        | `DecisionProblem.not_sufficient_iff_exists_counterexample`                                             |
-| [DP47]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP48}        | `DecisionProblem.numOptClasses`                                                                        |
-| [DP48]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP49}        | `DecisionProblem.numOptClasses_le`                                                                     |
-| [DP49]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP50}        | `DecisionProblem.numOptClasses_pos`                                                                    |
-| [DP50]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP51}        | `DecisionProblem.opt_eq_optQuotient_comp`                                                              |
-| [DP51]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP52}        | `DecisionProblem.opt_factors_through_quotient`                                                         |
-| [DP52]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP53}        | `DecisionProblem.preservesOpt`                                                                         |
-| [DP53]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP54}        | `DecisionProblem.preservesOptStrong`                                                                   |
-| [DP54]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP55}        | `DecisionProblem.quotientEntropy`                                                                      |
-| [DP55]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP56}        | `DecisionProblem.quotientEntropy_nonneg`                                                               |
-| [DP56]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP57}        | `DecisionProblem.quotientEntropy_zero_of_constant`                                                     |
-| [DP57]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP58}        | `DecisionProblem.quotientMap`                                                                          |
-| [DP58]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP59}        | `DecisionProblem.quotientMap_preservesOpt`                                                             |
-| [DP59]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP60}        | `DecisionProblem.quotientSize`                                                                         |
-| [DP60]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP61}        | `DecisionProblem.quotient_is_coarsest`                                                                 |
-| [DP61]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP62}        | `DecisionProblem.quotient_represents_opt_equiv`                                                        |
-| [DP62]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP63}        | `DecisionProblem.relevantSet`                                                                          |
-| [DP63]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP64}        | `DecisionProblem.relevantSet_is_minimal`                                                               |
-| [DP64]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP65}        | `DecisionProblem.relevant_necessary`                                                                   |
-| [DP65]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP66}        | `DecisionProblem.sufficientSets`                                                                       |
-| [DP66]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP67}        | `DecisionProblem.sufficientSets_principal'`                                                            |
-| [DP67]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP68}        | `DecisionProblem.sufficientSets_upward`                                                                |
-| [DP68]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP69}        | `DecisionProblem.sufficientSets_upward_closed`                                                         |
-| [DP69]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP70}        | `DecisionProblem.sufficient_contains_all_relevant`                                                     |
-| [DP70]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP71}        | `DecisionProblem.sufficient_contains_relevant`                                                         |
-| [DP71]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP72}        | `DecisionProblem.sufficient_erase_irrelevant'`                                                         |
-| [DP72]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP73}        | `DecisionProblem.sufficient_iff_zeroEpsilonSufficient`                                                 |
-| [DP73]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP74}        | `DecisionProblem.sufficient_implies_selectorSufficient`                                                |
-| [DP74]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP75}        | `DecisionProblem.sufficient_superset`                                                                  |
-| [DP75]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DP76}        | `DecisionProblem.univ_sufficient_of_injective`                                                         |
-| [DP76]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ3}         | `DecisionQuotient.card_anchoredSlice_eq_pow_sub`                                                       |
-| [DQ3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ5}         | `DecisionQuotient.opt_eq_feasible_of_gap`                                                              |
-| [DQ5]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ6}         | `DecisionQuotient.opt_eq_of_allowed_iff`                                                               |
-| [DQ6]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ7}         | `DecisionQuotient.opt_singleton_of_logicallyDeterministic`                                             |
-| [DQ7]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ8}         | `DecisionQuotient.universe_sets_objective_schema`                                                      |
-| [DQ8]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ9}         | `DecisionQuotient.AdditiveUtility`                                                                     |
-| [DQ9]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ10}        | `DecisionQuotient.AssignX`                                                                             |
-| [DQ10]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ11}        | `DecisionQuotient.AssignY`                                                                             |
-| [DQ11]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ12}        | `DecisionQuotient.Assignment`                                                                          |
-| [DQ12]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ13}        | `DecisionQuotient.BinaryState`                                                                         |
-| [DQ13]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ14}        | `DecisionQuotient.BooleanCircuit`                                                                      |
-| [DQ14]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ15}        | `DecisionQuotient.CircuitDecisionProblem`                                                              |
-| [DQ15]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ16}        | `DecisionQuotient.ClaimClosure.agreeOn_refl`                                                           |
-| [DQ16]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ17}        | `DecisionQuotient.ClaimClosure.agreeOn_symm`                                                           |
-| [DQ17]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ18}        | `DecisionQuotient.ClaimClosure.agreeOn_trans`                                                          |
-| [DQ18]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ19}        | `DecisionQuotient.ClaimClosure.irrelevantOn_implies_not_relevantOn`                                    |
-| [DQ19]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ20}        | `DecisionQuotient.ClaimClosure.isIrrelevantOn`                                                         |
-| [DQ20]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ21}        | `DecisionQuotient.ClaimClosure.isRelevantOn`                                                           |
-| [DQ21]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ22}        | `DecisionQuotient.Clause3`                                                                             |
-| [DQ22]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ23}        | `DecisionQuotient.ComputableDecisionProblem`                                                           |
-| [DQ23]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ24}        | `DecisionQuotient.ConfigReduction.ConfigAction`                                                        |
-| [DQ24]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ25}        | `DecisionQuotient.ConfigReduction.behaviorPreserving`                                                  |
-| [DQ25]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ26}        | `DecisionQuotient.ConfigReduction.configDecisionProblem`                                               |
-| [DQ26]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ27}        | `DecisionQuotient.ConfigReduction.configUtility`                                                       |
-| [DQ27]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ28}        | `DecisionQuotient.ConfigReduction.configUtility_le_one`                                                |
-| [DQ28]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ29}        | `DecisionQuotient.ConfigReduction.no_occurs_iff_of_behaviorPreserving`                                 |
-| [DQ29]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ30}        | `DecisionQuotient.ConfigReduction.none_mem_Opt_iff_no_occurs`                                          |
-| [DQ30]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ31}        | `DecisionQuotient.ConfigReduction.some_mem_Opt_iff_occurs`                                             |
-| [DQ31]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ32}        | `DecisionQuotient.ConfigReduction.some_mem_Opt_of_occurs`                                              |
-| [DQ32]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ33}        | `DecisionQuotient.ConfigReduction.some_not_mem_Opt_of_not_occurs`                                      |
-| [DQ33]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ34}        | `DecisionQuotient.CoordinateSpace`                                                                     |
-| [DQ34]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ35}        | `DecisionQuotient.Counted`                                                                             |
-| [DQ35]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ36}        | `DecisionQuotient.DQAction`                                                                            |
-| [DQ36]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ37}        | `DecisionQuotient.DQInstance`                                                                          |
-| [DQ37]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ38}        | `DecisionQuotient.DecisionProblem`                                                                     |
-| [DQ38]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ39}        | `DecisionQuotient.EncodedDecisionProblem`                                                              |
-| [DQ39]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ40}        | `DecisionQuotient.ExistsForallFormula`                                                                 |
-| [DQ40]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ41}        | `DecisionQuotient.ExistsForallFormula.embedVar`                                                        |
-| [DQ41]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ42}        | `DecisionQuotient.ExistsForallFormula.eval_padUniversal`                                               |
-| [DQ42]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ43}        | `DecisionQuotient.ExistsForallFormula.padUniversal`                                                    |
-| [DQ43]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ44}        | `DecisionQuotient.ExistsForallFormula.restrictY`                                                       |
-| [DQ44]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ45}        | `DecisionQuotient.ExistsForallFormula.satisfiable`                                                     |
-| [DQ45]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ46}        | `DecisionQuotient.ExistsForallFormula.satisfiable_iff_padUniversal`                                    |
-| [DQ46]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ47}        | `DecisionQuotient.ExistsForallFormula.satisfiedBy`                                                     |
-| [DQ47]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ48}        | `DecisionQuotient.ExistsForallFormula.sumAssignment`                                                   |
-| [DQ48]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ49}        | `DecisionQuotient.ExistsForallFormula.sumAssignment_embed`                                             |
-| [DQ49]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ50}        | `DecisionQuotient.FiniteDecisionProblem`                                                               |
-| [DQ50]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ51}        | `DecisionQuotient.FiniteDecisionProblem.decisionQuotient`                                              |
-| [DQ51]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ52}        | `DecisionQuotient.FiniteDecisionProblem.isSufficient`                                                  |
-| [DQ52]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ53}        | `DecisionQuotient.FiniteDecisionProblem.isSufficient_superset`                                         |
-| [DQ53]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ54}        | `DecisionQuotient.FiniteDecisionProblem.mem_optimalActions_iff`                                        |
-| [DQ54]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ55}        | `DecisionQuotient.FiniteDecisionProblem.optimalActions`                                                |
-| [DQ55]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ56}        | `DecisionQuotient.FiniteDecisionProblem.optimalActions_subset_actions`                                 |
-| [DQ56]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ57}        | `DecisionQuotient.FiniteDecisionProblem.toDecisionProblem`                                             |
-| [DQ57]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ58}        | `DecisionQuotient.HardnessDistribution.IsEventuallyConstant`                                           |
-| [DQ58]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ59}        | `DecisionQuotient.HardnessDistribution.SolutionArchitecture`                                           |
-| [DQ59]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ60}        | `DecisionQuotient.HardnessDistribution.SpecificationProblem`                                           |
-| [DQ60]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ61}        | `DecisionQuotient.HardnessDistribution.amortizationThreshold`                                          |
-| [DQ61]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ62}        | `DecisionQuotient.HardnessDistribution.amortization_threshold_native_manual`                           |
-| [DQ62]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ63}        | `DecisionQuotient.HardnessDistribution.centralization_step_reduces_total`                              |
-| [DQ63]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ64}        | `DecisionQuotient.HardnessDistribution.centralized_constant`                                           |
-| [DQ64]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ65}        | `DecisionQuotient.HardnessDistribution.centralized_minimal_errors`                                     |
-| [DQ65]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ66}        | `DecisionQuotient.HardnessDistribution.distributed_errors_grow`                                        |
-| [DQ66]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ67}        | `DecisionQuotient.HardnessDistribution.distributed_multiplies`                                         |
-| [DQ67]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ68}        | `DecisionQuotient.HardnessDistribution.dof_conservation`                                               |
-| [DQ68]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ69}        | `DecisionQuotient.HardnessDistribution.errorSites`                                                     |
-| [DQ69]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ70}        | `DecisionQuotient.HardnessDistribution.gapCard`                                                        |
-| [DQ70]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ71}        | `DecisionQuotient.HardnessDistribution.generalizedTotalDOF`                                            |
-| [DQ71]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ72}        | `DecisionQuotient.HardnessDistribution.generalized_right_dominates_wrong_pointwise`                    |
-| [DQ72]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ73}        | `DecisionQuotient.HardnessDistribution.hardnessEfficiency`                                             |
-| [DQ73]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ74}        | `DecisionQuotient.HardnessDistribution.less_distributed_less_total`                                    |
-| [DQ74]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ75}        | `DecisionQuotient.HardnessDistribution.leverageRatio`                                                  |
-| [DQ75]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ76}        | `DecisionQuotient.HardnessDistribution.linear_lt_exponential_eventually`                               |
-| [DQ76]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ77}        | `DecisionQuotient.HardnessDistribution.linear_represents_saturating_only_zero_slope`                   |
-| [DQ77]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ78}        | `DecisionQuotient.HardnessDistribution.manualApproach`                                                 |
-| [DQ78]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ79}        | `DecisionQuotient.HardnessDistribution.manual_errors_grow`                                             |
-| [DQ79]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ80}        | `DecisionQuotient.HardnessDistribution.manual_is_wrong`                                                |
-| [DQ80]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ81}        | `DecisionQuotient.HardnessDistribution.nativeTypeSystem`                                               |
-| [DQ81]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ82}        | `DecisionQuotient.HardnessDistribution.native_is_right`                                                |
-| [DQ82]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ83}        | `DecisionQuotient.HardnessDistribution.native_minimal_errors`                                          |
-| [DQ83]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ84}        | `DecisionQuotient.HardnessDistribution.right_fewer_error_sites`                                        |
-| [DQ84]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ85}        | `DecisionQuotient.HardnessDistribution.saturatingSiteCost`                                             |
-| [DQ85]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ86}        | `DecisionQuotient.HardnessDistribution.simplicityTax`                                                  |
-| [DQ86]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ87}        | `DecisionQuotient.HardnessDistribution.simplicityTax_conservation`                                     |
-| [DQ87]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ88}        | `DecisionQuotient.HardnessDistribution.totalDOF`                                                       |
-| [DQ88]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ89}        | `DecisionQuotient.HardnessDistribution.totalDOF_eventually_constant_of_zero_distributed`               |
-| [DQ89]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ90}        | `DecisionQuotient.HardnessDistribution.totalExternalWork`                                              |
-| [DQ90]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ91}        | `DecisionQuotient.HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`                             |
-| [DQ91]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ92}        | `DecisionQuotient.HardnessDistribution.zero_distributed_of_totalDOF_eventually_constant`               |
-| [DQ92]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ93}        | `DecisionQuotient.InP`                                                                                 |
-| [DQ93]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ94}        | `DecisionQuotient.InsufficiencyWitness`                                                                |
-| [DQ94]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ95}        | `DecisionQuotient.IntegrityCompetence.CertifyingSolver`                                                |
-| [DQ95]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ96}        | `DecisionQuotient.IntegrityCompetence.ClaimAdmissible`                                                 |
-| [DQ96]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ97}        | `DecisionQuotient.IntegrityCompetence.CompetentOn`                                                     |
-| [DQ97]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ98}        | `DecisionQuotient.IntegrityCompetence.EpsilonCompetentOn`                                              |
-| [DQ98]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ99}        | `DecisionQuotient.IntegrityCompetence.EpsilonRelation`                                                 |
-| [DQ99]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ100}       | `DecisionQuotient.IntegrityCompetence.Regime`                                                          |
-| [DQ100]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ101}       | `DecisionQuotient.IntegrityCompetence.SolverIntegrity`                                                 |
-| [DQ101]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ102}       | `DecisionQuotient.IntegrityCompetence.admissibleIrrationalCount`                                       |
-| [DQ102]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ103}       | `DecisionQuotient.IntegrityCompetence.admissibleRationalCount`                                         |
-| [DQ103]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ104}       | `DecisionQuotient.IntegrityCompetence.admissible_epsilon_implies_integrity`                            |
-| [DQ104]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ105}       | `DecisionQuotient.IntegrityCompetence.admissible_exact_implies_integrity`                              |
-| [DQ105]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ106}       | `DecisionQuotient.IntegrityCompetence.alwaysAbstain`                                                   |
-| [DQ106]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ107}       | `DecisionQuotient.IntegrityCompetence.alwaysAbstain_integrity`                                         |
-| [DQ107]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ108}       | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_eq_raw_plus_overhead`                         |
-| [DQ108]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ109}       | `DecisionQuotient.IntegrityCompetence.claim_admissible_abstain`                                        |
-| [DQ109]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ110}       | `DecisionQuotient.IntegrityCompetence.claim_admissible_epsilon_iff`                                    |
-| [DQ110]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ111}       | `DecisionQuotient.IntegrityCompetence.claim_admissible_exact_iff`                                      |
-| [DQ111]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ112}       | `DecisionQuotient.IntegrityCompetence.competent_has_coverage`                                          |
-| [DQ112]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ113}       | `DecisionQuotient.IntegrityCompetence.epsilon_admissible_iff_raw_lt_certifiedTotal`                    |
-| [DQ113]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ114}       | `DecisionQuotient.IntegrityCompetence.exact_admissible_iff_raw_lt_certifiedTotal`                      |
-| [DQ114]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ115}       | `DecisionQuotient.IntegrityCompetence.exact_raw_eq_certifiedTotal_iff_exactCertaintyInflation`         |
-| [DQ115]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ116}       | `DecisionQuotient.IntegrityCompetence.inducedRelation`                                                 |
-| [DQ116]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ117}       | `DecisionQuotient.IntegrityCompetence.no_uncertified_epsilon_claim`                                    |
-| [DQ117]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ118}       | `DecisionQuotient.IntegrityCompetence.no_uncertified_exact_claim`                                      |
-| [DQ118]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ119}       | `DecisionQuotient.IntegrityCompetence.overModelVerdict`                                                |
-| [DQ119]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ120}       | `DecisionQuotient.IntegrityCompetence.overModelVerdict_inadmissible_iff`                               |
-| [DQ120]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ121}       | `DecisionQuotient.IntegrityCompetence.overModelVerdict_irrational_iff`                                 |
-| [DQ121]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ122}       | `DecisionQuotient.IntegrityCompetence.program_framed_as_solver`                                        |
-| [DQ122]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ123}       | `DecisionQuotient.IntegrityCompetence.report_admissible_implies_raw_lt_certifiedTotal`                 |
-| [DQ123]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ124}       | `DecisionQuotient.IntegrityCompetence.report_not_admissible_implies_raw_eq_certifiedTotal`             |
-| [DQ124]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ125}       | `DecisionQuotient.IntegrityCompetence.report_raw_eq_certifiedTotal_iff_certaintyInflation`             |
-| [DQ125]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ126}       | `DecisionQuotient.IntegrityCompetence.rlffReward_abstain`                                              |
-| [DQ126]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ127}       | `DecisionQuotient.IntegrityCompetence.rlffReward_of_evidence`                                          |
-| [DQ127]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ128}       | `DecisionQuotient.IntegrityCompetence.rlffReward_of_no_evidence`                                       |
-| [DQ128]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ129}       | `DecisionQuotient.IntegrityCompetence.solverIntegrity_substrate_parametric`                            |
-| [DQ129]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ130}       | `DecisionQuotient.IntegrityCompetence.solverOfPartialMap`                                              |
-| [DQ130]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ131}       | `DecisionQuotient.IntegrityCompetence.solverOfPartialMap_integrity`                                    |
-| [DQ131]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ132}       | `DecisionQuotient.IntegrityCompetence.steps_run_scalar_always_defined`                                 |
-| [DQ132]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ133}       | `DecisionQuotient.IntegrityCompetence.steps_run_scalar_falsifiable`                                    |
-| [DQ133]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ134}       | `DecisionQuotient.IntegrityCompetence.zero_epsilon_competence_iff_exact`                               |
-| [DQ134]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ135}       | `DecisionQuotient.InteriorVerification.CoordScore`                                                     |
-| [DQ135]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ136}       | `DecisionQuotient.InteriorVerification.not_sufficientOnSet_of_counterexample`                          |
-| [DQ136]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ137}       | `DecisionQuotient.InteriorVerification.singleton_coordinate_interior_certificate`                      |
-| [DQ137]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ138}       | `DecisionQuotient.IsPolynomialTime`                                                                    |
-| [DQ138]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ139}       | `DecisionQuotient.Literal`                                                                             |
-| [DQ139]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ140}       | `DecisionQuotient.MinSufficientSetInstance`                                                            |
-| [DQ140]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ141}       | `DecisionQuotient.Outside`                                                                             |
-| [DQ141]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ142}       | `DecisionQuotient.PhysicalBudgetCrossover.EncodingSizeModel`                                           |
-| [DQ142]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ143}       | `DecisionQuotient.PhysicalBudgetCrossover.ExplicitInfeasible`                                          |
-| [DQ143]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ144}       | `DecisionQuotient.PhysicalBudgetCrossover.ExplicitUnbounded`                                           |
-| [DQ144]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ145}       | `DecisionQuotient.PhysicalBudgetCrossover.HasCrossover`                                                |
-| [DQ145]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ146}       | `DecisionQuotient.PhysicalBudgetCrossover.SuccinctBoundedBy`                                           |
-| [DQ146]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ147}       | `DecisionQuotient.PhysicalBudgetCrossover.SuccinctFeasible`                                            |
-| [DQ147]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ148}       | `DecisionQuotient.PhysicalBudgetCrossover.crossover_for_all_budgets_above_cap`                         |
-| [DQ148]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ149}       | `DecisionQuotient.PhysicalBudgetCrossover.crossover_hardness_bundle`                                   |
-| [DQ149]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ150}       | `DecisionQuotient.PhysicalBudgetCrossover.crossover_integrity_policy`                                  |
-| [DQ150]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ151}       | `DecisionQuotient.PhysicalBudgetCrossover.has_crossover_of_bounded_succinct_unbounded_explicit`        |
-| [DQ151]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ152}       | `DecisionQuotient.PhysicalBudgetCrossover.has_crossover_of_witness`                                    |
-| [DQ152]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ153}       | `DecisionQuotient.Physics.Instantiation.Configuration`                                                 |
-| [DQ153]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ154}       | `DecisionQuotient.Physics.Instantiation.DecisionCircuit`                                               |
-| [DQ154]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ155}       | `DecisionQuotient.Physics.Instantiation.DecisionInterpretation`                                        |
-| [DQ155]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ156}       | `DecisionQuotient.Physics.Instantiation.EnergyLandscape`                                               |
-| [DQ156]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ157}       | `DecisionQuotient.Physics.Instantiation.LandauerBound`                                                 |
-| [DQ157]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ158}       | `DecisionQuotient.Physics.Instantiation.Molecule`                                                      |
-| [DQ158]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ159}       | `DecisionQuotient.Physics.Instantiation.MoleculeAsCircuit`                                             |
-| [DQ159]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ160}       | `DecisionQuotient.Physics.Instantiation.MoleculeAsDecisionCircuit`                                     |
-| [DQ160]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ162}       | `DecisionQuotient.Physics.Instantiation.Reaction`                                                      |
-| [DQ162]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ163}       | `DecisionQuotient.Physics.Instantiation.k_Boltzmann`                                                   |
-| [DQ163]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ164}       | `DecisionQuotient.PolyReduction`                                                                       |
-| [DQ164]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ165}       | `DecisionQuotient.PolyTimeApprox`                                                                      |
-| [DQ165]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ166}       | `DecisionQuotient.PolytimeElicitationMechanism`                                                        |
-| [DQ166]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ167}       | `DecisionQuotient.Prior`                                                                               |
-| [DQ167]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ168}       | `DecisionQuotient.ProductSpace`                                                                        |
-| [DQ168]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ169}       | `DecisionQuotient.QBFState`                                                                            |
-| [DQ169]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ170}       | `DecisionQuotient.QueryAlgorithm`                                                                      |
-| [DQ170]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ171}       | `DecisionQuotient.QueryTranscript`                                                                     |
-| [DQ171]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ172}       | `DecisionQuotient.SAT3Instance`                                                                        |
-| [DQ172]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ173}       | `DecisionQuotient.SAT3Instance.eval`                                                                   |
-| [DQ173]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ174}       | `DecisionQuotient.SAT3Instance.eval_eq_true_iff`                                                       |
-| [DQ174]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ175}       | `DecisionQuotient.SAT3Instance.satisfiable`                                                            |
-| [DQ175]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ176}       | `DecisionQuotient.SAT3Instance.satisfiedBy`                                                            |
-| [DQ176]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ177}       | `DecisionQuotient.SeparableUtility`                                                                    |
-| [DQ177]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ178}       | `DecisionQuotient.SetComparisonInstance`                                                               |
-| [DQ178]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ179}       | `DecisionQuotient.SharpSATInstance`                                                                    |
-| [DQ179]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ180}       | `DecisionQuotient.Sigma2PHardness.GadgetState`                                                         |
-| [DQ180]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ181}       | `DecisionQuotient.Sigma2PHardness.I_eq_I_of_encodeX`                                                   |
-| [DQ181]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ182}       | `DecisionQuotient.Sigma2PHardness.I_of_encodeX_subset`                                                 |
-| [DQ182]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ183}       | `DecisionQuotient.Sigma2PHardness.I_of_x`                                                              |
-| [DQ183]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ184}       | `DecisionQuotient.Sigma2PHardness.I_of_x_card`                                                         |
-| [DQ184]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ185}       | `DecisionQuotient.Sigma2PHardness.bit`                                                                 |
-| [DQ185]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ186}       | `DecisionQuotient.Sigma2PHardness.bit_le_one`                                                          |
-| [DQ186]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ187}       | `DecisionQuotient.Sigma2PHardness.bit_lt_two`                                                          |
-| [DQ187]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ188}       | `DecisionQuotient.Sigma2PHardness.cCoord`                                                              |
-| [DQ188]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ189}       | `DecisionQuotient.Sigma2PHardness.cCoord_inj`                                                          |
-| [DQ189]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ190}       | `DecisionQuotient.Sigma2PHardness.cCoord_inj_bits`                                                     |
-| [DQ190]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ191}       | `DecisionQuotient.Sigma2PHardness.cCoord_injective`                                                    |
-| [DQ191]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ192}       | `DecisionQuotient.Sigma2PHardness.cCoord_val`                                                          |
-| [DQ192]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ193}       | `DecisionQuotient.Sigma2PHardness.cCoord_val_lt_of_lt`                                                 |
-| [DQ193]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ194}       | `DecisionQuotient.Sigma2PHardness.disjoint_I_of_x00_x11`                                               |
-| [DQ194]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ195}       | `DecisionQuotient.Sigma2PHardness.encodeX`                                                             |
-| [DQ195]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ196}       | `DecisionQuotient.Sigma2PHardness.encodeX_I_of_x`                                                      |
-| [DQ196]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ197}       | `DecisionQuotient.Sigma2PHardness.exactlyIdentifiesRelevant`                                           |
-| [DQ197]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ198}       | `DecisionQuotient.Sigma2PHardness.exactlyIdentifiesRelevant_iff_mem_relevant`                          |
-| [DQ198]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ199}       | `DecisionQuotient.Sigma2PHardness.exactlyIdentifiesRelevant_implies_representationGap_zero`            |
-| [DQ199]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ200}       | `DecisionQuotient.Sigma2PHardness.goodEq`                                                              |
-| [DQ200]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ201}       | `DecisionQuotient.Sigma2PHardness.goodEq_x00`                                                          |
-| [DQ201]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ202}       | `DecisionQuotient.Sigma2PHardness.goodEq_x11`                                                          |
-| [DQ202]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ203}       | `DecisionQuotient.Sigma2PHardness.mem_I_of_x_iff`                                                      |
-| [DQ203]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ204}       | `DecisionQuotient.Sigma2PHardness.mem_relevantFinset_iff`                                              |
-| [DQ204]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ205}       | `DecisionQuotient.Sigma2PHardness.not_goodEq_x01`                                                      |
-| [DQ205]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ206}       | `DecisionQuotient.Sigma2PHardness.not_sufficient_of_missing_relevantFinset`                            |
-| [DQ206]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ207}       | `DecisionQuotient.Sigma2PHardness.relevantFinset`                                                      |
-| [DQ207]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ208}       | `DecisionQuotient.Sigma2PHardness.representationGap`                                                   |
-| [DQ208]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ209}       | `DecisionQuotient.Sigma2PHardness.representationGap_eq_waste_plus_missing`                             |
-| [DQ209]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ210}       | `DecisionQuotient.Sigma2PHardness.representationGap_missing_eq_gapCard`                                |
-| [DQ210]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ211}       | `DecisionQuotient.Sigma2PHardness.representationGap_zero_iff_exactlyIdentifiesRelevant`                |
-| [DQ211]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ212}       | `DecisionQuotient.Sigma2PHardness.representationGap_zero_iff_minimalSufficient`                        |
-| [DQ212]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ213}       | `DecisionQuotient.Sigma2PHardness.representationGap_zero_iff_sufficient_and_subset_relevantFinset`     |
-| [DQ213]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ214}       | `DecisionQuotient.Sigma2PHardness.representationGap_zero_implies_sufficient`                           |
-| [DQ214]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ215}       | `DecisionQuotient.Sigma2PHardness.sufficient_iff_relevantFinset_subset`                                |
-| [DQ215]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ216}       | `DecisionQuotient.Sigma2PHardness.sufficient_iff_relevant_subset`                                      |
-| [DQ216]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ217}       | `DecisionQuotient.Sigma2PHardness.sufficient_of_contains_relevant`                                     |
-| [DQ217]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ218}       | `DecisionQuotient.Sigma2PHardness.two_mul_add_one_lt_two_mul`                                          |
-| [DQ218]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ219}       | `DecisionQuotient.Sigma2PHardness.univ_sufficient_bool`                                                |
-| [DQ219]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ220}       | `DecisionQuotient.Sigma2PHardness.validI`                                                              |
-| [DQ220]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ221}       | `DecisionQuotient.Sigma2PHardness.validI_I_of_x`                                                       |
-| [DQ221]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ222}       | `DecisionQuotient.Sigma2PHardness.validI_iff_exists_x`                                                 |
-| [DQ222]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ223}       | `DecisionQuotient.Sigma2PHardness.vector1_obstruction`                                                 |
-| [DQ223]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ224}       | `DecisionQuotient.Sigma2PHardness.x00`                                                                 |
-| [DQ224]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ225}       | `DecisionQuotient.Sigma2PHardness.x01`                                                                 |
-| [DQ225]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ226}       | `DecisionQuotient.Sigma2PHardness.x11`                                                                 |
-| [DQ226]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ227}       | `DecisionQuotient.Sigma2PHardness.yCoord`                                                              |
-| [DQ227]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ228}       | `DecisionQuotient.Sigma2PHardness.yCoord_val`                                                          |
-| [DQ228]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ229}       | `DecisionQuotient.Signal`                                                                              |
-| [DQ229]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ230}       | `DecisionQuotient.StateAbstraction`                                                                    |
-| [DQ230]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ231}       | `DecisionQuotient.StateBatchQuery`                                                                     |
-| [DQ231]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ232}       | `DecisionQuotient.StructuredUtility`                                                                   |
-| [DQ232]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ233}       | `DecisionQuotient.SufficiencyCheckInstance`                                                            |
-| [DQ233]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ234}       | `DecisionQuotient.SufficiencyInstance`                                                                 |
-| [DQ234]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ235}       | `DecisionQuotient.Summary.bounded_actions_tractable`                                                   |
-| [DQ235]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ236}       | `DecisionQuotient.Summary.complexity_dichotomy`                                                        |
-| [DQ236]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ237}       | `DecisionQuotient.Summary.conp_completeness`                                                           |
-| [DQ237]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ238}       | `DecisionQuotient.Summary.eth_lower_bound`                                                             |
-| [DQ238]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ239}       | `DecisionQuotient.Summary.min_sufficient_inapproximability`                                            |
-| [DQ239]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ240}       | `DecisionQuotient.Summary.parameterized_results`                                                       |
-| [DQ240]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ241}       | `DecisionQuotient.Summary.separable_utility_tractable`                                                 |
-| [DQ241]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ242}       | `DecisionQuotient.Summary.sharp_p_hardness`                                                            |
-| [DQ242]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ243}       | `DecisionQuotient.Summary.tractability_tightness`                                                      |
-| [DQ243]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ244}       | `DecisionQuotient.Summary.tree_structure_tractable`                                                    |
-| [DQ244]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ245}       | `DecisionQuotient.ThermodynamicLift.ThermoModel`                                                       |
-| [DQ245]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ246}       | `DecisionQuotient.ThermodynamicLift.carbonLowerBound`                                                  |
-| [DQ246]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ247}       | `DecisionQuotient.ThermodynamicLift.carbon_lower_additive`                                             |
-| [DQ247]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ248}       | `DecisionQuotient.ThermodynamicLift.carbon_lower_from_bits_lower`                                      |
-| [DQ248]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ249}       | `DecisionQuotient.ThermodynamicLift.carbon_lower_mandatory`                                            |
-| [DQ249]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ250}       | `DecisionQuotient.ThermodynamicLift.energyLowerBound`                                                  |
-| [DQ250]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ251}       | `DecisionQuotient.ThermodynamicLift.energy_lower_additive`                                             |
-| [DQ251]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ252}       | `DecisionQuotient.ThermodynamicLift.energy_lower_from_bits_lower`                                      |
-| [DQ252]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ253}       | `DecisionQuotient.ThermodynamicLift.energy_lower_mandatory`                                            |
-| [DQ253]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ254}       | `DecisionQuotient.ThermodynamicLift.eventual_thermo_lift`                                              |
-| [DQ254]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ255}       | `DecisionQuotient.ThermodynamicLift.hardness_thermo_bundle_conditional`                                |
-| [DQ255]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ256}       | `DecisionQuotient.ThermodynamicLift.mandatory_conserved_bundle_conditional`                            |
-| [DQ256]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ257}       | `DecisionQuotient.ThermodynamicLift.mandatory_cost_bundle`                                             |
-| [DQ257]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ258}       | `DecisionQuotient.TreeStructured`                                                                      |
-| [DQ258]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ259}       | `DecisionQuotient.UniverseDynamics`                                                                    |
-| [DQ259]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ260}       | `DecisionQuotient.ValueQueryState`                                                                     |
-| [DQ260]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ261}       | `DecisionQuotient.actions_card`                                                                        |
-| [DQ261]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ262}       | `DecisionQuotient.adversarialOpt`                                                                      |
-| [DQ262]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ263}       | `DecisionQuotient.adversarialOpt_eq_false_of_ne`                                                       |
-| [DQ263]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ264}       | `DecisionQuotient.adversarialOpt_eq_true_of_eq`                                                        |
-| [DQ264]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ265}       | `DecisionQuotient.agreeOn`                                                                             |
-| [DQ265]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ266}       | `DecisionQuotient.agreeOn_flipAt`                                                                      |
-| [DQ266]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ267}       | `DecisionQuotient.agreeOn_iff_subset_agreementSet`                                                     |
-| [DQ267]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ268}       | `DecisionQuotient.agreeOn_xCoords_iff`                                                                 |
-| [DQ268]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ269}       | `DecisionQuotient.agreementSet`                                                                        |
-| [DQ269]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ270}       | `DecisionQuotient.all_coords_relevant_of_not_tautology`                                                |
-| [DQ270]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ271}       | `DecisionQuotient.anchor_sufficiency_sigma2p`                                                          |
-| [DQ271]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ272}       | `DecisionQuotient.anchor_sufficiency_sigma2p_nonempty`                                                 |
-| [DQ272]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ273}       | `DecisionQuotient.anchoredSlice`                                                                       |
-| [DQ273]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ274}       | `DecisionQuotient.anchoredSliceEquivOutside`                                                           |
-| [DQ274]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ275}       | `DecisionQuotient.anchoredSlice_mul_fixed_eq_full`                                                     |
-| [DQ275]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ276}       | `DecisionQuotient.approxWithin`                                                                        |
-| [DQ276]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ277}       | `DecisionQuotient.bestExpectedUtility`                                                                 |
-| [DQ277]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ278}       | `DecisionQuotient.bool_minimalSufficient_unique`                                                       |
-| [DQ278]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ279}       | `DecisionQuotient.bool_sufficient_erase_irrelevant`                                                    |
-| [DQ279]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ280}       | `DecisionQuotient.bounded_actions_complexity`                                                          |
-| [DQ280]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ281}       | `DecisionQuotient.bounded_actions_polynomial_time`                                                     |
-| [DQ281]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ282}       | `DecisionQuotient.buildDQProblem`                                                                      |
-| [DQ282]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ283}       | `DecisionQuotient.card_anchoredSlice`                                                                  |
-| [DQ283]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ284}       | `DecisionQuotient.card_anchoredSlice_eq_uniform`                                                       |
-| [DQ284]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ285}       | `DecisionQuotient.card_binary_state`                                                                   |
-| [DQ285]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ286}       | `DecisionQuotient.card_function_space`                                                                 |
-| [DQ286]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ287}       | `DecisionQuotient.card_outside_eq_sub`                                                                 |
-| [DQ287]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ288}       | `DecisionQuotient.certificate_lower_bound_for_I`                                                       |
-| [DQ288]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ289}       | `DecisionQuotient.certificate_lower_bound_for_I_card`                                                  |
-| [DQ289]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ290}       | `DecisionQuotient.certificate_lower_bound_for_I_card_summary`                                          |
-| [DQ290]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ291}       | `DecisionQuotient.certificate_lower_bound_for_I_empty`                                                 |
-| [DQ291]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ292}       | `DecisionQuotient.certificate_lower_bound_for_I_empty_summary`                                         |
-| [DQ292]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ293}       | `DecisionQuotient.certificate_lower_bound_for_I_summary`                                               |
-| [DQ293]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ294}       | `DecisionQuotient.certificate_lower_bound_poly`                                                        |
-| [DQ294]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ295}       | `DecisionQuotient.certificate_lower_bound_poly_ge`                                                     |
-| [DQ295]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ296}       | `DecisionQuotient.certificate_lower_bound_poly_ge_summary`                                             |
-| [DQ296]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ297}       | `DecisionQuotient.certificate_lower_bound_poly_summary`                                                |
-| [DQ297]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ298}       | `DecisionQuotient.compatibleStates`                                                                    |
-| [DQ298]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ299}       | `DecisionQuotient.complexity_summary`                                                                  |
-| [DQ299]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ300}       | `DecisionQuotient.constTrueFinite_empty_sufficient`                                                    |
-| [DQ300]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ301}       | `DecisionQuotient.constTrueProblem`                                                                    |
-| [DQ301]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ302}       | `DecisionQuotient.constTrueProblemFinite`                                                              |
-| [DQ302]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ303}       | `DecisionQuotient.constTrueProblemFinite_opt`                                                          |
-| [DQ303]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ304}       | `DecisionQuotient.constTrueProblem_opt`                                                                |
-| [DQ304]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ305}       | `DecisionQuotient.constTrue_empty_sufficient`                                                          |
-| [DQ305]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ306}       | `DecisionQuotient.const_vs_scaled_opt_view_equal`                                                      |
-| [DQ306]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ307}       | `DecisionQuotient.const_vs_scaled_value_entry_diff_at_true`                                            |
-| [DQ307]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ308}       | `DecisionQuotient.constant_opt_no_relevant`                                                            |
-| [DQ308]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ309}       | `DecisionQuotient.constant_opt_quotientSize_one`                                                       |
-| [DQ309]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ310}       | `DecisionQuotient.countSatisfyingAssignments`                                                          |
-| [DQ310]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ311}       | `DecisionQuotient.countedCheckPairs`                                                                   |
-| [DQ311]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ312}       | `DecisionQuotient.countedCheckPairs_steps_bound`                                                       |
-| [DQ312]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ313}       | `DecisionQuotient.countedCompare`                                                                      |
-| [DQ313]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ314}       | `DecisionQuotient.countedOptEqual`                                                                     |
-| [DQ314]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ315}       | `DecisionQuotient.covers`                                                                              |
-| [DQ315]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ316}       | `DecisionQuotient.covers_iff_agreeOn`                                                                  |
-| [DQ316]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ317}       | `DecisionQuotient.cube_lt_pow`                                                                         |
-| [DQ317]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ318}       | `DecisionQuotient.cubic_step_bound`                                                                    |
-| [DQ318]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ319}       | `DecisionQuotient.cyclic_dependencies_coNP_hard`                                                       |
-| [DQ319]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ320}       | `DecisionQuotient.decisionQuotient_cases`                                                              |
-| [DQ320]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ321}       | `DecisionQuotient.decision_quotient_FPTAS`                                                             |
-| [DQ321]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ322}       | `DecisionQuotient.decision_quotient_sharp_P_hard`                                                      |
-| [DQ322]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ323}       | `DecisionQuotient.decode_error_sum_two_labels`                                                         |
-| [DQ323]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ324}       | `DecisionQuotient.dichotomy_by_relevant_size`                                                          |
-| [DQ324]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ325}       | `DecisionQuotient.distinguish_requires_target`                                                         |
-| [DQ325]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ326}       | `DecisionQuotient.dqExact`                                                                             |
-| [DQ326]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ327}       | `DecisionQuotient.dqProjection`                                                                        |
-| [DQ327]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ328}       | `DecisionQuotient.dq_approximation_hard`                                                               |
-| [DQ328]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ329}       | `DecisionQuotient.emptySufficiency_query_indistinguishable_pair`                                       |
-| [DQ329]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ330}       | `DecisionQuotient.emptySufficiency_query_indistinguishable_pair_finite`                                |
-| [DQ330]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ331}       | `DecisionQuotient.emptySufficiency_stateBatch_indistinguishable_pair`                                  |
-| [DQ331]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ332}       | `DecisionQuotient.emptySufficiency_valueEntry_indistinguishable_pair`                                  |
-| [DQ332]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ333}       | `DecisionQuotient.empty_minimal_sufficient_iff_constant`                                               |
-| [DQ333]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ334}       | `DecisionQuotient.endpoints`                                                                           |
-| [DQ334]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ335}       | `DecisionQuotient.endpoints_card_le`                                                                   |
-| [DQ335]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ336}       | `DecisionQuotient.eth_implies_sat3_exponential`                                                        |
-| [DQ336]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ337}       | `DecisionQuotient.eth_lower_bound_informal`                                                            |
-| [DQ337]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ338}       | `DecisionQuotient.eth_lower_bound_sufficiency_check`                                                   |
-| [DQ338]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ339}       | `DecisionQuotient.exactDQ`                                                                             |
-| [DQ339]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ340}       | `DecisionQuotient.exists_coord_not_mem`                                                                |
-| [DQ340]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ341}       | `DecisionQuotient.exists_distinct_patterns`                                                            |
-| [DQ341]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ342}       | `DecisionQuotient.exists_forall_iff_anchor_sufficient`                                                 |
-| [DQ342]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ343}       | `DecisionQuotient.exists_forall_iff_anchor_sufficient_padded`                                          |
-| [DQ343]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ344}       | `DecisionQuotient.exists_not_mem_of_card_lt_univ`                                                      |
-| [DQ344]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ345}       | `DecisionQuotient.exists_state_not_in_endpoints`                                                       |
-| [DQ345]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ346}       | `DecisionQuotient.expectedUtility`                                                                     |
-| [DQ346]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ347}       | `DecisionQuotient.exponential_query_complexity`                                                        |
-| [DQ347]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ348}       | `DecisionQuotient.feasibleActions`                                                                     |
-| [DQ348]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ349}       | `DecisionQuotient.flipAt`                                                                              |
-| [DQ349]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ350}       | `DecisionQuotient.flipAt_ne`                                                                           |
-| [DQ350]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ351}       | `DecisionQuotient.fptRunningTime`                                                                      |
-| [DQ351]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ352}       | `DecisionQuotient.fpt_kernel_bound`                                                                    |
-| [DQ352]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ353}       | `DecisionQuotient.full_query_distinguishes_const_spike_finite`                                         |
-| [DQ353]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ354}       | `DecisionQuotient.greedy_approximation_ratio`                                                          |
-| [DQ354]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ355}       | `DecisionQuotient.hard_when_all_relevant`                                                              |
-| [DQ355]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ356}       | `DecisionQuotient.indistinguishable_pair_forces_one_error`                                             |
-| [DQ356]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ357}       | `DecisionQuotient.indistinguishable_pair_forces_one_error_per_seed`                                    |
-| [DQ357]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ358}       | `DecisionQuotient.infeasible_not_optimal_of_gap`                                                       |
-| [DQ358]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ359}       | `DecisionQuotient.lawDecisionProblem`                                                                  |
-| [DQ359]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ360}       | `DecisionQuotient.lawUtility`                                                                          |
-| [DQ360]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ361}       | `DecisionQuotient.lawUtility_eq_of_allowed_iff`                                                        |
-| [DQ361]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ362}       | `DecisionQuotient.logicallyDeterministic`                                                              |
-| [DQ362]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ363}       | `DecisionQuotient.mem_compatibleStates_iff`                                                            |
-| [DQ363]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ364}       | `DecisionQuotient.mem_optFinset_iff`                                                                   |
-| [DQ364]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ365}       | `DecisionQuotient.mem_optimalActions_iff_actionValue`                                                  |
-| [DQ365]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ366}       | `DecisionQuotient.mem_xCoords`                                                                         |
-| [DQ366]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ367}       | `DecisionQuotient.min_sufficient_W2_hard`                                                              |
-| [DQ367]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ368}       | `DecisionQuotient.min_sufficient_inapproximability_informal`                                           |
-| [DQ368]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ369}       | `DecisionQuotient.min_sufficient_set_coNP_hard`                                                        |
-| [DQ369]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ370}       | `DecisionQuotient.min_sufficient_set_inapprox_statement`                                               |
-| [DQ370]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ371}       | `DecisionQuotient.mkState`                                                                             |
-| [DQ371]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ372}       | `DecisionQuotient.mkState_castAdd`                                                                     |
-| [DQ372]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ373}       | `DecisionQuotient.mkState_natAdd`                                                                      |
-| [DQ373]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ374}       | `DecisionQuotient.monotone_opt_at_top`                                                                 |
-| [DQ374]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ375}       | `DecisionQuotient.mss_equiv_relevant_card`                                                             |
-| [DQ375]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ376}       | `DecisionQuotient.no_satisfying_of_count_zero`                                                         |
-| [DQ376]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ377}       | `DecisionQuotient.not_tautology_iff_exists_opt_difference`                                             |
-| [DQ377]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ378}       | `DecisionQuotient.numPatterns`                                                                         |
-| [DQ378]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ379}       | `DecisionQuotient.optComparisonCost`                                                                   |
-| [DQ379]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ380}       | `DecisionQuotient.optFinset`                                                                           |
-| [DQ380]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ381}       | `DecisionQuotient.optFinset_subset_projectedOptCover`                                                  |
-| [DQ381]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ382}       | `DecisionQuotient.opt_both`                                                                            |
-| [DQ382]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ383}       | `DecisionQuotient.opt_falsifying`                                                                      |
-| [DQ383]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ384}       | `DecisionQuotient.opt_falsifying_many`                                                                 |
-| [DQ384]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ385}       | `DecisionQuotient.opt_no_only`                                                                         |
-| [DQ385]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ386}       | `DecisionQuotient.opt_reference`                                                                       |
-| [DQ386]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ387}       | `DecisionQuotient.opt_reference_many`                                                                  |
-| [DQ387]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ388}       | `DecisionQuotient.opt_satisfying`                                                                      |
-| [DQ388]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ389}       | `DecisionQuotient.opt_tautology_many`                                                                  |
-| [DQ389]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ390}       | `DecisionQuotient.opt_yes_only`                                                                        |
-| [DQ390]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ391}       | `DecisionQuotient.optimalActions_eq_of_separable`                                                      |
-| [DQ391]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ392}       | `DecisionQuotient.optimalActions_sat`                                                                  |
-| [DQ392]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ393}       | `DecisionQuotient.optimalActions_unsat`                                                                |
-| [DQ393]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ394}       | `DecisionQuotient.oracleView`                                                                          |
-| [DQ394]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ395}       | `DecisionQuotient.oracleViewFinite`                                                                    |
-| [DQ395]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ396}       | `DecisionQuotient.oracleViewFinite_eq_of_agree`                                                        |
-| [DQ396]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ397}       | `DecisionQuotient.oracleView_eq_of_agree`                                                              |
-| [DQ397]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ398}       | `DecisionQuotient.over_modeling_justified`                                                             |
-| [DQ398]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ399}       | `DecisionQuotient.pairCheckCost`                                                                       |
-| [DQ399]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ400}       | `DecisionQuotient.parameterized_complexity_summary`                                                    |
-| [DQ400]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ401}       | `DecisionQuotient.patternClass`                                                                        |
-| [DQ401]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ402}       | `DecisionQuotient.poly_compose_bound`                                                                  |
-| [DQ402]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ403}       | `DecisionQuotient.poly_inner_bound`                                                                    |
-| [DQ403]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ404}       | `DecisionQuotient.poly_reduction_implies_many_one_exists`                                              |
-| [DQ404]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ405}       | `DecisionQuotient.poly_reduction_preserves_P`                                                          |
-| [DQ405]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ406}       | `DecisionQuotient.polytime_elicitation_exists_structured`                                              |
-| [DQ406]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ407}       | `DecisionQuotient.proj_binary_state`                                                                   |
-| [DQ407]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ408}       | `DecisionQuotient.projectToCoords`                                                                     |
-| [DQ408]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ409}       | `DecisionQuotient.projectedOptCover`                                                                   |
-| [DQ409]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ410}       | `DecisionQuotient.projectedOptCover_eq_opt_of_sufficient`                                              |
-| [DQ410]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ411}       | `DecisionQuotient.qbfEval`                                                                             |
-| [DQ411]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ412}       | `DecisionQuotient.qbfEval_mkState`                                                                     |
-| [DQ412]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ413}       | `DecisionQuotient.qbfProblem`                                                                          |
-| [DQ413]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ414}       | `DecisionQuotient.qbfUtility`                                                                          |
-| [DQ414]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ415}       | `DecisionQuotient.queryComplexityLowerBound`                                                           |
-| [DQ415]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ416}       | `DecisionQuotient.queryDistinguishes`                                                                  |
-| [DQ416]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ417}       | `DecisionQuotient.query_lower_bound_statement`                                                         |
-| [DQ417]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ418}       | `DecisionQuotient.quotientSize_bool_le_pow`                                                            |
-| [DQ418]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ419}       | `DecisionQuotient.quotientSize_le_card`                                                                |
-| [DQ419]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ420}       | `DecisionQuotient.quotientSize_le_pow_coords`                                                          |
-| [DQ420]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ421}       | `DecisionQuotient.quotientSize_one_all_sufficient`                                                     |
-| [DQ421]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ422}       | `DecisionQuotient.quotientSize_one_iff_constant`                                                       |
-| [DQ422]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ423}       | `DecisionQuotient.quotientSize_pos`                                                                    |
-| [DQ423]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ424}       | `DecisionQuotient.recoverCount`                                                                        |
-| [DQ424]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ425}       | `DecisionQuotient.recoverCount_correct`                                                                |
-| [DQ425]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ426}       | `DecisionQuotient.reductionProblem`                                                                    |
-| [DQ426]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ427}       | `DecisionQuotient.reductionProblemMany`                                                                |
-| [DQ427]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ428}       | `DecisionQuotient.reductionUtility`                                                                    |
-| [DQ428]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ429}       | `DecisionQuotient.reductionUtilityMany`                                                                |
-| [DQ429]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ430}       | `DecisionQuotient.reduction_not_separable`                                                             |
-| [DQ430]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ431}       | `DecisionQuotient.replace_proj_other`                                                                  |
-| [DQ431]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ432}       | `DecisionQuotient.replace_proj_self`                                                                   |
-| [DQ432]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ433}       | `DecisionQuotient.sameProjection`                                                                      |
-| [DQ433]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ434}       | `DecisionQuotient.sameProjection_trans`                                                                |
-| [DQ434]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ435}       | `DecisionQuotient.sat3ToCircuit`                                                                       |
-| [DQ435]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ436}       | `DecisionQuotient.sat3_reduction_size_preserving`                                                      |
-| [DQ436]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ437}       | `DecisionQuotient.satSet`                                                                              |
-| [DQ437]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ438}       | `DecisionQuotient.satSet_empty_of_count_zero`                                                          |
-| [DQ438]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ439}       | `DecisionQuotient.scaledTrueProblem`                                                                   |
-| [DQ439]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ440}       | `DecisionQuotient.scaledTrueProblem_opt`                                                               |
-| [DQ440]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ441}       | `DecisionQuotient.separable_isSufficient`                                                              |
-| [DQ441]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ442}       | `DecisionQuotient.sharpSAT_encoded_in_DQ`                                                              |
-| [DQ442]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ443}       | `DecisionQuotient.sharpSAT_exactDQ`                                                                    |
-| [DQ443]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ444}       | `DecisionQuotient.sharpSATtoDQ`                                                                        |
-| [DQ444]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ445}       | `DecisionQuotient.sharpSATtoDQInstance`                                                                |
-| [DQ445]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ446}       | `DecisionQuotient.single_action_always_sufficient`                                                     |
-| [DQ446]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ447}       | `DecisionQuotient.someEmbedding`                                                                       |
-| [DQ447]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ448}       | `DecisionQuotient.spikeFinite_empty_not_sufficient`                                                    |
-| [DQ448]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ449}       | `DecisionQuotient.spikeProblem`                                                                        |
-| [DQ449]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ450}       | `DecisionQuotient.spikeProblemFinite`                                                                  |
-| [DQ450]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ451}       | `DecisionQuotient.spikeProblemFinite_opt_at`                                                           |
-| [DQ451]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ452}       | `DecisionQuotient.spikeProblemFinite_opt_off`                                                          |
-| [DQ452]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ453}       | `DecisionQuotient.spikeProblem_opt_at`                                                                 |
-| [DQ453]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ454}       | `DecisionQuotient.spikeProblem_opt_off`                                                                |
-| [DQ454]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ455}       | `DecisionQuotient.spike_empty_not_sufficient`                                                          |
-| [DQ455]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ456}       | `DecisionQuotient.stateBatchView`                                                                      |
-| [DQ456]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ457}       | `DecisionQuotient.stateBatchView_eq_if_hidden_untouched`                                               |
-| [DQ457]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ458}       | `DecisionQuotient.structured_isSufficient`                                                             |
-| [DQ458]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ459}       | `DecisionQuotient.succ_cube`                                                                           |
-| [DQ459]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ460}       | `DecisionQuotient.sufficiencyToSetComparison`                                                          |
-| [DQ460]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ461}       | `DecisionQuotient.sufficiency_FPT_coords`                                                              |
-| [DQ461]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ462}       | `DecisionQuotient.sufficiency_W1_hard_unbounded_actions`                                               |
-| [DQ462]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ463}       | `DecisionQuotient.sufficiency_check_coNP_hard`                                                         |
-| [DQ463]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ464}       | `DecisionQuotient.sufficiency_check_polynomial`                                                        |
-| [DQ464]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ465}       | `DecisionQuotient.sufficiency_iff_dq_ratio`                                                            |
-| [DQ465]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ466}       | `DecisionQuotient.sufficiency_iff_projectedOptCover_eq_opt`                                            |
-| [DQ466]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ467}       | `DecisionQuotient.sufficiency_in_P`                                                                    |
-| [DQ467]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ468}       | `DecisionQuotient.sufficiency_poly_bounded_actions`                                                    |
-| [DQ468]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ469}       | `DecisionQuotient.sufficiency_poly_separable`                                                          |
-| [DQ469]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ470}       | `DecisionQuotient.sufficiency_poly_tree_structured`                                                    |
-| [DQ470]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ471}       | `DecisionQuotient.sufficient_implies_tautology`                                                        |
-| [DQ471]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ472}       | `DecisionQuotient.sufficient_implies_tautology_many`                                                   |
-| [DQ472]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ473}       | `DecisionQuotient.sufficient_means_factorizable`                                                       |
-| [DQ473]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ474}       | `DecisionQuotient.sufficient_of_projectedOptCover_eq_opt`                                              |
-| [DQ474]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ475}       | `DecisionQuotient.sufficient_preserves_decisions`                                                      |
-| [DQ475]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ476}       | `DecisionQuotient.targetProblem`                                                                       |
-| [DQ476]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ477}       | `DecisionQuotient.targetProblem_opt_off_target`                                                        |
-| [DQ477]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ478}       | `DecisionQuotient.targetProblem_opt_on_target`                                                         |
-| [DQ478]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ479}       | `DecisionQuotient.targetProblems_agree_outside`                                                        |
-| [DQ479]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ480}       | `DecisionQuotient.tautology_iff_opt_constant`                                                          |
-| [DQ480]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ481}       | `DecisionQuotient.tautology_iff_sufficient`                                                            |
-| [DQ481]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ482}       | `DecisionQuotient.tautology_iff_sufficient_many`                                                       |
-| [DQ482]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ483}       | `DecisionQuotient.tautology_implies_sufficient`                                                        |
-| [DQ483]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ484}       | `DecisionQuotient.tautology_implies_sufficient_many`                                                   |
-| [DQ484]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ485}       | `DecisionQuotient.totalCheckCost`                                                                      |
-| [DQ485]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ486}       | `DecisionQuotient.totalCheckCost_le_pow`                                                               |
-| [DQ486]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ487}       | `DecisionQuotient.touchedStates`                                                                       |
-| [DQ487]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ488}       | `DecisionQuotient.touchedStates_card_le_query_card`                                                    |
-| [DQ488]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ489}       | `DecisionQuotient.tractability_conditions_tight`                                                       |
-| [DQ489]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ490}       | `DecisionQuotient.tractable_small_state_space`                                                         |
-| [DQ490]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ491}       | `DecisionQuotient.tractable_when_few_relevant`                                                         |
-| [DQ491]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ492}       | `DecisionQuotient.two_actions_coNP_hard`                                                               |
-| [DQ492]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ493}       | `DecisionQuotient.two_le_one_false`                                                                    |
-| [DQ493]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ494}       | `DecisionQuotient.two_le_zero_false`                                                                   |
-| [DQ494]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ495}       | `DecisionQuotient.two_state_sufficiency`                                                               |
-| [DQ495]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ496}       | `DecisionQuotient.unique_matching_pattern`                                                             |
-| [DQ496]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ497}       | `DecisionQuotient.valueEntryView`                                                                      |
-| [DQ497]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ498}       | `DecisionQuotient.valueEntryView_eq_if_hidden_untouched`                                               |
-| [DQ498]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ499}       | `DecisionQuotient.valueEntryView_eq_of_stateBatchView_eq_on_touched`                                   |
-| [DQ499]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ500}       | `DecisionQuotient.valueOfInformation`                                                                  |
-| [DQ500]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ501}       | `DecisionQuotient.valueOfInformation_const`                                                            |
-| [DQ501]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ502}       | `DecisionQuotient.vectorB_blocked`                                                                     |
-| [DQ502]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ503}       | `DecisionQuotient.voi_computation_sharp_P_hard`                                                        |
-| [DQ503]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ504}       | `DecisionQuotient.voi_fptas_smooth_utilities`                                                          |
-| [DQ504]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ505}       | `DecisionQuotient.weightedQueryCost`                                                                   |
-| [DQ505]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ506}       | `DecisionQuotient.weightedQueryCost_ge_min_mul_card`                                                   |
-| [DQ506]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ507}       | `DecisionQuotient.weightedQueryCost_ge_min_mul_of_card_lb`                                             |
-| [DQ507]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ508}       | `DecisionQuotient.weighted_seed_error_identity`                                                        |
-| [DQ508]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ509}       | `DecisionQuotient.weighted_seed_half_floor`                                                            |
-| [DQ509]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ510}       | `DecisionQuotient.xCoords`                                                                             |
-| [DQ510]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ511}       | `DecisionQuotient.xPart`                                                                               |
-| [DQ511]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ512}       | `DecisionQuotient.xPart_mkState`                                                                       |
-| [DQ512]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ513}       | `DecisionQuotient.yAllFalse`                                                                           |
-| [DQ513]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ514}       | `DecisionQuotient.yAllFalse_mkState`                                                                   |
-| [DQ514]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ515}       | `DecisionQuotient.yPart`                                                                               |
-| [DQ515]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ516}       | `DecisionQuotient.yPart_mkState`                                                                       |
-| [DQ516]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ517}       | `DecisionQuotient.Physics.Instantiation.Circuit`                                                       |
-| [DQ517]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ518}       | `DecisionQuotient.Physics.Instantiation.Dynamics`                                                      |
-| [DQ518]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ519}       | `DecisionQuotient.Physics.Instantiation.Geometry`                                                      |
-| [DQ519]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ520}       | `DecisionQuotient.Physics.Instantiation.MoleculeCircuit`                                               |
-| [DQ520]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ521}       | `DecisionQuotient.Physics.Instantiation.MoleculeDynamics`                                              |
-| [DQ521]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ522}       | `DecisionQuotient.Physics.Instantiation.MoleculeGeometry`                                              |
-| [DQ522]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ523}       | `DecisionQuotient.Physics.Instantiation.geometry_plus_dynamics_is_circuit`                             |
-| [DQ523]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ524}       | `DecisionQuotient.Physics.Instantiation.law_objective_schema`                                          |
-| [DQ524]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ525}       | `DecisionQuotient.Physics.Instantiation.law_opt_eq_feasible_of_gap`                                    |
-| [DQ525]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ526}       | `DecisionQuotient.Physics.Instantiation.law_opt_singleton_of_deterministic`                            |
-| [DQ526]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ527}       | `DecisionQuotient.Physics.DecisionTime.DecisionEvent`                                                  |
-| [DQ527]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ528}       | `DecisionQuotient.Physics.DecisionTime.DecisionProcess`                                                |
-| [DQ528]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ529}       | `DecisionQuotient.Physics.DecisionTime.SubstrateModel`                                                 |
-| [DQ529]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ530}       | `DecisionQuotient.Physics.DecisionTime.TimeUnitStep`                                                   |
-| [DQ530]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ531}       | `DecisionQuotient.Physics.DecisionTime.TimedState`                                                     |
-| [DQ531]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ532}       | `DecisionQuotient.Physics.DecisionTime.decisionTrace`                                                  |
-| [DQ532]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ533}       | `DecisionQuotient.Physics.DecisionTime.decisionTrace_length_eq_ticks`                                  |
-| [DQ533]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ534}       | `DecisionQuotient.Physics.DecisionTime.decision_count_equals_elapsed_time`                             |
-| [DQ534]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ535}       | `DecisionQuotient.Physics.DecisionTime.decision_event_iff_eq_tick`                                     |
-| [DQ535]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ536}       | `DecisionQuotient.Physics.DecisionTime.decision_event_implies_time_unit`                               |
-| [DQ536]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ537}       | `DecisionQuotient.Physics.DecisionTime.decision_taking_place_is_unit_of_time`                          |
-| [DQ537]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ538}       | `DecisionQuotient.Physics.DecisionTime.run`                                                            |
-| [DQ538]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ539}       | `DecisionQuotient.Physics.DecisionTime.run_elapsed_time_eq_ticks`                                      |
-| [DQ539]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ540}       | `DecisionQuotient.Physics.DecisionTime.run_time_exact`                                                 |
-| [DQ540]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ541}       | `DecisionQuotient.Physics.DecisionTime.substrate_step_is_time_unit`                                    |
-| [DQ541]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ542}       | `DecisionQuotient.Physics.DecisionTime.substrate_step_realizes_decision_event`                         |
-| [DQ542]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ543}       | `DecisionQuotient.Physics.DecisionTime.tick`                                                           |
-| [DQ543]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ544}       | `DecisionQuotient.Physics.DecisionTime.tick_decision_witness`                                          |
-| [DQ544]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ545}       | `DecisionQuotient.Physics.DecisionTime.tick_increments_time`                                           |
-| [DQ545]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ546}       | `DecisionQuotient.Physics.DecisionTime.tick_is_decision_event`                                         |
-| [DQ546]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ547}       | `DecisionQuotient.Physics.DecisionTime.time_coordinate_falsifiable`                                    |
-| [DQ547]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ548}       | `DecisionQuotient.Physics.DecisionTime.time_is_discrete`                                               |
-| [DQ548]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ549}       | `DecisionQuotient.Physics.DecisionTime.time_unit_law_substrate_invariant`                              |
-| [DQ549]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ555}       | `DecisionQuotient.Physics.PhysicalIncompleteness.PhysicallyInstantiated`                               |
-| [DQ555]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ556}       | `DecisionQuotient.Physics.PhysicalIncompleteness.UniverseModel`                                        |
-| [DQ556]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ557}       | `DecisionQuotient.Physics.PhysicalIncompleteness.no_surjective_instantiation_of_card_gap`              |
-| [DQ557]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ558}       | `DecisionQuotient.Physics.PhysicalIncompleteness.physical_incompleteness_of_bounds`                    |
-| [DQ558]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ559}       | `DecisionQuotient.Physics.PhysicalIncompleteness.physical_incompleteness_of_card_gap`                  |
-| [DQ559]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ560}       | `DecisionQuotient.HardnessDistribution.hardnessLowerBound`                                             |
-| [DQ560]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ561}       | `DecisionQuotient.HardnessDistribution.hardness_is_irreducible_required_work`                          |
-| [DQ561]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ562}       | `DecisionQuotient.HardnessDistribution.requiredWork`                                                   |
-| [DQ562]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ563}       | `DecisionQuotient.HardnessDistribution.requiredWork_eq_affine_in_sites`                                |
-| [DQ563]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ564}       | `DecisionQuotient.HardnessDistribution.workGrowthDegree`                                               |
-| [DQ564]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:DQ565}       | `DecisionQuotient.HardnessDistribution.workGrowthDegree_zero_iff_eventually_constant`                  |
-| [DQ565]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:F1}          | `Formula.eval`                                                                                         |
-| [F1]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:F2}          | `Formula.isTautology`                                                                                  |
-| [F2]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:GC1}         | `GoalClass.classMonotoneOn`                                                                            |
-| [GC1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:GC2}         | `GoalClass.isNonNegativelyTautologicalCoord`                                                           |
-| [GC2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:GC3}         | `GoalClass.isTautologicalCoord`                                                                        |
-| [GC3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:GC4}         | `GoalClass.tautologicalSet`                                                                            |
-| [GC4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD1}         | `DecisionQuotient.HardnessDistribution.centralization_dominance_bundle`                                |
-| [HD1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD2}         | `DecisionQuotient.HardnessDistribution.centralization_step_saves_n_minus_one`                          |
-| [HD2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD3}         | `DecisionQuotient.HardnessDistribution.centralized_higher_leverage`                                    |
-| [HD3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD4}         | `DecisionQuotient.HardnessDistribution.complete_model_dominates_after_threshold`                       |
-| [HD4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD5}         | `DecisionQuotient.HardnessDistribution.gap_conservation_card`                                          |
-| [HD5]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD6}         | `DecisionQuotient.HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`           |
-| [HD6]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD7}         | `DecisionQuotient.HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`       |
-| [HD7]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD8}         | `DecisionQuotient.HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`            |
-| [HD8]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD9}         | `DecisionQuotient.HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower` |
-| [HD9]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD10}        | `DecisionQuotient.HardnessDistribution.generalized_right_eventually_dominates_wrong`                   |
-| [HD10]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD11}        | `DecisionQuotient.HardnessDistribution.hardnessEfficiency_eq_central_share`                            |
-| [HD11]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD12}        | `DecisionQuotient.HardnessDistribution.isRightHardness`                                                |
-| [HD12]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD13}        | `DecisionQuotient.HardnessDistribution.isWrongHardness`                                                |
-| [HD13]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD14}        | `DecisionQuotient.HardnessDistribution.linear_lt_exponential_plus_constant_eventually`                 |
-| [HD14]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD15}        | `DecisionQuotient.HardnessDistribution.native_dominates_manual`                                        |
-| [HD15]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD16}        | `DecisionQuotient.HardnessDistribution.no_positive_slope_linear_represents_saturating`                 |
-| [HD16]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD17}        | `DecisionQuotient.HardnessDistribution.right_dominates_wrong`                                          |
-| [HD17]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD18}        | `DecisionQuotient.HardnessDistribution.saturatingSiteCost_eventually_constant`                         |
-| [HD18]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD19}        | `DecisionQuotient.HardnessDistribution.simplicityTax_grows`                                            |
-| [HD19]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD20}        | `DecisionQuotient.HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`              |
-| [HD20]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:HD21}        | `DecisionQuotient.HardnessDistribution.totalDOF_ge_intrinsic`                                          |
-| [HD21]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC1}         | `DecisionQuotient.IntegrityCompetence.CertaintyInflation`                                              |
-| [IC1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC2}         | `DecisionQuotient.IntegrityCompetence.CompletionFractionDefined`                                       |
-| [IC2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC3}         | `DecisionQuotient.IntegrityCompetence.EvidenceForReport`                                               |
-| [IC3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC4}         | `DecisionQuotient.IntegrityCompetence.ExactCertaintyInflation`                                         |
-| [IC4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC5}         | `DecisionQuotient.IntegrityCompetence.Percent`                                                         |
-| [IC5]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC6}         | `DecisionQuotient.IntegrityCompetence.RLFFWeights`                                                     |
-| [IC6]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC7}         | `DecisionQuotient.IntegrityCompetence.ReportSignal`                                                    |
-| [IC7]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC8}         | `DecisionQuotient.IntegrityCompetence.ReportBitModel`                                                  |
-| [IC8]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC9}         | `DecisionQuotient.IntegrityCompetence.SignalConsistent`                                                |
-| [IC9]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC10}        | `DecisionQuotient.IntegrityCompetence.admissible_irrational_strictly_more_than_rational`               |
-| [IC10]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC11}        | `DecisionQuotient.IntegrityCompetence.admissible_matrix_counts`                                        |
-| [IC11]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC12}        | `DecisionQuotient.IntegrityCompetence.abstain_signal_exists_with_guess_self`                           |
-| [IC12]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC13}        | `DecisionQuotient.IntegrityCompetence.certaintyInflation_iff_not_admissible`                           |
-| [IC13]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC14}        | `DecisionQuotient.IntegrityCompetence.certificationOverheadBits`                                       |
-| [IC14]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC15}        | `DecisionQuotient.IntegrityCompetence.certificationOverheadBits_of_evidence`                           |
-| [IC15]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC16}        | `DecisionQuotient.IntegrityCompetence.certificationOverheadBits_of_no_evidence`                        |
-| [IC16]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC17}        | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits`                                              |
-| [IC17]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC18}        | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_ge_raw`                                       |
-| [IC18]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC19}        | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_gt_raw_of_evidence`                           |
-| [IC19]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC20}        | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_of_evidence`                                  |
-| [IC20]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC21}        | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_of_no_evidence`                               |
-| [IC21]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC22}        | `DecisionQuotient.IntegrityCompetence.claim_admissible_of_evidence`                                    |
-| [IC22]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC23}        | `DecisionQuotient.IntegrityCompetence.competence_implies_integrity`                                    |
-| [IC23]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC24}        | `DecisionQuotient.IntegrityCompetence.completion_fraction_defined_of_declared_bound`                   |
-| [IC24]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC25}        | `DecisionQuotient.IntegrityCompetence.epsilon_competence_implies_integrity`                            |
-| [IC25]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC26}        | `DecisionQuotient.IntegrityCompetence.evidence_nonempty_iff_claim_admissible`                          |
-| [IC26]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC27}        | `DecisionQuotient.IntegrityCompetence.evidence_of_claim_admissible`                                    |
-| [IC27]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC28}        | `DecisionQuotient.IntegrityCompetence.exact_claim_admissible_iff_exact_evidence_nonempty`              |
-| [IC28]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC29}        | `DecisionQuotient.IntegrityCompetence.exact_claim_requires_evidence`                                   |
-| [IC29]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC30}        | `DecisionQuotient.IntegrityCompetence.exactCertaintyInflation_iff_no_exact_competence`                 |
-| [IC30]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC31}        | `DecisionQuotient.IntegrityCompetence.exact_raw_only_of_no_exact_admissible`                           |
-| [IC31]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC32}        | `DecisionQuotient.IntegrityCompetence.integrity_forces_abstention`                                     |
-| [IC32]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC33}        | `DecisionQuotient.IntegrityCompetence.integrity_not_competent_of_nonempty_scope`                       |
-| [IC33]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC34}        | `DecisionQuotient.IntegrityCompetence.integrity_resource_bound`                                        |
-| [IC34]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC35}        | `DecisionQuotient.IntegrityCompetence.no_completion_fraction_without_declared_bound`                   |
-| [IC35]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC36}        | `DecisionQuotient.IntegrityCompetence.overModelVerdict_rational_iff`                                   |
-| [IC36]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC37}        | `DecisionQuotient.IntegrityCompetence.percentZero`                                                     |
-| [IC37]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC38}        | `DecisionQuotient.IntegrityCompetence.rlffBaseReward`                                                  |
-| [IC38]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC39}        | `DecisionQuotient.IntegrityCompetence.rlffReward`                                                      |
-| [IC39]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC40}        | `DecisionQuotient.IntegrityCompetence.rlff_abstain_strictly_prefers_no_certificates`                   |
-| [IC40]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC41}        | `DecisionQuotient.IntegrityCompetence.rlff_maximizer_has_evidence`                                     |
-| [IC41]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC42}        | `DecisionQuotient.IntegrityCompetence.rlff_maximizer_is_admissible`                                    |
-| [IC42]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC43}        | `DecisionQuotient.IntegrityCompetence.self_reflected_confidence_not_certification`                     |
-| [IC43]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC44}        | `DecisionQuotient.IntegrityCompetence.signal_certified_positive_implies_admissible`                    |
-| [IC44]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC45}        | `DecisionQuotient.IntegrityCompetence.signal_consistent_of_claim_admissible`                           |
-| [IC45]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC46}        | `DecisionQuotient.IntegrityCompetence.signal_no_evidence_forces_zero_certified`                        |
-| [IC46]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IC47}        | `DecisionQuotient.IntegrityCompetence.signal_exact_no_competence_forces_zero_certified`                |
-| [IC47]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IPT1}        | `IsPolynomialTime.const`                                                                               |
-| [IPT1]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IPT2}        | `IsPolynomialTime.of_steps_le`                                                                         |
-| [IPT2]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV1}         | `DecisionQuotient.InteriorVerification.GoalClass`                                                      |
-| [IV1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV2}         | `DecisionQuotient.InteriorVerification.InteriorDominanceVerifiable`                                    |
-| [IV2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV3}         | `DecisionQuotient.InteriorVerification.TautologicalSetIdentifiable`                                    |
-| [IV3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV4}         | `DecisionQuotient.InteriorVerification.agreeOnSet`                                                     |
-| [IV4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV5}         | `DecisionQuotient.InteriorVerification.interiorParetoDominates`                                        |
-| [IV5]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV6}         | `DecisionQuotient.InteriorVerification.interior_certificate_implies_non_rejection`                     |
-| [IV6]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV7}         | `DecisionQuotient.InteriorVerification.interior_dominance_implies_universal_non_rejection`             |
-| [IV7]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV8}         | `DecisionQuotient.InteriorVerification.interior_dominance_not_full_sufficiency`                        |
-| [IV8]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IV9}         | `DecisionQuotient.InteriorVerification.interior_verification_tractable_certificate`                    |
-| [IV9]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IW1}         | `InsufficiencyWitness.certifies_not_sufficient`                                                        |
-| [IW1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:IW2}         | `InsufficiencyWitness.not_abstract_sufficient`                                                         |
-| [IW2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L1}          | `ExactPhysicalClaimWellTyped`                                                                          |
-| [L1]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L2}          | `ExcusedBy`                                                                                            |
-| [L2]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L3}          | `ExplicitHardnessAssumptions`                                                                          |
-| [L3]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L4}          | `Literal.eval`                                                                                         |
-| [L4]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L5}          | `OneStepSequentialObjective`                                                                           |
-| [L5]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L6}          | `RegimeSimulation`                                                                                     |
-| [L6]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L7}          | `StandardComplexityAssumptions`                                                                        |
-| [L7]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L8}          | `StochasticCriterionObjective`                                                                         |
-| [L8]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L9}          | `StructureDetectable`                                                                                  |
-| [L9]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L10}         | `TransitionCoupledObjective`                                                                           |
-| [L10]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L11}         | `TwoStepObjective`                                                                                     |
-| [L11]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L12}         | `adq`                                                                                                  |
-| [L12]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L13}         | `adq_ordering`                                                                                         |
-| [L13]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L14}         | `agentBridgeClass`                                                                                     |
-| [L14]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L15}         | `agent_transfer_licensed_iff_snapshot`                                                                 |
-| [L15]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L16}         | `anchor_sigma2p_complete_conditional`                                                                  |
-| [L16]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L17}         | `anchor_sigma2p_reduction_core`                                                                        |
-| [L17]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L19}         | `boundaryCharacterized_iff_exists_sufficient_subset`                                                   |
-| [L19]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L20}         | `bounded_actions_detectable`                                                                           |
-| [L20]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L21}         | `bounded_actions_reusable_heuristic`                                                                   |
-| [L21]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L22}         | `bridgeFailureWitness`                                                                                 |
-| [L22]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L23}         | `bridgeTransferLicensed`                                                                               |
-| [L23]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L24}         | `bridge_boundary_represented_family`                                                                   |
-| [L24]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L25}         | `boolHypercube_node_count`                                                                             |
-| [L25]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L26}         | `boundaryCharacterized`                                                                                |
-| [L26]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L27}         | `bridge_failure_witness_non_one_step`                                                                  |
-| [L27]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L28}         | `bridge_transfer_iff_one_step_class`                                                                   |
-| [L28]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L29}         | `certified_total_bits_split_core`                                                                      |
-| [L29]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L30}         | `constantBoolDP`                                                                                       |
-| [L30]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L31}         | `constantBoolDP_empty_sufficient`                                                                      |
-| [L31]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L32}         | `constantBoolDP_opt`                                                                                   |
-| [L32]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L33}         | `cost_asymmetry_eth_conditional`                                                                       |
-| [L33]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L34}         | `declaredRegimeFamily`                                                                                 |
-| [L34]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L35}         | `declaredRegimeFamily_complete`                                                                        |
-| [L35]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L36}         | `declared_physics_no_universal_exact_certifier_core`                                                   |
-| [L36]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L37}         | `dichotomy_conditional`                                                                                |
-| [L37]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L38}         | `epsilon_admissible_iff_raw_lt_certified_total_core`                                                   |
-| [L38]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L39}         | `exact_admissible_iff_raw_lt_certified_total_core`                                                     |
-| [L39]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L40}         | `exact_certainty_inflation_under_hardness_core`                                                        |
-| [L40]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L41}         | `exact_raw_eq_certified_iff_certainty_inflation_core`                                                  |
-| [L41]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L42}         | `exact_raw_only_of_no_exact_admissible_core`                                                           |
-| [L42]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L43}         | `explicit_assumptions_required_of_not_excused_core`                                                    |
-| [L43]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L44}         | `explicit_state_upper_core`                                                                            |
-| [L44]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L45}         | `firstCoordDP`                                                                                         |
-| [L45]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L46}         | `firstCoordDP_empty_not_sufficient`                                                                    |
-| [L46]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L47}         | `firstCoordDP_opt`                                                                                     |
-| [L47]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L48}         | `hard_family_all_coords_core`                                                                          |
-| [L48]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L49}         | `horizonTwoWitness`                                                                                    |
-| [L49]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L50}         | `horizonTwoWitness_immediate_empty_sufficient`                                                         |
-| [L50]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L51}         | `horizonTwoWitness_not_empty_sufficient_two_step`                                                      |
-| [L51]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L52}         | `horizon_gt_one_bridge_can_fail_on_sufficiency`                                                        |
-| [L52]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L53}         | `i0`                                                                                                   |
-| [L53]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L54}         | `i0_bridge`                                                                                            |
-| [L54]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L55}         | `information_barrier_opt_oracle_core`                                                                  |
-| [L55]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L56}         | `information_barrier_state_batch_core`                                                                 |
-| [L56]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L57}         | `information_barrier_value_entry_core`                                                                 |
-| [L57]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L58}         | `integrity_resource_bound_for_sufficiency`                                                             |
-| [L58]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L59}         | `integrity_universal_applicability_core`                                                               |
-| [L59]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L60}         | `minsuff_collapse_core`                                                                                |
-| [L60]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L61}         | `minsuff_collapse_to_conp_conditional`                                                                 |
-| [L61]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L62}         | `minsuff_conp_complete_conditional`                                                                    |
-| [L62]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L63}         | `no_auto_minimize_of_p_neq_conp`                                                                       |
-| [L63]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L64}         | `no_exact_claim_admissible_under_hardness_core`                                                        |
-| [L64]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L65}         | `no_exact_claim_under_declared_assumptions_unless_excused_core`                                        |
-| [L65]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L66}         | `no_exact_identifier_implies_not_boundary_characterized`                                               |
-| [L66]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L67}         | `no_uncertified_exact_claim_core`                                                                      |
-| [L67]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L68}         | `node_count_does_not_determine_edge_geometry`                                                          |
-| [L68]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L69}         | `one_step_bridge`                                                                                      |
-| [L69]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L70}         | `oracle_lattice_transfer_as_regime_simulation`                                                         |
-| [L70]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L71}         | `physical_crossover_above_cap_core`                                                                    |
-| [L71]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L72}         | `physical_crossover_core`                                                                              |
-| [L72]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L73}         | `physical_crossover_hardness_core`                                                                     |
-| [L73]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L74}         | `physical_crossover_policy_core`                                                                       |
-| [L74]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L75}         | `preferTrueSelector`                                                                                   |
-| [L75]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L76}         | `process_bridge_failure_witness`                                                                       |
-| [L76]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L77}         | `query_obstruction_boolean_corollary`                                                                  |
-| [L77]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L78}         | `query_obstruction_finite_state_core`                                                                  |
-| [L78]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L79}         | `regimeCoreClaim`                                                                                      |
-| [L79]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L80}         | `regime_core_claim_proved`                                                                             |
-| [L80]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L81}         | `regime_simulation_transfers_hardness`                                                                 |
-| [L81]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L82}         | `reusable_heuristic_of_detectable`                                                                     |
-| [L82]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L83}         | `s0_bridge`                                                                                            |
-| [L83]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L84}         | `s1_bridge`                                                                                            |
-| [L84]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L85}         | `sFalse`                                                                                               |
-| [L85]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L86}         | `sTrue`                                                                                                |
-| [L86]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L87}         | `selectorGapProblem`                                                                                   |
-| [L87]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L88}         | `selectorGap_not_set_sufficient_empty`                                                                 |
-| [L88]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L89}         | `selectorGap_selectorSufficient_empty`                                                                 |
-| [L89]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L90}         | `selectorGap_true_mem_opt`                                                                             |
-| [L90]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L91}         | `selectorSufficient_not_implies_setSufficient`                                                         |
-| [L91]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L92}         | `separable_detectable`                                                                                 |
-| [L92]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L93}         | `separable_reusable_heuristic`                                                                         |
-| [L93]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L94}         | `snapshot_vs_process_typed_boundary`                                                                   |
-| [L94]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L95}         | `standard_assumption_ledger_unpack`                                                                    |
-| [L95]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L96}         | `stochasticWitness`                                                                                    |
-| [L96]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L97}         | `stochastic_objective_bridge_can_fail_on_sufficiency`                                                  |
-| [L97]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L98}         | `structureDetectable_of_decidable`                                                                     |
-| [L98]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L99}         | `subproblem_hardness_lifts_to_full`                                                                    |
-| [L99]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L100}        | `subproblem_transfer_as_regime_simulation`                                                             |
-| [L100]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L101}        | `sufficiency_conp_complete_conditional`                                                                |
-| [L101]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L102}        | `sufficiency_conp_reduction_core`                                                                      |
-| [L102]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L103}        | `thermo_conservation_additive_core`                                                                    |
-| [L103]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L104}        | `thermo_energy_carbon_lift_core`                                                                       |
-| [L104]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L105}        | `thermo_eventual_lift_core`                                                                            |
-| [L105]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L106}        | `thermo_hardness_bundle_core`                                                                          |
-| [L106]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L107}        | `thermo_mandatory_cost_core`                                                                           |
-| [L107]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L108}        | `tractable_bounded_core`                                                                               |
-| [L108]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L109}        | `tractable_separable_core`                                                                             |
-| [L109]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L110}        | `tractable_subcases_conditional`                                                                       |
-| [L110]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L111}        | `tractable_tree_core`                                                                                  |
-| [L111]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L112}        | `transitionWitness`                                                                                    |
-| [L112]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L113}        | `transition_coupled_bridge_can_fail_on_sufficiency`                                                    |
-| [L113]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L114}        | `tree_reusable_heuristic`                                                                              |
-| [L114]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L115}        | `tree_structure_detectable`                                                                            |
-| [L115]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L116}        | `typed_claim_admissibility_core`                                                                       |
-| [L116]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L117}        | `typed_static_class_completeness`                                                                      |
-| [L117]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:L118}        | `universal_solver_framing_core`                                                                        |
-| [L118]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:OSSO1}       | `OneStepSequentialObjective.Opt`                                                                       |
-| [OSSO1]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:OSSO2}       | `OneStepSequentialObjective.isSufficient`                                                              |
-| [OSSO2]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:OSSO3}       | `OneStepSequentialObjective.toDecisionProblem`                                                         |
-| [OSSO3]{.sans-serif}  |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PBC1}        | `DecisionQuotient.PhysicalBudgetCrossover.CrossoverAt`                                                 |
-| [PBC1]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PBC2}        | `DecisionQuotient.PhysicalBudgetCrossover.explicit_infeasible_succinct_feasible_of_crossover`          |
-| [PBC2]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC1}         | `PhysicalComplexity.ComputationalRequirement`                                                          |
-| [PC1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC2}         | `PhysicalComplexity.InstanceSize`                                                                      |
-| [PC2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC3}         | `PhysicalComplexity.Landauer_bound`                                                                    |
-| [PC3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC4}         | `PhysicalComplexity.PhysicalComputer`                                                                  |
-| [PC4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC5}         | `PhysicalComplexity.bit_energy_cost`                                                                   |
-| [PC5]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC6}         | `PhysicalComplexity.coNP_physically_impossible`                                                        |
-| [PC6]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC7}         | `PhysicalComplexity.coNP_requirement`                                                                  |
-| [PC7]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC8}         | `PhysicalComplexity.k_Boltzmann`                                                                       |
-| [PC8]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC9}         | `PhysicalComplexity.sufficiency_physically_impossible`                                                 |
-| [PC9]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC10}        | `PhysicalComplexity.AccessRegime.AccessRegime`                                                         |
-| [PC10]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC11}        | `PhysicalComplexity.AccessRegime.PhysicalDevice`                                                       |
-| [PC11]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC12}        | `PhysicalComplexity.AccessRegime.RegimeEval`                                                           |
-| [PC12]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC13}        | `PhysicalComplexity.AccessRegime.RegimeProof`                                                          |
-| [PC13]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC14}        | `PhysicalComplexity.AccessRegime.RegimeSample`                                                         |
-| [PC14]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC15}        | `PhysicalComplexity.AccessRegime.RegimeWithCertificate`                                                |
-| [PC15]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC16}        | `PhysicalComplexity.AccessRegime.certificate_amortizes_hardness`                                       |
-| [PC16]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC17}        | `PhysicalComplexity.AccessRegime.certificate_upgrades_regime`                                          |
-| [PC17]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC18}        | `PhysicalComplexity.AccessRegime.physical_succinct_certification_hard`                                 |
-| [PC18]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC19}        | `PhysicalComplexity.AccessRegime.regime_upgrade_with_certificate`                                      |
-| [PC19]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC20}        | `PhysicalComplexity.AccessRegime.AccessChannelLaw`                                                     |
-| [PC20]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC21}        | `PhysicalComplexity.AccessRegime.FiveWayMeet`                                                          |
-| [PC21]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC22}        | `PhysicalComplexity.AccessRegime.AuditableWithCertificate`                                             |
-| [PC22]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC23}        | `PhysicalComplexity.AccessRegime.HardUnderEval`                                                        |
-| [PC23]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC24}        | `PhysicalComplexity.coNP_not_in_P_physically`                                                          |
-| [PC24]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC25}        | `PhysicalComplexity.pow2_eventually_exceeds`                                                           |
-| [PC25]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC26}        | `PhysicalComplexity.AccessRegime.RegimeEvalOn`                                                         |
-| [PC26]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC27}        | `PhysicalComplexity.AccessRegime.RegimeProofOn`                                                        |
-| [PC27]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC28}        | `PhysicalComplexity.AccessRegime.RegimeSampleOn`                                                       |
-| [PC28]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC29}        | `PhysicalComplexity.AccessRegime.RegimeWithCertificateOn`                                              |
-| [PC29]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC30}        | `PhysicalComplexity.AccessRegime.certificate_upgrades_regime_on`                                       |
-| [PC30]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PC31}        | `PhysicalComplexity.AccessRegime.regime_upgrade_with_certificate_on`                                   |
-| [PC31]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PD2}         | `PhysicalDevice.is_succinct`                                                                           |
-| [PD2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PD3}         | `PhysicalDevice.derived_explicit_size`                                                                 |
-| [PD3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PD4}         | `PhysicalDevice.is_succinct_of_gap`                                                                    |
-| [PD4]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PR1}         | `PolyReduction.comp_exists`                                                                            |
-| [PR1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:PR2}         | `PolyReduction.id`                                                                                     |
-| [PR2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:QA1}         | `QueryAlgorithm.run`                                                                                   |
-| [QA1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:QF1}         | `QFormula.eval`                                                                                        |
-| [QF1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:QF2}         | `QFormula.eval_map`                                                                                    |
-| [QF2]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:QF3}         | `QFormula.map`                                                                                         |
-| [QF3]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:QT1}         | `QueryTranscript.size`                                                                                 |
-| [QT1]{.sans-serif}    |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:S1}          | `Signal.const`                                                                                         |
-| [S1]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:S2}          | `Signal.priorOn`                                                                                       |
-| [S2]{.sans-serif}     |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:S2P1}        | `DecisionQuotient.Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`  |
-| [S2P1]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:S2P2}        | `DecisionQuotient.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`                        |
-| [S2P2]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:S2P3}        | `DecisionQuotient.Sigma2PHardness.min_sufficient_set_iff_relevant_card`                                |
-| [S2P3]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:S2P6}        | `DecisionQuotient.Sigma2PHardness.representationGap_eq_zero_iff`                                       |
-| [S2P6]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:SAT3I1}      | `SAT3Instance.inputSize`                                                                               |
-| [SAT3I1]{.sans-serif} |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:SCO1}        | `StochasticCriterionObjective.OptChance`                                                               |
-| [SCO1]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:SCO2}        | `StochasticCriterionObjective.toExpectedDecisionProblem`                                               |
-| [SCO2]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:TCO1}        | `TransitionCoupledObjective.Opt`                                                                       |
-| [TCO1]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:TCO2}        | `TransitionCoupledObjective.score`                                                                     |
-| [TCO2]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:TCO3}        | `TransitionCoupledObjective.toImmediateDecisionProblem`                                                |
-| [TCO3]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:TSO1}        | `TwoStepObjective.Opt`                                                                                 |
-| [TSO1]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:TSO2}        | `TwoStepObjective.score`                                                                               |
-| [TSO2]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
-| ::: {#lh:TSO3}        | `TwoStepObjective.toImmediateDecisionProblem`                                                          |
-| [TSO3]{.sans-serif}   |                                                                                                        |
-| :::                   |                                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------+
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| ID                                | Full Lean handle                                                                                       |
++:==================================+:=======================================================================================================+
+| ID                                | Full Lean handle (continued)                                                                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| ::: {#lh:CC1}                     | `DecisionQuotient.ClaimClosure.RegimeSimulation`                                                       |
+| [CC1]{.sans-serif}                |                                                                                                        |
+| :::                               |                                                                                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC2]{.sans-serif}]{#lh:CC2}     | `DecisionQuotient.ClaimClosure.adq_ordering`                                                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC3]{.sans-serif}]{#lh:CC3}     | `DecisionQuotient.ClaimClosure.agent_transfer_licensed_iff_snapshot`                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC4]{.sans-serif}]{#lh:CC4}     | `DecisionQuotient.ClaimClosure.anchor_sigma2p_complete_conditional`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC5]{.sans-serif}]{#lh:CC5}     | `DecisionQuotient.ClaimClosure.anchor_sigma2p_reduction_core`                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC6]{.sans-serif}]{#lh:CC6}     | `DecisionQuotient.ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC7]{.sans-serif}]{#lh:CC7}     | `DecisionQuotient.ClaimClosure.bounded_actions_detectable`                                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC8]{.sans-serif}]{#lh:CC8}     | `DecisionQuotient.ClaimClosure.bridge_boundary_represented_family`                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC9]{.sans-serif}]{#lh:CC9}     | `DecisionQuotient.ClaimClosure.bridge_failure_witness_non_one_step`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC10]{.sans-serif}]{#lh:CC10}   | `DecisionQuotient.ClaimClosure.bridge_transfer_iff_one_step_class`                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC11]{.sans-serif}]{#lh:CC11}   | `DecisionQuotient.ClaimClosure.certified_total_bits_split_core`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC12]{.sans-serif}]{#lh:CC12}   | `DecisionQuotient.ClaimClosure.cost_asymmetry_eth_conditional`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC13]{.sans-serif}]{#lh:CC13}   | `DecisionQuotient.ClaimClosure.declaredBudgetSlice`                                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC14]{.sans-serif}]{#lh:CC14}   | `DecisionQuotient.ClaimClosure.declaredRegimeFamily_complete`                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC15]{.sans-serif}]{#lh:CC15}   | `DecisionQuotient.ClaimClosure.declared_physics_no_universal_exact_certifier_core`                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC16]{.sans-serif}]{#lh:CC16}   | `DecisionQuotient.ClaimClosure.dichotomy_conditional`                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC17]{.sans-serif}]{#lh:CC17}   | `DecisionQuotient.ClaimClosure.epsilon_admissible_iff_raw_lt_certified_total_core`                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC18]{.sans-serif}]{#lh:CC18}   | `DecisionQuotient.ClaimClosure.exact_admissible_iff_raw_lt_certified_total_core`                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC19]{.sans-serif}]{#lh:CC19}   | `DecisionQuotient.ClaimClosure.exact_certainty_inflation_under_hardness_core`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC20]{.sans-serif}]{#lh:CC20}   | `DecisionQuotient.ClaimClosure.exact_raw_eq_certified_iff_certainty_inflation_core`                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC21]{.sans-serif}]{#lh:CC21}   | `DecisionQuotient.ClaimClosure.exact_raw_only_of_no_exact_admissible_core`                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC22]{.sans-serif}]{#lh:CC22}   | `DecisionQuotient.ClaimClosure.explicit_assumptions_required_of_not_excused_core`                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC23]{.sans-serif}]{#lh:CC23}   | `DecisionQuotient.ClaimClosure.explicit_state_upper_core`                                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC24]{.sans-serif}]{#lh:CC24}   | `DecisionQuotient.ClaimClosure.hard_family_all_coords_core`                                            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC25]{.sans-serif}]{#lh:CC25}   | `DecisionQuotient.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC26]{.sans-serif}]{#lh:CC26}   | `DecisionQuotient.ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC27]{.sans-serif}]{#lh:CC27}   | `DecisionQuotient.ClaimClosure.information_barrier_opt_oracle_core`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC28]{.sans-serif}]{#lh:CC28}   | `DecisionQuotient.ClaimClosure.information_barrier_state_batch_core`                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC29]{.sans-serif}]{#lh:CC29}   | `DecisionQuotient.ClaimClosure.information_barrier_value_entry_core`                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC30]{.sans-serif}]{#lh:CC30}   | `DecisionQuotient.ClaimClosure.integrity_resource_bound_for_sufficiency`                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC31]{.sans-serif}]{#lh:CC31}   | `DecisionQuotient.ClaimClosure.integrity_universal_applicability_core`                                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC32]{.sans-serif}]{#lh:CC32}   | `DecisionQuotient.ClaimClosure.meta_coordinate_irrelevant_of_invariance_on_declared_slice`             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC33]{.sans-serif}]{#lh:CC33}   | `DecisionQuotient.ClaimClosure.meta_coordinate_not_relevant_on_declared_slice`                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC34]{.sans-serif}]{#lh:CC34}   | `DecisionQuotient.ClaimClosure.minsuff_collapse_core`                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC36]{.sans-serif}]{#lh:CC36}   | `DecisionQuotient.ClaimClosure.minsuff_conp_complete_conditional`                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC37]{.sans-serif}]{#lh:CC37}   | `DecisionQuotient.ClaimClosure.no_auto_minimize_of_p_neq_conp`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC38]{.sans-serif}]{#lh:CC38}   | `DecisionQuotient.ClaimClosure.no_exact_claim_admissible_under_hardness_core`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC39]{.sans-serif}]{#lh:CC39}   | `DecisionQuotient.ClaimClosure.no_exact_claim_under_declared_assumptions_unless_excused_core`          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC40]{.sans-serif}]{#lh:CC40}   | `DecisionQuotient.ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC41]{.sans-serif}]{#lh:CC41}   | `DecisionQuotient.ClaimClosure.no_uncertified_exact_claim_core`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC42]{.sans-serif}]{#lh:CC42}   | `DecisionQuotient.ClaimClosure.one_step_bridge`                                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC43]{.sans-serif}]{#lh:CC43}   | `DecisionQuotient.ClaimClosure.oracle_lattice_transfer_as_regime_simulation`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC44]{.sans-serif}]{#lh:CC44}   | `DecisionQuotient.ClaimClosure.physical_crossover_above_cap_core`                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC45]{.sans-serif}]{#lh:CC45}   | `DecisionQuotient.ClaimClosure.physical_crossover_core`                                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC46]{.sans-serif}]{#lh:CC46}   | `DecisionQuotient.ClaimClosure.physical_crossover_hardness_core`                                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC47]{.sans-serif}]{#lh:CC47}   | `DecisionQuotient.ClaimClosure.physical_crossover_policy_core`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC48]{.sans-serif}]{#lh:CC48}   | `DecisionQuotient.ClaimClosure.process_bridge_failure_witness`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC49]{.sans-serif}]{#lh:CC49}   | `DecisionQuotient.ClaimClosure.query_obstruction_boolean_corollary`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC50]{.sans-serif}]{#lh:CC50}   | `DecisionQuotient.ClaimClosure.query_obstruction_finite_state_core`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC51]{.sans-serif}]{#lh:CC51}   | `DecisionQuotient.ClaimClosure.regime_core_claim_proved`                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC52]{.sans-serif}]{#lh:CC52}   | `DecisionQuotient.ClaimClosure.regime_simulation_transfers_hardness`                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC53]{.sans-serif}]{#lh:CC53}   | `DecisionQuotient.ClaimClosure.reusable_heuristic_of_detectable`                                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC54]{.sans-serif}]{#lh:CC54}   | `DecisionQuotient.ClaimClosure.selectorSufficient_not_implies_setSufficient`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC55]{.sans-serif}]{#lh:CC55}   | `DecisionQuotient.ClaimClosure.separable_detectable`                                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC56]{.sans-serif}]{#lh:CC56}   | `DecisionQuotient.ClaimClosure.snapshot_vs_process_typed_boundary`                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC57]{.sans-serif}]{#lh:CC57}   | `DecisionQuotient.ClaimClosure.standard_assumption_ledger_unpack`                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC58]{.sans-serif}]{#lh:CC58}   | `DecisionQuotient.ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC59]{.sans-serif}]{#lh:CC59}   | `DecisionQuotient.ClaimClosure.subproblem_hardness_lifts_to_full`                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC60]{.sans-serif}]{#lh:CC60}   | `DecisionQuotient.ClaimClosure.subproblem_transfer_as_regime_simulation`                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC61]{.sans-serif}]{#lh:CC61}   | `DecisionQuotient.ClaimClosure.sufficiency_conp_complete_conditional`                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC62]{.sans-serif}]{#lh:CC62}   | `DecisionQuotient.ClaimClosure.sufficiency_conp_reduction_core`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC63]{.sans-serif}]{#lh:CC63}   | `DecisionQuotient.ClaimClosure.sufficiency_iff_dq_ratio`                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC64]{.sans-serif}]{#lh:CC64}   | `DecisionQuotient.ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC65]{.sans-serif}]{#lh:CC65}   | `DecisionQuotient.ClaimClosure.thermo_conservation_additive_core`                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC66]{.sans-serif}]{#lh:CC66}   | `DecisionQuotient.ClaimClosure.thermo_energy_carbon_lift_core`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC67]{.sans-serif}]{#lh:CC67}   | `DecisionQuotient.ClaimClosure.thermo_eventual_lift_core`                                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC68]{.sans-serif}]{#lh:CC68}   | `DecisionQuotient.ClaimClosure.thermo_hardness_bundle_core`                                            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC69]{.sans-serif}]{#lh:CC69}   | `DecisionQuotient.ClaimClosure.thermo_mandatory_cost_core`                                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC70]{.sans-serif}]{#lh:CC70}   | `DecisionQuotient.ClaimClosure.tractable_bounded_core`                                                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC71]{.sans-serif}]{#lh:CC71}   | `DecisionQuotient.ClaimClosure.tractable_separable_core`                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC72]{.sans-serif}]{#lh:CC72}   | `DecisionQuotient.ClaimClosure.tractable_subcases_conditional`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC73]{.sans-serif}]{#lh:CC73}   | `DecisionQuotient.ClaimClosure.tractable_tree_core`                                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC74]{.sans-serif}]{#lh:CC74}   | `DecisionQuotient.ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC75]{.sans-serif}]{#lh:CC75}   | `DecisionQuotient.ClaimClosure.tree_structure_detectable`                                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC76]{.sans-serif}]{#lh:CC76}   | `DecisionQuotient.ClaimClosure.typed_claim_admissibility_core`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CC77]{.sans-serif}]{#lh:CC77}   | `DecisionQuotient.ClaimClosure.typed_static_class_completeness`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CR1]{.sans-serif}]{#lh:CR1}     | `DecisionQuotient.ConfigReduction.config_sufficiency_iff_behavior_preserving`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CT1]{.sans-serif}]{#lh:CT1}     | `CT.law_gap_physical_claim_holds`                                                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CT2]{.sans-serif}]{#lh:CT2}     | `CT.no_law_gap_counterexample`                                                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CT3]{.sans-serif}]{#lh:CT3}     | `CT.no_physical_counterexample_of_core_theorem`                                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CT4]{.sans-serif}]{#lh:CT4}     | `CT.physical_bridge_bundle`                                                                            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CT5]{.sans-serif}]{#lh:CT5}     | `CT.physical_claim_lifts_from_core`                                                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CT6]{.sans-serif}]{#lh:CT6}     | `CT.physical_claim_lifts_from_core_conditional`                                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CT7]{.sans-serif}]{#lh:CT7}     | `CT.physical_counterexample_invalidates_core_rule`                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[CT8]{.sans-serif}]{#lh:CT8}     | `CT.physical_counterexample_yields_core_counterexample`                                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP1]{.sans-serif}]{#lh:DP1}     | `DecisionQuotient.DecisionProblem.minimalSufficient_iff_relevant`                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP2]{.sans-serif}]{#lh:DP2}     | `DecisionQuotient.DecisionProblem.relevantSet_is_minimal`                                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP3]{.sans-serif}]{#lh:DP3}     | `DecisionQuotient.DecisionProblem.sufficient_implies_selectorSufficient`                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP4]{.sans-serif}]{#lh:DP4}     | `DecisionQuotient.ClaimClosure.DecisionProblem.epsOpt_zero_eq_opt`                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP5]{.sans-serif}]{#lh:DP5}     | `DecisionQuotient.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP6]{.sans-serif}]{#lh:DP6}     | `DecisionProblem.anchorSufficient`                                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP7]{.sans-serif}]{#lh:DP7}     | `DecisionProblem.classMonotoneOn`                                                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP8]{.sans-serif}]{#lh:DP8}     | `DecisionProblem.constant_opt_all_sufficient`                                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DP21]{.sans-serif}]{#lh:DP21}   | `DecisionProblem.edgeOnComplement_iff_not_sufficient`                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ1]{.sans-serif}]{#lh:DQ1}     | `DecisionQuotient.CC.anchor_sigma2p_complete_conditional`                                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ2]{.sans-serif}]{#lh:DQ2}     | `DecisionQuotient.CC.cost_asymmetry_eth_conditional`                                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ3]{.sans-serif}]{#lh:DQ3}     | `DecisionQuotient.card_anchoredSlice_eq_pow_sub`                                                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ4]{.sans-serif}]{#lh:DQ4}     | `DecisionQuotient.CC.minsuff_collapse_to_conp_conditional`                                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ5]{.sans-serif}]{#lh:DQ5}     | `DecisionQuotient.opt_eq_feasible_of_gap`                                                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ6]{.sans-serif}]{#lh:DQ6}     | `DecisionQuotient.opt_eq_of_allowed_iff`                                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ7]{.sans-serif}]{#lh:DQ7}     | `DecisionQuotient.opt_singleton_of_logicallyDeterministic`                                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ8]{.sans-serif}]{#lh:DQ8}     | `DecisionQuotient.universe_sets_objective_schema`                                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ154]{.sans-serif}]{#lh:DQ154} | `DecisionQuotient.Physics.Instantiation.DecisionCircuit`                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ155]{.sans-serif}]{#lh:DQ155} | `DecisionQuotient.Physics.Instantiation.DecisionInterpretation`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ159]{.sans-serif}]{#lh:DQ159} | `DecisionQuotient.Physics.Instantiation.MoleculeAsCircuit`                                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ160]{.sans-serif}]{#lh:DQ160} | `DecisionQuotient.Physics.Instantiation.MoleculeAsDecisionCircuit`                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ517]{.sans-serif}]{#lh:DQ517} | `DecisionQuotient.Physics.Instantiation.Circuit`                                                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ518]{.sans-serif}]{#lh:DQ518} | `DecisionQuotient.Physics.Instantiation.Dynamics`                                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ519]{.sans-serif}]{#lh:DQ519} | `DecisionQuotient.Physics.Instantiation.Geometry`                                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ533]{.sans-serif}]{#lh:DQ533} | `DecisionQuotient.Physics.DecisionTime.decisionTrace_length_eq_ticks`                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ534]{.sans-serif}]{#lh:DQ534} | `DecisionQuotient.Physics.DecisionTime.decision_count_equals_elapsed_time`                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ535]{.sans-serif}]{#lh:DQ535} | `DecisionQuotient.Physics.DecisionTime.decision_event_iff_eq_tick`                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ537]{.sans-serif}]{#lh:DQ537} | `DecisionQuotient.Physics.DecisionTime.decision_taking_place_is_unit_of_time`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ539]{.sans-serif}]{#lh:DQ539} | `DecisionQuotient.Physics.DecisionTime.run_elapsed_time_eq_ticks`                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ540]{.sans-serif}]{#lh:DQ540} | `DecisionQuotient.Physics.DecisionTime.run_time_exact`                                                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ541]{.sans-serif}]{#lh:DQ541} | `DecisionQuotient.Physics.DecisionTime.substrate_step_is_time_unit`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ542]{.sans-serif}]{#lh:DQ542} | `DecisionQuotient.Physics.DecisionTime.substrate_step_realizes_decision_event`                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ545]{.sans-serif}]{#lh:DQ545} | `DecisionQuotient.Physics.DecisionTime.tick_increments_time`                                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ546]{.sans-serif}]{#lh:DQ546} | `DecisionQuotient.Physics.DecisionTime.tick_is_decision_event`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ547]{.sans-serif}]{#lh:DQ547} | `DecisionQuotient.Physics.DecisionTime.time_coordinate_falsifiable`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ548]{.sans-serif}]{#lh:DQ548} | `DecisionQuotient.Physics.DecisionTime.time_is_discrete`                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ549]{.sans-serif}]{#lh:DQ549} | `DecisionQuotient.Physics.DecisionTime.time_unit_law_substrate_invariant`                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ560]{.sans-serif}]{#lh:DQ560} | `DecisionQuotient.HardnessDistribution.hardnessLowerBound`                                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ561]{.sans-serif}]{#lh:DQ561} | `DecisionQuotient.HardnessDistribution.hardness_is_irreducible_required_work`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ562]{.sans-serif}]{#lh:DQ562} | `DecisionQuotient.HardnessDistribution.requiredWork`                                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ563]{.sans-serif}]{#lh:DQ563} | `DecisionQuotient.HardnessDistribution.requiredWork_eq_affine_in_sites`                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ564]{.sans-serif}]{#lh:DQ564} | `DecisionQuotient.HardnessDistribution.workGrowthDegree`                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ565]{.sans-serif}]{#lh:DQ565} | `DecisionQuotient.HardnessDistribution.workGrowthDegree_zero_iff_eventually_constant`                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ566]{.sans-serif}]{#lh:DQ566} | `DecisionQuotient.Physics.PhysicalCore.admissible_report_requires_strict_certified_work`               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ567]{.sans-serif}]{#lh:DQ567} | `DecisionQuotient.Physics.PhysicalCore.certified_work_lower_bound_raw`                                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ568]{.sans-serif}]{#lh:DQ568} | `DecisionQuotient.Physics.PhysicalCore.finite_budget_blocks_canonical_exponential_certification`       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ569]{.sans-serif}]{#lh:DQ569} | `DecisionQuotient.Physics.PhysicalCore.finite_budget_blocks_exact_certification_beyond_threshold`      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ570]{.sans-serif}]{#lh:DQ570} | `DecisionQuotient.Physics.PhysicalCore.rlff_abstain_strict_global_maximizer_of_no_certificates`        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ571]{.sans-serif}]{#lh:DQ571} | `DecisionQuotient.Physics.PhysicalCore.substrate_transport_blocks_encoded_counterexamples`             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ572]{.sans-serif}]{#lh:DQ572} | `DecisionQuotient.Physics.PhysicalCore.substrate_transport_sound_conditional`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ573]{.sans-serif}]{#lh:DQ573} | `DecisionQuotient.Physics.PhysicalCore.eventual_no_exact_admissibility_under_budget`                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ574]{.sans-serif}]{#lh:DQ574} | `DecisionQuotient.Physics.PhysicalCore.eventual_no_exact_admissibility_under_canonical_requirement`    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ575]{.sans-serif}]{#lh:DQ575} | `DecisionQuotient.PhysicalBudgetCrossover.crossover_eventually_of_eventual_split`                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ576]{.sans-serif}]{#lh:DQ576} | `DecisionQuotient.PhysicalBudgetCrossover.exists_least_crossover_point`                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ577]{.sans-serif}]{#lh:DQ577} | `DecisionQuotient.PhysicalBudgetCrossover.explicit_eventual_infeasibility_of_monotone_and_witness`     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ578]{.sans-serif}]{#lh:DQ578} | `DecisionQuotient.PhysicalBudgetCrossover.no_universal_survivor_without_succinct_bound`                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ579]{.sans-serif}]{#lh:DQ579} | `DecisionQuotient.PhysicalBudgetCrossover.payoff_threshold_explicit_vs_succinct`                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ580]{.sans-serif}]{#lh:DQ580} | `DecisionQuotient.PhysicalBudgetCrossover.policy_closure_at_divergence`                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ581]{.sans-serif}]{#lh:DQ581} | `DecisionQuotient.PhysicalBudgetCrossover.policy_closure_beyond_divergence`                            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ582]{.sans-serif}]{#lh:DQ582} | `DecisionQuotient.Physics.PhysicalIncompleteness.under_resolution_implies_collision`                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ583]{.sans-serif}]{#lh:DQ583} | `DecisionQuotient.Physics.PhysicalIncompleteness.under_resolution_implies_decision_collision`          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ584]{.sans-serif}]{#lh:DQ584} | `DecisionQuotient.Physics.HeisenbergStrong.HeisenbergStrongBinding`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ585]{.sans-serif}]{#lh:DQ585} | `DecisionQuotient.Physics.HeisenbergStrong.strong_binding_implies_core_nontrivial`                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ586]{.sans-serif}]{#lh:DQ586} | `DecisionQuotient.Physics.HeisenbergStrong.strong_binding_implies_nontrivial_opt_via_uncertainty`      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ587]{.sans-serif}]{#lh:DQ587} | `DecisionQuotient.checking_witnessing_duality`                                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ588]{.sans-serif}]{#lh:DQ588} | `DecisionQuotient.checking_witnessing_duality_budget`                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ589]{.sans-serif}]{#lh:DQ589} | `DecisionQuotient.Physics.PhysicalIncompleteness.no_surjective_instantiation_of_card_gap`              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ590]{.sans-serif}]{#lh:DQ590} | `DecisionQuotient.Physics.PhysicalIncompleteness.physical_incompleteness_of_bounds`                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[DQ591]{.sans-serif}]{#lh:DQ591} | `DecisionQuotient.Physics.PhysicalIncompleteness.physical_incompleteness_of_card_gap`                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD1]{.sans-serif}]{#lh:HD1}     | `DecisionQuotient.HardnessDistribution.centralization_dominance_bundle`                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD2]{.sans-serif}]{#lh:HD2}     | `DecisionQuotient.HardnessDistribution.centralization_step_saves_n_minus_one`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD3]{.sans-serif}]{#lh:HD3}     | `DecisionQuotient.HardnessDistribution.centralized_higher_leverage`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD4]{.sans-serif}]{#lh:HD4}     | `DecisionQuotient.HardnessDistribution.complete_model_dominates_after_threshold`                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD5]{.sans-serif}]{#lh:HD5}     | `DecisionQuotient.HardnessDistribution.gap_conservation_card`                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD6]{.sans-serif}]{#lh:HD6}     | `DecisionQuotient.HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD7]{.sans-serif}]{#lh:HD7}     | `DecisionQuotient.HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD8]{.sans-serif}]{#lh:HD8}     | `DecisionQuotient.HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD9]{.sans-serif}]{#lh:HD9}     | `DecisionQuotient.HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower` |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD10]{.sans-serif}]{#lh:HD10}   | `DecisionQuotient.HardnessDistribution.generalized_right_eventually_dominates_wrong`                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD11]{.sans-serif}]{#lh:HD11}   | `DecisionQuotient.HardnessDistribution.hardnessEfficiency_eq_central_share`                            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD12]{.sans-serif}]{#lh:HD12}   | `DecisionQuotient.HardnessDistribution.isRightHardness`                                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD13]{.sans-serif}]{#lh:HD13}   | `DecisionQuotient.HardnessDistribution.isWrongHardness`                                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD14]{.sans-serif}]{#lh:HD14}   | `DecisionQuotient.HardnessDistribution.linear_lt_exponential_plus_constant_eventually`                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD15]{.sans-serif}]{#lh:HD15}   | `DecisionQuotient.HardnessDistribution.native_dominates_manual`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD16]{.sans-serif}]{#lh:HD16}   | `DecisionQuotient.HardnessDistribution.no_positive_slope_linear_represents_saturating`                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD17]{.sans-serif}]{#lh:HD17}   | `DecisionQuotient.HardnessDistribution.right_dominates_wrong`                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD18]{.sans-serif}]{#lh:HD18}   | `DecisionQuotient.HardnessDistribution.saturatingSiteCost_eventually_constant`                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD19]{.sans-serif}]{#lh:HD19}   | `DecisionQuotient.HardnessDistribution.simplicityTax_grows`                                            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD20]{.sans-serif}]{#lh:HD20}   | `DecisionQuotient.HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[HD21]{.sans-serif}]{#lh:HD21}   | `DecisionQuotient.HardnessDistribution.totalDOF_ge_intrinsic`                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC1]{.sans-serif}]{#lh:IC1}     | `DecisionQuotient.IntegrityCompetence.CertaintyInflation`                                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC2]{.sans-serif}]{#lh:IC2}     | `DecisionQuotient.IntegrityCompetence.CompletionFractionDefined`                                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC3]{.sans-serif}]{#lh:IC3}     | `DecisionQuotient.IntegrityCompetence.EvidenceForReport`                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC4]{.sans-serif}]{#lh:IC4}     | `DecisionQuotient.IntegrityCompetence.ExactCertaintyInflation`                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC5]{.sans-serif}]{#lh:IC5}     | `DecisionQuotient.IntegrityCompetence.Percent`                                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC6]{.sans-serif}]{#lh:IC6}     | `DecisionQuotient.IntegrityCompetence.RLFFWeights`                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC7]{.sans-serif}]{#lh:IC7}     | `DecisionQuotient.IntegrityCompetence.ReportSignal`                                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC8]{.sans-serif}]{#lh:IC8}     | `DecisionQuotient.IntegrityCompetence.ReportBitModel`                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC9]{.sans-serif}]{#lh:IC9}     | `DecisionQuotient.IntegrityCompetence.SignalConsistent`                                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC10]{.sans-serif}]{#lh:IC10}   | `DecisionQuotient.IntegrityCompetence.admissible_irrational_strictly_more_than_rational`               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC11]{.sans-serif}]{#lh:IC11}   | `DecisionQuotient.IntegrityCompetence.admissible_matrix_counts`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC12]{.sans-serif}]{#lh:IC12}   | `DecisionQuotient.IntegrityCompetence.abstain_signal_exists_with_guess_self`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC13]{.sans-serif}]{#lh:IC13}   | `DecisionQuotient.IntegrityCompetence.certaintyInflation_iff_not_admissible`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC14]{.sans-serif}]{#lh:IC14}   | `DecisionQuotient.IntegrityCompetence.certificationOverheadBits`                                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC15]{.sans-serif}]{#lh:IC15}   | `DecisionQuotient.IntegrityCompetence.certificationOverheadBits_of_evidence`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC16]{.sans-serif}]{#lh:IC16}   | `DecisionQuotient.IntegrityCompetence.certificationOverheadBits_of_no_evidence`                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC17]{.sans-serif}]{#lh:IC17}   | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits`                                              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC18]{.sans-serif}]{#lh:IC18}   | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_ge_raw`                                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC19]{.sans-serif}]{#lh:IC19}   | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_gt_raw_of_evidence`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC20]{.sans-serif}]{#lh:IC20}   | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_of_evidence`                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC21]{.sans-serif}]{#lh:IC21}   | `DecisionQuotient.IntegrityCompetence.certifiedTotalBits_of_no_evidence`                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC22]{.sans-serif}]{#lh:IC22}   | `DecisionQuotient.IntegrityCompetence.claim_admissible_of_evidence`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC23]{.sans-serif}]{#lh:IC23}   | `DecisionQuotient.IntegrityCompetence.competence_implies_integrity`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC24]{.sans-serif}]{#lh:IC24}   | `DecisionQuotient.IntegrityCompetence.completion_fraction_defined_of_declared_bound`                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC25]{.sans-serif}]{#lh:IC25}   | `DecisionQuotient.IntegrityCompetence.epsilon_competence_implies_integrity`                            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC26]{.sans-serif}]{#lh:IC26}   | `DecisionQuotient.IntegrityCompetence.evidence_nonempty_iff_claim_admissible`                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC27]{.sans-serif}]{#lh:IC27}   | `DecisionQuotient.IntegrityCompetence.evidence_of_claim_admissible`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC28]{.sans-serif}]{#lh:IC28}   | `DecisionQuotient.IntegrityCompetence.exact_claim_admissible_iff_exact_evidence_nonempty`              |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC29]{.sans-serif}]{#lh:IC29}   | `DecisionQuotient.IntegrityCompetence.exact_claim_requires_evidence`                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC30]{.sans-serif}]{#lh:IC30}   | `DecisionQuotient.IntegrityCompetence.exactCertaintyInflation_iff_no_exact_competence`                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC31]{.sans-serif}]{#lh:IC31}   | `DecisionQuotient.IntegrityCompetence.exact_raw_only_of_no_exact_admissible`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC32]{.sans-serif}]{#lh:IC32}   | `DecisionQuotient.IntegrityCompetence.integrity_forces_abstention`                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC33]{.sans-serif}]{#lh:IC33}   | `DecisionQuotient.IntegrityCompetence.integrity_not_competent_of_nonempty_scope`                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC34]{.sans-serif}]{#lh:IC34}   | `DecisionQuotient.IntegrityCompetence.integrity_resource_bound`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC35]{.sans-serif}]{#lh:IC35}   | `DecisionQuotient.IntegrityCompetence.no_completion_fraction_without_declared_bound`                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC36]{.sans-serif}]{#lh:IC36}   | `DecisionQuotient.IntegrityCompetence.overModelVerdict_rational_iff`                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC37]{.sans-serif}]{#lh:IC37}   | `DecisionQuotient.IntegrityCompetence.percentZero`                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC38]{.sans-serif}]{#lh:IC38}   | `DecisionQuotient.IntegrityCompetence.rlffBaseReward`                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC39]{.sans-serif}]{#lh:IC39}   | `DecisionQuotient.IntegrityCompetence.rlffReward`                                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC40]{.sans-serif}]{#lh:IC40}   | `DecisionQuotient.IntegrityCompetence.rlff_abstain_strictly_prefers_no_certificates`                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC41]{.sans-serif}]{#lh:IC41}   | `DecisionQuotient.IntegrityCompetence.rlff_maximizer_has_evidence`                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC42]{.sans-serif}]{#lh:IC42}   | `DecisionQuotient.IntegrityCompetence.rlff_maximizer_is_admissible`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC43]{.sans-serif}]{#lh:IC43}   | `DecisionQuotient.IntegrityCompetence.self_reflected_confidence_not_certification`                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC44]{.sans-serif}]{#lh:IC44}   | `DecisionQuotient.IntegrityCompetence.signal_certified_positive_implies_admissible`                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC45]{.sans-serif}]{#lh:IC45}   | `DecisionQuotient.IntegrityCompetence.signal_consistent_of_claim_admissible`                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC46]{.sans-serif}]{#lh:IC46}   | `DecisionQuotient.IntegrityCompetence.signal_no_evidence_forces_zero_certified`                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IC47]{.sans-serif}]{#lh:IC47}   | `DecisionQuotient.IntegrityCompetence.signal_exact_no_competence_forces_zero_certified`                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV1]{.sans-serif}]{#lh:IV1}     | `DecisionQuotient.InteriorVerification.GoalClass`                                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV2]{.sans-serif}]{#lh:IV2}     | `DecisionQuotient.InteriorVerification.InteriorDominanceVerifiable`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV3]{.sans-serif}]{#lh:IV3}     | `DecisionQuotient.InteriorVerification.TautologicalSetIdentifiable`                                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV4]{.sans-serif}]{#lh:IV4}     | `DecisionQuotient.InteriorVerification.agreeOnSet`                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV5]{.sans-serif}]{#lh:IV5}     | `DecisionQuotient.InteriorVerification.interiorParetoDominates`                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV6]{.sans-serif}]{#lh:IV6}     | `DecisionQuotient.InteriorVerification.interior_certificate_implies_non_rejection`                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV7]{.sans-serif}]{#lh:IV7}     | `DecisionQuotient.InteriorVerification.interior_dominance_implies_universal_non_rejection`             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV8]{.sans-serif}]{#lh:IV8}     | `DecisionQuotient.InteriorVerification.interior_dominance_not_full_sufficiency`                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[IV9]{.sans-serif}]{#lh:IV9}     | `DecisionQuotient.InteriorVerification.interior_verification_tractable_certificate`                    |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L1]{.sans-serif}]{#lh:L1}       | `ExactPhysicalClaimWellTyped`                                                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L2]{.sans-serif}]{#lh:L2}       | `ExcusedBy`                                                                                            |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L3]{.sans-serif}]{#lh:L3}       | `ExplicitHardnessAssumptions`                                                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L4]{.sans-serif}]{#lh:L4}       | `Literal.eval`                                                                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L5]{.sans-serif}]{#lh:L5}       | `OneStepSequentialObjective`                                                                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L6]{.sans-serif}]{#lh:L6}       | `RegimeSimulation`                                                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L7]{.sans-serif}]{#lh:L7}       | `StandardComplexityAssumptions`                                                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L8]{.sans-serif}]{#lh:L8}       | `StochasticCriterionObjective`                                                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L9]{.sans-serif}]{#lh:L9}       | `StructureDetectable`                                                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L10]{.sans-serif}]{#lh:L10}     | `TransitionCoupledObjective`                                                                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L11]{.sans-serif}]{#lh:L11}     | `TwoStepObjective`                                                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L12]{.sans-serif}]{#lh:L12}     | `adq`                                                                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L13]{.sans-serif}]{#lh:L13}     | `adq_ordering`                                                                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L14]{.sans-serif}]{#lh:L14}     | `agentBridgeClass`                                                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L15]{.sans-serif}]{#lh:L15}     | `agent_transfer_licensed_iff_snapshot`                                                                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L16]{.sans-serif}]{#lh:L16}     | `anchor_sigma2p_complete_conditional`                                                                  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L17]{.sans-serif}]{#lh:L17}     | `anchor_sigma2p_reduction_core`                                                                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L19]{.sans-serif}]{#lh:L19}     | `boundaryCharacterized_iff_exists_sufficient_subset`                                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L20]{.sans-serif}]{#lh:L20}     | `bounded_actions_detectable`                                                                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L21]{.sans-serif}]{#lh:L21}     | `bounded_actions_reusable_heuristic`                                                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L22]{.sans-serif}]{#lh:L22}     | `bridgeFailureWitness`                                                                                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L23]{.sans-serif}]{#lh:L23}     | `bridgeTransferLicensed`                                                                               |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L24]{.sans-serif}]{#lh:L24}     | `bridge_boundary_represented_family`                                                                   |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L25]{.sans-serif}]{#lh:L25}     | `boolHypercube_node_count`                                                                             |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[L68]{.sans-serif}]{#lh:L68}     | `node_count_does_not_determine_edge_geometry`                                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PBC1]{.sans-serif}]{#lh:PBC1}   | `DecisionQuotient.PhysicalBudgetCrossover.CrossoverAt`                                                 |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PBC2]{.sans-serif}]{#lh:PBC2}   | `DecisionQuotient.PhysicalBudgetCrossover.explicit_infeasible_succinct_feasible_of_crossover`          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PC10]{.sans-serif}]{#lh:PC10}   | `PhysicalComplexity.AccessRegime.AccessRegime`                                                         |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PC12]{.sans-serif}]{#lh:PC12}   | `PhysicalComplexity.AccessRegime.RegimeEval`                                                           |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PC15]{.sans-serif}]{#lh:PC15}   | `PhysicalComplexity.AccessRegime.RegimeWithCertificate`                                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PC17]{.sans-serif}]{#lh:PC17}   | `PhysicalComplexity.AccessRegime.certificate_upgrades_regime`                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PC19]{.sans-serif}]{#lh:PC19}   | `PhysicalComplexity.AccessRegime.regime_upgrade_with_certificate`                                      |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PC20]{.sans-serif}]{#lh:PC20}   | `PhysicalComplexity.AccessRegime.AccessChannelLaw`                                                     |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[PC21]{.sans-serif}]{#lh:PC21}   | `PhysicalComplexity.AccessRegime.FiveWayMeet`                                                          |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[S2P1]{.sans-serif}]{#lh:S2P1}   | `DecisionQuotient.Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`  |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[S2P2]{.sans-serif}]{#lh:S2P2}   | `DecisionQuotient.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`                        |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[S2P3]{.sans-serif}]{#lh:S2P3}   | `DecisionQuotient.Sigma2PHardness.min_sufficient_set_iff_relevant_card`                                |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
+| [[S2P6]{.sans-serif}]{#lh:S2P6}   | `DecisionQuotient.Sigma2PHardness.representationGap_eq_zero_iff`                                       |
++-----------------------------------+--------------------------------------------------------------------------------------------------------+
 
 
 ## Assumption Ledger (Auto)
@@ -6370,229 +3466,680 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 -   `DQ.tractable_subcases_conditional`
 
 
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  **Paper handle**                              **Status**   **Lean support**
-  --------------------------------------------- ------------ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  `cor:exact-identifiability`                   Full         `DQ.Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  **Paper handle**                                **Status**   **Lean support**
+  ----------------------------------------------- ------------ ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  `cor:channel-degradation`                       Unmapped     *(no derived Lean handle found)*
 
-  `cor:exact-no-competence-zero-certified`      Full         `DQ.IntegrityCompetence.rlff_maximizer_has_evidence`
+  `cor:exact-identifiability`                     Full         `DQ.Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`
 
-  `cor:gap-externalization`                     Full         `DQ.HardnessDistribution.saturatingSiteCost_eventually_constant`, `DQ.HardnessDistribution.totalDOF_ge_intrinsic`
+  `cor:exact-no-competence-zero-certified`        Full         `DQ.IntegrityCompetence.rlff_maximizer_has_evidence`
 
-  `cor:gap-minimization-hard`                   Full         `DQ.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`
+  `cor:finite-budget-no-exact-admissibility`      Full         `DQ.Physics.PhysicalCore.eventual_no_exact_admissibility_under_budget`, `DQ.Physics.PhysicalCore.eventual_no_exact_admissibility_under_canonical_requirement`
 
-  `cor:generalized-eventual-dominance`          Full         `DQ.HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower`
+  `cor:finite-budget-threshold-impossibility`     Full         `DQ.Physics.PhysicalCore.eventual_no_exact_admissibility_under_canonical_requirement`, `DQ.Physics.PhysicalCore.finite_budget_blocks_canonical_exponential_certification`, `DQ.Physics.PhysicalCore.finite_budget_blocks_exact_certification_beyond_threshold`
 
-  `cor:hardness-exact-certainty-inflation`      Full         `DQ.ClaimClosure.exact_certainty_inflation_under_hardness_core`
+  `cor:finite-lifetime`                           Unmapped     *(no derived Lean handle found)*
 
-  `cor:hardness-raw-only-exact`                 Full         `DQ.ClaimClosure.exact_raw_only_of_no_exact_admissible_core`, `DQ.IntegrityCompetence.competence_implies_integrity`
+  `cor:gap-externalization`                       Full         `DQ.HardnessDistribution.saturatingSiteCost_eventually_constant`, `DQ.HardnessDistribution.totalDOF_ge_intrinsic`
 
-  `cor:information-barrier-query`               Full         `DQ.ClaimClosure.information_barrier_opt_oracle_core`, `DQ.ClaimClosure.information_barrier_state_batch_core`, `DQ.ClaimClosure.information_barrier_value_entry_core`
+  `cor:gap-minimization-hard`                     Full         `DQ.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`
 
-  `cor:integrity-universal`                     Full         `DQ.ClaimClosure.integrity_universal_applicability_core`
+  `cor:generalized-eventual-dominance`            Full         `DQ.HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower`
 
-  `cor:interior-singleton-certificate`          Full         `DQ.InteriorVerification.interior_verification_tractable_certificate`
+  `cor:ground-state-passive`                      Unmapped     *(no derived Lean handle found)*
 
-  `cor:linear-positive-no-saturation`           Full         `DQ.HardnessDistribution.native_dominates_manual`
+  `cor:hardness-exact-certainty-inflation`        Full         `DQ.ClaimClosure.exact_certainty_inflation_under_hardness_core`
 
-  `cor:no-auto-minimize`                        Full         `DQ.ClaimClosure.no_auto_minimize_of_p_neq_conp`
+  `cor:hardness-raw-only-exact`                   Full         `DQ.ClaimClosure.exact_raw_only_of_no_exact_admissible_core`, `DQ.IntegrityCompetence.competence_implies_integrity`
 
-  `cor:no-uncertified-exact-claim`              Full         `DQ.ClaimClosure.no_uncertified_exact_claim_core`
+  `cor:import-asymmetry`                          Unmapped     *(no derived Lean handle found)*
 
-  `cor:outside-excuses-no-exact-report`         Full         `DQ.ClaimClosure.no_exact_claim_under_declared_assumptions_unless_excused_core`
+  `cor:information-barrier-query`                 Full         `DQ.ClaimClosure.information_barrier_opt_oracle_core`, `DQ.ClaimClosure.information_barrier_state_batch_core`, `DQ.ClaimClosure.information_barrier_value_entry_core`
 
-  `cor:overmodel-diagnostic-implication`        Full         `DQ.Sigma2PHardness.representationGap_eq_zero_iff`
+  `cor:integrity-universal`                       Full         `DQ.ClaimClosure.integrity_universal_applicability_core`
 
-  `cor:physics-no-universal-exact-claim`        Full         `DQ.ClaimClosure.no_exact_claim_admissible_under_hardness_core`
+  `cor:interior-singleton-certificate`            Full         `DQ.InteriorVerification.interior_verification_tractable_certificate`
 
-  `cor:practice-bounded`                        Full         `agent_transfer_licensed_iff_snapshot`
+  `cor:linear-positive-no-saturation`             Full         `DQ.HardnessDistribution.native_dominates_manual`
 
-  `cor:practice-diagnostic`                     Full         `DQ.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`
+  `cor:neukart-vinokur`                           Full         `DQ.ClaimClosure.query_obstruction_finite_state_core`, `DQ.ClaimClosure.thermo_conservation_additive_core`
 
-  `cor:practice-structured`                     Full         `anchor_sigma2p_complete_conditional`
+  `cor:no-auto-minimize`                          Full         `DQ.ClaimClosure.no_auto_minimize_of_p_neq_conp`
 
-  `cor:practice-tree`                           Full         `anchor_sigma2p_reduction_core`
+  `cor:no-free-computation`                       Full         `DQ.ClaimClosure.anchor_sigma2p_reduction_core`, `DQ.ClaimClosure.bounded_actions_detectable`, `DQ.ClaimClosure.bridge_boundary_represented_family`
 
-  `cor:practice-unstructured`                   Full         `ExactPhysicalClaimWellTyped`
+  `cor:no-uncertified-exact-claim`                Full         `DQ.ClaimClosure.no_uncertified_exact_claim_core`
 
-  `cor:query-obstruction-bool`                  Full         `DQ.ClaimClosure.query_obstruction_boolean_corollary`, `RegimeSimulation`
+  `cor:no-universal-survivor-no-succinct-bound`   Full         `DQ.PhysicalBudgetCrossover.no_universal_survivor_without_succinct_bound`
 
-  `cor:right-wrong-hardness`                    Full         `DQ.HardnessDistribution.no_positive_slope_linear_represents_saturating`
+  `cor:outside-excuses-no-exact-report`           Full         `DQ.ClaimClosure.no_exact_claim_under_declared_assumptions_unless_excused_core`
 
-  `cor:rlff-abstain-no-certs`                   Full         `DQ.IntegrityCompetence.exactCertaintyInflation_iff_no_exact_competence`
+  `cor:overmodel-diagnostic-implication`          Full         `DQ.Sigma2PHardness.representationGap_eq_zero_iff`
 
-  `cor:type-system-threshold`                   Full         `DQ.HardnessDistribution.linear_lt_exponential_plus_constant_eventually`
+  `cor:phase-transition`                          Unmapped     *(no derived Lean handle found)*
 
-  `prop:abstain-guess-self-signal`              Full         `DQ.IntegrityCompetence.signal_no_evidence_forces_zero_certified`
+  `cor:physical-counterexample-core-failure`      Full         `CT.no_physical_counterexample_of_core_theorem`, `CT.physical_counterexample_invalidates_core_rule`, `CT.physical_counterexample_yields_core_counterexample`, `DQ.Physics.PhysicalCore.substrate_transport_blocks_encoded_counterexamples`
 
-  `prop:adq-ordering`                           Full         `DQ.ClaimClosure.adq_ordering`
+  `cor:physics-no-universal-exact-claim`          Full         `DQ.ClaimClosure.no_exact_claim_admissible_under_hardness_core`
 
-  `prop:attempted-competence-matrix`            Full         `DQ.IntegrityCompetence.RLFFWeights`, `DQ.IntegrityCompetence.ReportSignal`, `DQ.IntegrityCompetence.evidence_of_claim_admissible`
+  `cor:practice-bounded`                          Full         `agent_transfer_licensed_iff_snapshot`
 
-  `prop:bounded-slice-meta-irrelevance`         Full         `DQ.ClaimClosure.meta_coordinate_irrelevant_of_invariance_on_declared_slice`, `DQ.ClaimClosure.meta_coordinate_not_relevant_on_declared_slice`
+  `cor:practice-diagnostic`                       Full         `DQ.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`
 
-  `prop:bridge-failure-horizon`                 Full         `DQ.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`, `DQ.ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`
+  `cor:practice-structured`                       Full         `anchor_sigma2p_complete_conditional`
 
-  `prop:bridge-failure-stochastic`              Full         `DQ.ClaimClosure.standard_assumption_ledger_unpack`
+  `cor:practice-symmetry`                         Full         `DQ.ClaimClosure.tractable_subcases_conditional`
 
-  `prop:bridge-failure-transition`              Full         `DQ.ClaimClosure.tractable_tree_core`
+  `cor:practice-tensor`                           Full         `DQ.ClaimClosure.tractable_separable_core`
 
-  `prop:bridge-transfer-scope`                  Full         `DQ.ClaimClosure.one_step_bridge`
+  `cor:practice-tree`                             Full         `anchor_sigma2p_reduction_core`
 
-  `prop:budgeted-crossover`                     Full         `DQ.ClaimClosure.physical_crossover_core`, `DQ.PhysicalBudgetCrossover.CrossoverAt`
+  `cor:practice-treewidth`                        Full         `DQ.ClaimClosure.tractable_tree_core`, `DQ.ClaimClosure.tree_structure_detectable`
 
-  `prop:certainty-inflation-iff-inadmissible`   Full         `DQ.IntegrityCompetence.ReportBitModel`, `DQ.IntegrityCompetence.claim_admissible_of_evidence`
+  `cor:practice-unstructured`                     Full         `ExactPhysicalClaimWellTyped`
 
-  `prop:certified-confidence-gate`              Full         `DQ.IntegrityCompetence.rlffBaseReward`, `DQ.IntegrityCompetence.rlffReward`
+  `cor:query-obstruction-bool`                    Full         `DQ.ClaimClosure.query_obstruction_boolean_corollary`, `RegimeSimulation`
 
-  `prop:crossover-above-cap`                    Full         `DQ.ClaimClosure.physical_crossover_above_cap_core`, `DQ.PhysicalBudgetCrossover.explicit_infeasible_succinct_feasible_of_crossover`
+  `cor:right-wrong-hardness`                      Full         `DQ.HardnessDistribution.no_positive_slope_linear_represents_saturating`
 
-  `prop:crossover-not-certification`            Full         `DQ.ClaimClosure.physical_crossover_hardness_core`
+  `cor:rlff-abstain-no-certs`                     Full         `DQ.IntegrityCompetence.exactCertaintyInflation_iff_no_exact_competence`, `DQ.Physics.PhysicalCore.rlff_abstain_strict_global_maximizer_of_no_certificates`
 
-  `prop:crossover-policy`                       Full         `DQ.ClaimClosure.physical_crossover_policy_core`
+  `cor:speed-integrity`                           Unmapped     *(no derived Lean handle found)*
 
-  `prop:decision-unit-time`                     Full         `DQ.Physics.DecisionTime.decision_event_iff_eq_tick`, `DQ.Physics.DecisionTime.decision_taking_place_is_unit_of_time`, `DQ.Physics.DecisionTime.tick_increments_time`, `DQ.Physics.DecisionTime.tick_is_decision_event`
+  `cor:theorem-equilibrium`                       Unmapped     *(no derived Lean handle found)*
 
-  `prop:declared-contract-selection-validity`   Full         `DQ.ClaimClosure.explicit_assumptions_required_of_not_excused_core`, `DQ.ClaimClosure.no_exact_claim_under_declared_assumptions_unless_excused_core`, `DQ.ClaimClosure.tree_structure_detectable`
+  `cor:thermo-dq`                                 Full         `DQ.opt_singleton_of_logicallyDeterministic`, `DQ.universe_sets_objective_schema`
 
-  `prop:dominance-modes`                        Full         `DQ.HardnessDistribution.centralized_higher_leverage`
+  `cor:type-system-threshold`                     Full         `DQ.HardnessDistribution.linear_lt_exponential_plus_constant_eventually`
 
-  `prop:empty-sufficient-constant`              Full         `DP.anchorSufficient`
+  `cor:zero-capacity`                             Unmapped     *(no derived Lean handle found)*
 
-  `prop:evidence-admissibility-equivalence`     Full         `DQ.IntegrityCompetence.certifiedTotalBits`, `DQ.IntegrityCompetence.certifiedTotalBits_of_evidence`, `DQ.IntegrityCompetence.certifiedTotalBits_of_no_evidence`
+  `cor:zero-gap`                                  Unmapped     *(no derived Lean handle found)*
 
-  `prop:exact-requires-evidence`                Full         `DQ.IntegrityCompetence.no_completion_fraction_without_declared_bound`, `DQ.IntegrityCompetence.overModelVerdict_rational_iff`
+  `prop:abstain-guess-self-signal`                Full         `DQ.IntegrityCompetence.signal_no_evidence_forces_zero_certified`
 
-  `prop:fraction-defined-under-bound`           Full         `DQ.IntegrityCompetence.signal_consistent_of_claim_admissible`
+  `prop:adq-ordering`                             Full         `DQ.ClaimClosure.adq_ordering`
 
-  `prop:generalized-assumption-boundary`        Full         `DQ.HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`, `DQ.HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`
+  `prop:attempted-competence-matrix`              Full         `DQ.IntegrityCompetence.RLFFWeights`, `DQ.IntegrityCompetence.ReportSignal`, `DQ.IntegrityCompetence.evidence_of_claim_admissible`
 
-  `prop:hardness-conservation`                  Full         `DQ.HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`
+  `prop:bounded-slice-meta-irrelevance`           Full         `DQ.ClaimClosure.meta_coordinate_irrelevant_of_invariance_on_declared_slice`, `DQ.ClaimClosure.meta_coordinate_not_relevant_on_declared_slice`
 
-  `prop:hardness-efficiency-interpretation`     Full         `DQ.HardnessDistribution.generalized_right_eventually_dominates_wrong`
+  `prop:bridge-failure-horizon`                   Full         `DQ.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`, `DQ.ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`
 
-  `prop:heuristic-reusability`                  Full         `DQ.ClaimClosure.bounded_actions_detectable`, `DQ.ClaimClosure.reusable_heuristic_of_detectable`, `DQ.ClaimClosure.separable_detectable`, `DQ.ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`
+  `prop:bridge-failure-stochastic`                Full         `DQ.ClaimClosure.standard_assumption_ledger_unpack`
 
-  `prop:insufficiency-counterexample`           Full         `DP.classMonotoneOn`, `DP.constant_opt_all_sufficient`
+  `prop:bridge-failure-transition`                Full         `DQ.ClaimClosure.tractable_tree_core`
 
-  `prop:integrity-competence-separation`        Full         `DQ.IntegrityCompetence.certifiedTotalBits_ge_raw`, `DQ.IntegrityCompetence.epsilon_competence_implies_integrity`
+  `prop:bridge-transfer-scope`                    Full         `DQ.ClaimClosure.one_step_bridge`
 
-  `prop:integrity-resource-bound`               Full         `DQ.ClaimClosure.integrity_resource_bound_for_sufficiency`, `DQ.IntegrityCompetence.completion_fraction_defined_of_declared_bound`, `DQ.IntegrityCompetence.evidence_nonempty_iff_claim_admissible`
+  `prop:budgeted-crossover`                       Full         `DQ.ClaimClosure.physical_crossover_core`, `DQ.PhysicalBudgetCrossover.CrossoverAt`
 
-  `prop:interior-one-sidedness`                 Full         `DQ.InteriorVerification.interior_certificate_implies_non_rejection`, `DQ.InteriorVerification.interior_dominance_not_full_sufficiency`
+  `prop:certainty-inflation-iff-inadmissible`     Full         `DQ.IntegrityCompetence.ReportBitModel`, `DQ.IntegrityCompetence.claim_admissible_of_evidence`
 
-  `prop:interior-universal-non-rejection`       Full         `DQ.InteriorVerification.interiorParetoDominates`
+  `prop:certified-confidence-gate`                Full         `DQ.IntegrityCompetence.rlffBaseReward`, `DQ.IntegrityCompetence.rlffReward`
 
-  `prop:interior-verification-tractable`        Full         `DQ.InteriorVerification.agreeOnSet`, `DQ.InteriorVerification.interior_dominance_implies_universal_non_rejection`
+  `prop:checking-witnessing-duality`              Full         `DQ.checking_witnessing_duality`, `DQ.checking_witnessing_duality_budget`
 
-  `prop:minimal-relevant-equiv`                 Full         `DQ.DecisionProblem.relevantSet_is_minimal`, `DQ.DecisionProblem.sufficient_implies_selectorSufficient`
+  `prop:comp-thermo-chain`                        Unmapped     *(no derived Lean handle found)*
 
-  `prop:no-evidence-zero-certified`             Full         `DQ.IntegrityCompetence.rlff_abstain_strictly_prefers_no_certificates`
+  `prop:crossover-above-cap`                      Full         `DQ.ClaimClosure.physical_crossover_above_cap_core`, `DQ.PhysicalBudgetCrossover.explicit_infeasible_succinct_feasible_of_crossover`
 
-  `prop:no-fraction-without-bound`              Full         `DQ.IntegrityCompetence.signal_certified_positive_implies_admissible`
+  `prop:crossover-not-certification`              Full         `DQ.ClaimClosure.physical_crossover_hardness_core`
 
-  `prop:one-step-bridge`                        Full         `DQ.ClaimClosure.one_step_bridge`
+  `prop:crossover-policy`                         Full         `DQ.ClaimClosure.physical_crossover_policy_core`
 
-  `prop:oracle-lattice-strict`                  Full         `ExplicitHardnessAssumptions`, `L.eval`
+  `prop:decision-equivalence`                     Unmapped     *(no derived Lean handle found)*
 
-  `prop:oracle-lattice-transfer`                Full         `DQ.ClaimClosure.oracle_lattice_transfer_as_regime_simulation`, `bounded_actions_detectable`
+  `prop:decision-unit-time`                       Full         `DQ.Physics.DecisionTime.decision_event_iff_eq_tick`, `DQ.Physics.DecisionTime.decision_taking_place_is_unit_of_time`, `DQ.Physics.DecisionTime.tick_increments_time`, `DQ.Physics.DecisionTime.tick_is_decision_event`
 
-  `prop:outside-excuses-explicit-assumptions`   Full         `DQ.ClaimClosure.explicit_assumptions_required_of_not_excused_core`
+  `prop:declared-contract-selection-validity`     Full         `DQ.ClaimClosure.explicit_assumptions_required_of_not_excused_core`, `DQ.ClaimClosure.no_exact_claim_under_declared_assumptions_unless_excused_core`, `DQ.ClaimClosure.tree_structure_detectable`
 
-  `prop:physics-no-universal-exact`             Full         `DQ.ClaimClosure.declared_physics_no_universal_exact_certifier_core`
+  `prop:discrete-state-time`                      Unmapped     *(no derived Lean handle found)*
 
-  `prop:query-finite-state-generalization`      Full         `StandardComplexityAssumptions`, `adq_ordering`
+  `prop:dominance-modes`                          Full         `DQ.HardnessDistribution.centralized_higher_leverage`
 
-  `prop:query-randomized-robustness`            Full         `OneStepSequentialObjective`, `TwoStepObjective`, `adq`
+  `prop:empty-sufficient-constant`                Full         `DP.anchorSufficient`
 
-  `prop:query-randomized-weighted`              Full         `bridgeTransferLicensed`, `bridge_boundary_represented_family`
+  `prop:eventual-explicit-infeasibility`          Full         `DQ.PhysicalBudgetCrossover.explicit_eventual_infeasibility_of_monotone_and_witness`
 
-  `prop:query-regime-obstruction`               Full         `DQ.ClaimClosure.query_obstruction_finite_state_core`, `StandardComplexityAssumptions`, `adq_ordering`
+  `prop:evidence-admissibility-equivalence`       Full         `DQ.IntegrityCompetence.certifiedTotalBits`, `DQ.IntegrityCompetence.certifiedTotalBits_of_evidence`, `DQ.IntegrityCompetence.certifiedTotalBits_of_no_evidence`
 
-  `prop:query-state-batch-lb`                   Full         `StochasticCriterionObjective`, `agentBridgeClass`
+  `prop:exact-requires-evidence`                  Full         `DQ.IntegrityCompetence.no_completion_fraction_without_declared_bound`, `DQ.IntegrityCompetence.overModelVerdict_rational_iff`
 
-  `prop:query-subproblem-transfer`              Full         `DQ.ClaimClosure.regime_simulation_transfers_hardness`, `DQ.ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`, `DQ.ClaimClosure.subproblem_hardness_lifts_to_full`
+  `prop:fraction-defined-under-bound`             Full         `DQ.IntegrityCompetence.signal_consistent_of_claim_admissible`
 
-  `prop:query-tightness-full-scan`              Full         `TransitionCoupledObjective`
+  `prop:generalized-assumption-boundary`          Full         `DQ.HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`, `DQ.HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`
 
-  `prop:query-value-entry-lb`                   Full         `StructureDetectable`, `boundaryCharacterized_iff_exists_sufficient_subset`
+  `prop:hardness-conservation`                    Full         `DQ.HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`
 
-  `prop:query-weighted-transfer`                Full         `bounded_actions_reusable_heuristic`, `bridgeFailureWitness`
+  `prop:hardness-efficiency-interpretation`       Full         `DQ.HardnessDistribution.generalized_right_eventually_dominates_wrong`
 
-  `prop:raw-certified-bit-split`                Full         `DQ.ClaimClosure.certified_total_bits_split_core`, `DQ.IntegrityCompetence.admissible_irrational_strictly_more_than_rational`, `DQ.IntegrityCompetence.admissible_matrix_counts`, `DQ.IntegrityCompetence.certaintyInflation_iff_not_admissible`, `DQ.IntegrityCompetence.certificationOverheadBits`, `DQ.IntegrityCompetence.certificationOverheadBits_of_evidence`, `DQ.IntegrityCompetence.certificationOverheadBits_of_no_evidence`
+  `prop:heisenberg-strong-nontrivial-opt`         Full         `DQ.Physics.HeisenbergStrong.HeisenbergStrongBinding`, `DQ.Physics.HeisenbergStrong.strong_binding_implies_core_nontrivial`, `DQ.Physics.HeisenbergStrong.strong_binding_implies_nontrivial_opt_via_uncertainty`
 
-  `prop:rlff-maximizer-admissible`              Full         `DQ.IntegrityCompetence.exact_raw_only_of_no_exact_admissible`, `DQ.IntegrityCompetence.integrity_forces_abstention`
+  `prop:heuristic-reusability`                    Full         `DQ.ClaimClosure.bounded_actions_detectable`, `DQ.ClaimClosure.reusable_heuristic_of_detectable`, `DQ.ClaimClosure.separable_detectable`, `DQ.ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`
 
-  `prop:run-time-accounting`                    Full         `DQ.Physics.DecisionTime.decisionTrace_length_eq_ticks`, `DQ.Physics.DecisionTime.decision_count_equals_elapsed_time`, `DQ.Physics.DecisionTime.run_elapsed_time_eq_ticks`, `DQ.Physics.DecisionTime.run_time_exact`
+  `prop:insufficiency-counterexample`             Full         `DP.classMonotoneOn`, `DP.constant_opt_all_sufficient`
 
-  `prop:selector-separation`                    Full         `DQ.ClaimClosure.selectorSufficient_not_implies_setSufficient`
+  `prop:integrity-competence-separation`          Full         `DQ.IntegrityCompetence.certifiedTotalBits_ge_raw`, `DQ.IntegrityCompetence.epsilon_competence_implies_integrity`
 
-  `prop:self-confidence-not-certification`      Full         `DQ.IntegrityCompetence.signal_exact_no_competence_forces_zero_certified`
+  `prop:integrity-prerequisite`                   Unmapped     *(no derived Lean handle found)*
 
-  `prop:set-to-selector`                        Full         `DQ.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`
+  `prop:integrity-resource-bound`                 Full         `DQ.ClaimClosure.integrity_resource_bound_for_sufficiency`, `DQ.IntegrityCompetence.completion_fraction_defined_of_declared_bound`, `DQ.IntegrityCompetence.evidence_nonempty_iff_claim_admissible`
 
-  `prop:snapshot-process-typing`                Full         `DQ.ClaimClosure.agent_transfer_licensed_iff_snapshot`, `DQ.ClaimClosure.process_bridge_failure_witness`, `DQ.ClaimClosure.snapshot_vs_process_typed_boundary`
+  `prop:interior-one-sidedness`                   Full         `DQ.InteriorVerification.interior_certificate_implies_non_rejection`, `DQ.InteriorVerification.interior_dominance_not_full_sufficiency`
 
-  `prop:steps-run-scalar`                       Full         `DQ.IntegrityCompetence.rlff_maximizer_is_admissible`, `DQ.IntegrityCompetence.self_reflected_confidence_not_certification`
+  `prop:interior-universal-non-rejection`         Full         `DQ.InteriorVerification.interiorParetoDominates`
 
-  `prop:substrate-unit-time`                    Full         `DQ.Physics.DecisionTime.substrate_step_is_time_unit`, `DQ.Physics.DecisionTime.substrate_step_realizes_decision_event`, `DQ.Physics.DecisionTime.time_unit_law_substrate_invariant`
+  `prop:interior-verification-tractable`          Full         `DQ.InteriorVerification.agreeOnSet`, `DQ.InteriorVerification.interior_dominance_implies_universal_non_rejection`
 
-  `prop:sufficiency-char`                       Full         `DQ.ClaimClosure.sufficiency_conp_reduction_core`, `DQ.ClaimClosure.sufficiency_iff_dq_ratio`
+  `prop:landauer-constraint`                      Unmapped     *(no derived Lean handle found)*
 
-  `prop:thermo-conservation-additive`           Full         `DQ.ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`
+  `prop:law-instance-objective-bridge`            Full         `CT.law_gap_physical_claim_holds`, `CT.no_law_gap_counterexample`
 
-  `prop:thermo-hardness-bundle`                 Full         `DQ.ClaimClosure.thermo_eventual_lift_core`
+  `prop:least-divergence-point`                   Full         `DQ.PhysicalBudgetCrossover.exists_least_crossover_point`
 
-  `prop:thermo-lift`                            Full         `DQ.ClaimClosure.thermo_conservation_additive_core`, `DQ.ClaimClosure.thermo_energy_carbon_lift_core`
+  `prop:lorentz-discrete`                         Unmapped     *(no derived Lean handle found)*
 
-  `prop:thermo-mandatory-cost`                  Full         `DQ.ClaimClosure.thermo_hardness_bundle_core`
+  `prop:minimal-relevant-equiv`                   Full         `DQ.DecisionProblem.relevantSet_is_minimal`, `DQ.DecisionProblem.sufficient_implies_selectorSufficient`
 
-  `prop:time-discrete`                          Full         `DQ.Physics.DecisionTime.time_coordinate_falsifiable`, `DQ.Physics.DecisionTime.time_is_discrete`
+  `prop:no-evidence-zero-certified`               Full         `DQ.IntegrityCompetence.rlff_abstain_strictly_prefers_no_certificates`
 
-  `prop:typed-claim-admissibility`              Full         `DQ.ClaimClosure.tree_structure_detectable`
+  `prop:no-fraction-without-bound`                Full         `DQ.IntegrityCompetence.signal_certified_positive_implies_admissible`
 
-  `prop:universal-solver-framing`               Full         `DQ.ClaimClosure.typed_static_class_completeness`
+  `prop:one-step-bridge`                          Full         `DQ.ClaimClosure.one_step_bridge`
 
-  `prop:zero-epsilon-competence`                Full         `DQ.IntegrityCompetence.certifiedTotalBits_gt_raw_of_evidence`, `DQ.IntegrityCompetence.integrity_not_competent_of_nonempty_scope`
+  `prop:oracle-lattice-strict`                    Full         `ExplicitHardnessAssumptions`, `L.eval`
 
-  `prop:zero-epsilon-reduction`                 Full         `DQ.ClaimClosure.DecisionProblem.epsOpt_zero_eq_opt`, `DQ.DecisionProblem.minimalSufficient_iff_relevant`
+  `prop:oracle-lattice-transfer`                  Full         `DQ.ClaimClosure.oracle_lattice_transfer_as_regime_simulation`, `bounded_actions_detectable`
 
-  `thm:amortization`                            Full         `DQ.HardnessDistribution.centralized_higher_leverage`
+  `prop:orbital-symmetry`                         Unmapped     *(no derived Lean handle found)*
 
-  `thm:bridge-boundary-represented`             Full         `DQ.ClaimClosure.bridge_boundary_represented_family`, `DQ.ClaimClosure.bridge_failure_witness_non_one_step`, `DQ.ClaimClosure.bridge_transfer_iff_one_step_class`
+  `prop:outside-excuses-explicit-assumptions`     Full         `DQ.ClaimClosure.explicit_assumptions_required_of_not_excused_core`
 
-  `thm:centralization-dominance`                Full         `DQ.HardnessDistribution.centralization_dominance_bundle`, `DQ.HardnessDistribution.centralization_step_saves_n_minus_one`
+  `prop:payoff-threshold`                         Full         `DQ.PhysicalBudgetCrossover.crossover_eventually_of_eventual_split`, `DQ.PhysicalBudgetCrossover.payoff_threshold_explicit_vs_succinct`
 
-  `thm:claim-integrity-meta`                    Full         `DQ.ClaimClosure.explicit_assumptions_required_of_not_excused_core`
+  `prop:physical-claim-transport`                 Full         `CT.physical_claim_lifts_from_core`, `CT.physical_claim_lifts_from_core_conditional`, `DQ.Physics.PhysicalCore.substrate_transport_sound_conditional`
 
-  `thm:config-reduction`                        Full         `DQ.ConfigReduction.config_sufficiency_iff_behavior_preserving`
+  `prop:physics-no-universal-exact`               Full         `DQ.ClaimClosure.declared_physics_no_universal_exact_certifier_core`
 
-  `thm:cost-asymmetry-eth`                      Full         `DQ.ClaimClosure.cost_asymmetry_eth_conditional`, `DQ.HardnessDistribution.isWrongHardness`
+  `prop:policy-closure-beyond-divergence`         Full         `DQ.PhysicalBudgetCrossover.policy_closure_at_divergence`, `DQ.PhysicalBudgetCrossover.policy_closure_beyond_divergence`
 
-  `thm:dichotomy`                               Full         `DQ.ClaimClosure.dichotomy_conditional`, `DQ.ClaimClosure.explicit_state_upper_core`, `DQ.ClaimClosure.hard_family_all_coords_core`
+  `prop:query-finite-state-generalization`        Full         `StandardComplexityAssumptions`, `adq_ordering`
 
-  `thm:exact-certified-gap-iff-admissible`      Full         `DQ.ClaimClosure.epsilon_admissible_iff_raw_lt_certified_total_core`, `DQ.ClaimClosure.exact_admissible_iff_raw_lt_certified_total_core`, `DQ.ClaimClosure.exact_raw_eq_certified_iff_certainty_inflation_core`
+  `prop:query-randomized-robustness`              Full         `OneStepSequentialObjective`, `TwoStepObjective`, `adq`
 
-  `thm:generalized-dominance`                   Full         `DQ.HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`
+  `prop:query-randomized-weighted`                Full         `bridgeTransferLicensed`, `bridge_boundary_represented_family`
 
-  `thm:generalized-saturation-possible`         Full         `DQ.HardnessDistribution.gap_conservation_card`, `DQ.HardnessDistribution.right_dominates_wrong`
+  `prop:query-regime-obstruction`                 Full         `DQ.ClaimClosure.query_obstruction_finite_state_core`, `StandardComplexityAssumptions`, `adq_ordering`
 
-  `thm:linear-saturation-iff-zero`              Full         `DQ.HardnessDistribution.simplicityTax_grows`
+  `prop:query-state-batch-lb`                     Full         `StochasticCriterionObjective`, `agentBridgeClass`
 
-  `thm:overmodel-diagnostic`                    Full         `DQ.ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`, `DQ.ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`
+  `prop:query-subproblem-transfer`                Full         `DQ.ClaimClosure.regime_simulation_transfers_hardness`, `DQ.ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`, `DQ.ClaimClosure.subproblem_hardness_lifts_to_full`
 
-  `thm:regime-coverage`                         Full         `DQ.ClaimClosure.declaredRegimeFamily_complete`, `DQ.ClaimClosure.regime_core_claim_proved`
+  `prop:query-tightness-full-scan`                Full         `TransitionCoupledObjective`
 
-  `thm:tax-conservation`                        Full         `DQ.HardnessDistribution.complete_model_dominates_after_threshold`
+  `prop:query-value-entry-lb`                     Full         `StructureDetectable`, `boundaryCharacterized_iff_exists_sufficient_subset`
 
-  `thm:tax-grows`                               Full         `DQ.HardnessDistribution.totalDOF_ge_intrinsic`
+  `prop:query-weighted-transfer`                  Full         `bounded_actions_reusable_heuristic`, `bridgeFailureWitness`
 
-  `thm:tractable`                               Full         `DQ.ClaimClosure.thermo_mandatory_cost_core`, `DQ.ClaimClosure.tractable_bounded_core`, `DQ.ClaimClosure.tractable_separable_core`, `DQ.ClaimClosure.tractable_subcases_conditional`
+  `prop:raw-certified-bit-split`                  Full         `DQ.ClaimClosure.certified_total_bits_split_core`, `DQ.IntegrityCompetence.admissible_irrational_strictly_more_than_rational`, `DQ.IntegrityCompetence.admissible_matrix_counts`, `DQ.IntegrityCompetence.certaintyInflation_iff_not_admissible`, `DQ.IntegrityCompetence.certificationOverheadBits`, `DQ.IntegrityCompetence.certificationOverheadBits_of_evidence`, `DQ.IntegrityCompetence.certificationOverheadBits_of_no_evidence`, `DQ.Physics.PhysicalCore.certified_work_lower_bound_raw`
 
-  `thm:typed-completeness-static`               Full         `DQ.ClaimClosure.typed_claim_admissibility_core`
-  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  `prop:reaction-competence`                      Unmapped     *(no derived Lean handle found)*
 
-*Auto summary: mapped 109/109 (full=109, derived=0, unmapped=0).*
+  `prop:rlff-maximizer-admissible`                Full         `DQ.IntegrityCompetence.exact_raw_only_of_no_exact_admissible`, `DQ.IntegrityCompetence.integrity_forces_abstention`
+
+  `prop:run-time-accounting`                      Full         `DQ.Physics.DecisionTime.decisionTrace_length_eq_ticks`, `DQ.Physics.DecisionTime.decision_count_equals_elapsed_time`, `DQ.Physics.DecisionTime.run_elapsed_time_eq_ticks`, `DQ.Physics.DecisionTime.run_time_exact`
+
+  `prop:selector-separation`                      Full         `DQ.ClaimClosure.selectorSufficient_not_implies_setSufficient`
+
+  `prop:self-confidence-not-certification`        Full         `DQ.IntegrityCompetence.signal_exact_no_competence_forces_zero_certified`
+
+  `prop:set-to-selector`                          Full         `DQ.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`
+
+  `prop:snapshot-process-typing`                  Full         `DQ.ClaimClosure.agent_transfer_licensed_iff_snapshot`, `DQ.ClaimClosure.process_bridge_failure_witness`, `DQ.ClaimClosure.snapshot_vs_process_typed_boundary`
+
+  `prop:steps-run-scalar`                         Full         `DQ.IntegrityCompetence.rlff_maximizer_is_admissible`, `DQ.IntegrityCompetence.self_reflected_confidence_not_certification`
+
+  `prop:structural-asymmetry`                     Unmapped     *(no derived Lean handle found)*
+
+  `prop:substrate-unit-time`                      Full         `DQ.Physics.DecisionTime.substrate_step_is_time_unit`, `DQ.Physics.DecisionTime.substrate_step_realizes_decision_event`, `DQ.Physics.DecisionTime.time_unit_law_substrate_invariant`
+
+  `prop:sufficiency-char`                         Full         `DQ.ClaimClosure.sufficiency_conp_reduction_core`, `DQ.ClaimClosure.sufficiency_iff_dq_ratio`
+
+  `prop:temporal-equilibrium`                     Unmapped     *(no derived Lean handle found)*
+
+  `prop:thermo-conservation-additive`             Full         `DQ.ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`
+
+  `prop:thermo-hardness-bundle`                   Full         `DQ.ClaimClosure.thermo_eventual_lift_core`
+
+  `prop:thermo-lift`                              Full         `DQ.ClaimClosure.thermo_conservation_additive_core`, `DQ.ClaimClosure.thermo_energy_carbon_lift_core`
+
+  `prop:thermo-mandatory-cost`                    Full         `DQ.ClaimClosure.thermo_hardness_bundle_core`
+
+  `prop:time-discrete`                            Full         `DQ.Physics.DecisionTime.time_coordinate_falsifiable`, `DQ.Physics.DecisionTime.time_is_discrete`
+
+  `prop:typed-claim-admissibility`                Full         `DQ.ClaimClosure.tree_structure_detectable`
+
+  `prop:under-resolution-collision`               Full         `DQ.Physics.PhysicalIncompleteness.under_resolution_implies_collision`, `DQ.Physics.PhysicalIncompleteness.under_resolution_implies_decision_collision`
+
+  `prop:universal-solver-framing`                 Full         `DQ.ClaimClosure.typed_static_class_completeness`
+
+  `prop:zero-epsilon-competence`                  Full         `DQ.IntegrityCompetence.certifiedTotalBits_gt_raw_of_evidence`, `DQ.IntegrityCompetence.integrity_not_competent_of_nonempty_scope`
+
+  `prop:zero-epsilon-reduction`                   Full         `DQ.ClaimClosure.DecisionProblem.epsOpt_zero_eq_opt`, `DQ.DecisionProblem.minimalSufficient_iff_relevant`
+
+  `thm:amortization`                              Full         `DQ.HardnessDistribution.centralized_higher_leverage`
+
+  `thm:bridge-boundary-represented`               Full         `DQ.ClaimClosure.bridge_boundary_represented_family`, `DQ.ClaimClosure.bridge_failure_witness_non_one_step`, `DQ.ClaimClosure.bridge_transfer_iff_one_step_class`
+
+  `thm:centralization-dominance`                  Full         `DQ.HardnessDistribution.centralization_dominance_bundle`, `DQ.HardnessDistribution.centralization_step_saves_n_minus_one`
+
+  `thm:choice-pays`                               Unmapped     *(no derived Lean handle found)*
+
+  `thm:claim-integrity-meta`                      Full         `DQ.ClaimClosure.explicit_assumptions_required_of_not_excused_core`
+
+  `thm:competence-access`                         Unmapped     *(no derived Lean handle found)*
+
+  `thm:competence-capacity`                       Unmapped     *(no derived Lean handle found)*
+
+  `thm:complexity-dichotomy`                      Unmapped     *(no derived Lean handle found)*
+
+  `thm:config-reduction`                          Full         `DQ.ConfigReduction.config_sufficiency_iff_behavior_preserving`
+
+  `thm:conservation`                              Full         `DQ.InteriorVerification.agreeOnSet`
+
+  `thm:cost-asymmetry-eth`                        Full         `DQ.ClaimClosure.cost_asymmetry_eth_conditional`, `DQ.HardnessDistribution.isWrongHardness`
+
+  `thm:cycle-cost`                                Full         `DQ.ClaimClosure.RegimeSimulation`, `DQ.ClaimClosure.adq_ordering`, `DQ.ClaimClosure.agent_transfer_licensed_iff_snapshot`
+
+  `thm:deficit-source`                            Full         `DQ.InteriorVerification.interiorParetoDominates`, `DQ.InteriorVerification.interior_certificate_implies_non_rejection`
+
+  `thm:dichotomy`                                 Full         `DQ.ClaimClosure.dichotomy_conditional`, `DQ.ClaimClosure.explicit_state_upper_core`, `DQ.ClaimClosure.hard_family_all_coords_core`
+
+  `thm:dq-bayes`                                  Full         `DQ.CC.minsuff_collapse_to_conp_conditional`, `DQ.opt_eq_feasible_of_gap`, `DQ.opt_eq_of_allowed_iff`
+
+  `thm:exact-certified-gap-iff-admissible`        Full         `DQ.ClaimClosure.epsilon_admissible_iff_raw_lt_certified_total_core`, `DQ.ClaimClosure.exact_admissible_iff_raw_lt_certified_total_core`, `DQ.ClaimClosure.exact_raw_eq_certified_iff_certainty_inflation_core`, `DQ.Physics.PhysicalCore.admissible_report_requires_strict_certified_work`
+
+  `thm:gap-physical`                              Unmapped     *(no derived Lean handle found)*
+
+  `thm:generalized-dominance`                     Full         `DQ.HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`
+
+  `thm:generalized-saturation-possible`           Full         `DQ.HardnessDistribution.gap_conservation_card`, `DQ.HardnessDistribution.right_dominates_wrong`
+
+  `thm:growth-time`                               Full         `DQ.InteriorVerification.GoalClass`, `DQ.InteriorVerification.InteriorDominanceVerifiable`, `DQ.InteriorVerification.TautologicalSetIdentifiable`
+
+  `thm:information-gap`                           Unmapped     *(no derived Lean handle found)*
+
+  `thm:linear-saturation-iff-zero`                Full         `DQ.HardnessDistribution.simplicityTax_grows`
+
+  `thm:orbital-cost`                              Unmapped     *(no derived Lean handle found)*
+
+  `thm:orbital-transition`                        Unmapped     *(no derived Lean handle found)*
+
+  `thm:overmodel-diagnostic`                      Full         `DQ.ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`, `DQ.ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`
+
+  `thm:physical-bridge-bundle`                    Full         `CT.physical_bridge_bundle`
+
+  `thm:physical-incompleteness`                   Full         `DQ.Physics.PhysicalIncompleteness.no_surjective_instantiation_of_card_gap`, `DQ.Physics.PhysicalIncompleteness.physical_incompleteness_of_bounds`, `DQ.Physics.PhysicalIncompleteness.physical_incompleteness_of_card_gap`
+
+  `thm:regime-coverage`                           Full         `DQ.ClaimClosure.declaredRegimeFamily_complete`, `DQ.ClaimClosure.regime_core_claim_proved`
+
+  `thm:six-subcases`                              Unmapped     *(no derived Lean handle found)*
+
+  `thm:substrate-degradation`                     Unmapped     *(no derived Lean handle found)*
+
+  `thm:tax-conservation`                          Full         `DQ.HardnessDistribution.complete_model_dominates_after_threshold`
+
+  `thm:tax-grows`                                 Full         `DQ.HardnessDistribution.totalDOF_ge_intrinsic`
+
+  `thm:topology-motion`                           Unmapped     *(no derived Lean handle found)*
+
+  `thm:tractable`                                 Full         `DQ.ClaimClosure.tractable_bounded_core`, `DQ.ClaimClosure.tractable_separable_core`, `DQ.ClaimClosure.tractable_subcases_conditional`, `DQ.ClaimClosure.tractable_tree_core`
+
+  `thm:typed-completeness-static`                 Full         `DQ.ClaimClosure.typed_claim_admissibility_core`
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+*Notes:* *(1) Full rows come from theorem-local inline anchors in this paper.* *(2) Derived rows are filled by dependency/scaffold claim-handle derivation (same paper-handle label across proof dependencies).* *(3) Unmapped means no local anchor and no derivable dependency support were found.*
+
+*Auto summary: mapped 135/165 (full=135, derived=0, unmapped=30).*
+
+
+  ----------------------------------------------------------------------------------------------------------------------------------------------------
+  **Paper handle**                                **Hardness profile**     **Regime tags**                     **Lean support**
+  ----------------------------------------------- ------------------------ ----------------------------------- ---------------------------------------
+  `cor:channel-degradation`                       `cost-growth`            `H=cost-growth,Q_fin`               *(no derived Lean handle found)*
+
+  `cor:finite-lifetime`                           `cost-growth`            `H=cost-growth,Q_fin`               *(no derived Lean handle found)*
+
+  `cor:gap-externalization`                       `cost-growth`            `H=cost-growth`                     ,
+
+  `cor:generalized-eventual-dominance`            `cost-growth`            `H=cost-growth`                     
+
+  `cor:linear-positive-no-saturation`             `cost-growth`            `H=cost-growth`                     
+
+  `cor:no-free-computation`                       `cost-growth`            `AR,H=cost-growth`                  , ,
+
+  `cor:right-wrong-hardness`                      `cost-growth`            `H=cost-growth`                     
+
+  `cor:speed-integrity`                           `cost-growth`            `H=cost-growth,Q_fin`               *(no derived Lean handle found)*
+
+  `cor:thermo-dq`                                 `cost-growth`            `AR,H=cost-growth`                  ,
+
+  `cor:type-system-threshold`                     `cost-growth`            `H=cost-growth`                     
+
+  `cor:zero-capacity`                             `cost-growth`            `H=cost-growth,Q_fin`               *(no derived Lean handle found)*
+
+  `prop:dominance-modes`                          `cost-growth`            `H=cost-growth`                     
+
+  `prop:generalized-assumption-boundary`          `cost-growth`            `H=cost-growth`                     ,
+
+  `prop:hardness-conservation`                    `cost-growth`            `H=cost-growth`                     
+
+  `prop:hardness-efficiency-interpretation`       `cost-growth`            `H=cost-growth`                     
+
+  `prop:reaction-competence`                      `cost-growth`            `H=cost-growth,Q_fin`               *(no derived Lean handle found)*
+
+  `prop:structural-asymmetry`                     `cost-growth`            `AR,H=cost-growth`                  *(no derived Lean handle found)*
+
+  `prop:thermo-conservation-additive`             `cost-growth`            `H=cost-growth`                     
+
+  `prop:thermo-hardness-bundle`                   `cost-growth`            `H=cost-growth`                     
+
+  `prop:thermo-lift`                              `cost-growth`            `H=cost-growth`                     ,
+
+  `prop:thermo-mandatory-cost`                    `cost-growth`            `H=cost-growth`                     
+
+  `thm:choice-pays`                               `cost-growth`            `AR,H=cost-growth`                  *(no derived Lean handle found)*
+
+  `thm:conservation`                              `cost-growth`            `H=cost-growth,Q_fin`               
+
+  `thm:cycle-cost`                                `cost-growth`            `AR,H=cost-growth`                  , ,
+
+  `thm:deficit-source`                            `cost-growth`            `H=cost-growth,Q_fin`               ,
+
+  `thm:dq-bayes`                                  `cost-growth`            `AR,H=cost-growth`                  , ,
+
+  `thm:generalized-dominance`                     `cost-growth`            `H=cost-growth`                     
+
+  `thm:generalized-saturation-possible`           `cost-growth`            `H=cost-growth`                     ,
+
+  `thm:growth-time`                               `cost-growth`            `H=cost-growth,Q_fin`               , ,
+
+  `thm:linear-saturation-iff-zero`                `cost-growth`            `H=cost-growth`                     
+
+  `thm:orbital-cost`                              `cost-growth`            `H=cost-growth,Q_fin`               *(no derived Lean handle found)*
+
+  `thm:substrate-degradation`                     `cost-growth`            `H=cost-growth,Q_fin`               *(no derived Lean handle found)*
+
+  `cor:finite-budget-no-exact-admissibility`      `exp-lb-conditional`     `H=exp-lb-conditional`              ,
+
+  `cor:finite-budget-threshold-impossibility`     `exp-lb-conditional`     `H=exp-lb-conditional`              , ,
+
+  `cor:no-universal-survivor-no-succinct-bound`   `exp-lb-conditional`     `H=exp-lb-conditional`              
+
+  `prop:budgeted-crossover`                       `exp-lb-conditional`     `H=exp-lb-conditional`              ,
+
+  `prop:crossover-above-cap`                      `exp-lb-conditional`     `H=exp-lb-conditional`              ,
+
+  `prop:crossover-not-certification`              `exp-lb-conditional`     `H=exp-lb-conditional`              
+
+  `prop:crossover-policy`                         `exp-lb-conditional`     `H=exp-lb-conditional`              
+
+  `prop:eventual-explicit-infeasibility`          `exp-lb-conditional`     `H=exp-lb-conditional`              
+
+  `prop:least-divergence-point`                   `exp-lb-conditional`     `H=exp-lb-conditional`              
+
+  `prop:payoff-threshold`                         `exp-lb-conditional`     `H=exp-lb-conditional`              ,
+
+  `prop:policy-closure-beyond-divergence`         `exp-lb-conditional`     `H=exp-lb-conditional`              ,
+
+  `cor:information-barrier-query`                 `query-lb`               `H=query-lb`                        , ,
+
+  `cor:query-obstruction-bool`                    `query-lb`               `H=query-lb`                        ,
+
+  `prop:checking-witnessing-duality`              `query-lb`               `H=query-lb`                        ,
+
+  `prop:query-finite-state-generalization`        `query-lb`               `H=query-lb`                        ,
+
+  `prop:query-randomized-robustness`              `query-lb`               `H=query-lb`                        , ,
+
+  `prop:query-randomized-weighted`                `query-lb`               `H=query-lb`                        ,
+
+  `prop:query-tightness-full-scan`                `query-lb`               `H=query-lb`                        
+
+  `prop:query-weighted-transfer`                  `query-lb`               `H=query-lb`                        ,
+
+  `cor:exact-identifiability`                     `succinct-hard`          `H=succinct-hard`                   
+
+  `cor:gap-minimization-hard`                     `succinct-hard`          `H=succinct-hard`                   
+
+  `cor:no-auto-minimize`                          `succinct-hard`          `H=succinct-hard`                   
+
+  `cor:overmodel-diagnostic-implication`          `succinct-hard`          `H=succinct-hard`                   
+
+  `cor:practice-diagnostic`                       `succinct-hard`          `H=succinct-hard`                   
+
+  `prop:sufficiency-char`                         `succinct-hard`          `H=succinct-hard`                   ,
+
+  `cor:interior-singleton-certificate`            `tractable-structured`   `H=tractable-structured`            
+
+  `cor:practice-bounded`                          `tractable-structured`   `H=tractable-structured`            
+
+  `cor:practice-structured`                       `tractable-structured`   `H=tractable-structured`            
+
+  `cor:practice-symmetry`                         `tractable-structured`   `H=tractable-structured`            
+
+  `cor:practice-tensor`                           `tractable-structured`   `H=tractable-structured`            
+
+  `cor:practice-tree`                             `tractable-structured`   `H=tractable-structured`            
+
+  `cor:practice-treewidth`                        `tractable-structured`   `H=tractable-structured`            ,
+
+  `prop:heuristic-reusability`                    `tractable-structured`   `H=tractable-structured`            , , ,
+
+  `prop:interior-verification-tractable`          `tractable-structured`   `H=tractable-structured`            ,
+
+  `prop:orbital-symmetry`                         `tractable-structured`   `H=tractable-structured,Q_fin`      *(no derived Lean handle found)*
+
+  `thm:complexity-dichotomy`                      `tractable-structured`   `AR,E,H=tractable-structured,Q,S`   *(no derived Lean handle found)*
+
+  `thm:six-subcases`                              `tractable-structured`   `AR,E,H=tractable-structured,Q,S`   *(no derived Lean handle found)*
+
+  `cor:exact-no-competence-zero-certified`        `unspecified`            `AR,DC`                             
+
+  `cor:ground-state-passive`                      `unspecified`            `AR,Q_fin`                          *(no derived Lean handle found)*
+
+  `cor:hardness-exact-certainty-inflation`        `unspecified`            `CR`                                
+
+  `cor:hardness-raw-only-exact`                   `unspecified`            `AR`                                ,
+
+  `cor:import-asymmetry`                          `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `cor:integrity-universal`                       `unspecified`            `TR`                                
+
+  `cor:neukart-vinokur`                           `unspecified`            `AR`                                ,
+
+  `cor:no-uncertified-exact-claim`                `unspecified`            `AR`                                
+
+  `cor:outside-excuses-no-exact-report`           `unspecified`            `CR,DC`                             
+
+  `cor:phase-transition`                          `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `cor:physical-counterexample-core-failure`      `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                , , ,
+
+  `cor:physics-no-universal-exact-claim`          `unspecified`            `AR,CR,DC`                          
+
+  `cor:practice-unstructured`                     `unspecified`            `-`                                 
+
+  `cor:rlff-abstain-no-certs`                     `unspecified`            `AR`                                ,
+
+  `cor:theorem-equilibrium`                       `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `cor:zero-gap`                                  `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `prop:abstain-guess-self-signal`                `unspecified`            `AR,DC`                             
+
+  `prop:adq-ordering`                             `unspecified`            `-`                                 
+
+  `prop:attempted-competence-matrix`              `unspecified`            `AR`                                , ,
+
+  `prop:bounded-slice-meta-irrelevance`           `unspecified`            `AR`                                ,
+
+  `prop:bridge-failure-horizon`                   `unspecified`            `-`                                 ,
+
+  `prop:bridge-failure-stochastic`                `unspecified`            `-`                                 
+
+  `prop:bridge-failure-transition`                `unspecified`            `-`                                 
+
+  `prop:bridge-transfer-scope`                    `unspecified`            `-`                                 
+
+  `prop:certainty-inflation-iff-inadmissible`     `unspecified`            `CR`                                ,
+
+  `prop:certified-confidence-gate`                `unspecified`            `AR,DC`                             ,
+
+  `prop:comp-thermo-chain`                        `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `prop:decision-equivalence`                     `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `prop:decision-unit-time`                       `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                , , ,
+
+  `prop:declared-contract-selection-validity`     `unspecified`            `-`                                 , ,
+
+  `prop:discrete-state-time`                      `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `prop:empty-sufficient-constant`                `unspecified`            `AR,DC,DM`                          
+
+  `prop:evidence-admissibility-equivalence`       `unspecified`            `AR,DC`                             , ,
+
+  `prop:exact-requires-evidence`                  `unspecified`            `AR,DC`                             ,
+
+  `prop:fraction-defined-under-bound`             `unspecified`            `AR,DC`                             
+
+  `prop:heisenberg-strong-nontrivial-opt`         `unspecified`            `AR`                                , ,
+
+  `prop:insufficiency-counterexample`             `unspecified`            `AR,DC,DM`                          ,
+
+  `prop:integrity-competence-separation`          `unspecified`            `AR`                                ,
+
+  `prop:integrity-prerequisite`                   `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `prop:integrity-resource-bound`                 `unspecified`            `AR,DC,S,S+ETH`                     , ,
+
+  `prop:interior-one-sidedness`                   `unspecified`            `AR`                                ,
+
+  `prop:interior-universal-non-rejection`         `unspecified`            `AR`                                
+
+  `prop:landauer-constraint`                      `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `prop:law-instance-objective-bridge`            `unspecified`            `AR`                                ,
+
+  `prop:lorentz-discrete`                         `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `prop:minimal-relevant-equiv`                   `unspecified`            `-`                                 ,
+
+  `prop:no-evidence-zero-certified`               `unspecified`            `AR,DC`                             
+
+  `prop:no-fraction-without-bound`                `unspecified`            `AR,DC`                             
+
+  `prop:one-step-bridge`                          `unspecified`            `-`                                 
+
+  `prop:oracle-lattice-strict`                    `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                ,
+
+  `prop:oracle-lattice-transfer`                  `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                ,
+
+  `prop:outside-excuses-explicit-assumptions`     `unspecified`            `CR,DC`                             
+
+  `prop:physical-claim-transport`                 `unspecified`            `AR`                                , ,
+
+  `prop:physics-no-universal-exact`               `unspecified`            `AR,CR,DC`                          
+
+  `prop:query-regime-obstruction`                 `unspecified`            `AR,E,Q_fin,Qb,Qf,S,S+ETH`          , ,
+
+  `prop:query-state-batch-lb`                     `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                ,
+
+  `prop:query-subproblem-transfer`                `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                , ,
+
+  `prop:query-value-entry-lb`                     `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                ,
+
+  `prop:raw-certified-bit-split`                  `unspecified`            `AR`                                , , , , , , ,
+
+  `prop:rlff-maximizer-admissible`                `unspecified`            `AR`                                ,
+
+  `prop:run-time-accounting`                      `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                , , ,
+
+  `prop:selector-separation`                      `unspecified`            `-`                                 
+
+  `prop:self-confidence-not-certification`        `unspecified`            `AR,DC`                             
+
+  `prop:set-to-selector`                          `unspecified`            `-`                                 
+
+  `prop:snapshot-process-typing`                  `unspecified`            `RA`                                , ,
+
+  `prop:steps-run-scalar`                         `unspecified`            `AR,DC`                             ,
+
+  `prop:substrate-unit-time`                      `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                , ,
+
+  `prop:temporal-equilibrium`                     `unspecified`            `AR`                                *(no derived Lean handle found)*
+
+  `prop:time-discrete`                            `unspecified`            `AR,E,Qb,Qf,S,S+ETH`                ,
+
+  `prop:typed-claim-admissibility`                `unspecified`            `AR,DC,Qf,S+ETH`                    
+
+  `prop:under-resolution-collision`               `unspecified`            `DM`                                ,
+
+  `prop:universal-solver-framing`                 `unspecified`            `TR`                                
+
+  `prop:zero-epsilon-competence`                  `unspecified`            `-`                                 ,
+
+  `prop:zero-epsilon-reduction`                   `unspecified`            `-`                                 ,
+
+  `thm:amortization`                              `unspecified`            `LC`                                
+
+  `thm:bridge-boundary-represented`               `unspecified`            `-`                                 , ,
+
+  `thm:centralization-dominance`                  `unspecified`            `AR,LC`                             ,
+
+  `thm:claim-integrity-meta`                      `unspecified`            `AR,CR,DC`                          
+
+  `thm:competence-access`                         `unspecified`            `AR,E,Q,S`                          *(no derived Lean handle found)*
+
+  `thm:competence-capacity`                       `unspecified`            `AR,Q_fin`                          *(no derived Lean handle found)*
+
+  `thm:config-reduction`                          `unspecified`            `AR,E,S,TA`                         
+
+  `thm:cost-asymmetry-eth`                        `unspecified`            `S+ETH`                             ,
+
+  `thm:dichotomy`                                 `unspecified`            `AR,E,Q_fin,Qb,Qf,RG,S,S+ETH`       , ,
+
+  `thm:exact-certified-gap-iff-admissible`        `unspecified`            `AR`                                , , ,
+
+  `thm:gap-physical`                              `unspecified`            `AR,E,Q,S`                          *(no derived Lean handle found)*
+
+  `thm:information-gap`                           `unspecified`            `AR,E,Q,S`                          *(no derived Lean handle found)*
+
+  `thm:orbital-transition`                        `unspecified`            `AR,Q_fin`                          *(no derived Lean handle found)*
+
+  `thm:overmodel-diagnostic`                      `unspecified`            `S`                                 ,
+
+  `thm:physical-bridge-bundle`                    `unspecified`            `AR`                                
+
+  `thm:physical-incompleteness`                   `unspecified`            `AR`                                , ,
+
+  `thm:regime-coverage`                           `unspecified`            `CR,S`                              ,
+
+  `thm:tax-conservation`                          `unspecified`            `AR,LC`                             
+
+  `thm:tax-grows`                                 `unspecified`            `LC`                                
+
+  `thm:topology-motion`                           `unspecified`            `AR,E,Q,S`                          *(no derived Lean handle found)*
+
+  `thm:tractable`                                 `unspecified`            `AR,E,Qb,Qf,RG,S,S+ETH,STR,TA`      , , ,
+
+  `thm:typed-completeness-static`                 `unspecified`            `AR,CR,S`                           
+  ----------------------------------------------------------------------------------------------------------------------------------------------------
+
+*Auto summary: indexed 165 claims by hardness profile (cost-growth=32; exp-lb-conditional=11; query-lb=8; succinct-hard=6; tractable-structured=12; unspecified=96).*
 
 
 
@@ -6603,6 +4150,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 11932
-- Theorems: 553
+- Lines: 16353
+- Theorems: 727
 - `sorry` placeholders: 0

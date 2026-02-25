@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Decision Quotient.
 
-- **Lines:** 11499
-- **Theorems:** 527
+- **Lines:** 13391
+- **Theorems:** 597
 - **`sorry` placeholders:** 0
 
 
@@ -57,8 +57,14 @@ lake build
 | `InteriorVerification.lean` | InteriorVerification |
 | `PhysicalBudgetCrossover.lean` | PhysicalBudgetCrossover |
 | `AccessRegime.lean` | AccessRegime |
+| `ClaimTransport.lean` | ClaimTransport |
+| `DecisionTime.lean` | DecisionTime |
+| `HeisenbergStrong.lean` | HeisenbergStrong |
 | `Instantiation.lean` | Instantiation |
+| `PhysicalCore.lean` | PhysicalCore |
 | `PhysicalHardness.lean` | PhysicalHardness |
+| `PhysicalIncompleteness.lean` | PhysicalIncompleteness |
+| `Uncertainty.lean` | Uncertainty |
 | `PolynomialReduction.lean` | PolynomialReduction |
 | `QueryComplexity.lean` | QueryComplexity |
 | `Quotient.lean` | Quotient |
@@ -74,6 +80,7 @@ lake build
 | `TreeStructure.lean` | TreeStructure |
 | `Tractable.lean` | Tractable |
 | `UniverseObjective.lean` | UniverseObjective |
+| `WitnessCheckingDuality.lean` | WitnessCheckingDuality |
 | `DecisionQuotient.lean` | DecisionQuotient |
 | `lakefile.lean` | lakefile |
 

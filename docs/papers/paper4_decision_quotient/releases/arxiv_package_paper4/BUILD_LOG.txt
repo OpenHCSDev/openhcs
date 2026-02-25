@@ -2,14 +2,14 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper4 - Verified Polynomial-Time Reductions in Lean 4: Formalizing the Complexity of Decision-Relevant Information
-Package Date: 2026-02-23T15:25:03.902681
+Package Date: 2026-02-23T23:59:02.540422
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 51
-Lines of Code: 11499
-Theorems: 527
+Lean Files: 58
+Lines of Code: 13391
+Theorems: 597
 Sorry Placeholders: 0
 
 
@@ -47,8 +47,14 @@ Proof Files:
   - InteriorVerification.lean
   - PhysicalBudgetCrossover.lean
   - AccessRegime.lean
+  - ClaimTransport.lean
+  - DecisionTime.lean
+  - HeisenbergStrong.lean
   - Instantiation.lean
+  - PhysicalCore.lean
   - PhysicalHardness.lean
+  - PhysicalIncompleteness.lean
+  - Uncertainty.lean
   - PolynomialReduction.lean
   - QueryComplexity.lean
   - Quotient.lean
@@ -64,6 +70,7 @@ Proof Files:
   - TreeStructure.lean
   - Tractable.lean
   - UniverseObjective.lean
+  - WitnessCheckingDuality.lean
   - DecisionQuotient.lean
   - lakefile.lean
 

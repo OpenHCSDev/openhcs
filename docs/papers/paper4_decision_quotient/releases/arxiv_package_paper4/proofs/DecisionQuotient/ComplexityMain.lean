@@ -9,6 +9,12 @@
   - Polynomial-time reductions
 
   These results formalize the computational aspects of Theorem 4.1 from the paper.
+
+  ## Triviality Level
+  TRIVIAL: This is composition/integration of results from other files.
+
+  ## Dependencies
+  - Chain: QueryComplexity.lean + AlgorithmComplexity.lean → here
 -/
 
 import DecisionQuotient.QueryComplexity

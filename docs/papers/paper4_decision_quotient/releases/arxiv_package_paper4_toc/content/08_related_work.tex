@@ -29,7 +29,9 @@ Complementary companion work studies zero-error identification under constrained
 
 \subsection{Energy Landscapes and Chemical Reaction Networks}
 
-The geometric interpretation of decision complexity connects to the physics of energy landscapes. Wales established a widely used picture in which molecular configurations form high-dimensional landscapes with basins and transition saddles~\cite{wales2003energy,wales2005energy,wales2018exploring}. Protein-folding theory uses the same landscape language via funnel structure toward native states~\cite{onuchic1997protein}. In this paper's formal model, the corresponding core object is coordinate-projection invariance of the optimizer map: sufficiency asks whether fixing coordinates preserves \(\Opt\), while insufficiency is witnessed by agreeing projections with different optimal sets (Definition~\ref{def:sufficient}, Proposition~\ref{prop:insufficiency-counterexample}).\claimstamp{D\ref{def:sufficient};P\ref{prop:insufficiency-counterexample}}{DM}
+The geometric interpretation of decision complexity connects to the physics of energy landscapes. Wales established a widely used picture in which molecular configurations form high-dimensional landscapes with basins and transition saddles~\cite{wales2003energy,wales2005energy,wales2018exploring}. Protein-folding theory uses the same landscape language via funnel structure toward native states~\cite{onuchic1997protein}. In this paper's formal model, the corresponding core object is coordinate-projection invariance of the optimizer map: sufficiency asks whether fixing coordinates preserves \(\Opt\), while insufficiency is witnessed by agreeing projections with different optimal sets (Definition~\ref{def:sufficient}, Proposition~\ref{prop:insufficiency-counterexample}).\claimstamp{D\ref{def:sufficient};P\ref{prop:insufficiency-counterexample}}{DM}\leanmeta{\LH{DP7},\LH{DP8}.}
+
+Section~\ref{sec:physical-transport} makes this transfer rule theorem-level: encoded physical claims are derived from core claims through an explicit assumption-transfer map, and an encoded physical counterexample refutes the corresponding core rule on that encoded slice.\claimstamp{P\ref{prop:physical-claim-transport};C\ref{cor:physical-counterexample-core-failure}}{AR}\leanmeta{\LH{CT6},\LH{CT5},\LH{CT8},\LH{CT7}.}
 
 Under that mapping, the explicit-vs-succinct split is the mechanized statement of access asymmetry: [E] admits polynomial verification on explicit state access, while [S+ETH] admits worst-case exponential lower bounds on succinct inputs (Theorem~\ref{thm:dichotomy}); finite query access already exhibits indistinguishability barriers (Proposition~\ref{prop:query-regime-obstruction}). The complexity separation is mechanized.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction}}{E,S+ETH,Q\_fin}\leanmeta{\LH{CC16},\LH{CC23},\LH{CC24},\LH{CC50}.}
 
@@ -39,21 +41,61 @@ The circuit-to-decision instantiation is also mechanized in a separate bridge la
 
 Chemical reaction networks provide a concrete physical class where this encoding applies directly. Prior work establishes hardness for output optimization, reconfiguration, and reconstruction in CRN settings~\cite{andersen2012maximizing,alaniz2023complexity,flamml2013complexity}. Those domain-specific CRN complexity results are external literature claims, not mechanized in this Lean artifact. The mechanized statement here is the transfer principle: once a CRN decision task is encoded as a C1--C4 decision problem, it inherits the same sufficiency hardness/tractability regime map (Theorems~\ref{thm:config-reduction}, \ref{thm:sufficiency-conp}, \ref{thm:tractable}).\claimstamp{T\ref{thm:config-reduction},\ref{thm:sufficiency-conp},\ref{thm:tractable}}{E,S,TA}\leanmeta{\LH{CR1},\LH{CC61},\LH{CC69},\LH{CC70},\LH{CC71},\LH{CC72}.}
 
-For matter-only dynamics, the law-induced objective specialization is mechanized for arbitrary universes (arbitrary state/action types and transition-feasibility relations): the utility schema is induced from transition laws, and under a strict allowed-vs-blocked gap with nonempty feasible set, the optimizer equals the feasible-action set; with logical determinism at the action layer, the optimizer is singleton.\leanmeta{\LH{DQ8}, \LH{DQ5}, \LH{DQ7}, \LH{DQ6}.}
+The physical bridge is not a single-domain add-on: Theorem~\ref{thm:physical-bridge-bundle} composes law-objective semantics, reduction equivalence, and hardness lower-bound accounting in one mechanized theorem, so physical instantiation and complexity claims share one proof chain.\claimstamp{T\ref{thm:physical-bridge-bundle}}{AR}\leanmeta{\LH{CT4}.}
+
+For matter-only dynamics, the law-induced objective specialization is mechanized for arbitrary universes (arbitrary state/action types and transition-feasibility relations): the utility schema is induced from transition laws, and under a strict allowed-vs-blocked gap with nonempty feasible set, the optimizer equals the feasible-action set; with logical determinism at the action layer, the optimizer is singleton.\claimstamp{P\ref{prop:law-instance-objective-bridge}}{AR}\leanmeta{\LH{DQ8}, \LH{DQ5}, \LH{DQ7}, \LH{DQ6}.}
 
 The interface-time semantics are also explicit and mechanized: timed states are $\mathbb{N}$-indexed, one decision event is exactly one tick, run length equals elapsed interface time, and this unit-time law is invariant across substrate tags under interface-consistency assumptions.\claimstamp{P\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time}}{AR}\leanmeta{\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ534},\LH{DQ541},\LH{DQ549}.}
 
-Regime-side interface machinery is also formalized as typed access objects with an explicit simulation preorder and certificate-upgrade statements. The access-channel and five-way composition theorems are encoded as assumption-explicit composition laws rather than informal metaphors.\leanmeta{\LH{PC10}, \LH{PC12}, \LH{PC15}, \LH{PC17}, \LH{PC19}, \LH{PC20}, \LH{PC21}.}
+Regime-side interface machinery is also formalized as typed access objects with an explicit simulation preorder and certificate-upgrade statements. The access-channel and five-way composition theorems are encoded as assumption-explicit composition laws rather than informal metaphors.\claimstamp{P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}\leanmeta{\LH{PC10}, \LH{PC12}, \LH{PC15}, \LH{PC17}, \LH{PC19}, \LH{PC20}, \LH{PC21}.}
 
 \subsection{Thermodynamic Costs and Landauer's Principle}
 
 The thermodynamic lift in Section~\ref{sec:dichotomy} converts declared bit-operation lower bounds into declared energy/carbon lower bounds via linear conversion constants. In this artifact, those conversion consequences are mechanized conditionally through Propositions~\ref{prop:thermo-lift}, \ref{prop:thermo-hardness-bundle}, \ref{prop:thermo-mandatory-cost}, and \ref{prop:thermo-conservation-additive}. Landauer's principle and reversible-computation context~\cite{landauer1961irreversibility,bennett2003notes} define the physical assumption set; the constants are declared premises, not Lean-derived constants.\claimstamp{P\ref{prop:thermo-lift},\ref{prop:thermo-hardness-bundle},\ref{prop:thermo-mandatory-cost},\ref{prop:thermo-conservation-additive}}{AR}\leanmeta{\LH{CC65},\LH{CC66},\LH{CC67},\LH{CC68},\LH{CC64}.}
 
+\paragraph{Physics assumptions decompose into regime tags.}
+The paper does not create domain-specific tags for physics assumptions. Instead, every physics assumption decomposes into the same regime tags used throughout the paper. This uniformity is the formal statement that physics assumptions are not epistemically privileged---they are declared assumptions, tracked with the same discipline as the paper's own complexity-theoretic assumptions.
+
+\begin{table}[h]
+\centering
+\caption{Physics-Assumption-to-Regime-Tag Decomposition}
+\label{tab:physics-regime-decomposition}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Physics Assumption} & \textbf{Regime Decomposition} & \textbf{Justification} \\
+\midrule
+Landauer bound ($E \ge kT\ln 2$) & [AR], [H=cost-growth] & Declared law; yields cost lower bounds \\
+Lorentz invariance & [AR] & Declared physical symmetry \\
+Discrete state space & [Q\_fin], [AR] & Finite-state core; declared assumption \\
+Thermodynamic constants ($\lambda, \rho$) & [AR], [H=cost-growth] & Declared conversion model \\
+Planck scale ($\ell_P$) & [AR] & Declared physical constant \\
+Physical-to-core encoding ($E$) & [AR] & Declared encoding map \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The decomposition in Table~\ref{tab:physics-regime-decomposition} makes explicit what the paper already practices: physics assumptions are declared premises in the [AR] (axiomatic regime) sense, and when they yield cost lower bounds, they inherit [H=cost-growth]. The finite-state query core [Q\_fin] captures the discrete-state assumption underlying the computational model. No physics assumption receives a special domain tag; all decompose into the existing regime taxonomy.\claimstamp{P\ref{prop:thermo-lift},\ref{prop:landauer-constraint},\ref{prop:lorentz-discrete},\ref{prop:discrete-state-time};T\ref{thm:physical-bridge-bundle}}{AR,H=cost-growth,Q\_fin}
+
 Coupling this to integrity yields a mechanized policy condition: when exact competence is hardness-blocked in the declared regime, integrity requires abstention or explicitly weakened guarantees (Propositions~\ref{prop:integrity-resource-bound}, \ref{prop:attempted-competence-matrix}). A stronger behavioral claim such as ``abstention is globally utility-optimal for every objective'' is \emph{not} currently mechanized and remains objective-dependent.\claimstamp{P\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{AR}\leanmeta{\LH{IC26},\LH{IC24},\LH{CC30},\LH{IC27},\LH{IC7},\LH{IC6}.}
+
+\subsection{Neukart--Vinokur Thermodynamic Duality}
+
+Neukart and Vinokur~\cite{neukart2025thermodynamic} propose a thermodynamic duality $dU = T\,dS - p\,dV + \lambda\,dC$ where $C$ is a ``complexity coordinate'' associated with computational irreversibility in spin-glass systems. Corollary~\ref{cor:neukart-vinokur} derives their duality as a specialization of our thermodynamic lift (Proposition~\ref{prop:thermo-lift}) under declared $\lambda > 0$.
+\claimstamp{C\ref{cor:neukart-vinokur};P\ref{prop:thermo-lift}}{AR}
+\leanmeta{\LH{CC65},\LH{CC50}.}
+
+Their spin-glass phase transitions become regime-specific instances: our [S+ETH] hard families with $k^* = n$ witness their ``complexity potential'' via explicit TAUTOLOGY reduction (Theorem~\ref{thm:dichotomy}). Physical transport via $E:\mathcal{P}\to\mathcal{D}$ extends to arbitrary substrates, not only quantum or spin systems (Theorem~\ref{thm:physical-bridge-bundle}).
+\claimstamp{T\ref{thm:dichotomy},\ref{thm:physical-bridge-bundle}}{S+ETH,AR}
+\leanmeta{\LH{CC16},\LH{CT4}.}
+
+Thus Neukart--Vinokur $\subseteq$ [AR] regime: declared $\lambda,\rho > 0$, explicit encoding $E:\mathcal{P}\to\mathcal{D}$ $\Rightarrow$ their thermodynamic duality holds by assumption transfer through our \coNP-complete core (Proposition~\ref{prop:physical-claim-transport}).
+\claimstamp{P\ref{prop:physical-claim-transport}}{AR}
+\leanmeta{\LH{PC10}.}
 
 \subsection{Feature Selection}
 
 In machine learning, feature selection asks which input features are relevant for prediction. This is known to be NP-hard in general~\cite{blum1997selection, guyon2003introduction}. Our results show the decision-theoretic analog is \coNP-complete for both checking and minimization.
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp}}{S}\leanmeta{\LH{CC61},\LH{CC36}.}
 
 \subsection{Value of Information}
 
@@ -62,6 +104,7 @@ The value of information (VOI) framework~\cite{howard1966information,raiffa1961a
 \subsection{Model Selection}
 
 Statistical model selection (AIC/BIC/cross-validation) provides practical heuristics for choosing among models \cite{akaike1974new,schwarz1978estimating,stone1974cross}. Our results formalize the regime-level reason heuristic selection appears: without added structural assumptions, exact optimal model selection inherits worst-case intractability, so heuristic methods implement explicit weakened-guarantee policies for unresolved structure.
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:dichotomy},\ref{thm:tractable}}{E,S,S+ETH}\leanmeta{\LH{CC61},\LH{CC16},\LH{CC69},\LH{CC70},\LH{CC71}.}
 
 \subsection{Information Compression vs Certification Length}
 
@@ -72,6 +115,7 @@ From a zero-error viewpoint, this distinction is structural rather than stylisti
 The rate-distortion and MDL lines make the same split in different language: there is a difference between achievable compression rate, computational procedure for obtaining/optimizing that rate, and certifiable model adequacy \cite{shannon1959coding,blahut1972computation,rissanen1978modeling,grunwald2007minimum,li2008introduction}.
 
 Formally, Theorem~\ref{thm:exact-certified-gap-iff-admissible} and Corollary~\ref{cor:hardness-raw-only-exact} characterize the exact-report boundary: admissible exact reports require a strict certified-bit gap above raw payload, while hardness-blocked exact reports collapse to raw-only accounting. This directly links representational succinctness to certification cost under the declared contract, rather than treating ``short reports'' as automatically high-information claims.
+\claimstamp{T\ref{thm:exact-certified-gap-iff-admissible};P\ref{prop:raw-certified-bit-split};C\ref{cor:hardness-raw-only-exact}}{AR}\leanmeta{\LH{CC18},\LH{CC11},\LH{CC21}.}
 
 \subsection{Certifying Outputs and Proof-Carrying Claims}
 
@@ -80,9 +124,12 @@ Our integrity layer matches the certifying-algorithms pattern: algorithms emit c
 At the systems level, this is the same architecture as proof-carrying code: a producer ships evidence and a consumer runs a small checker before accepting the claim \cite{necula1997proof,mcconnell2010certifying}. Our competence definition adds the regime-specific coverage/resource requirement that certifying soundness alone does not provide.
 
 The feasibility qualifier in Definition~\ref{def:competence-regime} yields the bounded-rationality constraint used in this paper: admissible policy is constrained by computational feasibility under the declared resource model (Remark~\ref{rem:modal-should}) \cite{sep_bounded_rationality,arora2009computational}.\claimstamp{P\ref{prop:integrity-competence-separation}}{AR}
+\leanmeta{\LH{IC18}.}
 
 \paragraph{Cryptographic-verifiability perspective (scope).}
 The role of cryptography in this paper is structural verifiability, not secrecy: the relevant analogy is certificate-carrying claims with lightweight verification, not confidential encoding \cite{goldwasser1989knowledge,necula1997proof}. Concretely, the typed-report discipline is modeled as a game-based reporting interface: a prover emits $(r,\pi)$ and a verifier accepts exactly when $\pi$ certifies the declared report type under the active contract. In that model, Evidence--Admissibility Equivalence gives completeness for admissible report types, while Typed Claim Admissibility plus Exact Claims Require Exact Evidence give soundness against exact overclaiming. Certified-confidence constraints then act as evidence-gated admissibility constraints on top of that verifier interface, so raw payload bits and certified bits represent distinct resources rather than stylistic notation variants.
+\claimstamp{P\ref{prop:evidence-admissibility-equivalence},\ref{prop:typed-claim-admissibility},\ref{prop:exact-requires-evidence},\ref{prop:certified-confidence-gate}}{AR}\leanmeta{\LH{IC2},\LH{CC75},\LH{IC35},\LH{IC38}.}
 
 \paragraph{Three-axis integration.}
 In the cited literature, these pillars are treated separately: representation-sensitive hardness, query-access lower bounds, and certifying soundness disciplines. This paper composes all three for the same decision-relevance object in one regime-typed and machine-checked framework.
+\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:typed-claim-admissibility}}{S+ETH,Qf,AR}\leanmeta{\LH{CC16},\LH{CC50},\LH{CC75}.}

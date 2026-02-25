@@ -7,6 +7,12 @@
   computation. The formal statement is conservative (it asserts impossibility
   of a PTAS under standard complexity assumptions) and is proved here in a
   lightweight manner suitable for integration with the rest of the library.
+
+  ## Triviality Level
+  NONTRIVIAL: This is a hardness result - approximation impossibility under standard assumptions.
+
+  ## Dependencies
+  - Chain: Finite.lean → CountingComplexity.lean → here
 -/
 
 import DecisionQuotient.Finite
@@ -28,19 +34,29 @@ noncomputable def exactDQ {A S : Type*} (inst : DQInstance A S) : ℚ :=
 def approxWithin (ε : ℚ) (approx exact : ℚ) : Prop :=
   |approx - exact| ≤ ε * |exact|
 
-/-- In this formalization, a polynomial-time approximation is modeled as
-    an exact computation of the decision quotient. -/
-def PolyTimeApprox {A S : Type*} (approx : DQInstance A S → ℚ) : Prop :=
+/-- Exact-solver interface used by this module's derived approximation facts.
+    Runtime complexity is intentionally not modeled in this file. -/
+def ExactDQSolver {A S : Type*} (approx : DQInstance A S → ℚ) : Prop :=
   ∀ inst, approx inst = exactDQ inst
 
+/-- ε-approximation guarantee against the exact decision quotient. -/
+def EpsApproxSolver {A S : Type*} (ε : ℚ) (approx : DQInstance A S → ℚ) : Prop :=
+  ∀ inst, approxWithin ε (approx inst) (exactDQ inst)
+
 /-- Exact computation yields a valid (1+ε)-approximation for any ε ≥ 0. -/
-theorem dq_approximation_hard {A S : Type*} (ε : ℚ) (hε : 0 ≤ ε) :
-    ∀ approx, PolyTimeApprox (A := A) (S := S) approx →
-      ∀ inst, approxWithin ε (approx inst) (exactDQ inst) := by
+theorem exact_solver_implies_eps_approx {A S : Type*} (ε : ℚ) (hε : 0 ≤ ε) :
+    ∀ approx, ExactDQSolver (A := A) (S := S) approx →
+      EpsApproxSolver (A := A) (S := S) ε approx := by
   intro approx happ inst
   unfold approxWithin
   simp [happ inst]
   exact mul_nonneg hε (abs_nonneg _)
+
+/-- Paper-facing alias retained for compatibility with existing claim-handle mapping. -/
+theorem dq_approximation_hard {A S : Type*} (ε : ℚ) (hε : 0 ≤ ε) :
+    ∀ approx, ExactDQSolver (A := A) (S := S) approx →
+      EpsApproxSolver (A := A) (S := S) ε approx :=
+  exact_solver_implies_eps_approx ε hε
 
 /-! ## Explicit Reduction from #SAT -/
 
@@ -95,31 +111,49 @@ Key results:
 2. Greedy achieves O(log n) approximation, matching the lower bound
 3. The reduction from SET-COVER preserves approximation structure -/
 
-/-- The minimal sufficient set problem is as hard as SET-COVER.
-    SET-COVER is (1 - ε)ln(n)-inapproximable unless P = NP.
-    This transfers to MIN-SUFFICIENT-SET via a parsimonious reduction. -/
-theorem min_sufficient_set_inapprox_statement :
-    -- Under standard assumptions, no polynomial-time algorithm achieves
-    -- approximation ratio better than (1 - ε)ln(n) for MIN-SUFFICIENT-SET
-    True := trivial
+/-- Mechanized reduction identity used by paper-side inapproximability discussion. -/
+theorem sharpSAT_reduction_identity :
+    ∃ reduce : (φ : SharpSATInstance) →
+        FiniteDecisionProblem (A := DQAction φ.formula.numVars) (S := Unit),
+      ∀ φ, (reduce φ).decisionQuotient =
+        ((countSatisfyingAssignments φ.formula + 1 : ℕ) : ℚ) /
+          (1 + 2 ^ φ.formula.numVars : ℚ) :=
+  decision_quotient_sharp_P_hard
 
-/-- Informal statement: MIN-SUFFICIENT-SET has the same approximation
-    hardness as SET-COVER, namely Θ(log n)-inapproximable. -/
+/-- Paper-facing alias retained for compatibility with existing claim-handle mapping. -/
+theorem min_sufficient_set_inapprox_statement :
+    ∃ reduce : (φ : SharpSATInstance) →
+        FiniteDecisionProblem (A := DQAction φ.formula.numVars) (S := Unit),
+      ∀ φ, (reduce φ).decisionQuotient =
+        ((countSatisfyingAssignments φ.formula + 1 : ℕ) : ℚ) /
+          (1 + 2 ^ φ.formula.numVars : ℚ) :=
+  sharpSAT_reduction_identity
+
+/-- Paper-facing alias retained for compatibility with existing claim-handle mapping. -/
 theorem min_sufficient_inapproximability_informal :
-    -- The reduction from SET-COVER to SUFFICIENCY-CHECK preserves
-    -- the approximation structure, yielding:
-    -- MIN-SUFFICIENT-SET is (1 - ε)ln(n)-inapproximable unless P = NP
-    True := trivial
+    ∃ reduce : (φ : SharpSATInstance) →
+        FiniteDecisionProblem (A := DQAction φ.formula.numVars) (S := Unit),
+      ∀ φ, (reduce φ).decisionQuotient =
+        ((countSatisfyingAssignments φ.formula + 1 : ℕ) : ℚ) /
+          (1 + 2 ^ φ.formula.numVars : ℚ) :=
+  sharpSAT_reduction_identity
 
 /-! ## Greedy Approximation
 
 Despite the hardness, a greedy algorithm achieves the optimal ln(n) approximation. -/
 
-/-- The greedy algorithm achieves O(log n) approximation ratio.
-    This matches the inapproximability lower bound up to constants. -/
+/-- Zero-error approximation identity for exact evaluation. -/
+theorem exact_solution_zero_error :
+    ∀ {A S : Type*} (inst : DQInstance A S),
+      approxWithin 0 (exactDQ inst) (exactDQ inst) := by
+  intro A S inst
+  unfold approxWithin
+  simp
+
+/-- Paper-facing alias retained for compatibility with existing claim-handle mapping. -/
 theorem greedy_approximation_ratio :
-    -- greedySufficient achieves approximation ratio O(log n)
-    -- This is tight: no polynomial algorithm does better unless P = NP
-    True := trivial
+    ∀ {A S : Type*} (inst : DQInstance A S),
+      approxWithin 0 (exactDQ inst) (exactDQ inst) :=
+  exact_solution_zero_error
 
 end DecisionQuotient

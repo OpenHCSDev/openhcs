@@ -1,15 +1,25 @@
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.List.Basic
 import Mathlib.Tactic
+import DecisionQuotient.Physics.ClaimTransport
 
 /-!
 # Decision-Time Atomicity
 
-Formal interface for the claim:
+## Dependency Graph
+- **Nontrivial source:** ClaimTransport.substrate_consistency (the actual proof that
+  substrate dynamics preserves interface behavior)
+- **This module:** Defines the interface-level time model. The "time = decision atom"
+  claim is definitional at the interface level; the nontrivial proof is that
+  substrate models realize this interface (ClaimTransport)
 
-`one decision event = one unit of time`
+## Role
+This module provides the definitional framework: tick increments time by 1.
+The connection to physical substrates is in ClaimTransport.
 
-All statements here are theorem-level and assumption-explicit.
+## Triviality Level
+TRIVIAL — interface-level discrete-time model and lemmas. Closest nontrivial
+proof: `ClaimTransport.substrate_consistency` (DecisionQuotient.Physics.ClaimTransport).
 -/
 
 namespace DecisionQuotient

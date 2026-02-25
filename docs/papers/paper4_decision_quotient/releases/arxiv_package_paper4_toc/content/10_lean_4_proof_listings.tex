@@ -107,6 +107,13 @@ Lean identifiers retain internal naming (\texttt{intrinsicDOF}, \texttt{simplici
   \textit{Auto claim-mapping table not found. Run the paper build script to generate \texttt{content/claim\_mapping\_auto.tex}.}
 }
 
+\subsection{Proof Hardness Index (Auto)}
+\IfFileExists{content/proof_hardness_index_auto.tex}{
+  \input{content/proof_hardness_index_auto.tex}
+}{
+  \textit{Auto hardness-index table not found. Run the paper build script to generate \texttt{content/proof\_hardness\_index\_auto.tex}.}
+}
+
 \subsection{Claims Not Fully Mechanized}
 
 \textbf{Status:} all theorem/proposition/corollary handles in this paper now have Lean backing.

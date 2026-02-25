@@ -3,44 +3,46 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: decision_quotient_toc.aux
 The style file: plain.bst
 Database file #1: references.bib
-You've used 72 entries,
+Warning--can't use both volume and number fields in cichocki2016tensor
+You've used 89 entries,
             2118 wiz_defined-function locations,
-            915 strings with 14997 characters,
-and the built_in function-call counts, 23847 in all, are:
-= -- 2427
-> -- 944
-< -- 14
-+ -- 391
-- -- 304
-* -- 1607
-:= -- 3879
-add.period$ -- 226
-call.type$ -- 72
-change.case$ -- 356
+            1031 strings with 18063 characters,
+and the built_in function-call counts, 29403 in all, are:
+= -- 3010
+> -- 1139
+< -- 20
++ -- 472
+- -- 366
+* -- 1973
+:= -- 4789
+add.period$ -- 287
+call.type$ -- 89
+change.case$ -- 437
 chr.to.int$ -- 0
-cite$ -- 72
-duplicate$ -- 936
-empty$ -- 1980
-format.name$ -- 304
-if$ -- 5031
+cite$ -- 90
+duplicate$ -- 1158
+empty$ -- 2430
+format.name$ -- 366
+if$ -- 6201
 int.to.chr$ -- 0
-int.to.str$ -- 72
-missing$ -- 86
-newline$ -- 365
-num.names$ -- 144
-pop$ -- 384
+int.to.str$ -- 89
+missing$ -- 106
+newline$ -- 460
+num.names$ -- 178
+pop$ -- 448
 preamble$ -- 1
-purify$ -- 296
+purify$ -- 361
 quote$ -- 0
-skip$ -- 654
+skip$ -- 816
 stack$ -- 0
-substring$ -- 1715
-swap$ -- 193
-text.length$ -- 14
+substring$ -- 2122
+swap$ -- 244
+text.length$ -- 20
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 254
-warning$ -- 0
-while$ -- 257
-width$ -- 74
-write$ -- 795
+type$ -- 316
+warning$ -- 1
+while$ -- 321
+width$ -- 91
+write$ -- 1002
+(There was 1 warning)

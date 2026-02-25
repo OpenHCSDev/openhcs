@@ -1,6 +1,9 @@
 \section{Regime-Conditional Corollaries}\label{sec:engineering-justification}
 
 This section derives regime-typed engineering corollaries from the core complexity theorems. Theorem~\ref{thm:config-reduction} maps configuration simplification to SUFFICIENCY-CHECK; Theorems~\ref{thm:sufficiency-conp}, \ref{thm:minsuff-conp}, and \ref{thm:dichotomy} then yield exact minimization consequences under [S] and [S+ETH].
+The same derivation applies to physical configuration/control systems once they are encoded into the C1--C4 decision interface: ``configuration parameter'' becomes any declared physical control or observation coordinate, and the same sufficiency predicate governs behavior preservation.
+\claimstamp{T\ref{thm:config-reduction},\ref{thm:physical-bridge-bundle};P\ref{prop:physical-claim-transport}}{AR}
+\leanmeta{\LH{CR1},\LH{CT6},\LH{CT4}.}
 
 Regime tags used below follow Section~\ref{sec:model-contract}: [S], [S+ETH], [E], [S\_bool].
 Any prescription that requires exact minimization is constrained by these theorem-level bounds.\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:dichotomy}}{S,S+ETH}
@@ -141,6 +144,7 @@ For any fixed nonnegative $C_{\text{under}}$, the asymptotic dominance inequalit
 
 \begin{corollary}[Impossibility of Automated Configuration Minimization]
 \label{cor:no-auto-minimize}
+\claimstamp{C\ref{cor:no-auto-minimize}}{H=succinct-hard}
 Assuming $\Pclass \neq \coNP$, there exists no polynomial-time algorithm that:
 \begin{enumerate}
 \item Takes an arbitrary configuration file with $n$ parameters

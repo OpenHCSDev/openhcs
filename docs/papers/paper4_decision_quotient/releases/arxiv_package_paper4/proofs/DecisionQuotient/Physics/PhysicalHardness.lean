@@ -1,13 +1,26 @@
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Tactic
+import DecisionQuotient.ClaimClosure
 
 /-!
 # Physical Hardness (Conditional, Mechanized Core)
 
-This module states a physical-cost lower-bound interface in natural-number
-energy units. It keeps the core objects and theorem names used by the paper
-metadata while making all statements fully mechanized and assumption-explicit.
+## Dependency Graph
+- **Nontrivial source:** ClaimClosure.sufficiency_conp_complete_conditional,
+  ClaimClosure.anchor_sigma2p_complete_conditional, ClaimClosure.dichotomy_conditional
+- **This module:** Assumes those hardness results + physics premises (Landauer bound,
+  discrete time) → derives physical impossibility statements
+- **See also:** ClaimTransport.lean for the full bridge composition
+
+## Role
+This module is NOT the core hardness proof. It translates the complexity results
+from ClaimClosure into physical consequences using declared physics axioms.
+
+## Triviality Level
+NONTRIVIAL — interprets nontrivial complexity lower bounds as physical
+constraints. Closest nontrivial proofs referenced: `ClaimClosure.sufficiency_conp_complete_conditional`
+and `ClaimClosure.anchor_sigma2p_complete_conditional` (DecisionQuotient.ClaimClosure).
 -/
 
 namespace PhysicalComplexity

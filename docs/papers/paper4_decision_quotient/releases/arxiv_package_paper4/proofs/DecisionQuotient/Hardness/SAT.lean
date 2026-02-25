@@ -8,6 +8,13 @@
   `IMPLEMENTATION_PLAN.md`). The focus here is on clear, computable
   semantics: literals, 3-clauses, evaluation under assignments, and the
   satisfiability predicate.
+
+  ## Triviality Level
+  TRIVIAL: This defines SAT encoding. No nontrivial proofs - just definitions
+  used as source problems for reductions.
+
+  ## Dependencies
+  - Chain: Basic.lean → here → Reduction.lean (uses SAT as reduction source)
 -/
 
 import Mathlib.Data.Fin.Basic

@@ -16,8 +16,16 @@
   2. Pay k × n times (distributed: each site re-encodes it)
 
   LaTeX reference: Section 6.4 (Hardness Distribution: Right Place vs Wrong Place)
--/
 
+  ## Triviality Level
+  NONTRIVIAL: This is a core conceptual contribution - connecting complexity-theoretic
+  hardness (DOF) to information-theoretic bounds. The insight that hardness = DOF
+  is the main theoretical contribution, not just a derivation.
+
+  ## Dependencies
+  - Builds on: Sufficiency.lean (coordinate structure)
+  - Used by: AccessRegime.lean (physical device characterization)
+-/
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Rat.Defs
