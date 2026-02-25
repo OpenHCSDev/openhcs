@@ -1,5 +1,8 @@
 \section{Conclusion}
 
+This paper gives coNP/\(\SigmaP{2}\) placement with encoding/query separation for the static sufficiency class (\LH{CC61}, \LH{CC36}, \LH{CC5}, \LH{CC16}, \LH{CC50}), theorem-level physical transport plus an exact represented-adjacent bridge boundary (\LH{CT4}, \LH{CC10}, \LH{CC9}, \LH{CC8}), static-class completeness boundaries (\LH{CC14}, \LH{CC76}), Bayesian uniqueness under DQ/thermodynamic admissibility axioms (\LH{FN14}), explicit Neukart--Vinokur duality specialization from the thermodynamic lift (\LH{CC64}, \LH{CC65}), and formal centralized/distributed hardness thresholds through dominance and amortization theorems (\LH{HD1}, \LH{HD4}, \LH{HD3}).
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{thm:dichotomy},\ref{thm:physical-bridge-bundle},\ref{thm:bridge-boundary-represented},\ref{thm:regime-coverage},\ref{thm:typed-completeness-static},\ref{thm:bayes-from-dq},\ref{thm:centralization-dominance},\ref{thm:tax-conservation},\ref{thm:amortization};P\ref{prop:query-regime-obstruction},\ref{prop:thermo-lift};C\ref{cor:neukart-vinokur}}{E,S,S+ETH,Qf,Qb,AR,LC,H=cost-growth}
+
 \subsection*{Methodology and Disclosure}
 
 \textbf{Role of LLMs in this work.} This paper was developed through human-AI collaboration. The author provided the core intuitions: the connection between decision-relevance and computational complexity, the conjecture that SUFFICIENCY-CHECK is \coNP-complete, and the insight that the $\SigmaP{2}$ structure collapses for MINIMUM-SUFFICIENT-SET. Large language models (Claude, GPT-4) served as implementation partners for proof drafting, Lean formalization, and \LaTeX{} generation.
@@ -27,9 +30,12 @@ This paper establishes the computational complexity of coordinate sufficiency pr
 \item Tractable subcases exist for explicit-state encoding, separable utility, and tree-structured utility with explicit local factors (Theorem~\ref{thm:tractable})
 \item Discrete-time interface semantics are formalized: time is $\mathbb{N}$-valued, decision events are exactly one-tick transitions, run length equals elapsed time, and substrate-consistent realizations preserve the same one-unit event law (Propositions~\ref{prop:time-discrete}--\ref{prop:substrate-unit-time})
 \item Physical-system transport is formalized: encoded physical claims are derived from core rules through explicit assumption transfer, physical counterexamples map to encoded core failures, and the bundled bridge theorem composes law semantics, reduction equivalence, and required-work lower bounds (Proposition~\ref{prop:physical-claim-transport}, Corollary~\ref{cor:physical-counterexample-core-failure}, Theorem~\ref{thm:physical-bridge-bundle})
+\item Exact represented-adjacent bridge boundary: transfer is licensed iff the class is one-step deterministic; represented horizon, stochastic-criterion, and transition-coupled classes have explicit bridge-failure witnesses (Theorem~\ref{thm:bridge-boundary-represented})
+\item Exact-report admissibility is characterized by a certified-bit gap criterion; when exact reporting is blocked, exact accounting collapses to raw-only (Theorem~\ref{thm:exact-certified-gap-iff-admissible}, Corollary~\ref{cor:hardness-raw-only-exact})
+\item The thermodynamic lift yields the Neukart--Vinokur duality specialization $dU \ge \lambda\,dC$ for $\lambda>0$ (Corollary~\ref{cor:neukart-vinokur}, Proposition~\ref{prop:thermo-lift})
 \end{itemize}
-\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{thm:dichotomy},\ref{thm:tractable},\ref{thm:physical-bridge-bundle};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:query-subproblem-transfer},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time},\ref{prop:physical-claim-transport};C\ref{cor:physical-counterexample-core-failure}}{E,S,S+ETH,Qf,Qb,AR}
-\leanmeta{\LH{CC61},\LH{CC36},\LH{CC5},\LH{CC16},\LH{CC69},\LH{CC50},\LH{L9},\LH{L8},\LH{L11},\LH{L21},\LH{L20},\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ541},\LH{CT6},\LH{CT8},\LH{CT4}.}
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{thm:dichotomy},\ref{thm:tractable},\ref{thm:physical-bridge-bundle},\ref{thm:bridge-boundary-represented},\ref{thm:exact-certified-gap-iff-admissible};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:query-subproblem-transfer},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time},\ref{prop:physical-claim-transport},\ref{prop:thermo-lift},\ref{prop:raw-certified-bit-split};C\ref{cor:physical-counterexample-core-failure},\ref{cor:hardness-raw-only-exact},\ref{cor:neukart-vinokur}}{E,S,S+ETH,Qf,Qb,AR,H=cost-growth}
+\leanmeta{\LH{CC61},\LH{CC36},\LH{CC5},\LH{CC16},\LH{CC69},\LH{CC50},\LH{L9},\LH{L8},\LH{L11},\LH{L21},\LH{L20},\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ541},\LH{CT6},\LH{CT8},\LH{CT4},\LH{CC10},\LH{CC9},\LH{CC8},\LH{CC18},\LH{CC11},\LH{CC21},\LH{CC64},\LH{CC65}.}
 
 These results place the problem of identifying decision-relevant coordinates at the first and second levels of the polynomial hierarchy.
 
@@ -71,7 +77,7 @@ The set identity is elementary; its operational content comes from composition w
 
 \subsection*{Open Questions}
 
-The landscape above is complete for the static sufficiency class under C1--C4 and the declared regimes; the items below are adjacent-class extensions or secondary refinements.
+The landscape above is complete for the static sufficiency class under C1--C4; the items below are adjacent-class extensions or secondary refinements.
 Several questions remain for future work:
 \begin{itemize}
 \item \textbf{Fixed-parameter tractability (primary):} Is SUFFICIENCY-CHECK FPT when parameterized by the minimal sufficient-set size $k^*$, or is it W[2]-hard under this parameterization?
@@ -107,7 +113,7 @@ If a solver-agent declares a truth-preserving objective for claims about relatio
 Under the signal discipline, this includes abstain-with-guess/self-confidence reports while keeping certification evidence-gated.\claimstamp{D\ref{def:signaled-typed-report},\ref{def:signal-consistency};P\ref{prop:certified-confidence-gate},\ref{prop:abstain-guess-self-signal};C\ref{cor:exact-no-competence-zero-certified}}{AR}\leanmeta{\LH{IC46},\LH{IC38},\LH{IC41}.}
 Equivalently, training policies that suppress abstention in uncertified regions violate the typed claim discipline under the declared task model.\claimstamp{D\ref{def:solver-integrity};P\ref{prop:integrity-competence-separation},\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{AR}\leanmeta{\LH{IC18},\LH{CC30},\LH{IC27}.}
 
-This yields a training doctrine for solver-agents under declared tasks/regimes:
+This yields a training doctrine for solver-agents under the task/regime contract:
 \begin{enumerate}
 \item Treat $\mathsf{ABSTAIN}/\mathsf{UNKNOWN}$ as first-class admissible outputs, not errors.\claimstamp{D\ref{def:solver-integrity}}{TR}
 \item For signaled reports, maintain two channels: self-reflected confidence may be emitted, but certified confidence is positive only with evidence.\claimstamp{D\ref{def:signal-consistency};P\ref{prop:certified-confidence-gate},\ref{prop:self-confidence-not-certification}}{AR}\leanmeta{\LH{IC38},\LH{IC47}.}
@@ -116,7 +122,7 @@ This yields a training doctrine for solver-agents under declared tasks/regimes:
 \item In hardness-blocked regimes, abstention or explicit guarantee-weakening is structurally required unless regime assumptions are changed.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{S,S+ETH}\leanmeta{\LH{CC16},\LH{CC30},\LH{IC27}.}
 \end{enumerate}
 
-Operationally, a reporting schema consistent with this framework tracks at least five quantities: integrity violations, competent non-abstaining coverage on the declared scope, abstention quality under regime shift, the calibration gap between self-reflected and certified confidence channels, and scalar runtime witness distributions (with bound-qualified fraction semantics when bounds are declared). This is consistent with bounded-rationality feasibility discipline under declared resource models \cite{sep_bounded_rationality,arora2009computational}.
+Operationally, a reporting schema consistent with this framework tracks at least five quantities: integrity violations, competent non-abstaining coverage on the scoped family, abstention quality under regime shift, the calibration gap between self-reflected and certified confidence channels, and scalar runtime witness distributions (with bound-qualified fraction semantics when bounds are given). This is consistent with bounded-rationality feasibility discipline under bounded resource models \cite{sep_bounded_rationality,arora2009computational}.
 
 
 \appendix
