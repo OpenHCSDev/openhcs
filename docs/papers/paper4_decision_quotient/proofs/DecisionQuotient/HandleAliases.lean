@@ -39,7 +39,6 @@ import DecisionQuotient.StochasticSequential.Hierarchy
 import DecisionQuotient.BayesianBridge
 import DecisionQuotient.BayesFromDQ
 import DecisionQuotient.BayesFoundations
--- BayesOptimalityProof theorems are referenced directly in latex via their full names
 
 namespace DecisionQuotient
 
@@ -636,10 +635,5 @@ abbrev BB2 := BayesianDQ.certaintyGain
 abbrev BB3 := dq_is_bayesian_certainty_fraction
 abbrev BB4 := bayesian_dq_matches_physics_dq
 abbrev BB5 := dq_derived_from_bayes
-
--- Bayes From DQ (BF) handles - Bayes uniquely forced by DQ axioms
--- BF1-BF13: documented in BayesFromDQ.lean, polymorphic theorems
-
--- Bayes Foundations (FN) handles - Complete derivation chain
 
 end DecisionQuotient
