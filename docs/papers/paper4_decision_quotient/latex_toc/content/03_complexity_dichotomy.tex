@@ -518,27 +518,27 @@ where $I(I_t; I_{t+1}) = H(I_{t+1}) - H(I_{t+1} \mid I_t)$ is the mutual informa
 \claimstamp{T\ref{thm:dq-physical}}{AR,H=cost-growth}
 The decision quotient $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$ is a physical quantity with:
 \begin{enumerate}
-  \item $\mathrm{DQ} \in [0, 1]$ \quad \leanmeta{\LH{BF3}}
-  \item $\mathrm{DQ} = 0 \Leftrightarrow$ maximum gap (no information) \quad \leanmeta{\LH{BF5}}
-  \item $\mathrm{DQ} = 1 \Leftrightarrow$ zero gap (deterministic) \quad \leanmeta{\LH{BF4}}
-  \item $\mathrm{DQ} + \text{Gap}/\text{Total} = 1$ (complementarity) \quad \leanmeta{\LH{BF6}}
+  \item $\mathrm{DQ} \in [0, 1]$ \quad \leanmeta{\LH{DQ4}}
+  \item $\mathrm{DQ} = 0 \Leftrightarrow$ maximum gap (no information) \quad \leanmeta{\LH{DQ5}}
+  \item $\mathrm{DQ} = 1 \Leftrightarrow$ zero gap (deterministic) \quad \leanmeta{\LH{DQ6}}
+  \item $\mathrm{DQ} + \text{Gap}/\text{Total} = 1$ (complementarity) \quad \leanmeta{\LH{DQ3}}
 \end{enumerate}
-\leanmeta{\LH{BF1}, \LH{BF2}.}
+\leanmeta{\LH{DQ1}, \LH{DQ2}.}
 \end{theorem}
 
 \begin{theorem}[Bayes Uniquely Forced by DQ Axioms]\label{thm:bayes-from-dq}
 \claimstamp{T\ref{thm:bayes-from-dq}}{AR,H=cost-growth}
 An update rule $U$ is \emph{admissible} if it satisfies:
 \begin{enumerate}
-  \item \textbf{No free information}: $\mathrm{DQ}(U(\text{prior}, e)) \le \mathrm{DQ}(\text{prior}) + I(e)$ \quad \leanmeta{\LH{BF7}}
-  \item \textbf{Landauer bound}: energy cost $\ge k_BT \ln 2 \times$ bits updated \quad \leanmeta{\LH{BF8}}
-  \item \textbf{Integrity preservation}: can't corrupt verified bits for free \quad \leanmeta{\LH{BF9}}
+  \item \textbf{No free information}: $\mathrm{DQ}(U(\text{prior}, e)) \le \mathrm{DQ}(\text{prior}) + I(e)$ \quad \leanmeta{\LH{BB3}}
+  \item \textbf{Landauer bound}: energy cost $\ge k_BT \ln 2 \times$ bits updated \quad \leanmeta{\LH{BB4}}
+  \item \textbf{Integrity preservation}: can't corrupt verified bits for free \quad \leanmeta{\LH{BB5}}
 \end{enumerate}
 Then: $U$ is admissible $\Leftrightarrow$ $U$ is Bayesian updating.
-\leanmeta{\LH{FN7}, \LH{FN8}, \LH{FN12}.}
-\end{theorem}
+\leanmeta{\LH{FN14}.}
+\end theorem}
 
-\begin{proof}
+\begin proof}
 This is the Cox-Jaynes argument grounded in thermodynamics rather than Boolean logic.
 The three admissibility constraints are so restrictive that only Bayesian updating satisfies them:
 \begin{itemize}
@@ -547,6 +547,7 @@ The three admissibility constraints are so restrictive that only Bayesian updati
   \item \textbf{Integrity preservation} prevents forgetting for free.
 \end{itemize}
 Together, these force $P(\text{posterior}) = P(\text{prior}) \cdot P(\text{evidence}|\text{hypothesis}) / P(\text{evidence})$.
+
 The uniqueness corollary \LH{FN14} shows any two admissible rules must agree.
 
 \textbf{Machine-checked foundation.} The core inequality underlying this result---that Bayesian updating uniquely minimizes cross-entropy---is proved in Lean 4 with zero axioms and zero \texttt{sorry} statements. The proof derives Gibbs' inequality ($\mathrm{KL}(p\|q) \geq 0$) from the fundamental inequality $\log x \leq x - 1$, then shows $\mathrm{CE}(p,q) = H(p) + \mathrm{KL}(p\|q)$, yielding $\mathrm{CE}(p,p) \leq \mathrm{CE}(p,q)$ with equality iff $p = q$ \LH{FN7}, \LH{FN8}, \LH{FN12}, \LH{FN14}.
@@ -581,21 +582,21 @@ The decision quotient framework provides two independent paths to Bayesian updat
 \paragraph{Path 1: Four Bridges from Counting to DQ.}
 The standard derivation proceeds through four elementary bridges:
 \begin{enumerate}
-  \item \textbf{Fraction $\Rightarrow$ Probability}: For finite $\Omega$, define $P(A) = |A|/|\Omega|$. This satisfies the Kolmogorov axioms: nonnegativity \LH{FN2}, normalization \LH{FN3}, and finite additivity \LH{FN4}.
-  \item \textbf{Conditional $\Rightarrow$ Bayes}: Define $P(H|E) = P(H \cap E)/P(E)$. Then $P(H|E) = P(E|H) P(H) / P(E)$ follows in two lines by commutativity of intersection \LH{FN6}.
-  \item \textbf{KL $\geq 0$ $\Rightarrow$ Entropy Contraction}: From Gibbs' inequality $D_{\text{KL}}(P \| Q) \geq 0$ \LH{FN7}, the chain rule $I(H;E) = H(H) - H(H|E)$ yields $H(H|E) \leq H(H)$ \LH{FN8}. Conditioning cannot increase entropy.
-  \item \textbf{Normalization $\Rightarrow$ DQ}: Define $\text{DQ} = I(H;E)/H(H) = 1 - H(H|E)/H(H)$ \LH{FN9}. This is the fraction of prior uncertainty eliminated by observing $E$, bounded in $[0,1]$ \LH{FN11}.
+  \item \textbf{Fraction $\Rightarrow$ Probability}: For finite $\Omega$, define $P(A) = |A|/|\Omega|$. This satisfies the Kolmogorov axioms: nonnegativity \LH{DQ1}, normalization \LH{DQ2}, and finite additivity \LH{DQ3}.
+  \item \textbf{Conditional $\Rightarrow$ Bayes}: Define $P(H|E) = P(H \cap E)/P(E)$. Then $P(H|E) = P(E|H) P(H) / P(E)$ follows in two lines by commutativity of intersection \LH{BB1}.
+  \item \textbf{KL $\geq 0$ $\Rightarrow$ Entropy Contraction}: From Gibbs' inequality $D_{\text{KL}}(P \| Q) \geq 0$ \LH{BB2}, the chain rule $I(H;E) = H(H) - H(H|E)$ yields $H(H|E) \leq H(H)$ \LH{BB3}. Conditioning cannot increase entropy.
+  \item \textbf{Normalization $\Rightarrow$ DQ}: Define $\text{DQ} = I(H;E)/H(H) = 1 - H(H|E)/H(H)$ \LH{DQ4}. This is the fraction of prior uncertainty eliminated by observing $E$, bounded in $[0,1]$ \LH{DQ5}.
 \end{enumerate}
-The complete chain is mechanized in a single theorem \LH{FN14}.
+The complete chain is mechanized in a single theorem \LH{BB5}.
 
 \paragraph{Path 2: Bayes from Thermodynamic Admissibility.}
 The Cox-Jaynes argument, traditionally grounded in Boolean logic, admits a thermodynamic reformulation. An update rule $U$ is \emph{admissible} if:
 \begin{itemize}
-  \item \textbf{No free information}: DQ cannot increase without evidence (2nd law) \LH{BF7}.
-  \item \textbf{Landauer bound}: DQ increase costs $\geq k_B T \ln 2$ per bit \LH{BF8}.
-  \item \textbf{Integrity preservation}: verified bits cannot be corrupted for free \LH{BF9}.
+  \item \textbf{No free information}: DQ cannot increase without evidence (2nd law) \LH{BB3}.
+  \item \textbf{Landauer bound}: DQ increase costs $\geq k_B T \ln 2$ per bit \LH{BB4}.
+  \item \textbf{Integrity preservation}: verified bits cannot be corrupted for free \LH{BB5}.
 \end{itemize}
-Under these constraints, Bayesian updating is the \emph{unique} admissible rule \LH{FN12}. Any two admissible rules must agree \LH{FN14}. This is ``Bayes from physics''---the thermodynamic constraints uniquely determine the correct update rule.
+Under these constraints, Bayesian updating is the \emph{unique} admissible rule \LH{BB3}. Any two admissible rules must agree \LH{BB5}. This is ``Bayes from physics''---the thermodynamic constraints uniquely determine the correct update rule.
 
 \paragraph{Integrity Self-Preservation.}
 A decision circuit maintains its integrity when no external process can afford the erasure cost. If the work required to corrupt the circuit's state exceeds the available competence of any potential attacker, the circuit persists by thermodynamic necessity.
