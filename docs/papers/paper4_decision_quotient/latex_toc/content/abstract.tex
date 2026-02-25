@@ -1,25 +1,9 @@
-We study \emph{physical information sufficiency} as a decision-theoretic meta-problem. For \(\mathcal{D}=(A,S,U)\) with factored state space \(S=X_1\times\cdots\times X_n\), a coordinate set \(I\) is sufficient when
-\[
-s_I=s'_I \implies \Opt(s)=\Opt(s').
-\]
-This asks whether projected information preserves the full optimal-action correspondence.
+We study physical information sufficiency: given a decision problem $D=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, does coordinate set $I$ determine optimal action? Formally $s_I=s'_I\implies\Opt(s)=\Opt(s')$.
 
-\textbf{Complexity landscape.}
-\begin{itemize}
-\item SUFFICIENCY-CHECK is \coNP-complete; MINIMUM-SUFFICIENT-SET is \coNP-complete; ANCHOR-SUFFICIENCY is \(\SigmaP{2}\)-complete. Informally, this gap separates verification (checking whether a given coordinate set suffices) from discovery (finding a grounding under which the optimal action is determined), and suggests the latter is structurally harder unless the polynomial hierarchy collapses.
-\item Under explicit-state encoding, polynomial-time algorithms hold for bounded actions, separable utility, and tree-structured utility.
-\item Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case families with \(k^*=n\) requiring \(2^{\Omega(n)}\) time.
-\item Under query access, the finite-state core has worst-case Opt-oracle complexity \(\Omega(|S|)\), with Boolean value-entry and state-batch refinements preserving the obstruction.
-\end{itemize}
+Complexity: SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete. Six polynomial-time regimes under explicit-state. Succinct with ETH gives $2^{\Omega(n)}$.
 
-\textbf{Physical grounding.}
-The paper formalizes a physical-to-core encoding \(E:\mathcal{P}\to\mathcal{D}\) and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
-\claimstamp{P\ref{prop:physical-claim-transport},\ref{prop:law-instance-objective-bridge},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time},\ref{prop:budgeted-crossover},\ref{prop:thermo-lift};C\ref{cor:physical-counterexample-core-failure},\ref{cor:finite-budget-threshold-impossibility};T\ref{thm:physical-bridge-bundle}}{AR}
-\leanmeta{\LH{CT6},\LH{CT8},\LH{CT4},\LH{CT1},\LH{DT23},\LH{DT6},\LH{DT8},\LH{DT10},\LH{PBC1},\LH{CC65},\LH{PBC7}.}
+Physical: formalizes encoding $E:\mathcal{P}\to\mathcal{D}$ with transport rules. Atoms with orbital transitions are agents.
 
-All theorem-level claims are machine-checked in Lean 4 (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
+Machine-checked: Lean 4 (21045 lines, 901 theorems, 0 sorries). Two derivations of Bayesian reasoning.
 
-\textbf{Contribution.}
-The formalization includes two independent derivations of Bayesian reasoning: (i) the standard path from counting fractions through conditional probability to the decision quotient as a certainty measure, and (ii) a thermodynamic path proving that Bayesian updating is the unique update rule satisfying Landauer-compatible admissibility constraints. The thermodynamic derivation is grounded in a machine-checked proof that Bayes uniquely minimizes cross-entropy (Gibbs' inequality from the fundamental inequality $\log x \leq x - 1$), with zero axioms and zero \texttt{sorry} statements \LH{FN7}, \LH{FN8}, \LH{FN12}, \LH{FN14}.
-
-\textbf{Keywords:} computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
+Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
