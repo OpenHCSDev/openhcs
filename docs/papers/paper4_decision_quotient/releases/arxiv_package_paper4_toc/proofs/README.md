@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Decision Quotient (ToC).
 
-- **Lines:** 16353
-- **Theorems:** 727
+- **Lines:** 19895
+- **Theorems:** 862
 - **`sorry` placeholders:** 0
 
 
@@ -74,6 +74,30 @@ lake build
 | `Quotient.lean` | Quotient |
 | `Reduction.lean` | Reduction |
 | `Reduction_AllCoords.lean` | Reduction_AllCoords |
+| `ProbabilisticBridge.lean` | ProbabilisticBridge |
+| `AlgorithmComplexity.lean` | AlgorithmComplexity |
+| `Basic.lean` | Basic |
+| `ClaimClosure.lean` | ClaimClosure |
+| `Computation.lean` | Computation |
+| `CrossRegime.lean` | CrossRegime |
+| `Dichotomy.lean` | Dichotomy |
+| `Economics.lean` | Economics |
+| `Finite.lean` | Finite |
+| `Hardness.lean` | Hardness |
+| `HardnessDistribution.lean` | HardnessDistribution |
+| `Hierarchy.lean` | Hierarchy |
+| `Information.lean` | Information |
+| `Instances.lean` | Instances |
+| `PolynomialReduction.lean` | PolynomialReduction |
+| `QueryComplexity.lean` | QueryComplexity |
+| `Quotient.lean` | Quotient |
+| `SubstrateCost.lean` | SubstrateCost |
+| `Summary.lean` | Summary |
+| `TemporalIntegrity.lean` | TemporalIntegrity |
+| `TemporalLearning.lean` | TemporalLearning |
+| `ThermodynamicLift.lean` | ThermodynamicLift |
+| `Tractability.lean` | Tractability |
+| `StochasticSequential.lean` | StochasticSequential |
 | `Sufficiency.lean` | Sufficiency |
 | `Summary.lean` | Summary |
 | `ThermodynamicLift.lean` | ThermodynamicLift |
@@ -81,6 +105,7 @@ lake build
 | `Dimensional.lean` | Dimensional |
 | `FPT.lean` | FPT |
 | `SeparableUtility.lean` | SeparableUtility |
+| `StructuralRank.lean` | StructuralRank |
 | `Tightness.lean` | Tightness |
 | `TreeStructure.lean` | TreeStructure |
 | `Tractable.lean` | Tractable |

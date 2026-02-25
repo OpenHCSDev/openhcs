@@ -2,14 +2,14 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper4_toc - Computational Complexity of Physical Information Sufficiency
-Package Date: 2026-02-24T20:11:17.903614
+Package Date: 2026-02-25T03:02:09.479691
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 63
-Lines of Code: 16353
-Theorems: 727
+Lean Files: 88
+Lines of Code: 19895
+Theorems: 862
 Sorry Placeholders: 0
 
 
@@ -64,6 +64,30 @@ Proof Files:
   - Quotient.lean
   - Reduction.lean
   - Reduction_AllCoords.lean
+  - ProbabilisticBridge.lean
+  - AlgorithmComplexity.lean
+  - Basic.lean
+  - ClaimClosure.lean
+  - Computation.lean
+  - CrossRegime.lean
+  - Dichotomy.lean
+  - Economics.lean
+  - Finite.lean
+  - Hardness.lean
+  - HardnessDistribution.lean
+  - Hierarchy.lean
+  - Information.lean
+  - Instances.lean
+  - PolynomialReduction.lean
+  - QueryComplexity.lean
+  - Quotient.lean
+  - SubstrateCost.lean
+  - Summary.lean
+  - TemporalIntegrity.lean
+  - TemporalLearning.lean
+  - ThermodynamicLift.lean
+  - Tractability.lean
+  - StochasticSequential.lean
   - Sufficiency.lean
   - Summary.lean
   - ThermodynamicLift.lean
@@ -71,6 +95,7 @@ Proof Files:
   - Dimensional.lean
   - FPT.lean
   - SeparableUtility.lean
+  - StructuralRank.lean
   - Tightness.lean
   - TreeStructure.lean
   - Tractable.lean

@@ -1454,6 +1454,12 @@ end {module_root}
         ident_pattern = re.compile(r"^[A-Za-z_][A-Za-z0-9_']*$")
 
         def parse_alias_file(alias_file: Path) -> Dict[str, str]:
+            """Extract ID -> handle mappings from HandleAliases.lean.
+
+            DOF=1 design: Lean file is source of truth.
+            - Export statements: namespace prefix + sequential index -> source.name
+            - Abbrev declarations: abbrev name IS the ID -> qualified handle
+            """
             text = alias_file.read_text(encoding="utf-8", errors="replace")
             stripped = self._strip_lean_comments(text)
             local_map: Dict[str, str] = {}
@@ -1468,13 +1474,14 @@ end {module_root}
                     i += 1
                     continue
 
-                ns_match = re.match(r"^namespace\s+([A-Za-z0-9_']+)\s*$", line)
+                # Track namespace
+                ns_match = re.match(r"^namespace\s+([A-Za-z0-9_'.]+)\s*$", line)
                 if ns_match:
                     namespace_stack.append(ns_match.group(1))
                     i += 1
                     continue
 
-                end_match = re.match(r"^end(?:\s+([A-Za-z0-9_']+))?\s*$", line)
+                end_match = re.match(r"^end(?:\s+([A-Za-z0-9_'.]+))?\s*$", line)
                 if end_match:
                     end_ns = end_match.group(1)
                     if end_ns and namespace_stack:
@@ -1487,9 +1494,10 @@ end {module_root}
                     i += 1
                     continue
 
+                # Parse export statements for auto-numbered IDs
                 if line.startswith("export ") and "(" in line and namespace_stack:
                     current_ns = namespace_stack[-1]
-                    # Ignore top-level namespace; compact IDs are tied to sub-namespaces.
+                    # Skip top-level namespace
                     if current_ns == "DecisionQuotient":
                         i += 1
                         continue
@@ -1500,6 +1508,7 @@ end {module_root}
                         continue
                     source_ns = src_match.group(1)
 
+                    # Collect all names in the export (may span multiple lines)
                     depth = line.count("(") - line.count(")")
                     body = line.split("(", 1)[1]
                     j = i + 1
@@ -1512,27 +1521,40 @@ end {module_root}
                     if ")" in body:
                         body = body.rsplit(")", 1)[0]
 
+                    # Extract identifiers
                     names: List[str] = []
-                    for raw in body.splitlines():
+                    for raw in body.replace(",", " ").split():
                         token = raw.strip()
                         if ident_pattern.fullmatch(token):
                             names.append(token)
 
+                    # Dedupe while preserving order
                     seen: Set[str] = set()
-                    ordered_names: List[str] = []
                     for name in names:
                         if name in seen:
                             continue
                         seen.add(name)
-                        ordered_names.append(name)
-
-                    for name in ordered_names:
                         idx = counters.get(current_ns, 0) + 1
                         counters[current_ns] = idx
                         local_map[f"{current_ns}{idx}"] = f"{source_ns}.{name}"
 
                     i = j
                     continue
+
+                # Parse abbrev declarations: abbrev XX := YY
+                abbrev_match = re.match(
+                    r"^abbrev\s+([A-Z]{1,4}\d+)\s*:=\s*([A-Za-z0-9_'.@]+)\s*$", line
+                )
+                if abbrev_match:
+                    code = abbrev_match.group(1)
+                    target = abbrev_match.group(2).lstrip("@")
+                    # Qualify target with namespace prefix
+                    if namespace_stack:
+                        ns_prefix = ".".join(namespace_stack) + "."
+                        full_handle = ns_prefix + target
+                    else:
+                        full_handle = target
+                    local_map[code] = full_handle
 
                 i += 1
 
@@ -1555,11 +1577,17 @@ end {module_root}
     def _assign_compact_handle_ids(
         self, handles: Set[str], existing_rows: List[Tuple[str, str]]
     ) -> Dict[str, str]:
-        """Assign stable compact IDs to Lean handles, preserving prior assignments."""
+        """Assign compact IDs to handles, preserving explicit assignments.
+
+        DOF=1 design:
+        1. Explicit assignments from HandleAliases.lean are preserved as-is
+        2. Remaining handles get auto-numbered IDs based on prefix
+        3. Auto-numbering is deterministic (sorted order)
+        """
         handle_to_code: Dict[str, str] = {}
         used_codes: Set[str] = set()
 
-        # Preserve existing assignments when they are non-conflicting.
+        # First, apply explicit assignments from provided existing rows
         for code, handle in existing_rows:
             if handle in handle_to_code:
                 continue
@@ -1568,30 +1596,28 @@ end {module_root}
             handle_to_code[handle] = code
             used_codes.add(code)
 
-        # Track next index per code prefix from existing assignments.
-        next_index: Dict[str, int] = {}
-        for code in used_codes:
-            match = re.match(r"^([A-Za-z]+)(\d+)$", code)
-            if not match:
-                continue
-            prefix = match.group(1)
-            index = int(match.group(2))
-            next_index[prefix] = max(next_index.get(prefix, 0), index)
-
-        # Assign IDs to any new handles.
+        # Auto-assign stable, insertion-safe IDs for remaining handles.
+        # Use a prefix derived from the first namespace component plus a
+        # short sha1 digest of the full handle to ensure determinism and
+        # that adding other handles won't shift existing codes.
         for handle in sorted(handles):
             if handle in handle_to_code:
                 continue
 
             group = handle.split(".", 1)[0] if "." in handle else "L"
             prefix = self._compact_lean_prefix(group) or "H"
-            index = next_index.get(prefix, 0) + 1
-            code = f"{prefix}{index}"
-            while code in used_codes:
-                index += 1
-                code = f"{prefix}{index}"
 
-            next_index[prefix] = index
+            # Short stable digest
+            digest = hashlib.sha1(handle.encode("utf-8")).hexdigest()[:8]
+            code = f"{prefix}_{digest}"
+
+            # If collision (very unlikely), extend digest until unique
+            ext = 8
+            while code in used_codes:
+                ext += 4
+                digest = hashlib.sha1((handle + str(ext)).encode("utf-8")).hexdigest()[:ext]
+                code = f"{prefix}_{digest}"
+
             used_codes.add(code)
             handle_to_code[handle] = code
 
@@ -1604,7 +1630,12 @@ end {module_root}
             return
 
         out_file = content_dir / "lean_handle_ids_auto.tex"
-        existing_rows = self._read_existing_lean_handle_rows(paper_id)
+        # Prefer explicit mappings declared in HandleAliases.lean as the
+        # single source of truth for explicit ID assignments.
+        alias_by_code = self._extract_alias_code_map_from_handle_aliases(
+            paper_id, include_dependencies=True
+        )
+        existing_rows = sorted(alias_by_code.items())
         referenced_handles = self._extract_referenced_lean_handles_from_content(paper_id)
         referenced_ids = self._extract_lh_ids_from_content(paper_id)
         # DOF=1 policy for handle maps:
@@ -1617,44 +1648,16 @@ end {module_root}
         for handles in claim_to_handles.values():
             support_handles.update(handles)
 
-        # If this paper was scaffolded from another paper (for example, paper4b
-        # from paper4_toc), inherit missing ID->handle rows from the source map.
-        # This preserves stable short IDs referenced in prose.
-        meta = self._get_paper_meta(paper_id)
-        inherited_by_code: Dict[str, str] = {}
-        source_id = meta.scaffold_from.strip()
-        if source_id and source_id in self.papers:
-            inherited_by_code = self._read_lean_handle_id_map(source_id)
-
-        existing_by_code: Dict[str, str] = {code: handle for code, handle in existing_rows}
-        # Backfill any missing referenced IDs from scaffold and HandleAliases
-        # maps. This runs even for existing tables to prevent ID-map drift.
-        for code in referenced_ids:
-            inherited = inherited_by_code.get(code)
-            if inherited and code not in existing_by_code:
-                existing_by_code[code] = inherited
-
-        alias_by_code = self._extract_alias_code_map_from_handle_aliases(
-            paper_id, include_dependencies=True
-        )
-        for code in referenced_ids:
-            alias = alias_by_code.get(code)
-            if alias and code not in existing_by_code:
-                existing_by_code[code] = alias
-
-        existing_rows = sorted(existing_by_code.items())
-
         candidate_handles = set(referenced_handles) | set(support_handles)
-        # Preserve existing rows that still correspond to known handles.
-        preserved_rows = [
-            (code, handle)
-            for code, handle in existing_rows
-            if code in referenced_ids or handle in candidate_handles
-        ]
+
+        # Preserve explicit alias assignments from HandleAliases.lean and
+        # include those handles in the universe to ensure they remain stable.
+        preserved_rows = existing_rows
         preserved_handles = {handle for _, handle in preserved_rows}
 
-        # Single derived universe: local references + derived theorem support.
-        all_handles = set(referenced_handles) | set(support_handles) | preserved_handles
+        # Single derived universe: local references + derived theorem support
+        # plus any explicitly-declared alias handles.
+        all_handles = set(referenced_handles) | set(support_handles) | preserved_handles | set(alias_by_code.values())
 
         handle_to_code = self._assign_compact_handle_ids(all_handles, preserved_rows)
         code_to_handle = {code: handle for handle, code in handle_to_code.items()}

@@ -150,13 +150,14 @@ Dimensional analysis: the unique scale from ℏ, G, c.
 
 /-- AXIOM (Planck): The Planck scale is the unique Lorentz-invariant discreteness
     scale derivable from fundamental constants (ℏ, G, c).
+    Any two Lorentz-invariant scales (spatial = temporal) must be equal —
+    there is only one such scale at the Planck length.
     Citation: Planck, M. (1899). Über irreversible Strahlungsvorgänge. -/
 axiom planck_unique_scale :
     ∀ scale₁ scale₂ : DiscretenessScale,
       scale₁.spatialUnit = scale₁.temporalUnit →
       scale₂.spatialUnit = scale₂.temporalUnit →
-      -- Under same physical units, both reduce to Planck scale
-      True  -- Placeholder: actual uniqueness requires real-valued constants
+      scale₁ = scale₂
 
 /-! ## Part 4: Landauer Bound (AXIOM - cite Landauer 1961, Bennett 2003)
 

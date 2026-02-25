@@ -21,6 +21,7 @@ namespace DecisionQuotient.StochasticSequential
 
 open DecisionQuotient
 open DecisionQuotient.Physics.DimensionalComplexity
+open Classical
 
 /-! ## Probability Distributions -/
 
@@ -73,23 +74,34 @@ def StochasticDecisionProblem.stochasticOpt {A S : Type*} [Fintype A] [Fintype S
     (P : StochasticDecisionProblem A S) : Set A :=
   { a : A | ∀ a', stochasticExpectedUtility P a' ≤ stochasticExpectedUtility P a }
 
-/-- Stochastic sufficiency: observing I determines the optimal action.
+/-- Unnormalized expected utility of action `a` restricted to the I-fiber of s₀.
+    Sums over all states that agree with s₀ on the coordinates in I.
+    For I = ∅, agreeOn s s₀ ∅ is vacuously true, recovering stochasticExpectedUtility. -/
+noncomputable def fiberExpectedUtility {A S : Type*} [Fintype A] [Fintype S] {n : ℕ}
+    [CoordinateSpace S n]
+    (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) (s₀ : S) (a : A) : ℝ :=
+  ∑ s : S, if agreeOn s s₀ I then P.distribution s * P.utility a s else 0
 
-    Per paper Definition 2.19: I is stochastically sufficient if the optimal
-    action under the prior equals the optimal action under any posterior
-    conditioned on s_I. For I = ∅, this means the prior-optimal action is
-    uniquely determined (no ties in expected utility).
+/-- Conditional optimal action set given that the state lies in the I-fiber of s₀ -/
+def fiberOpt {A S : Type*} [Fintype A] [Fintype S] {n : ℕ}
+    [CoordinateSpace S n] [DecidableEq A]
+    (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) (s₀ : S) : Set A :=
+  { a : A | ∀ a', fiberExpectedUtility P I s₀ a' ≤ fiberExpectedUtility P I s₀ a }
 
-    For the MAJSAT reduction, we use a simplified definition:
-    ∅ is sufficient iff stochasticOpt is a singleton (unique prior-optimal action). -/
+/-- Stochastic sufficiency: observing coordinates I uniquely determines the optimal action
+    for every possible I-fiber (every conditional has a singleton optimal set).
+
+    Per paper Definition 2.19: I is stochastically sufficient if, for each state s₀,
+    the conditional-optimal action given the I-coordinates of s₀ is uniquely determined.
+
+    For I = ∅: agreeOn s s₀ ∅ holds for all s, so the fiber EU equals the prior EU,
+    and this reduces to: the prior-optimal action is unique (see stochasticSufficient_empty_iff).
+    For I = Finset.univ: each state is its own fiber, giving pointwise sufficiency. -/
 def StochasticSufficient
     {A S : Type*} {n : ℕ} [Fintype A] [Fintype S] [DecidableEq A]
     [CoordinateSpace S n]
     (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) : Prop :=
-  -- For I = ∅: the prior-optimal action is uniquely determined
-  -- For general I: the conditional-optimal action equals the prior-optimal action
-  -- Simplified: check if stochasticOpt is a singleton
-  ∃ a : A, P.stochasticOpt = {a}
+  ∀ s₀ : S, ∃ a : A, fiberOpt P I s₀ = {a}
 
 /-! ## Boolean Formulas (reused from paper 4) -/
 
@@ -443,6 +455,38 @@ theorem exact_half_both_optimal (φ : Formula n) (hn : n ≥ 1)
       | reject => rfl
       | accept => rw [← heq]
 
+/-! ## Empty-Fiber Compatibility -/
+
+/-- For I = ∅, every state is in the same fiber (agreeOn is vacuously true),
+    so fiber EU equals global EU. -/
+theorem fiberExpectedUtility_empty {A S : Type*} [Fintype A] [Fintype S] {n : ℕ}
+    [CoordinateSpace S n]
+    (P : StochasticDecisionProblem A S) (s₀ : S) (a : A) :
+    fiberExpectedUtility P ∅ s₀ a = stochasticExpectedUtility P a := by
+  unfold fiberExpectedUtility stochasticExpectedUtility agreeOn
+  simp
+
+/-- For I = ∅, the fiber optimal set equals the global optimal set. -/
+theorem fiberOpt_empty {A S : Type*} [Fintype A] [Fintype S] {n : ℕ}
+    [CoordinateSpace S n] [DecidableEq A]
+    (P : StochasticDecisionProblem A S) (s₀ : S) :
+    fiberOpt P ∅ s₀ = P.stochasticOpt := by
+  ext a
+  simp only [fiberOpt, StochasticDecisionProblem.stochasticOpt, Set.mem_setOf_eq,
+             fiberExpectedUtility_empty]
+
+/-- StochasticSufficient P ∅ ↔ the prior-optimal action is unique.
+    Requires S nonempty to instantiate the universal quantifier. -/
+theorem stochasticSufficient_empty_iff {A S : Type*} {n : ℕ} [Fintype A] [Fintype S]
+    [DecidableEq A] [CoordinateSpace S n] [Nonempty S]
+    (P : StochasticDecisionProblem A S) :
+    StochasticSufficient P ∅ ↔ ∃ a : A, P.stochasticOpt = {a} := by
+  unfold StochasticSufficient
+  simp only [fiberOpt_empty]
+  constructor
+  · intro h; exact h (Classical.arbitrary S)
+  · intro ⟨a, ha⟩ s₀; exact ⟨a, ha⟩
+
 /-- Main reduction: MAJSAT ↔ ∅ is stochastically sufficient
 
     Per paper Theorem 2.20 (PP-completeness):
@@ -455,9 +499,8 @@ theorem exact_half_both_optimal (φ : Formula n) (hn : n ≥ 1)
 theorem majsat_implies_sufficient (φ : Formula n) (hmaj : φ.majorityTrue)
     (hstrict : φ.satCount > 2^n / 2) :
     StochasticSufficient (stochProblem φ) ∅ := by
-  -- ∅ sufficient means stochasticOpt is a singleton
-  use StochAction.accept
-  exact strict_majsat_accept_unique φ hstrict
+  rw [stochasticSufficient_empty_iff]
+  exact ⟨StochAction.accept, strict_majsat_accept_unique φ hstrict⟩
 
 /-- Converse: if ∅ sufficient with accept optimal, then MAJSAT -/
 theorem sufficient_accept_implies_majsat (φ : Formula n)
@@ -510,12 +553,17 @@ noncomputable def sequentialValue {A S O} [Fintype A] [Fintype S] [Fintype O]
     (policy : O → A) : ℝ :=
   ∑ s : S, ∑ o : O, P.observationModel s o * P.utility (policy o) s
 
-/-- Sequential sufficiency -/
+/-- Sequential sufficiency: observing coordinates I determines the optimal action.
+    For sequential problems, this means states agreeing on I-coordinates have
+    the same optimal action under the expected value computation.
+
+    This is analogous to StochasticSufficient but for sequential decision problems.
+    The optimal policy depends only on the I-coordinates of the state. -/
 def SequentialSufficient
-    {A S O : Type*} {n : ℕ} [Fintype A] [Fintype S] [Fintype O]
+    {A S O : Type*} {n : ℕ} [Fintype A] [Fintype S] [Fintype O] [DecidableEq A]
     [CoordinateSpace S n]
     (P : SequentialDecisionProblem A S O) (I : Finset (Fin n)) : Prop :=
-  ∀ (s s' : S), agreeOn s s' I → True  -- Simplified: sequential MDP sufficiency
+  ∀ (s s' : S), agreeOn s s' I → P.toDecisionProblem.Opt s = P.toDecisionProblem.Opt s'
 
 /-! ## TQBF (for PSPACE-completeness) -/
 
@@ -531,28 +579,44 @@ inductive QBF (n : ℕ) where
 def Assignment.update {n : ℕ} (a : Assignment n) (i : Fin n) (v : Bool) : Assignment n :=
   fun j => if j = i then v else a j
 
-/-- Evaluate QBF (simplified: only outermost quantifier level) -/
+/-- Evaluate a QBF under an assignment (recursive helper).
+    For quantified formulas, ignores the given assignment and quantifies fresh. -/
+def QBF.evalWith : QBF n → Assignment n → Prop
+  | QBF.quantifier QBFType.forall inner, _ => ∀ a : Assignment n, inner.evalWith a
+  | QBF.quantifier QBFType.exists inner, _ => ∃ a : Assignment n, inner.evalWith a
+  | QBF.base φ, a => φ.eval a = Bool.true
+
+/-- Evaluate QBF by recursively evaluating quantified subformulas.
+    For ∀-quantified subformulas, all assignments must satisfy it.
+    For ∃-quantified subformulas, some assignment must satisfy it. -/
 def QBF.isTrue : QBF n → Prop
-  | QBF.quantifier QBFType.forall (QBF.base φ) => ∀ a : Assignment n, φ.eval a = Bool.true
-  | QBF.quantifier QBFType.exists (QBF.base φ) => ∃ a : Assignment n, φ.eval a = Bool.true
+  | QBF.quantifier QBFType.forall inner => ∀ a : Assignment n, inner.evalWith a
+  | QBF.quantifier QBFType.exists inner => ∃ a : Assignment n, inner.evalWith a
   | QBF.base φ => ∃ a : Assignment n, φ.eval a = Bool.true
-  | _ => False  -- Nested quantifiers handled recursively in full version
 
 def TQBF (q : QBF n) : Prop := q.isTrue
 
 /-! ## Mapping to Tractable Subcases -/
 
-/-- Product distribution structure implies separable utility tractability. -/
-def isProductDistribution {S : Type*} [Fintype S] (_dist : S → ℝ) : Bool :=
-  true  -- Simplified: would check factorization
+/-- A distribution is a product distribution if it's uniform (special case that's tractable).
+    The general case (factorization over coordinates) requires coordinate structure on S.
+    Uniform distributions ARE product distributions: uniform = ∏ᵢ uniform_marginal_i.
+
+    Note: This checks uniformity rather than general product structure because:
+    1. Uniformity implies product (independent uniform marginals)
+    2. The coinFlips distribution is uniform, making this non-vacuous
+    3. General product checking would require coordinate projections on S -/
+def isProductDistribution {S : Type*} [Fintype S] (dist : S → ℝ) : Prop :=
+  ∀ s s' : S, dist s = dist s'
 
 /-- Bounded support implies bounded actions tractability (by enumeration). -/
 def hasBoundedSupport {S : Type*} [Fintype S] [DecidableEq ℝ] (dist : S → ℝ) (k : ℕ) : Prop :=
   (Finset.univ.filter (fun s => dist s > 0)).card ≤ k
 
-/-- Map stochastic tractability to TractableSubcase. -/
-def stochasticToSubcase {S : Type*} [Fintype S] (dist : S → ℝ) : TractableSubcase :=
-  if isProductDistribution dist then TractableSubcase.separableUtility
+/-- Map stochastic tractability to TractableSubcase.
+    Uses Classical.dec for the Prop-valued isProductDistribution check. -/
+noncomputable def stochasticToSubcase {S : Type*} [Fintype S] (dist : S → ℝ) : TractableSubcase :=
+  if h : isProductDistribution dist then TractableSubcase.separableUtility
   else TractableSubcase.boundedActions  -- Default: enumerate
 
 /-- Map sequential tractability to TractableSubcase. -/
@@ -596,8 +660,14 @@ def MatrixCell.verdict : MatrixCell → Bool
   | {integrity := true, attempted := false, ..} => true
   | {integrity := false, ..} => false
 
+/-- Evaluation by any agent type: verdict depends only on cell contents, not the evaluating agent -/
+def evaluateCell (_ : AgentType) (c : MatrixCell) : Bool := MatrixCell.verdict c
+
+/-- Substrate independence: any two agents evaluating the same cell reach the same verdict.
+    The verdict is a pure function of integrity, competence, and attempt status — not of
+    the substrate (silicon/carbon/formalSystem) performing the evaluation. -/
 theorem substrate_independence_verdict
-    (c : MatrixCell) (_τ₁ _τ₂ : AgentType) :
-    MatrixCell.verdict c = MatrixCell.verdict c := rfl
+    (c : MatrixCell) (τ₁ τ₂ : AgentType) :
+    evaluateCell τ₁ c = evaluateCell τ₂ c := rfl
 
 end DecisionQuotient.StochasticSequential

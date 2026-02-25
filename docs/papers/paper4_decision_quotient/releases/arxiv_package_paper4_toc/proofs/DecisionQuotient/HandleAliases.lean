@@ -29,6 +29,13 @@ import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.Physics.Uncertainty
 import DecisionQuotient.Physics.HeisenbergStrong
 import DecisionQuotient.WitnessCheckingDuality
+import DecisionQuotient.Summary
+import DecisionQuotient.Dichotomy
+import DecisionQuotient.Tractability.StructuralRank
+import DecisionQuotient.StochasticSequential.ClaimClosure
+import DecisionQuotient.StochasticSequential.Basic
+import DecisionQuotient.StochasticSequential.Hardness
+import DecisionQuotient.StochasticSequential.Hierarchy
 
 namespace DecisionQuotient
 
@@ -473,7 +480,8 @@ export DecisionQuotient (
 )
 end UO
 
-namespace DQ
+-- NOTE: Do NOT use "DQ" as a namespace - it conflicts with auto-generated DQ### IDs.
+namespace CCC
 export DecisionQuotient.CC (
   anchor_sigma2p_complete_conditional
   cost_asymmetry_eth_conditional
@@ -483,6 +491,118 @@ export DecisionQuotient.CC (
   sufficiency_conp_complete_conditional
   tractable_subcases_conditional
 )
-end DQ
+end CCC
+
+/-! ## Stochastic/Sequential Hierarchy (DC prefix) -/
+
+-- DC: Dichotomy/Complexity claims from StochasticSequential
+abbrev DC1 := StochasticSequential.static_stochastic_strict_separation
+abbrev DC2 := StochasticSequential.stochastic_sequential_strict_separation
+abbrev DC3 := StochasticSequential.complexity_dichotomy_hierarchy
+abbrev DC4 := StochasticSequential.regime_hierarchy
+abbrev DC5 := StochasticSequential.coNP_subset_PP
+abbrev DC6 := StochasticSequential.PP_subset_PSPACE
+abbrev DC7 := StochasticSequential.coNP_subset_PSPACE
+abbrev DC8 := StochasticSequential.static_to_coNP
+abbrev DC9 := StochasticSequential.stochastic_to_PP
+abbrev DC10 := StochasticSequential.sequential_to_PSPACE
+abbrev DC11 := StochasticSequential.ClaimClosure.claim_six_subcases
+abbrev DC12 := StochasticSequential.ClaimClosure.claim_hierarchy
+abbrev DC13 := StochasticSequential.ClaimClosure.claim_tractable_subcases_to_P
+abbrev DC14 := StochasticSequential.stochastic_dichotomy
+abbrev DC15 := StochasticSequential.unbounded_implies_base_class
+
+/-! ## Physics Claims Handle Abbreviations -/
+
+-- Decision Equivalence (DE) handles
+abbrev DE1 := ClaimClosure.DE1
+abbrev DE2 := ClaimClosure.DE2
+abbrev DE3 := ClaimClosure.DE3
+abbrev DE4 := ClaimClosure.DE4
+
+-- Molecular Integrity (MI) handles
+abbrev MI1 := ClaimClosure.MI1
+abbrev MI2 := ClaimClosure.MI2
+abbrev MI3 := ClaimClosure.MI3
+abbrev MI4 := ClaimClosure.MI4
+abbrev MI5 := ClaimClosure.MI5
+
+-- Self-Reference (SR) handles
+abbrev SR1 := ClaimClosure.SR1
+abbrev SR2 := ClaimClosure.SR2
+abbrev SR3 := ClaimClosure.SR3
+abbrev SR4 := ClaimClosure.SR4
+abbrev SR5 := ClaimClosure.SR5
+
+-- Information Access (IA) handles
+abbrev IA1 := ClaimClosure.IA1
+abbrev IA2 := ClaimClosure.IA2
+abbrev IA3 := ClaimClosure.IA3
+abbrev IA4 := ClaimClosure.IA4
+abbrev IA5 := ClaimClosure.IA5
+abbrev IA6 := ClaimClosure.IA6
+
+-- Gap Energy (GE) handles
+abbrev GE1 := ClaimClosure.GE1
+abbrev GE2 := ClaimClosure.GE2
+abbrev GE3 := ClaimClosure.GE3
+abbrev GE4 := ClaimClosure.GE4
+abbrev GE5 := ClaimClosure.GE5
+abbrev GE6 := ClaimClosure.GE6
+abbrev GE7 := ClaimClosure.GE7
+abbrev GE8 := ClaimClosure.GE8
+abbrev GE9 := ClaimClosure.GE9
+
+-- Integrity Equilibrium (IE) handles
+abbrev IE1 := ClaimClosure.IE1
+abbrev IE2 := ClaimClosure.IE2
+abbrev IE3 := ClaimClosure.IE3
+abbrev IE4 := ClaimClosure.IE4
+abbrev IE5 := ClaimClosure.IE5
+abbrev IE6 := ClaimClosure.IE6
+abbrev IE7 := ClaimClosure.IE7
+abbrev IE8 := ClaimClosure.IE8
+abbrev IE9 := ClaimClosure.IE9
+abbrev IE10 := ClaimClosure.IE10
+abbrev IE11 := ClaimClosure.IE11
+abbrev IE12 := ClaimClosure.IE12
+abbrev IE13 := ClaimClosure.IE13
+abbrev IE14 := ClaimClosure.IE14
+abbrev IE15 := ClaimClosure.IE15
+abbrev IE16 := ClaimClosure.IE16
+abbrev IE17 := ClaimClosure.IE17
+
+-- Substrate Energy (SE) handles
+abbrev SE1 := ClaimClosure.SE1
+abbrev SE2 := ClaimClosure.SE2
+abbrev SE3 := ClaimClosure.SE3
+abbrev SE4 := ClaimClosure.SE4
+abbrev SE5 := ClaimClosure.SE5
+abbrev SE6 := ClaimClosure.SE6
+
+-- Channel (CH) handles
+abbrev CH1 := ClaimClosure.CH1
+abbrev CH2 := ClaimClosure.CH2
+abbrev CH3 := ClaimClosure.CH3
+abbrev CH5 := ClaimClosure.CH5
+abbrev CH6 := ClaimClosure.CH6
+
+-- Atomic/Orbital (AC) handles
+abbrev AC1 := ClaimClosure.AtomicCircuitExports.AC1
+abbrev AC3 := ClaimClosure.AtomicCircuitExports.AC3
+abbrev AC4 := ClaimClosure.AtomicCircuitExports.AC4
+abbrev AC5 := ClaimClosure.AtomicCircuitExports.AC5
+abbrev AC6 := ClaimClosure.AtomicCircuitExports.AC6
+abbrev AC8 := ClaimClosure.AtomicCircuitExports.AC8
+abbrev AC9 := ClaimClosure.AtomicCircuitExports.AC9
+abbrev AC11 := ClaimClosure.AtomicCircuitExports.AC11
+
+-- Discrete State (DS) handles
+abbrev DS1 := ClaimClosure.DS1
+abbrev DS2 := ClaimClosure.DS2
+abbrev DS3 := ClaimClosure.DS3
+abbrev DS4 := ClaimClosure.DS4
+abbrev DS5 := ClaimClosure.DS5
+abbrev DS6 := ClaimClosure.DS6
 
 end DecisionQuotient

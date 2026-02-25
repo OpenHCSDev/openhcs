@@ -18,7 +18,7 @@ Complexity landscape.
 - Under query access, the finite-state core has worst-case Opt-oracle complexity $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving the obstruction.
 
 Physical grounding. The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$ and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
-All theorem-level claims are machine-checked in Lean 4 (19529 lines, 847 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
+All theorem-level claims are machine-checked in Lean 4 (19895 lines, 862 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
 Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
 ```
@@ -42,7 +42,7 @@ Complexity landscape.
 
 Physical grounding. The paper formalizes a physical-to-core encoding E: 𝒫 → 𝒟 and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
 
-All theorem-level claims are machine-checked in Lean 4 (19529 lines, 847 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
+All theorem-level claims are machine-checked in Lean 4 (19895 lines, 862 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
 Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
 ```

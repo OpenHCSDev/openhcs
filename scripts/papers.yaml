@@ -98,6 +98,9 @@ papers:
     venue: "Theory of Computing"
     assumption_ledger_sources:
       - "DecisionQuotient/ClaimClosure.lean"
+      - "DecisionQuotient/StochasticSequential/ClaimClosure.lean"
+      - "DecisionQuotient/StochasticSequential/Hierarchy.lean"
+      - "DecisionQuotient/HandleAliases.lean"
     claim_mapping_file: "content/claim_mapping_auto.tex"
 
   paper4b:

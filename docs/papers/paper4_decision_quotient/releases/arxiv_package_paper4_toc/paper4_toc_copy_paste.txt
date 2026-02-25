@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-02-24T20:11:15.281192
+Generated: 2026-02-25T03:02:08.372147
 
 === HUMAN COPY/PASTE ===
 
@@ -22,7 +22,7 @@ Complexity landscape.
 
 Physical grounding. The paper formalizes a physical-to-core encoding E: 𝒫 → 𝒟 and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
 
-All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
+All theorem-level claims are machine-checked in Lean 4 (19895 lines, 862 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
 Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
 
@@ -40,12 +40,12 @@ Complexity landscape.
 - Under query access, the finite-state core has worst-case Opt-oracle complexity $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving the obstruction.
 
 Physical grounding. The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$ and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
-All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
+All theorem-level claims are machine-checked in Lean 4 (19895 lines, 862 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
 Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
 
 arXiv Comments:
-Theory of Computing submission. Lean 4 artifact: 16353 lines, 727 theorems/lemmas across 63 files (0 sorry placeholders).
+Theory of Computing submission. Lean 4 artifact: 19895 lines, 862 theorems/lemmas across 88 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper4_toc
@@ -92,7 +92,7 @@ zenodo:
     framework.
 
 
-    All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma
+    All theorem-level claims are machine-checked in Lean 4 (19895 lines, 862 theorem/lemma
     statements). Complexity-class completeness follows by composition with standard
     complexity results; regime-dependent and physical-transport consequences are proved
     as assumption-explicit closures.
@@ -139,7 +139,7 @@ arxiv:
     lower bounds under declared constants) are formalized in the same assumption-typed
     framework.
 
-    All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma
+    All theorem-level claims are machine-checked in Lean 4 (19895 lines, 862 theorem/lemma
     statements). Complexity-class completeness follows by composition with standard
     complexity results; regime-dependent and physical-transport consequences are proved
     as assumption-explicit closures.
@@ -147,8 +147,8 @@ arxiv:
 
     Keywords: computational complexity, physical information, decision theory, polynomial
     hierarchy, formal verification'
-  comments: 'Theory of Computing submission. Lean 4 artifact: 16353 lines, 727 theorems/lemmas
-    across 63 files (0 sorry placeholders).'
+  comments: 'Theory of Computing submission. Lean 4 artifact: 19895 lines, 862 theorems/lemmas
+    across 88 files (0 sorry placeholders).'
 abstract_variants:
   unicode: 'We study physical information sufficiency as a decision-theoretic meta-problem.
     For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × X_(n), a coordinate set
@@ -190,7 +190,7 @@ abstract_variants:
     framework.
 
 
-    All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma
+    All theorem-level claims are machine-checked in Lean 4 (19895 lines, 862 theorem/lemma
     statements). Complexity-class completeness follows by composition with standard
     complexity results; regime-dependent and physical-transport consequences are proved
     as assumption-explicit closures.
@@ -235,7 +235,7 @@ abstract_variants:
     lower bounds under declared constants) are formalized in the same assumption-typed
     framework.
 
-    All theorem-level claims are machine-checked in Lean 4 (16353 lines, 727 theorem/lemma
+    All theorem-level claims are machine-checked in Lean 4 (19895 lines, 862 theorem/lemma
     statements). Complexity-class completeness follows by composition with standard
     complexity results; regime-dependent and physical-transport consequences are proved
     as assumption-explicit closures.

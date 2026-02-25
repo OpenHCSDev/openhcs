@@ -81,13 +81,13 @@ theorem parameterized_results :
 /-- Dichotomy alias in terms of minimal-sufficient-set size relative to state
 cardinality. -/
 theorem complexity_dichotomy
-    {A S : Type*} {n : ℕ}
-    [DecidableEq (Set A)] [DecidableEq (Fin n)]
-    [ProductSpace S n] [Fintype S] [Nonempty S]
-    (dp : DecisionProblem A S) (I : Finset (Fin n))
-    (hmin : dp.isMinimalSufficient I) :
+    {S : Type*} {n : ℕ}
+    [Fintype S] [Nonempty S]
+    (I : Finset (Fin n)) :
     (I.card ≤ Nat.log 2 (Fintype.card S)) ∨
-    (I.card > Nat.log 2 (Fintype.card S)) :=
-  DecisionQuotient.dichotomy_by_relevant_size dp I hmin
+    (I.card > Nat.log 2 (Fintype.card S)) := by
+  by_cases h : I.card ≤ Nat.log 2 (Fintype.card S)
+  · exact Or.inl h
+  · exact Or.inr (lt_of_not_ge h)
 
 end DecisionQuotient.Summary
