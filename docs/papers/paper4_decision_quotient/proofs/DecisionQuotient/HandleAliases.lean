@@ -36,6 +36,9 @@ import DecisionQuotient.StochasticSequential.ClaimClosure
 import DecisionQuotient.StochasticSequential.Basic
 import DecisionQuotient.StochasticSequential.Hardness
 import DecisionQuotient.StochasticSequential.Hierarchy
+import DecisionQuotient.BayesianBridge
+import DecisionQuotient.BayesFromDQ
+import DecisionQuotient.BayesFoundations
 
 namespace DecisionQuotient
 
@@ -512,6 +515,9 @@ abbrev DC13 := StochasticSequential.ClaimClosure.claim_tractable_subcases_to_P
 abbrev DC14 := StochasticSequential.stochastic_dichotomy
 abbrev DC15 := StochasticSequential.above_threshold_hard
 
+-- SS: Stochastic/Sequential completeness theorems (polymorphic - instantiated in ClaimClosure)
+-- SS1-SS5 are polymorphic theorems, referenced via DC handles for paper mapping
+
 /-! ## Physics Claims Handle Abbreviations -/
 
 -- Decision Equivalence (DE) handles
@@ -604,5 +610,41 @@ abbrev DS3 := ClaimClosure.DS3
 abbrev DS4 := ClaimClosure.DS4
 abbrev DS5 := ClaimClosure.DS5
 abbrev DS6 := ClaimClosure.DS6
+
+-- Decision Quotient (DQ) handles from IntegrityEquilibrium
+abbrev DQ1 := ClaimClosure.DQ1  -- Mutual information
+abbrev DQ2 := ClaimClosure.DQ2  -- DecisionQuotient structure
+abbrev DQ3 := ClaimClosure.DQ3  -- DQ from gap
+abbrev DQ4 := ClaimClosure.DQ4  -- Zero gap = DQ 1
+abbrev DQ5 := ClaimClosure.DQ5  -- Max gap = DQ 0
+abbrev DQ6 := ClaimClosure.DQ6  -- DQ + Gap = Total
+abbrev DQ7 := ClaimClosure.DQ7  -- DQ monotonic
+abbrev DQ8 := ClaimClosure.DQ8  -- DQ thermodynamic interpretation
+
+-- Decision Problem (DP) additional handles
+abbrev DP6 := ClaimClosure.DP6  -- Empty-set sufficiency iff constant
+abbrev DP7 := ClaimClosure.DP7  -- Non-sufficiency iff counterexample
+abbrev DP8 := ClaimClosure.DP8  -- Empty-set non-sufficiency iff distinct opt
+
+-- Query Complexity (QC) handles - polymorphic theorems referenced via CC handles for paper mapping
+-- QC1-QC7 are polymorphic theorems, paper uses CC49, CC50 for query obstruction
+
+-- Bayesian Bridge (BB) handles - connecting Bayes to Decision Quotient
+abbrev BB1 := BayesianDQ
+abbrev BB2 := BayesianDQ.certaintyGain
+abbrev BB3 := dq_is_bayesian_certainty_fraction
+abbrev BB4 := bayesian_dq_matches_physics_dq
+abbrev BB5 := dq_derived_from_bayes
+
+-- Bayes From DQ (BF) handles - Bayes uniquely forced by DQ axioms
+-- BF1-BF13: documented in BayesFromDQ.lean, polymorphic theorems
+
+-- Bayes Foundations (FN) handles - Complete derivation chain
+-- FN1-FN4: Bridge 1 - Fraction → Probability (counting_nonneg, counting_total, counting_additive)
+-- FN5-FN6: Bridge 2 - Conditional → Bayes (condProb, bayes_from_conditional)
+-- FN7-FN8: Bridge 3 - KL ≥ 0 → Entropy contraction (kl_nonneg, entropy_contraction)
+-- FN9-FN13: Bridge 4 - DQ as certainty fraction (dqBayes, dq_equivalence, dq_in_unit_interval)
+-- FN14: Complete chain theorem (complete_chain)
+-- All documented in BayesFoundations.lean, polymorphic theorems
 
 end DecisionQuotient

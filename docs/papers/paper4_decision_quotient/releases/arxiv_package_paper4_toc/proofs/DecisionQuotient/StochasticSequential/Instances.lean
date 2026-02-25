@@ -60,11 +60,15 @@ noncomputable def coinFlips (n : ℕ) [NeZero (2^n)] : StochasticDecisionProblem
     { utility := fun _ _ => 1 }
     distribution := fun _ => 1 / (2^n : ℝ) }
 
-/-- Coin flips have product distribution (statement) -/
+/-- Coin flips have product distribution: uniform over Fin (2^n) is a product
+    of n independent uniform coin flips. The uniformity check (all probabilities equal)
+    captures this since uniform = ∏ᵢ uniform_marginal_i for independent coordinates. -/
 theorem coinFlips_product (n : ℕ) [NeZero (2^n)] :
     isProductDistribution (coinFlips n).distribution := by
-  unfold isProductDistribution
-  trivial
+  unfold isProductDistribution coinFlips
+  intro s s'
+  -- Both s and s' have probability 1 / (2^n : ℝ)
+  rfl
 
 /-! ## Fully Observable MDP Instance -/
 

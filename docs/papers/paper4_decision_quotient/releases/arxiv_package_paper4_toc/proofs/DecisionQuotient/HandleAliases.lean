@@ -510,7 +510,14 @@ abbrev DC11 := StochasticSequential.ClaimClosure.claim_six_subcases
 abbrev DC12 := StochasticSequential.ClaimClosure.claim_hierarchy
 abbrev DC13 := StochasticSequential.ClaimClosure.claim_tractable_subcases_to_P
 abbrev DC14 := StochasticSequential.stochastic_dichotomy
-abbrev DC15 := StochasticSequential.unbounded_implies_base_class
+abbrev DC15 := StochasticSequential.above_threshold_hard
+
+-- SS: Stochastic/Sequential completeness theorems
+abbrev SS1 := StochasticSequential.stochastic_sufficiency_pp_complete
+abbrev SS2 := StochasticSequential.sequential_sufficiency_pspace_complete
+abbrev SS3 := StochasticSequential.stochastic_sufficiency_pp_hard
+abbrev SS4 := StochasticSequential.stochastic_sufficient_in_PP
+abbrev SS5 := StochasticSequential.sequential_sufficient_in_PSPACE
 
 /-! ## Physics Claims Handle Abbreviations -/
 
@@ -604,5 +611,20 @@ abbrev DS3 := ClaimClosure.DS3
 abbrev DS4 := ClaimClosure.DS4
 abbrev DS5 := ClaimClosure.DS5
 abbrev DS6 := ClaimClosure.DS6
+
+-- Decision Quotient (DQ) handles from IntegrityEquilibrium
+abbrev DQ1 := ClaimClosure.DQ1  -- Mutual information
+abbrev DQ2 := ClaimClosure.DQ2  -- DecisionQuotient structure
+abbrev DQ3 := ClaimClosure.DQ3  -- DQ from gap
+abbrev DQ4 := ClaimClosure.DQ4  -- Zero gap = DQ 1
+abbrev DQ5 := ClaimClosure.DQ5  -- Max gap = DQ 0
+abbrev DQ6 := ClaimClosure.DQ6  -- DQ + Gap = Total
+abbrev DQ7 := ClaimClosure.DQ7  -- DQ monotonic
+abbrev DQ8 := ClaimClosure.DQ8  -- DQ thermodynamic interpretation
+
+-- Decision Problem (DP) additional handles
+abbrev DP6 := ClaimClosure.DP6  -- Empty-set sufficiency iff constant
+abbrev DP7 := ClaimClosure.DP7  -- Non-sufficiency iff counterexample
+abbrev DP8 := ClaimClosure.DP8  -- Empty-set non-sufficiency iff distinct opt
 
 end DecisionQuotient

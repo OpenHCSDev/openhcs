@@ -40,6 +40,7 @@ import DecisionQuotient.Physics.DiscreteSpacetime
 import DecisionQuotient.Physics.DecisionEquivalence
 import DecisionQuotient.Physics.IntegrityEquilibrium
 import DecisionQuotient.Physics.MolecularIntegrity
+import DecisionQuotient.BayesFromDQ  -- Replaced BayesianDQ with rigorous derivation
 import Mathlib.Data.Rat.Init
 import Mathlib.Data.Finset.Card
 import Mathlib.Tactic
@@ -2281,6 +2282,24 @@ abbrev DC14 := @DC14_dimension_determines_class
 abbrev DC15 := @DC15_complexity_hierarchy
 
 end DimensionalComplexityExports
+
+/-! ## Decision Problem Handle Exports (DP6-DP8)
+
+These provide paper-compatible handles for the foundational sufficiency theorems.
+-/
+
+section DecisionProblemExtras
+
+/-- DP6: Empty-set sufficiency iff constant decision boundary (Bool-coordinate instance). -/
+abbrev DP6 := @DecisionProblem.emptySet_sufficient_iff_constant Bool (Fin 2 → Bool) 2 (functionCoordinateSpace Bool 2)
+
+/-- DP7: Non-sufficiency iff counterexample witness (Bool-coordinate instance). -/
+abbrev DP7 := @DecisionProblem.not_sufficient_iff_exists_counterexample Bool (Fin 2 → Bool) 2 (functionCoordinateSpace Bool 2)
+
+/-- DP8: Empty-set non-sufficiency iff distinct optimal sets (Bool-coordinate instance). -/
+abbrev DP8 := @DecisionProblem.emptySet_not_sufficient_iff_exists_opt_difference Bool (Fin 2 → Bool) 2 (functionCoordinateSpace Bool 2)
+
+end DecisionProblemExtras
 
 end ClaimClosure
 end DecisionQuotient

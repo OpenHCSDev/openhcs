@@ -175,7 +175,8 @@ theorem hard_family_srank_eq_n {n : ℕ} (hn : 0 < n)
     (it has srank = n, which is the maximum possible). -/
 theorem hard_family_srank_maximal {n : ℕ} (hn : 0 < n)
     (φ : Formula n) (hnt : ¬φ.isTautology) :
-    (reductionProblemMany φ).srank = (reductionProblemMany φ).srank := rfl
+    (reductionProblemMany φ).srank = n :=
+  hard_family_srank_eq_n hn φ hnt
 
 /-! ## Structural Rank and Sufficient Sets -/
 

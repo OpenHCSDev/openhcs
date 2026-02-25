@@ -45,9 +45,12 @@ structure BoundedHorizon where
   horizon_le : horizon ≤ bound
 
 /-- Fully observable MDP (no partial observability).
-    Maps to TractableSubcase.treeStructure -/
+    Maps to TractableSubcase.treeStructure.
+    The observation function is injective: different states produce different observations,
+    so the current state can be uniquely recovered from the observation. -/
 structure FullyObservable (A S O : Type*) where
-  observation_deterministic : ∀ s : S, ∃! o : O, True  -- placeholder
+  obs : S → O
+  obs_injective : Function.Injective obs
 
 /-! ## Mapping to 6 Tractable Subcases -/
 

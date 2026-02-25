@@ -135,8 +135,9 @@ axiom reduceTQBF_poly (q : QBF n) :
     TQBF ↔ ∅ is sequentially sufficient encodes PSPACE-completeness.
     This is the Cook-Levin-style reduction adapted to sequential decision theory. -/
 axiom reduceTQBF_correct (q : QBF n) :
-    TQBF q ↔ @SequentialSufficient SeqAction (SeqState n) SeqObs 1 _ _ _
-              (instCoordinateSpaceSeqState n) (reduceTQBF q) ∅
+    TQBF q ↔ @SequentialSufficient SeqAction (SeqState n) SeqObs 1
+              instFintypeSeqAction (instFintypeSeqState n) instFintypeSeqObs
+              instDecidableEqSeqAction (instCoordinateSpaceSeqState n) (reduceTQBF q) ∅
 
 /-! ## Composition -/
 

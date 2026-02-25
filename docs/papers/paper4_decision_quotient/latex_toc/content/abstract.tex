@@ -15,8 +15,11 @@ This asks whether projected information preserves the full optimal-action corres
 \textbf{Physical grounding.}
 The paper formalizes a physical-to-core encoding \(E:\mathcal{P}\to\mathcal{D}\) and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
 \claimstamp{P\ref{prop:physical-claim-transport},\ref{prop:law-instance-objective-bridge},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time},\ref{prop:budgeted-crossover},\ref{prop:thermo-lift};C\ref{cor:physical-counterexample-core-failure},\ref{cor:finite-budget-threshold-impossibility};T\ref{thm:physical-bridge-bundle}}{AR}
-\leanmeta{\LH{CT6},\LH{CT8},\LH{CT4},\LH{CT1},\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ541},\LH{PBC1},\LH{CC65},\LH{DQ569}.}
+\leanmeta{\LH{CT6},\LH{CT8},\LH{CT4},\LH{CT1},\LH{DT23},\LH{DT6},\LH{DT8},\LH{DT10},\LH{PBC1},\LH{CC65},\LH{PBC7}.}
 
 All theorem-level claims are machine-checked in Lean 4 (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
+
+\textbf{Foundational contribution.}
+The formalization includes two independent derivations of Bayesian reasoning: (i) the standard path from counting fractions through conditional probability to the decision quotient as a certainty measure, and (ii) a thermodynamic path proving that Bayesian updating is the unique update rule satisfying Landauer-compatible admissibility constraints. The thermodynamic derivation is grounded in a machine-checked proof that Bayes uniquely minimizes cross-entropy (Gibbs' inequality from the fundamental inequality $\log x \leq x - 1$), with zero axioms and zero \texttt{sorry} statements.\footnote{Proof source: \url{https://github.com/OpenHCSDev/openhcs/blob/main/docs/papers/paper4_decision_quotient/proofs/DecisionQuotient/BayesOptimalityProof.lean}}
 
 \textbf{Keywords:} computational complexity, physical information, decision theory, polynomial hierarchy, formal verification

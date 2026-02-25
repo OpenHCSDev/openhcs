@@ -25,14 +25,14 @@ Transfer between regimes is governed by the complexity hierarchy:
 Tractability transfers upward when dimension structure is preserved.
 -/
 
-/-- Tractability transfers with subcase preservation -/
+/-- Tractability transfers: if a subcase is in P, it remains in P regardless of regime.
+    The tractable subcases are defined regime-independently (separable utility, bounded actions,
+    etc.), so a P-time algorithm for any subcase works across all regimes. -/
 theorem tractability_transfers (subcase : TractableSubcase) :
     subcaseComplexity subcase = ComplexityClass.P →
-    -- If tractable in one regime, tractable in all
-    ∀ regime : ℕ, ∃ algo : Bool, True := by
-  intro _
-  intro _
-  exact ⟨true, trivial⟩
+    ∀ _regime : ℕ, subcaseComplexity subcase = ComplexityClass.P := by
+  intro hP _
+  exact hP
 
 /-! ## Regime Comparison
 

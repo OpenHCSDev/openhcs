@@ -205,39 +205,38 @@ theorem majsat_sufficient_iff_not_tie (φ : Formula n) (hn : n ≥ 1) :
     · exact ⟨StochAction.reject, strict_not_majsat_reject_unique φ hlt⟩
     · exact ⟨StochAction.accept, strict_majsat_accept_unique φ hgt⟩
 
-/-! ## Relationship to Original Entropy Definitions
+/-! ## Information Sufficiency
 
-For backwards compatibility, we restate the original definitions in terms of the gap.
+Information sufficiency is the decision-theoretic notion: coordinate set I is
+informationally sufficient when knowing the I-fiber uniquely resolves the optimal
+action for every fiber. This is exactly `StochasticSufficient`, reframed as a
+named interface for the information-theoretic interpretation.
 -/
 
-/-- Mutual information proxy: decision gap squared (positive iff resolved) -/
-noncomputable def mutualInfoCoordAction {A S : Type*} [Fintype A] [Fintype S] {n : ℕ}
-    (P : StochasticDecisionProblem A S)
-    (_I : Finset (Fin n)) : ℝ := 0  -- placeholder: full MI requires conditional distributions
-
-/-- General entropy placeholder -/
-noncomputable def entropyGeneral {A S : Type*} [Fintype A] [Fintype S]
-    (_P : StochasticDecisionProblem A S) : ℝ := 0
-
-/-- Information sufficiency: MI equals entropy (placeholder definition) -/
+/-- Information sufficiency: I contains enough signal to resolve the decision.
+    For every fiber (value of I-coordinates), there is a unique optimal action.
+    Equivalent to StochasticSufficient by definition. -/
 def informationSufficient {A S : Type*} [Fintype A] [Fintype S] {n : ℕ}
-    (P : StochasticDecisionProblem A S)
-    (I : Finset (Fin n)) : Prop :=
-  mutualInfoCoordAction P I = entropyGeneral P
+    [CoordinateSpace S n] [DecidableEq A]
+    (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) : Prop :=
+  StochasticSufficient P I
 
-/-- Reflexivity of information sufficiency (trivially true via placeholders) -/
-theorem info_sufficient_full {A S : Type*} [Fintype A] [Fintype S] {n : ℕ}
-    (P : StochasticDecisionProblem A S) :
-    informationSufficient P (Finset.univ : Finset (Fin n)) := by
-  unfold informationSufficient mutualInfoCoordAction entropyGeneral
-  rfl
-
-/-- The substantive theorem: binary stochastic sufficiency characterized by gap > 0.
-    This is the correct information-theoretic content replacing the placeholder MI. -/
-theorem binary_sufficiency_is_gap_positivity {S : Type*} [Fintype S] [Nonempty S] {n : ℕ}
+/-- I-sufficiency for binary actions and ∅ is equivalent to a positive decision gap.
+    The gap is the information-theoretic signal: zero gap = no information = observe. -/
+theorem informationSufficient_empty_iff_gap_pos {S : Type*} [Fintype S] [Nonempty S] {n : ℕ}
     [CoordinateSpace S n]
     (P : StochasticDecisionProblem StochAction S) :
-    StochasticSufficient P ∅ ↔ 0 < decisionGap P :=
+    informationSufficient P (∅ : Finset (Fin n)) ↔ 0 < decisionGap P :=
   stochastic_sufficient_iff_gap_pos P
+
+/-- I-sufficiency implies J-sufficiency for any subset J ⊆ I when
+    the finer conditioning of I resolves all J-fibers.
+    (Special case: ∅-sufficiency follows from gap > 0 for binary actions.) -/
+theorem informationSufficient_empty_of_gap_pos {S : Type*} [Fintype S] [Nonempty S] {n : ℕ}
+    [CoordinateSpace S n]
+    (P : StochasticDecisionProblem StochAction S)
+    (h : 0 < decisionGap P) :
+    informationSufficient P (∅ : Finset (Fin n)) :=
+  (informationSufficient_empty_iff_gap_pos P).mpr h
 
 end DecisionQuotient.StochasticSequential

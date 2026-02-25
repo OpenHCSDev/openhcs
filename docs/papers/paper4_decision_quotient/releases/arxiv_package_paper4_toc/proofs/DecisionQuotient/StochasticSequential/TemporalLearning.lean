@@ -31,13 +31,14 @@ noncomputable def posterior {C : Type*}
     C → ℝ :=
   fun c => prior c * likelihood c / evidence
 
-/-- Bayesian update: posterior ∝ prior × likelihood -/
+/-- Bayesian update: posterior c = prior c × likelihood c / evidence.
+    Definitionally true; the normalization condition (evidence = ∑ c, prior c * likelihood c)
+    is the caller's responsibility and does not affect the pointwise equality. -/
 theorem bayesian_update {C : Type*}
     (prior : StructurePrior C)
     (c : C)
     (likelihood : C → ℝ)
-    (evidence : ℝ)
-    (_hEvidence : True) :  -- Placeholder for evidence normalization
+    (evidence : ℝ) :
     posterior prior likelihood evidence c = prior c * likelihood c / evidence := rfl
 
 /-! ## Convergence -/

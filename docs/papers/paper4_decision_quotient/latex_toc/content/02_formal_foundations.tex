@@ -226,8 +226,7 @@ Let \(\mathrm{repr} : \mathcal{L} \to \mathcal{C}\) be any representation map fr
 \exists s,s' \in \mathcal{L},\ s \neq s' \wedge \mathrm{repr}(s)=\mathrm{repr}(s').
 \]
 This is the finite-cardinality collision statement underlying under-resolved exact-decision claims.
-\leanmeta{\LH{DQ582},
-\LH{DQ583}.}
+\leanmeta{\LH{PI6}, \LH{PI7}.}
 \end{proposition}
 
 \begin{theorem}[Physical Incompleteness of Instantiation]\label{thm:physical-incompleteness}
@@ -238,9 +237,7 @@ Let $\mathcal{P}$ be a finite set of physical states and $\mathcal{L}$ a finite 
 \item there exists a logical possibility $\ell \in \mathcal{L}$ that is not physically instantiated: $\ell \notin \mathrm{range}(\iota)$.
 \end{enumerate}
 Under explicit bounds: if $|\mathcal{P}| \le M$ and $|\mathcal{L}| \ge L$ with $M < L$, the same conclusion holds.
-\leanmeta{\LH{DQ589},
-\LH{DQ591},
-\LH{DQ590}.}
+\leanmeta{\LH{PI3}, \LH{PI4}, \LH{PI5}.}
 \end{theorem}
 
 \begin{definition}[Regime Simulation]\label{def:regime-simulation}
@@ -316,7 +313,7 @@ Pointwise time equality is decidable for every $k\in\mathbb{N}$:
 \[
 x_t=k\ \vee\ x_t\neq k.
 \]
-\leanmeta{\LH{DQ548},\LH{DQ547}.}
+\leanmeta{\LH{DT6},\LH{DT7}.}
 \end{proposition}
 
 \begin{proposition}[Decision Event Is One Unit of Time]\label{prop:decision-unit-time}
@@ -328,7 +325,7 @@ and therefore
 \[
 \mathrm{DecisionEvent}(x,y)\ \Longrightarrow\ y_t=x_t+1.
 \]
-\leanmeta{\LH{DQ535},\LH{DQ537},\LH{DQ545},\LH{DQ546}.}
+\leanmeta{\LH{DT13},\LH{DT11},\LH{DT10},\LH{DT12}.}
 \end{proposition}
 
 \begin{proposition}[Run Accounting Identity]\label{prop:run-time-accounting}
@@ -342,12 +339,12 @@ Hence decision count equals elapsed time:
 \[
 |\mathrm{trace}(n,x)|=\mathrm{run}(n,x)_t-x_t.
 \]
-\leanmeta{\LH{DQ540},\LH{DQ539},\LH{DQ533},\LH{DQ534}.}
+\leanmeta{\LH{DT15},\LH{DT16},\LH{DT18},\LH{DT19}.}
 \end{proposition}
 
 \begin{proposition}[Substrate Realization Preserves Unit-Time Events]\label{prop:substrate-unit-time}
 For any substrate model that is consistent with the declared interface transition rule, each one-step substrate evolution realizes one interface decision event and advances interface time by one unit. The time update law is invariant under substrate kind.
-\leanmeta{\LH{DQ542},\LH{DQ541},\LH{DQ549}.}
+\leanmeta{\LH{DT22},\LH{DT23},\LH{DT24}.}
 \end{proposition}
 
 \subsection{Physical-System Encoding and Theorem Transport}\label{sec:physical-transport}
@@ -365,11 +362,7 @@ All physical claims below are typed relative to a declared encoding map $E$ and 
 Fix a declared noisy physical encoding interface and assume a \emph{Heisenberg-strong binding witness}: one physical instance is compatible with two distinct interface states whose encoded optimal-action sets differ.
 Then there exists a core decision problem with non-constant optimizer map.
 Equivalently, under this declared physical ambiguity assumption, decision nontriviality is derivable at the core level.
-\leanmeta{
-\LH{DQ584},
-\LH{DQ585},
-\LH{DQ586}.
-}
+\leanmeta{\LH{HS3}, \LH{HS5}, \LH{HS6}.}
 \end{proposition}
 
 \begin{proposition}[Conditional Physical Claim Transport]\label{prop:physical-claim-transport}
@@ -385,8 +378,7 @@ then
 \[
 \forall p\in\mathcal{P},\ \mathrm{PhysAssm}(p)\Rightarrow \mathrm{CoreClaim}(E(p)).
 \]
-\leanmeta{\LH{CT6}, \LH{CT5},
-\LH{DQ572}.}
+\leanmeta{\LH{CT6}, \LH{CT5}, \LH{CT3}.}
 \end{proposition}
 
 \begin{corollary}[Physical Counterexample Implies Core Failure on Encoded Slice]\label{cor:physical-counterexample-core-failure}
@@ -396,8 +388,7 @@ Under the same encoding and assumption-transfer map:
 \item if a physical counterexample exists, then the purported core rule is invalid;
 \item if the lifted claim holds on all physically admissible encoded instances, no such physical counterexample exists.
 \end{enumerate}
-\leanmeta{\LH{CT8}, \LH{CT7}, \LH{CT3},
-\LH{DQ571}.}
+\leanmeta{\LH{CT4}, \LH{CT5}, \LH{CT6}.}
 \end{corollary}
 
 \begin{proposition}[Law-Instance Objective Bridge]\label{prop:law-instance-objective-bridge}
@@ -548,7 +539,7 @@ For a fixed decision question (e.g., ``is $I$ sufficient for $\mathcal{D}$?''; s
 For a fixed decision question and an encoding regime $E$ (Section~\ref{sec:encoding}), \emph{representational hardness} is the worst-case computational cost incurred by solvers whose input access is restricted to $E$.
 \end{definition}
 
-In the mechanized architecture model, this is made explicit as a required-work observable and intrinsic lower bound: `requiredWork` is total realized work, `hardnessLowerBound` is the intrinsic floor, and `hardness\_is\_irreducible\_required\_work` proves the lower-bound relation for all nonzero use-site counts; `requiredWork\_eq\_affine\_in\_sites` and `workGrowthDegree` make the site-count growth law explicit.\leanmeta{\LH{DQ562},\LH{DQ560},\LH{DQ561},\LH{DQ563},\LH{DQ564},\LH{DQ565}.}
+In the mechanized architecture model, this is made explicit as a required-work observable and intrinsic lower bound: `requiredWork` is total realized work, `hardnessLowerBound` is the intrinsic floor, and `hardness\_is\_irreducible\_required\_work` proves the lower-bound relation for all nonzero use-site counts; `requiredWork\_eq\_affine\_in\_sites` and `workGrowthDegree` make the site-count growth law explicit.\leanmeta{\LH{HD17}, \LH{HD22}, \LH{HD23}, \LH{HD18}, \LH{HD27}, \LH{HD28}.}
 
 \begin{remark}[Interpretation Contract]
 This paper keeps the decision question fixed and varies the encoding regime explicitly. Thus, later separations are read as changes in representational hardness under fixed structural complexity, not as changes to the underlying sufficiency semantics.
@@ -934,8 +925,7 @@ If $\mathsf{ABSTAIN}$ reward strictly exceeds the inadmissibility branch, then a
 
 \begin{corollary}[RLFF Abstain Preference Without Certificates]\label{cor:rlff-abstain-no-certs}
 If $\mathsf{EXACT}$ and $\mathsf{EPSILON}(\varepsilon)$ have no evidence objects while $\mathsf{ABSTAIN}$ beats the inadmissibility branch, then RLFF strictly prefers $\mathsf{ABSTAIN}$ to both report types.
-\leanmeta{\LH{IC30},
-\LH{DQ570}.}
+\leanmeta{\LH{IC30}, \LH{IC40}.}
 \end{corollary}
 \claimstamp{D\ref{def:rlff-objective};P\ref{prop:rlff-maximizer-admissible};C\ref{cor:rlff-abstain-no-certs}}{AR}
 
@@ -996,14 +986,7 @@ with
 \exists\ \text{evidence for }r \Rightarrow B_{\mathrm{over}}(r)=B_{\mathrm{cert}}(r).
 \]
 Hence $B_{\mathrm{raw}}(r)\le B_{\mathrm{total}}(r)$ always, and strict inequality holds when evidence exists with positive certificate-bit allocation.
-\leanmeta{\LH{CC11},
-\LH{IC11},
-\LH{IC10},
-\LH{IC16},
-\LH{IC15},
-\LH{IC13},
-\LH{IC14},
-\LH{DQ567}.}
+\leanmeta{\LH{CC11}, \LH{IC11}, \LH{IC10}, \LH{IC16}, \LH{IC15}, \LH{IC13}, \LH{IC14}, \LH{IC18}, \LH{IC19}.}
 \end{proposition}
 
 \begin{theorem}[Exact Report: Certified-Bit Gap iff Admissibility]\label{thm:exact-certified-gap-iff-admissible}
@@ -1019,10 +1002,7 @@ B_{\mathrm{total}}(\mathsf{EXACT})=B_{\mathrm{raw}}(\mathsf{EXACT})
 \iff
 \text{ExactCertaintyInflation}.
 \]
-\leanmeta{\LH{CC18},
-\LH{CC20},
-\LH{CC17},
-\LH{DQ566}.}
+\leanmeta{\LH{CC18}, \LH{CC20}, \LH{CC17}, \LH{IC31}.}
 \end{theorem}
 
 \begin{corollary}[Finite Budget Eventually Blocks Exact Admissibility]\label{cor:finite-budget-no-exact-admissibility}
@@ -1035,8 +1015,7 @@ If:
 \end{enumerate}
 then there exists \(n_0\) such that for all \(n \ge n_0\), exact admissibility fails.
 The same conclusion holds in the canonical exponential-requirement specialization.
-\leanmeta{\LH{DQ573},
-\LH{DQ574}.}
+\leanmeta{\LH{PBC7}, \LH{PBC8}.}
 \end{corollary}
 
 \begin{corollary}[Hardness-Blocked Exact Reports Are Raw-Only]\label{cor:hardness-raw-only-exact}
