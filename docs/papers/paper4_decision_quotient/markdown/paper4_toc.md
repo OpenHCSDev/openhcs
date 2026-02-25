@@ -1,6 +1,6 @@
 # Paper: Computational Complexity of Physical Information Sufficiency
 
-**Status**: Theory of Computing-ready | **Lean**: 21286 lines, 906 theorems
+**Status**: Theory of Computing-ready | **Lean**: 21045 lines, 901 theorems
 
 ---
 
@@ -20,9 +20,9 @@ We study *physical information sufficiency* as a decision-theoretic meta-problem
 
 **Physical grounding.** The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$ and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework. \[D:Pprop:physical-claim-transport, prop:law-instance-objective-bridge, prop:time-discrete, prop:decision-unit-time, prop:run-time-accounting, prop:substrate-unit-time, prop:budgeted-crossover, prop:thermo-lift;Ccor:physical-counterexample-core-failure, cor:finite-budget-threshold-impossibility;Tthm:physical-bridge-bundle; R:AR\]
 
-All theorem-level claims are machine-checked in Lean 4 (21286 lines, 906 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
+All theorem-level claims are machine-checked in Lean 4 (21045 lines, 901 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
-**Foundational contribution.** The formalization includes two independent derivations of Bayesian reasoning: (i) the standard path from counting fractions through conditional probability to the decision quotient as a certainty measure, and (ii) a thermodynamic path showing that Bayesian updating is the unique update rule satisfying Landauer-compatible admissibility constraints. Both derivations are machine-checked.
+**Contribution.** The formalization includes two independent derivations of Bayesian reasoning: (i) the standard path from counting fractions through conditional probability to the decision quotient as a certainty measure, and (ii) a thermodynamic path proving that Bayesian updating is the unique update rule satisfying Landauer-compatible admissibility constraints. The thermodynamic derivation is grounded in a machine-checked proof that Bayes uniquely minimizes cross-entropy (Gibbs' inequality from the fundamental inequality $\log x \leq x - 1$), with zero axioms and zero `sorry` statements , , , .
 
 **Keywords:** computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
 
@@ -157,7 +157,7 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 
 ## Machine-Checked Proofs
 
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 [@Lean2015; @demoura2021lean4; @mathlib2020; @forster2019verified; @kunze2019formal] (21286 lines, 906 theorem/lemma statements). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets. Complexity class membership (coNP-completeness, $\Sigma_2^P$-completeness) follows by composition with standard complexity-theoretic results.
+The reduction constructions and key equivalence theorems are machine-checked in Lean 4 [@Lean2015; @demoura2021lean4; @mathlib2020; @forster2019verified; @kunze2019formal] (21045 lines, 901 theorem/lemma statements). The formalization verifies that the TAUTOLOGY reduction correctly maps tautologies to sufficient coordinate sets. Complexity class membership (coNP-completeness, $\Sigma_2^P$-completeness) follows by composition with standard complexity-theoretic results.
 
 #### What is new.
 
@@ -1735,7 +1735,9 @@ Then: $U$ is admissible $\Leftrightarrow$ $U$ is Bayesian updating.
 
 -   **Integrity preservation** prevents forgetting for free.
 
-Together, these force $P(\text{posterior}) = P(\text{prior}) \cdot P(\text{evidence}|\text{hypothesis}) / P(\text{evidence})$. The uniqueness corollary shows any two admissible rules must agree. ◻
+Together, these force $P(\text{posterior}) = P(\text{prior}) \cdot P(\text{evidence}|\text{hypothesis}) / P(\text{evidence})$. The uniqueness corollary shows any two admissible rules must agree.
+
+**Machine-checked foundation.** The core inequality underlying this result---that Bayesian updating uniquely minimizes cross-entropy---is proved in Lean 4 with zero axioms and zero `sorry` statements. The proof derives Gibbs' inequality ($\mathrm{KL}(p\|q) \geq 0$) from the fundamental inequality $\log x \leq x - 1$, then shows $\mathrm{CE}(p,q) = H(p) + \mathrm{KL}(p\|q)$, yielding $\mathrm{CE}(p,p) \leq \mathrm{CE}(p,q)$ with equality iff $p = q$ , , , . ◻
 :::
 
 ::: corollary
@@ -1754,7 +1756,7 @@ Together, these force $P(\text{posterior}) = P(\text{prior}) \cdot P(\text{evide
 []{#cor:theorem-equilibrium label="cor:theorem-equilibrium"} \[D:Ccor:theorem-equilibrium; R:AR\] At low theorem counts, dismissal is affordable and may dominate. At high theorem counts, erasure cost exceeds competence, forcing acknowledgment.
 :::
 
-### Foundational Derivation of Bayesian Reasoning
+### Derivation of Bayesian Reasoning
 
 The decision quotient framework provides two independent paths to Bayesian updating, each mechanically verified.
 
@@ -2827,7 +2829,7 @@ Operationally, a reporting schema consistent with this framework tracks at least
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 21286 lines across 92 files, with 906 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 21045 lines across 92 files, with 901 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -4624,6 +4626,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 21286
-- Theorems: 906
+- Lines: 21045
+- Theorems: 901
 - `sorry` placeholders: 0

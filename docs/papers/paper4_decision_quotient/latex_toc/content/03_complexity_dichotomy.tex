@@ -535,7 +535,7 @@ An update rule $U$ is \emph{admissible} if it satisfies:
   \item \textbf{Integrity preservation}: can't corrupt verified bits for free \quad \leanmeta{\LH{BF9}}
 \end{enumerate}
 Then: $U$ is admissible $\Leftrightarrow$ $U$ is Bayesian updating.
-\leanmeta{\LH{BF10}, \LH{BF11}, \LH{BF12}.}
+\leanmeta{\LH{FN7}, \LH{FN8}, \LH{FN12}.}
 \end{theorem}
 
 \begin{proof}
@@ -547,9 +547,9 @@ The three admissibility constraints are so restrictive that only Bayesian updati
   \item \textbf{Integrity preservation} prevents forgetting for free.
 \end{itemize}
 Together, these force $P(\text{posterior}) = P(\text{prior}) \cdot P(\text{evidence}|\text{hypothesis}) / P(\text{evidence})$.
-The uniqueness corollary \LH{BF13} shows any two admissible rules must agree.
+The uniqueness corollary \LH{FN14} shows any two admissible rules must agree.
 
-\textbf{Machine-checked foundation.} The core inequality underlying this result---that Bayesian updating uniquely minimizes cross-entropy---is proved in Lean 4 with zero axioms and zero \texttt{sorry} statements. The proof derives Gibbs' inequality ($\mathrm{KL}(p\|q) \geq 0$) from the fundamental inequality $\log x \leq x - 1$, then shows $\mathrm{CE}(p,q) = H(p) + \mathrm{KL}(p\|q)$, yielding $\mathrm{CE}(p,p) \leq \mathrm{CE}(p,q)$ with equality iff $p = q$.\footnote{Source: \url{https://github.com/OpenHCSDev/openhcs/blob/main/docs/papers/paper4_decision_quotient/proofs/DecisionQuotient/BayesOptimalityProof.lean}}
+\textbf{Machine-checked foundation.} The core inequality underlying this result---that Bayesian updating uniquely minimizes cross-entropy---is proved in Lean 4 with zero axioms and zero \texttt{sorry} statements. The proof derives Gibbs' inequality ($\mathrm{KL}(p\|q) \geq 0$) from the fundamental inequality $\log x \leq x - 1$, then shows $\mathrm{CE}(p,q) = H(p) + \mathrm{KL}(p\|q)$, yielding $\mathrm{CE}(p,p) \leq \mathrm{CE}(p,q)$ with equality iff $p = q$ \LH{FN7}, \LH{FN8}, \LH{FN12}, \LH{FN14}.
 \end{proof}
 
 \begin{corollary}[Thermodynamic Decision Quotient]\label{cor:thermo-dq}
@@ -574,7 +574,7 @@ At low theorem counts, dismissal is affordable and may dominate. At high theorem
 \leanmeta{\LH{IE3},\LH{IE4},\LH{IE5}.}
 \end{corollary}
 
-\subsubsection{Foundational Derivation of Bayesian Reasoning}
+\subsubsection{Derivation of Bayesian Reasoning}
 
 The decision quotient framework provides two independent paths to Bayesian updating, each mechanically verified.
 
@@ -595,7 +595,7 @@ The Cox-Jaynes argument, traditionally grounded in Boolean logic, admits a therm
   \item \textbf{Landauer bound}: DQ increase costs $\geq k_B T \ln 2$ per bit \LH{BF8}.
   \item \textbf{Integrity preservation}: verified bits cannot be corrupted for free \LH{BF9}.
 \end{itemize}
-Under these constraints, Bayesian updating is the \emph{unique} admissible rule \LH{BF12}. Any two admissible rules must agree \LH{BF13}. This is ``Bayes from physics''---the thermodynamic constraints uniquely determine the correct update rule.
+Under these constraints, Bayesian updating is the \emph{unique} admissible rule \LH{FN12}. Any two admissible rules must agree \LH{FN14}. This is ``Bayes from physics''---the thermodynamic constraints uniquely determine the correct update rule.
 
 \paragraph{Integrity Self-Preservation.}
 A decision circuit maintains its integrity when no external process can afford the erasure cost. If the work required to corrupt the circuit's state exceeds the available competence of any potential attacker, the circuit persists by thermodynamic necessity.

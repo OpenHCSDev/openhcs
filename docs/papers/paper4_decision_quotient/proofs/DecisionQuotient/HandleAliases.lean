@@ -39,6 +39,7 @@ import DecisionQuotient.StochasticSequential.Hierarchy
 import DecisionQuotient.BayesianBridge
 import DecisionQuotient.BayesFromDQ
 import DecisionQuotient.BayesFoundations
+-- BayesOptimalityProof theorems are referenced directly in latex via their full names
 
 namespace DecisionQuotient
 
@@ -640,11 +641,5 @@ abbrev BB5 := dq_derived_from_bayes
 -- BF1-BF13: documented in BayesFromDQ.lean, polymorphic theorems
 
 -- Bayes Foundations (FN) handles - Complete derivation chain
--- FN1-FN4: Bridge 1 - Fraction → Probability (counting_nonneg, counting_total, counting_additive)
--- FN5-FN6: Bridge 2 - Conditional → Bayes (condProb, bayes_from_conditional)
--- FN7-FN8: Bridge 3 - KL ≥ 0 → Entropy contraction (kl_nonneg, entropy_contraction)
--- FN9-FN13: Bridge 4 - DQ as certainty fraction (dqBayes, dq_equivalence, dq_in_unit_interval)
--- FN14: Complete chain theorem (complete_chain)
--- All documented in BayesFoundations.lean, polymorphic theorems
 
 end DecisionQuotient

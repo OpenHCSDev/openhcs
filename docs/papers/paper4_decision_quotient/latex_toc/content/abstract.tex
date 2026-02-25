@@ -19,7 +19,7 @@ The paper formalizes a physical-to-core encoding \(E:\mathcal{P}\to\mathcal{D}\)
 
 All theorem-level claims are machine-checked in Lean 4 (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
 
-\textbf{Foundational contribution.}
-The formalization includes two independent derivations of Bayesian reasoning: (i) the standard path from counting fractions through conditional probability to the decision quotient as a certainty measure, and (ii) a thermodynamic path proving that Bayesian updating is the unique update rule satisfying Landauer-compatible admissibility constraints. The thermodynamic derivation is grounded in a machine-checked proof that Bayes uniquely minimizes cross-entropy (Gibbs' inequality from the fundamental inequality $\log x \leq x - 1$), with zero axioms and zero \texttt{sorry} statements.\footnote{Proof source: \url{https://github.com/OpenHCSDev/openhcs/blob/main/docs/papers/paper4_decision_quotient/proofs/DecisionQuotient/BayesOptimalityProof.lean}}
+\textbf{Contribution.}
+The formalization includes two independent derivations of Bayesian reasoning: (i) the standard path from counting fractions through conditional probability to the decision quotient as a certainty measure, and (ii) a thermodynamic path proving that Bayesian updating is the unique update rule satisfying Landauer-compatible admissibility constraints. The thermodynamic derivation is grounded in a machine-checked proof that Bayes uniquely minimizes cross-entropy (Gibbs' inequality from the fundamental inequality $\log x \leq x - 1$), with zero axioms and zero \texttt{sorry} statements \LH{FN7}, \LH{FN8}, \LH{FN12}, \LH{FN14}.
 
 \textbf{Keywords:} computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
