@@ -29,6 +29,12 @@ import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.Physics.Uncertainty
 import DecisionQuotient.Physics.HeisenbergStrong
 import DecisionQuotient.WitnessCheckingDuality
+import DecisionQuotient.Summary
+import DecisionQuotient.Dichotomy
+import DecisionQuotient.Tractability.StructuralRank
+import DecisionQuotient.StochasticSequential.ClaimClosure
+import DecisionQuotient.StochasticSequential.Basic
+import DecisionQuotient.StochasticSequential.Hardness
 
 namespace DecisionQuotient
 
