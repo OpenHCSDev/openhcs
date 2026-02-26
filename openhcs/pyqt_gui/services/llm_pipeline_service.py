@@ -24,12 +24,12 @@ DEFAULT_OLLAMA_ENDPOINT = "http://localhost:11434/api/generate"
 
 # Preferred models in priority order (first available wins)
 PREFERRED_MODELS = [
-    "qwen2.5-coder",      # Best for code generation
-    "codellama",          # Good alternative
-    "deepseek-coder",     # Another good option
-    "llama3",             # General purpose fallback
-    "llama2",             # Older but common
-    "mistral",            # General purpose
+    "qwen2.5-coder",  # Best for code generation
+    "codellama",  # Good alternative
+    "deepseek-coder",  # Another good option
+    "llama3",  # General purpose fallback
+    "llama2",  # Older but common
+    "mistral",  # General purpose
 ]
 
 # Functions that get full documentation in system prompt (most commonly used)
@@ -58,8 +58,9 @@ class LLMPipelineService:
     containing OpenHCS API documentation and examples.
     """
 
-    def __init__(self, api_endpoint: str = DEFAULT_OLLAMA_ENDPOINT,
-                 model: str = None):
+    def __init__(
+        self, api_endpoint: str = DEFAULT_OLLAMA_ENDPOINT, model: Optional[str] = None
+    ):
         """
         Initialize LLM service.
 
@@ -72,14 +73,20 @@ class LLMPipelineService:
         self.model = model  # May be None, resolved on first test_connection
         # Build system prompts for different contexts
         self._system_prompts = {
-            'pipeline': self._build_pipeline_system_prompt(),
-            'function': self._build_custom_function_system_prompt(),
+            "pipeline": self._build_pipeline_system_prompt(),
+            "function": self._build_custom_function_system_prompt(),
         }
 
     @property
     def system_prompt(self) -> str:
         """Default system prompt (pipeline) for backward compatibility."""
-        return self._system_prompts.get('pipeline', '')
+        return self._system_prompts.get("pipeline", "")
+
+    def get_system_prompt(self, code_type: str = "pipeline") -> str:
+        """Return the runtime-generated system prompt for a given context."""
+        if code_type == "function":
+            return self._system_prompts.get("function", self.system_prompt)
+        return self._system_prompts.get("pipeline", self.system_prompt)
 
     def _derive_base_url(self, endpoint: str) -> str:
         """Extract base URL from endpoint."""
@@ -90,8 +97,7 @@ class LLMPipelineService:
         """Fetch available models from Ollama."""
         try:
             response = requests.get(
-                f"{self.base_url}/api/tags",
-                timeout=CONNECTION_TIMEOUT_S
+                f"{self.base_url}/api/tags", timeout=CONNECTION_TIMEOUT_S
             )
             response.raise_for_status()
             data = response.json()
@@ -108,7 +114,9 @@ class LLMPipelineService:
         for preferred in PREFERRED_MODELS:
             for available in available_models:
                 # Match base name (e.g., "qwen2.5-coder" matches "qwen2.5-coder:7b")
-                if available.split(":")[0] == preferred or available.startswith(preferred):
+                if available.split(":")[0] == preferred or available.startswith(
+                    preferred
+                ):
                     return available
 
         # Fall back to first available model
@@ -261,10 +269,12 @@ Generate COMPLETE, RUNNABLE Python code. Include ALL imports at the top.
 
 === CRITICAL RULES ===
 1. Include ALL imports (dataclass, typing, numpy, etc.)
-2. First parameter MUST be named 'image' (3D array: channels, height, width)
-3. Return a 3D array, OR tuple (image, output1, output2, ...) with @special_outputs
+2. First parameter MUST be named 'image' (3D array: (C, Y, X) a.k.a. (Z, Y, X))
+3. Input/Output backend types are declared by the memory decorator (e.g. @numpy / @cupy / @pyclesperanto). Your function must accept the decorator's declared input type and return the declared output type.
 4. DO NOT write FunctionStep or pipeline code - just the function
 5. Output ONLY Python code, no explanations
+6. Do NOT manually convert between array backends inside the function (no cp.asnumpy(), no cle.pull(), etc.). OpenHCS handles cross-step conversions.
+7. The decorator adds keyword-only args like slice_by_slice and dtype_conversion. dtype_conversion defaults to preserving the input dtype for the main output.
 
 {imports_section}
 
@@ -282,7 +292,7 @@ def enhance_contrast(image, clip_limit: float = 0.03):
 ```
 
 === FUNCTION WITH CSV OUTPUT ===
-When you need to save measurements to CSV, use @special_outputs with csv_materializer.
+When you need to save measurements to CSV, use @special_outputs with csv_only() preset.
 
 RETURN SEMANTICS: With N special_outputs, return (image, output1, output2, ..., outputN)
 
@@ -293,7 +303,7 @@ import numpy as np
 from skimage.measure import label, regionprops
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import csv_materializer
+from openhcs.processing.materialization import csv_only
 
 @dataclass
 class CellMeasurement:
@@ -303,10 +313,7 @@ class CellMeasurement:
     mean_intensity: float
 
 @numpy
-@special_outputs(("cell_measurements", csv_materializer(
-    fields=["slice_index", "cell_count", "total_area", "mean_intensity"],
-    analysis_type="cell_counts"
-)))
+@special_outputs(("cell_measurements", csv_only()))
 def count_cells_with_csv(
     image,
     threshold: float = 0.5,
@@ -339,10 +346,10 @@ import numpy as np
 from skimage.measure import label
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import roi_zip_materializer
+from openhcs.processing.materialization import roi_zip
 
 @numpy
-@special_outputs(("segmentation_masks", roi_zip_materializer()))
+@special_outputs(("segmentation_masks", roi_zip()))
 def segment_cells_with_rois(
     image,
     threshold: float = 0.5
@@ -357,33 +364,27 @@ def segment_cells_with_rois(
     return image, masks  # masks -> .roi.zip for Fiji, shapes for Napari
 ```
 
-=== FUNCTION WITH BOTH CSV AND ROI OUTPUT ===
+=== FUNCTION WITH BOTH JSON AND CSV OUTPUT ===
+Use json_and_csv() preset for analysis results (most common pattern).
+
 ```python
 from typing import List, Tuple
 import numpy as np
 from skimage.measure import label
 from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import regionprops_materializer
+from openhcs.processing.materialization import json_and_csv, roi_zip
 
 @numpy
 @special_outputs(
-    # One special output can materialize multiple artifacts:
-    # - ROI zip for Fiji + shapes for Napari
-    # - CSV details table
-    # - JSON summary
-    ("segmentation_masks", regionprops_materializer(
-        analysis_type="segmentation_regionprops",
-        min_area=50,
-        require_intensity=True,
-        intensity_source="step_output",
-    ))
+    ("segmentation_masks", roi_zip()),
+    ("cell_measurements", json_and_csv()),
 )
 def analyze_cells_full(
     image,
     threshold: float = 0.5
 ) -> Tuple[np.ndarray, List[np.ndarray]]:
-    """Segmentation + rich materialization (ROIs + metrics) from labeled masks."""
+    """Segmentation + analysis with both ROIs and metrics output."""
     masks: List[np.ndarray] = []
 
     for i, slice_2d in enumerate(image):
@@ -391,7 +392,6 @@ def analyze_cells_full(
         labeled = label(binary)
         masks.append(labeled)
 
-    # 1 special_output -> return (image, masks)
     return image, masks
 ```
 
@@ -407,8 +407,7 @@ import numpy as np
 import pyclesperanto as cle
 from openhcs.core.memory import pyclesperanto
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import csv_materializer
-from openhcs.processing.materialization import roi_zip_materializer
+from openhcs.processing.materialization import csv_only, roi_zip
 
 @dataclass
 class CellStats:
@@ -419,8 +418,8 @@ class CellStats:
 
 @pyclesperanto
 @special_outputs(
-    ("cell_stats", csv_materializer(fields=["slice_index", "cell_count", "total_area", "mean_intensity"], analysis_type="cell_stats")),
-    ("segmentation_masks", roi_zip_materializer())
+    ("cell_stats", csv_only()),
+    ("segmentation_masks", roi_zip())
 )
 def count_cells_gpu(
     image,
@@ -455,9 +454,9 @@ def count_cells_gpu(
             total_area=total_area,
             mean_intensity=mean_int
         ))
-        masks.append(cle.pull(labels))  # Pull labeled mask for ROI output
+        masks.append(labels)
 
-    return cle.pull(image), stats_list, masks
+    return image, stats_list, masks
 ```
 
 Key pyclesperanto functions:
@@ -480,8 +479,7 @@ from cucim.skimage.filters import gaussian
 from cucim.skimage.measure import label, regionprops_table
 from openhcs.core.memory import cupy
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import csv_materializer
-from openhcs.processing.materialization import roi_zip_materializer
+from openhcs.processing.materialization import CsvOptions, MaterializationSpec, ROIOptions
 
 @dataclass
 class CellStats:
@@ -492,8 +490,8 @@ class CellStats:
 
 @cupy
 @special_outputs(
-    ("cell_stats", csv_materializer(fields=["slice_index", "cell_count", "total_area", "mean_intensity"], analysis_type="cell_stats")),
-    ("segmentation_masks", roi_zip_materializer())
+    ("cell_stats", MaterializationSpec(CsvOptions(filename_suffix="_stats.csv"))),
+    ("segmentation_masks", MaterializationSpec(ROIOptions()))
 )
 def count_cells_cupy(
     image,
@@ -525,9 +523,9 @@ def count_cells_cupy(
             total_area=float(cp.sum(areas[valid_mask])),
             mean_intensity=float(cp.mean(props['mean_intensity'][valid_mask])) if cp.any(valid_mask) else 0.0
         ))
-        masks.append(cp.asnumpy(labeled))  # Convert to numpy for ROI output
+        masks.append(labeled)
 
-    return cp.asnumpy(image), stats_list, masks
+    return image, stats_list, masks
 ```
 
 Key cucim.skimage modules (same API as skimage, but GPU):
@@ -537,7 +535,7 @@ Key cucim.skimage modules (same API as skimage, but GPU):
 - cucim.skimage.segmentation: watershed, clear_border
 - cucim.skimage.exposure: equalize_adapthist, rescale_intensity
 
-IMPORTANT: Use cp.asnumpy() to convert cupy arrays to numpy for output.
+IMPORTANT: Do not convert arrays between backends on return.
 
 === SPECIAL INPUTS (consume data from previous steps) ===
 ```python
@@ -556,7 +554,7 @@ def analyze_at_positions(image, cell_positions):
     def _get_dynamic_imports_section(self) -> str:
         """Generate imports section with actual module paths."""
         # These are the actual import paths - single source of truth
-        return '''=== REQUIRED IMPORTS (use exactly these paths) ===
+        return """=== REQUIRED IMPORTS (use exactly these paths) ===
 # Backend decorators
 from openhcs.core.memory import numpy, pyclesperanto, cupy
 
@@ -565,51 +563,104 @@ from openhcs.core.pipeline.function_contracts import special_outputs, special_in
 
 # Materializers for CSV/JSON and ROI outputs
 from openhcs.processing.materialization import (
-    csv_materializer,
-    json_materializer,
-    dual_materializer,
-    roi_zip_materializer
+    MaterializationSpec,
+    CsvOptions,
+    JsonOptions,
+    ROIOptions,
+    TiffStackOptions,
+    TextOptions,
 )
 
 # Standard library (include as needed)
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
-import numpy as np'''
+import numpy as np"""
 
     def _get_dynamic_materializers_section(self) -> str:
-        """Generate materializers section with signatures from actual code."""
+        """Generate materializers section with simple presets and advanced options."""
         try:
-            from openhcs.processing.materialization import csv_materializer, json_materializer, dual_materializer, roi_zip_materializer
+            from openhcs.processing.materialization import (
+                MaterializationSpec,
+                CsvOptions,
+                JsonOptions,
+                ROIOptions,
+                TiffStackOptions,
+                TextOptions,
+            )
+            from openhcs.processing.materialization.presets import (
+                json_and_csv,
+                csv_only,
+                json_only,
+                roi_zip,
+                tiff_stack,
+                text_only,
+            )
             import inspect
 
-            csv_sig = str(inspect.signature(csv_materializer))
-            json_sig = str(inspect.signature(json_materializer))
-            dual_sig = str(inspect.signature(dual_materializer))
-            roi_sig = str(inspect.signature(roi_zip_materializer))
+            csv_sig = str(inspect.signature(CsvOptions))
+            json_sig = str(inspect.signature(JsonOptions))
+            roi_sig = str(inspect.signature(ROIOptions))
 
-            return f'''=== MATERIALIZER SIGNATURES ===
-csv_materializer{csv_sig}
-json_materializer{json_sig}
-dual_materializer{dual_sig}
-roi_zip_materializer{roi_sig}'''
+            return f"""=== SIMPLE MATERIALIZATION (Use These!) ===
+from openhcs.processing.materialization import json_and_csv, csv_only, json_only, roi_zip
+
+# JSON + CSV (most common for analysis)
+@special_outputs(("results", json_and_csv()))
+
+# CSV only
+@special_outputs(("measurements", csv_only()))
+
+# JSON only
+@special_outputs(("metadata", json_only()))
+
+# ROI zip for ImageJ/Fiji
+@special_outputs(("masks", roi_zip()))
+
+=== ADVANCED CUSTOMIZATION (When needed) ===
+CsvOptions{csv_sig}
+JsonOptions{json_sig}
+ROIOptions{roi_sig}
+
+Usage: MaterializationSpec(CsvOptions(filename_suffix="_custom.csv", fields=["x", "y"]))"""
         except Exception:
-            return '''=== MATERIALIZERS ===
-csv_materializer(fields: List[str], analysis_type: str, filename_suffix: str = ".csv", strip_roi_suffix: bool = False)
-json_materializer(fields: List[str], analysis_type: str, filename_suffix: str = ".json", strip_roi_suffix: bool = False)
-dual_materializer(fields: List[str], summary_fields: List[str], analysis_type: str, strip_roi_suffix: bool = False)
-roi_zip_materializer(min_area: int = 10, extract_contours: bool = True, strip_roi_suffix: bool = False)'''
+            return """=== SIMPLE MATERIALIZATION (Use These!) ===
+from openhcs.processing.materialization import json_and_csv, csv_only, json_only, roi_zip
+
+# Most common patterns - just use these:
+@special_outputs(("results", json_and_csv()))  # JSON + CSV
+@special_outputs(("measurements", csv_only()))  # CSV only
+@special_outputs(("masks", roi_zip()))  # ROIs for ImageJ
+
+=== ADVANCED CUSTOMIZATION ===
+MaterializationSpec(CsvOptions(...), JsonOptions(...))"""
 
     def _get_pyclesperanto_function_docs(self) -> str:
         """Get pyclesperanto functions dynamically if available."""
         try:
-            import pyclesperanto as cle
+            import pyclesperanto as cle  # type: ignore[import-not-found]
+
             # Get commonly used functions that actually exist
             key_funcs = []
-            for name in ["gaussian_blur", "median", "top_hat", "bottom_hat",
-                        "threshold_otsu", "binary_opening", "binary_closing",
-                        "erode", "dilate", "label", "connected_components_labeling",
-                        "voronoi_labeling", "exclude_labels_on_edges", "exclude_small_labels",
-                        "push", "pull", "maximum_z_projection", "mean_z_projection"]:
+            for name in [
+                "gaussian_blur",
+                "median",
+                "top_hat",
+                "bottom_hat",
+                "threshold_otsu",
+                "binary_opening",
+                "binary_closing",
+                "erode",
+                "dilate",
+                "label",
+                "connected_components_labeling",
+                "voronoi_labeling",
+                "exclude_labels_on_edges",
+                "exclude_small_labels",
+                "push",
+                "pull",
+                "maximum_z_projection",
+                "mean_z_projection",
+            ]:
                 if hasattr(cle, name):
                     key_funcs.append(f"cle.{name}()")
             return "\n".join(key_funcs)
@@ -619,7 +670,10 @@ roi_zip_materializer(min_area: int = 10, extract_contours: bool = True, strip_ro
     def _get_function_documentation(self) -> str:
         """Build function documentation from the registry."""
         try:
-            from openhcs.processing.backends.lib_registry.registry_service import RegistryService
+            from openhcs.processing.backends.lib_registry.registry_service import (
+                RegistryService,
+            )
+
             all_functions = RegistryService.get_all_functions_with_metadata()
         except Exception as e:
             logger.warning(f"Could not load function registry: {e}")
@@ -646,7 +700,10 @@ roi_zip_materializer(min_area: int = 10, extract_contours: bool = True, strip_ro
             # Sort with core functions first, then alphabetically
             sorted_functions = sorted(
                 functions,
-                key=lambda m: (0 if m.original_name in CORE_FUNCTIONS else 1, m.original_name)
+                key=lambda m: (
+                    0 if m.original_name in CORE_FUNCTIONS else 1,
+                    m.original_name,
+                ),
             )
 
             # Limit non-core functions to keep prompt size manageable
@@ -663,7 +720,9 @@ roi_zip_materializer(min_area: int = 10, extract_contours: bool = True, strip_ro
                         count += 1
 
             if len(sorted_functions) > MAX_FUNCTIONS_PER_LIBRARY:
-                lib_docs.append(f"... and {len(sorted_functions) - MAX_FUNCTIONS_PER_LIBRARY} more functions\n")
+                lib_docs.append(
+                    f"... and {len(sorted_functions) - MAX_FUNCTIONS_PER_LIBRARY} more functions\n"
+                )
 
             docs_parts.append("\n".join(lib_docs))
 
@@ -690,7 +749,7 @@ roi_zip_materializer(min_area: int = 10, extract_contours: bool = True, strip_ro
             # Get description (first line of docstring)
             desc = ""
             if metadata.doc:
-                first_line = metadata.doc.split('\n')[0].strip()
+                first_line = metadata.doc.split("\n")[0].strip()
                 if first_line:
                     desc = f"  # {first_line}"
 
@@ -721,7 +780,10 @@ Signature: `{sig_str}`{desc}
                 if pname in INTERNAL_PARAMS or pname == "kwargs":
                     continue
                 # Skip *args, **kwargs
-                if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+                if param.kind in (
+                    inspect.Parameter.VAR_POSITIONAL,
+                    inspect.Parameter.VAR_KEYWORD,
+                ):
                     continue
 
                 if param.default is inspect.Parameter.empty:
@@ -752,7 +814,10 @@ Signature: `{sig_str}`{desc}
             for pname, param in sig.parameters.items():
                 if pname in INTERNAL_PARAMS:
                     continue
-                if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+                if param.kind in (
+                    inspect.Parameter.VAR_POSITIONAL,
+                    inspect.Parameter.VAR_KEYWORD,
+                ):
                     continue
 
                 # Get type annotation
@@ -788,20 +853,31 @@ Signature: `{sig_str}`{desc}
         # Core enums that are always useful
         try:
             from openhcs.processing.backends.analysis.cell_counting_cpu import (
-                DetectionMethod, ThresholdMethod, ColocalizationMethod
+                DetectionMethod,
+                ThresholdMethod,
+                ColocalizationMethod,
             )
-            enums_to_document.extend([DetectionMethod, ThresholdMethod, ColocalizationMethod])
+
+            enums_to_document.extend(
+                [DetectionMethod, ThresholdMethod, ColocalizationMethod]
+            )
         except ImportError:
             pass
 
         try:
-            from openhcs.constants.constants import DtypeConversion, VariableComponents, GroupBy
+            from openhcs.constants.constants import (
+                DtypeConversion,
+                VariableComponents,
+                GroupBy,
+            )
+
             enums_to_document.extend([DtypeConversion, VariableComponents, GroupBy])
         except ImportError:
             pass
 
         try:
             from openhcs.constants.input_source import InputSource
+
             enums_to_document.append(InputSource)
         except ImportError:
             pass
@@ -816,9 +892,11 @@ Signature: `{sig_str}`{desc}
 
     def _get_example_pipeline(self) -> str:
         """Load example pipeline from file."""
-        basic_pipeline_path = Path(__file__).parent.parent.parent / "tests" / "basic_pipeline.py"
+        basic_pipeline_path = (
+            Path(__file__).parent.parent.parent / "tests" / "basic_pipeline.py"
+        )
         try:
-            with open(basic_pipeline_path, 'r') as f:
+            with open(basic_pipeline_path, "r") as f:
                 return f.read()
         except Exception as e:
             logger.warning(f"Could not load example pipeline: {e}")
@@ -835,7 +913,7 @@ Signature: `{sig_str}`{desc}
 - `assemble_stack_cpu`: from openhcs.processing.backends.assemblers.assemble_stack_cpu
 """
 
-    def generate_code(self, user_request: str, code_type: str = 'pipeline') -> str:
+    def generate_code(self, user_request: str, code_type: str = "pipeline") -> str:
         """
         Generate code from user request based on context.
 
@@ -851,16 +929,18 @@ Signature: `{sig_str}`{desc}
         """
         try:
             # Select appropriate system prompt based on code_type
-            if code_type == 'function':
-                system_prompt = self._system_prompts.get('function', self.system_prompt)
-                context_suffix = "Generate a standalone custom function with @decorator."
+            if code_type == "function":
+                system_prompt = self._system_prompts.get("function", self.system_prompt)
+                context_suffix = (
+                    "Generate a standalone custom function with @decorator."
+                )
             else:
-                system_prompt = self._system_prompts.get('pipeline', self.system_prompt)
+                system_prompt = self._system_prompts.get("pipeline", self.system_prompt)
                 context_suffix = {
-                    'pipeline': "Generate complete pipeline_steps list with FunctionStep objects.",
-                    'step': "Generate a single FunctionStep object.",
-                    'config': "Generate a configuration object (LazyProcessingConfig, LazyStepWellFilterConfig, etc.).",
-                    'orchestrator': "Generate complete orchestrator code with plate_paths, pipeline_data, and configs."
+                    "pipeline": "Generate complete pipeline_steps list with FunctionStep objects.",
+                    "step": "Generate a single FunctionStep object.",
+                    "config": "Generate a configuration object (LazyProcessingConfig, LazyStepWellFilterConfig, etc.).",
+                    "orchestrator": "Generate complete orchestrator code with plate_paths, pipeline_data, and configs.",
                 }.get(code_type, "Generate OpenHCS code.")
 
             # Construct request payload (Ollama format)
@@ -871,15 +951,17 @@ Signature: `{sig_str}`{desc}
                 "options": {
                     "temperature": 0.2,  # Low temperature for more deterministic code generation
                     "top_p": 0.9,
-                }
+                },
             }
 
-            logger.info(f"Sending request to LLM: {self.api_endpoint} (code_type={code_type})")
+            logger.info(
+                f"Sending request to LLM: {self.api_endpoint} (code_type={code_type})"
+            )
             response = requests.post(self.api_endpoint, json=payload, timeout=60)
             response.raise_for_status()
 
             result = response.json()
-            generated_code = result.get('response', '')
+            generated_code = result.get("response", "")
 
             # Clean up code (remove markdown code blocks if present)
             generated_code = self._clean_generated_code(generated_code)
@@ -906,7 +988,7 @@ Signature: `{sig_str}`{desc}
         """
         # Remove markdown code blocks
         if code.startswith("```python"):
-            code = code[len("```python"):].lstrip()
+            code = code[len("```python") :].lstrip()
         if code.startswith("```"):
             code = code[3:].lstrip()
         if code.endswith("```"):

@@ -60,6 +60,24 @@ Generated classes are automatically registered for type mapping.
 
 The registry is populated automatically when :py:meth:`~openhcs.config_framework.lazy_factory.LazyDataclassFactory.make_lazy_simple` creates a new lazy class. You can retrieve the base type using :py:func:`~openhcs.config_framework.lazy_factory.get_base_type_for_lazy`.
 
+Dataclass Reconstruction (Serialization)
+--------------------------------------
+
+OpenHCS uses the ObjectState lazy framework for config/lazy dataclass resolution and serialization.
+When resolved lazy dataclasses are converted back into concrete dataclasses (e.g. for pickling),
+ObjectState reconstructs objects from a resolved ``{field_name: value}`` mapping.
+
+If a dataclass uses a custom constructor (common with ``@dataclass(init=False)``), reconstruction
+via ``Type(**fields)`` may fail. In that case, the dataclass should provide a rebuild hook:
+
+.. code-block:: python
+
+    @classmethod
+    def __objectstate_rebuild__(cls, **fields):
+        return cls(*fields["outputs"], primary=fields.get("primary", 0))
+
+This keeps custom constructors clean while still supporting lazy resolution and serialization.
+
 Dual-Axis Resolution Strategy
 -----------------------------
 The factory uses a two-axis resolution strategy to find field values.

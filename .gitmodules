@@ -5,7 +5,7 @@
 [submodule "external/python-introspect"]
 	path = external/python-introspect
 	url = https://github.com/OpenHCSDev/python-introspect.git
-	branch = master
+	branch = main
 [submodule "external/arraybridge"]
 	path = external/arraybridge
 	url = https://github.com/OpenHCSDev/arraybridge.git

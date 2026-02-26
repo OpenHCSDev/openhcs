@@ -22,7 +22,11 @@ import pyclesperanto as cle
 # OpenHCS imports
 from openhcs.core.memory import pyclesperanto as pyclesperanto_func
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import materializer_spec, tiff_stack_materializer
+from openhcs.processing.materialization import (
+    MaterializationSpec,
+    CsvOptions,
+    JsonOptions,
+)
 from openhcs.constants.constants import Backend
 
 
@@ -46,139 +50,6 @@ class CellCountResult:
     binary_mask: np.ndarray = None  # Labeled mask for ROI extraction
 
 
-def materialize_cell_counts(data: List[CellCountResult], path: str, filemanager, backend: str) -> str:
-    """Materialize cell counting results - compatible with existing system."""
-    logger.info(f"🔬 CELL_COUNT_MATERIALIZE: Called with path={path}, data_length={len(data) if data else 0}, backend={backend}")
-
-    if not data:
-        logger.warning("🔬 CELL_COUNT_MATERIALIZE: No data to materialize")
-        return path
-
-    # Generate output file paths
-    base_path = path.replace('.pkl', '')
-    json_path = f"{base_path}.json"
-    csv_path = f"{base_path}_details.csv"
-
-    # Ensure output directory exists for disk backend
-    from pathlib import Path
-    output_dir = Path(json_path).parent
-    if backend == Backend.DISK.value:
-        filemanager.ensure_directory(str(output_dir), backend)
-
-    summary = {
-        "analysis_type": "single_channel_cell_counting",
-        "total_slices": len(data),
-        "results_per_slice": []
-    }
-    rows = []
-
-    total_cells = 0
-    for result in data:
-        total_cells += result.cell_count
-
-        # Add to summary
-        summary["results_per_slice"].append({
-            "slice_index": result.slice_index,
-            "method": result.method,
-            "cell_count": result.cell_count,
-            "avg_cell_area": np.mean(result.cell_areas) if result.cell_areas else 0,
-            "avg_cell_intensity": np.mean(result.cell_intensities) if result.cell_intensities else 0,
-            "parameters": result.parameters_used
-        })
-
-        # Add individual cell data to CSV
-        for i, (pos, area, intensity, confidence) in enumerate(zip(
-            result.cell_positions, result.cell_areas,
-            result.cell_intensities, result.detection_confidence
-        )):
-            rows.append({
-                'slice_index': result.slice_index,
-                'cell_id': f"slice_{result.slice_index}_cell_{i}",
-                'x_position': pos[0],
-                'y_position': pos[1],
-                'cell_area': area,
-                'cell_intensity': intensity,
-                'detection_confidence': confidence,
-                'detection_method': result.method
-            })
-
-    summary["total_cells_all_slices"] = total_cells
-    summary["average_cells_per_slice"] = total_cells / len(data) if data else 0
-
-    # Save JSON summary
-    json_content = json.dumps(summary, indent=2, default=str)
-    if filemanager.exists(json_path, backend):
-        filemanager.delete(json_path, backend)
-    filemanager.save(json_content, json_path, backend)
-
-    # Save CSV details
-    if rows:
-        df = pd.DataFrame(rows)
-        csv_content = df.to_csv(index=False)
-        if filemanager.exists(csv_path, backend):
-            filemanager.delete(csv_path, backend)
-        filemanager.save(csv_content, csv_path, backend)
-
-    return json_path
-
-
-def materialize_segmentation_masks(data: List[np.ndarray], path: str, filemanager, backend: str) -> str:
-    """Materialize segmentation masks as ROIs - compatible with existing system."""
-    logger.info(f"🔬 SEGMENTATION_MATERIALIZE: Called with path={path}, backend={backend}, masks_count={len(data) if data else 0}")
-
-    if not data:
-        logger.info("🔬 SEGMENTATION_MATERIALIZE: No segmentation masks to materialize")
-        summary_path = path.replace('.pkl', '_segmentation_summary.txt')
-        summary_content = "No segmentation masks generated (return_segmentation_mask=False)\n"
-        filemanager.save(summary_content, summary_path, backend)
-        return summary_path
-
-    # Extract ROIs from labeled masks
-    from polystore.roi import extract_rois_from_labeled_mask
-
-    all_rois = []
-    total_cells = 0
-    for z_idx, mask in enumerate(data):
-        rois = extract_rois_from_labeled_mask(
-            mask,
-            min_area=10,
-            extract_contours=True
-        )
-        all_rois.extend(rois)
-        total_cells += len(rois)
-        logger.debug(f"🔬 SEGMENTATION_MATERIALIZE: Extracted {len(rois)} ROIs from z-plane {z_idx}")
-
-    logger.info(f"🔬 SEGMENTATION_MATERIALIZE: Extracted {total_cells} total ROIs from {len(data)} z-planes")
-
-    # Save ROIs
-    base_path = path.replace('.pkl', '')
-    roi_path = f"{base_path}_rois.roi.zip"
-
-    if all_rois:
-        filemanager.save(all_rois, roi_path, backend)
-        logger.info(f"🔬 SEGMENTATION_MATERIALIZE: Saved {len(all_rois)} ROIs to {backend} backend")
-
-    # Save summary
-    summary_path = f"{base_path}_segmentation_summary.txt"
-    summary_content = f"Segmentation ROIs: {len(all_rois)} cells\n"
-    summary_content += f"Z-planes: {len(data)}\n"
-    if all_rois:
-        summary_content += f"ROI file: {roi_path}\n"
-    else:
-        summary_content += f"No ROIs extracted (all regions below min_area threshold)\n"
-
-    filemanager.save(summary_content, summary_path, backend)
-
-    return summary_path
-
-
-@pyclesperanto_func
-@special_outputs(
-    ("cell_counts", materializer_spec("cell_counts")),
-    ("segmentation_masks", tiff_stack_materializer(
-        summary_suffix="_segmentation_summary.txt"
-    ))
-)
 def count_cells_single_channel(
     image_stack: np.ndarray,
     # Simplified parameters

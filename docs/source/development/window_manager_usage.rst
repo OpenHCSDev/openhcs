@@ -1,5 +1,5 @@
 Window Manager Usage Guide
-==========================
+=========================
 
 Overview
 --------
@@ -12,6 +12,30 @@ Key features:
 - Auto-cleanup on close (no manual unregistration).
 - Navigation API for focusing and scrolling to fields.
 - Fail-loud on stale references.
+
+ServiceRegistry Integration
+-------------------------
+
+Window handlers use ``ServiceRegistry`` for widget access instead of manual traversal:
+
+.. code-block:: python
+
+    from pyqt_reactive.services import ServiceRegistry
+    from my_widgets import PlateManagerWidget
+
+    def create_plate_config_window(scope_id: str, object_state=None):
+        # Get plate manager from ServiceRegistry
+        plate_manager = ServiceRegistry.get(PlateManagerWidget)
+        if not plate_manager:
+            return None
+
+        window = ConfigWindow(
+            config_class=PipelineConfig,
+            current_config=orchestrator.pipeline_config,
+            scope_id=scope_id,
+        )
+        window.show()
+        return window
 
 Basic Usage
 -----------
@@ -297,3 +321,195 @@ Benefits
 4. Extensible: navigation API ready for inheritance tracking.
 5. Fail-loud: catches deleted windows early.
 6. Fits OpenHCS patterns: similar to ``ObjectStateRegistry`` for states.
+
+Declarative Window Specifications
+---------------------------------
+
+For simple windows that don't require the full BaseFormDialog machinery, use the **WindowSpec** pattern with **ManagedWindow** classes.
+
+WindowSpec Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Define window specifications declaratively in your main window:
+
+.. code-block:: python
+
+   from openhcs.pyqt_gui.services.window_config import WindowSpec
+   
+   class OpenHCSMainWindow(QMainWindow):
+       def __init__(self):
+           super().__init__()
+           self.window_specs = self._get_window_specs()
+       
+       def _get_window_specs(self) -> dict[str, WindowSpec]:
+           """Return declarative window specifications."""
+           from openhcs.pyqt_gui.windows.managed_windows import (
+               PlateManagerWindow,
+               PipelineEditorWindow,
+               ImageBrowserWindow,
+           )
+           
+           return {
+               "plate_manager": WindowSpec(
+                   window_id="plate_manager",
+                   title="Plate Manager",
+                   window_class=PlateManagerWindow,
+                   initialize_on_startup=True,
+               ),
+               "pipeline_editor": WindowSpec(
+                   window_id="pipeline_editor",
+                   title="Pipeline Editor",
+                   window_class=PipelineEditorWindow,
+               ),
+               "image_browser": WindowSpec(
+                   window_id="image_browser",
+                   title="Image Browser",
+                   window_class=ImageBrowserWindow,
+               ),
+           }
+
+ManagedWindow Implementation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create a ManagedWindow class for each window type:
+
+.. code-block:: python
+
+   # In openhcs/pyqt_gui/windows/managed_windows.py
+   
+   class PlateManagerWindow(QDialog):
+       """Window wrapper for PlateManagerWidget."""
+       
+       def __init__(self, main_window, service_adapter):
+           super().__init__(main_window)
+           self.main_window = main_window
+           self.service_adapter = service_adapter
+           self.setWindowTitle("Plate Manager")
+           self.setModal(False)
+           self.resize(600, 400)
+           
+           # Create and add widget
+           from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
+           layout = QVBoxLayout(self)
+           self.widget = PlateManagerWidget(
+               self.service_adapter,
+               self.service_adapter.get_current_color_scheme(),
+           )
+           layout.addWidget(self.widget)
+           
+           # Setup signal connections
+           self._setup_connections()
+       
+       def _setup_connections(self):
+           """Connect signals to main window and other windows."""
+           # Connect to main window
+           self.widget.global_config_changed.connect(
+               lambda: self.main_window.on_config_changed(
+                   self.service_adapter.get_global_config()
+               )
+           )
+           
+           # Connect progress signals to status bar
+           if hasattr(self.main_window, "status_bar"):
+               self._setup_progress_signals()
+           
+           # Connect to other windows via WindowManager
+           self._connect_to_pipeline_editor()
+
+Showing Windows with WindowManager
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use WindowManager with a factory function:
+
+.. code-block:: python
+
+   from pyqt_reactive.services.window_manager import WindowManager
+   
+   def show_window(self, window_id: str) -> None:
+       """Show window using WindowManager."""
+       factory = self._create_window_factory(window_id)
+       window = WindowManager.show_or_focus(window_id, factory)
+       
+       # Optional: Initialize hidden for startup windows
+       spec = self.window_specs[window_id]
+       if spec.initialize_on_startup and window_id == "log_viewer":
+           window.hide()
+       
+       # Ensure flash overlay is ready
+       self._ensure_flash_overlay(window)
+   
+   def _create_window_factory(self, window_id: str) -> Callable[[], QDialog]:
+       """Create factory function for a window."""
+       spec = self.window_specs[window_id]
+       
+       def factory() -> QDialog:
+           return spec.window_class(self, self.service_adapter)
+       
+       return factory
+
+Window-to-Window Communication
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ManagedWindows can communicate via WindowManager:
+
+.. code-block:: python
+
+   def _connect_to_pipeline_editor(self):
+       """Connect plate manager to pipeline editor."""
+       from pyqt_reactive.services.window_manager import WindowManager
+       
+       # Get pipeline window if it exists
+       pipeline_window = WindowManager._scoped_windows.get("pipeline_editor")
+       if pipeline_window:
+           # Access the widget and connect signals
+           pipeline_widget = pipeline_window.widget
+           self.widget.plate_selected.connect(pipeline_widget.set_current_plate)
+           self.widget.orchestrator_config_changed.connect(
+               pipeline_widget.on_orchestrator_config_changed
+           )
+
+When to Use Each Pattern
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Use WindowSpec + ManagedWindow for:**
+
+- Simple container windows (Plate Manager, Image Browser, etc.)
+- Windows that don't need ObjectState/form management
+- Windows that wrap existing widgets
+- Quick prototyping
+
+**Use BaseFormDialog for:**
+
+- Configuration dialogs (ConfigWindow, DualEditorWindow)
+- Forms with ParameterFormManager
+- Windows that need ObjectState integration
+- Complex multi-tab dialogs
+
+Comparison
+~~~~~~~~~~~
+
+.. list-table:: Window Management Patterns
+   :header-rows: 1
+   :widths: 25 35 40
+
+   * - Feature
+     - WindowSpec + ManagedWindow
+     - BaseFormDialog
+   * - Complexity
+     - Low
+     - High
+   * - ObjectState
+     - Manual
+     - Automatic
+   * - Form Management
+     - No
+     - Built-in
+   * - Singleton Enforcement
+     - Via WindowManager
+     - Via WindowManager
+   * - Save/Restore
+     - Manual
+     - Automatic
+   * - Best For
+     - Simple containers
+     - Complex config dialogs

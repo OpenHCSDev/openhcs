@@ -25,16 +25,24 @@ GlobalPipelineConfig (main app / pipeline defaults)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - ``num_workers``
-  
-  How many parallel workers to run for processing (higher = more CPU usage, but faster run times).
+   
+   How many parallel workers to run for processing (higher = more CPU usage, but faster run times).
 
 - ``materialization_results_path``
-  
-  Directory name where non-image analysis results (CSV/JSON) are written by default.
+   
+   Directory name where non-image analysis results (CSV/JSON) are written by default.
 
 - ``use_threading``
-  
-  If true, use threads instead of processes (useful for some environments, don't touch this unless you know what you're doing).
+   
+   If true, use threads instead of processes (useful for some environments, don't touch this unless you know what you're doing).
+
+- ``auto_add_output_plate_to_plate_manager`` (abbreviation: ``auto_add_output_plate``)
+   
+   If true, when a plate run completes successfully, the computed output plate root (from path planning) is automatically added to Plate Manager as a new orchestrator if it is not already present. This allows immediate visualization of processed results without manual plate addition.
+   
+   **Environment variable**: ``OPENHCS_AUTO_ADD_OUTPUT_PLATE``
+   
+   **Default**: ``False``
 
 WellFilterConfig
 ~~~~~~~~~~~~~~~~~

@@ -35,7 +35,10 @@ Compilation Flow Summary
 
 **Key Insight**: Function patterns are modified during compilation
 (metadata injection) and stored in ``step_plans['func']`` by the
-FuncStepContractValidator, then retrieved during execution.
+FuncStepContractValidator. The compiler returns a ``step_state_map``
+that lets downstream validators and streaming helpers read the
+the saved configuration snapshot for each step so that only the
+compile-time values (not live UI edits) influence execution plans.
 
 Phase-by-Phase Detailed Flow
 ----------------------------
@@ -48,14 +51,26 @@ Entry Point: ``PipelineOrchestrator.compile_pipelines()``
    for well_id in wells_to_process:
        context = self.create_context(well_id)
 
-       # 5-Phase Compilation (actual implementation)
-       # All phases wrapped in config_context for lazy resolution
-       with config_context(orchestrator.pipeline_config):
-           PipelineCompiler.initialize_step_plans_for_context(context, pipeline_definition, orchestrator, metadata_writer=is_responsible, plate_path=orchestrator.plate_path)
-           PipelineCompiler.declare_zarr_stores_for_context(context, pipeline_definition, orchestrator)
-           PipelineCompiler.plan_materialization_flags_for_context(context, pipeline_definition, orchestrator)
-           PipelineCompiler.validate_memory_contracts_for_context(context, pipeline_definition, orchestrator)
-           PipelineCompiler.assign_gpu_resources_for_context(context)
+        # 5-Phase Compilation (actual implementation)
+        # All phases wrapped in config_context for lazy resolution
+        with config_context(orchestrator.pipeline_config):
+            resolved_steps, step_state_map = PipelineCompiler.initialize_step_plans_for_context(
+                context,
+                pipeline_definition,
+                orchestrator,
+                metadata_writer=is_responsible,
+                plate_path=orchestrator.plate_path,
+                steps_already_resolved=False,
+            )
+            PipelineCompiler.declare_zarr_stores_for_context(context, resolved_steps, orchestrator)
+            PipelineCompiler.plan_materialization_flags_for_context(context, resolved_steps, orchestrator)
+            PipelineCompiler.validate_memory_contracts_for_context(
+                context,
+                resolved_steps,
+                orchestrator,
+                step_state_map=step_state_map,
+            )
+            PipelineCompiler.assign_gpu_resources_for_context(context, resolved_steps, orchestrator)
 
        context.freeze()
        compiled_contexts[well_id] = context
@@ -63,29 +78,46 @@ Entry Point: ``PipelineOrchestrator.compile_pipelines()``
 Phase 1: Step Plan Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**File**: ``openhcs/core/pipeline/compiler.py:229-282``
+**File**: ``openhcs/core/pipeline/compiler.py:229-360``
 
 .. code:: python
 
-   def initialize_step_plans_for_context(context, steps_definition, orchestrator, metadata_writer=False, plate_path=None):
-       # Pre-initialize basic step_plans using step index as key
-       for step_index, step in enumerate(steps_definition):
-           context.step_plans[step_index] = {
-               "step_name": step.name,
-               "step_type": step.__class__.__name__,
-               "axis_id": context.axis_id,
+    def initialize_step_plans_for_context(
+        context,
+        steps_definition,
+        orchestrator,
+        metadata_writer=False,
+        plate_path=None,
+        step_state_map=None,
+        steps_already_resolved=True,
+    ):
+        # Pre-initialize basic step_plans using step index as key
+        for step_index, step in enumerate(steps_definition):
+            context.step_plans[step_index] = {
+                "step_name": step.name,
+                "step_type": step.__class__.__name__,
+                "axis_id": context.axis_id,
            }
 
-       # Call path planner - THIS IS WHERE METADATA INJECTION HAPPENS
-       PipelinePathPlanner.prepare_pipeline_paths(context, steps_definition, orchestrator.pipeline_config)
+        # Register ObjectState layers (global → orchestrator → step)
+        # and resolve the steps_before_path_planner using saved values.
+        PipelinePathPlanner.prepare_pipeline_paths(
+            context,
+            steps_definition,
+            orchestrator.pipeline_config,
+        )
 
-       # Post-path-planner processing (stores func_name but NOT func)
-       for step_index, step in enumerate(steps_definition):
-           if isinstance(step, FunctionStep):
-               current_plan = context.step_plans[step_index]
-               if hasattr(step, 'func'):
-                   current_plan["func_name"] = getattr(step.func, '__name__', str(step.func))
-                   # NOTE: step.func is NOT stored here - happens in Phase 4
+        # Post-path-planner processing (stores func_name but NOT func)
+        for step_index, step in enumerate(steps_definition):
+            if isinstance(step, FunctionStep):
+                current_plan = context.step_plans[step_index]
+                if hasattr(step, 'func'):
+                    current_plan["func_name"] = getattr(step.func, '__name__', str(step.func))
+                    # NOTE: step.func is NOT stored here - happens in Phase 4
+
+        # Return the resolved steps and the registered ObjectState map so later
+        # planner phases can access saved configuration values deterministically.
+        return steps_definition, step_state_map
 
 Critical Sub-Phase: Metadata Injection in Path Planner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

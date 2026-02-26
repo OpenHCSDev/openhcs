@@ -112,6 +112,11 @@ Use GroupBy for dictionary function patterns and conditional routing:
        variable_components=[VariableComponents.SITE]
    )
 
+.. seealso::
+
+   :doc:`../architecture/pattern_grouping_and_special_outputs`
+      Comprehensive explanation of how ``group_by`` works for both dict and list patterns, including special output namespacing
+
 **GroupBy properties**:
 
 .. code-block:: python

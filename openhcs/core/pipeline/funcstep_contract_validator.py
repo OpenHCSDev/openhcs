@@ -10,12 +10,15 @@ import importlib
 import inspect
 import logging
 import sys
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple
 
 from openhcs.constants.constants import VALID_MEMORY_TYPES, get_openhcs_config
 from openhcs.core.steps.function_step import FunctionStep
 
 from openhcs.core.components.validation import GenericValidator
+
+# Import ObjectState - it's always available
+from objectstate import ObjectState
 
 logger = logging.getLogger(__name__)
 
@@ -397,18 +400,19 @@ class FuncStepContractValidator:
                 )) from e
 
     @staticmethod
-    def validate_pipeline(steps: List[Any], pipeline_context: Optional[Dict[str, Any]] = None, orchestrator=None) -> Dict[str, Dict[str, str]]:
+    def validate_pipeline(steps: List[Any], pipeline_context: Optional[Dict[str, Any]] = None, step_state_map: Optional[Dict[int, 'ObjectState']] = None, orchestrator=None) -> Dict[str, Dict[str, str]]:
         """
         Validate memory type contracts and function patterns for all FunctionStep instances in a pipeline.
 
-        This validator must run after the materialization and path planners to ensure
+        This validator must run after materialization and path planners to ensure
         proper plan integration. It verifies that these planners have run by checking
-        the pipeline_context for planner execution flags and by validating the presence
-        of required fields in the step plans.
+        pipeline_context for planner execution flags and by validating presence
+        of required fields in step plans.
 
         Args:
             steps: The steps in the pipeline
             pipeline_context: Optional context object with planner execution flags
+            step_state_map: Map of step index to ObjectState for accessing config values
             orchestrator: Optional orchestrator for dict pattern key validation
 
         Returns:
@@ -464,7 +468,8 @@ class FuncStepContractValidator:
                         f"Missing attribute: {e}. Path planner must run first."
                     ) from e
 
-                memory_types = FuncStepContractValidator.validate_funcstep(step, orchestrator)
+                step_objectstate = step_state_map.get(i) if step_state_map else None
+                memory_types = FuncStepContractValidator.validate_funcstep(step, orchestrator, step_objectstate)
                 step_memory_types[i] = memory_types  # Use step index instead of step_id
 
 
@@ -472,23 +477,32 @@ class FuncStepContractValidator:
         return step_memory_types
 
     @staticmethod
-    def validate_funcstep(step: FunctionStep, orchestrator=None) -> Dict[str, str]:
+    def validate_funcstep(step: FunctionStep, orchestrator=None, step_objectstate: Optional[ObjectState] = None) -> Dict[str, str]:
         """
         Validate memory type contracts, func_pattern structure, and dict pattern keys for a FunctionStep instance.
 
         Args:
             step: The FunctionStep to validate
             orchestrator: Optional orchestrator for dict pattern key validation
+            step_objectstate: ObjectState for accessing config values
 
         Returns:
             Dictionary of validated memory types
 
         Raises:
-            ValueError: If the FunctionStep violates memory type contracts, structural rules,
+            ValueError: If FunctionStep violates memory type contracts, structural rules,
                         or dict pattern key validation.
         """
-        # Extract the function pattern and name from the step
-        func_pattern = step.func # Renamed for clarity in this context
+        # Extracting config values via ObjectState get_saved_resolved_value()
+        if step_objectstate is None:
+            raise ValueError(f"Step '{step.name}': ObjectState is required for config access")
+
+        variable_components = step_objectstate.get_saved_resolved_value('processing_config.variable_components')
+        group_by = step_objectstate.get_saved_resolved_value('processing_config.group_by')
+        input_source = step_objectstate.get_saved_resolved_value('processing_config.input_source')
+
+        # Extracting function pattern and name from step
+        func_pattern = step.func
         step_name = step.name
 
         # 1. Check if any function in the pattern uses special contract decorators
@@ -503,7 +517,7 @@ class FuncStepContractValidator:
                    hasattr(f_callable, '__chain_breaker__'):
                     uses_special_contracts = True
                     break
-        
+
         # 2. Special contracts validation is handled by validate_pattern_structure() below
         # No additional restrictions needed - all valid patterns support special contracts
 
@@ -512,36 +526,32 @@ class FuncStepContractValidator:
         validator = GenericValidator(config)
 
         # Check for constraint violation: group_by ∈ variable_components
-        if step.processing_config.group_by and step.processing_config.group_by.value in [vc.value for vc in step.processing_config.variable_components]:
+        if group_by and group_by.value in [vc.value for vc in variable_components]:
             # Auto-resolve constraint violation by setting group_by to NONE
             # Use GroupBy.NONE (explicit "no grouping") instead of None (which means "inherit")
             from openhcs.constants import GroupBy
             logger.warning(
                 f"Step '{step_name}': Auto-resolved group_by conflict. "
-                f"Set group_by to GroupBy.NONE due to conflict with variable_components {[vc.value for vc in step.processing_config.variable_components]}. "
-                f"Original group_by was {step.processing_config.group_by.value}."
+                f"Set group_by to GroupBy.NONE due to conflict with variable_components {[vc.value for vc in variable_components]}. "
+                f"Original group_by was {group_by.value}."
             )
-            # Create new config with group_by set to GroupBy.NONE (explicit no-grouping)
-            from openhcs.core.config import ProcessingConfig
-            step.processing_config = ProcessingConfig(
-                variable_components=step.processing_config.variable_components,
-                group_by=GroupBy.NONE,
-                input_source=step.processing_config.input_source
-            )
+            # Update group_by to GroupBy.NONE (explicit no-grouping)
+            # Note: We don't mutate the step itself, just use the resolved value
+            group_by = GroupBy.NONE
 
         # Sequential processing validation removed - it's now pipeline-level, not per-step
 
         # Validate step configuration after auto-resolution
         validation_result = validator.validate_step(
-            step.processing_config.variable_components, step.processing_config.group_by, func_pattern, step_name
+            variable_components, group_by, func_pattern, step_name
         )
         if not validation_result.is_valid:
             raise ValueError(validation_result.error_message)
 
         # Validate dict pattern keys if orchestrator is available
-        if orchestrator is not None and isinstance(func_pattern, dict) and step.processing_config.group_by is not None:
+        if orchestrator is not None and isinstance(func_pattern, dict) and group_by is not None:
             dict_validation_result = validator.validate_dict_pattern_keys(
-                func_pattern, step.processing_config.group_by, step_name, orchestrator
+                func_pattern, group_by, step_name, orchestrator
             )
             if not dict_validation_result.is_valid:
                 raise ValueError(dict_validation_result.error_message)
@@ -751,10 +761,7 @@ class FuncStepContractValidator:
 
     @staticmethod
     def _resolve_function_reference(func_or_ref):
-        """Resolve a FunctionReference to an actual function, or return the original."""
-        from openhcs.core.pipeline.compiler import FunctionReference
-        if isinstance(func_or_ref, FunctionReference):
-            return func_or_ref.resolve()
+        """Return a FunctionReference as-is (it proxies attrs via __getattr__), or return the original callable."""
         return func_or_ref
 
     @staticmethod
@@ -784,11 +791,10 @@ class FuncStepContractValidator:
         """
         functions = []
 
-        # Case 1: Direct FunctionReference
+        # Case 1: Direct FunctionReference — don't resolve, it proxies attrs via __getattr__
         from openhcs.core.pipeline.compiler import FunctionReference
         if isinstance(func, FunctionReference):
-            resolved_func = func.resolve()
-            functions.append(resolved_func)
+            functions.append(func)
             return functions
 
         # Case 2: Direct callable
@@ -798,12 +804,12 @@ class FuncStepContractValidator:
 
         # Case 3: Tuple of (callable/FunctionReference, kwargs)
         if isinstance(func, tuple) and len(func) == 2 and isinstance(func[1], dict):
-            # Resolve the first element if it's a FunctionReference
-            resolved_first = FuncStepContractValidator._resolve_function_reference(func[0])
-            if callable(resolved_first) and not isinstance(resolved_first, type):
-                # The kwargs dict is optional - if provided, it will be used during execution
-                # No need to validate required args here as the execution logic handles this gracefully
-                functions.append(resolved_first)
+            first = func[0]
+            if isinstance(first, FunctionReference):
+                # Don't resolve — FunctionReference proxies attrs via __getattr__
+                functions.append(first)
+            elif callable(first) and not isinstance(first, type):
+                functions.append(first)
             return functions
 
         # Case 4: List of patterns

@@ -8,6 +8,11 @@ The Special I/O system enables sophisticated data exchange between pipeline step
 
 **System Evolution**: Originally designed for simple single-function steps, the system was extended to handle dict patterns (multiple functions per step) through sophisticated namespacing and scope promotion rules, similar to symbol resolution in programming language compilers.
 
+.. seealso::
+
+   :doc:`pattern_grouping_and_special_outputs`
+      Comprehensive guide to pattern grouping, special output path resolution, and debugging path collisions
+
 Architectural Evolution
 -----------------------
 
@@ -53,14 +58,14 @@ The Special I/O system uses a declarative approach where functions simply declar
 
 **Special Inputs**: Functions that need data from previous steps declare their requirements using ``@special_inputs``. The system automatically loads this data from the VFS and provides it as function parameters.
 
-**Materialization Support**: Special outputs can optionally include materialization specs that declaratively select a handler (CSV, JSON, ROI ZIP, etc.) for persistent formats.
+**Materialization Support**: Special outputs can optionally include materialization specs that declaratively select one or more *format writers* (CSV/JSON/ROI ZIP/TIFF/TEXT) for persistent formats.
 
 .. code:: python
 
    # Example: Position generation with materialization spec
-   from openhcs.processing.materialization import csv_materializer
+   from openhcs.processing.materialization import MaterializationSpec, CsvOptions
 
-   @special_outputs(("positions", csv_materializer(fields=["x", "y"], analysis_type="positions")))
+   @special_outputs(("positions", MaterializationSpec(CsvOptions(filename_suffix=".csv"))))
    def generate_positions(image_stack):
        positions = calculate_positions(image_stack)
        return processed_image, positions
@@ -70,6 +75,10 @@ The Special I/O system uses a declarative approach where functions simply declar
    def stitch_images(image_stack, positions):
        return stitch(image_stack, positions)
 
+Note: Writer dispatch is automatically inferred from the options type. No need to specify handler strings.
+CsvOptions auto-extracts fields from dataclasses/dicts. The ``fields`` parameter is only needed when you
+want to control column ordering or select a subset.
+
 Decorator Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -77,9 +86,9 @@ The decorators work by attaching metadata to function objects that the compilati
 
 **Metadata Attachment**: The decorators add attributes to functions (``__special_outputs__``, ``__special_inputs__``) that the compiler reads during pipeline analysis. This metadata-driven approach means functions remain normal Python functions that can be tested independently.
 
-**Materialization Integration**: When special outputs include materialization specs, the decorator stores both the output keys (for path planning) and the specs (for handler dispatch) as separate attributes.
+**Materialization Integration**: When special outputs include materialization specs, the decorator stores both the output keys (for path planning) and the specs (for writer dispatch) as separate attributes.
 
-**Backward Compatibility**: Registered materializer handlers can still be referenced directly where appropriate, but specs are the canonical representation.
+**Greenfield Rule**: Materialization is writer-driven. Do not register custom handler functions; declare writer options in MaterializationSpec.
 
 Compilation-Time Path Resolution
 --------------------------------

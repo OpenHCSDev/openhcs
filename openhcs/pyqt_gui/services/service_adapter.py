@@ -14,7 +14,11 @@ from PyQt6.QtCore import QProcess, QThread, pyqtSignal, QObject
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtCore import QUrl
 
-from openhcs.core.path_cache import PathCacheKey, get_cached_dialog_path, cache_dialog_path
+from openhcs.core.path_cache import (
+    PathCacheKey,
+    get_cached_dialog_path,
+    cache_dialog_path,
+)
 from pyqt_reactive.theming import ThemeManager
 from pyqt_reactive.theming import ColorScheme
 
@@ -50,8 +54,12 @@ class GlobalEventBus(QObject):
     """
 
     # Global signals that all windows can emit/receive
-    pipeline_changed = pyqtSignal(list)  # List[FunctionStep] - emitted when pipeline changes
-    config_changed = pyqtSignal(object)  # Config object - emitted when any config changes
+    pipeline_changed = pyqtSignal(
+        list
+    )  # List[FunctionStep] - emitted when pipeline changes
+    config_changed = pyqtSignal(
+        object
+    )  # Config object - emitted when any config changes
     step_changed = pyqtSignal(object)  # FunctionStep - emitted when a step is modified
 
     def __init__(self):
@@ -85,7 +93,9 @@ class GlobalEventBus(QObject):
         Args:
             pipeline_steps: Updated list of FunctionStep objects
         """
-        logger.debug(f"Broadcasting pipeline_changed to {len(self._registered_windows)} windows")
+        logger.debug(
+            f"Broadcasting pipeline_changed to {len(self._registered_windows)} windows"
+        )
         self.pipeline_changed.emit(pipeline_steps)
 
     def emit_config_changed(self, config):
@@ -94,7 +104,9 @@ class GlobalEventBus(QObject):
         Args:
             config: Updated config object
         """
-        logger.debug(f"Broadcasting config_changed to {len(self._registered_windows)} windows")
+        logger.debug(
+            f"Broadcasting config_changed to {len(self._registered_windows)} windows"
+        )
         self.config_changed.emit(config)
 
     def emit_step_changed(self, step):
@@ -103,18 +115,20 @@ class GlobalEventBus(QObject):
         Args:
             step: Updated FunctionStep object
         """
-        logger.debug(f"Broadcasting step_changed to {len(self._registered_windows)} windows")
+        logger.debug(
+            f"Broadcasting step_changed to {len(self._registered_windows)} windows"
+        )
         self.step_changed.emit(step)
 
 
 class PyQtServiceAdapter:
     """
     Adapter to bridge OpenHCS services to PyQt6 context.
-    
+
     Replaces prompt_toolkit dependencies (dialogs, system commands, etc.)
     with PyQt6 equivalents while maintaining the same interface for services.
     """
-    
+
     def __init__(self, main_window: QWidget):
         """
         Initialize the service adapter.
@@ -189,7 +203,7 @@ class PyQtServiceAdapter:
                 raise
 
         # Use ThreadPoolExecutor (simpler than Qt threading)
-        if not hasattr(self, '_thread_pool'):
+        if not hasattr(self, "_thread_pool"):
             self._thread_pool = ThreadPoolExecutor(max_workers=4)
 
         # Submit to thread pool (non-blocking like TUI executor)
@@ -198,27 +212,29 @@ class PyQtServiceAdapter:
     def show_dialog(self, content: str, title: str = "OpenHCS") -> bool:
         """
         Replace prompt_toolkit dialogs with QMessageBox.
-        
+
         Args:
             content: Dialog content text
             title: Dialog title
-            
+
         Returns:
             True if user clicked OK, False otherwise
         """
         msg = QMessageBox(self.main_window)
         msg.setWindowTitle(title)
         msg.setText(content)
-        msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+        msg.setStandardButtons(
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel
+        )
         msg.setDefaultButton(QMessageBox.StandardButton.Ok)
-        
+
         result = msg.exec()
         return result == QMessageBox.StandardButton.Ok
-    
+
     def show_error_dialog(self, error_message: str, title: str = "Error") -> None:
         """
         Show error dialog with error icon.
-        
+
         Args:
             error_message: Error message to display
             title: Dialog title
@@ -229,11 +245,11 @@ class PyQtServiceAdapter:
         msg.setIcon(QMessageBox.Icon.Critical)
         msg.setStandardButtons(QMessageBox.StandardButton.Ok)
         msg.exec()
-    
+
     def show_info_dialog(self, info_message: str, title: str = "Information") -> None:
         """
         Show information dialog.
-        
+
         Args:
             info_message: Information message to display
             title: Dialog title
@@ -251,7 +267,7 @@ class PyQtServiceAdapter:
         title: str = "Select File",
         file_filter: str = "All Files (*)",
         mode: str = "open",
-        fallback_path: Optional[Path] = None
+        fallback_path: Optional[Path] = None,
     ) -> Optional[Path]:
         """
         Show file dialog with path caching (mirrors Textual TUI pattern).
@@ -272,17 +288,11 @@ class PyQtServiceAdapter:
         try:
             if mode == "save":
                 file_path, _ = QFileDialog.getSaveFileName(
-                    self.main_window,
-                    title,
-                    initial_dir,
-                    file_filter
+                    self.main_window, title, initial_dir, file_filter
                 )
             else:  # mode == "open"
                 file_path, _ = QFileDialog.getOpenFileName(
-                    self.main_window,
-                    title,
-                    initial_dir,
-                    file_filter
+                    self.main_window, title, initial_dir, file_filter
                 )
 
             if file_path:
@@ -302,7 +312,7 @@ class PyQtServiceAdapter:
         cache_key: PathCacheKey,
         title: str = "Select Directory",
         fallback_path: Optional[Path] = None,
-        allow_multiple: bool = False
+        allow_multiple: bool = False,
     ) -> Optional[Path | list[Path]]:
         """
         Show directory dialog with path caching.
@@ -319,25 +329,62 @@ class PyQtServiceAdapter:
             - List[Path] if allow_multiple=True
         """
         # Get cached initial directory
-        initial_dir = str(get_cached_dialog_path(cache_key, fallback_path))
+        initial_path = get_cached_dialog_path(cache_key, fallback_path)
+        initial_dir = str(initial_path)
 
         try:
             if allow_multiple:
-                # Use custom QFileDialog for multi-directory selection
+                # Use custom QFileDialog for multi-directory selection.
+                # NOTE: DontUseNativeDialog is required for multi-select.
                 dialog = QFileDialog(self.main_window, title, initial_dir)
                 dialog.setFileMode(QFileDialog.FileMode.Directory)
                 dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
 
-                # Enable multi-selection in the list view
+                # Enable multi-selection in the list/tree views.
                 list_view = dialog.findChild(QWidget, "listView")
                 if list_view:
                     from PyQt6.QtWidgets import QAbstractItemView
-                    list_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+                    list_view.setSelectionMode(
+                        QAbstractItemView.SelectionMode.ExtendedSelection
+                    )
 
                 tree_view = dialog.findChild(QWidget, "treeView")
                 if tree_view:
                     from PyQt6.QtWidgets import QAbstractItemView
-                    tree_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+                    tree_view.setSelectionMode(
+                        QAbstractItemView.SelectionMode.ExtendedSelection
+                    )
+
+                # Make the path bar editable so users can paste paths.
+                # In the non-native dialog, the path widget is a QComboBox ("lookInCombo").
+                try:
+                    from PyQt6.QtWidgets import QComboBox
+
+                    look_in = dialog.findChild(QComboBox, "lookInCombo")
+                    if look_in:
+                        look_in.setEditable(True)
+                        line_edit = look_in.lineEdit()
+                        if line_edit:
+                            line_edit.setPlaceholderText("Paste a path and press Enter")
+
+                            def _jump_to_typed_path() -> None:
+                                raw = line_edit.text().strip().strip('"').strip("'")
+                                if not raw:
+                                    return
+                                try:
+                                    p = Path(raw).expanduser()
+                                    if p.exists() and p.is_dir():
+                                        dialog.setDirectory(str(p))
+                                except Exception:
+                                    # Leave the dialog as-is if the path is invalid.
+                                    return
+
+                            line_edit.returnPressed.connect(_jump_to_typed_path)
+                except Exception:
+                    # If the internal widget names differ across platforms, fail gracefully.
+                    pass
 
                 if dialog.exec():
                     selected_paths = [Path(p) for p in dialog.selectedFiles()]
@@ -349,9 +396,7 @@ class PyQtServiceAdapter:
             else:
                 # Single directory selection (native dialog)
                 dir_path = QFileDialog.getExistingDirectory(
-                    self.main_window,
-                    title,
-                    initial_dir
+                    self.main_window, title, initial_dir
                 )
 
                 if dir_path:
@@ -369,17 +414,17 @@ class PyQtServiceAdapter:
     def run_system_command(self, command: str, wait_for_finish: bool = True) -> bool:
         """
         Replace prompt_toolkit system command with QProcess.
-        
+
         Args:
             command: System command to execute
             wait_for_finish: Whether to wait for command completion
-            
+
         Returns:
             True if command executed successfully, False otherwise
         """
         try:
             process = QProcess(self.main_window)
-            
+
             if wait_for_finish:
                 process.start(command)
                 success = process.waitForFinished(30000)  # 30 second timeout
@@ -387,19 +432,19 @@ class PyQtServiceAdapter:
             else:
                 # Start detached process
                 return process.startDetached(command)
-                
+
         except Exception as e:
             logger.error(f"System command failed: {command} - {e}")
             self.show_error_dialog(f"Command failed: {e}")
             return False
-    
+
     def open_external_editor(self, file_path: Path) -> bool:
         """
         Open file in external editor using system default.
-        
+
         Args:
             file_path: Path to file to edit
-            
+
         Returns:
             True if editor opened successfully, False otherwise
         """
@@ -410,34 +455,34 @@ class PyQtServiceAdapter:
             logger.error(f"Failed to open external editor: {e}")
             self.show_error_dialog(f"Failed to open editor: {e}")
             return False
-    
+
     def get_global_config(self):
         """
         Get global configuration from application.
-        
+
         Returns:
             Global configuration object
         """
         # Access global config through application property
-        if hasattr(self.app, 'global_config'):
+        if hasattr(self.app, "global_config"):
             return self.app.global_config
         else:
             # Fallback to default config
-            
+
             return GlobalPipelineConfig()
-    
+
     def set_global_config(self, config):
         """
         Set global configuration on application.
-        
+
         Args:
             config: Global configuration object
         """
-        if hasattr(self.app, 'global_config'):
+        if hasattr(self.app, "global_config"):
             self.app.global_config = config
         else:
             # Set as application property
-            setattr(self.app, 'global_config', config)
+            setattr(self.app, "global_config", config)
 
     # ========== THEME MANAGEMENT METHODS ==========
 
@@ -526,7 +571,7 @@ class PyQtServiceAdapter:
             callback: Function to call with new color scheme
         """
         self.theme_manager.register_theme_change_callback(callback)
-    
+
     def get_file_manager(self):
         """
         Get FileManager instance from application.
@@ -534,14 +579,15 @@ class PyQtServiceAdapter:
         Returns:
             FileManager instance
         """
-        if hasattr(self.app, 'file_manager'):
+        if hasattr(self.app, "file_manager"):
             return self.app.file_manager
         else:
             # Create default FileManager
             from polystore.filemanager import FileManager
             from polystore.base import storage_registry
+
             file_manager = FileManager(storage_registry)
-            setattr(self.app, 'file_manager', file_manager)
+            setattr(self.app, "file_manager", file_manager)
             return file_manager
 
     def get_event_bus(self) -> GlobalEventBus:
@@ -556,31 +602,31 @@ class PyQtServiceAdapter:
 class ExternalEditorProcess(QThread):
     """
     Thread for handling external editor processes.
-    
+
     Replaces prompt_toolkit's run_system_command for external editor integration.
     """
-    
+
     finished = pyqtSignal(bool, str)  # success, error_message
-    
+
     def __init__(self, command: str, file_path: Path):
         super().__init__()
         self.command = command
         self.file_path = file_path
-    
+
     def run(self):
         """Execute external editor command in thread."""
         try:
             process = QProcess()
             process.start(self.command)
-            
+
             success = process.waitForFinished(300000)  # 5 minute timeout
-            
+
             if success and process.exitCode() == 0:
                 self.finished.emit(True, "")
             else:
                 error_msg = process.readAllStandardError().data().decode()
                 self.finished.emit(False, f"Editor failed: {error_msg}")
-                
+
         except Exception as e:
             self.finished.emit(False, f"Editor process failed: {e}")
 
@@ -588,35 +634,33 @@ class ExternalEditorProcess(QThread):
 class AsyncOperationThread(QThread):
     """
     Generic thread for async operations.
-    
+
     Converts async operations to Qt thread-based operations.
     """
-    
+
     result_ready = pyqtSignal(object)
     error_occurred = pyqtSignal(str)
-    
+
     def __init__(self, async_func, *args, **kwargs):
         super().__init__()
         self.async_func = async_func
         self.args = args
         self.kwargs = kwargs
-    
+
     def run(self):
         """Execute async function in thread with event loop."""
         try:
             import asyncio
-            
+
             # Create new event loop for this thread
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            
+
             # Run async function
-            result = loop.run_until_complete(
-                self.async_func(*self.args, **self.kwargs)
-            )
-            
+            result = loop.run_until_complete(self.async_func(*self.args, **self.kwargs))
+
             self.result_ready.emit(result)
-            
+
         except Exception as e:
             logger.error(f"Async operation failed: {e}")
             self.error_occurred.emit(str(e))

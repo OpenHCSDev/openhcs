@@ -8,7 +8,20 @@ Pipeline visualization with Fiji/ImageJ requires real-time data streaming to ext
 
 **The Fiji Integration Challenge**: ImageJ/Fiji uses a different dimensional model (CZT: Channels, Z-slices, Time-frames) than OpenHCS's component-based system. Additionally, hyperstack building is computationally expensive (~2 seconds per stack), which could block pipeline execution if not handled properly.
 
-**The OpenHCS Solution**: A process-based streaming architecture that separates Fiji visualization into independent processes communicating via ZeroMQ. This eliminates blocking issues while enabling automatic hyperstack creation from OpenHCS's component metadata.
+**The OpenHCS Solution**: A thin-wrapper architecture where OpenHCS composes
+external streaming infrastructure. Generic transport is provided by
+``zmqruntime``, payload semantics and receiver-core utilities are provided by
+``polystore``, and OpenHCS provides runtime wiring and process management.
+
+Canonical Abstraction Docs
+--------------------------
+
+For generic abstraction internals, see external module docs:
+
+- ``external/zmqruntime/docs/source/architecture/viewer_streaming_architecture.rst``
+- ``external/PolyStore/docs/source/architecture/streaming_receiver_projection.rst``
+
+This page focuses on OpenHCS-specific viewer wrapper behavior.
 
 **Key Innovation**: Shared memory IPC with proper lifecycle management ensures zero-copy data transfer while preventing memory leaks. The publisher closes handles after successful sends, while the receiver unlinks shared memory after copying data.
 
@@ -18,7 +31,7 @@ Architecture Components
 FijiStreamingBackend
 ~~~~~~~~~~~~~~~~~~~~
 
-**Location**: ``openhcs/io/fiji_stream.py``
+**Location**: ``external/PolyStore/src/polystore/fiji_stream.py``
 
 The streaming backend sends image data to Fiji viewers using ZeroMQ publish/subscribe pattern:
 
@@ -58,7 +71,7 @@ The streaming backend sends image data to Fiji viewers using ZeroMQ publish/subs
 FijiViewerServer
 ~~~~~~~~~~~~~~~~
 
-**Location**: ``openhcs/runtime/fiji_viewer_server.py``
+**Location**: ``openhcs/runtime/fiji_viewer_server.py`` (OpenHCS wrapper)
 
 The viewer server receives images and displays them via PyImageJ, inheriting from ``ZMQServer`` ABC:
 
@@ -94,7 +107,7 @@ The viewer server receives images and displays them via PyImageJ, inheriting fro
 FijiStreamVisualizer
 ~~~~~~~~~~~~~~~~~~~~
 
-**Location**: ``openhcs/runtime/fiji_stream_visualizer.py``
+**Location**: ``openhcs/runtime/fiji_stream_visualizer.py`` (OpenHCS wrapper)
 
 Manages Fiji viewer process lifecycle, following the same architecture as ``NapariStreamVisualizer``:
 

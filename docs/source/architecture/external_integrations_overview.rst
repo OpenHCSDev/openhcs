@@ -13,6 +13,24 @@ OpenHCS implements a comprehensive integration strategy with the bioimage analys
 
 This document provides a high-level overview of OpenHCS's integration architecture and how the different components work together to create a unified bioimage analysis platform.
 
+Boundary Split
+--------------
+
+The integration stack is now explicitly split across repositories:
+
+- ``zmqruntime`` owns transport and execution lifecycle primitives
+  (REQ/REP + PUB/SUB channels, polling, typed execution status contracts).
+- ``polystore`` owns streaming payload semantics and receiver-side projection
+  utilities (component-mode grouping, batch/debounce engines, viewer payload
+  constants).
+- ``pyqt-reactive`` owns generic manager/browser UI infrastructure
+  (polling shells, tree sync/rebuild, aggregation policies).
+- ``openhcs`` owns domain wiring only
+  (pipeline/orchestrator semantics, OpenHCS-specific adapters, UX policies).
+
+OpenHCS architecture docs focus on OpenHCS wrapper behavior and link to
+external module docs for generic abstraction internals.
+
 Integration Philosophy
 ----------------------
 
@@ -60,7 +78,8 @@ Napari Integration
 
 **Purpose**: Real-time visualization of processing results
 
-**Architecture**: Streaming backend + persistent viewer processes
+**Architecture**: OpenHCS wrapper over ``zmqruntime`` transport plus
+``polystore`` streaming semantics and receiver projection
 
 **Key Features**:
 
@@ -108,7 +127,8 @@ Fiji Integration
 
 **Purpose**: Interoperability with ImageJ/Fiji ecosystem
 
-**Architecture**: Streaming backend + PyImageJ integration
+**Architecture**: OpenHCS wrapper over ``zmqruntime`` transport plus
+``polystore`` streaming semantics and receiver projection
 
 **Key Features**:
 

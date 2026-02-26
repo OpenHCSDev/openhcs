@@ -156,7 +156,6 @@ See Also
 - :doc:`widget_protocol_system` - ABC contracts for widget operations
 - :doc:`ui_services_architecture` - Service layer for ParameterFormManager
 - :doc:`gui_performance_patterns` - Cross-window preview system
-- :doc:`compilation_service` - Compilation service extracted from PlateManager
-- :doc:`zmq_execution_service_extracted` - ZMQ execution service extracted from PlateManager
+- :doc:`batch_workflow_service` - Unified compile/execute orchestration service
+- :doc:`zmq_server_browser_system` - ZMQ browser abstraction and OpenHCS adapter
 - :doc:`parametric_widget_creation` - Widget creation configuration
-

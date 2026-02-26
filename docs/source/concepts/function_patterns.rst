@@ -3,6 +3,11 @@ Function Patterns
 
 OpenHCS provides four distinct function patterns that allow you to organize processing logic in different ways. Understanding these patterns is crucial for building effective analysis workflows that handle complex multi-channel, multi-condition experiments.
 
+.. seealso::
+
+   :doc:`../architecture/pattern_grouping_and_special_outputs`
+      Deep dive into pattern grouping mechanics, special output path resolution, and the dual purpose of ``group_by``
+
 The Four Function Patterns
 --------------------------
 

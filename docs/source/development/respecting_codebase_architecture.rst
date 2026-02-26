@@ -68,14 +68,25 @@ Smart implementation respects codebase architecture by reusing information that 
 
 .. code-block:: python
 
-   # RESPECTFUL CODE - reuse information from where it's already available
-   def initialize_step_plans_for_context(context, steps_definition, orchestrator):
-       # Config already retrieved here
-       effective_config = orchestrator.get_effective_config(for_serialization=False)
-       set_current_global_config(GlobalPipelineConfig, effective_config)
+    # RESPECTFUL CODE - reuse information from where it's already available
+    def initialize_step_plans_for_context(context, steps_definition, orchestrator):
+        # Config already retrieved here
+        effective_config = orchestrator.get_effective_config(for_serialization=False)
+        set_current_global_config(GlobalPipelineConfig, effective_config)
 
-       # Add visualizer config while we have it
-       context.visualizer_config = effective_config.visualizer
+        # Add visualizer config while we have it
+        context.visualizer_config = effective_config.visualizer
+
+        # Modern compiler contract: reuse the resolved steps without rerunning path planning
+        resolved_steps, step_state_map = PipelineCompiler.initialize_step_plans_for_context(
+            context,
+            steps_definition,
+            orchestrator,
+            steps_already_resolved=False,
+        )
+
+        # ``step_state_map`` keeps the saved configuration snapshot for each step.
+        return resolved_steps, step_state_map
 
 **Key Principle**: When information is already available in a method's scope, use it there rather than calling the same method again elsewhere. This shows understanding of the data flow and prevents redundant operations.
 

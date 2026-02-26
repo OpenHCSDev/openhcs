@@ -362,22 +362,24 @@ Streams ROIs as ImageJ ROIs to ROI Manager via ZMQ:
             rm.addRoi(java_roi)
 
 Integration with Pipeline System
-=================================
+================================
 
 Special Outputs Registration
 -----------------------------
 
-Functions register ROI outputs using the ``@special_outputs`` decorator:
+Functions register ROI outputs using the ``@special_outputs`` decorator with writer-based materialization specs:
 
 .. code-block:: python
 
+    from openhcs.processing.materialization import MaterializationSpec, CsvOptions, ROIOptions
+
     @special_outputs(
-        cell_counts=materialize_cell_counts,
-        segmentation_masks=materialize_segmentation_masks
+        ("cell_counts", MaterializationSpec(CsvOptions(filename_suffix="_details.csv"))),
+        ("segmentation_masks", MaterializationSpec(ROIOptions())),
     )
     def count_cells_single_channel(..., return_segmentation_mask: bool = False):
         """Count cells and optionally return segmentation masks."""
-        
+
         if return_segmentation_mask:
             return output_stack, cell_counts, labeled_masks
         else:
@@ -388,7 +390,7 @@ Materialization Workflow
 
 1. **Execution**: Function returns special outputs (e.g., labeled masks)
 2. **Storage**: Special outputs saved to memory backend with channel-specific paths
-3. **Materialization**: After step completion, materialization handlers are invoked
+3. **Materialization**: After step completion, format writers are invoked
 4. **Multi-Backend**: ROIs saved to all backends (disk + streaming) simultaneously
 
 **Path Transformation**:

@@ -9,8 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-#### LLM-Powered Code Generation
+#### Auto-Add Output Plate Feature
+- **Automatic output plate registration** - New `auto_add_output_plate_to_plate_manager` config option in GlobalPipelineConfig
+  - When enabled, successfully completed plate runs automatically add the computed output plate to Plate Manager
+  - Allows immediate visualization of processed results without manual plate addition
+  - Environment variable: `OPENHCS_AUTO_ADD_OUTPUT_PLATE`
+  - Accessible via Config Window under Pipeline Settings
+
+#### Compilation Architecture Improvements
+- **Remote compilation via ZMQ server** - Compilation now happens on the ZMQ execution server instead of locally
+  - New shared `ZMQClientService` for managing ZMQ client connections between compilation and execution
+  - `CompilationService` and `ZMQExecutionService` now share a single client service instance
+  - Improved consistency and resource management across compile/run workflows
+  - Requires ZMQ server to be running for compilation (same as execution)
+
+#### LLM-Powered Code Generation Improvements
 - **LLM Assist in Code Editor** - Added LLM-powered code generation directly into the OpenHCS code editor
+  - **Automatic array backend handling** - Generated functions no longer require manual backend conversions (`cp.asnumpy()`, `cle.pull()`)
+  - **Context-aware system prompts** - New `get_system_prompt(code_type)` method provides different prompts for pipeline vs function generation
+  - **Array format clarification** - Documentation now specifies (C, Y, X) a.k.a. (Z, Y, X) format for 3D arrays
+  - **Memory decorator awareness** - LLM understands `@numpy`, `@cupy`, `@pyclesperanto` decorators and their implications
   - New `LLMPipelineService` for communicating with local LLM endpoints (Ollama)
   - New `LLMChatPanel` widget with chat interface for natural language code generation
   - Integrated LLM panel into `QScintillaCodeEditorDialog` with toggle button

@@ -25,10 +25,22 @@ try:
 except ImportError:
     pass
 
+# Import simple cell counting
+try:
+    from openhcs.processing.backends.analysis.count_cells_simple import \
+        count_cells_simple, ThresholdMethod, Foreground
+except ImportError:
+    pass
+
 __all__ = [
     # DXF mask pipeline
     "dxf_mask_pipeline",
 
     # Focus analyzer
     "FocusAnalyzer",
+
+    # Simple cell counting
+    "count_cells_simple",
+    "ThresholdMethod",
+    "Foreground",
 ]

@@ -557,7 +557,7 @@ The materialization system bridges the gap between computational processing and 
 Special Output Decoration
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Functions declare their side effects using the ``@special_outputs`` decorator, which can optionally specify materialization specs (resolved via handlers) for converting data to persistent formats.
+Functions declare their side effects using the ``@special_outputs`` decorator, which can optionally specify materialization specs (resolved via format writers) for converting data to persistent formats.
 
 **Basic Special Outputs** (memory backend only):
 
@@ -578,10 +578,10 @@ Functions declare their side effects using the ``@special_outputs`` decorator, w
 
 .. code:: python
 
-   from openhcs.processing.materialization import csv_materializer, roi_zip_materializer
+   from openhcs.processing.materialization import MaterializationSpec, CsvOptions, ROIOptions
 
-   @special_outputs(("cell_counts", csv_materializer(fields=["slice_index", "cell_count"], analysis_type="cell_counts")),
-                    ("masks", roi_zip_materializer()))
+   @special_outputs(("cell_counts", MaterializationSpec(CsvOptions(filename_suffix="_details.csv"))),
+                     ("masks", MaterializationSpec(ROIOptions())))
    def count_cells_with_materialization(image_stack):
        """Function with materialized special outputs."""
        processed_image, cell_counts, segmentation_masks = analyze_cells(image_stack)
@@ -593,137 +593,42 @@ Functions declare their side effects using the ``@special_outputs`` decorator, w
 
 .. code:: python
 
-   from openhcs.processing.materialization import csv_materializer
+   from openhcs.processing.materialization import MaterializationSpec, CsvOptions
 
-   @special_outputs("debug_info", ("analysis_results", csv_materializer(fields=["metric"], analysis_type="analysis_results")))
+   @special_outputs("debug_info", ("analysis_results", MaterializationSpec(CsvOptions(filename_suffix=".csv"))))
    def analyze_with_mixed_outputs(image_stack):
        """Function with both memory-only and materialized outputs."""
        # debug_info stays in memory, analysis_results gets materialized
        return processed_image, debug_info, analysis_results
 
-Materialization Handler Implementation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Note: Writer dispatch is automatically inferred from options type. No need to specify handler strings.
+The ``fields`` parameter is optional and defaults to None (auto-extract all fields).
+Only specify ``fields`` when you need to control column ordering or select a subset.
 
-Materialization handlers follow standard signatures and handle the conversion from Python objects to persistent file formats. They receive data from the memory backend and save it using the FileManager with appropriate backend selection.
+Writer-Based Materialization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Single Backend Signature** (for simple materialization):
+Materialization is implemented as a small set of format writers (CSV/JSON/ROI ZIP/TIFF/TEXT). Call sites never register custom materializers.
 
-.. code:: python
-
-   def materialize_function_name(data: Any, path: str, filemanager, backend: str) -> str:
-       """
-       Convert special output data to persistent storage format.
-
-       Args:
-           data: The special output data from memory backend
-           path: Base path for output files (from VFS path planning)
-           filemanager: FileManager instance for backend-agnostic I/O
-           backend: Backend name (disk, omero_local, napari_stream, fiji_stream)
-
-       Returns:
-           str: Path to the primary output file created
-       """
-       # Get backend instance and dispatch to backend-specific implementation
-       backend_obj = filemanager.get_backend(backend)
-       return backend_obj._save_data(data, path)
-
-**Multi-Backend Signature** (for simultaneous materialization to multiple backends):
+Instead, functions declare what they want persisted by providing writer options to ``MaterializationSpec``.
 
 .. code:: python
 
-   def materialize_function_name(
-       data: Any,
-       path: str,
-       filemanager,
-       backends: Union[str, List[str]],
-       backend_kwargs: dict = None
-   ) -> str:
-       """
-       Convert special output data to multiple backends simultaneously.
+   from openhcs.processing.materialization import MaterializationSpec, CsvOptions, JsonOptions
 
-       Args:
-           data: The special output data from memory backend
-           path: Base path for output files (from VFS path planning)
-           filemanager: FileManager instance for backend-agnostic I/O
-           backends: Single backend string or list of backends to save to
-           backend_kwargs: Dict mapping backend names to their kwargs
+   # JSON summary + CSV details, JSON is primary
+   spec = MaterializationSpec(
+       JsonOptions(source="summary", filename_suffix=".json"),
+       CsvOptions(source="details", filename_suffix="_details.csv"),
+       primary=0,
+   )
 
-       Returns:
-           str: Path to the primary output file created (first backend)
-       """
-       # Normalize backends to list
-       if isinstance(backends, str):
-           backends = [backends]
+The framework handles:
 
-       # Materialize to all backends
-       for backend in backends:
-           kwargs = backend_kwargs.get(backend, {}) if backend_kwargs else {}
-           filemanager.save(data, path, backend, **kwargs)
+- path normalization (including compound suffix stripping)
+- directory creation and overwrite/delete semantics
+- multi-backend iteration
 
-       return path
-
-**Real Example - Cell Count Materialization**:
-
-.. code:: python
-
-   def materialize_cell_counts(data: List[CellCountResult], path: str, filemanager) -> str:
-       """Materialize cell counting results as analysis-ready CSV and JSON formats."""
-
-       # Generate output file paths based on the input path
-       base_path = path.replace('.pkl', '')
-       json_path = f"{base_path}.json"
-       csv_path = f"{base_path}_details.csv"
-
-       # Ensure output directory exists for disk backend
-       from pathlib import Path
-       from openhcs.constants.constants import Backend
-       output_dir = Path(json_path).parent
-       filemanager.ensure_directory(str(output_dir), Backend.DISK.value)
-
-       # Create summary data
-       summary = {
-           "analysis_type": "single_channel_cell_counting",
-           "total_slices": len(data),
-           "total_cells_detected": sum(result.cell_count for result in data)
-       }
-
-       # Save JSON summary
-       import json
-       json_content = json.dumps(summary, indent=2)
-       filemanager.save(json_content, json_path, Backend.DISK.value)
-
-       # Create detailed CSV
-       rows = []
-       for result in data:
-           rows.append({
-               'slice_index': result.slice_index,
-               'cell_count': result.cell_count,
-               'detection_method': result.detection_method,
-               'threshold_value': result.threshold_value
-           })
-
-       # Save CSV details
-       import pandas as pd
-       df = pd.DataFrame(rows)
-       csv_content = df.to_csv(index=False)
-       filemanager.save(csv_content, csv_path, Backend.DISK.value)
-
-       return json_path  # Return primary output file
-
-**Real Example - Position Materialization**:
-
-.. code:: python
-
-   def materialize_ashlar_positions(data: List[Tuple[float, float]], path: str, filemanager) -> str:
-       """Materialize tile positions as scientific CSV with grid metadata."""
-       csv_path = path.replace('.pkl', '_ashlar_positions.csv')
-
-       # Convert to DataFrame with metadata
-       import pandas as pd
-       df = pd.DataFrame(data, columns=['x_position_um', 'y_position_um'])
-       df['tile_id'] = range(len(df))
-
-       # Add grid analysis
        unique_x = sorted(df['x_position_um'].unique())
        unique_y = sorted(df['y_position_um'].unique())
        df['grid_dimensions'] = f"{len(unique_y)}x{len(unique_x)}"

@@ -9,8 +9,16 @@ import logging
 from typing import Callable, Optional, Dict, Any
 
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QTreeWidget, QTreeWidgetItem, QSplitter, QWidget, QSizePolicy
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QSplitter,
+    QWidget,
+    QSizePolicy,
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
@@ -50,7 +58,7 @@ class LibraryDetector:
             if registry_name.lower() in module_path.lower():
                 return display_name
 
-        return 'Unknown'
+        return "Unknown"
 
     @classmethod
     def _build_registry_ownership_cache(cls):
@@ -77,16 +85,16 @@ class LibraryDetector:
 
         # Fallback to module path analysis
         module_path = metadata.module.lower()
-        if 'openhcs' in module_path:
-            return 'OpenHCS'
-        elif 'cupy' in module_path:
-            return 'CuPy'
-        elif 'pyclesperanto' in module_path or 'cle' in module_path:
-            return 'Pyclesperanto'
-        elif 'skimage' in module_path:
-            return 'scikit-image'
+        if "openhcs" in module_path:
+            return "OpenHCS"
+        elif "cupy" in module_path:
+            return "CuPy"
+        elif "pyclesperanto" in module_path or "cle" in module_path:
+            return "Pyclesperanto"
+        elif "skimage" in module_path:
+            return "scikit-image"
 
-        return 'Unknown'
+        return "Unknown"
 
 
 class FunctionSelectorDialog(QDialog):
@@ -113,8 +121,8 @@ class FunctionSelectorDialog(QDialog):
     MIN_HEIGHT = 500
     MODULE_COLUMN_WIDTH = 250
     DESCRIPTION_COLUMN_WIDTH = 200
-    TREE_PROPORTION = 300  # Reduced from 400 to take up less width
-    TABLE_PROPORTION = 700  # Increased from 600 to give more space to table
+    TREE_PROPORTION = 180  # Reduced to give more space to function table
+    TABLE_PROPORTION = 820  # Increased for better function table visibility
 
     # Signals
     function_selected = pyqtSignal(object)  # Selected function
@@ -150,7 +158,9 @@ class FunctionSelectorDialog(QDialog):
         # Connect to custom function signals for auto-refresh
         custom_function_signals.functions_changed.connect(self._on_functions_changed)
 
-        logger.debug(f"Function selector initialized with {len(self.all_functions_metadata)} functions")
+        logger.debug(
+            f"Function selector initialized with {len(self.all_functions_metadata)} functions"
+        )
 
     def _load_function_data(self) -> None:
         """Load ALL functions from registries (not just FUNC_REGISTRY subset)."""
@@ -173,30 +183,32 @@ class FunctionSelectorDialog(QDialog):
         # Handle composite keys (backend:function_name) from registry service
         for composite_key, metadata in unified_functions.items():
             # Extract backend and function name from composite key
-            if ':' in composite_key:
-                backend, func_name = composite_key.split(':', 1)
+            if ":" in composite_key:
+                backend, func_name = composite_key.split(":", 1)
             else:
                 # Fallback for non-composite keys
-                backend = metadata.registry.library_name if metadata.registry else 'unknown'
+                backend = (
+                    metadata.registry.library_name if metadata.registry else "unknown"
+                )
                 func_name = composite_key
 
             self.all_functions_metadata[composite_key] = {
-                'name': metadata.name,
-                'func': metadata.func,
-                'module': metadata.module,
-                'contract': metadata.contract,
-                'tags': metadata.tags,
-                'doc': metadata.doc,
-                'backend': metadata.get_memory_type(),  # Actual memory type (cupy, numpy, etc.)
-                'registry': metadata.get_registry_name(),  # Registry source (openhcs, skimage, etc.)
-                'metadata': metadata  # Store full metadata for access to new methods
+                "name": metadata.name,
+                "func": metadata.func,
+                "module": metadata.module,
+                "contract": metadata.contract,
+                "tags": metadata.tags,
+                "doc": metadata.doc,
+                "backend": metadata.get_memory_type(),  # Actual memory type (cupy, numpy, etc.)
+                "registry": metadata.get_registry_name(),  # Registry source (openhcs, skimage, etc.)
+                "metadata": metadata,  # Store full metadata for access to new methods
             }
 
         # Cache the results for future use
         FunctionSelectorDialog._metadata_cache = self.all_functions_metadata
-        logger.info(f"Loaded {len(self.all_functions_metadata)} functions from all registries")
-
-
+        logger.info(
+            f"Loaded {len(self.all_functions_metadata)} functions from all registries"
+        )
 
         self.filtered_functions = self.all_functions_metadata.copy()
 
@@ -214,7 +226,9 @@ class FunctionSelectorDialog(QDialog):
         self.populate_module_tree()
         self.populate_function_table()
 
-        logger.debug(f"Function selector refreshed with {len(self.all_functions_metadata)} functions")
+        logger.debug(
+            f"Function selector refreshed with {len(self.all_functions_metadata)} functions"
+        )
 
     def populate_module_tree(self):
         """Populate the module tree with hierarchical function organization based purely on module paths."""
@@ -228,9 +242,13 @@ class FunctionSelectorDialog(QDialog):
             self._add_function_to_hierarchy(module_hierarchy, module_path, func_name)
 
         # Build tree structure directly from module hierarchy (no library grouping)
-        self._build_module_hierarchy_tree(self.module_tree, module_hierarchy, [], is_root=True)
+        self._build_module_hierarchy_tree(
+            self.module_tree, module_hierarchy, [], is_root=True
+        )
 
-    def _update_filtered_view(self, filtered_functions: Dict[str, Any], filter_description: str = ""):
+    def _update_filtered_view(
+        self, filtered_functions: Dict[str, Any], filter_description: str = ""
+    ):
         """Update filtered view using table browser."""
         self.filtered_functions = filtered_functions
         self.populate_function_table(self.filtered_functions)
@@ -275,32 +293,34 @@ class FunctionSelectorDialog(QDialog):
 
     def _determine_library(self, metadata) -> str:
         """Direct library determination using registry ownership (robust approach)."""
-        func_name = metadata.get('name', '')
-        module = metadata.get('module', '')
+        func_name = metadata.get("name", "")
+        module = metadata.get("module", "")
 
         # Use direct registry ownership lookup (eliminates pattern matching fragility)
         return LibraryDetector.get_function_library(func_name, module)
 
     def _extract_module_path(self, metadata) -> str:
         """Extract full module path from metadata for hierarchical tree building."""
-        module = metadata.get('module', '')
+        module = metadata.get("module", "")
         if not module:
-            return 'unknown'
+            return "unknown"
 
         # Return the full module path for hierarchical tree building
         return module
 
-    def _add_function_to_hierarchy(self, hierarchy: dict, module_path: str, func_name: str):
+    def _add_function_to_hierarchy(
+        self, hierarchy: dict, module_path: str, func_name: str
+    ):
         """Add a function to the hierarchical module structure."""
-        if module_path == 'unknown':
+        if module_path == "unknown":
             # Handle unknown modules
-            if 'functions' not in hierarchy:
-                hierarchy['functions'] = []
-            hierarchy['functions'].append(func_name)
+            if "functions" not in hierarchy:
+                hierarchy["functions"] = []
+            hierarchy["functions"].append(func_name)
             return
 
         # Split module path and build hierarchy
-        parts = module_path.split('.')
+        parts = module_path.split(".")
         current_level = hierarchy
 
         for part in parts:
@@ -309,28 +329,35 @@ class FunctionSelectorDialog(QDialog):
             current_level = current_level[part]
 
         # Add function to the deepest level
-        if 'functions' not in current_level:
-            current_level['functions'] = []
-        current_level['functions'].append(func_name)
+        if "functions" not in current_level:
+            current_level["functions"] = []
+        current_level["functions"].append(func_name)
 
     def _count_functions_in_hierarchy(self, hierarchy: dict) -> int:
         """Count total functions in a hierarchical structure."""
         count = 0
         for key, value in hierarchy.items():
-            if key == 'functions':
+            if key == "functions":
                 count += len(value)
             elif isinstance(value, dict):
                 count += self._count_functions_in_hierarchy(value)
         return count
 
-    def _build_module_hierarchy_tree(self, parent_container, hierarchy: dict,
-                                   module_path_parts: list, is_root: bool = False):
+    def _build_module_hierarchy_tree(
+        self,
+        parent_container,
+        hierarchy: dict,
+        module_path_parts: list,
+        is_root: bool = False,
+    ):
         """Recursively build the hierarchical module tree."""
         for key, value in hierarchy.items():
-            if key == 'functions':
+            if key == "functions":
                 # This level has functions - create a module node if there are functions
                 if value:  # Only create node if there are functions
-                    current_path = '.'.join(module_path_parts) if module_path_parts else 'unknown'
+                    current_path = (
+                        ".".join(module_path_parts) if module_path_parts else "unknown"
+                    )
                     if is_root:
                         # For root level, add directly to tree widget
                         module_item = QTreeWidgetItem(parent_container)
@@ -338,11 +365,11 @@ class FunctionSelectorDialog(QDialog):
                         # For nested levels, add to parent item
                         module_item = QTreeWidgetItem(parent_container)
                     module_item.setText(0, f"{current_path} ({len(value)} functions)")
-                    module_item.setData(0, Qt.ItemDataRole.UserRole, {
-                        "type": "module",
-                        "module": current_path,
-                        "functions": value
-                    })
+                    module_item.setData(
+                        0,
+                        Qt.ItemDataRole.UserRole,
+                        {"type": "module", "module": current_path, "functions": value},
+                    )
             elif isinstance(value, dict):
                 # This is a module part - create a tree node and recurse
                 new_path_parts = module_path_parts + [key]
@@ -357,17 +384,25 @@ class FunctionSelectorDialog(QDialog):
                     # For nested levels, add to parent item
                     module_part_item = QTreeWidgetItem(parent_container)
 
-                module_part_item.setText(0, f"{key} ({subtree_function_count} functions)")
-                module_part_item.setData(0, Qt.ItemDataRole.UserRole, {
-                    "type": "module_part",
-                    "module_part": key,
-                    "full_path": '.'.join(new_path_parts)
-                })
+                module_part_item.setText(
+                    0, f"{key} ({subtree_function_count} functions)"
+                )
+                module_part_item.setData(
+                    0,
+                    Qt.ItemDataRole.UserRole,
+                    {
+                        "type": "module_part",
+                        "module_part": key,
+                        "full_path": ".".join(new_path_parts),
+                    },
+                )
                 # Start collapsed - users can expand as needed
                 module_part_item.setExpanded(False)
 
                 # Recursively build subtree
-                self._build_module_hierarchy_tree(module_part_item, value, new_path_parts, is_root=False)
+                self._build_module_hierarchy_tree(
+                    module_part_item, value, new_path_parts, is_root=False
+                )
 
     @classmethod
     def clear_metadata_cache(cls) -> None:
@@ -375,7 +410,7 @@ class FunctionSelectorDialog(QDialog):
         cls._metadata_cache = None
         RegistryService.clear_metadata_cache()
         logger.info("Function metadata cache cleared")
-    
+
     def setup_ui(self):
         """Setup the dual-pane user interface with tree, filters, and table."""
         self.setWindowTitle("Select Function - Dual Pane View")
@@ -391,12 +426,16 @@ class FunctionSelectorDialog(QDialog):
         title_font.setBold(True)
         title_font.setPointSize(12)
         title_label.setFont(title_font)
-        title_label.setStyleSheet(f"color: {self.color_scheme.to_hex(self.color_scheme.text_accent)};")
+        title_label.setStyleSheet(
+            f"color: {self.color_scheme.to_hex(self.color_scheme.text_accent)};"
+        )
         layout.addWidget(title_label)
 
         # Create main horizontal splitter (left panel | right table)
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
-        main_splitter.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        main_splitter.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         main_splitter.setHandleWidth(5)
 
         # === LEFT PANEL: Tree + Filters ===
@@ -406,13 +445,19 @@ class FunctionSelectorDialog(QDialog):
 
         # Module tree
         self.module_tree = QTreeWidget()
-        self.module_tree.setHeaderLabel("Module Structure")
-        self.module_tree.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.module_tree.setHeaderHidden(True)
+        self.module_tree.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.module_tree.mousePressEvent = self._tree_mouse_press_event
-        left_layout.addWidget(self._create_pane_widget("Module Structure", self.module_tree), 1)
+        left_layout.addWidget(
+            self._create_pane_widget("Module Structure", self.module_tree), 1
+        )
 
         # Column filter panel (Library, Backend, Contract, Tags)
-        self.column_filter_panel = MultiColumnFilterPanel(color_scheme=self.color_scheme)
+        self.column_filter_panel = MultiColumnFilterPanel(
+            color_scheme=self.color_scheme
+        )
         self.column_filter_panel.setVisible(False)  # Hidden until populated
         left_layout.addWidget(self.column_filter_panel)
 
@@ -420,12 +465,15 @@ class FunctionSelectorDialog(QDialog):
 
         # === RIGHT PANEL: Function Table Browser ===
         self.function_table_browser = FunctionTableBrowser(
-            color_scheme=self.color_scheme,
-            parent=self
+            color_scheme=self.color_scheme, parent=self
         )
-        self.function_table_browser.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.function_table_browser.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
 
-        right_widget = self._create_pane_widget("Function Details", self.function_table_browser)
+        right_widget = self._create_pane_widget(
+            "Function Details", self.function_table_browser
+        )
         main_splitter.addWidget(right_widget)
 
         # Set splitter proportions
@@ -449,16 +497,19 @@ class FunctionSelectorDialog(QDialog):
 
         # Apply centralized styling
         self.setStyleSheet(
-            self.style_generator.generate_dialog_style() + "\n" +
-            self.style_generator.generate_tree_widget_style() + "\n" +
-            self.style_generator.generate_table_widget_style() + "\n" +
-            self.style_generator.generate_button_style()
+            self.style_generator.generate_dialog_style()
+            + "\n"
+            + self.style_generator.generate_tree_widget_style()
+            + "\n"
+            + self.style_generator.generate_table_widget_style()
+            + "\n"
+            + self.style_generator.generate_button_style()
         )
 
         # Connect buttons
         self.select_btn.clicked.connect(self.accept_selection)
         cancel_btn.clicked.connect(self.reject)
-    
+
     def setup_connections(self):
         """Setup signal/slot connections."""
         # Tree selection for filtering
@@ -466,12 +517,18 @@ class FunctionSelectorDialog(QDialog):
 
         # Table browser signals
         self.function_table_browser.item_selected.connect(self._on_function_selected)
-        self.function_table_browser.item_double_clicked.connect(self._on_function_double_clicked)
+        self.function_table_browser.item_double_clicked.connect(
+            self._on_function_double_clicked
+        )
 
         # Column filter panel
-        self.column_filter_panel.filters_changed.connect(self._on_column_filters_changed)
+        self.column_filter_panel.filters_changed.connect(
+            self._on_column_filters_changed
+        )
 
-    def populate_function_table(self, functions_metadata: Optional[Dict[str, FunctionMetadata]] = None):
+    def populate_function_table(
+        self, functions_metadata: Optional[Dict[str, FunctionMetadata]] = None
+    ):
         """Populate function table using FunctionTableBrowser."""
         if functions_metadata is None:
             functions_metadata = self.filtered_functions
@@ -481,7 +538,9 @@ class FunctionSelectorDialog(QDialog):
         # Update count label
         total = len(self.all_functions_metadata)
         filtered = len(functions_metadata)
-        self.function_table_browser.status_label.setText(f"Functions: {filtered}/{total}")
+        self.function_table_browser.status_label.setText(
+            f"Functions: {filtered}/{total}"
+        )
 
     def _build_column_filters(self):
         """Build column filter widgets from function metadata."""
@@ -492,22 +551,25 @@ class FunctionSelectorDialog(QDialog):
 
         # Extract unique values for filterable columns
         filter_columns = {
-            'Registry': lambda m: m.get('registry', 'unknown').title(),
-            'Backend': lambda m: m.get('backend', 'unknown').title(),
-            'Contract': lambda m: (
-                m.get('contract').name if hasattr(m.get('contract'), 'name')
-                else str(m.get('contract')) if m.get('contract') else 'unknown'
+            "Registry": lambda m: m.get("registry", "unknown").title(),
+            "Backend": lambda m: m.get("backend", "unknown").title(),
+            "Contract": lambda m: (
+                m.get("contract").name
+                if hasattr(m.get("contract"), "name")
+                else str(m.get("contract"))
+                if m.get("contract")
+                else "unknown"
             ),
-            'Tags': None,  # Special handling for tags (multiple values per item)
+            "Tags": None,  # Special handling for tags (multiple values per item)
         }
 
         for column_name, extractor in filter_columns.items():
             unique_values = set()
 
             for metadata in self.all_functions_metadata.values():
-                if column_name == 'Tags':
+                if column_name == "Tags":
                     # Tags is a list - add each tag individually
-                    tags = metadata.get('tags', [])
+                    tags = metadata.get("tags", [])
                     unique_values.update(tags)
                 else:
                     value = extractor(metadata)
@@ -515,7 +577,9 @@ class FunctionSelectorDialog(QDialog):
                         unique_values.add(value)
 
             if unique_values:
-                self.column_filter_panel.add_column_filter(column_name, sorted(list(unique_values)))
+                self.column_filter_panel.add_column_filter(
+                    column_name, sorted(list(unique_values))
+                )
 
         if self.column_filter_panel.column_filters:
             self.column_filter_panel.setVisible(True)
@@ -535,16 +599,22 @@ class FunctionSelectorDialog(QDialog):
             matches = True
 
             for column_name, allowed_values in active_filters.items():
-                if column_name == 'Registry':
-                    value = metadata.get('registry', 'unknown').title()
-                elif column_name == 'Backend':
-                    value = metadata.get('backend', 'unknown').title()
-                elif column_name == 'Contract':
-                    contract = metadata.get('contract')
-                    value = contract.name if hasattr(contract, 'name') else str(contract) if contract else 'unknown'
-                elif column_name == 'Tags':
+                if column_name == "Registry":
+                    value = metadata.get("registry", "unknown").title()
+                elif column_name == "Backend":
+                    value = metadata.get("backend", "unknown").title()
+                elif column_name == "Contract":
+                    contract = metadata.get("contract")
+                    value = (
+                        contract.name
+                        if hasattr(contract, "name")
+                        else str(contract)
+                        if contract
+                        else "unknown"
+                    )
+                elif column_name == "Tags":
                     # For tags, match if ANY tag is in allowed_values
-                    tags = metadata.get('tags', [])
+                    tags = metadata.get("tags", [])
                     if not any(tag in allowed_values for tag in tags):
                         matches = False
                         continue
@@ -568,7 +638,9 @@ class FunctionSelectorDialog(QDialog):
 
         # If no items selected, show all functions
         if not selected_items:
-            self._update_filtered_view(self.all_functions_metadata, "showing all functions")
+            self._update_filtered_view(
+                self.all_functions_metadata, "showing all functions"
+            )
             return
 
         item = selected_items[0]
@@ -581,7 +653,8 @@ class FunctionSelectorDialog(QDialog):
             if node_type == "module":
                 module_functions = data.get("functions", [])
                 filtered = {
-                    name: metadata for name, metadata in self.all_functions_metadata.items()
+                    name: metadata
+                    for name, metadata in self.all_functions_metadata.items()
                     if name in module_functions
                 }
                 self._update_filtered_view(filtered, "filtered by module")
@@ -590,13 +663,18 @@ class FunctionSelectorDialog(QDialog):
                 # Filter by module part - find all functions whose modules start with this path
                 module_part_path = data.get("full_path", "")
                 filtered = {
-                    name: metadata for name, metadata in self.all_functions_metadata.items()
+                    name: metadata
+                    for name, metadata in self.all_functions_metadata.items()
                     if self._extract_module_path(metadata).startswith(module_part_path)
                 }
-                self._update_filtered_view(filtered, f"filtered by module part: {module_part_path}")
+                self._update_filtered_view(
+                    filtered, f"filtered by module part: {module_part_path}"
+                )
         else:
             # No data means show all functions
-            self._update_filtered_view(self.all_functions_metadata, "showing all functions")
+            self._update_filtered_view(
+                self.all_functions_metadata, "showing all functions"
+            )
 
     def _tree_mouse_press_event(self, event):
         """Handle mouse press events on the tree to allow deselection."""
@@ -612,35 +690,37 @@ class FunctionSelectorDialog(QDialog):
 
     def _on_function_selected(self, key: str, item: Dict[str, Any]):
         """Handle function selection from table browser."""
-        func = item.get('func')
+        func = item.get("func")
         self._set_selection_state(func, func is not None)
 
     def _on_function_double_clicked(self, key: str, item: Dict[str, Any]):
         """Handle function double-click from table browser."""
-        func = item.get('func')
+        func = item.get("func")
         if func:
             self.selected_function = func
             self.accept_selection()
-    
+
     def accept_selection(self):
         """Accept the selected function."""
         if self.selected_function:
             self.function_selected.emit(self.selected_function)
             self.accept()
-    
+
     def get_selected_function(self) -> Optional[Callable]:
         """Get the selected function."""
         return self.selected_function
-    
+
     @staticmethod
-    def select_function(current_function: Optional[Callable] = None, parent=None) -> Optional[Callable]:
+    def select_function(
+        current_function: Optional[Callable] = None, parent=None
+    ) -> Optional[Callable]:
         """
         Static method to show function selector and return selected function.
-        
+
         Args:
             current_function: Currently selected function (for highlighting)
             parent: Parent widget
-            
+
         Returns:
             Selected function or None if cancelled
         """

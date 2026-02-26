@@ -1,6 +1,8 @@
 """OpenHCS execution client built on zmqruntime ExecutionClient."""
+
 from __future__ import annotations
 
+import hashlib
 import logging
 import subprocess
 import sys
@@ -17,7 +19,7 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 logger = logging.getLogger(__name__)
 
 
-class OpenHCSExecutionClient(ExecutionClient):
+class ZMQExecutionClient(ExecutionClient):
     """ZMQ client for OpenHCS pipeline execution with progress streaming."""
 
     def __init__(
@@ -47,41 +49,109 @@ class OpenHCSExecutionClient(ExecutionClient):
         global_config = task.get("global_config")
         pipeline_config = task.get("pipeline_config")
         config_params = task.get("config_params")
+        compile_only = task.get("compile_only", False)
+        compile_artifact_id = task.get("compile_artifact_id")
 
         pipeline_code = generate_python_source(
             Assignment("pipeline_steps", pipeline_steps),
             header="# Edit this pipeline and save to apply changes",
             clean_mode=True,
         )
-        request = {"type": "execute", "plate_id": str(plate_id), "pipeline_code": pipeline_code}
+        request = {
+            "type": "execute",
+            "plate_id": str(plate_id),
+            "pipeline_code": pipeline_code,
+        }
+        pipeline_sha = hashlib.sha256(pipeline_code.encode("utf-8")).hexdigest()[:12]
+        if compile_only:
+            request["compile_only"] = True
+        if compile_artifact_id:
+            request["compile_artifact_id"] = str(compile_artifact_id)
         if config_params:
             request["config_params"] = config_params
         else:
-            request["config_code"] = generate_python_source(
+            config_code = generate_python_source(
                 Assignment("config", global_config),
                 header="# Configuration Code",
                 clean_mode=True,
             )
+            request["config_code"] = config_code
+            config_sha = hashlib.sha256(config_code.encode("utf-8")).hexdigest()[:12]
             if pipeline_config:
-                request["pipeline_config_code"] = generate_python_source(
+                pipeline_config_code = generate_python_source(
                     Assignment("config", pipeline_config),
                     header="# Configuration Code",
                     clean_mode=True,
                 )
+                request["pipeline_config_code"] = pipeline_config_code
+                pipeline_config_sha = hashlib.sha256(
+                    pipeline_config_code.encode("utf-8")
+                ).hexdigest()[:12]
+            else:
+                pipeline_config_sha = "-"
+        if config_params:
+            config_sha = "params"
+            pipeline_config_sha = "params"
+        logger.info(
+            "Serialize task: plate=%s compile_only=%s artifact_id=%s step_count=%s pipeline_sha=%s config_sha=%s pipeline_config_sha=%s",
+            plate_id,
+            bool(compile_only),
+            compile_artifact_id,
+            len(pipeline_steps) if isinstance(pipeline_steps, list) else "?",
+            pipeline_sha,
+            config_sha,
+            pipeline_config_sha,
+        )
         return request
 
-    def submit_pipeline(self, plate_id, pipeline_steps, global_config, pipeline_config=None, config_params=None):
+    def submit_pipeline(
+        self,
+        plate_id,
+        pipeline_steps,
+        global_config,
+        pipeline_config=None,
+        config_params=None,
+        compile_artifact_id=None,
+    ):
         task = {
             "plate_id": plate_id,
             "pipeline_steps": pipeline_steps,
             "global_config": global_config,
             "pipeline_config": pipeline_config,
             "config_params": config_params,
+            "compile_artifact_id": compile_artifact_id,
         }
         return self.submit_execution(task)
 
-    def execute_pipeline(self, plate_id, pipeline_steps, global_config, pipeline_config=None, config_params=None):
-        response = self.submit_pipeline(plate_id, pipeline_steps, global_config, pipeline_config, config_params)
+    def submit_compile(
+        self,
+        plate_id,
+        pipeline_steps,
+        global_config,
+        pipeline_config=None,
+        config_params=None,
+    ):
+        task = {
+            "plate_id": plate_id,
+            "pipeline_steps": pipeline_steps,
+            "global_config": global_config,
+            "pipeline_config": pipeline_config,
+            "config_params": config_params,
+            "compile_only": True,
+        }
+        return self.submit_execution(task)
+
+    def execute_pipeline(
+        self,
+        plate_id,
+        pipeline_steps,
+        global_config,
+        pipeline_config=None,
+        config_params=None,
+    ):
+        response = self.submit_pipeline(
+            plate_id, pipeline_steps, global_config, pipeline_config, config_params
+        )
         if response.get("status") == "accepted":
             execution_id = response.get("execution_id")
             return self.wait_for_completion(execution_id)
@@ -93,15 +163,37 @@ class OpenHCSExecutionClient(ExecutionClient):
     def _spawn_server_process(self):
         import os
         import glob
+        import logging
 
         log_dir = Path.home() / ".local" / "share" / "openhcs" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
-        log_file_path = log_dir / f"openhcs_zmq_server_port_{self.port}_{int(time.time() * 1000000)}.log"
-        cmd = [sys.executable, "-m", "openhcs.runtime.zmq_execution_server_launcher", "--port", str(self.port)]
+        log_file_path = (
+            log_dir
+            / f"openhcs_zmq_server_port_{self.port}_{int(time.time() * 1000000)}.log"
+        )
+        cmd = [
+            sys.executable,
+            "-m",
+            "openhcs.runtime.zmq_execution_server_launcher",
+            "--port",
+            str(self.port),
+        ]
         if self.persistent:
             cmd.append("--persistent")
         cmd.extend(["--log-file-path", str(log_file_path)])
         cmd.extend(["--transport-mode", self.transport_mode.value])
+
+        # Pass the current process's logging level to the server
+        # Get the root logger's effective level
+        root_logger = logging.getLogger()
+        current_log_level = root_logger.getEffectiveLevel()
+        log_level_name = logging.getLevelName(current_log_level)
+
+        # Log what we're passing to help debug
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Spawning ZMQ server with log level: {log_level_name} (numeric: {current_log_level})")
+
+        cmd.extend(["--log-level", log_level_name])
 
         env = os.environ.copy()
         site_packages = (
@@ -111,12 +203,18 @@ class OpenHCSExecutionClient(ExecutionClient):
             / "site-packages"
         )
         nvidia_lib_pattern = str(site_packages / "nvidia" / "*" / "lib")
-        venv_nvidia_libs = [p for p in glob.glob(nvidia_lib_pattern) if os.path.isdir(p)]
+        venv_nvidia_libs = [
+            p for p in glob.glob(nvidia_lib_pattern) if os.path.isdir(p)
+        ]
 
         if venv_nvidia_libs:
             existing_ld_path = env.get("LD_LIBRARY_PATH", "")
             nvidia_paths = ":".join(venv_nvidia_libs)
-            env["LD_LIBRARY_PATH"] = f"{nvidia_paths}:{existing_ld_path}" if existing_ld_path else nvidia_paths
+            env["LD_LIBRARY_PATH"] = (
+                f"{nvidia_paths}:{existing_ld_path}"
+                if existing_ld_path
+                else nvidia_paths
+            )
 
         return subprocess.Popen(
             cmd,
@@ -135,6 +233,3 @@ class OpenHCSExecutionClient(ExecutionClient):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.disconnect()
-
-
-ZMQExecutionClient = OpenHCSExecutionClient

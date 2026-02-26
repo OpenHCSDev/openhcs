@@ -19,7 +19,7 @@ from PyQt6.QtCore import Qt
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.theming import StyleSheetGenerator
 from pyqt_reactive.widgets.editors.simple_code_editor import QScintillaCodeEditorDialog
-from openhcs.pyqt_gui.windows.base_form_dialog import BaseFormDialog
+from pyqt_reactive.widgets.shared import BaseFormDialog
 from openhcs.processing.custom_functions import CustomFunctionManager
 from openhcs.processing.custom_functions.signals import custom_function_signals
 from openhcs.processing.custom_functions.templates import get_default_template

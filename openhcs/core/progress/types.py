@@ -1,0 +1,478 @@
+"""Immutable progress types following OpenHCS patterns."""
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, replace
+from enum import Enum
+from typing import Dict, Any, Optional, List
+import time
+from zmqruntime.messages import TaskProgress
+
+# =============================================================================
+# ProgressPhase Enum - Unifies TaskPhase + AxisPhase
+# =============================================================================
+
+
+class ProgressPhase(Enum):
+    """Progress phases - unified phase vocabulary.
+
+    Extends ZMQRuntime's TaskPhase with OpenHCS-specific phases.
+    """
+
+    # Generic phases (from TaskPhase)
+    INIT = "init"
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+    # Compilation phases
+    COMPILE = "compile"
+
+    # Execution phases
+    AXIS_STARTED = "axis_started"
+    STEP_STARTED = "step_started"
+    STEP_COMPLETED = "step_completed"
+    PATTERN_GROUP = "pattern_group"
+    AXIS_COMPLETED = "axis_completed"
+
+    # Error phases
+    AXIS_ERROR = "axis_error"
+
+    def __str__(self):
+        """String representation for logging."""
+        return self.value
+
+
+class ProgressChannel(Enum):
+    """Semantic channel for phase-specific progress streams."""
+
+    INIT = "init"
+    COMPILE = "compile"
+    PIPELINE = "pipeline"
+    STEP = "step"
+
+    def __str__(self):
+        return self.value
+
+
+# =============================================================================
+# ProgressStatus Enum - Unifies TaskStatus + AxisStatus
+# =============================================================================
+
+
+class ProgressStatus(Enum):
+    """Progress status - unified status vocabulary.
+
+    Extends ZMQRuntime's TaskStatus with OpenHCS-specific statuses.
+    """
+
+    # Generic statuses (from TaskStatus)
+    PENDING = "pending"
+    STARTED = "started"
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+    # OpenHCS-specific statuses
+    ERROR = "error"
+    QUEUED = "queued"
+
+    def __str__(self):
+        """String representation for logging."""
+        return self.value
+
+
+class ProgressSemanticsABC(ABC):
+    """Nominal contract for progress phase semantics."""
+
+    @abstractmethod
+    def channel_for_phase(self, phase: ProgressPhase) -> ProgressChannel:
+        """Classify phase into a semantic channel."""
+
+    @abstractmethod
+    def is_terminal(self, event: "ProgressEvent") -> bool:
+        """Return True when event is terminal."""
+
+    @abstractmethod
+    def is_execution_phase(self, phase: ProgressPhase) -> bool:
+        """Return True when phase belongs to execution."""
+
+
+class ProgressSemantics(ProgressSemanticsABC):
+    """Single source of truth for phase semantics."""
+
+    _PHASE_TO_CHANNEL = {
+        ProgressPhase.INIT: ProgressChannel.INIT,
+        ProgressPhase.QUEUED: ProgressChannel.PIPELINE,
+        ProgressPhase.RUNNING: ProgressChannel.PIPELINE,
+        ProgressPhase.SUCCESS: ProgressChannel.PIPELINE,
+        ProgressPhase.FAILED: ProgressChannel.PIPELINE,
+        ProgressPhase.CANCELLED: ProgressChannel.PIPELINE,
+        ProgressPhase.COMPILE: ProgressChannel.COMPILE,
+        ProgressPhase.AXIS_STARTED: ProgressChannel.PIPELINE,
+        ProgressPhase.STEP_STARTED: ProgressChannel.PIPELINE,
+        ProgressPhase.STEP_COMPLETED: ProgressChannel.PIPELINE,
+        ProgressPhase.PATTERN_GROUP: ProgressChannel.STEP,
+        ProgressPhase.AXIS_COMPLETED: ProgressChannel.PIPELINE,
+        ProgressPhase.AXIS_ERROR: ProgressChannel.PIPELINE,
+    }
+    _TERMINAL_PHASES = {
+        ProgressPhase.SUCCESS,
+        ProgressPhase.FAILED,
+        ProgressPhase.CANCELLED,
+        ProgressPhase.AXIS_COMPLETED,
+        ProgressPhase.AXIS_ERROR,
+    }
+    _TERMINAL_STATUSES = {
+        ProgressStatus.SUCCESS,
+        ProgressStatus.FAILED,
+        ProgressStatus.CANCELLED,
+        ProgressStatus.ERROR,
+    }
+
+    def channel_for_phase(self, phase: ProgressPhase) -> ProgressChannel:
+        return self._PHASE_TO_CHANNEL[phase]
+
+    def is_terminal(self, event: "ProgressEvent") -> bool:
+        return (
+            event.phase in self._TERMINAL_PHASES
+            or event.status in self._TERMINAL_STATUSES
+        )
+
+    def is_execution_phase(self, phase: ProgressPhase) -> bool:
+        channel = self.channel_for_phase(phase)
+        return channel in {ProgressChannel.PIPELINE, ProgressChannel.STEP}
+
+
+_PROGRESS_SEMANTICS = ProgressSemantics()
+_FAILURE_STATUSES = {
+    ProgressStatus.FAILED,
+    ProgressStatus.ERROR,
+    ProgressStatus.CANCELLED,
+}
+_FAILURE_PHASES = {
+    ProgressPhase.FAILED,
+    ProgressPhase.CANCELLED,
+    ProgressPhase.AXIS_ERROR,
+}
+_SUCCESS_TERMINAL_PHASES = {
+    ProgressPhase.SUCCESS,
+    ProgressPhase.AXIS_COMPLETED,
+}
+
+
+def phase_channel(phase: ProgressPhase) -> ProgressChannel:
+    """Classify phase to semantic channel."""
+    return _PROGRESS_SEMANTICS.channel_for_phase(phase)
+
+
+def is_terminal_event(event: "ProgressEvent") -> bool:
+    """True when the event is terminal."""
+    return _PROGRESS_SEMANTICS.is_terminal(event)
+
+
+def is_execution_phase(phase: ProgressPhase) -> bool:
+    """True when phase belongs to execution tree."""
+    return _PROGRESS_SEMANTICS.is_execution_phase(phase)
+
+
+def is_failure_event(event: "ProgressEvent") -> bool:
+    """True when event represents a failure state."""
+    return event.status in _FAILURE_STATUSES or event.phase in _FAILURE_PHASES
+
+
+def is_success_terminal_event(event: "ProgressEvent") -> bool:
+    """True when event represents successful terminal completion."""
+    return event.phase in _SUCCESS_TERMINAL_PHASES
+
+
+# =============================================================================
+# ProgressEvent Frozen Dataclass - Single Source of Truth
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class ProgressEvent:
+    """Immutable progress event - single source of truth.
+
+    Replaces dict-based progress payloads with validated, immutable data.
+    Uses frozen=True to ensure thread-safety and prevent accidental mutation.
+
+    All fields are explicit and typed - no generic metadata dict.
+    """
+
+    # Required core identifiers
+    execution_id: str
+    plate_id: str
+    axis_id: str
+    step_name: str
+
+    # Progress tracking
+    phase: ProgressPhase
+    status: ProgressStatus
+    percent: float
+    completed: int
+    total: int
+
+    # Metadata (timestamp, PID)
+    timestamp: float
+    pid: int
+
+    # Optional error information
+    error: Optional[str] = None
+    traceback: Optional[str] = None
+
+    # Optional application-specific fields
+    total_wells: Optional[List[str]] = None
+    worker_assignments: Optional[Dict[str, List[str]]] = None
+    worker_slot: Optional[str] = None
+    owned_wells: Optional[List[str]] = None
+    message: Optional[str] = None  # General message field (e.g., error messages)
+    component: Optional[str] = None  # Component value for pattern group progress
+    pattern: Optional[str] = None  # Pattern value for pattern group progress
+    context: Optional[Dict[str, Any]] = None  # Generic context for arbitrary data
+    step_names: Optional[List[str]] = None  # Step names for the pipeline
+
+    def __post_init__(self):
+        """Validate invariants (fail-loud principle)."""
+        # Validate percent range
+        if not (0.0 <= self.percent <= 100.0):
+            raise ValueError(f"percent must be in [0.0, 100.0], got {self.percent}")
+
+        # Validate completed <= total
+        if self.completed > self.total:
+            raise ValueError(
+                f"completed ({self.completed}) cannot exceed total ({self.total})"
+            )
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ProgressEvent":
+        """Create ProgressEvent from dict (for ZMQ transport).
+
+        Converts string phase/status to enums for type safety.
+
+        Args:
+            data: Dictionary with progress data (from ZMQ message)
+
+        Returns:
+            ProgressEvent instance
+
+        Raises:
+            KeyError: If required fields missing
+            ValueError: If phase/status strings invalid
+            TypeError: If field types invalid
+        """
+        # Validate generic transport invariants using zmqruntime primitive
+        TaskProgress.from_dict(data)
+
+        # Validate OpenHCS-required fields
+        required_fields = {
+            "execution_id",
+            "plate_id",
+            "axis_id",
+            "step_name",
+            "phase",
+            "status",
+            "percent",
+            "completed",
+            "total",
+            "timestamp",
+            "pid",
+        }
+        missing = required_fields - set(data.keys())
+        if missing:
+            raise KeyError(
+                f"Missing required fields: {missing}. Got keys: {list(data.keys())}"
+            )
+
+        # Convert phase string to enum
+        phase_str = data["phase"]
+        try:
+            phase = ProgressPhase(phase_str)
+        except ValueError:
+            raise ValueError(
+                f"Invalid phase '{phase_str}'. Valid phases: "
+                f"{[p.value for p in ProgressPhase]}"
+            )
+
+        # Convert status string to enum
+        status_str = data["status"]
+        try:
+            status = ProgressStatus(status_str)
+        except ValueError:
+            raise ValueError(
+                f"Invalid status '{status_str}'. Valid statuses: "
+                f"{[s.value for s in ProgressStatus]}"
+            )
+
+        # Create event with all fields (optional fields use .get())
+        return cls(
+            execution_id=data["execution_id"],
+            plate_id=data["plate_id"],
+            axis_id=data["axis_id"],
+            step_name=data["step_name"],
+            phase=phase,
+            status=status,
+            percent=float(data["percent"]),
+            completed=int(data["completed"]),
+            total=int(data["total"]),
+            timestamp=float(data["timestamp"]),
+            pid=int(data["pid"]),
+            error=data.get("error"),
+            traceback=data.get("traceback"),
+            total_wells=data.get("total_wells"),
+            worker_assignments=data.get("worker_assignments"),
+            worker_slot=data.get("worker_slot"),
+            owned_wells=data.get("owned_wells"),
+            message=data.get("message"),
+            component=data.get("component"),
+            pattern=data.get("pattern"),
+            context=data.get("context"),
+            step_names=data.get("step_names"),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dict (for ZMQ transport).
+
+        Converts enums to strings for JSON serialization.
+        Only includes optional fields if they are not None.
+
+        Returns:
+            Dictionary representation of this event
+        """
+        result = {
+            "execution_id": str(self.execution_id),
+            "plate_id": str(self.plate_id),
+            "axis_id": str(self.axis_id),
+            "step_name": self.step_name,
+            "phase": self.phase.value,  # Enum → string
+            "status": self.status.value,  # Enum → string
+            "percent": self.percent,
+            "completed": self.completed,
+            "total": self.total,
+            "timestamp": self.timestamp,
+            "pid": self.pid,
+        }
+
+        # Add optional fields if present
+        if self.error is not None:
+            result["error"] = self.error
+        if self.traceback is not None:
+            result["traceback"] = self.traceback
+        if self.total_wells is not None:
+            result["total_wells"] = self.total_wells
+        if self.worker_assignments is not None:
+            result["worker_assignments"] = self.worker_assignments
+        if self.worker_slot is not None:
+            result["worker_slot"] = self.worker_slot
+        if self.owned_wells is not None:
+            result["owned_wells"] = self.owned_wells
+        if self.message is not None:
+            result["message"] = self.message
+        if self.component is not None:
+            result["component"] = self.component
+        if self.pattern is not None:
+            result["pattern"] = self.pattern
+        if self.context is not None:
+            result["context"] = self.context
+        if self.step_names is not None:
+            result["step_names"] = self.step_names
+
+        return result
+
+    def replace(self, **kwargs) -> "ProgressEvent":
+        """Create a copy with replaced fields (immutable update pattern).
+
+        Returns:
+            New ProgressEvent with specified fields replaced
+        """
+        return replace(self, **kwargs)
+
+    def is_complete(self) -> bool:
+        """Check if this event represents a completed/terminal state.
+
+        Returns:
+            True if the event is in a terminal phase or status
+        """
+        return is_terminal_event(self)
+
+
+# =============================================================================
+# Utility Functions
+# =============================================================================
+
+
+def create_event(
+    execution_id: str,
+    plate_id: str,
+    axis_id: str,
+    step_name: str,
+    phase: ProgressPhase,
+    status: ProgressStatus,
+    percent: float,
+    completed: int = 0,
+    total: int = 1,
+    error: Optional[str] = None,
+    traceback: Optional[str] = None,
+    total_wells: Optional[List[str]] = None,
+    worker_assignments: Optional[Dict[str, List[str]]] = None,
+    worker_slot: Optional[str] = None,
+    owned_wells: Optional[List[str]] = None,
+    message: Optional[str] = None,
+    component: Optional[str] = None,
+    pattern: Optional[str] = None,
+) -> ProgressEvent:
+    """Convenience function to create ProgressEvent with defaults.
+
+    Automatically sets timestamp and pid for caller.
+
+    Args:
+        execution_id: Execution identifier
+        plate_id: Plate identifier
+        axis_id: Axis/well identifier
+        step_name: Name of current step
+        phase: Progress phase enum
+        status: Progress status enum
+        percent: Progress percentage (0-100)
+        completed: Number of completed items
+        total: Total number of items
+        error: Optional error message
+        traceback: Optional error traceback
+        total_wells: Optional list of well identifiers
+        worker_assignments: Optional worker->well map
+        worker_slot: Optional worker slot ID for the emitting worker
+        owned_wells: Optional owned well list for the emitting worker
+        message: Optional general message
+        component: Optional component value for pattern group progress
+        pattern: Optional pattern value for pattern group progress
+
+    Returns:
+        ProgressEvent instance with timestamp and pid set
+
+    Raises:
+        ValueError: If validation fails
+    """
+    return ProgressEvent(
+        execution_id=execution_id,
+        plate_id=plate_id,
+        axis_id=axis_id,
+        step_name=step_name,
+        phase=phase,
+        status=status,
+        percent=percent,
+        completed=completed,
+        total=total,
+        timestamp=time.time(),
+        pid=__import__("os").getpid(),
+        error=error,
+        traceback=traceback,
+        total_wells=total_wells,
+        worker_assignments=worker_assignments,
+        worker_slot=worker_slot,
+        owned_wells=owned_wells,
+        message=message,
+        component=component,
+        pattern=pattern,
+    )

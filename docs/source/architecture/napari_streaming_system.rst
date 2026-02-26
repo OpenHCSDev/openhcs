@@ -8,7 +8,21 @@ Pipeline visualization requires real-time data streaming to external processes w
 
 **The Visualization Challenge**: Traditional visualization approaches embed viewers in the main process, causing Qt threading conflicts and blocking pipeline execution. This creates a fundamental tension between visualization needs and processing performance.
 
-**The OpenHCS Solution**: A process-based streaming architecture that separates visualization into independent processes communicating via ZeroMQ. This eliminates Qt threading issues while enabling true real-time monitoring without performance impact on pipeline execution.
+**The OpenHCS Solution**: A thin-wrapper composition architecture. OpenHCS uses
+``zmqruntime`` for transport/lifecycle and ``polystore`` for streaming payload
+semantics and receiver-side batching/projection, while OpenHCS runtime modules
+provide application-specific process management and orchestration wiring.
+
+Canonical Abstraction Docs
+--------------------------
+
+For generic abstraction internals, see external module docs:
+
+- ``external/zmqruntime/docs/source/architecture/zmq_execution_system.rst``
+- ``external/zmqruntime/docs/source/architecture/viewer_streaming_architecture.rst``
+- ``external/PolyStore/docs/source/architecture/streaming_receiver_projection.rst``
+
+This page focuses on OpenHCS wrapper behavior and integration decisions.
 
 **Key Innovation**: Materialization-aware filtering ensures only meaningful outputs (final results, checkpoints) are visualized rather than overwhelming users with every intermediate processing step.
 

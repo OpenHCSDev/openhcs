@@ -81,7 +81,7 @@ def extract_attributes(pattern: Any) -> Dict[str, Any]:
 class PathPlanner:
     """Minimal path planner with zero duplication."""
 
-    def __init__(self, context: ProcessingContext, pipeline_config, orchestrator=None):
+    def __init__(self, context: ProcessingContext, pipeline_config, orchestrator=None, step_state_map=None):
         self.ctx = context
         # CRITICAL: pipeline_config is now the merged config (GlobalPipelineConfig) from context.global_config
         # This ensures proper inheritance from global config without needing field-specific code
@@ -90,6 +90,7 @@ class PathPlanner:
         self.plans = context.step_plans
         self.declared = {}  # Tracks special outputs
         self.orchestrator = orchestrator
+        self.step_state_map = step_state_map  # For resolving lazy dataclass attributes via ObjectState
 
         # Initial input determination (once)
         self.initial_input = Path(context.input_dir)
@@ -101,7 +102,7 @@ class PathPlanner:
             return None
         return str(key)
 
-    def _get_execution_groups(self, step: AbstractStep) -> List[Optional[str]]:
+    def _get_execution_groups(self, step: AbstractStep, step_index: int) -> List[Optional[str]]:
         """Determine which component groups this step will execute for."""
         from openhcs.constants import GroupBy
 
@@ -110,10 +111,23 @@ class PathPlanner:
 
         func_pattern = step.func
         if isinstance(func_pattern, dict):
-            return [self._normalize_group_key(k) for k in func_pattern.keys()]
+            result = [self._normalize_group_key(k) for k in func_pattern.keys()]
+            logger.info(f"🔍 PATH_PLANNER: Dict pattern detected, groups={result}")
+            return result
 
-        group_by = getattr(step.processing_config, "group_by", None)
+        # Resolve group_by via ObjectState to handle lazy dataclasses
+        group_by = None
+        if self.step_state_map and step_index in self.step_state_map:
+            step_state = self.step_state_map[step_index]
+            group_by = step_state.get_saved_resolved_value("processing_config.group_by")
+            logger.info(f"🔍 PATH_PLANNER: step={getattr(step, 'name', 'unknown')}, group_by={group_by} (via ObjectState)")
+        else:
+            # Fallback to direct access (shouldn't happen in normal compilation)
+            group_by = getattr(step.processing_config, "group_by", None)
+            logger.warning(f"🔍 PATH_PLANNER: step={getattr(step, 'name', 'unknown')}, group_by={group_by} (FALLBACK - no ObjectState!)")
+
         if not group_by or group_by == GroupBy.NONE or getattr(group_by, "value", None) is None:
+            logger.info(f"🔍 PATH_PLANNER: No group_by, returning [None]")
             return [None]
 
         if self.orchestrator is None:
@@ -124,7 +138,9 @@ class PathPlanner:
             return [None]
 
         try:
-            return [self._normalize_group_key(k) for k in self.orchestrator.get_component_keys(group_by)]
+            result = [self._normalize_group_key(k) for k in self.orchestrator.get_component_keys(group_by)]
+            logger.info(f"🔍 PATH_PLANNER: Resolved groups from orchestrator: {result}")
+            return result
         except Exception as e:
             logger.warning(f"PathPlanner: failed to resolve component keys for {group_by}: {e}")
             return [None]
@@ -230,7 +246,7 @@ class PathPlanner:
             step.func = self._inject_injectable_params(step.func, step)
             step.func = self._strip_disabled_functions(step.func)
             attrs = extract_attributes(step.func if step.func else [])
-            execution_groups = self._get_execution_groups(step)
+            execution_groups = self._get_execution_groups(step, i)  # Pass step_index for ObjectState resolution
             # For non-dict patterns grouped by component, namespace outputs only
             # when they are NOT consumed by any later step.
             if not isinstance(step.func, dict) and execution_groups != [None] and attrs["outputs"]["names"]:
@@ -799,7 +815,8 @@ class PipelinePathPlanner:
     def prepare_pipeline_paths(context: ProcessingContext,
                               pipeline_definition: List[AbstractStep],
                               pipeline_config,
-                              orchestrator=None) -> Dict:
+                              orchestrator=None,
+                              step_state_map=None) -> Dict:
         """
         Prepare pipeline paths.
 
@@ -809,8 +826,9 @@ class PipelinePathPlanner:
             pipeline_config: Merged GlobalPipelineConfig (from context.global_config)
                            NOT the raw PipelineConfig - ensures proper global config inheritance
             orchestrator: Optional orchestrator for component key resolution
+            step_state_map: Optional dict mapping step_index to ObjectState for resolving lazy dataclass attributes
         """
-        return PathPlanner(context, pipeline_config, orchestrator=orchestrator).plan(pipeline_definition)
+        return PathPlanner(context, pipeline_config, orchestrator=orchestrator, step_state_map=step_state_map).plan(pipeline_definition)
 
     @staticmethod
     def _build_axis_filename(axis_id: str, key: str, extension: str = "pkl", step_index: Optional[int] = None) -> str:

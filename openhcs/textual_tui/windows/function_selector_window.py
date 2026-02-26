@@ -236,8 +236,12 @@ class FunctionSelectorWindow(BaseOpenHCSWindow):
             description = metadata.doc[:50] + "..." if len(metadata.doc) > 50 else metadata.doc
 
             # Add row with function metadata - Backend shows memory type, Registry shows source
+            # Display original_name (just the function name) instead of name (which includes module prefix)
+            # The module is shown separately in the Module column
+            display_name = metadata.original_name or metadata.name
+
             row_key = table.add_row(
-                metadata.name,
+                display_name,
                 metadata.module.split('.')[-1] if metadata.module else "unknown",  # Show only last part of module
                 memory_type.title(),  # Show actual memory type (cupy, numpy, etc.)
                 registry_name.title(),  # Show registry source (openhcs, skimage, etc.)

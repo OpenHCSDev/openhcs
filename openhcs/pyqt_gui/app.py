@@ -11,12 +11,15 @@ from typing import Optional
 from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication, QMessageBox
+from PyQt6.QtCore import qInstallMessageHandler
 from PyQt6.QtGui import QIcon
 
 from openhcs.core.config import GlobalPipelineConfig
 from polystore.base import storage_registry
 from polystore.filemanager import FileManager
+from objectstate import spawn_thread_with_context
 
+from pyqt_reactive.utils.scroll_filter import install_shift_wheel_scrolling
 from openhcs.pyqt_gui.main import OpenHCSMainWindow
 
 logger = logging.getLogger(__name__)
@@ -25,53 +28,67 @@ logger = logging.getLogger(__name__)
 class OpenHCSPyQtApp(QApplication):
     """
     OpenHCS PyQt6 Application.
-    
+
     Main application class that manages global state, configuration,
     and the main window lifecycle.
     """
-    
-    def __init__(self, argv: list, global_config: Optional[GlobalPipelineConfig] = None):
+
+    def __init__(
+        self, argv: list, global_config: Optional[GlobalPipelineConfig] = None
+    ):
         """
         Initialize the OpenHCS PyQt6 application.
-        
+
         Args:
             argv: Command line arguments
             global_config: Global configuration (uses default if None)
         """
         super().__init__(argv)
-        
+
+        def _qt_message_handler(msg_type, context, message):
+            if "QTextCursor::setPosition" in message:
+                logger.warning("Qt: %s", message)
+
+        qInstallMessageHandler(_qt_message_handler)
+
         # Application metadata
         self.setApplicationName("OpenHCS")
         self.setApplicationVersion("1.0.0")
         self.setOrganizationName("OpenHCS Development Team")
         self.setOrganizationDomain("openhcs.org")
-        
+
         # Global configuration
         self.global_config = global_config or GlobalPipelineConfig()
-        
+
         # Shared components
         self.storage_registry = storage_registry
         self.file_manager = FileManager(self.storage_registry)
-        
+
         # Main window
         self.main_window: Optional[OpenHCSMainWindow] = None
-        
+
         # Setup application
         self.setup_application()
-        
+
+        # Install global Shift+Wheel horizontal scrolling
+        self._scroll_filter = install_shift_wheel_scrolling(self)
+        logger.debug("Installed global Shift+Wheel horizontal scrolling")
+
         logger.info("OpenHCS PyQt6 application initialized")
-    
+
     def setup_application(self):
         """Setup application-wide configuration."""
+
         # Start async storage registry initialization in background thread
-        import threading
         def init_storage_registry_background():
             from polystore.base import ensure_storage_registry
+
             ensure_storage_registry()
             logger.info("Storage registry initialized in background")
 
-        thread = threading.Thread(target=init_storage_registry_background, daemon=True, name="storage-registry-init")
-        thread.start()
+        spawn_thread_with_context(
+            init_storage_registry_background, name="storage-registry-init"
+        )
         logger.info("Storage registry initialization started in background")
 
         # Start async function registry initialization in background thread
@@ -79,18 +96,25 @@ class OpenHCSPyQtApp(QApplication):
         # Custom functions are automatically loaded as part of initialize_registry()
         def init_function_registry_background():
             from openhcs.processing.func_registry import initialize_registry
-            initialize_registry()
-            logger.info("Function registry initialized in background - virtual modules created")
 
-        func_thread = threading.Thread(target=init_function_registry_background, daemon=True, name="function-registry-init")
-        func_thread.start()
+            initialize_registry()
+            logger.info(
+                "Function registry initialized in background - virtual modules created"
+            )
+
+        spawn_thread_with_context(
+            init_function_registry_background, name="function-registry-init"
+        )
         logger.info("Function registry initialization started in background")
 
         # CRITICAL FIX: Establish global config context for lazy dataclass resolution
         # This was missing and caused placeholder resolution to fall back to static defaults
         from openhcs.config_framework.global_config import set_global_config_for_editing
         from openhcs.config_framework.lazy_factory import ensure_global_config_context
-        from openhcs.config_framework.object_state import ObjectState, ObjectStateRegistry
+        from openhcs.config_framework.object_state import (
+            ObjectState,
+            ObjectStateRegistry,
+        )
         from openhcs.core.config import GlobalPipelineConfig
 
         # Set for editing (UI placeholders) - this uses threading.local() storage
@@ -106,7 +130,7 @@ class OpenHCSPyQtApp(QApplication):
             object_instance=self.global_config,
             scope_id="",  # Empty string = global scope
         )
-        ObjectStateRegistry.register(global_state)
+        ObjectStateRegistry.register(global_state, _skip_snapshot=True)
 
         # ARCHITECTURAL FIX: Do NOT set contextvars at app startup
         # contextvars is ONLY for temporary nested contexts (inside with config_context() blocks)
@@ -114,10 +138,15 @@ class OpenHCSPyQtApp(QApplication):
         # Placeholder resolution will automatically fall back to threading.local() via get_base_global_config()
         # This eliminates the dual storage architecture smell
 
-        logger.info("Global configuration context established for lazy dataclass resolution")
+        logger.info(
+            "Global configuration context established for lazy dataclass resolution"
+        )
 
         # Register pyqt-reactor providers (LLM, codegen, log discovery, window factory, etc.)
-        from openhcs.pyqt_gui.services.reactor_providers import register_reactor_providers
+        from openhcs.pyqt_gui.services.reactor_providers import (
+            register_reactor_providers,
+        )
+
         register_reactor_providers()
 
         # Set application icon (if available)
@@ -127,22 +156,22 @@ class OpenHCSPyQtApp(QApplication):
 
         # Setup exception handling
         sys.excepthook = self.handle_exception
-    
+
     def create_main_window(self) -> OpenHCSMainWindow:
         """
         Create and show the main window.
-        
+
         Returns:
             Created main window
         """
         if self.main_window is None:
             self.main_window = OpenHCSMainWindow(self.global_config)
-            
+
             # Connect application-level signals
             self.main_window.config_changed.connect(self.on_config_changed)
-            
+
         return self.main_window
-    
+
     def show_main_window(self):
         """Show the main window."""
         if self.main_window is None:
@@ -155,22 +184,23 @@ class OpenHCSPyQtApp(QApplication):
         # Trigger deferred initialization AFTER window is visible
         # This includes log viewer and default windows (pipeline editor)
         from PyQt6.QtCore import QTimer
+
         QTimer.singleShot(100, self.main_window._deferred_initialization)
-    
+
     def on_config_changed(self, new_config: GlobalPipelineConfig):
         """
         Handle global configuration changes.
-        
+
         Args:
             new_config: New global configuration
         """
         self.global_config = new_config
         logger.info("Global configuration updated")
-    
+
     def handle_exception(self, exc_type, exc_value, exc_traceback):
         """
         Handle uncaught exceptions.
-        
+
         Args:
             exc_type: Exception type
             exc_value: Exception value
@@ -180,26 +210,23 @@ class OpenHCSPyQtApp(QApplication):
             # Handle Ctrl+C gracefully
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
-        
+
         # Log the exception
         logger.critical(
-            "Uncaught exception",
-            exc_info=(exc_type, exc_value, exc_traceback)
+            "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)
         )
-        
+
         # Show error dialog
         error_msg = f"An unexpected error occurred:\n\n{exc_type.__name__}: {exc_value}"
-        
+
         if self.main_window:
-            QMessageBox.critical(
-                self.main_window,
-                "Unexpected Error",
-                error_msg
-            )
+            QMessageBox.critical(self.main_window, "Unexpected Error", error_msg)
         else:
             # No main window - application is in invalid state
-            raise RuntimeError("Uncaught exception occurred but no main window available for error dialog")
-    
+            raise RuntimeError(
+                "Uncaught exception occurred but no main window available for error dialog"
+            )
+
     def run(self) -> int:
         """
         Run the application.
@@ -233,7 +260,7 @@ class OpenHCSPyQtApp(QApplication):
             self.processEvents()
 
             # Clean up main window
-            if hasattr(self, 'main_window') and self.main_window:
+            if hasattr(self, "main_window") and self.main_window:
                 # Force close if not already closed
                 if not self.main_window.isHidden():
                     self.main_window.close()
@@ -245,6 +272,7 @@ class OpenHCSPyQtApp(QApplication):
 
             # Force garbage collection
             import gc
+
             gc.collect()
 
             logger.info("Application cleanup completed")
@@ -255,5 +283,7 @@ class OpenHCSPyQtApp(QApplication):
 
 if __name__ == "__main__":
     # Don't run directly - use launch.py instead
-    print("Use 'python -m openhcs.pyqt_gui' or 'python -m openhcs.pyqt_gui.launch' to start the GUI")
+    print(
+        "Use 'python -m openhcs.pyqt_gui' or 'python -m openhcs.pyqt_gui.launch' to start the GUI"
+    )
     sys.exit(1)

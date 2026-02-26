@@ -81,12 +81,9 @@ omero web restart
 
 ```bash
 # From openhcs repository root
-python -m openhcs.runtime.execution_server \
-    --omero-host localhost \
-    --omero-user root \
-    --omero-password omero-root-password \
-    --omero-data-dir /OMERO/Files \
-    --server-port 7777
+python -m openhcs.runtime.zmq_execution_server_launcher \
+    --port 7777 \
+    --persistent
 ```
 
 ### 4. Test the Integration

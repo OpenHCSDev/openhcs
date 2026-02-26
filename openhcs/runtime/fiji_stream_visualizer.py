@@ -19,7 +19,10 @@ import zmq
 
 from polystore.filemanager import FileManager
 from polystore.backend_registry import register_cleanup_callback
-from openhcs.core.config import TransportMode as OpenHCSTransportMode, FijiStreamingConfig
+from openhcs.core.config import (
+    TransportMode as OpenHCSTransportMode,
+    FijiStreamingConfig,
+)
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from zmqruntime.config import TransportMode as ZMQTransportMode
 from zmqruntime.streaming import VisualizerProcessManager
@@ -98,8 +101,9 @@ sys.path.insert(0, {repr(current_dir)})
 try:
     from openhcs.runtime.fiji_viewer_server import _fiji_viewer_server_process
     from openhcs.core.config import TransportMode
+    from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
     transport_mode = TransportMode.{transport_mode.name}
-    _fiji_viewer_server_process({port}, {repr(viewer_title)}, None, {repr(current_dir + "/.fiji_log_path_placeholder")}, transport_mode)
+    _fiji_viewer_server_process({port}, {repr(viewer_title)}, None, {repr(current_dir + "/.fiji_log_path_placeholder")}, transport_mode, OPENHCS_ZMQ_CONFIG)
 except Exception as e:
     import logging
     logger = logging.getLogger("openhcs.runtime.fiji_detached")
@@ -119,6 +123,12 @@ except Exception as e:
         python_code = python_code.replace(
             repr(current_dir + "/.fiji_log_path_placeholder"), repr(log_file)
         )
+        # Remove incidental indentation and leading/trailing whitespace from the
+        # embedded snippet so it runs with the expected top-level indentation when
+        # passed to `python -c`.
+        import textwrap
+
+        python_code = textwrap.dedent(python_code).strip()
 
         # Use subprocess.Popen with detachment flags
         if sys.platform == "win32":
@@ -166,7 +176,6 @@ class FijiStreamVisualizer(VisualizerProcessManager):
     """
     Manages Fiji viewer instance for real-time visualization via ZMQ.
 
-    Uses FijiViewerServer (inherits from ZMQServer) for PyImageJ-based display.
     Follows same architecture as NapariStreamVisualizer.
     """
 
@@ -192,7 +201,9 @@ class FijiStreamVisualizer(VisualizerProcessManager):
         )
         super().__init__(port=self.port)
         self.display_config = display_config
-        self.transport_mode = coerce_transport_mode(transport_mode) or ZMQTransportMode.IPC  # ZMQ transport mode (IPC or TCP)
+        self.transport_mode = (
+            coerce_transport_mode(transport_mode) or ZMQTransportMode.IPC
+        )  # ZMQ transport mode (IPC or TCP)
         self.process: Optional[multiprocessing.Process] = None
         self._is_running = False
         self._connected_to_existing = False
@@ -278,7 +289,9 @@ class FijiStreamVisualizer(VisualizerProcessManager):
 
         with self._lock:
             # Check if there's already a viewer running on the configured port
-            if is_port_in_use(self.port, self.transport_mode, config=OPENHCS_ZMQ_CONFIG):
+            if is_port_in_use(
+                self.port, self.transport_mode, config=OPENHCS_ZMQ_CONFIG
+            ):
                 # Try to connect to existing viewer first
                 logger.info(
                     f"🔬 FIJI VISUALIZER: Port {self.port} is in use, attempting to connect to existing viewer..."
@@ -539,9 +552,15 @@ import os
 sys.path.insert(0, {repr(current_dir)})
 from openhcs.runtime.fiji_viewer_server import _fiji_viewer_server_process
 from openhcs.core.config import TransportMode
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 transport_mode = TransportMode.{self.transport_mode.name}
-_fiji_viewer_server_process({self.port}, {repr(self.viewer_title)}, None, {repr(log_file)}, transport_mode)
+_fiji_viewer_server_process({self.port}, {repr(self.viewer_title)}, None, {repr(log_file)}, transport_mode, OPENHCS_ZMQ_CONFIG)
 """
+
+        # Ensure snippet has no incidental indentation
+        import textwrap
+
+        python_code = textwrap.dedent(python_code).strip()
 
         return [sys.executable, "-c", python_code]
 

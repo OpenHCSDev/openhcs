@@ -36,6 +36,7 @@ Practical guides for specific development tasks.
    lazy_dataclass_utils
    pyclesperanto_simple_implementation
    window_manager_usage
+   compact_window_patterns
 
 Testing and CI
 ==============

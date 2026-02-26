@@ -45,11 +45,9 @@ omero web restart
 
 ```bash
 # On the OMERO server machine
-python -m openhcs.runtime.execution_server \
-    --omero-host localhost \
-    --omero-user root \
-    --omero-password omero-root-password \
-    --server-port 7777
+python -m openhcs.runtime.zmq_execution_server_launcher \
+    --port 7777 \
+    --persistent
 ```
 
 ## Usage
@@ -91,4 +89,3 @@ omero web start --debug
 ## License
 
 MIT License - see LICENSE file for details.
-

@@ -21,8 +21,35 @@ if '--log-level' in sys.argv:
 __version__ = "1.0.0"
 __author__ = "OpenHCS Development Team"
 
-from openhcs.pyqt_gui.main import OpenHCSMainWindow
-from openhcs.pyqt_gui.app import OpenHCSPyQtApp
+# Lazy-load GUI classes to support environment-specific Qt platform initialization.
+# The OpenHCS GUI requires platform-specific Qt configuration (WSL2 needs Wayland,
+# macOS needs Cocoa plugin path, etc.) before PyQt6 is imported. This configuration
+# happens in launch.py:setup_qt_platform(). Lazy loading via __getattr__ ensures that
+# GUI imports are deferred until after platform setup completes.
+
+def __getattr__(name: str):
+    """Lazy import GUI classes to defer PyQt6 initialization.
+    
+    Defers importing OpenHCSMainWindow and OpenHCSPyQtApp until accessed,
+    allowing launch.py:setup_qt_platform() to configure Qt before any
+    PyQt6 libraries are loaded.
+    
+    Args:
+        name: The attribute being accessed.
+        
+    Returns:
+        The requested class.
+        
+    Raises:
+        AttributeError: If the requested attribute doesn't exist.
+    """
+    if name == "OpenHCSMainWindow":
+        from openhcs.pyqt_gui.main import OpenHCSMainWindow
+        return OpenHCSMainWindow
+    elif name == "OpenHCSPyQtApp":
+        from openhcs.pyqt_gui.app import OpenHCSPyQtApp
+        return OpenHCSPyQtApp
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     "OpenHCSMainWindow",

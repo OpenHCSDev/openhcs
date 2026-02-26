@@ -188,7 +188,7 @@ The system prompt provides comprehensive OpenHCS context to the LLM:
         ## Guidelines
         - Use FunctionStep for each processing operation
         - Specify function name and parameters
-        - Use appropriate memory backends (@numpy_memory, @cupy_memory)
+        - Use appropriate memory decorators (@numpy, @cupy, @pyclesperanto)
         - Include materialization for final outputs
         
         Generate executable Python code that creates an OpenHCS pipeline.
@@ -196,12 +196,73 @@ The system prompt provides comprehensive OpenHCS context to the LLM:
         
         return prompt
 
+    def get_system_prompt(self, code_type: str = "pipeline") -> str:
+        """Return the runtime-generated system prompt for a given context.
+        
+        Args:
+            code_type: Type of code being generated ("pipeline" or "function")
+            
+        Returns:
+            System prompt tailored for the specific code type
+        """
+        if code_type == "function":
+            return self._system_prompts.get("function", self.system_prompt)
+        return self._system_prompts.get("pipeline", self.system_prompt)
+
 **System prompt components**:
 
 1. **Example pipeline**: Working OpenHCS pipeline code
 2. **Function library**: Available processing functions and signatures
 3. **Guidelines**: Best practices for pipeline construction
 4. **API documentation**: Core classes and patterns
+5. **Context-aware prompts**: Different prompts for pipeline vs function generation
+
+Array Backend Handling
+----------------------
+
+The LLM now understands OpenHCS memory decorators and handles array backends automatically:
+
+**Memory Decorators**:
+
+- ``@numpy`` - Function accepts and returns NumPy arrays
+- ``@cupy`` - Function accepts and returns CuPy GPU arrays  
+- ``@pyclesperanto`` - Function accepts and returns pyclesperanto GPU arrays
+
+**Key Rules for Generated Functions**:
+
+1. **First parameter MUST be named 'image'** - 3D array in (C, Y, X) a.k.a. (Z, Y, X) format
+2. **Accept the decorator's declared input type** - Don't manually convert between backends
+3. **Return the declared output type** - OpenHCS handles cross-step conversions automatically
+4. **No manual backend conversions** - Don't use ``cp.asnumpy()``, ``cle.pull()``, etc.
+5. **Decorator adds keyword-only args** - ``slice_by_slice`` and ``dtype_conversion`` (defaults to preserving input dtype)
+
+**Example Function Generation**:
+
+.. code-block:: python
+
+    # CuPy function - no manual conversion needed
+    @cupy
+    def count_cells_cupy(image, min_area=50):
+        import cupy as cp
+        from cucim.skimage import measure
+        
+        labeled = measure.label(image > 0)
+        regions = measure.regionprops(labeled, intensity_image=image)
+        
+        stats_list = []
+        masks = []
+        for props in regions:
+            if props.area >= min_area:
+                stats_list.append({
+                    'area': int(props.area),
+                    'centroid': tuple(props.centroid)
+                })
+                masks.append(labeled == props.label)
+        
+        return image, stats_list, masks  # Return CuPy array directly
+
+**Important**: The function returns the CuPy array directly. OpenHCS automatically handles
+conversions between steps with different memory decorators.
 
 Chat Panel Integration
 ======================

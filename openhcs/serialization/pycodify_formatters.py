@@ -4,6 +4,7 @@ import inspect
 from typing import Any, Dict, Tuple
 
 from openhcs.core.steps.function_step import FunctionStep
+from pyqt_reactive.services.pattern_data_manager import SCOPE_TOKEN_KEY
 
 from pycodify import FormatContext, SourceFormatter, SourceFragment, to_source
 
@@ -53,6 +54,13 @@ def _is_pattern_item(value: Any) -> bool:
     return callable(value) or _is_pattern_tuple(value)
 
 
+def _strip_internal_pattern_metadata(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove UI-only metadata keys from function-pattern kwargs."""
+    if not isinstance(args, dict):
+        return {}
+    return {k: v for k, v in args.items() if k != SCOPE_TOKEN_KEY}
+
+
 class FunctionPatternTupleFormatter(SourceFormatter):
     priority = 85
 
@@ -61,6 +69,7 @@ class FunctionPatternTupleFormatter(SourceFormatter):
 
     def format(self, value: Tuple[Any, Dict[str, Any]], context: FormatContext) -> SourceFragment:
         func, args = value
+        args = _strip_internal_pattern_metadata(args)
 
         if not args and context.clean_mode:
             return to_source(func, context)

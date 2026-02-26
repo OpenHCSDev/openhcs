@@ -822,8 +822,10 @@ class OpenHCSMicroscopeHandler(MicroscopeHandler):
 
         # 2. Prefer virtual_workspace if available (for plates with workspace_mapping)
         if 'virtual_workspace' in available_backends_dict and available_backends_dict['virtual_workspace']:
-            # Register virtual_workspace backend using centralized helper
-            self._register_virtual_workspace_backend(self.plate_folder, filemanager)
+            # PERFORMANCE: Only register if not already registered (avoid reloading mappings)
+            from openhcs.constants.constants import Backend
+            if Backend.VIRTUAL_WORKSPACE.value not in filemanager.registry:
+                self._register_virtual_workspace_backend(self.plate_folder, filemanager)
             return 'virtual_workspace'
 
         # 3. Fall back to first available backend (usually disk)

@@ -166,3 +166,4 @@ win_logs.txt
 # Chunkhound
 .chunkhound/
 docs/generated_md/
+.grepai/

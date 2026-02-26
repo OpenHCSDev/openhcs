@@ -9,13 +9,22 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional
 import datetime
 
-from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QToolBar, QFrame, QComboBox, QLabel
+from PyQt6.QtWidgets import (
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+    QToolBar,
+    QFrame,
+    QComboBox,
+    QLabel,
+)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 
 from openhcs.config_framework.object_state import ObjectStateRegistry
 from pyqt_reactive.widgets.shared.abstract_table_browser import (
-    AbstractTableBrowser, ColumnDef
+    AbstractTableBrowser,
+    ColumnDef,
 )
 from pyqt_reactive.theming import ColorScheme
 from openhcs.pyqt_gui.widgets.shared.time_travel_widget import TimeTravelWidget
@@ -24,6 +33,7 @@ from openhcs.pyqt_gui.widgets.shared.time_travel_widget import TimeTravelWidget
 @dataclass
 class SnapshotInfo:
     """Snapshot data for display in table."""
+
     index: int
     timestamp: str
     timestamp_raw: float
@@ -65,18 +75,22 @@ class SnapshotTableBrowser(AbstractTableBrowser[SnapshotInfo]):
 
     def _refresh_from_registry(self):
         """Refresh table from ObjectStateRegistry history."""
-        history = ObjectStateRegistry.get_history_info()
+        # OpenHCS-specific filter: hide system-only scopes
+        HIDDEN_SCOPES = {"", "__plates__"}
+        history = ObjectStateRegistry.get_history_info(
+            filter_fn=lambda scope_id: scope_id not in HIDDEN_SCOPES
+        )
         items: Dict[str, SnapshotInfo] = {}
 
         for h in history:
-            key = str(h['index'])
+            key = str(h["index"])
             items[key] = SnapshotInfo(
-                index=h['index'],
-                timestamp=h['timestamp'],
+                index=h["index"],
+                timestamp=h["timestamp"],
                 timestamp_raw=0.0,  # Not exposed by get_history_info
-                label=h['label'],
-                num_states=h['num_states'],
-                is_current=h['is_current'],
+                label=h["label"],
+                num_states=h["num_states"],
+                is_current=h["is_current"],
             )
 
         self.set_items(items)
@@ -119,14 +133,14 @@ class SnapshotBrowserWindow(QMainWindow):
         # Timeline widget at bottom (stays in sync with all other timeline widgets)
         # No browse button - we're already in the browser window
         self.timeline_widget = TimeTravelWidget(
-            color_scheme=self.color_scheme,
-            show_browse_button=False,
-            parent=self
+            color_scheme=self.color_scheme, show_browse_button=False, parent=self
         )
         layout.addWidget(self.timeline_widget)
 
         # Connect timeline widget position changes to refresh table
-        self.timeline_widget.position_changed.connect(self._on_timeline_position_changed)
+        self.timeline_widget.position_changed.connect(
+            self._on_timeline_position_changed
+        )
 
         # Subscribe to history changes to refresh table (event-based, no polling)
         ObjectStateRegistry.add_history_changed_callback(self._on_refresh)
@@ -163,7 +177,9 @@ class SnapshotBrowserWindow(QMainWindow):
 
         # Delete branch action
         self.delete_branch_action = QAction("🗑️", self)
-        self.delete_branch_action.setToolTip("Delete current branch (cannot delete 'main')")
+        self.delete_branch_action.setToolTip(
+            "Delete current branch (cannot delete 'main')"
+        )
         self.delete_branch_action.triggered.connect(self._on_delete_branch)
         toolbar.addAction(self.delete_branch_action)
 
@@ -176,9 +192,9 @@ class SnapshotBrowserWindow(QMainWindow):
         self.branch_combo.blockSignals(True)
         self.branch_combo.clear()
         for b in branches:
-            self.branch_combo.addItem(b['name'])
-            if b['is_current']:
-                self.branch_combo.setCurrentText(b['name'])
+            self.branch_combo.addItem(b["name"])
+            if b["is_current"]:
+                self.branch_combo.setCurrentText(b["name"])
         self.branch_combo.blockSignals(False)
 
         # Can't delete main

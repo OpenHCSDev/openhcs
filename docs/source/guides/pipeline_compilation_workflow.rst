@@ -26,19 +26,26 @@ The ``PipelineCompiler`` executes five sequential phases for each well:
         context = self.create_context(well_id)
 
         # 5-Phase Compilation
-        PipelineCompiler.initialize_step_plans_for_context(
-            context, pipeline_definition, metadata_writer=is_responsible, plate_path=self.plate_path
+        resolved_steps, step_state_map = PipelineCompiler.initialize_step_plans_for_context(
+            context,
+            pipeline_definition,
+            metadata_writer=is_responsible,
+            plate_path=self.plate_path,
+            steps_already_resolved=False,
         )
         PipelineCompiler.declare_zarr_stores_for_context(
-            context, pipeline_definition, self
+            context, resolved_steps, self
         )
         PipelineCompiler.plan_materialization_flags_for_context(
-            context, pipeline_definition, self
+            context, resolved_steps, self
         )
         PipelineCompiler.validate_memory_contracts_for_context(
-            context, pipeline_definition, self
+            context,
+            resolved_steps,
+            self,
+            step_state_map=step_state_map,
         )
-        PipelineCompiler.assign_gpu_resources_for_context(context)
+        PipelineCompiler.assign_gpu_resources_for_context(context, resolved_steps, self)
 
         context.freeze()
         compiled_contexts[well_id] = context
@@ -52,7 +59,9 @@ Phase 1: Step Plan Initialization
 
 **Key Operations**:
 - Creates step plans for each pipeline step
+- Registers global/orchestrator/step ``ObjectState`` scopes and resolves their saved values before metadata injection
 - Calls ``PipelinePathPlanner.prepare_pipeline_paths()`` for path resolution
+- Returns ``(resolved_steps, step_state_map)`` so later phases can access the exact configuration snapshot used during resolution (streaming defaults, visualizer settings, etc.)
 - Handles special I/O path linking between steps
 - Sets up chainbreaker status for steps that break the pipeline flow
 

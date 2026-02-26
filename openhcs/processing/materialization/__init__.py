@@ -1,50 +1,50 @@
-"""
-Materialization framework for analysis outputs.
+"""Materialization public API (writer-based)."""
 
-Provides composable, declarative materialization functions that transform
-analysis results (dataclasses, dicts, arrays) into serialized formats
-(CSV, JSON, ROI archives) via the VFS.
-
-Architecture:
-    - MaterializationSpec: Declarative spec for how to serialize a type
-    - MaterializationRegistry + materialize(): Registry + dispatcher for specs
-    - Built-in spec builders for common patterns (csv/json/dual/roi/tiff)
-
-Usage:
-    from openhcs.processing.materialization import csv_materializer, json_materializer
-
-    @special_outputs(("cell_counts", csv_materializer(
-        fields=["slice_index", "cell_count", "avg_area"],
-        filename_suffix="_cell_counts.csv"
-    )))
-    def count_cells(image):
-        ...
-"""
-
+from openhcs.processing.materialization.constants import MaterializationFormat, WriteMode
 from openhcs.processing.materialization.core import (
+    BackendSaver,
+    MaterializationContext,
     MaterializationSpec,
-    MaterializationRegistry,
-    register_materializer,
+    Output,
+    PathHelper,
     materialize,
-    csv_materializer,
-    json_materializer,
-    dual_materializer,
-    roi_zip_materializer,
-    regionprops_materializer,
-    tiff_stack_materializer,
-    materializer_spec,
+)
+from openhcs.processing.materialization.options import (
+    CsvOptions,
+    FileOutputOptions,
+    JsonOptions,
+    ROIOptions,
+    TextOptions,
+    TiffStackOptions,
+)
+from openhcs.processing.materialization.presets import (
+    csv_only,
+    json_and_csv,
+    json_only,
+    roi_zip,
+    text_only,
+    tiff_stack,
 )
 
 __all__ = [
+    "MaterializationFormat",
+    "WriteMode",
     "MaterializationSpec",
-    "MaterializationRegistry",
-    "register_materializer",
+    "MaterializationContext",
+    "Output",
+    "PathHelper",
+    "BackendSaver",
     "materialize",
-    "csv_materializer",
-    "json_materializer",
-    "dual_materializer",
-    "roi_zip_materializer",
-    "regionprops_materializer",
-    "tiff_stack_materializer",
-    "materializer_spec",
+    "FileOutputOptions",
+    "CsvOptions",
+    "JsonOptions",
+    "ROIOptions",
+    "TiffStackOptions",
+    "TextOptions",
+    "json_only",
+    "csv_only",
+    "json_and_csv",
+    "roi_zip",
+    "tiff_stack",
+    "text_only",
 ]

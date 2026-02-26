@@ -5,6 +5,8 @@ This module provides template matching capabilities using the Multi-Template-Mat
 to detect and crop regions of interest in image stacks.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import cv2
 from typing import Tuple, List, Dict, Any, Optional, Union
@@ -22,8 +24,48 @@ except ImportError:
 
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import register_materializer, materializer_spec
-from openhcs.processing.materialization.core import _generate_output_path
+from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+
+
+def _mtm_row_unpacker(result: TemplateMatchResult) -> List[Dict[str, Any]]:
+    """Expand one TemplateMatchResult into multiple CSV rows."""
+    rows: List[Dict[str, Any]] = []
+    slice_idx = result.slice_index
+
+    for i, match in enumerate(result.matches or []):
+        # MTM hits format: [label, bbox, score] where bbox is (x, y, width, height)
+        if len(match) >= 3:
+            template_label, bbox, score = match[0], match[1], match[2]
+            x, y, w, h = bbox if len(bbox) >= 4 else (0, 0, 0, 0)
+            rows.append(
+                {
+                    "match_id": f"slice_{slice_idx}_match_{i}",
+                    "bbox_x": x,
+                    "bbox_y": y,
+                    "bbox_width": w,
+                    "bbox_height": h,
+                    "confidence_score": score,
+                    "template_name": template_label,
+                    "is_best_match": (match == result.best_match),
+                    "was_cropped": result.crop_bbox is not None,
+                }
+            )
+        else:
+            rows.append(
+                {
+                    "match_id": f"slice_{slice_idx}_match_{i}",
+                    "bbox_x": 0,
+                    "bbox_y": 0,
+                    "bbox_width": 0,
+                    "bbox_height": 0,
+                    "confidence_score": 0.0,
+                    "template_name": "malformed_match",
+                    "is_best_match": False,
+                    "was_cropped": result.crop_bbox is not None,
+                }
+            )
+
+    return rows
 
 @dataclass
 class TemplateMatchResult:
@@ -37,126 +79,13 @@ class TemplateMatchResult:
     best_rotation_angle: float  # Angle of best matching template
     error_message: Optional[str] = None
 
-@register_materializer("mtm_match_results")
-def materialize_mtm_match_results(
-    data: List[TemplateMatchResult],
-    path: str,
-    filemanager,
-    backends: Union[str, List[str]],
-    backend_kwargs: dict = None,
-    spec=None,
-    context=None,
-    extra_inputs: dict | None = None,
-) -> str:
-    """Materialize MTM match results as analysis-ready CSV with confidence analysis.
-
-    Args:
-        data: List of template match results
-        path: Output path for results
-        filemanager: FileManager instance for I/O operations
-        backends: Single backend string or list of backends to save to
-        backend_kwargs: Dict mapping backend names to their kwargs
-
-    Returns:
-        Path to the saved results file (first backend in list)
-    """
-    # Normalize backends to list
-    if isinstance(backends, str):
-        backends = [backends]
-
-    if backend_kwargs is None:
-        backend_kwargs = {}
-
-    csv_path = _generate_output_path(path, "_mtm_matches.csv", ".csv")
-
-    rows = []
-    for result in data:
-        slice_idx = result.slice_index
-
-        # Process all matches for this slice
-        # MTM hits format: [label, bbox, score] where bbox is (x, y, width, height)
-        for i, match in enumerate(result.matches):
-            if len(match) >= 3:
-                template_label, bbox, score = match[0], match[1], match[2]
-                x, y, w, h = bbox if len(bbox) >= 4 else (0, 0, 0, 0)
-
-                rows.append({
-                    'slice_index': slice_idx,
-                    'match_id': f"slice_{slice_idx}_match_{i}",
-                    'bbox_x': x,
-                    'bbox_y': y,
-                    'bbox_width': w,
-                    'bbox_height': h,
-                    'confidence_score': score,
-                    'template_name': template_label,
-                    'is_best_match': (match == result.best_match),
-                    'was_cropped': result.crop_bbox is not None
-                })
-            else:
-                # Handle malformed match data
-                rows.append({
-                    'slice_index': slice_idx,
-                    'match_id': f"slice_{slice_idx}_match_{i}",
-                    'bbox_x': 0,
-                    'bbox_y': 0,
-                    'bbox_width': 0,
-                    'bbox_height': 0,
-                    'confidence_score': 0.0,
-                    'template_name': 'malformed_match',
-                    'is_best_match': False,
-                    'was_cropped': result.crop_bbox is not None
-                })
-
-    if rows:
-        df = pd.DataFrame(rows)
-
-        # Add analysis columns
-        if len(df) > 0 and 'confidence_score' in df.columns:
-            df['high_confidence'] = df['confidence_score'] > 0.8
-
-            # Only create quartiles if we have enough unique values
-            unique_scores = df['confidence_score'].nunique()
-            if unique_scores >= 4:
-                try:
-                    df['confidence_quartile'] = pd.qcut(df['confidence_score'], 4, labels=['Q1', 'Q2', 'Q3', 'Q4'], duplicates='drop')
-                except ValueError:
-                    # Fallback to simple binning if qcut fails
-                    df['confidence_quartile'] = pd.cut(df['confidence_score'], 4, labels=['Q1', 'Q2', 'Q3', 'Q4'])
-            else:
-                # Not enough unique values for quartiles, use simple high/low classification
-                df['confidence_quartile'] = df['confidence_score'].apply(lambda x: 'High' if x > 0.8 else 'Low')
-
-            # Add spatial clustering if we have position data
-            if 'bbox_x' in df.columns and 'bbox_y' in df.columns:
-                try:
-                    from sklearn.cluster import KMeans
-                    if len(df) >= 3:
-                        coords = df[['bbox_x', 'bbox_y']].values
-                        n_clusters = min(3, len(df))
-                        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-                        df['spatial_cluster'] = kmeans.fit_predict(coords)
-                    else:
-                        df['spatial_cluster'] = 0
-                except ImportError:
-                    df['spatial_cluster'] = 0
-
-        csv_content = df.to_csv(index=False)
-
-        # Save to all backends
-        for backend in backends:
-            # Ensure output directory exists for disk backend
-            if backend == Backend.DISK.value:
-                filemanager.ensure_directory(Path(csv_path).parent, backend)
-
-            # Get backend-specific kwargs
-            kwargs = backend_kwargs.get(backend, {})
-            filemanager.save(csv_content, csv_path, backend, **kwargs)
-
-    return csv_path
-
-
 @numpy_func
-@special_outputs(("match_results", materializer_spec("mtm_match_results")))
+@special_outputs((
+    "match_results",
+    MaterializationSpec(
+        CsvOptions(filename_suffix="_mtm_matches.csv", fields=["slice_index"], row_unpacker=_mtm_row_unpacker)
+    ),
+))
 def multi_template_crop_reference_channel(
     image_stack: np.ndarray,
     template_path: str,
@@ -326,7 +255,12 @@ def multi_template_crop_reference_channel(
 
 
 @numpy_func
-@special_outputs(("match_results", materializer_spec("mtm_match_results")))
+@special_outputs((
+    "match_results",
+    MaterializationSpec(
+        CsvOptions(filename_suffix="_mtm_matches.csv", fields=["slice_index"], row_unpacker=_mtm_row_unpacker)
+    ),
+))
 def multi_template_crop_subset(
     image_stack: np.ndarray,
     template_path: str,
@@ -475,7 +409,12 @@ def multi_template_crop_subset(
 
 
 @numpy_func
-@special_outputs(("match_results", materializer_spec("mtm_match_results")))
+@special_outputs((
+    "match_results",
+    MaterializationSpec(
+        CsvOptions(filename_suffix="_mtm_matches.csv", fields=["slice_index"], row_unpacker=_mtm_row_unpacker)
+    ),
+))
 def multi_template_crop(
     image_stack: np.ndarray,
     template_path: str,

@@ -24,7 +24,11 @@ from scipy.spatial.distance import cdist
 # OpenHCS imports
 from openhcs.core.memory import pyclesperanto as pyclesperanto_func
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import materializer_spec, tiff_stack_materializer
+from openhcs.processing.materialization import (
+    MaterializationSpec,
+    CsvOptions,
+    JsonOptions,
+)
 from openhcs.constants.constants import Backend
 
 
@@ -83,90 +87,6 @@ class MultiChannelResult:
     overlap_positions: List[Tuple[float, float]]
 
 
-def materialize_cell_counts(data: List[Union[CellCountResult, MultiChannelResult]], path: str, filemanager, backend: str) -> str:
-    """Materialize cell counting results as analysis-ready CSV and JSON formats."""
-
-    logger.info(f"🔬 CELL_COUNT_MATERIALIZE: Called with path={path}, data_length={len(data) if data else 0}, backend={backend}")
-
-    # Convert CLE binary_mask to NumPy if present
-    if data:
-        for result in data:
-            if result.binary_mask is not None:
-                result.binary_mask = np.asarray(result.binary_mask)
-            if isinstance(result, MultiChannelResult):
-                if result.chan_1_results.binary_mask is not None:
-                    result.chan_1_results.binary_mask = np.asarray(result.chan_1_results.binary_mask)
-                if result.chan_2_results.binary_mask is not None:
-                    result.chan_2_results.binary_mask = np.asarray(result.chan_2_results.binary_mask)
-
-    # Determine if this is single-channel or multi-channel data
-    if not data:
-        logger.warning("🔬 CELL_COUNT_MATERIALIZE: No data to materialize")
-        return path
-
-    is_multi_channel = isinstance(data[0], MultiChannelResult)
-    logger.info(f"🔬 CELL_COUNT_MATERIALIZE: is_multi_channel={is_multi_channel}")
-
-    if is_multi_channel:
-        return _materialize_multi_channel_results(data, path, filemanager, backend)
-    else:
-        return _materialize_single_channel_results(data, path, filemanager, backend)
-
-
-def materialize_segmentation_masks(data: List[np.ndarray], path: str, filemanager, backend: str) -> str:
-    """
-    Materialize segmentation masks as individual TIFF files.
-
-    Single-backend signature - decorator automatically wraps for multi-backend support.
-    """
-
-    logger.info(f"🔬 SEGMENTATION_MATERIALIZE: Called with path={path}, backend={backend}, masks_count={len(data) if data else 0}")
-
-    # Convert CLE arrays to NumPy
-    if data:
-        data = [np.asarray(mask) for mask in data]
-
-    if not data:
-        logger.info("🔬 SEGMENTATION_MATERIALIZE: No segmentation masks to materialize (return_segmentation_mask=False)")
-        # Create empty summary file to indicate no masks were generated
-        summary_path = path.replace('.pkl', '_segmentation_summary.txt')
-        summary_content = "No segmentation masks generated (return_segmentation_mask=False)\n"
-        filemanager.save(summary_content, summary_path, backend)
-        return summary_path
-
-    # Generate output file paths based on the input path
-    base_path = path.replace('.pkl', '')
-
-    # Save each mask as a separate TIFF file
-    for i, mask in enumerate(data):
-        mask_filename = f"{base_path}_slice_{i:03d}.tif"
-
-        # Labeled masks must preserve dtype to support >255 labels
-        # Do NOT convert to uint8 - keep as int32/uint16
-        # Save using filemanager with provided backend
-        filemanager.save(mask, mask_filename, backend)
-        logger.debug(f"🔬 SEGMENTATION_MATERIALIZE: Saved mask {i} to {mask_filename} (backend={backend})")
-
-    # Return summary path
-    summary_path = f"{base_path}_segmentation_summary.txt"
-    summary_content = f"Segmentation masks saved: {len(data)} files\n"
-    summary_content += f"Base filename pattern: {base_path}_slice_XXX.tif\n"
-    summary_content += f"Mask dtype: {data[0].dtype}\n"
-    summary_content += f"Mask shape: {data[0].shape}\n"
-
-    filemanager.save(summary_content, summary_path, backend)
-    logger.info(f"🔬 SEGMENTATION_MATERIALIZE: Completed, saved {len(data)} masks to backend={backend}")
-
-    return summary_path
-
-
-@pyclesperanto_func
-@special_outputs(
-    ("cell_counts", materializer_spec("cell_counts")),
-    ("segmentation_masks", tiff_stack_materializer(
-        summary_suffix="_segmentation_summary.txt"
-    ))
-)
 def count_cells_single_channel(
     image_stack: np.ndarray,
     # Detection method and parameters
@@ -273,7 +193,14 @@ def count_cells_single_channel(
 
 
 @pyclesperanto_func
-@special_outputs(("multi_channel_counts", materializer_spec("cell_counts")))
+@special_outputs((
+    "multi_channel_counts",
+    MaterializationSpec(
+        JsonOptions(filename_suffix=".json", wrap_list=True),
+        CsvOptions(filename_suffix="_details.csv"),
+        primary=0,
+    ),
+))
 def count_cells_multi_channel(
     image_stack: np.ndarray,
     chan_1: int,                         # Index of first channel (positional arg)
@@ -457,79 +384,6 @@ def count_cells_multi_channel(
         output_stack = np.stack([image_stack[chan_1], image_stack[chan_2], coloc_map])
 
     return output_stack, multi_results
-
-
-def _materialize_single_channel_results(data: List[CellCountResult], path: str, filemanager, backend: str) -> str:
-    """Materialize single-channel cell counting results."""
-    # Generate output file paths based on the input path
-    # Use clean naming: preserve namespaced path structure, don't duplicate special output key
-    base_path = path.replace('.pkl', '')
-    json_path = f"{base_path}.json"
-    csv_path = f"{base_path}_details.csv"
-
-    # Ensure output directory exists for disk backend
-    from pathlib import Path
-    output_dir = Path(json_path).parent
-    if backend == Backend.DISK.value:
-        filemanager.ensure_directory(str(output_dir), backend)
-
-    summary = {
-        "analysis_type": "single_channel_cell_counting",
-        "total_slices": len(data),
-        "results_per_slice": []
-    }
-    rows = []
-
-    total_cells = 0
-    for result in data:
-        total_cells += result.cell_count
-
-        # Add to summary
-        summary["results_per_slice"].append({
-            "slice_index": result.slice_index,
-            "method": result.method,
-            "cell_count": result.cell_count,
-            "avg_cell_area": np.mean(result.cell_areas) if result.cell_areas else 0,
-            "avg_cell_intensity": np.mean(result.cell_intensities) if result.cell_intensities else 0,
-            "parameters": result.parameters_used
-        })
-
-        # Add individual cell data to CSV
-        for i, (pos, area, intensity, confidence) in enumerate(zip(
-            result.cell_positions, result.cell_areas,
-            result.cell_intensities, result.detection_confidence
-        )):
-            rows.append({
-                'slice_index': result.slice_index,
-                'cell_id': f"slice_{result.slice_index}_cell_{i}",
-                'x_position': pos[0],
-                'y_position': pos[1],
-                'cell_area': area,
-                'cell_intensity': intensity,
-                'detection_confidence': confidence,
-                'detection_method': result.method
-            })
-
-    summary["total_cells_all_slices"] = total_cells
-    summary["average_cells_per_slice"] = total_cells / len(data) if data else 0
-
-    # Save JSON summary (overwrite if exists)
-    json_content = json.dumps(summary, indent=2, default=str)
-    # Remove existing file if it exists using filemanager
-    if filemanager.exists(json_path, backend):
-        filemanager.delete(json_path, backend)
-    filemanager.save(json_content, json_path, backend)
-
-    # Save CSV details (overwrite if exists)
-    if rows:
-        df = pd.DataFrame(rows)
-        csv_content = df.to_csv(index=False)
-        # Remove existing file if it exists using filemanager
-        if filemanager.exists(csv_path, backend):
-            filemanager.delete(csv_path, backend)
-        filemanager.save(csv_content, csv_path, backend)
-
-    return json_path
 
 
 def _materialize_multi_channel_results(data: List[MultiChannelResult], path: str, filemanager, backend: str) -> str:

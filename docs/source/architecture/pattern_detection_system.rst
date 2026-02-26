@@ -11,6 +11,11 @@ The Solution: Automatic Pattern Discovery
 
 OpenHCS implements a pattern detection system that automatically discovers image file patterns across different microscope formats. This system coordinates filename parsing, directory structure analysis, and pattern grouping to enable flexible pipeline processing without manual configuration.
 
+.. seealso::
+
+   :doc:`pattern_grouping_and_special_outputs`
+      Detailed explanation of how pattern grouping interacts with special outputs and the dual purpose of ``group_by``
+
 Overview
 --------
 

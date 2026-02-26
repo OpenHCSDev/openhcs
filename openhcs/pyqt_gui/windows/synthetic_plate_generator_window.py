@@ -11,16 +11,26 @@ from pathlib import Path
 from typing import Optional
 
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QScrollArea, QWidget, QMessageBox, QFileDialog
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QScrollArea,
+    QWidget,
+    QMessageBox,
+    QFileDialog,
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 
 from pyqt_reactive.forms import ParameterFormManager
+from pyqt_reactive.forms.layout_constants import CURRENT_LAYOUT
 from pyqt_reactive.theming import StyleSheetGenerator
 from pyqt_reactive.theming import ColorScheme
-from openhcs.tests.generators.generate_synthetic_data import SyntheticMicroscopyGenerator
+from openhcs.tests.generators.generate_synthetic_data import (
+    SyntheticMicroscopyGenerator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,36 +38,36 @@ logger = logging.getLogger(__name__)
 class SyntheticPlateGeneratorWindow(QDialog):
     """
     Dialog window for generating synthetic microscopy plates.
-    
+
     Provides a parameter form for SyntheticMicroscopyGenerator with sensible
     defaults from the test suite, allowing users to easily generate test data.
     """
-    
+
     # Signals
     plate_generated = pyqtSignal(str, str)  # output_dir path, pipeline_path
-    
+
     def __init__(self, color_scheme: Optional[ColorScheme] = None, parent=None):
         """
         Initialize the synthetic plate generator window.
-        
+
         Args:
             color_scheme: Color scheme for styling (optional)
             parent: Parent widget
         """
         super().__init__(parent)
-        
+
         # Initialize color scheme and style generator
         self.color_scheme = color_scheme or ColorScheme()
         self.style_generator = StyleSheetGenerator(self.color_scheme)
-        
+
         # Output directory (will be set by user or use temp)
         self.output_dir: Optional[str] = None
-        
+
         # Setup UI
         self.setup_ui()
-        
+
         logger.debug("Synthetic plate generator window initialized")
-    
+
     def setup_ui(self):
         """Setup the user interface."""
         self.setWindowTitle("Generate Synthetic Plate")
@@ -67,15 +77,17 @@ class SyntheticPlateGeneratorWindow(QDialog):
 
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
-        
+
         # Header with title and description
         header_widget = QWidget()
         header_layout = QVBoxLayout(header_widget)
         header_layout.setContentsMargins(10, 10, 10, 10)
-        
+
         header_label = QLabel("Generate Synthetic Microscopy Plate")
         header_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
-        header_label.setStyleSheet(f"color: {self.color_scheme.to_hex(self.color_scheme.text_accent)};")
+        header_label.setStyleSheet(
+            f"color: {self.color_scheme.to_hex(self.color_scheme.text_accent)};"
+        )
         header_layout.addWidget(header_label)
 
         description_label = QLabel(
@@ -84,15 +96,17 @@ class SyntheticPlateGeneratorWindow(QDialog):
             "with 3x3 grid, 2 channels, and 3 z-levels."
         )
         description_label.setWordWrap(True)
-        description_label.setStyleSheet(f"color: {self.color_scheme.to_hex(self.color_scheme.text_secondary)}; padding: 5px;")
+        description_label.setStyleSheet(
+            f"color: {self.color_scheme.to_hex(self.color_scheme.text_secondary)}; padding: 5px;"
+        )
         header_layout.addWidget(description_label)
-        
+
         layout.addWidget(header_widget)
-        
+
         # Output directory selection
         output_dir_widget = self._create_output_dir_selector()
         layout.addWidget(output_dir_widget)
-        
+
         # Parameter form with scroll area
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -109,100 +123,107 @@ class SyntheticPlateGeneratorWindow(QDialog):
         self.state = ObjectState(
             object_instance=SyntheticMicroscopyGenerator,  # Pass the class itself, not __init__
             scope_id=None,
-            exclude_params=['output_dir', 'skip_files', 'include_all_components', 'random_seed'],
+            exclude_params=[
+                "output_dir",
+                "skip_files",
+                "include_all_components",
+                "random_seed",
+            ],
         )
 
         self.form_manager = ParameterFormManager(
             state=self.state,
             config=FormManagerConfig(
                 parent=self,
-                color_scheme=self.color_scheme  # Pass color_scheme as instance parameter
-            )
+                color_scheme=self.color_scheme,  # Pass color_scheme as instance parameter
+            ),
         )
 
         scroll_area.setWidget(self.form_manager)
         layout.addWidget(scroll_area)
-        
+
         # Button row
         button_row = QHBoxLayout()
         button_row.setContentsMargins(10, 5, 10, 10)
         button_row.setSpacing(10)
-        
+
         button_row.addStretch()
-        
+
         # Get centralized button styles
         button_styles = self.style_generator.generate_config_button_styles()
-        
+
         # Cancel button
         cancel_button = QPushButton("Cancel")
-        cancel_button.setFixedHeight(28)
+        cancel_button.setFixedHeight(CURRENT_LAYOUT.button_height)
         cancel_button.setMinimumWidth(100)
         cancel_button.clicked.connect(self.reject)
         cancel_button.setStyleSheet(button_styles["cancel"])
         button_row.addWidget(cancel_button)
-        
+
         # Generate button
         generate_button = QPushButton("Generate Plate")
-        generate_button.setFixedHeight(28)
+        generate_button.setFixedHeight(CURRENT_LAYOUT.button_height)
         generate_button.setMinimumWidth(100)
         generate_button.clicked.connect(self.generate_plate)
         generate_button.setStyleSheet(button_styles["save"])
         button_row.addWidget(generate_button)
-        
+
         layout.addLayout(button_row)
 
         # Apply window styling
         self.setStyleSheet(self.style_generator.generate_dialog_style())
-    
+
     def _create_output_dir_selector(self) -> QWidget:
         """Create the output directory selector widget."""
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(10, 5, 10, 5)
         layout.setSpacing(10)
-        
+
         label = QLabel("Output Directory:")
-        label.setStyleSheet(f"color: {self.color_scheme.to_hex(self.color_scheme.text_primary)};")
+        label.setStyleSheet(
+            f"color: {self.color_scheme.to_hex(self.color_scheme.text_primary)};"
+        )
         layout.addWidget(label)
-        
+
         self.output_dir_label = QLabel("<temp directory>")
         self.output_dir_label.setStyleSheet(
             f"color: {self.color_scheme.to_hex(self.color_scheme.text_secondary)}; "
             f"font-style: italic; padding: 5px;"
         )
         layout.addWidget(self.output_dir_label, 1)
-        
+
         browse_button = QPushButton("Browse...")
-        browse_button.setFixedHeight(28)
+        browse_button.setFixedHeight(CURRENT_LAYOUT.button_height)
         browse_button.setMinimumWidth(80)
         browse_button.clicked.connect(self.browse_output_dir)
         browse_button.setStyleSheet(self.style_generator.generate_button_style())
         layout.addWidget(browse_button)
-        
+
         return widget
-    
+
     def browse_output_dir(self):
         """Open file dialog to select output directory."""
         dir_path = QFileDialog.getExistingDirectory(
             self,
             "Select Output Directory for Synthetic Plate",
             str(Path.home()),
-            QFileDialog.Option.ShowDirsOnly
+            QFileDialog.Option.ShowDirsOnly,
         )
-        
+
         if dir_path:
             self.output_dir = dir_path
             self.output_dir_label.setText(dir_path)
             self.output_dir_label.setStyleSheet(
                 f"color: {self.color_scheme.to_hex(self.color_scheme.text_primary)}; padding: 5px;"
             )
-    
+
     def generate_plate(self):
         """Generate the synthetic plate with current parameters."""
         try:
             # Get parameters from state
             params = self.state.get_current_values()
-            
+
             # Determine output directory
             if self.output_dir is None:
                 # Use temp directory
@@ -211,53 +232,31 @@ class SyntheticPlateGeneratorWindow(QDialog):
                 logger.info(f"Using temporary directory: {output_dir}")
             else:
                 output_dir = self.output_dir
-            
+
             # Add output_dir to params
-            params['output_dir'] = output_dir
-            
-            # Show progress message
-            QMessageBox.information(
-                self,
-                "Generating Plate",
-                f"Generating synthetic plate at:\n{output_dir}\n\n"
-                f"This may take a moment...",
-                QMessageBox.StandardButton.Ok
-            )
-            
+            params["output_dir"] = output_dir
+
             # Create generator and generate dataset
             logger.info(f"Generating synthetic plate with params: {params}")
             generator = SyntheticMicroscopyGenerator(**params)
             generator.generate_dataset()
-            
+
             logger.info(f"Successfully generated synthetic plate at: {output_dir}")
 
             # Get path to test_pipeline.py
             from openhcs.tests import test_pipeline
+
             pipeline_path = Path(test_pipeline.__file__)
 
             # Emit signal with output directory and pipeline path
             self.plate_generated.emit(output_dir, str(pipeline_path))
-            
-            # Show success message
-            QMessageBox.information(
-                self,
-                "Success",
-                f"Synthetic plate generated successfully!\n\nLocation: {output_dir}",
-                QMessageBox.StandardButton.Ok
-            )
-            
+
             # Close dialog
             self.accept()
-            
+
         except Exception as e:
             logger.error(f"Failed to generate synthetic plate: {e}", exc_info=True)
-            QMessageBox.critical(
-                self,
-                "Generation Failed",
-                f"Failed to generate synthetic plate:\n\n{str(e)}",
-                QMessageBox.StandardButton.Ok
-            )
-    
+
     def reject(self):
         """Handle dialog rejection (Cancel button)."""
         # Cleanup before closing
@@ -273,7 +272,7 @@ class SyntheticPlateGeneratorWindow(QDialog):
     def _cleanup(self):
         """Cleanup resources before window closes."""
         # Unregister from cross-window updates
-        if hasattr(self, 'form_manager') and self.form_manager is not None:
+        if hasattr(self, "form_manager") and self.form_manager is not None:
             try:
                 self.form_manager.unregister_from_cross_window_updates()
             except RuntimeError:
@@ -286,4 +285,3 @@ class SyntheticPlateGeneratorWindow(QDialog):
         except (RuntimeError, TypeError):
             # Already disconnected or no connections, ignore
             pass
-

@@ -45,19 +45,28 @@ upon the previous:
 Phase 1: Step Plan Initialization (``initialize_step_plans_for_context``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Purpose**: Establishes the data flow topology and initializes step plans
+**Purpose**: Establishes the data flow topology, registers ObjectState layers,
+and resolves a deterministic, saved-value representation of each step
 
 -  **Input**: Step definitions + ProcessingContext (well_id, input_dir)
 -  **Output**: Initialized ``step_plans`` with input/output directories and
-   special I/O paths
--  **Responsibilities**:
+    special I/O paths
+ -  **Responsibilities**:
 
-   -  Creates basic step plan structure for each step
-   -  Calls ``PipelinePathPlanner.prepare_pipeline_paths()`` for path resolution
-   -  Determines input/output directories for each step
-   -  Creates VFS paths for special I/O (cross-step communication)
-   -  Links special outputs from one step to special inputs of another
-   -  Handles chain breaker logic and input source detection
+    -  Creates basic step plan structure for each step
+    -  Calls ``PipelinePathPlanner.prepare_pipeline_paths()`` for path resolution
+    -  Registers global/orchestrator/step ``ObjectState`` scopes and resolves
+      their saved values before metadata injection
+    -  Determines input/output directories for each step
+    -  Creates VFS paths for special I/O (cross-step communication)
+    -  Links special outputs from one step to special inputs of another
+    -  Handles chain breaker logic and input source detection
+
+**Key Insight**:
+The compiler returns ``(resolved_steps, step_state_map)``, and the
+``step_state_map`` is consumed by later phases (notably memory
+validation/streaming config collection) so only the saved configuration
+values used during the resolution pass influence execution plans.
 
 **Key Error**:
 ``"Context step_plans must be initialized before path planning"`` -
@@ -315,21 +324,32 @@ ProcessingContext Lifecycle
 
 .. code:: python
 
-   # Phase 1: Step plan initialization
-   PipelineCompiler.initialize_step_plans_for_context(context, steps, orchestrator)
+    # Phase 1: Step plan initialization
+    resolved_steps, step_state_map = PipelineCompiler.initialize_step_plans_for_context(
+        context,
+        steps,
+        orchestrator,
+        steps_already_resolved=False,
+    )
 
-   # Phase 2: ZARR store declaration
-   PipelineCompiler.declare_zarr_stores_for_context(context, steps, orchestrator)
+    # Phase 2: ZARR store declaration
+    PipelineCompiler.declare_zarr_stores_for_context(context, resolved_steps, orchestrator)
 
-   # Phase 3: Materialization planning
-   PipelineCompiler.plan_materialization_flags_for_context(context, steps, orchestrator)
+    # Phase 3: Materialization planning
+    PipelineCompiler.plan_materialization_flags_for_context(context, resolved_steps, orchestrator)
 
-   # Phase 4: Memory contract validation + function pattern storage
-   PipelineCompiler.validate_memory_contracts_for_context(context, steps, orchestrator)
-   # This phase validates memory types AND stores function patterns in step_plans['func']
+    # Phase 4: Memory contract validation + function pattern storage
+    PipelineCompiler.validate_memory_contracts_for_context(
+        context,
+        resolved_steps,
+        orchestrator,
+        step_state_map=step_state_map,
+    )
+    # This phase validates memory types, stores function patterns in step_plans['func'],
+    # and builds ``context.required_visualizers`` using streaming configs from the ObjectState map.
 
-   # Phase 5: GPU resource assignment
-   PipelineCompiler.assign_gpu_resources_for_context(context, steps, orchestrator)
+    # Phase 5: GPU resource assignment
+    PipelineCompiler.assign_gpu_resources_for_context(context, resolved_steps, orchestrator)
 
 3. Freezing
 ~~~~~~~~~~~

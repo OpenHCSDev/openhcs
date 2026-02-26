@@ -61,6 +61,12 @@ class ProcessingContext:
         self.global_config = global_config # Store the global config
         self.filemanager = None # Expected to be set by Orchestrator via kwargs or direct assignment
 
+        # Execution tracking fields (set at execution time)
+        self.execution_id = None  # Set by worker before execution
+        self.plate_id = None  # Set by worker before execution (same as plate_path)
+        self.worker_slot = None  # Logical worker slot for deterministic ownership
+        self.owned_wells = None  # Full well set owned by this worker slot
+
         # Pipeline-wide sequential processing fields
         self.pipeline_sequential_mode = False
         self.pipeline_sequential_combinations = None  # Precomputed at compile time from metadata
@@ -77,7 +83,7 @@ class ProcessingContext:
 
         All fields are immutable once frozen - no exceptions.
         """
-        if getattr(self, '_is_frozen', False) and name != '_is_frozen':
+        if self._is_frozen and name != '_is_frozen':
             raise AttributeError(f"Cannot modify attribute '{name}' of a frozen ProcessingContext.")
         super().__setattr__(name, value)
 

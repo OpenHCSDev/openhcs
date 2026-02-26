@@ -23,8 +23,7 @@ from enum import Enum
 
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import register_materializer, materializer_spec
-from openhcs.processing.materialization.core import _generate_output_path
+from openhcs.processing.materialization import CsvOptions, JsonOptions, MaterializationSpec, TextOptions
 from openhcs.constants.constants import Backend
 
 logger = logging.getLogger(__name__)
@@ -45,137 +44,7 @@ class WellPatternType(Enum):
     CUSTOM = "custom"
 
 
-@register_materializer("consolidated_summary")
-def materialize_consolidated_summary(
-    data: Dict[str, Any],
-    output_path: str,
-    filemanager,
-    backends,
-    backend_kwargs: dict = None,
-    spec=None,
-    context=None,
-    extra_inputs: dict | None = None,
-) -> str:
-    """
-    Materialize consolidated summary data to CSV file.
-    
-    Args:
-        data: Dictionary containing consolidated summary data
-        output_path: Path where CSV should be saved
-        filemanager: OpenHCS FileManager instance
-        well_id: Well identifier
-        
-    Returns:
-        Path to saved CSV file
-    """
-    try:
-        options = spec.options if spec is not None else {}
-        filename_suffix = options.get("filename_suffix", ".csv")
-        strip_roi = options.get("strip_roi_suffix", False)
-        output_path = _generate_output_path(output_path, filename_suffix, ".csv", strip_roi=strip_roi)
-
-        # Convert to DataFrame
-        if 'summary_table' in data:
-            df = pd.DataFrame(data['summary_table'])
-        else:
-            # Fallback: create DataFrame from raw data
-            df = pd.DataFrame([data])
-        
-        # Generate CSV content
-        csv_content = df.to_csv(index=False)
-        
-        if isinstance(backends, str):
-            backends = [backends]
-        backend_kwargs = backend_kwargs or {}
-
-        for backend in backends:
-            if filemanager.exists(output_path, backend):
-                filemanager.delete(output_path, backend)
-            kwargs = backend_kwargs.get(backend, {})
-            filemanager.save(csv_content, output_path, backend, **kwargs)
-        
-        logger.info(f"Materialized consolidated summary to {output_path}")
-        return output_path
-        
-    except Exception as e:
-        logger.error(f"Failed to materialize consolidated summary: {e}")
-        raise
-
-
-@register_materializer("detailed_report")
-def materialize_detailed_report(
-    data: Dict[str, Any],
-    output_path: str,
-    filemanager,
-    backends,
-    backend_kwargs: dict = None,
-    spec=None,
-    context=None,
-    extra_inputs: dict | None = None,
-) -> str:
-    """
-    Materialize detailed analysis report to text file.
-    
-    Args:
-        data: Dictionary containing analysis data
-        output_path: Path where report should be saved
-        filemanager: OpenHCS FileManager instance
-        well_id: Well identifier
-        
-    Returns:
-        Path to saved report file
-    """
-    try:
-        options = spec.options if spec is not None else {}
-        filename_suffix = options.get("filename_suffix", ".txt")
-        strip_roi = options.get("strip_roi_suffix", False)
-        output_path = _generate_output_path(output_path, filename_suffix, ".txt", strip_roi=strip_roi)
-
-        report_lines = []
-        report_lines.append("="*80)
-        report_lines.append("OPENHCS SPECIAL OUTPUTS CONSOLIDATION REPORT")
-        report_lines.append("="*80)
-        
-        if 'metadata' in data:
-            metadata = data['metadata']
-            report_lines.append(f"Analysis timestamp: {metadata.get('timestamp', 'Unknown')}")
-            report_lines.append(f"Total wells processed: {metadata.get('total_wells', 0)}")
-            report_lines.append(f"Output types detected: {metadata.get('output_types', [])}")
-            report_lines.append("")
-        
-        if 'summary_stats' in data:
-            stats = data['summary_stats']
-            report_lines.append("SUMMARY STATISTICS:")
-            report_lines.append("-" * 40)
-            for output_type, type_stats in stats.items():
-                report_lines.append(f"\n{output_type.upper()}:")
-                for metric, value in type_stats.items():
-                    if isinstance(value, float):
-                        report_lines.append(f"  {metric}: {value:.3f}")
-                    else:
-                        report_lines.append(f"  {metric}: {value}")
-        
-        report_lines.append("\n" + "="*80)
-        
-        # Save report
-        report_content = "\n".join(report_lines)
-        
-        if isinstance(backends, str):
-            backends = [backends]
-        backend_kwargs = backend_kwargs or {}
-
-        for backend in backends:
-            if filemanager.exists(output_path, backend):
-                filemanager.delete(output_path, backend)
-            kwargs = backend_kwargs.get(backend, {})
-            filemanager.save(report_content, output_path, backend, **kwargs)
-        
-        logger.info(f"Materialized detailed report to {output_path}")
-        return output_path
-        
-    except Exception as e:
-        logger.error(f"Failed to materialize detailed report: {e}")
-        raise
+## Greenfield: materialization is writer-driven (no custom materializers).
 
 
 def extract_well_id(filename: str, pattern: str = WellPatternType.STANDARD_96.value) -> Optional[str]:
@@ -273,8 +142,13 @@ def aggregate_series(series: pd.Series, strategy: AggregationStrategy) -> Dict[s
 
 @numpy_func
 @special_outputs(
-    ("consolidated_summary", materializer_spec("consolidated_summary")),
-    ("detailed_report", materializer_spec("detailed_report"))
+    ("consolidated_summary", MaterializationSpec(CsvOptions(filename_suffix=".csv"))),
+    (
+        "detailed_report",
+        MaterializationSpec(
+            TextOptions(filename_suffix=".txt")
+        ),
+    ),
 )
 def consolidate_special_outputs(
     image_stack: np.ndarray,

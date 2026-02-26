@@ -13,8 +13,14 @@ from typing import List, Dict, Optional, Callable, Tuple, Any, Iterable, Set
 from pathlib import Path
 
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
-    QListWidgetItem, QLabel, QSplitter
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QListWidget,
+    QListWidgetItem,
+    QLabel,
+    QSplitter,
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont, QColor
@@ -25,6 +31,7 @@ from openhcs.core.config import GlobalPipelineConfig
 from polystore.filemanager import FileManager
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.pipeline import Pipeline
+
 # Mixin imports REMOVED - now in ABC (handle_selection_change_with_prevention, CrossWindowPreviewMixin)
 from pyqt_reactive.theming import StyleSheetGenerator
 from pyqt_reactive.widgets.shared.scope_visual_config import ListItemType
@@ -36,7 +43,10 @@ from pyqt_reactive.animation import WindowFlashOverlay
 
 # Import shared list widget components (single source of truth)
 from pyqt_reactive.core import ReorderableListWidget
-from pyqt_reactive.widgets.shared.list_item_delegate import MultilinePreviewItemDelegate, StyledText
+from pyqt_reactive.widgets.shared.list_item_delegate import (
+    MultilinePreviewItemDelegate,
+    StyledText,
+)
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from openhcs.config_framework.lazy_factory import PREVIEW_LABEL_REGISTRY
 from openhcs.core.config import ProcessingConfig
@@ -49,7 +59,10 @@ from openhcs.utils.pipeline_migration import (
 from openhcs.pyqt_gui.windows.dual_editor_window import DualEditorWindow
 
 # Import ABC base class (Phase 4 migration)
-from pyqt_reactive.widgets.shared.abstract_manager_widget import AbstractManagerWidget, ListItemFormat
+from pyqt_reactive.widgets.shared.abstract_manager_widget import (
+    AbstractManagerWidget,
+    ListItemFormat,
+)
 
 from openhcs.utils.performance_monitor import timer
 
@@ -86,39 +99,31 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
     # Declarative item hooks (replaces 9 trivial method overrides)
     ITEM_HOOKS = {
-        'id_accessor': ('attr', 'name'),          # getattr(item, 'name', '')
-        'backing_attr': 'pipeline_steps',         # self.pipeline_steps
-        'selection_attr': 'selected_step',        # self.selected_step = ...
-        'selection_signal': 'step_selected',      # self.step_selected.emit(...)
-        'selection_emit_id': False,               # emit the full step object
-        'selection_clear_value': None,            # emit None when cleared
-        'items_changed_signal': 'pipeline_changed',  # self.pipeline_changed.emit(...)
-        'preserve_selection_pred': lambda self: bool(self.pipeline_steps),
-        'list_item_data': 'item',                 # store the step object
-        'scope_item_type': ListItemType.STEP,
-        'scope_id_builder': lambda item, idx, w: w._build_step_scope_id(item),
+        "id_accessor": ("attr", "name"),  # getattr(item, 'name', '')
+        "backing_attr": "pipeline_steps",  # self.pipeline_steps
+        "selection_attr": "selected_step",  # self.selected_step = ...
+        "selection_signal": "step_selected",  # self.step_selected.emit(...)
+        "selection_emit_id": False,  # emit the full step object
+        "selection_clear_value": None,  # emit None when cleared
+        "items_changed_signal": "pipeline_changed",  # self.pipeline_changed.emit(...)
+        "preserve_selection_pred": lambda self: bool(self.pipeline_steps),
+        "list_item_data": "item",  # store the step object
+        "scope_item_type": ListItemType.STEP,
+        "scope_id_builder": lambda item, idx, w: w._build_step_scope_id(item),
     }
 
-    # Declarative preview field configuration (processed automatically in ABC.__init__)
-    # Labels auto-discovered from PREVIEW_LABEL_REGISTRY (set via @global_pipeline_config(preview_label=...))
-    PREVIEW_FIELD_CONFIGS = [
-        'napari_streaming_config',       # preview_label='NAP'
-        'fiji_streaming_config',         # preview_label='FIJI'
-        'step_materialization_config',   # preview_label='MAT'
-    ]
-
     # Declarative list item format (replaces imperative format_item_for_display logic)
+    # Config indicators (NAP, FIJI, MAT) are auto-discovered via always_viewable_fields
     LIST_ITEM_FORMAT = ListItemFormat(
-        first_line=('func',),  # func= shown after step name
+        first_line=("func",),  # func= shown after step name
         preview_line=(
-            'processing_config.variable_components',
-            'processing_config.group_by',
-            'processing_config.input_source',
+            "processing_config.variable_components",
+            "processing_config.group_by",
+            "processing_config.input_source",
         ),
-        show_config_indicators=True,
         formatters={
-            'func': '_format_func_preview',  # Method name for complex formatting
-            'processing_config.input_source': '_format_input_source_preview',
+            "func": "_format_func_preview",  # Method name for complex formatting
+            "processing_config.input_source": "_format_input_source_preview",
         },
     )
 
@@ -145,7 +150,7 @@ class PipelineEditorWidget(AbstractManagerWidget):
             func_names = [self._get_func_name(f) for f in func if f is not None]
             return f"func=[{', '.join(func_names)}]"
         elif callable(func):
-            func_name = getattr(func, '__name__', str(func))
+            func_name = getattr(func, "__name__", str(func))
             return f"func={func_name}"
         elif isinstance(func, dict):
             # Use orchestrator's metadata cache for key→name mapping if available
@@ -155,7 +160,7 @@ class PipelineEditorWidget(AbstractManagerWidget):
             # Get group_by from ObjectState to determine component type for metadata lookup
             group_by = None
             if state:
-                group_by = state.get_resolved_value('processing_config.group_by')
+                group_by = state.get_resolved_value("processing_config.group_by")
 
             # Build {display_name: func_name} entries
             entries = []
@@ -163,7 +168,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
                 # Try to get display name from metadata cache using step's group_by
                 display_name = None
                 if group_by and metadata_cache:
-                    display_name = metadata_cache.get_component_metadata(group_by, str(key))
+                    display_name = metadata_cache.get_component_metadata(
+                        group_by, str(key)
+                    )
                 if display_name is None:
                     display_name = str(key)
                 func_name = self._get_func_name(func[key])
@@ -175,7 +182,7 @@ class PipelineEditorWidget(AbstractManagerWidget):
         """Extract function name from various func entry formats."""
         if isinstance(func_entry, tuple) and len(func_entry) >= 1:
             # (func, kwargs) pattern
-            return getattr(func_entry[0], '__name__', str(func_entry[0]))
+            return getattr(func_entry[0], "__name__", str(func_entry[0]))
         elif isinstance(func_entry, list) and func_entry:
             # Chain pattern - show first→last
             first = self._get_func_name(func_entry[0])
@@ -184,25 +191,28 @@ class PipelineEditorWidget(AbstractManagerWidget):
                 return f"{first}→{last}"
             return first
         elif callable(func_entry):
-            return getattr(func_entry, '__name__', str(func_entry))
+            return getattr(func_entry, "__name__", str(func_entry))
         return str(func_entry)
 
     def _format_input_source_preview(self, input_source) -> Optional[str]:
         """Format input_source field (only show if not default)."""
-        source_name = getattr(input_source, 'name', str(input_source))
-        if source_name != 'PREVIOUS_STEP':
+        source_name = getattr(input_source, "name", str(input_source))
+        if source_name != "PREVIOUS_STEP":
             return f"input={source_name}"
         return None  # Skip default value
-
-
 
     # Signals
     pipeline_changed = pyqtSignal(list)  # List[FunctionStep]
     step_selected = pyqtSignal(object)  # FunctionStep
     status_message = pyqtSignal(str)  # status message
-    
-    def __init__(self, service_adapter, color_scheme: Optional[ColorScheme] = None,
-                 gui_config: Optional[PyQtGUIConfig] = None, parent=None):
+
+    def __init__(
+        self,
+        service_adapter,
+        color_scheme: Optional[ColorScheme] = None,
+        gui_config: Optional[PyQtGUIConfig] = None,
+        parent=None,
+    ):
         """
         Initialize the pipeline editor widget.
 
@@ -222,6 +232,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
         # Reference to plate manager (set externally)
         # Note: orchestrator is looked up dynamically via _get_current_orchestrator()
         self.plate_manager = None
+
+        # Clipboard for copy-paste operations (in-memory only)
+        self._clipboard_steps: List[FunctionStep] = []
 
         # Initialize base class (creates style_generator, event_bus, item_list, buttons, status_label internally)
         # Also auto-processes PREVIEW_FIELD_CONFIGS declaratively
@@ -244,10 +257,19 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
         # Step-specific signal
         self.pipeline_changed.connect(self.on_pipeline_changed)
+        self._suppress_pipeline_state_sync = False
+
+        # Keyboard shortcuts for copy-paste
+        from PyQt6.QtGui import QShortcut, QKeySequence
+
+        QShortcut(QKeySequence("Ctrl+C"), self, self._action_copy_steps)
+        QShortcut(QKeySequence("Ctrl+V"), self, self._action_paste_steps)
 
     # ========== Pipeline ObjectState Management ==========
 
-    def _ensure_pipeline_state(self, plate_path: str) -> ObjectState:
+    def _ensure_pipeline_state(
+        self, plate_path: str, *, register: bool = True
+    ) -> ObjectState:
         """Get or create Pipeline ObjectState for a plate.
 
         Args:
@@ -270,9 +292,10 @@ class PipelineEditorWidget(AbstractManagerWidget):
             state = ObjectState(
                 object_instance=pipeline,
                 scope_id=pipeline_scope,
-                parent_state=ObjectStateRegistry.get_by_scope(plate_path)
+                parent_state=ObjectStateRegistry.get_by_scope(plate_path),
             )
-            ObjectStateRegistry.register(state)
+            if register:
+                ObjectStateRegistry.register(state, _skip_snapshot=True)
 
         return state
 
@@ -295,18 +318,20 @@ class PipelineEditorWidget(AbstractManagerWidget):
         for scope_id in step_scope_ids:
             step_state = ObjectStateRegistry.get_by_scope(scope_id)
             if step_state:
-                steps.append(step_state.object_instance)
+                steps.append(step_state.to_object())
 
         return steps
 
-    def _update_pipeline_steps(self, plate_path: str, steps: List[FunctionStep]) -> None:
+    def _update_pipeline_steps(
+        self, plate_path: str, steps: List[FunctionStep]
+    ) -> None:
         """Update Pipeline ObjectState with new step list.
 
         Args:
             plate_path: Path of the plate
             steps: New list of FunctionStep objects
         """
-        pipeline_state = self._ensure_pipeline_state(plate_path)
+        pipeline_state = self._ensure_pipeline_state(plate_path, register=False)
         if not pipeline_state:
             return
 
@@ -315,22 +340,48 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
         # Build scope IDs and register each step with ObjectState
         step_scope_ids = []
+        to_register: list[ObjectState] = []
         for step in steps:
             scope_id = ScopeTokenService.build_scope_id(plate_path, step)
             step_scope_ids.append(scope_id)
 
             # Register step with ObjectState if not already registered
             existing = ObjectStateRegistry.get_by_scope(scope_id)
-            if not existing:
+            step_state = existing
+            if not step_state:
                 state = ObjectState(
                     object_instance=step,
                     scope_id=scope_id,
                     parent_state=ObjectStateRegistry.get_by_scope(plate_path),
                 )
-                ObjectStateRegistry.register(state)
-                logger.debug(f"Registered ObjectState for step: {scope_id}")
+                step_state = state
+                to_register.append(step_state)
 
-        # Update Pipeline ObjectState parameter
+            # Register function ObjectStates alongside the step
+            func_items = self._normalize_func_items(step.func)
+            for func_obj, kwargs in func_items:
+                func_scope_id = ScopeTokenService.build_scope_id(scope_id, func_obj)
+                if ObjectStateRegistry.get_by_scope(func_scope_id):
+                    continue
+                reserved_param = self._get_reserved_param_name(func_obj)
+                exclude_params = [reserved_param] if reserved_param else None
+                func_state = ObjectState(
+                    object_instance=func_obj,
+                    scope_id=func_scope_id,
+                    parent_state=step_state,
+                    exclude_params=exclude_params,
+                    initial_values=kwargs,
+                )
+                to_register.append(func_state)
+
+        # Register pipeline + steps + update step_scope_ids
+        # NOTE: This is called within an atomic block from the caller (delete/paste/add)
+        # Do NOT wrap in atomic() here - let the caller manage the atomic context
+        if ObjectStateRegistry.get_by_scope(pipeline_state.scope_id) is None:
+            ObjectStateRegistry.register(pipeline_state)
+        for state in to_register:
+            ObjectStateRegistry.register(state)
+            logger.debug(f"Registered ObjectState for step: {state.scope_id}")
         pipeline_state.update_parameter("step_scope_ids", step_scope_ids)
 
     @property
@@ -346,7 +397,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
         """
         # Prefer the plate root scope used by PlateManager (ROOT_SCOPE_ID="__plates__")
         # Fallback to global scope "" for legacy behavior.
-        root_state = ObjectStateRegistry.get_by_scope("__plates__") or ObjectStateRegistry.get_by_scope("")
+        root_state = ObjectStateRegistry.get_by_scope(
+            "__plates__"
+        ) or ObjectStateRegistry.get_by_scope("")
         if not root_state:
             return {}
 
@@ -361,8 +414,10 @@ class PipelineEditorWidget(AbstractManagerWidget):
         return result
 
     # ========== Business Logic Methods (Extracted from Textual) ==========
-    
-    def format_item_for_display(self, step: FunctionStep, live_context_snapshot=None) -> Tuple[str, str]:
+
+    def format_item_for_display(
+        self, step: FunctionStep, live_context_snapshot=None
+    ) -> Tuple[str, str]:
         """
         Format step for display in the list with constructor value preview.
 
@@ -376,7 +431,7 @@ class PipelineEditorWidget(AbstractManagerWidget):
         Returns:
             Tuple of (StyledText with segments, step_name)
         """
-        step_name: str = getattr(step, 'name', 'Unknown Step') or 'Unknown Step'
+        step_name: str = getattr(step, "name", "Unknown Step") or "Unknown Step"
 
         # Use declarative format from LIST_ITEM_FORMAT
         styled = self._build_item_display_from_format(
@@ -387,49 +442,55 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
     def _create_step_tooltip(self, step: FunctionStep) -> str:
         """Create detailed tooltip for a step showing all constructor values."""
-        step_name = getattr(step, 'name', 'Unknown Step')
+        step_name = getattr(step, "name", "Unknown Step")
         tooltip_lines = [f"Step: {step_name}"]
 
         # Function details
-        func = getattr(step, 'func', None)
+        func = getattr(step, "func", None)
         if func:
             if isinstance(func, list):
                 if len(func) == 1:
-                    func_name = getattr(func[0], '__name__', str(func[0]))
+                    func_name = getattr(func[0], "__name__", str(func[0]))
                     tooltip_lines.append(f"Function: {func_name}")
                 else:
-                    func_names = [getattr(f, '__name__', str(f)) for f in func[:3]]
+                    func_names = [getattr(f, "__name__", str(f)) for f in func[:3]]
                     if len(func) > 3:
-                        func_names.append(f"... +{len(func)-3} more")
+                        func_names.append(f"... +{len(func) - 3} more")
                     tooltip_lines.append(f"Functions: {', '.join(func_names)}")
             elif callable(func):
-                func_name = getattr(func, '__name__', str(func))
+                func_name = getattr(func, "__name__", str(func))
                 tooltip_lines.append(f"Function: {func_name}")
             elif isinstance(func, dict):
-                tooltip_lines.append(f"Function: Dictionary with {len(func)} routing keys")
+                tooltip_lines.append(
+                    f"Function: Dictionary with {len(func)} routing keys"
+                )
         else:
             tooltip_lines.append("Function: None")
 
         # Variable components
-        var_components = getattr(step, 'variable_components', None)
+        var_components = getattr(step, "variable_components", None)
         if var_components:
-            comp_names = [getattr(c, 'name', str(c)) for c in var_components]
+            comp_names = [getattr(c, "name", str(c)) for c in var_components]
             tooltip_lines.append(f"Variable Components: [{', '.join(comp_names)}]")
         else:
             tooltip_lines.append("Variable Components: None")
 
         # Group by
-        group_by = getattr(step, 'group_by', None)
+        group_by = getattr(step, "group_by", None)
         if group_by and group_by.value is not None:  # Check for GroupBy.NONE
-            group_name = getattr(group_by, 'name', str(group_by))
+            group_name = getattr(group_by, "name", str(group_by))
             tooltip_lines.append(f"Group By: {group_name}")
         else:
             tooltip_lines.append("Group By: None")
 
         # Input source (access from processing_config)
-        input_source = getattr(step.processing_config, 'input_source', None) if hasattr(step, 'processing_config') else None
+        input_source = (
+            getattr(step.processing_config, "input_source", None)
+            if hasattr(step, "processing_config")
+            else None
+        )
         if input_source:
-            source_name = getattr(input_source, 'name', str(input_source))
+            source_name = getattr(input_source, "name", str(input_source))
             tooltip_lines.append(f"Input Source: {source_name}")
         else:
             tooltip_lines.append("Input Source: None")
@@ -440,15 +501,15 @@ class PipelineEditorWidget(AbstractManagerWidget):
         # Helper to format config details based on type
         def format_config_detail(config_attr: str, config) -> str:
             """Format config detail string based on config type."""
-            if config_attr == 'step_materialization_config':
+            if config_attr == "step_materialization_config":
                 return "• Materialization Config: Enabled"
-            elif config_attr == 'napari_streaming_config':
-                port = getattr(config, 'port', 'default')
+            elif config_attr == "napari_streaming_config":
+                port = getattr(config, "port", "default")
                 return f"• Napari Streaming: Port {port}"
-            elif config_attr == 'fiji_streaming_config':
+            elif config_attr == "fiji_streaming_config":
                 return "• Fiji Streaming: Enabled"
-            elif config_attr == 'step_well_filter_config':
-                well_filter = getattr(config, 'well_filter', 'default')
+            elif config_attr == "step_well_filter_config":
+                well_filter = getattr(config, "well_filter", "default")
                 return f"• Well Filter: {well_filter}"
             else:
                 # Generic fallback for unknown config types
@@ -468,7 +529,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
                 if not in_registry:
                     continue
                 # Check enabled field if exists
-                if is_dataclass(config) and 'enabled' in {ff.name for ff in fields(config)}:
+                if is_dataclass(config) and "enabled" in {
+                    ff.name for ff in fields(config)
+                }:
                     if not config.enabled:
                         continue
                 config_details.append(format_config_detail(f.name, config))
@@ -477,7 +540,7 @@ class PipelineEditorWidget(AbstractManagerWidget):
             tooltip_lines.append("")  # Empty line separator
             tooltip_lines.extend(config_details)
 
-        return '\n'.join(tooltip_lines)
+        return "\n".join(tooltip_lines)
 
     def action_add_step(self):
         """Handle Add Step button (adapted from Textual version)."""
@@ -488,7 +551,7 @@ class PipelineEditorWidget(AbstractManagerWidget):
         step_name = f"Step_{len(self.pipeline_steps) + 1}"
         new_step = FunctionStep(
             func=[],  # Start with empty function list
-            name=step_name
+            name=step_name,
         )
         plate_scope = self.current_plate or "no_plate"
         ScopeTokenService.ensure_token(plate_scope, new_step)
@@ -501,7 +564,11 @@ class PipelineEditorWidget(AbstractManagerWidget):
             """Handle step save from editor."""
             # Use atomic operation to coalesce all ObjectState changes into one undo step
             is_new = edited_step not in self.pipeline_steps
-            label = f"add step {edited_step.name}" if is_new else f"edit step {edited_step.name}"
+            label = (
+                f"add step {edited_step.name}"
+                if is_new
+                else f"edit step {edited_step.name}"
+            )
 
             with ObjectStateRegistry.atomic(label):
                 # Check if step already exists in pipeline (for Shift+Click saves)
@@ -518,7 +585,11 @@ class PipelineEditorWidget(AbstractManagerWidget):
                     self._update_pipeline_steps(self.current_plate, self.pipeline_steps)
 
             self.update_item_list()
-            self.pipeline_changed.emit(self.pipeline_steps)
+            self._suppress_pipeline_state_sync = True
+            try:
+                self.pipeline_changed.emit(self.pipeline_steps)
+            finally:
+                self._suppress_pipeline_state_sync = False
 
         # Create and show editor dialog within the correct config context
         orchestrator = self._get_current_orchestrator()
@@ -526,7 +597,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
         # SIMPLIFIED: Orchestrator context is automatically available through type-based registry
         # No need for explicit context management - dual-axis resolver handles it automatically
         if not orchestrator:
-            logger.info("No orchestrator found for step editor context, This should not happen.")
+            logger.info(
+                "No orchestrator found for step editor context, This should not happen."
+            )
 
         editor = DualEditorWindow(
             step_data=new_step,
@@ -534,15 +607,19 @@ class PipelineEditorWidget(AbstractManagerWidget):
             on_save_callback=handle_save,
             orchestrator=orchestrator,
             gui_config=self.gui_config,
-            parent=self
+            parent=self,
         )
         # Set original step for change detection
         editor.set_original_step_for_change_detection()
 
         # Connect orchestrator config changes to step editor for live placeholder updates
         # This ensures the step editor's placeholders update when pipeline config is saved
-        if self.plate_manager and hasattr(self.plate_manager, 'orchestrator_config_changed'):
-            self.plate_manager.orchestrator_config_changed.connect(editor.on_orchestrator_config_changed)
+        if self.plate_manager and hasattr(
+            self.plate_manager, "orchestrator_config_changed"
+        ):
+            self.plate_manager.orchestrator_config_changed.connect(
+                editor.on_orchestrator_config_changed
+            )
             logger.debug("Connected orchestrator_config_changed signal to step editor")
 
         editor.show()
@@ -568,14 +645,19 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
             # Use ABC template for unified code execution (handles registration sync)
             self._handle_edited_code(python_code)
-            self.status_message.emit(f"Auto-loaded {len(self.pipeline_steps)} steps from basic_pipeline.py")
+            self.status_message.emit(
+                f"Auto-loaded {len(self.pipeline_steps)} steps from basic_pipeline.py"
+            )
 
         except Exception as e:
             import traceback
+
             logger.error(f"Failed to auto-load basic_pipeline.py: {e}")
             logger.error(f"Full traceback:\n{traceback.format_exc()}")
-            self.service_adapter.show_error_dialog(f"Failed to auto-load pipeline: {str(e)}")
-    
+            self.service_adapter.show_error_dialog(
+                f"Failed to auto-load pipeline: {str(e)}"
+            )
+
     def action_code_pipeline(self):
         """Handle Code Pipeline button - edit pipeline as Python code."""
         logger.debug("Code button pressed - opening code editor")
@@ -597,7 +679,10 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
             # Check if user wants external editor (check environment variable)
             import os
-            use_external = os.environ.get('OPENHCS_USE_EXTERNAL_EDITOR', '').lower() in ('1', 'true', 'yes')
+
+            use_external = os.environ.get(
+                "OPENHCS_USE_EXTERNAL_EDITOR", ""
+            ).lower() in ("1", "true", "yes")
 
             # Launch editor with callback - uses ABC _handle_edited_code template
             editor_service.edit_code(
@@ -605,47 +690,67 @@ class PipelineEditorWidget(AbstractManagerWidget):
                 title="Edit Pipeline Steps",
                 callback=self._handle_edited_code,  # ABC template method
                 use_external=use_external,
-                code_type='pipeline',
-                code_data={'clean_mode': True}
+                code_type="pipeline",
+                code_data={"clean_mode": True},
             )
 
         except Exception as e:
             logger.error(f"Failed to open pipeline code editor: {e}")
-            self.service_adapter.show_error_dialog(f"Failed to open code editor: {str(e)}")
+            self.service_adapter.show_error_dialog(
+                f"Failed to open code editor: {str(e)}"
+            )
 
     # === Code Execution Hooks (ABC _handle_edited_code template) ===
 
-    def _handle_code_execution_error(self, code: str, error: Exception, namespace: dict) -> Optional[dict]:
+    def _handle_code_execution_error(
+        self, code: str, error: Exception, namespace: dict
+    ) -> Optional[dict]:
         """Handle old-format step constructors by retrying with migration patch."""
         error_msg = str(error)
-        if "unexpected keyword argument" in error_msg and ("group_by" in error_msg or "variable_components" in error_msg):
-            logger.info(f"Detected old-format step constructor, retrying with migration patch: {error}")
+        if "unexpected keyword argument" in error_msg and (
+            "group_by" in error_msg or "variable_components" in error_msg
+        ):
+            logger.info(
+                f"Detected old-format step constructor, retrying with migration patch: {error}"
+            )
             new_namespace = {}
-            with self._patch_lazy_constructors(), patch_step_constructors_for_migration():
+            with (
+                self._patch_lazy_constructors(),
+                patch_step_constructors_for_migration(),
+            ):
                 exec(code, new_namespace)
             return new_namespace
         return None  # Re-raise error
 
     def _apply_executed_code(self, namespace: dict) -> bool:
         """Extract pipeline_steps from namespace and apply to widget state."""
-        if 'pipeline_steps' not in namespace:
+        if "pipeline_steps" not in namespace:
             return False
 
-        new_pipeline_steps = namespace['pipeline_steps']
+        new_pipeline_steps = namespace["pipeline_steps"]
         self.pipeline_steps = new_pipeline_steps
-        self._normalize_step_scope_tokens()
+        # Don't register here; _update_pipeline_steps handles atomic registration
+        self._normalize_step_scope_tokens(register=False)
 
         # Update Pipeline ObjectState with new step list
         if self.current_plate:
             self._update_pipeline_steps(self.current_plate, self.pipeline_steps)
-            logger.debug(f"Updated Pipeline ObjectState ({len(self.pipeline_steps)} steps) for plate: {self.current_plate}")
+            logger.debug(
+                f"Updated Pipeline ObjectState ({len(self.pipeline_steps)} steps) for plate: {self.current_plate}"
+            )
 
         self.update_item_list()
-        self.pipeline_changed.emit(self.pipeline_steps)
-        self.status_message.emit(f"Pipeline updated with {len(new_pipeline_steps)} steps")
+        self._suppress_pipeline_state_sync = True
+        try:
+            self.pipeline_changed.emit(self.pipeline_steps)
+        finally:
+            self._suppress_pipeline_state_sync = False
+        self.status_message.emit(
+            f"Pipeline updated with {len(new_pipeline_steps)} steps"
+        )
 
         # Broadcast to global event bus for ALL windows to receive
-        self._broadcast_to_event_bus('pipeline', new_pipeline_steps)
+        self._broadcast_to_event_bus("pipeline", new_pipeline_steps)
         return True
 
     def _get_code_missing_error_message(self) -> str:
@@ -667,40 +772,50 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
             if steps is not None:
                 self.pipeline_steps = steps
-                self._normalize_step_scope_tokens()
+                # Don't register here; _update_pipeline_steps handles atomic registration
+                self._normalize_step_scope_tokens(register=False)
 
                 # Update Pipeline ObjectState with loaded steps
                 if self.current_plate:
                     self._update_pipeline_steps(self.current_plate, self.pipeline_steps)
-                    logger.debug(f"Updated Pipeline ObjectState ({len(self.pipeline_steps)} steps) for plate: {self.current_plate}")
+                    logger.debug(
+                        f"Updated Pipeline ObjectState ({len(self.pipeline_steps)} steps) for plate: {self.current_plate}"
+                    )
 
                 self.update_item_list()
-                self.pipeline_changed.emit(self.pipeline_steps)
-                self.status_message.emit(f"Loaded {len(steps)} steps from {file_path.name}")
+                self._suppress_pipeline_state_sync = True
+                try:
+                    self.pipeline_changed.emit(self.pipeline_steps)
+                finally:
+                    self._suppress_pipeline_state_sync = False
+                self.status_message.emit(
+                    f"Loaded {len(steps)} steps from {file_path.name}"
+                )
             else:
                 self.status_message.emit(f"Invalid pipeline format in {file_path.name}")
 
         except Exception as e:
             logger.error(f"Failed to load pipeline: {e}")
             self.service_adapter.show_error_dialog(f"Failed to load pipeline: {e}")
-    
+
     def save_pipeline_to_file(self, file_path: Path):
         """
         Save pipeline to file (extracted from Textual version).
-        
+
         Args:
             file_path: Path to save pipeline
         """
         try:
             import dill as pickle
-            with open(file_path, 'wb') as f:
+
+            with open(file_path, "wb") as f:
                 pickle.dump(list(self.pipeline_steps), f)
             self.status_message.emit(f"Saved pipeline to {file_path.name}")
-            
+
         except Exception as e:
             logger.error(f"Failed to save pipeline: {e}")
             self.service_adapter.show_error_dialog(f"Failed to save pipeline: {e}")
-    
+
     def save_pipeline_for_plate(self, plate_path: str, pipeline: List[FunctionStep]):
         """
         Save pipeline for specific plate (extracted from Textual version).
@@ -711,7 +826,13 @@ class PipelineEditorWidget(AbstractManagerWidget):
         """
         self._update_pipeline_steps(plate_path, pipeline)
         logger.debug(f"Updated Pipeline ObjectState for plate: {plate_path}")
-    
+
+    def get_pipeline_for_plate(self, plate_path: str) -> List[FunctionStep]:
+        """Return the current pipeline definition from Pipeline ObjectState."""
+        if not plate_path:
+            return []
+        return self._get_steps_from_pipeline_state(plate_path)
+
     def set_current_plate(self, plate_path: str):
         """
         Set current plate and load its pipeline (extracted from Textual version).
@@ -731,12 +852,14 @@ class PipelineEditorWidget(AbstractManagerWidget):
         if plate_path:
             plate_pipeline = self._get_steps_from_pipeline_state(plate_path)
             self.pipeline_steps = plate_pipeline
-            logger.info(f"  → Loaded {len(plate_pipeline)} steps for plate from Pipeline ObjectState")
+            logger.info(
+                f"  → Loaded {len(plate_pipeline)} steps for plate from Pipeline ObjectState"
+            )
         else:
             self.pipeline_steps = []
             logger.info(f"  → No plate selected, cleared pipeline")
 
-        self._normalize_step_scope_tokens()
+        self._normalize_step_scope_tokens(register=False)
 
         # CRITICAL: Force cleanup of flash subscriptions when switching plates
         # This ensures FlashElements don't point to stale QListWidgetItems
@@ -764,7 +887,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
         """
         # Only refresh if this is for the current plate
         if plate_path == self.current_plate:
-            logger.debug(f"Refreshing placeholders for orchestrator config change: {plate_path}")
+            logger.debug(
+                f"Refreshing placeholders for orchestrator config change: {plate_path}"
+            )
 
             # SIMPLIFIED: Orchestrator context is automatically available through type-based registry
             # No need for explicit context management - dual-axis resolver handles it automatically
@@ -772,7 +897,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
             if orchestrator:
                 # Trigger refresh of any open configuration windows or step forms
                 # The type-based registry ensures they resolve against the updated orchestrator config
-                logger.debug(f"Step forms will now resolve against updated orchestrator config for: {plate_path}")
+                logger.debug(
+                    f"Step forms will now resolve against updated orchestrator config for: {plate_path}"
+                )
             else:
                 logger.debug(f"No orchestrator found for config refresh: {plate_path}")
 
@@ -788,19 +915,52 @@ class PipelineEditorWidget(AbstractManagerWidget):
     def _get_item_insert_index(self, item: Any, scope_key: str) -> Optional[int]:
         """Get correct position for step re-insertion during time-travel."""
         # Token format is e.g. "functionstep_3" - parse index from it
-        token = getattr(item, '_scope_token', None)
+        token = getattr(item, "_scope_token", None)
         if token:
-            parts = token.rsplit('_', 1)
+            parts = token.rsplit("_", 1)
             if len(parts) == 2 and parts[1].isdigit():
                 return min(int(parts[1]), len(self.pipeline_steps))
         return None
 
-    def _normalize_step_scope_tokens(self) -> None:
+    def _normalize_step_scope_tokens(self, register: bool = True) -> None:
         """Ensure all steps have tokens and are registered."""
         plate_scope = self.current_plate or "no_plate"
         ScopeTokenService.seed_from_objects(plate_scope, self.pipeline_steps)
+        if not register:
+            return
         for step in self.pipeline_steps:
             self._register_step_state(step)
+
+    def _normalize_func_items(self, func_value) -> list[tuple[Callable, dict]]:
+        if not func_value:
+            return []
+        from pyqt_reactive.services.pattern_data_manager import PatternDataManager
+
+        if isinstance(func_value, dict):
+            items = []
+            for channel_funcs in func_value.values():
+                items.extend(self._normalize_func_items(channel_funcs))
+            return items
+        if isinstance(func_value, list):
+            items = []
+            for item in func_value:
+                func_obj, kwargs = PatternDataManager.extract_func_and_kwargs(item)
+                if func_obj:
+                    items.append((func_obj, kwargs))
+            return items
+        func_obj, kwargs = PatternDataManager.extract_func_and_kwargs(func_value)
+        return [(func_obj, kwargs)] if func_obj else []
+
+    def _get_reserved_param_name(self, func: Callable) -> Optional[str]:
+        try:
+            sig = inspect.signature(func)
+        except (TypeError, ValueError):
+            return None
+        for param_name, _param in sig.parameters.items():
+            if param_name in ("self", "cls"):
+                continue
+            return param_name
+        return None
 
     def _register_step_state(self, step: FunctionStep) -> None:
         """Register ObjectState for a step (creates if not exists)."""
@@ -808,21 +968,56 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
         # Check if already registered
         existing = ObjectStateRegistry.get_by_scope(scope_id)
-        if existing:
-            return
+        step_state = existing
 
         # Get context (PipelineConfig from orchestrator)
         orchestrator = self._get_current_orchestrator()
         context_obj = orchestrator.pipeline_config if orchestrator else None
 
-        state = ObjectState(
-            object_instance=step,
-            scope_id=scope_id,
-            parent_state=ObjectStateRegistry.get_by_scope(str(self.current_plate)) if self.current_plate else None,
-            # func is hidden from ParameterFormManager via _ui_special_fields but included in ObjectState
+        parent_state = (
+            ObjectStateRegistry.get_by_scope(str(self.current_plate))
+            if self.current_plate
+            else None
         )
-        ObjectStateRegistry.register(state)
-        logger.debug(f"Registered ObjectState for step: {scope_id}")
+
+        # Determine which ObjectStates need registering
+        to_register: list[ObjectState] = []
+
+        if step_state is None:
+            step_state = ObjectState(
+                object_instance=step,
+                scope_id=scope_id,
+                parent_state=parent_state,
+                # func is hidden from ParameterFormManager via _ui_special_fields but included in ObjectState
+            )
+            to_register.append(step_state)
+
+        # Register function ObjectStates alongside the step (atomic)
+        func_items = self._normalize_func_items(step.func)
+        for func_obj, kwargs in func_items:
+            func_scope_id = ScopeTokenService.build_scope_id(scope_id, func_obj)
+            if ObjectStateRegistry.get_by_scope(func_scope_id):
+                continue
+            reserved_param = self._get_reserved_param_name(func_obj)
+            exclude_params = [reserved_param] if reserved_param else None
+            func_state = ObjectState(
+                object_instance=func_obj,
+                scope_id=func_scope_id,
+                parent_state=step_state,
+                exclude_params=exclude_params,
+                initial_values=kwargs,
+            )
+            to_register.append(func_state)
+
+        if not to_register:
+            return
+
+        # NOTE: Registration should be atomic with the calling operation (paste/add)
+        # Do NOT wrap in atomic() here - let the caller manage the atomic context
+        for state in to_register:
+            ObjectStateRegistry.register(state)
+
+        logger.debug(f"Registered ObjectState for step (and functions): {scope_id}")
 
     def _unregister_step_state(self, step: FunctionStep) -> None:
         """Unregister ObjectState for a step and all its nested functions."""
@@ -830,7 +1025,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
         # Cascade unregister: step + all nested functions (prevents memory leak)
         count = ObjectStateRegistry.unregister_scope_and_descendants(scope_id)
-        logger.debug(f"Cascade unregistered {count} ObjectState(s) for deleted step: {scope_id}")
+        logger.debug(
+            f"Cascade unregistered {count} ObjectState(s) for deleted step: {scope_id}"
+        )
 
     # _merge_with_live_values() DELETED - use _merge_with_live_values() from base class
     # _get_step_preview_instance() DELETED - ObjectState provides resolved values directly
@@ -839,7 +1036,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
         """Refresh all step preview labels."""
         self.update_item_list()
 
-    def _refresh_step_items_by_index(self, indices: Iterable[int], live_context_snapshot=None) -> None:
+    def _refresh_step_items_by_index(
+        self, indices: Iterable[int], live_context_snapshot=None
+    ) -> None:
         """Refresh specific step items by index. Uses ObjectState for values."""
         if not indices or not self.current_plate:
             return
@@ -878,8 +1077,10 @@ class PipelineEditorWidget(AbstractManagerWidget):
         self.buttons["auto_load_pipeline"].setEnabled(has_plate and is_initialized)
         self.buttons["del_step"].setEnabled(has_steps)
         self.buttons["edit_step"].setEnabled(has_steps and has_selection)
-        self.buttons["code_pipeline"].setEnabled(has_plate and is_initialized)  # Same as add button - orchestrator init is sufficient
-    
+        self.buttons["code_pipeline"].setEnabled(
+            has_plate and is_initialized
+        )  # Same as add button - orchestrator init is sufficient
+
     # Event handlers (update_status, on_selection_changed, on_item_double_clicked, on_steps_reordered)
     # DELETED - provided by AbstractManagerWidget base class
     # Step-specific behavior implemented via abstract hooks (see end of file)
@@ -887,14 +1088,16 @@ class PipelineEditorWidget(AbstractManagerWidget):
     def on_pipeline_changed(self, steps: List[FunctionStep]):
         """
         Handle pipeline changes.
-        
+
         Args:
             steps: New pipeline steps
         """
+        if self._suppress_pipeline_state_sync:
+            return
         # Save pipeline to current plate if one is selected
         if self.current_plate:
             self.save_pipeline_for_plate(self.current_plate, steps)
-        
+
         logger.debug(f"Pipeline changed: {len(steps)} steps")
 
     def _is_current_plate_initialized(self) -> bool:
@@ -902,39 +1105,58 @@ class PipelineEditorWidget(AbstractManagerWidget):
         if not self.current_plate:
             return False
 
-        # Get plate manager from main window
-        main_window = self._find_main_window()
-        if not main_window:
-            return False
+        # Use plate_manager reference if available (set by main window during connection)
+        # This works for both embedded widgets and floating windows
+        if self.plate_manager:
+            from objectstate import ObjectStateRegistry
 
-        # Get plate manager widget from floating windows
-        plate_manager_window = main_window.floating_windows.get("plate_manager")
-        if not plate_manager_window:
-            return False
+            orchestrator = ObjectStateRegistry.get_object(self.current_plate)
+            if orchestrator is None:
+                return False
 
-        layout = plate_manager_window.layout()
-        if not layout or layout.count() == 0:
+            # Check if orchestrator is in an initialized state (mirrors Textual TUI logic)
+            is_initialized = orchestrator.state in [
+                OrchestratorState.READY,
+                OrchestratorState.COMPILED,
+                OrchestratorState.COMPLETED,
+                OrchestratorState.COMPILE_FAILED,
+                OrchestratorState.EXEC_FAILED,
+            ]
+            logger.debug(
+                f"PipelineEditor: Plate {self.current_plate} orchestrator state: {orchestrator.state}, initialized: {is_initialized}"
+            )
+            return is_initialized
+
+        # Fallback: Try to find plate manager via ServiceRegistry
+        from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
+        from pyqt_reactive.services import ServiceRegistry
+
+        plate_manager = ServiceRegistry.get(PlateManagerWidget)
+        if not plate_manager:
             return False
 
         from objectstate import ObjectStateRegistry
+
         orchestrator = ObjectStateRegistry.get_object(self.current_plate)
         if orchestrator is None:
             return False
 
         # Check if orchestrator is in an initialized state (mirrors Textual TUI logic)
-        return orchestrator.state in [OrchestratorState.READY, OrchestratorState.COMPILED,
-                                     OrchestratorState.COMPLETED, OrchestratorState.COMPILE_FAILED,
-                                     OrchestratorState.EXEC_FAILED]
-
-
+        return orchestrator.state in [
+            OrchestratorState.READY,
+            OrchestratorState.COMPILED,
+            OrchestratorState.COMPLETED,
+            OrchestratorState.COMPILE_FAILED,
+            OrchestratorState.EXEC_FAILED,
+        ]
 
     def _get_current_orchestrator(self) -> Optional[PipelineOrchestrator]:
         """Get the orchestrator for the currently selected plate."""
         if not self.current_plate:
             return None
         from objectstate import ObjectStateRegistry
-        return ObjectStateRegistry.get_object(self.current_plate)
 
+        return ObjectStateRegistry.get_object(self.current_plate)
 
     # _find_main_window() moved to AbstractManagerWidget
 
@@ -949,9 +1171,11 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
         # CRITICAL FIX: Refresh all placeholders when global config changes
         # This ensures pipeline config editor shows updated inherited values
-        if hasattr(self, 'form_manager') and self.form_manager:
+        if hasattr(self, "form_manager") and self.form_manager:
             self.form_manager.refresh_placeholder_text()
-            logger.info("Refreshed pipeline config placeholders after global config change")
+            logger.info(
+                "Refreshed pipeline config placeholders after global config change"
+            )
 
     # ========== Abstract Hook Implementations (AbstractManagerWidget ABC) ==========
 
@@ -964,7 +1188,7 @@ class PipelineEditorWidget(AbstractManagerWidget):
     def _perform_delete(self, items: List[Any]) -> None:
         """Remove steps from backing list (required abstract method)."""
         # Build descriptive label for undo
-        step_names = [getattr(step, 'name', '?') for step in items]
+        step_names = [getattr(step, "name", "?") for step in items]
         label = f"delete step{'s' if len(items) > 1 else ''} {', '.join(step_names)}"
 
         with ObjectStateRegistry.atomic(label):
@@ -974,14 +1198,16 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
             # Build set of steps to delete (by identity, not equality)
             steps_to_delete = set(id(step) for step in items)
-            self.pipeline_steps = [s for s in self.pipeline_steps if id(s) not in steps_to_delete]
-            self._normalize_step_scope_tokens()
+            self.pipeline_steps = [
+                s for s in self.pipeline_steps if id(s) not in steps_to_delete
+            ]
+            self._normalize_step_scope_tokens(register=False)
 
             # Sync to Pipeline ObjectState
             if self.current_plate:
                 self._update_pipeline_steps(self.current_plate, self.pipeline_steps)
 
-        if self.selected_step in [getattr(step, 'name', '') for step in items]:
+        if self.selected_step in [getattr(step, "name", "") for step in items]:
             self.selected_step = ""
 
     def _show_item_editor(self, item: Any) -> None:
@@ -1003,7 +1229,9 @@ class PipelineEditorWidget(AbstractManagerWidget):
                 if step is step_to_edit:
                     # Transfer scope token from old to new step
                     prefix = ScopeTokenService._get_prefix(step_to_edit)
-                    ScopeTokenService.get_generator(plate_scope, prefix).transfer(step_to_edit, edited_step)
+                    ScopeTokenService.get_generator(plate_scope, prefix).transfer(
+                        step_to_edit, edited_step
+                    )
                     self.pipeline_steps[i] = edited_step
                     break
 
@@ -1021,14 +1249,18 @@ class PipelineEditorWidget(AbstractManagerWidget):
             orchestrator=orchestrator,
             gui_config=self.gui_config,
             parent=self,
-            step_index=step_index  # Pass actual position for border pattern
+            step_index=step_index,  # Pass actual position for border pattern
         )
         # Set original step for change detection
         editor.set_original_step_for_change_detection()
 
         # Connect orchestrator config changes to step editor for live placeholder updates
-        if self.plate_manager and hasattr(self.plate_manager, 'orchestrator_config_changed'):
-            self.plate_manager.orchestrator_config_changed.connect(editor.on_orchestrator_config_changed)
+        if self.plate_manager and hasattr(
+            self.plate_manager, "orchestrator_config_changed"
+        ):
+            self.plate_manager.orchestrator_config_changed.connect(
+                editor.on_orchestrator_config_changed
+            )
             logger.debug("Connected orchestrator_config_changed signal to step editor")
 
         editor.show()
@@ -1063,12 +1295,12 @@ class PipelineEditorWidget(AbstractManagerWidget):
         ObjectState provides resolved values directly - no need to collect
         LiveContextSnapshot. Just ensure scope tokens are normalized.
         """
-        self._normalize_step_scope_tokens()
+        self._normalize_step_scope_tokens(register=False)
         return None  # ObjectState provides values, no context needed
 
     def _post_reorder(self) -> None:
         """Additional cleanup after reorder - normalize tokens and emit signal."""
-        self._normalize_step_scope_tokens()
+        self._normalize_step_scope_tokens(register=False)
 
         # Sync to Pipeline ObjectState
         if self.current_plate:
@@ -1076,15 +1308,17 @@ class PipelineEditorWidget(AbstractManagerWidget):
 
         self.pipeline_changed.emit(self.pipeline_steps)
         # Broadcast to global event bus so open step editors update their colors
-        self._broadcast_to_event_bus('pipeline', self.pipeline_steps)
+        self._broadcast_to_event_bus("pipeline", self.pipeline_steps)
         # Record snapshot for time-travel (reordering is a significant state change)
-        ObjectStateRegistry.record_snapshot("reorder steps", scope_id=str(self.current_plate))
+        ObjectStateRegistry.record_snapshot(
+            "reorder steps", scope_id=str(self.current_plate)
+        )
 
     # === Config Resolution Hook (domain-specific) ===
 
     def _get_scope_for_item(self, item: Any) -> str:
         """PipelineEditor: scope = plate::step_token."""
-        scope = self._build_step_scope_id(item) or ''
+        scope = self._build_step_scope_id(item) or ""
         logger.debug(f"⚡ FLASH_DEBUG _get_scope_for_item: item={item}, scope={scope}")
         return scope
 
@@ -1106,10 +1340,65 @@ class PipelineEditorWidget(AbstractManagerWidget):
     def _on_time_travel_complete(self, dirty_states, triggering_scope):
         """Refresh pipeline list after time travel to reflect restored step order."""
         if self.current_plate:
-            self.pipeline_steps = self._get_steps_from_pipeline_state(self.current_plate)
+            self.pipeline_steps = self._get_steps_from_pipeline_state(
+                self.current_plate
+            )
         else:
             self.pipeline_steps = []
 
-        self._normalize_step_scope_tokens()
+        self._normalize_step_scope_tokens(register=False)
         self.update_item_list()
         self.update_button_states()
+
+    def _action_copy_steps(self):
+        """Copy selected steps to clipboard (Ctrl+C)."""
+        selected_steps = self.get_selected_items()
+        if not selected_steps:
+            self.status_message.emit("No steps selected to copy")
+            return
+
+        self._clipboard_steps = [copy.deepcopy(step) for step in selected_steps]
+        step_names = [getattr(step, "name", "?") for step in selected_steps]
+        self.status_message.emit(
+            f"Copied {len(selected_steps)} step(s): {', '.join(step_names)}"
+        )
+
+    def _action_paste_steps(self):
+        """Paste steps from clipboard after selected step (Ctrl+V)."""
+        if not self._clipboard_steps:
+            self.status_message.emit("Clipboard is empty")
+            return
+
+        if not self.current_plate:
+            self.status_message.emit("No plate selected")
+            return
+
+        # Calculate insert position: after last selected index, or at end if nothing selected
+        selected_indices = self.item_list.selectedIndexes()
+        if selected_indices:
+            insert_after_index = max(idx.row() for idx in selected_indices)
+        else:
+            insert_after_index = len(self.pipeline_steps) - 1
+
+        step_names = [getattr(step, "name", "?") for step in self._clipboard_steps]
+        label = f"paste {len(self._clipboard_steps)} step(s): {', '.join(step_names)}"
+
+        with ObjectStateRegistry.atomic(label):
+            # Insert steps after the selected position
+            insert_position = insert_after_index + 1
+            for i, step in enumerate(self._clipboard_steps):
+                # Ensure fresh scope token for the copied step
+                ScopeTokenService.ensure_token(self.current_plate, step)
+                # Register with ObjectState (handles flashing automatically)
+                self._register_step_state(step)
+                # Insert into pipeline
+                self.pipeline_steps.insert(insert_position + i, step)
+
+            # Update Pipeline ObjectState
+            self._update_pipeline_steps(self.current_plate, self.pipeline_steps)
+
+        self.update_item_list()
+        self.pipeline_changed.emit(self.pipeline_steps)
+        self.status_message.emit(
+            f"Pasted {len(self._clipboard_steps)} step(s) after position {insert_after_index + 1}"
+        )

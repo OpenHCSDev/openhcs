@@ -39,12 +39,17 @@ from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.constants.constants import Backend, VariableComponents, OrchestratorState
 from openhcs.textual_tui.services.file_browser_service import SelectionMode
 from openhcs.textual_tui.services.window_service import WindowService
-from openhcs.core.path_cache import get_cached_browser_path, PathCacheKey, get_path_cache
+from openhcs.core.path_cache import (
+    get_cached_browser_path,
+    PathCacheKey,
+    get_path_cache,
+)
 from openhcs.introspection import SignatureAnalyzer
 
 logger = logging.getLogger(__name__)
 
 # Note: Using subprocess approach instead of multiprocessing to avoid TUI FD conflicts
+
 
 def get_orchestrator_status_symbol(orchestrator: PipelineOrchestrator) -> str:
     """Get UI symbol for orchestrator state - simple mapping without over-engineering."""
@@ -52,22 +57,17 @@ def get_orchestrator_status_symbol(orchestrator: PipelineOrchestrator) -> str:
         return "?"  # No orchestrator (newly added plate)
 
     state_to_symbol = {
-        OrchestratorState.CREATED: "?",         # Created but not initialized
-        OrchestratorState.READY: "-",           # Initialized, ready for compilation
-        OrchestratorState.COMPILED: "o",        # Compiled, ready for execution
-        OrchestratorState.EXECUTING: "!",       # Execution in progress
-        OrchestratorState.COMPLETED: "C",       # Execution completed successfully
-        OrchestratorState.INIT_FAILED: "I",     # Initialization failed
+        OrchestratorState.CREATED: "?",  # Created but not initialized
+        OrchestratorState.READY: "-",  # Initialized, ready for compilation
+        OrchestratorState.COMPILED: "o",  # Compiled, ready for execution
+        OrchestratorState.EXECUTING: "!",  # Execution in progress
+        OrchestratorState.COMPLETED: "C",  # Execution completed successfully
+        OrchestratorState.INIT_FAILED: "I",  # Initialization failed
         OrchestratorState.COMPILE_FAILED: "P",  # Compilation failed (P for Pipeline)
-        OrchestratorState.EXEC_FAILED: "X",     # Execution failed
+        OrchestratorState.EXEC_FAILED: "X",  # Execution failed
     }
 
     return state_to_symbol.get(orchestrator.state, "?")
-
-
-
-
-
 
 
 class PlateManagerWidget(ButtonListWidget):
@@ -80,17 +80,21 @@ class PlateManagerWidget(ButtonListWidget):
     orchestrators = reactive({})
     plate_configs = reactive({})
     orchestrator_state_version = reactive(0)  # Increment to trigger UI refresh
-    
+
     def __init__(self, filemanager: FileManager, global_config: GlobalPipelineConfig):
         button_configs = [
             ButtonConfig("Add", "add_plate"),
             ButtonConfig("Del", "del_plate", disabled=True),
-            ButtonConfig("Edit", "edit_config", disabled=True),  # Unified edit button for config editing
+            ButtonConfig(
+                "Edit", "edit_config", disabled=True
+            ),  # Unified edit button for config editing
             ButtonConfig("Init", "init_plate", disabled=True),
             ButtonConfig("Compile", "compile_plate", disabled=True),
             ButtonConfig("Run", "run_plate", disabled=True),
             ButtonConfig("Code", "code_plate", disabled=True),  # Generate Python code
-            ButtonConfig("Save", "save_python_script", disabled=True),  # Save Python script
+            ButtonConfig(
+                "Save", "save_python_script", disabled=True
+            ),  # Save Python script
             # ButtonConfig("Export", "export_ome_zarr", disabled=True),  # Export to OME-ZARR - HIDDEN FROM UI
         ]
         super().__init__(
@@ -99,13 +103,13 @@ class PlateManagerWidget(ButtonListWidget):
             container_id="plate_list",
             on_button_pressed=self._handle_button_press,
             on_selection_changed=self._handle_selection_change,
-            on_item_moved=self._handle_item_moved
+            on_item_moved=self._handle_item_moved,
         )
         self.filemanager = filemanager
         self.global_config = global_config
         self.plate_compiled_data = {}
         self.on_plate_selected: Optional[Callable[[str], None]] = None
-        self.pipeline_editor: Optional['PipelineEditorWidget'] = None
+        self.pipeline_editor: Optional["PipelineEditorWidget"] = None
 
         # Initialize window service to avoid circular imports
         self.window_service = None  # Will be set in on_mount
@@ -115,22 +119,23 @@ class PlateManagerWidget(ButtonListWidget):
         self.zmq_client = None  # ZMQ execution client (when using ZMQ mode)
         self.current_execution_id = None  # Track current execution ID for cancellation
         self.log_file_path: Optional[str] = None  # Single source of truth
-        self.log_file_position: int = 0  # Track position in log file for incremental reading
+        self.log_file_position: int = (
+            0  # Track position in log file for incremental reading
+        )
         # Async monitoring using Textual's interval system
         self.monitoring_interval = None
         self.monitoring_active = False
         # ---
-        
+
         logger.debug("PlateManagerWidget initialized")
 
-
-
-
-
     def on_unmount(self) -> None:
-        logger.debug("Unmounting PlateManagerWidget, ensuring worker process is terminated.")
+        logger.debug(
+            "Unmounting PlateManagerWidget, ensuring worker process is terminated."
+        )
         # Schedule async stop execution since on_unmount is sync
         import asyncio
+
         if self.current_process and self.current_process.poll() is None:
             # Create a task to stop execution asynchronously
             asyncio.create_task(self.action_stop_execution())
@@ -138,22 +143,22 @@ class PlateManagerWidget(ButtonListWidget):
 
     def format_item_for_display(self, plate: Dict) -> Tuple[str, str]:
         # Get status from orchestrator instead of magic string
-        plate_path = plate.get('path', '')
+        plate_path = plate.get("path", "")
         orchestrator = self.orchestrators.get(plate_path)
         status_symbol = get_orchestrator_status_symbol(orchestrator)
 
         status_symbols = {
-            "?": "➕",   # Created (not initialized)
-            "-": "✅",   # Ready (initialized)
-            "o": "⚡",   # Compiled
-            "!": "🔄",   # Executing
-            "C": "🏁",   # Completed
-            "I": "🚫",   # Init failed
-            "P": "💥",   # Compile failed (Pipeline)
-            "X": "❌"    # Execution failed
+            "?": "➕",  # Created (not initialized)
+            "-": "✅",  # Ready (initialized)
+            "o": "⚡",  # Compiled
+            "!": "🔄",  # Executing
+            "C": "🏁",  # Completed
+            "I": "🚫",  # Init failed
+            "P": "💥",  # Compile failed (Pipeline)
+            "X": "❌",  # Execution failed
         }
         status_icon = status_symbols.get(status_symbol, "❓")
-        plate_name = plate.get('name', 'Unknown')
+        plate_name = plate.get("name", "Unknown")
         display_text = f"{status_icon} {plate_name} - {plate_path}"
         return display_text, plate_path
 
@@ -188,7 +193,7 @@ class PlateManagerWidget(ButtonListWidget):
         plate = current_plates.pop(from_index)
         current_plates.insert(to_index, plate)
         self.items = current_plates
-        plate_name = plate['name']
+        plate_name = plate["name"]
         direction = "up" if to_index < from_index else "down"
         self.app.current_status = f"Moved plate '{plate_name}' {direction}"
 
@@ -198,19 +203,23 @@ class PlateManagerWidget(ButtonListWidget):
 
         self.call_later(self._delayed_update_display)
         self.call_later(self._update_button_states)
-    
+
     def watch_items(self, items: List[Dict]) -> None:
         """Automatically update UI when items changes (follows ButtonListWidget pattern)."""
         # DEBUG: Log when items list changes to track the source of the reset
-        stack_trace = ''.join(traceback.format_stack()[-3:-1])  # Get last 2 stack frames
-        logger.debug(f"🔍 ITEMS CHANGED: {len(items)} plates. Call stack:\n{stack_trace}")
+        stack_trace = "".join(
+            traceback.format_stack()[-3:-1]
+        )  # Get last 2 stack frames
+        logger.debug(
+            f"🔍 ITEMS CHANGED: {len(items)} plates. Call stack:\n{stack_trace}"
+        )
 
         # CRITICAL: Call parent's watch_items to update the SelectionList
         super().watch_items(items)
 
         logger.debug(f"Plates updated: {len(items)} plates")
         self._update_button_states()
-    
+
     def watch_highlighted_item(self, plate_path: str) -> None:
         self.selected_plate = plate_path
         logger.debug(f"Highlighted plate: {plate_path}")
@@ -236,7 +245,9 @@ class PlateManagerWidget(ButtonListWidget):
 
         # Also notify PipelineEditor if connected
         if self.pipeline_editor:
-            logger.debug(f"PlateManager: Notifying PipelineEditor of orchestrator state change (version {version})")
+            logger.debug(
+                f"PlateManager: Notifying PipelineEditor of orchestrator state change (version {version})"
+            )
             self.pipeline_editor._update_button_states()
 
     def get_selection_state(self) -> tuple[List[Dict], str]:
@@ -249,16 +260,20 @@ class PlateManagerWidget(ButtonListWidget):
             selection_list = self.query_one(f"#{self.list_id}")
             multi_selected_values = selection_list.selected
             if multi_selected_values:
-                selected_items = [p for p in self.items if p.get('path') in multi_selected_values]
+                selected_items = [
+                    p for p in self.items if p.get("path") in multi_selected_values
+                ]
                 return selected_items, "checkbox"
             elif self.selected_plate:
-                selected_items = [p for p in self.items if p.get('path') == self.selected_plate]
+                selected_items = [
+                    p for p in self.items if p.get("path") == self.selected_plate
+                ]
                 return selected_items, "cursor"
             else:
                 return [], "empty"
         except Exception as e:
             # DOM CORRUPTION DETECTED - This is a critical error
-            stack_trace = ''.join(traceback.format_stack()[-3:-1])
+            stack_trace = "".join(traceback.format_stack()[-3:-1])
             logger.error(f"🚨 DOM CORRUPTION: Failed to get selection state: {e}")
             logger.error(f"🚨 DOM CORRUPTION: Call stack:\n{stack_trace}")
             logger.error(f"🚨 DOM CORRUPTION: Widget mounted: {self.is_mounted}")
@@ -274,14 +289,22 @@ class PlateManagerWidget(ButtonListWidget):
                 logger.error(f"🚨 DOM CORRUPTION: Could not diagnose widgets: {diag_e}")
 
             if self.selected_plate:
-                selected_items = [p for p in self.items if p.get('path') == self.selected_plate]
+                selected_items = [
+                    p for p in self.items if p.get("path") == self.selected_plate
+                ]
                 return selected_items, "cursor"
             return [], "empty"
 
-    def get_operation_description(self, selected_items: List[Dict], selection_mode: str, operation: str) -> str:
+    def get_operation_description(
+        self, selected_items: List[Dict], selection_mode: str, operation: str
+    ) -> str:
         count = len(selected_items)
-        if count == 0: return f"No items for {operation}"
-        if count == 1: return f"{operation.title()} item: {selected_items[0].get('name', 'Unknown')}"
+        if count == 0:
+            return f"No items for {operation}"
+        if count == 1:
+            return (
+                f"{operation.title()} item: {selected_items[0].get('name', 'Unknown')}"
+            )
         return f"{operation.title()} {count} items"
 
     def _delayed_update_display(self) -> None:
@@ -308,7 +331,11 @@ class PlateManagerWidget(ButtonListWidget):
             selected_items, _ = self.get_selection_state()
             has_selected_items = bool(selected_items)
 
-            can_run = has_selection and any(p['path'] in self.plate_compiled_data for p in self.items if p.get('path') == self.selected_plate)
+            can_run = has_selection and any(
+                p["path"] in self.plate_compiled_data
+                for p in self.items
+                if p.get("path") == self.selected_plate
+            )
 
             # Try to get run button - if it doesn't exist, widget is not fully mounted
             try:
@@ -324,47 +351,64 @@ class PlateManagerWidget(ButtonListWidget):
                 return
 
             self.query_one("#add_plate").disabled = is_running
-            self.query_one("#del_plate").disabled = not self.items or not has_selected_items or is_running
+            self.query_one("#del_plate").disabled = (
+                not self.items or not has_selected_items or is_running
+            )
 
             # Edit button (config editing) enabled when 1+ orchestrators selected and initialized
             selected_items, _ = self.get_selection_state()
             edit_enabled = (
-                len(selected_items) > 0 and
-                all(self._is_orchestrator_initialized(item['path']) for item in selected_items) and
-                not is_running
+                len(selected_items) > 0
+                and all(
+                    self._is_orchestrator_initialized(item["path"])
+                    for item in selected_items
+                )
+                and not is_running
             )
             self.query_one("#edit_config").disabled = not edit_enabled
 
             # Init button - enabled when plates are selected, can be initialized, and not running
             init_enabled = (
-                len(selected_items) > 0 and
-                any(self._can_orchestrator_be_initialized(item['path']) for item in selected_items) and
-                not is_running
+                len(selected_items) > 0
+                and any(
+                    self._can_orchestrator_be_initialized(item["path"])
+                    for item in selected_items
+                )
+                and not is_running
             )
             self.query_one("#init_plate").disabled = not init_enabled
 
             # Compile button - enabled when plates are selected, initialized, and not running
             selected_items, _ = self.get_selection_state()
             compile_enabled = (
-                len(selected_items) > 0 and
-                all(self._is_orchestrator_initialized(item['path']) for item in selected_items) and
-                not is_running
+                len(selected_items) > 0
+                and all(
+                    self._is_orchestrator_initialized(item["path"])
+                    for item in selected_items
+                )
+                and not is_running
             )
             self.query_one("#compile_plate").disabled = not compile_enabled
 
             # Code button - enabled when plates are selected, initialized, and not running
             code_enabled = (
-                len(selected_items) > 0 and
-                all(self._is_orchestrator_initialized(item['path']) for item in selected_items) and
-                not is_running
+                len(selected_items) > 0
+                and all(
+                    self._is_orchestrator_initialized(item["path"])
+                    for item in selected_items
+                )
+                and not is_running
             )
             self.query_one("#code_plate").disabled = not code_enabled
 
             # Save Python script button - enabled when plates are selected, initialized, and not running
             save_enabled = (
-                len(selected_items) > 0 and
-                all(self._is_orchestrator_initialized(item['path']) for item in selected_items) and
-                not is_running
+                len(selected_items) > 0
+                and all(
+                    self._is_orchestrator_initialized(item["path"])
+                    for item in selected_items
+                )
+                and not is_running
             )
             self.query_one("#save_python_script").disabled = not save_enabled
 
@@ -396,7 +440,7 @@ class PlateManagerWidget(ButtonListWidget):
             return False
 
         for plate in plates:
-            pipeline = self.pipeline_editor.get_pipeline_for_plate(plate['path'])
+            pipeline = self.pipeline_editor.get_pipeline_for_plate(plate["path"])
             if not pipeline:
                 return False
         return True
@@ -411,18 +455,27 @@ class PlateManagerWidget(ButtonListWidget):
         orchestrator = self.orchestrators.get(plate_path)
         if orchestrator is None:
             return False
-        return orchestrator.state in [OrchestratorState.READY, OrchestratorState.COMPILED,
-                                     OrchestratorState.COMPLETED, OrchestratorState.COMPILE_FAILED,
-                                     OrchestratorState.EXEC_FAILED]
+        return orchestrator.state in [
+            OrchestratorState.READY,
+            OrchestratorState.COMPILED,
+            OrchestratorState.COMPLETED,
+            OrchestratorState.COMPILE_FAILED,
+            OrchestratorState.EXEC_FAILED,
+        ]
 
     def _can_orchestrator_be_initialized(self, plate_path: str) -> bool:
         """Check if orchestrator can be initialized (doesn't exist or is in a re-initializable state)."""
         orchestrator = self.orchestrators.get(plate_path)
         if orchestrator is None:
             return True  # No orchestrator exists, can be initialized
-        return orchestrator.state in [OrchestratorState.CREATED, OrchestratorState.INIT_FAILED]
+        return orchestrator.state in [
+            OrchestratorState.CREATED,
+            OrchestratorState.INIT_FAILED,
+        ]
 
-    def _notify_pipeline_editor_status_change(self, plate_path: str, new_status: str) -> None:
+    def _notify_pipeline_editor_status_change(
+        self, plate_path: str, new_status: str
+    ) -> None:
         """Notify pipeline editor when plate status changes (enables Add button immediately)."""
         if self.pipeline_editor and self.pipeline_editor.current_plate == plate_path:
             # Update pipeline editor's status and trigger button state update
@@ -446,7 +499,9 @@ class PlateManagerWidget(ButtonListWidget):
         # No conversion needed - pipeline_steps are already FunctionStep objects with memory type decorators
         return pipeline_steps
 
-    def get_operation_description(self, selected_items: List[Dict], selection_mode: str, operation: str) -> str:
+    def get_operation_description(
+        self, selected_items: List[Dict], selection_mode: str, operation: str
+    ) -> str:
         """Generate human-readable description of what will be operated on."""
         count = len(selected_items)
         if selection_mode == "empty":
@@ -455,14 +510,16 @@ class PlateManagerWidget(ButtonListWidget):
             return f"{operation.title()} ALL {count} items"
         elif selection_mode == "checkbox":
             if count == 1:
-                item_name = selected_items[0].get('name', 'Unknown')
+                item_name = selected_items[0].get("name", "Unknown")
                 return f"{operation.title()} selected item: {item_name}"
             else:
                 return f"{operation.title()} {count} selected items"
         else:
             return f"{operation.title()} {count} items"
 
-    def _reset_execution_state(self, status_message: str, force_fail_executing: bool = True):
+    def _reset_execution_state(
+        self, status_message: str, force_fail_executing: bool = True
+    ):
         if self.current_process:
             if self.current_process.poll() is None:  # Still running
                 logger.warning("Forcefully terminating subprocess during reset.")
@@ -492,7 +549,7 @@ class PlateManagerWidget(ButtonListWidget):
 
         # Update button states - but only if widget is properly mounted
         try:
-            if self.is_mounted and hasattr(self, 'query_one'):
+            if self.is_mounted and hasattr(self, "query_one"):
                 self._update_button_states()
         except Exception as e:
             logger.error(f"Failed to update button states during reset: {e}")
@@ -503,12 +560,14 @@ class PlateManagerWidget(ButtonListWidget):
         # Clear logs from singleton toolong window before starting new run
         try:
             from openhcs.textual_tui.windows.toolong_window import clear_toolong_logs
+
             logger.info("Clearing logs from singleton toolong window before new run")
             clear_toolong_logs(self.app)
             logger.info("Toolong logs cleared")
         except Exception as e:
             logger.error(f"Failed to clear toolong logs: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
 
         selected_items, _ = self.get_selection_state()
@@ -516,9 +575,15 @@ class PlateManagerWidget(ButtonListWidget):
             self.app.show_error("No plates selected to run.")
             return
 
-        ready_items = [item for item in selected_items if item.get('path') in self.plate_compiled_data]
+        ready_items = [
+            item
+            for item in selected_items
+            if item.get("path") in self.plate_compiled_data
+        ]
         if not ready_items:
-            self.app.show_error("Selected plates are not compiled. Please compile first.")
+            self.app.show_error(
+                "Selected plates are not compiled. Please compile first."
+            )
             return
 
         await self._run_plates_zmq(ready_items)
@@ -532,10 +597,10 @@ class PlateManagerWidget(ButtonListWidget):
         try:
             # Extract base path from log file path (remove .log extension)
             log_path = Path(self.log_file_path)
-            base_log_path = str(log_path.with_suffix(''))
+            base_log_path = str(log_path.with_suffix(""))
 
             # Notify status bar to start log monitoring
-            if hasattr(self.app, 'status_bar') and self.app.status_bar:
+            if hasattr(self.app, "status_bar") and self.app.status_bar:
                 self.app.status_bar.start_log_monitoring(base_log_path)
                 logger.debug(f"Started reactive log monitoring for: {base_log_path}")
             else:
@@ -548,7 +613,7 @@ class PlateManagerWidget(ButtonListWidget):
         """Stop reactive log monitoring."""
         try:
             # Notify status bar to stop log monitoring
-            if hasattr(self.app, 'status_bar') and self.app.status_bar:
+            if hasattr(self.app, "status_bar") and self.app.status_bar:
                 self.app.status_bar.stop_log_monitoring()
                 logger.debug("Stopped reactive log monitoring")
         except Exception as e:
@@ -563,13 +628,11 @@ class PlateManagerWidget(ButtonListWidget):
         except Exception:
             return 0
 
-
-            
     def _stop_file_watcher(self) -> None:
         """Stop file system watcher without blocking."""
         if not self.file_observer:
             return
-            
+
         try:
             # Just stop and abandon - don't wait for anything
             self.file_observer.stop()
@@ -579,8 +642,6 @@ class PlateManagerWidget(ButtonListWidget):
             # Always clear references immediately
             self.file_observer = None
             self.file_watcher = None
-
-
 
     async def _start_monitoring(self) -> None:
         """Start async monitoring using Textual's interval system."""
@@ -595,7 +656,7 @@ class PlateManagerWidget(ButtonListWidget):
         self.monitoring_interval = self.set_interval(
             10.0,  # Check every 10 seconds
             self._check_process_status_async,
-            pause=False
+            pause=False,
         )
         logger.debug("Started async process monitoring")
 
@@ -639,11 +700,15 @@ class PlateManagerWidget(ButtonListWidget):
         if self.log_file_path and Path(self.log_file_path).exists():
             try:
                 # Read log file directly to check for success markers
-                with open(self.log_file_path, 'r') as f:
+                with open(self.log_file_path, "r") as f:
                     log_content = f.read()
                     # Look for success markers in the log
-                    has_execution_success = "🔥 SUBPROCESS: EXECUTION SUCCESS:" in log_content
-                    has_all_completed = "All plates completed successfully" in log_content
+                    has_execution_success = (
+                        "🔥 SUBPROCESS: EXECUTION SUCCESS:" in log_content
+                    )
+                    has_all_completed = (
+                        "All plates completed successfully" in log_content
+                    )
                     if has_execution_success and has_all_completed:
                         success = True
 
@@ -668,7 +733,9 @@ class PlateManagerWidget(ButtonListWidget):
                     orchestrator._state = OrchestratorState.COMPLETED
 
             # Reset execution state (this will trigger UI refresh internally)
-            self._reset_execution_state("Execution completed successfully.", force_fail_executing=False)
+            self._reset_execution_state(
+                "Execution completed successfully.", force_fail_executing=False
+            )
         else:
             # Failure - update orchestrators to failed
             for plate_path, orchestrator in self.orchestrators.items():
@@ -692,7 +759,7 @@ class PlateManagerWidget(ButtonListWidget):
                 if not Path(self.log_file_path).exists():
                     return None, self.log_file_position
 
-                with open(self.log_file_path, 'r') as f:
+                with open(self.log_file_path, "r") as f:
                     # Seek to where we left off
                     f.seek(self.log_file_position)
                     new_content = f.read()
@@ -701,7 +768,9 @@ class PlateManagerWidget(ButtonListWidget):
 
                 return new_content, new_position
 
-            new_content, new_position = await asyncio.get_event_loop().run_in_executor(None, _read_log_content)
+            new_content, new_position = await asyncio.get_event_loop().run_in_executor(
+                None, _read_log_content
+            )
             self.log_file_position = new_position
 
             if new_content is None:
@@ -710,7 +779,7 @@ class PlateManagerWidget(ButtonListWidget):
 
             if new_content and new_content.strip():
                 # Get the last non-empty line from new content
-                lines = new_content.strip().split('\n')
+                lines = new_content.strip().split("\n")
                 non_empty_lines = [line.strip() for line in lines if line.strip()]
 
                 if non_empty_lines:
@@ -728,21 +797,19 @@ class PlateManagerWidget(ButtonListWidget):
         except Exception as e:
             self.app.current_status = f"🔥 LOG READER ERROR: {e}"
 
-
-
     async def _run_plates_zmq(self, ready_items) -> None:
         """Run plates using ZMQ execution client (recommended)."""
         try:
             from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
-            plate_paths_to_run = [item['path'] for item in ready_items]
+            plate_paths_to_run = [item["path"] for item in ready_items]
             logger.info(f"Starting ZMQ execution for {len(plate_paths_to_run)} plates")
 
             # Create ZMQ client (non-persistent mode for UI-managed execution)
             self.zmq_client = ZMQExecutionClient(
                 port=7777,
                 persistent=False,  # UI manages lifecycle
-                progress_callback=self._on_zmq_progress
+                progress_callback=self._on_zmq_progress,
             )
 
             # Connect to server (will spawn if needed)
@@ -750,6 +817,7 @@ class PlateManagerWidget(ButtonListWidget):
                 return self.zmq_client.connect(timeout=15)
 
             import asyncio
+
             loop = asyncio.get_event_loop()
             connected = await loop.run_in_executor(None, _connect)
 
@@ -760,7 +828,7 @@ class PlateManagerWidget(ButtonListWidget):
 
             # Update orchestrator states to show running state
             for plate in ready_items:
-                plate_path = plate['path']
+                plate_path = plate["path"]
                 if plate_path in self.orchestrators:
                     self.orchestrators[plate_path]._state = OrchestratorState.EXECUTING
 
@@ -775,6 +843,7 @@ class PlateManagerWidget(ButtonListWidget):
                 # Get effective config for this plate
                 effective_config = self.app.global_config
                 from openhcs.core.config import PipelineConfig
+
                 pipeline_config = PipelineConfig()
 
                 logger.info(f"Executing plate: {plate_path}")
@@ -785,28 +854,38 @@ class PlateManagerWidget(ButtonListWidget):
                         plate_id=str(plate_path),
                         pipeline_steps=definition_pipeline,
                         global_config=effective_config,
-                        pipeline_config=pipeline_config
+                        pipeline_config=pipeline_config,
                     )
 
                 response = await loop.run_in_executor(None, _execute)
 
                 # Track execution ID for cancellation
-                if response.get('execution_id'):
-                    self.current_execution_id = response['execution_id']
+                if response.get("execution_id"):
+                    self.current_execution_id = response["execution_id"]
 
-                logger.info(f"Plate {plate_path} execution response: {response.get('status')}")
+                logger.info(
+                    f"Plate {plate_path} execution response: {response.get('status')}"
+                )
 
-                if response.get('status') != 'complete':
-                    error_msg = response.get('message', 'Unknown error')
-                    traceback_str = response.get('traceback', '')
+                if response.get("status") != "complete":
+                    error_msg = response.get("message", "Unknown error")
+                    traceback_str = response.get("traceback", "")
 
                     # Log full traceback if available
                     if traceback_str:
-                        logger.error(f"Plate {plate_path} execution failed:\n{traceback_str}")
-                        self.app.show_error(f"Execution failed for {plate_path}:\n\n{traceback_str}")
+                        logger.error(
+                            f"Plate {plate_path} execution failed:\n{traceback_str}"
+                        )
+                        self.app.show_error(
+                            f"Execution failed for {plate_path}:\n\n{traceback_str}"
+                        )
                     else:
-                        logger.error(f"Plate {plate_path} execution failed: {error_msg}")
-                        self.app.show_error(f"Execution failed for {plate_path}: {error_msg}")
+                        logger.error(
+                            f"Plate {plate_path} execution failed: {error_msg}"
+                        )
+                        self.app.show_error(
+                            f"Execution failed for {plate_path}: {error_msg}"
+                        )
 
             # Execution complete
             self.current_execution_id = None
@@ -814,9 +893,11 @@ class PlateManagerWidget(ButtonListWidget):
 
             # Update orchestrator states
             for plate in ready_items:
-                plate_path = plate['path']
+                plate_path = plate["path"]
                 if plate_path in self.orchestrators:
-                    self.orchestrators[plate_path]._state = OrchestratorState.EXEC_COMPLETE
+                    self.orchestrators[
+                        plate_path
+                    ]._state = OrchestratorState.EXEC_COMPLETE
 
             self._trigger_ui_refresh()
             self._update_button_states()
@@ -835,7 +916,7 @@ class PlateManagerWidget(ButtonListWidget):
             self._reset_execution_state("ZMQ execution failed")
 
             # Cleanup ZMQ client
-            if hasattr(self, 'zmq_client') and self.zmq_client:
+            if hasattr(self, "zmq_client") and self.zmq_client:
                 try:
                     self.zmq_client.disconnect()
                 except:
@@ -844,18 +925,15 @@ class PlateManagerWidget(ButtonListWidget):
 
     def _on_zmq_progress(self, message):
         """Handle progress updates from ZMQ execution server."""
-        try:
-            well_id = message.get('well_id', 'unknown')
-            step = message.get('step', 'unknown')
-            status = message.get('status', 'unknown')
+        plate_id = message["plate_id"]
+        axis_id = message["axis_id"]
+        step_name = message["step_name"]
+        phase = message["phase"]
+        percent = message["percent"]
 
-            # Update status in TUI
-            progress_text = f"[{well_id}] {step}: {status}"
-            self.app.current_status = progress_text
-            logger.debug(f"Progress: {progress_text}")
-
-        except Exception as e:
-            logger.warning(f"Failed to handle progress update: {e}")
+        progress_text = f"{plate_id} [{axis_id}] {step_name} {percent:.0f}% {phase}"
+        self.app.current_status = progress_text
+        logger.debug(f"Progress: {progress_text}")
 
     async def action_stop_execution(self) -> None:
         logger.info("🛑 Stop button pressed.")
@@ -870,6 +948,7 @@ class PlateManagerWidget(ButtonListWidget):
                 logger.info("🛑 Requesting graceful cancellation via ZMQ...")
 
                 import asyncio
+
                 loop = asyncio.get_event_loop()
 
                 # Cancel specific execution if we have an ID
@@ -877,12 +956,16 @@ class PlateManagerWidget(ButtonListWidget):
                     logger.info(f"🛑 Cancelling execution {self.current_execution_id}")
 
                     def _cancel():
-                        return self.zmq_client.cancel_execution(self.current_execution_id)
+                        return self.zmq_client.cancel_execution(
+                            self.current_execution_id
+                        )
 
                     response = await loop.run_in_executor(None, _cancel)
 
-                    if response.get('status') == 'ok':
-                        logger.info("🛑 Cancellation request accepted, waiting for graceful shutdown...")
+                    if response.get("status") == "ok":
+                        logger.info(
+                            "🛑 Cancellation request accepted, waiting for graceful shutdown..."
+                        )
                         self.app.current_status = "Cancellation requested, waiting..."
 
                         # Wait for graceful cancellation with timeout
@@ -892,23 +975,37 @@ class PlateManagerWidget(ButtonListWidget):
                         while (asyncio.get_event_loop().time() - start_time) < timeout:
                             # Check if execution is still running
                             def _check_status():
-                                return self.zmq_client.get_status(self.current_execution_id)
+                                return self.zmq_client.get_status(
+                                    self.current_execution_id
+                                )
 
-                            status_response = await loop.run_in_executor(None, _check_status)
+                            status_response = await loop.run_in_executor(
+                                None, _check_status
+                            )
 
-                            if status_response.get('status') == 'error':
+                            if status_response.get("status") == "error":
                                 # Execution no longer exists (completed or cancelled)
-                                logger.info("🛑 Execution completed/cancelled gracefully")
+                                logger.info(
+                                    "🛑 Execution completed/cancelled gracefully"
+                                )
                                 break
 
                             await asyncio.sleep(0.5)
                         else:
                             # Timeout reached - execution still running
-                            logger.warning("🛑 Graceful cancellation timeout - execution may still be running")
-                            self.app.current_status = "Cancellation timeout - execution may still be running"
+                            logger.warning(
+                                "🛑 Graceful cancellation timeout - execution may still be running"
+                            )
+                            self.app.current_status = (
+                                "Cancellation timeout - execution may still be running"
+                            )
                     else:
-                        logger.warning(f"🛑 Cancellation failed: {response.get('message')}")
-                        self.app.current_status = f"Cancellation failed: {response.get('message')}"
+                        logger.warning(
+                            f"🛑 Cancellation failed: {response.get('message')}"
+                        )
+                        self.app.current_status = (
+                            f"Cancellation failed: {response.get('message')}"
+                        )
 
                 # Disconnect client
                 def _disconnect():
@@ -924,11 +1021,15 @@ class PlateManagerWidget(ButtonListWidget):
                 logger.error(f"🛑 Error cancelling ZMQ execution: {e}")
                 self.app.show_error(f"Failed to cancel execution: {e}")
 
-        elif self.current_process and self.current_process.poll() is None:  # Still running subprocess
+        elif (
+            self.current_process and self.current_process.poll() is None
+        ):  # Still running subprocess
             try:
                 # Kill the entire process group, not just the parent process
                 # The subprocess creates its own process group, so we need to kill that group
-                logger.info(f"🛑 Killing process group for PID {self.current_process.pid}...")
+                logger.info(
+                    f"🛑 Killing process group for PID {self.current_process.pid}..."
+                )
 
                 # Get the process group ID (should be same as PID since subprocess calls os.setpgrp())
                 process_group_id = self.current_process.pid
@@ -944,16 +1045,18 @@ class PlateManagerWidget(ButtonListWidget):
                     os.killpg(process_group_id, signal.SIGKILL)
                     logger.info(f"🛑 Force killed process group {process_group_id}")
                 except ProcessLookupError:
-                    logger.info(f"🛑 Process group {process_group_id} already terminated")
+                    logger.info(
+                        f"🛑 Process group {process_group_id} already terminated"
+                    )
 
             except Exception as e:
-                logger.warning(f"🛑 Error killing process group: {e}, falling back to single process kill")
+                logger.warning(
+                    f"🛑 Error killing process group: {e}, falling back to single process kill"
+                )
                 # Fallback to killing just the main process
                 self.current_process.kill()
 
         self._reset_execution_state("Execution terminated by user.")
-
-
 
     async def action_add_plate(self) -> None:
         """Handle Add Plate button."""
@@ -968,13 +1071,19 @@ class PlateManagerWidget(ButtonListWidget):
         # Get the orchestrator for the selected plate
         orchestrator = self.orchestrators.get(self.selected_plate)
         if not orchestrator:
-            self.app.show_error("Not Initialized", "Please initialize the plate before exporting.")
+            self.app.show_error(
+                "Not Initialized", "Please initialize the plate before exporting."
+            )
             return
 
         # Open file browser for export location
         def handle_export_result(selected_paths):
             if selected_paths:
-                export_path = Path(selected_paths[0]) if isinstance(selected_paths, list) else Path(selected_paths)
+                export_path = (
+                    Path(selected_paths[0])
+                    if isinstance(selected_paths, list)
+                    else Path(selected_paths)
+                )
                 self._start_ome_zarr_export(orchestrator, export_path)
 
         await self.window_service.open_file_browser(
@@ -986,26 +1095,32 @@ class PlateManagerWidget(ButtonListWidget):
             selection_mode=SelectionMode.DIRECTORIES_ONLY,
             cache_key=PathCacheKey.GENERAL,
             on_result_callback=handle_export_result,
-            caller_id="plate_manager_export"
+            caller_id="plate_manager_export",
         )
 
     def _start_ome_zarr_export(self, orchestrator, export_path: Path):
         """Start OME-ZARR export process."""
+
         async def run_export():
             try:
                 self.app.current_status = f"Exporting to OME-ZARR: {export_path}"
 
                 # Create export-specific config with ZARR materialization
                 from openhcs.core.config import GlobalPipelineConfig
-                from openhcs.config_framework.global_config import get_current_global_config
+                from openhcs.config_framework.global_config import (
+                    get_current_global_config,
+                )
+
                 export_config = get_current_global_config(GlobalPipelineConfig)
                 export_vfs_config = VFSConfig(
                     intermediate_backend=export_config.vfs_config.intermediate_backend,
-                    materialization_backend=MaterializationBackend.ZARR
+                    materialization_backend=MaterializationBackend.ZARR,
                 )
 
                 # Update orchestrator config for export
-                export_global_config = dataclasses.replace(export_config, vfs=export_vfs_config)
+                export_global_config = dataclasses.replace(
+                    export_config, vfs=export_vfs_config
+                )
 
                 # Create zarr backend with OME-ZARR enabled
                 zarr_backend = ZarrStorageBackend(ome_zarr_metadata=True)
@@ -1025,7 +1140,7 @@ class PlateManagerWidget(ButtonListWidget):
                             # Extract well from filename
                             well_match = None
                             # Try ImageXpress pattern: A01_s001_w1_z001.tif
-                            match = re.search(r'([A-Z]\d{2})_', img_path.name)
+                            match = re.search(r"([A-Z]\d{2})_", img_path.name)
                             if match:
                                 well_id = match.group(1)
                                 wells_data[well_id].append(img_path)
@@ -1041,21 +1156,33 @@ class PlateManagerWidget(ButtonListWidget):
                                 images.append(np.array(img))
 
                             # Create output paths for OME-ZARR structure
-                            output_paths = [export_store_path / f"{well_id}_{i:03d}.tif"
-                                          for i in range(len(images))]
+                            output_paths = [
+                                export_store_path / f"{well_id}_{i:03d}.tif"
+                                for i in range(len(images))
+                            ]
 
                             # Save to OME-ZARR format
-                            zarr_backend.save_batch(images, output_paths, chunk_name=well_id)
+                            zarr_backend.save_batch(
+                                images, output_paths, chunk_name=well_id
+                            )
 
-                        self.app.current_status = f"✅ OME-ZARR export completed: {export_store_path}"
+                        self.app.current_status = (
+                            f"✅ OME-ZARR export completed: {export_store_path}"
+                        )
                     else:
-                        self.app.show_error("No Data", "No processed images found in workspace.")
+                        self.app.show_error(
+                            "No Data", "No processed images found in workspace."
+                        )
                 else:
-                    self.app.show_error("No Workspace", "Plate workspace not found. Run pipeline first.")
+                    self.app.show_error(
+                        "No Workspace", "Plate workspace not found. Run pipeline first."
+                    )
 
             except Exception as e:
                 logger.error(f"OME-ZARR export failed: {e}", exc_info=True)
-                self.app.show_error("Export Failed", f"OME-ZARR export failed: {str(e)}")
+                self.app.show_error(
+                    "Export Failed", f"OME-ZARR export failed: {str(e)}"
+                )
 
         # Run export in background
         asyncio.create_task(run_export())
@@ -1066,7 +1193,9 @@ class PlateManagerWidget(ButtonListWidget):
         """Open textual-window file browser for plate directory selection."""
         # Get cached path for better UX - remembers last used directory
         path_cache = get_path_cache()
-        initial_path = path_cache.get_initial_path(PathCacheKey.PLATE_IMPORT, Path.home())
+        initial_path = path_cache.get_initial_path(
+            PathCacheKey.PLATE_IMPORT, Path.home()
+        )
 
         # Open textual-window file browser for directory selection
         await self.window_service.open_file_browser(
@@ -1079,12 +1208,14 @@ class PlateManagerWidget(ButtonListWidget):
             cache_key=PathCacheKey.PLATE_IMPORT,
             on_result_callback=self._add_plate_callback,
             caller_id="plate_manager",
-            enable_multi_selection=True
+            enable_multi_selection=True,
         )
 
     def _add_plate_callback(self, selected_paths) -> None:
         """Handle directory selection from file browser."""
-        logger.debug(f"_add_plate_callback called with: {selected_paths} (type: {type(selected_paths)})")
+        logger.debug(
+            f"_add_plate_callback called with: {selected_paths} (type: {type(selected_paths)})"
+        )
 
         if selected_paths is None or selected_paths is False:
             self.app.current_status = "Plate selection cancelled"
@@ -1105,15 +1236,15 @@ class PlateManagerWidget(ButtonListWidget):
                 selected_path = Path(str(selected_path))
 
             # Check if plate already exists
-            if any(plate['path'] == str(selected_path) for plate in current_plates):
+            if any(plate["path"] == str(selected_path) for plate in current_plates):
                 continue
 
             # Add the plate to the list
             plate_name = selected_path.name
             plate_path = str(selected_path)
             plate_entry = {
-                'name': plate_name,
-                'path': plate_path,
+                "name": plate_name,
+                "path": plate_path,
                 # No status field - state comes from orchestrator
             }
 
@@ -1123,7 +1254,11 @@ class PlateManagerWidget(ButtonListWidget):
         # Cache the parent directory for next time (save user navigation time)
         if selected_paths:
             # Use parent of first selected path as the cached directory
-            first_path = selected_paths[0] if isinstance(selected_paths[0], Path) else Path(selected_paths[0])
+            first_path = (
+                selected_paths[0]
+                if isinstance(selected_paths[0], Path)
+                else Path(selected_paths[0])
+            )
             parent_dir = first_path.parent
             get_path_cache().set_cached_path(PathCacheKey.PLATE_IMPORT, parent_dir)
 
@@ -1134,7 +1269,9 @@ class PlateManagerWidget(ButtonListWidget):
             if len(added_plates) == 1:
                 self.app.current_status = f"Added plate: {added_plates[0]}"
             else:
-                self.app.current_status = f"Added {len(added_plates)} plates: {', '.join(added_plates)}"
+                self.app.current_status = (
+                    f"Added {len(added_plates)} plates: {', '.join(added_plates)}"
+                )
         else:
             self.app.current_status = "No new plates added (duplicates skipped)"
 
@@ -1143,9 +1280,9 @@ class PlateManagerWidget(ButtonListWidget):
         if not selected_items:
             self.app.show_error("No plate selected to delete.")
             return
-        
-        paths_to_delete = {p['path'] for p in selected_items}
-        self.items = [p for p in self.items if p['path'] not in paths_to_delete]
+
+        paths_to_delete = {p["path"] for p in selected_items}
+        self.items = [p for p in self.items if p["path"] not in paths_to_delete]
 
         # Clean up orchestrators for deleted plates
         for path in paths_to_delete:
@@ -1156,8 +1293,6 @@ class PlateManagerWidget(ButtonListWidget):
             self.selected_plate = ""
 
         self.app.current_status = f"Deleted {len(paths_to_delete)} plate(s)"
-
-
 
     async def action_edit_config(self) -> None:
         """
@@ -1173,8 +1308,9 @@ class PlateManagerWidget(ButtonListWidget):
             return
 
         selected_orchestrators = [
-            self.orchestrators[item['path']] for item in selected_items
-            if item['path'] in self.orchestrators
+            self.orchestrators[item["path"]]
+            for item in selected_items
+            if item["path"] in self.orchestrators
         ]
 
         if not selected_orchestrators:
@@ -1185,9 +1321,13 @@ class PlateManagerWidget(ButtonListWidget):
         representative_orchestrator = selected_orchestrators[0]
 
         # Use orchestrator's existing config if it exists, otherwise use global config as source
-        source_config = representative_orchestrator.pipeline_config or self.global_config
+        source_config = (
+            representative_orchestrator.pipeline_config or self.global_config
+        )
 
-        current_plate_config = create_dataclass_for_editing(PipelineConfig, source_config)
+        current_plate_config = create_dataclass_for_editing(
+            PipelineConfig, source_config
+        )
 
         def handle_config_save(new_config: PipelineConfig) -> None:
             """Apply per-orchestrator configuration without global side effects."""
@@ -1195,15 +1335,14 @@ class PlateManagerWidget(ButtonListWidget):
                 # Direct synchronous call - no async needed
                 orchestrator.apply_pipeline_config(new_config)
 
-
             count = len(selected_orchestrators)
-            self.app.current_status = f"Per-orchestrator configuration applied to {count} orchestrator(s)"
+            self.app.current_status = (
+                f"Per-orchestrator configuration applied to {count} orchestrator(s)"
+            )
 
         # Open configuration window using PipelineConfig (not GlobalPipelineConfig)
         await self.window_service.open_config_window(
-            PipelineConfig,
-            current_plate_config,
-            on_save_callback=handle_config_save
+            PipelineConfig, current_plate_config, on_save_callback=handle_config_save
         )
 
     async def action_edit_global_config(self) -> None:
@@ -1212,7 +1351,7 @@ class PlateManagerWidget(ButtonListWidget):
 
         This maintains the existing global configuration workflow but uses lazy loading.
         """
-        
+
         from openhcs.core.config import PipelineConfig
         from openhcs.config_framework.lazy_factory import create_dataclass_for_editing
 
@@ -1220,7 +1359,9 @@ class PlateManagerWidget(ButtonListWidget):
         current_global_config = self.app.global_config or GlobalPipelineConfig()
 
         # Create lazy PipelineConfig for editing with proper thread-local context
-        current_lazy_config = create_dataclass_for_editing(PipelineConfig, current_global_config, preserve_values=True)
+        current_lazy_config = create_dataclass_for_editing(
+            PipelineConfig, current_global_config, preserve_values=True
+        )
 
         def handle_global_config_save(new_config: PipelineConfig) -> None:
             """Apply global configuration to all orchestrators."""
@@ -1233,18 +1374,20 @@ class PlateManagerWidget(ButtonListWidget):
 
             for orchestrator in self.orchestrators.values():
                 asyncio.create_task(orchestrator.apply_new_global_config(global_config))
-            self.app.current_status = "Global configuration applied to all orchestrators"
+            self.app.current_status = (
+                "Global configuration applied to all orchestrators"
+            )
 
         # PipelineConfig already imported from openhcs.core.config
         await self.window_service.open_config_window(
             PipelineConfig,
             current_lazy_config,
-            on_save_callback=handle_global_config_save
+            on_save_callback=handle_global_config_save,
         )
 
-
-
-    def _analyze_orchestrator_configs(self, orchestrators: List['PipelineOrchestrator']) -> Dict[str, Dict[str, Any]]:
+    def _analyze_orchestrator_configs(
+        self, orchestrators: List["PipelineOrchestrator"]
+    ) -> Dict[str, Dict[str, Any]]:
         """Analyze configs across multiple orchestrators to detect same/different values.
 
         Args:
@@ -1289,13 +1432,13 @@ class PlateManagerWidget(ButtonListWidget):
                 config_analysis[field_name] = {
                     "type": "same",
                     "value": values[0],
-                    "default": default_value
+                    "default": default_value,
                 }
             else:
                 config_analysis[field_name] = {
                     "type": "different",
                     "values": values,
-                    "default": default_value
+                    "default": default_value,
                 }
 
         return config_analysis
@@ -1321,24 +1464,33 @@ class PlateManagerWidget(ButtonListWidget):
         # Validate all selected plates can be initialized (allow ALL failed plates to be re-initialized)
         invalid_plates = []
         for item in selected_items:
-            plate_path = item['path']
+            plate_path = item["path"]
             orchestrator = self.orchestrators.get(plate_path)
             # Only block plates that are currently executing - all other states can be re-initialized
-            if orchestrator is not None and orchestrator.state == OrchestratorState.EXECUTING:
+            if (
+                orchestrator is not None
+                and orchestrator.state == OrchestratorState.EXECUTING
+            ):
                 invalid_plates.append(item)
 
         if invalid_plates:
-            names = [item['name'] for item in invalid_plates]
-            logger.warning(f"Cannot initialize plates that are currently executing: {', '.join(names)}")
+            names = [item["name"] for item in invalid_plates]
+            logger.warning(
+                f"Cannot initialize plates that are currently executing: {', '.join(names)}"
+            )
             return
 
         # Start async initialization
         self._start_async_init(selected_items, selection_mode)
 
-    def _start_async_init(self, selected_items: List[Dict], selection_mode: str) -> None:
+    def _start_async_init(
+        self, selected_items: List[Dict], selection_mode: str
+    ) -> None:
         """Start async initialization of selected plates."""
         # Generate operation description
-        desc = self.get_operation_description(selected_items, selection_mode, "initialize")
+        desc = self.get_operation_description(
+            selected_items, selection_mode, "initialize"
+        )
         logger.info(f"Initializing: {desc}")
 
         # Start background worker
@@ -1348,12 +1500,12 @@ class PlateManagerWidget(ButtonListWidget):
     async def _init_plates_worker(self, selected_items: List[Dict]) -> None:
         """Background worker for plate initialization."""
         for plate_data in selected_items:
-            plate_path = plate_data['path']
+            plate_path = plate_data["path"]
 
             # Find the actual plate in self.items (not the copy from get_selection_state)
             actual_plate = None
             for plate in self.items:
-                if plate['path'] == plate_path:
+                if plate["path"] == plate_path:
                     actual_plate = plate
                     break
 
@@ -1367,10 +1519,12 @@ class PlateManagerWidget(ButtonListWidget):
                     return PipelineOrchestrator(
                         plate_path=plate_path,
                         global_config=self.global_config,
-                        storage_registry=self.filemanager.registry
+                        storage_registry=self.filemanager.registry,
                     ).initialize()
 
-                orchestrator = await asyncio.get_event_loop().run_in_executor(None, init_orchestrator)
+                orchestrator = await asyncio.get_event_loop().run_in_executor(
+                    None, init_orchestrator
+                )
 
                 # Store orchestrator for later use (channel selection, etc.)
                 self.orchestrators[plate_path] = orchestrator
@@ -1378,32 +1532,52 @@ class PlateManagerWidget(ButtonListWidget):
                 logger.info(f"Plate {actual_plate['name']} initialized successfully")
 
             except Exception as e:
-                logger.error(f"Failed to initialize plate {plate_path}: {e}", exc_info=True)
+                logger.error(
+                    f"Failed to initialize plate {plate_path}: {e}", exc_info=True
+                )
                 # Create a failed orchestrator to track the error state
                 failed_orchestrator = PipelineOrchestrator(
                     plate_path=plate_path,
                     global_config=self.global_config,
-                    storage_registry=self.filemanager.registry
+                    storage_registry=self.filemanager.registry,
                 )
                 failed_orchestrator._state = OrchestratorState.INIT_FAILED
                 self.orchestrators[plate_path] = failed_orchestrator
-                actual_plate['error'] = str(e)
+                actual_plate["error"] = str(e)
 
             # Trigger UI refresh after orchestrator state changes
             self._trigger_ui_refresh()
             # Update button states immediately (reactive system handles UI updates automatically)
             self._update_button_states()
             # Notify pipeline editor of status change
-            status_symbol = get_orchestrator_status_symbol(self.orchestrators.get(actual_plate['path']))
-            self._notify_pipeline_editor_status_change(actual_plate['path'], status_symbol)
+            status_symbol = get_orchestrator_status_symbol(
+                self.orchestrators.get(actual_plate["path"])
+            )
+            self._notify_pipeline_editor_status_change(
+                actual_plate["path"], status_symbol
+            )
             logger.debug(f"Updated plate {actual_plate['name']} status")
 
         # Final UI update (reactive system handles this automatically when self.items is modified)
         self._update_button_states()
 
         # Update status
-        success_count = len([p for p in selected_items if self.orchestrators.get(p['path']) and self.orchestrators[p['path']].state == OrchestratorState.READY])
-        error_count = len([p for p in selected_items if self.orchestrators.get(p['path']) and self.orchestrators[p['path']].state == OrchestratorState.INIT_FAILED])
+        success_count = len(
+            [
+                p
+                for p in selected_items
+                if self.orchestrators.get(p["path"])
+                and self.orchestrators[p["path"]].state == OrchestratorState.READY
+            ]
+        )
+        error_count = len(
+            [
+                p
+                for p in selected_items
+                if self.orchestrators.get(p["path"])
+                and self.orchestrators[p["path"]].state == OrchestratorState.INIT_FAILED
+            ]
+        )
 
         if error_count == 0:
             logger.info(f"Successfully initialized {success_count} plates")
@@ -1422,39 +1596,59 @@ class PlateManagerWidget(ButtonListWidget):
         # Validate all selected plates are ready for compilation (allow failed plates to be re-compiled)
         not_ready = []
         for item in selected_items:
-            plate_path = item['path']
+            plate_path = item["path"]
             orchestrator = self.orchestrators.get(plate_path)
             # Allow READY, COMPILE_FAILED, EXEC_FAILED, COMPILED, and COMPLETED states to be compiled/recompiled
-            if orchestrator is None or orchestrator.state not in [OrchestratorState.READY, OrchestratorState.COMPILE_FAILED, OrchestratorState.EXEC_FAILED, OrchestratorState.COMPILED, OrchestratorState.COMPLETED]:
+            if orchestrator is None or orchestrator.state not in [
+                OrchestratorState.READY,
+                OrchestratorState.COMPILE_FAILED,
+                OrchestratorState.EXEC_FAILED,
+                OrchestratorState.COMPILED,
+                OrchestratorState.COMPLETED,
+            ]:
                 not_ready.append(item)
 
         if not_ready:
-            names = [item['name'] for item in not_ready]
+            names = [item["name"] for item in not_ready]
             # More accurate error message based on actual state
-            if any(self.orchestrators.get(item['path']) is None for item in not_ready):
-                logger.warning(f"Cannot compile plates that haven't been initialized: {', '.join(names)}")
-            elif any(self.orchestrators.get(item['path']).state == OrchestratorState.EXECUTING for item in not_ready):
-                logger.warning(f"Cannot compile plates that are currently executing: {', '.join(names)}")
+            if any(self.orchestrators.get(item["path"]) is None for item in not_ready):
+                logger.warning(
+                    f"Cannot compile plates that haven't been initialized: {', '.join(names)}"
+                )
+            elif any(
+                self.orchestrators.get(item["path"]).state
+                == OrchestratorState.EXECUTING
+                for item in not_ready
+            ):
+                logger.warning(
+                    f"Cannot compile plates that are currently executing: {', '.join(names)}"
+                )
             else:
-                logger.warning(f"Cannot compile plates in current state: {', '.join(names)}")
+                logger.warning(
+                    f"Cannot compile plates in current state: {', '.join(names)}"
+                )
             return
 
         # Validate all selected plates have pipelines
         no_pipeline = []
         for item in selected_items:
-            pipeline = self._get_current_pipeline_definition(item['path'])
+            pipeline = self._get_current_pipeline_definition(item["path"])
             if not pipeline:
                 no_pipeline.append(item)
 
         if no_pipeline:
-            names = [item['name'] for item in no_pipeline]
-            self.app.current_status = f"Cannot compile plates without pipelines: {', '.join(names)}"
+            names = [item["name"] for item in no_pipeline]
+            self.app.current_status = (
+                f"Cannot compile plates without pipelines: {', '.join(names)}"
+            )
             return
 
         # Start async compilation
         self._start_async_compile(selected_items, selection_mode)
 
-    def _start_async_compile(self, selected_items: List[Dict], selection_mode: str) -> None:
+    def _start_async_compile(
+        self, selected_items: List[Dict], selection_mode: str
+    ) -> None:
         """Start async compilation of selected plates."""
         # Generate operation description
         desc = self.get_operation_description(selected_items, selection_mode, "compile")
@@ -1467,12 +1661,12 @@ class PlateManagerWidget(ButtonListWidget):
     async def _compile_plates_worker(self, selected_items: List[Dict]) -> None:
         """Background worker for plate compilation."""
         for plate_data in selected_items:
-            plate_path = plate_data['path']
+            plate_path = plate_data["path"]
 
             # Find the actual plate in self.items (not the copy from get_selection_state)
             actual_plate = None
             for plate in self.items:
-                if plate['path'] == plate_path:
+                if plate["path"] == plate_path:
                     actual_plate = plate
                     break
 
@@ -1483,7 +1677,9 @@ class PlateManagerWidget(ButtonListWidget):
             # Get definition pipeline and make fresh copy
             definition_pipeline = self._get_current_pipeline_definition(plate_path)
             if not definition_pipeline:
-                logger.warning(f"No pipeline defined for {actual_plate['name']}, using empty pipeline")
+                logger.warning(
+                    f"No pipeline defined for {actual_plate['name']}, using empty pipeline"
+                )
                 definition_pipeline = []
 
             try:
@@ -1498,10 +1694,12 @@ class PlateManagerWidget(ButtonListWidget):
                         return PipelineOrchestrator(
                             plate_path=plate_path,
                             global_config=self.global_config,
-                            storage_registry=self.filemanager.registry
+                            storage_registry=self.filemanager.registry,
                         ).initialize()
 
-                orchestrator = await asyncio.get_event_loop().run_in_executor(None, get_or_create_orchestrator)
+                orchestrator = await asyncio.get_event_loop().run_in_executor(
+                    None, get_or_create_orchestrator
+                )
                 self.orchestrators[plate_path] = orchestrator
 
                 # Make fresh copy for compilation
@@ -1512,12 +1710,20 @@ class PlateManagerWidget(ButtonListWidget):
                     step.step_id = str(id(step))
                     # Ensure variable_components is never None - use FunctionStep default
                     if step.processing_config.variable_components is None:
-                        logger.warning(f"🔥 Step '{step.name}' has None variable_components, setting FunctionStep default")
-                        step.processing_config.variable_components = [VariableComponents.SITE]
+                        logger.warning(
+                            f"🔥 Step '{step.name}' has None variable_components, setting FunctionStep default"
+                        )
+                        step.processing_config.variable_components = [
+                            VariableComponents.SITE
+                        ]
                     # Also ensure it's not an empty list
                     elif not step.processing_config.variable_components:
-                        logger.warning(f"🔥 Step '{step.name}' has empty variable_components, setting FunctionStep default")
-                        step.processing_config.variable_components = [VariableComponents.SITE]
+                        logger.warning(
+                            f"🔥 Step '{step.name}' has empty variable_components, setting FunctionStep default"
+                        )
+                        step.processing_config.variable_components = [
+                            VariableComponents.SITE
+                        ]
 
                 # Get wells and compile (async - run in executor to avoid blocking UI)
                 # Wrap in Pipeline object like test_main.py does
@@ -1526,7 +1732,10 @@ class PlateManagerWidget(ButtonListWidget):
                 # Run heavy operations in executor to avoid blocking UI
                 # Get wells using multiprocessing axis (WELL in default config)
                 from openhcs.constants import MULTIPROCESSING_AXIS
-                wells = await asyncio.get_event_loop().run_in_executor(None, lambda: orchestrator.get_component_keys(MULTIPROCESSING_AXIS))
+
+                wells = await asyncio.get_event_loop().run_in_executor(
+                    None, lambda: orchestrator.get_component_keys(MULTIPROCESSING_AXIS)
+                )
                 compiled_contexts = await asyncio.get_event_loop().run_in_executor(
                     None, orchestrator.compile_pipelines, pipeline_obj.steps, wells
                 )
@@ -1534,21 +1743,38 @@ class PlateManagerWidget(ButtonListWidget):
                 # Store state simply - no reactive property issues
                 step_ids_in_pipeline = [id(step) for step in execution_pipeline]
                 # Get step IDs from contexts (ProcessingContext objects)
-                first_well_key = list(compiled_contexts.keys())[0] if compiled_contexts else None
-                step_ids_in_contexts = list(compiled_contexts[first_well_key].step_plans.keys()) if first_well_key and hasattr(compiled_contexts[first_well_key], 'step_plans') else []
-                logger.info(f"🔥 Storing compiled data for {plate_path}: pipeline={type(execution_pipeline)}, contexts={type(compiled_contexts)}")
+                first_well_key = (
+                    list(compiled_contexts.keys())[0] if compiled_contexts else None
+                )
+                step_ids_in_contexts = (
+                    list(compiled_contexts[first_well_key].step_plans.keys())
+                    if first_well_key
+                    and hasattr(compiled_contexts[first_well_key], "step_plans")
+                    else []
+                )
+                logger.info(
+                    f"🔥 Storing compiled data for {plate_path}: pipeline={type(execution_pipeline)}, contexts={type(compiled_contexts)}"
+                )
                 logger.info(f"🔥 Step IDs in pipeline: {step_ids_in_pipeline}")
                 logger.info(f"🔥 Step IDs in contexts: {step_ids_in_contexts}")
-                self.plate_compiled_data[plate_path] = (execution_pipeline, compiled_contexts)
-                logger.info(f"🔥 Stored! Available compiled plates: {list(self.plate_compiled_data.keys())}")
+                self.plate_compiled_data[plate_path] = (
+                    execution_pipeline,
+                    compiled_contexts,
+                )
+                logger.info(
+                    f"🔥 Stored! Available compiled plates: {list(self.plate_compiled_data.keys())}"
+                )
 
                 # Orchestrator state is already set to COMPILED by compile_pipelines() method
                 logger.info(f"🔥 Successfully compiled {plate_path}")
 
             except Exception as e:
-                logger.error(f"🔥 COMPILATION ERROR: Pipeline compilation failed for {plate_path}: {e}", exc_info=True)
+                logger.error(
+                    f"🔥 COMPILATION ERROR: Pipeline compilation failed for {plate_path}: {e}",
+                    exc_info=True,
+                )
                 # Orchestrator state is already set to FAILED by compile_pipelines() method
-                actual_plate['error'] = str(e)
+                actual_plate["error"] = str(e)
                 # Don't store anything in plate_compiled_data on failure
 
             # Trigger UI refresh after orchestrator state changes
@@ -1556,15 +1782,34 @@ class PlateManagerWidget(ButtonListWidget):
             # Update button states immediately (reactive system handles UI updates automatically)
             self._update_button_states()
             # Notify pipeline editor of status change
-            status_symbol = get_orchestrator_status_symbol(self.orchestrators.get(actual_plate['path']))
-            self._notify_pipeline_editor_status_change(actual_plate['path'], status_symbol)
+            status_symbol = get_orchestrator_status_symbol(
+                self.orchestrators.get(actual_plate["path"])
+            )
+            self._notify_pipeline_editor_status_change(
+                actual_plate["path"], status_symbol
+            )
 
         # Final UI update (reactive system handles this automatically when self.items is modified)
         self._update_button_states()
 
         # Update status
-        success_count = len([p for p in selected_items if self.orchestrators.get(p['path']) and self.orchestrators[p['path']].state == OrchestratorState.COMPILED])
-        error_count = len([p for p in selected_items if self.orchestrators.get(p['path']) and self.orchestrators[p['path']].state == OrchestratorState.COMPILE_FAILED])
+        success_count = len(
+            [
+                p
+                for p in selected_items
+                if self.orchestrators.get(p["path"])
+                and self.orchestrators[p["path"]].state == OrchestratorState.COMPILED
+            ]
+        )
+        error_count = len(
+            [
+                p
+                for p in selected_items
+                if self.orchestrators.get(p["path"])
+                and self.orchestrators[p["path"]].state
+                == OrchestratorState.COMPILE_FAILED
+            ]
+        )
 
         if error_count == 0:
             logger.info(f"Successfully compiled {success_count} plates")
@@ -1582,15 +1827,17 @@ class PlateManagerWidget(ButtonListWidget):
 
         try:
             # Get pipeline data for selected plates
-            plate_paths = [item['path'] for item in selected_items]
+            plate_paths = [item["path"] for item in selected_items]
             pipeline_data = {}
 
             # Collect pipeline steps for each plate
             for plate_path in plate_paths:
-                if hasattr(self, 'pipeline_editor') and self.pipeline_editor:
+                if hasattr(self, "pipeline_editor") and self.pipeline_editor:
                     # Get pipeline steps from pipeline editor if available
                     if plate_path in self.pipeline_editor.plate_pipelines:
-                        pipeline_data[plate_path] = self.pipeline_editor.plate_pipelines[plate_path]
+                        pipeline_data[plate_path] = (
+                            self.pipeline_editor.plate_pipelines[plate_path]
+                        )
                     else:
                         pipeline_data[plate_path] = []
                 else:
@@ -1601,27 +1848,34 @@ class PlateManagerWidget(ButtonListWidget):
 
             # Create data structure the serializer expects
             data = {
-                'plate_paths': plate_paths,
-                'pipeline_data': pipeline_data,
-                'global_config': self.app.global_config
+                "plate_paths": plate_paths,
+                "pipeline_data": pipeline_data,
+                "global_config": self.app.global_config,
             }
 
             # Extract variables from data dict
-            plate_paths = data['plate_paths']
-            pipeline_data = data['pipeline_data']
+            plate_paths = data["plate_paths"]
+            pipeline_data = data["pipeline_data"]
 
             # Generate just the orchestrator configuration (no execution wrapper)
             import openhcs.serialization.pycodify_formatters  # noqa: F401
-            from pycodify import Assignment, BlankLine, CodeBlock, generate_python_source
+            from pycodify import (
+                Assignment,
+                BlankLine,
+                CodeBlock,
+                generate_python_source,
+            )
 
             python_code = generate_python_source(
-                CodeBlock.from_items([
-                    Assignment("plate_paths", plate_paths),
-                    BlankLine(),
-                    Assignment("global_config", self.app.global_config),
-                    BlankLine(),
-                    Assignment("pipeline_data", pipeline_data),
-                ]),
+                CodeBlock.from_items(
+                    [
+                        Assignment("plate_paths", plate_paths),
+                        BlankLine(),
+                        Assignment("global_config", self.app.global_config),
+                        BlankLine(),
+                        Assignment("pipeline_data", pipeline_data),
+                    ]
+                ),
                 header="# Edit this orchestrator configuration and save to apply changes",
                 clean_mode=True,  # Default to clean mode - only show non-default values
             )
@@ -1635,54 +1889,75 @@ class PlateManagerWidget(ButtonListWidget):
                     exec(edited_code, namespace)
 
                     # Update pipeline data if present (composition: orchestrator contains pipelines)
-                    if 'pipeline_data' in namespace:
-                        new_pipeline_data = namespace['pipeline_data']
+                    if "pipeline_data" in namespace:
+                        new_pipeline_data = namespace["pipeline_data"]
                         # Update pipeline editor using reactive system (like pipeline code button does)
-                        if hasattr(self, 'pipeline_editor') and self.pipeline_editor:
+                        if hasattr(self, "pipeline_editor") and self.pipeline_editor:
                             # Update plate pipelines storage
-                            current_pipelines = dict(self.pipeline_editor.plate_pipelines)
+                            current_pipelines = dict(
+                                self.pipeline_editor.plate_pipelines
+                            )
                             current_pipelines.update(new_pipeline_data)
                             self.pipeline_editor.plate_pipelines = current_pipelines
 
                             # If current plate is in the edited data, update the current view too
                             current_plate = self.pipeline_editor.current_plate
                             if current_plate and current_plate in new_pipeline_data:
-                                self.pipeline_editor.pipeline_steps = new_pipeline_data[current_plate]
+                                self.pipeline_editor.pipeline_steps = new_pipeline_data[
+                                    current_plate
+                                ]
 
-                        self.app.current_status = f"Pipeline data updated for {len(new_pipeline_data)} plates"
+                        self.app.current_status = (
+                            f"Pipeline data updated for {len(new_pipeline_data)} plates"
+                        )
 
                     # Update global config if present
-                    elif 'global_config' in namespace:
-                        new_global_config = namespace['global_config']
+                    elif "global_config" in namespace:
+                        new_global_config = namespace["global_config"]
                         import asyncio
+
                         for plate_path in plate_paths:
                             if plate_path in self.orchestrators:
                                 orchestrator = self.orchestrators[plate_path]
-                                asyncio.create_task(orchestrator.apply_new_global_config(new_global_config))
-                        self.app.current_status = f"Global config updated for {len(plate_paths)} plates"
+                                asyncio.create_task(
+                                    orchestrator.apply_new_global_config(
+                                        new_global_config
+                                    )
+                                )
+                        self.app.current_status = (
+                            f"Global config updated for {len(plate_paths)} plates"
+                        )
 
                     # Update orchestrators list if present
-                    elif 'orchestrators' in namespace:
-                        new_orchestrators = namespace['orchestrators']
+                    elif "orchestrators" in namespace:
+                        new_orchestrators = namespace["orchestrators"]
                         self.app.current_status = f"Orchestrator list updated with {len(new_orchestrators)} orchestrators"
 
                     else:
-                        self.app.show_error("Parse Error", "No valid assignments found in edited code")
+                        self.app.show_error(
+                            "Parse Error", "No valid assignments found in edited code"
+                        )
 
                 except SyntaxError as e:
                     self.app.show_error("Syntax Error", f"Invalid Python syntax: {e}")
                 except Exception as e:
                     import traceback
+
                     full_traceback = traceback.format_exc()
-                    logger.error(f"Failed to parse edited orchestrator code: {e}\nFull traceback:\n{full_traceback}")
-                    self.app.show_error("Edit Error", f"Failed to parse orchestrator code: {str(e)}\n\nFull traceback:\n{full_traceback}")
+                    logger.error(
+                        f"Failed to parse edited orchestrator code: {e}\nFull traceback:\n{full_traceback}"
+                    )
+                    self.app.show_error(
+                        "Edit Error",
+                        f"Failed to parse orchestrator code: {str(e)}\n\nFull traceback:\n{full_traceback}",
+                    )
 
             # Launch terminal editor
             launcher = TerminalLauncher(self.app)
             await launcher.launch_editor_for_file(
                 file_content=python_code,
-                file_extension='.py',
-                on_save_callback=handle_edited_code
+                file_extension=".py",
+                on_save_callback=handle_edited_code,
             )
 
         except Exception as e:
@@ -1700,15 +1975,17 @@ class PlateManagerWidget(ButtonListWidget):
 
         try:
             # Get pipeline data for selected plates
-            plate_paths = [item['path'] for item in selected_items]
+            plate_paths = [item["path"] for item in selected_items]
             pipeline_data = {}
 
             # Collect pipeline steps for each plate
             for plate_path in plate_paths:
-                if hasattr(self, 'pipeline_editor') and self.pipeline_editor:
+                if hasattr(self, "pipeline_editor") and self.pipeline_editor:
                     # Get pipeline steps from pipeline editor if available
                     if plate_path in self.pipeline_editor.plate_pipelines:
-                        pipeline_data[plate_path] = self.pipeline_editor.plate_pipelines[plate_path]
+                        pipeline_data[plate_path] = (
+                            self.pipeline_editor.plate_pipelines[plate_path]
+                        )
                     else:
                         pipeline_data[plate_path] = []
                 else:
@@ -1716,16 +1993,19 @@ class PlateManagerWidget(ButtonListWidget):
 
             # Create data structure the serializer expects
             data = {
-                'plate_paths': plate_paths,
-                'pipeline_data': pipeline_data,
-                'global_config': self.app.global_config
+                "plate_paths": plate_paths,
+                "pipeline_data": pipeline_data,
+                "global_config": self.app.global_config,
             }
 
             # Generate complete executable Python script using the serializer
             python_code = self._generate_executable_script(data)
 
             # Launch file browser to save the script
-            from openhcs.textual_tui.windows.file_browser_window import open_file_browser_window, BrowserMode
+            from openhcs.textual_tui.windows.file_browser_window import (
+                open_file_browser_window,
+                BrowserMode,
+            )
             from openhcs.textual_tui.services.file_browser_service import SelectionMode
             from openhcs.core.path_cache import get_cached_browser_path, PathCacheKey
             from openhcs.constants.constants import Backend
@@ -1742,11 +2022,13 @@ class PlateManagerWidget(ButtonListWidget):
                     if save_path:
                         try:
                             # Write the Python script to the selected file
-                            with open(save_path, 'w') as f:
+                            with open(save_path, "w") as f:
                                 f.write(python_code)
 
                             logger.info(f"Python script saved to: {save_path}")
-                            self.app.current_status = f"Python script saved to: {save_path}"
+                            self.app.current_status = (
+                                f"Python script saved to: {save_path}"
+                            )
                         except Exception as e:
                             logger.error(f"Failed to save Python script: {e}")
                             self.app.current_status = f"Failed to save script: {e}"
@@ -1763,11 +2045,11 @@ class PlateManagerWidget(ButtonListWidget):
                 title="Save Python Pipeline Script",
                 mode=BrowserMode.SAVE,
                 selection_mode=SelectionMode.FILES_ONLY,
-                filter_extensions=['.py'],
+                filter_extensions=[".py"],
                 default_filename=default_filename,
                 cache_key=PathCacheKey.PIPELINE_FILES,
                 on_result_callback=handle_save_result,
-                caller_id="plate_manager_save_script"
+                caller_id="plate_manager_save_script",
             )
 
         except Exception as e:
@@ -1781,12 +2063,16 @@ class PlateManagerWidget(ButtonListWidget):
         from openhcs.debug.pickle_converter import convert_pickle_to_python
 
         # Create temporary pickle file
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.pkl', delete=False) as temp_pickle:
+        with tempfile.NamedTemporaryFile(
+            mode="wb", suffix=".pkl", delete=False
+        ) as temp_pickle:
             pickle.dump(data, temp_pickle)
             temp_pickle_path = temp_pickle.name
 
         # Create temporary output file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_output:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False
+        ) as temp_output:
             temp_output_path = temp_output.name
 
         try:
@@ -1794,7 +2080,7 @@ class PlateManagerWidget(ButtonListWidget):
             convert_pickle_to_python(temp_pickle_path, temp_output_path)
 
             # Read the generated script
-            with open(temp_output_path, 'r') as f:
+            with open(temp_output_path, "r") as f:
                 script_content = f.read()
 
             return script_content
@@ -1802,6 +2088,7 @@ class PlateManagerWidget(ButtonListWidget):
         finally:
             # Clean up temp files
             import os
+
             try:
                 os.unlink(temp_pickle_path)
                 os.unlink(temp_output_path)

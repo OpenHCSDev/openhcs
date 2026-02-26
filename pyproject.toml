@@ -67,6 +67,7 @@ dependencies = [
 
     # Core utilities
     "setuptools",
+    "packaging>=21.0",  # For version parsing (replaces deprecated pkg_resources)
     "watchdog>=6.0.0",
     "portalocker>=2.8.2",  # Cross-platform file locking (Windows compatibility for fcntl)
     "requests>=2.31.0",  # HTTP library for LLM service communication
@@ -78,7 +79,7 @@ dependencies = [
     "zmqruntime>=0.1.0",
     "pycodify>=0.1.0",
     "objectstate>=0.1.0",
-    "python-introspect>=0.1.0",
+    "python-introspect>=0.1.1",
     "metaclass-registry>=0.1.0",
     "arraybridge>=0.1.0",
     "polystore>=0.1.0",
@@ -140,12 +141,14 @@ viz = [
 
 # OMERO integration dependencies
 #
-# IMPORTANT: zeroc-ice is a dependency of omero-py but is NOT available on PyPI.
-# We use direct URL references with environment markers to install the appropriate
-# zeroc-ice wheel from Glencoe Software's repository.
+# IMPORTANT: PyPI does not allow direct URL dependencies in project metadata.
+# The zeroc-ice wheels required by omero-py must be installed via the helper script
+# or requirements file instead of as an extra dependency here.
 #
-# Installation (automatic):
-#   pip install 'openhcs[omero]'
+# Installation:
+#   python scripts/install_omero_deps.py
+#   # or
+#   pip install -r requirements-omero.txt
 #
 # Alternative installation (using requirements file):
 #   pip install -r requirements-omero.txt
@@ -155,22 +158,6 @@ viz = [
 #   - scripts/install_omero_deps.py
 #   - requirements-omero.txt
 omero = [
-    # Linux x86_64
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_x86_64.whl ; sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.11'",
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp312-cp312-manylinux_2_28_x86_64.whl ; sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.12'",
-
-    # Linux aarch64
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-aarch64/releases/download/20240621/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_aarch64.whl ; sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.11'",
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-aarch64/releases/download/20240621/zeroc_ice-3.6.5-cp312-cp312-manylinux_2_28_aarch64.whl ; sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.12'",
-
-    # macOS universal2
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos/releases/download/20231208/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl ; sys_platform == 'darwin' and python_version == '3.11'",
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos/releases/download/20231208/zeroc_ice-3.6.5-cp312-cp312-macosx_11_0_universal2.whl ; sys_platform == 'darwin' and python_version == '3.12'",
-
-    # Windows amd64
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-windows-x86_64/releases/download/20240326/zeroc_ice-3.6.5-cp311-cp311-win_amd64.whl ; sys_platform == 'win32' and python_version == '3.11'",
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-windows-x86_64/releases/download/20240326/zeroc_ice-3.6.5-cp312-cp312-win_amd64.whl ; sys_platform == 'win32' and python_version == '3.12'",
-
     "omero-py>=5.19.0",
 ]
 
@@ -184,31 +171,13 @@ docs = [
 
 # Remote execution and OMERO integration
 #
-# IMPORTANT: zeroc-ice is a dependency of omero-py but is NOT available on PyPI.
-# We use direct URL references with environment markers to install the appropriate
-# zeroc-ice wheel from Glencoe Software's repository.
+# IMPORTANT: PyPI does not allow direct URL dependencies in project metadata.
+# Install zeroc-ice for OMERO using scripts/install_omero_deps.py or requirements-omero.txt.
 #
 # See the 'omero' optional dependency section above for more details.
 remote = [
     "pyzmq>=26.0.0",  # ZMQ-based remote execution and streaming
     "omero-py>=5.19.0",  # OMERO Python bindings for OMERO backend
-
-    # Duplicate zeroc-ice URLs (extras can't reference other extras)
-    # Linux x86_64
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_x86_64.whl ; sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.11'",
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-x86_64/releases/download/20240202/zeroc_ice-3.6.5-cp312-cp312-manylinux_2_28_x86_64.whl ; sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.12'",
-
-    # Linux aarch64
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-aarch64/releases/download/20240621/zeroc_ice-3.6.5-cp311-cp311-manylinux_2_28_aarch64.whl ; sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.11'",
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-linux-aarch64/releases/download/20240621/zeroc_ice-3.6.5-cp312-cp312-manylinux_2_28_aarch64.whl ; sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.12'",
-
-    # macOS universal2
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos/releases/download/20231208/zeroc_ice-3.6.5-cp311-cp311-macosx_11_0_universal2.whl ; sys_platform == 'darwin' and python_version == '3.11'",
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-macos/releases/download/20231208/zeroc_ice-3.6.5-cp312-cp312-macosx_11_0_universal2.whl ; sys_platform == 'darwin' and python_version == '3.12'",
-
-    # Windows amd64
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-windows-x86_64/releases/download/20240326/zeroc_ice-3.6.5-cp311-cp311-win_amd64.whl ; sys_platform == 'win32' and python_version == '3.11'",
-    "zeroc-ice @ https://github.com/glencoesoftware/zeroc-ice-py-windows-x86_64/releases/download/20240326/zeroc_ice-3.6.5-cp312-cp312-win_amd64.whl ; sys_platform == 'win32' and python_version == '3.12'",
 ]
 
 # GPU acceleration dependencies
@@ -276,10 +245,10 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/trissim/openhcs"
-"Bug Reports" = "https://github.com/trissim/openhcs/issues"
-Source = "https://github.com/trissim/openhcs"
-Documentation = "https://github.com/trissim/openhcs/blob/main/README.md"
+Homepage = "https://github.com/OpenHCSDev/OpenHCS"
+"Bug Reports" = "https://github.com/OpenHCSDev/OpenHCS/issues"
+Source = "https://github.com/OpenHCSDev/OpenHCS"
+Documentation = "https://github.com/OpenHCSDev/OpenHCS/blob/main/README.md"
 
 [project.scripts]
 # Main interfaces - GUI is now the default

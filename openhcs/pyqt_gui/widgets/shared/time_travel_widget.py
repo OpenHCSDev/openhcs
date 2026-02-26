@@ -9,8 +9,15 @@ import logging
 from typing import Optional, List, Dict, Any
 
 from PyQt6.QtWidgets import (
-    QWidget, QHBoxLayout, QSlider, QLabel, QPushButton, QToolTip, QFrame, QCheckBox,
-    QSizePolicy, QComboBox
+    QWidget,
+    QHBoxLayout,
+    QSlider,
+    QLabel,
+    QPushButton,
+    QToolTip,
+    QCheckBox,
+    QSizePolicy,
+    QComboBox,
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QPoint
 from PyQt6.QtGui import QFont
@@ -35,10 +42,18 @@ class TimeTravelWidget(QWidget):
     - Tooltip showing num states captured
     """
 
+    # OpenHCS-specific filter: hide system-only scopes from history
+    _HIDDEN_SCOPES = {"", "__plates__"}
+
     # Emitted when time-travel position changes
     position_changed = pyqtSignal(int)  # (index)
 
-    def __init__(self, color_scheme: Optional[ColorScheme] = None, show_browse_button: bool = True, parent=None):
+    def __init__(
+        self,
+        color_scheme: Optional[ColorScheme] = None,
+        show_browse_button: bool = True,
+        parent=None,
+    ):
         super().__init__(parent)
         self.color_scheme = color_scheme or ColorScheme()
         self.style_gen = StyleSheetGenerator(self.color_scheme)
@@ -90,28 +105,26 @@ class TimeTravelWidget(QWidget):
         layout.addWidget(self.forward_btn)
 
         # Head button (return to present)
-        self.head_btn = self._create_icon_button("⏭", "Return to present (latest state)")
+        self.head_btn = self._create_icon_button(
+            "⏭", "Return to present (latest state)"
+        )
         self.head_btn.clicked.connect(self._on_head)
         layout.addWidget(self.head_btn)
 
-        # Status label
-        self.status_label = QLabel("No history")
-        self.status_label.setMinimumWidth(180)
-        font = QFont()
-        font.setPointSize(9)
-        self.status_label.setFont(font)
-        layout.addWidget(self.status_label)
-
         # Branch dropdown (auto-hides when only one branch)
         self.branch_combo = QComboBox()
-        self.branch_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.branch_combo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.branch_combo.setToolTip("Switch branch")
         self.branch_combo.currentTextChanged.connect(self._on_branch_changed)
         layout.addWidget(self.branch_combo)
 
         # Skip unsaved checkbox
         self.skip_unsaved_cb = QCheckBox("Saves only")
-        self.skip_unsaved_cb.setToolTip("Skip unsaved changes, jump only between save points")
+        self.skip_unsaved_cb.setToolTip(
+            "Skip unsaved changes, jump only between save points"
+        )
         self.skip_unsaved_cb.setChecked(False)
         layout.addWidget(self.skip_unsaved_cb)
 
@@ -121,11 +134,18 @@ class TimeTravelWidget(QWidget):
             self.browse_btn.clicked.connect(self._on_browse)
             layout.addWidget(self.browse_btn)
 
-            # Separator (only needed if browse button shown)
-            separator = QFrame()
-            separator.setFrameShape(QFrame.Shape.VLine)
-            separator.setFrameShadow(QFrame.Shadow.Sunken)
-            layout.addWidget(separator)
+        # Status label: right-most widget, text left-aligned
+        self.status_label = QLabel("No history")
+        self.status_label.setMinimumWidth(180)
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.status_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Preferred,
+        )
+        font = QFont()
+        font.setPointSize(9)
+        self.status_label.setFont(font)
+        layout.addWidget(self.status_label)
 
         # Apply button styling
         self.setStyleSheet(self.style_gen.generate_button_style())
@@ -138,7 +158,9 @@ class TimeTravelWidget(QWidget):
         History: [oldest, ..., newest] - index 0 = oldest, len-1 = head.
         Slider: 0 = oldest, max = head. Direct mapping, no inversion needed.
         """
-        history = ObjectStateRegistry.get_history_info()
+        history = ObjectStateRegistry.get_history_info(
+            filter_fn=lambda scope_id: scope_id not in self._HIDDEN_SCOPES
+        )
 
         if not history:
             self.slider.setMaximum(0)
@@ -152,27 +174,31 @@ class TimeTravelWidget(QWidget):
         self.slider.setEnabled(True)
         self.slider.setMaximum(len(history) - 1)
 
-        # Find current position
-        current_idx = next((h['index'] for h in history if h['is_current']), len(history) - 1)
+        # Find current position within the filtered list.
+        # NOTE: history entries include a global "index" which is not guaranteed to be
+        # contiguous after filtering; using it as a list index will crash.
+        current_pos = next(
+            (i for i, h in enumerate(history) if h["is_current"]), len(history) - 1
+        )
         self.slider.blockSignals(True)
-        self.slider.setValue(current_idx)
+        self.slider.setValue(current_pos)
         self.slider.blockSignals(False)
 
         # Update status
-        current = history[current_idx]
+        current = history[current_pos]
         is_traveling = ObjectStateRegistry.is_time_traveling()
 
         status = f"{current['timestamp']} | {current['label'][:30]}"
         if is_traveling:
-            status += f" ({current_idx + 1}/{len(history)})"
+            status += f" ({current_pos + 1}/{len(history)})"
         else:
             status += " (HEAD)"
 
         self.status_label.setText(status)
 
         # Enable/disable buttons (back = toward 0, forward = toward len-1)
-        self.back_btn.setEnabled(current_idx > 0)
-        self.forward_btn.setEnabled(current_idx < len(history) - 1)
+        self.back_btn.setEnabled(current_pos > 0)
+        self.forward_btn.setEnabled(current_pos < len(history) - 1)
         self.head_btn.setEnabled(is_traveling)
 
         # Visual indicator when time-traveling
@@ -190,9 +216,9 @@ class TimeTravelWidget(QWidget):
             self.branch_combo.blockSignals(True)
             self.branch_combo.clear()
             for b in branches:
-                self.branch_combo.addItem(b['name'])
-                if b['is_current']:
-                    self.branch_combo.setCurrentText(b['name'])
+                self.branch_combo.addItem(b["name"])
+                if b["is_current"]:
+                    self.branch_combo.setCurrentText(b["name"])
             self.branch_combo.blockSignals(False)
 
     def _on_branch_changed(self, name: str):
@@ -202,7 +228,13 @@ class TimeTravelWidget(QWidget):
 
     def _on_slider_changed(self, value: int):
         """Handle slider value change. Direct mapping: slider value = history index."""
-        ObjectStateRegistry.time_travel_to(value)
+        history = ObjectStateRegistry.get_history_info(
+            filter_fn=lambda scope_id: scope_id not in self._HIDDEN_SCOPES
+        )
+        if value < 0 or value >= len(history):
+            return
+
+        ObjectStateRegistry.time_travel_to(history[value]["index"])
         self._update_ui()
         self.position_changed.emit(value)
 
@@ -210,40 +242,47 @@ class TimeTravelWidget(QWidget):
         """Check if a snapshot label represents a save operation."""
         return label.startswith("save") or label.startswith("init")
 
-    def _find_next_save_index(self, current_idx: int, direction: int) -> int:
+    def _find_next_save_index(
+        self, history: List[Dict[str, Any]], current_pos: int, direction: int
+    ) -> int:
         """Find next save snapshot in given direction.
 
         Args:
-            current_idx: Current history index (0 = oldest, len-1 = head)
+            history: Filtered history list.
+            current_pos: Current position in the filtered list (0 = oldest, len-1 = head)
             direction: -1 for back (toward older), +1 for forward (toward newer)
 
         Returns:
             Index of next save snapshot, or current if none found
         """
-        history = ObjectStateRegistry.get_history_info()
         if not history:
-            return current_idx
+            return current_pos
 
-        search_idx = current_idx + direction
-        while 0 <= search_idx < len(history):
-            if self._is_save_snapshot(history[search_idx]['label']):
-                return search_idx
-            search_idx += direction
+        search_pos = current_pos + direction
+        while 0 <= search_pos < len(history):
+            if self._is_save_snapshot(history[search_pos]["label"]):
+                return search_pos
+            search_pos += direction
 
         # No save found - stay at current or go to boundary
         if direction > 0:
             return len(history) - 1  # Go to head
-        return current_idx
+        return current_pos
 
     def _on_back(self):
         """Step back in history (toward older = lower index)."""
         if self.skip_unsaved_cb.isChecked():
-            history = ObjectStateRegistry.get_history_info()
+            history = ObjectStateRegistry.get_history_info(
+                filter_fn=lambda scope_id: scope_id not in self._HIDDEN_SCOPES
+            )
             if history:
-                current_idx = next((h['index'] for h in history if h['is_current']), len(history) - 1)
-                target_idx = self._find_next_save_index(current_idx, -1)
-                if target_idx != current_idx:
-                    ObjectStateRegistry.time_travel_to(target_idx)
+                current_pos = next(
+                    (i for i, h in enumerate(history) if h["is_current"]),
+                    len(history) - 1,
+                )
+                target_pos = self._find_next_save_index(history, current_pos, -1)
+                if target_pos != current_pos:
+                    ObjectStateRegistry.time_travel_to(history[target_pos]["index"])
         else:
             ObjectStateRegistry.time_travel_back()
         self._update_ui()
@@ -251,12 +290,17 @@ class TimeTravelWidget(QWidget):
     def _on_forward(self):
         """Step forward in history (toward newer = higher index)."""
         if self.skip_unsaved_cb.isChecked():
-            history = ObjectStateRegistry.get_history_info()
+            history = ObjectStateRegistry.get_history_info(
+                filter_fn=lambda scope_id: scope_id not in self._HIDDEN_SCOPES
+            )
             if history:
-                current_idx = next((h['index'] for h in history if h['is_current']), len(history) - 1)
-                target_idx = self._find_next_save_index(current_idx, +1)
-                if target_idx != current_idx:
-                    ObjectStateRegistry.time_travel_to(target_idx)
+                current_pos = next(
+                    (i for i, h in enumerate(history) if h["is_current"]),
+                    len(history) - 1,
+                )
+                target_pos = self._find_next_save_index(history, current_pos, +1)
+                if target_pos != current_pos:
+                    ObjectStateRegistry.time_travel_to(history[target_pos]["index"])
         else:
             ObjectStateRegistry.time_travel_forward()
         self._update_ui()
@@ -268,19 +312,25 @@ class TimeTravelWidget(QWidget):
 
     def _on_browse(self):
         """Open the full Snapshot Browser window."""
-        from openhcs.pyqt_gui.windows.snapshot_browser_window import SnapshotBrowserWindow
+        from openhcs.pyqt_gui.windows.snapshot_browser_window import (
+            SnapshotBrowserWindow,
+        )
 
         color_scheme = None
         parent = self.window()
-        if parent and hasattr(parent, 'color_scheme'):
+        if parent and hasattr(parent, "color_scheme"):
             color_scheme = parent.color_scheme
 
-        self._snapshot_browser = SnapshotBrowserWindow(color_scheme=color_scheme, parent=self)
+        self._snapshot_browser = SnapshotBrowserWindow(
+            color_scheme=color_scheme, parent=self
+        )
         self._snapshot_browser.show()
 
     def _show_tooltip_at_position(self, value: int):
         """Show tooltip with snapshot details. Slider value = history index."""
-        history = ObjectStateRegistry.get_history_info()
+        history = ObjectStateRegistry.get_history_info(
+            filter_fn=lambda scope_id: scope_id not in self._HIDDEN_SCOPES
+        )
         if value < 0 or value >= len(history):
             return
 

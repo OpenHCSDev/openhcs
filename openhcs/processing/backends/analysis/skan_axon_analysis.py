@@ -17,8 +17,7 @@ import logging
 # OpenHCS imports
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import special_outputs
-from openhcs.processing.materialization import register_materializer, materializer_spec, tiff_stack_materializer
-from openhcs.processing.materialization.core import _generate_output_path
+from openhcs.processing.materialization import MaterializationSpec, CsvOptions, JsonOptions, ROIOptions, TiffStackOptions
 from polystore.roi import ROI
 
 logger = logging.getLogger(__name__)
@@ -45,284 +44,26 @@ class AnalysisDimension(Enum):
     THREE_D = "3d"
 
 
-@register_materializer("axon_analysis_skan")
-def materialize_axon_analysis(
-    axon_analysis_data: Dict[str, Any],
-    path: str,
-    filemanager,
-    backends,
-    backend_kwargs: dict = None,
-    spec=None,
-    context=None,
-    extra_inputs: dict | None = None,
-) -> str:
-    """
-    Materialize axon analysis results to disk using filemanager.
-
-    Creates multiple output files:
-    - CSV file with detailed branch data
-    - JSON file with summary metrics and metadata
-    - Optional: Excel file with multiple sheets
-
-    Args:
-        axon_analysis_data: The axon analysis results dictionary
-        path: Base path for output files (from special output path)
-        filemanager: FileManager instance for consistent I/O
-        backends: Single backend string or list of backends to save to
-        backend_kwargs: Dict mapping backend names to their kwargs
-
-    Returns:
-        str: Path to the primary output file (JSON summary)
-    """
-    # Normalize backends to list
-    if isinstance(backends, str):
-        backends = [backends]
-
-    if backend_kwargs is None:
-        backend_kwargs = {}
-
-    logger.info(f"🔬 SKAN_MATERIALIZE: Called with path={path}, backends={backends}, data_keys={list(axon_analysis_data.keys()) if axon_analysis_data else 'None'}")
-    import json
-    from openhcs.constants.constants import Backend
-
-    # Generate output file paths based on the input path
-    # Replace extension properly (handles .pkl, .roi.zip, or any extension)
-    base_path = _generate_output_path(path, "", "")
-    json_path = f"{base_path}.json"
-    csv_path = f"{base_path}_branches.csv"
-    parent_dir = Path(base_path).parent
-
-    # 1. Prepare summary and metadata as JSON (primary output)
-    summary_data = {
-        'analysis_type': 'axon_skeleton_analysis',
-        'summary': axon_analysis_data['summary'],
-        'metadata': axon_analysis_data['metadata']
-    }
-    json_content = json.dumps(summary_data, indent=2, default=str)
-
-    # 2. Prepare detailed branch data as CSV
-    branch_df = pd.DataFrame(axon_analysis_data['branch_data'])
-    csv_content = branch_df.to_csv(index=False)
-
-    # 3. Save to all backends
-    for backend in backends:
-        # Ensure output directory exists for disk backend
-        if backend == Backend.DISK.value:
-            filemanager.ensure_directory(str(parent_dir), backend)
-
-        # Get backend-specific kwargs
-        kwargs = backend_kwargs.get(backend, {})
-
-        # Get backend instance to check capabilities (polymorphic dispatch)
-        backend_instance = filemanager._get_backend(backend)
-        
-        # Only check exists/delete for backends that support filesystem operations
-        if backend_instance.requires_filesystem_validation:
-            # Storage backend - check and delete if exists
-            if filemanager.exists(json_path, backend):
-                filemanager.delete(json_path, backend)
-            if filemanager.exists(csv_path, backend):
-                filemanager.delete(csv_path, backend)
-
-        # Save JSON and CSV (works for all backends)
-        filemanager.save(json_content, json_path, backend, **kwargs)
-        filemanager.save(csv_content, csv_path, backend, **kwargs)
-
-        # 4. Optional: Create Excel file with multiple sheets (using direct file I/O for Excel)
-        # Note: Excel files require actual file paths, not compatible with OMERO backend
-        if kwargs.get('create_excel', True) and backend == Backend.DISK.value:
-            excel_path = str(parent_dir / f"{base_path}_complete.xlsx")
-            # Remove existing file if it exists
-            if Path(excel_path).exists():
-                Path(excel_path).unlink()
-            with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-                # Branch data sheet
-                branch_df.to_excel(writer, sheet_name='Branch_Data', index=False)
-
-                # Summary sheet
-                summary_df = pd.DataFrame([axon_analysis_data['summary']])
-                summary_df.to_excel(writer, sheet_name='Summary', index=False)
-
-                # Metadata sheet
-                metadata_df = pd.DataFrame([axon_analysis_data['metadata']])
-                metadata_df.to_excel(writer, sheet_name='Metadata', index=False)
-
-            logger.info(f"Created Excel file: {excel_path}")
-
-    # 4. Log materialization
-    logger.info("Materialized axon analysis:")
-    logger.info(f"  - Summary: {json_path}")
-    logger.info(f"  - Branch data: {csv_path}")
-
-    return json_path
-
-
-def materialize_skeleton_visualizations(data: List[np.ndarray], path: str, filemanager, backends, backend_kwargs: dict = None) -> str:
-    """Materialize skeleton visualizations as individual TIFF files (legacy)."""
-
-    # Normalize backends to list
-    if isinstance(backends, str):
-        backends = [backends]
-
-    if backend_kwargs is None:
-        backend_kwargs = {}
-
-    # Generate output file paths based on the input path
-    base_path = _generate_output_path(path, "", "")
-    parent_dir = Path(base_path).parent
-
-    # Check if data is None or empty (handle both None and empty arrays)
-    if data is None or (isinstance(data, np.ndarray) and data.size == 0):
-        # Create empty summary file to indicate no visualizations were generated
-        summary_path = f"{base_path}_skeleton_summary.txt"
-        summary_content = "No skeleton visualizations generated (return_skeleton_visualizations=False)\n"
-        for backend in backends:
-            kwargs = backend_kwargs.get(backend, {})
-            filemanager.save(summary_content, summary_path, backend, **kwargs)
-        return summary_path
-
-    # Save each visualization as a separate TIFF file
-    for i, visualization in enumerate(data):
-        viz_filename = f"{base_path}_slice_{i:03d}.tif"
-
-        # Convert visualization to uint8 for tracing visualizations (standard format)
-        if visualization.dtype != np.uint8:
-            # Normalize to uint8 range if needed
-            if visualization.max() <= 1.0:
-                viz_uint8 = (visualization * 255).astype(np.uint8)
-            else:
-                viz_uint8 = visualization.astype(np.uint8)
-        else:
-            viz_uint8 = visualization
-
-        # Save to all backends
-        for backend in backends:
-            kwargs = backend_kwargs.get(backend, {})
-            filemanager.save(viz_uint8, viz_filename, backend, **kwargs)
-
-    # Return summary path
-    summary_path = f"{base_path}_skeleton_summary.txt"
-    summary_content = f"Skeleton visualizations saved: {len(data)} files\n"
-    summary_content += f"Base filename pattern: {Path(base_path).name}_slice_XXX.tif\n"
-    summary_content += f"Visualization dtype: {data[0].dtype}\n"
-    summary_content += f"Visualization shape: {data[0].shape}\n"
-
-    # Save summary to all backends
-    from openhcs.constants.constants import Backend
-    for backend in backends:
-        kwargs = backend_kwargs.get(backend, {})
-        filemanager.save(summary_content, summary_path, backend, **kwargs)
-
-    return summary_path
-
-
-@register_materializer("skeleton_rois_skan")
-def materialize_skeleton_rois(
-    skeleton_mask,
-    path: str,
-    filemanager,
-    backends,
-    backend_kwargs: dict = None,
-    spec=None,
-    context=None,
-    extra_inputs: dict | None = None,
-) -> str:
-    """
-    Materialize skeleton mask as label image AND ROI ZIP files.
-
-    Converts binary skeleton mask to:
-    1. Label image where each branch has unique ID (for streaming/visualization)
-    2. Polyline ROIs (for ImageJ/Fiji compatibility)
-
-    Args:
-        skeleton_mask: Binary skeleton array (Z, Y, X) or list of arrays with skeleton pixels
-        path: Base path for output files
-        filemanager: FileManager instance
-        backends: Backend(s) to save to
-        backend_kwargs: Backend-specific kwargs
-
-    Returns:
-        str: Path to the saved label image (primary output for streaming)
-    """
-    # Normalize backends to list
-    if isinstance(backends, str):
-        backends = [backends]
-
-    if backend_kwargs is None:
-        backend_kwargs = {}
-
-    # Handle data that comes as a list (from multiple items/slices)
-    if isinstance(skeleton_mask, list):
-        if len(skeleton_mask) == 0:
-            skeleton_mask = np.zeros((0, 0, 0), dtype=bool)
-        elif len(skeleton_mask) == 1:
-            skeleton_mask = skeleton_mask[0]
-        else:
-            # Stack multiple masks into 3D array
-            skeleton_mask = np.stack(skeleton_mask, axis=0)
-
-    logger.info(f"🔬 SKELETON_MATERIALIZE: Called with path={path}, mask_shape={skeleton_mask.shape if hasattr(skeleton_mask, 'shape') and skeleton_mask.size > 0 else 'empty'}, backends={backends}")
-
-    # Check if skeleton mask is empty (return_skeleton_mask=False)
-    if not hasattr(skeleton_mask, 'size') or skeleton_mask.size == 0:
-        logger.info("🔬 SKELETON_MATERIALIZE: No skeleton mask to materialize (return_skeleton_mask=False)")
-        # Create empty summary file
-        base_path = path.replace('.pkl', '').replace('.roi.zip', '').replace('.tif', '')
-        summary_path = f"{base_path}_skeleton_summary.txt"
-        summary_content = "No skeleton mask generated (return_skeleton_mask=False)\n"
-        for backend in backends:
-            filemanager.save(summary_content, summary_path, backend)
-        return summary_path
-
-    # Convert skeleton mask to label image (each branch gets unique ID)
-    skeleton_labels = _skeleton_mask_to_labels(skeleton_mask)
-    num_labels = int(skeleton_labels.max())
-    logger.info(f"🔬 SKELETON_MATERIALIZE: Converted skeleton mask to label image with {num_labels} branches")
-
-    # Also convert to ROIs for ImageJ/Fiji compatibility
-    skeleton_rois = _skeleton_mask_to_rois(skeleton_mask)
-    logger.info(f"🔬 SKELETON_MATERIALIZE: Converted skeleton mask to {len(skeleton_rois)} ROIs for ImageJ")
-
-    # Generate output paths
-    base_path = path.replace('.pkl', '').replace('.roi.zip', '').replace('.tif', '')
-    labels_path = f"{base_path}_skeleton_labels.tif"
-    roi_path = f"{base_path}_skeleton.roi.zip"
-
-    # Save label image (primary output for streaming)
-    for backend in backends:
-        kwargs = backend_kwargs.get(backend, {})
-        filemanager.save(skeleton_labels, labels_path, backend, **kwargs)
-        logger.info(f"🔬 SKELETON_MATERIALIZE: Saved skeleton labels to {labels_path} ({backend})")
-
-    # Save ROIs for ImageJ/Fiji
-    if skeleton_rois:
-        for backend in backends:
-            kwargs = backend_kwargs.get(backend, {})
-            filemanager.save(skeleton_rois, roi_path, backend, **kwargs)
-            logger.info(f"🔬 SKELETON_MATERIALIZE: Saved {len(skeleton_rois)} skeleton ROIs to {roi_path} ({backend})")
-
-    # Save summary
-    summary_path = f"{base_path}_skeleton_summary.txt"
-    summary_content = f"Skeleton branches: {num_labels}\n"
-    summary_content += f"Skeleton shape: {skeleton_mask.shape}\n"
-    summary_content += f"Label image: {labels_path}\n"
-    if skeleton_rois:
-        summary_content += f"ROI file: {roi_path}\n"
-
-    for backend in backends:
-        filemanager.save(summary_content, summary_path, backend)
-
-    # Return label image path (this is what gets streamed)
-    return labels_path
-
 
 @special_outputs(
-    ("axon_analysis", materializer_spec("axon_analysis_skan")),
-    ("skeleton_visualizations", tiff_stack_materializer(
-        normalize_uint8=True,
-        summary_suffix="_skeleton_summary.txt"
-    )),
-    ("skeleton_masks", materializer_spec("skeleton_rois_skan"))  # Mask output gets converted to ROIs
+    (
+        "axon_analysis",
+        MaterializationSpec(
+            JsonOptions(filename_suffix=".json"),
+            CsvOptions(source="branch_data", filename_suffix="_branches.csv"),
+            primary=0,
+        ),
+    ),
+    (
+        "skeleton_visualizations",
+        MaterializationSpec(
+            TiffStackOptions(
+                normalize_uint8=True,
+                summary_suffix="_skeleton_summary.txt",
+            )
+        ),
+    ),
+    ("skeleton_masks", MaterializationSpec(ROIOptions())),
 )
 @numpy_func
 def skan_axon_skeletonize_and_analyze(
@@ -423,8 +164,12 @@ def skan_axon_skeletonize_and_analyze(
             )
             skeleton_visualizations.append(visualization)
 
-    # Step 7: Return skeleton mask if requested (materializer will convert to ROIs)
-    skeleton_mask_output = skeleton_stack if return_skeleton_mask else np.zeros((0, 0, 0), dtype=bool)
+    # Step 7: Return skeleton mask if requested (converted to per-branch labels for ROI writer)
+    skeleton_mask_output = (
+        _skeleton_mask_to_labels(skeleton_stack)
+        if return_skeleton_mask
+        else np.zeros((0, 0, 0), dtype=np.uint16)
+    )
 
     # Step 8: Compile comprehensive results
     results = _compile_analysis_results(
@@ -877,7 +622,8 @@ def _compile_analysis_results(branch_data, skeleton_stack, binary_stack, image_s
     # Combine all results
     results = {
         'summary': {**summary, **segmentation_metrics},
-        'branch_data': branch_data.to_dict('list') if len(branch_data) > 0 else {},
+        # Writer-based materialization expects list-of-dicts for tabular CSV.
+        'branch_data': branch_data.to_dict('records') if len(branch_data) > 0 else [],
         'metadata': {
             'analysis_type': analysis_type,
             'voxel_spacing': voxel_spacing,

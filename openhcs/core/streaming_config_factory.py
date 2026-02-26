@@ -11,7 +11,11 @@ from dataclasses import dataclass
 from abc import ABC
 
 if TYPE_CHECKING:
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.config import (
+        GlobalPipelineConfig,
+        PipelineConfig,
+        StreamingConfig,
+    )
 
 
 def create_streaming_config(
@@ -22,15 +26,16 @@ def create_streaming_config(
     visualizer_module: str,
     visualizer_class_name: str,
     extra_fields: dict = None,
-    preview_label: str = None
-):
+    preview_label: str = None,
+    abbreviation: str = None,
+) -> Type["StreamingConfig"]:
     """
     Factory to create streaming config classes with minimal boilerplate.
-    
+
     Eliminates duplication between streaming configs by auto-generating classes
     from declarative specifications. Adding a new streaming backend requires only
     5-10 lines instead of ~50 lines of boilerplate.
-    
+
     Args:
         viewer_name: Viewer identifier ('napari', 'fiji', etc.)
         port: Default port number
@@ -39,10 +44,12 @@ def create_streaming_config(
         visualizer_module: Module path for visualizer class
         visualizer_class_name: Name of visualizer class
         extra_fields: Optional dict of {field_name: (type, default_value)}
-    
+        preview_label: Short label for list item previews (e.g., "NAP", "FIJI")
+        abbreviation: Short abbreviation for config class name in grouped previews (e.g., "nap", "fiji")
+
     Returns:
         Dynamically created streaming config class
-    
+
     Example:
         >>> NapariStreamingConfig = create_streaming_config(
         ...     viewer_name='napari',
@@ -59,17 +66,20 @@ def create_streaming_config(
     # Get the global_pipeline_config decorator from config module
     # It's created by @auto_create_decorator on GlobalPipelineConfig
     import openhcs.core.config as config_module
-    global_pipeline_config = getattr(config_module, 'global_pipeline_config', None)
+
+    global_pipeline_config = getattr(config_module, "global_pipeline_config", None)
     if global_pipeline_config is None:
-        raise RuntimeError("global_pipeline_config decorator not found. Import openhcs.core.config first.")
-    
+        raise RuntimeError(
+            "global_pipeline_config decorator not found. Import openhcs.core.config first."
+        )
+
     # Build class namespace with methods
     def _get_streaming_kwargs(self, context):
         kwargs = {
             "port": self.port,
             "host": self.host,
             "transport_mode": self.transport_mode,
-            "display_config": self
+            "display_config": self,
         }
         # Add extra fields to kwargs
         if extra_fields:
@@ -79,7 +89,7 @@ def create_streaming_config(
             kwargs["microscope_handler"] = context.microscope_handler
             kwargs["plate_path"] = context.plate_path
         return kwargs
-    
+
     def _create_visualizer(self, filemanager, visualizer_config):
         # Lazy import to avoid circular dependencies
         module = __import__(visualizer_module, fromlist=[visualizer_class_name])
@@ -91,35 +101,49 @@ def create_streaming_config(
             persistent=self.persistent,
             port=self.port,
             display_config=self,
-            transport_mode=self.transport_mode
+            transport_mode=self.transport_mode,
         )
-    
+
+    # Compute registry key early (snake_case class name)
+    import re
+    cls_name = f"{viewer_name.title()}StreamingConfig"
+    registry_key = re.sub(r"(?<!^)(?=[A-Z])", "_", cls_name).lower()
+
     # Build class dict with properties using lambdas
     class_dict = {
-        'port': port,
-        'backend': property(lambda self: backend),
-        'viewer_type': property(lambda self: viewer_name),
-        'step_plan_output_key': property(lambda self: f"{viewer_name}_streaming_paths"),
-        'get_streaming_kwargs': _get_streaming_kwargs,
-        'create_visualizer': _create_visualizer,
-        '__annotations__': {'port': int},
-        '__module__': 'openhcs.core.config',  # Make it appear as if defined in config.py
+        "port": port,
+        "backend": property(lambda self: backend),
+        "viewer_type": property(lambda self: registry_key),  # Property returning registry key (e.g., 'napari_streaming_config')
+        "step_plan_output_key": property(lambda self: f"{viewer_name}_streaming_paths"),
+        "get_streaming_kwargs": _get_streaming_kwargs,
+        "create_visualizer": _create_visualizer,
+        "__annotations__": {"port": int},
+        "__module__": "openhcs.core.config",  # Make it appear as if defined in config.py
     }
-    
+
     # Add extra fields
     if extra_fields:
         for field_name, (field_type, default_val) in extra_fields.items():
             class_dict[field_name] = default_val
-            class_dict['__annotations__'][field_name] = field_type
-    
-    # Create class dynamically
-    cls_name = f"{viewer_name.title()}StreamingConfig"
+            class_dict["__annotations__"][field_name] = field_type
+
+    # Set the registry key (snake_case class name) for AutoRegisterMeta
+    class_dict["_streaming_config_key"] = registry_key
+
     new_class = type(cls_name, (StreamingConfig, display_config_class), class_dict)
-    
+
     # Apply decorators
     new_class = dataclass(frozen=True)(new_class)
+
+    # Build decorator kwargs
+    decorator_kwargs = {}
     if preview_label is not None:
-        new_class = global_pipeline_config(preview_label=preview_label)(new_class)
+        decorator_kwargs["preview_label"] = preview_label
+    if abbreviation is not None:
+        decorator_kwargs["abbreviation"] = abbreviation
+
+    if decorator_kwargs:
+        new_class = global_pipeline_config(**decorator_kwargs)(new_class)
     else:
         new_class = global_pipeline_config(new_class)
 
@@ -156,8 +180,8 @@ def build_component_order():
 
 
 def get_all_streaming_ports(
-    config: 'Union[GlobalPipelineConfig, PipelineConfig]' = None,
-    num_ports_per_type: int = 10
+    config: "Union[GlobalPipelineConfig, PipelineConfig]" = None,
+    num_ports_per_type: int = 10,
 ) -> List[int]:
     """Get all streaming ports for all registered streaming config types.
 
@@ -202,13 +226,20 @@ def get_all_streaming_ports(
         field_type = field.type
 
         # Handle Optional[StreamingConfig] types
-        if hasattr(typing, 'get_origin') and typing.get_origin(field_type) is typing.Union:
+        if (
+            hasattr(typing, "get_origin")
+            and typing.get_origin(field_type) is typing.Union
+        ):
             # Extract the non-None type from Optional[T]
             args = typing.get_args(field_type)
             field_type = next((arg for arg in args if arg is not type(None)), None)
 
         # Check if field_type is a StreamingConfig subclass
-        if field_type is not None and inspect.isclass(field_type) and issubclass(field_type, StreamingConfig):
+        if (
+            field_type is not None
+            and inspect.isclass(field_type)
+            and issubclass(field_type, StreamingConfig)
+        ):
             # Get the port from the field value or global config
             field_value = getattr(config, field.name)
 
@@ -234,4 +265,3 @@ def get_all_streaming_ports(
             ports.extend([port + i for i in range(num_ports_per_type)])
 
     return ports
-

@@ -9,12 +9,12 @@ Doctrinal Clauses:
 - Clause 88 — No Inferred Capabilities: Explicit TensorFlow dependency
 - Clause 106-A — Declared Memory Types: All methods specify TensorFlow tensors
 """
-from __future__ import annotations 
+from __future__ import annotations
 
 import logging
 from typing import Any, List, Optional, Tuple
 
-import pkg_resources
+from packaging.version import parse as parse_version
 
 from openhcs.core.memory import tensorflow as tensorflow_func
 from openhcs.core.lazy_gpu_imports import tf
@@ -25,8 +25,8 @@ TENSORFLOW_ERROR = ""
 # Check TensorFlow version for DLPack compatibility if available
 if tf is not None:
     try:
-        tf_version = pkg_resources.parse_version(tf.__version__)
-        min_version = pkg_resources.parse_version("2.12.0")
+        tf_version = parse_version(tf.__version__)
+        min_version = parse_version("2.12.0")
 
         if tf_version < min_version:
             TENSORFLOW_ERROR = (
