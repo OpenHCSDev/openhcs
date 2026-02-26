@@ -153,6 +153,34 @@ theorem p_eq_np_physically_impossible_canonical
   p_eq_np_physically_impossible_of_collapse_map
     (c := c) (req := coNP_requirement) hMap
 
+/-- Coherent DQ-rejection schema at a requirement profile:
+the rejection claim is asserted and is accompanied by an explicit collapse map
+from that claim into physical-collapse feasibility. -/
+def CoherentDQRejectionAtRequirement
+    (c : PhysicalComputer)
+    (req : ComputationalRequirement)
+    (RejectDQ : Prop) : Prop :=
+  RejectDQ ∧ (RejectDQ → PhysicalCollapseAtRequirement c req)
+
+/-- A coherent DQ-rejection package is physically impossible at any requirement
+profile with exponential lower-bound interface and finite positive bit-cost. -/
+theorem coherent_dq_rejection_impossible_at_requirement
+    (c : PhysicalComputer)
+    (req : ComputationalRequirement)
+    {RejectDQ : Prop} :
+    ¬ CoherentDQRejectionAtRequirement c req RejectDQ := by
+  intro hReject
+  rcases hReject with ⟨hClaim, hMap⟩
+  exact no_physical_collapse_at_requirement c req (hMap hClaim)
+
+/-- Canonical specialization for `coNP_requirement`. -/
+theorem coherent_dq_rejection_impossible_canonical
+    (c : PhysicalComputer)
+    {RejectDQ : Prop} :
+    ¬ CoherentDQRejectionAtRequirement c coNP_requirement RejectDQ :=
+  coherent_dq_rejection_impossible_at_requirement
+    (c := c) (req := coNP_requirement)
+
 /-- Same statement, exposed as the paper-facing corollary name. -/
 theorem coNP_not_in_P_physically
     (c : PhysicalComputer)

@@ -14,6 +14,7 @@ import DecisionQuotient.Basic
 import DecisionQuotient.ClaimClosure
 import DecisionQuotient.IntegrityCompetence
 import DecisionQuotient.HardnessDistribution
+import DecisionQuotient.ToolCollapse
 import DecisionQuotient.Hardness.Sigma2PHardness
 import DecisionQuotient.PhysicalBudgetCrossover
 import DecisionQuotient.Hardness.ConfigReduction
@@ -492,8 +493,28 @@ export PhysicalComplexity (
   canonical_physical_collapse_impossible
   p_eq_np_physically_impossible_of_collapse_map
   p_eq_np_physically_impossible_canonical
+  CoherentDQRejectionAtRequirement
+  coherent_dq_rejection_impossible_at_requirement
+  coherent_dq_rejection_impossible_canonical
 )
 end PH
+
+namespace TC
+export DecisionQuotient.ToolCollapse (
+  WorkProfile
+  WorkModel
+  ToolModel
+  EventualStrictImprovement
+  EffectiveCollapse
+  tool_never_worse
+  strict_improvement_has_witness
+  effective_collapse_of_eventual_strict
+  expBaseline
+  linearTool
+  linear_tool_eventual_strict
+  linear_tool_effective_collapse
+)
+end TC
 
 namespace UQ
 export DecisionQuotient.Physics.Uncertainty (
@@ -761,6 +782,9 @@ abbrev PH30 := @PhysicalComplexity.sequential_no_physical_collapse
 abbrev PH31 := @PhysicalComplexity.collapse_possible_with_unbounded_budget_profile
 abbrev PH32 := @PhysicalComplexity.exp_budget_profile_unbounded
 abbrev PH33 := @PhysicalComplexity.finite_budget_assumption_is_necessary
+abbrev PH34 := @PhysicalComplexity.CoherentDQRejectionAtRequirement
+abbrev PH35 := @PhysicalComplexity.coherent_dq_rejection_impossible_at_requirement
+abbrev PH36 := @PhysicalComplexity.coherent_dq_rejection_impossible_canonical
 
 -- Bayes-from-DQ (BF) handles - belief forcing before Bayes uniqueness
 abbrev BF1 := @certainty_of_not_nondegenerateBelief
@@ -825,6 +849,20 @@ noncomputable abbrev TL1 := @ThermodynamicLift.landauerJoulesPerBit
 abbrev TL2 := @ThermodynamicLift.landauerJoulesPerBit_pos
 abbrev TL3 := @ThermodynamicLift.joulesPerBit_pos_of_landauer_calibration
 abbrev TL4 := @ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration
+
+-- Tool-collapse (TC) handles - model-relative leverage collapse
+abbrev TC1 := @ToolCollapse.WorkProfile
+abbrev TC2 := @ToolCollapse.WorkModel
+abbrev TC3 := @ToolCollapse.ToolModel
+abbrev TC4 := @ToolCollapse.EventualStrictImprovement
+abbrev TC5 := @ToolCollapse.EffectiveCollapse
+abbrev TC6 := @ToolCollapse.tool_never_worse
+abbrev TC7 := @ToolCollapse.strict_improvement_has_witness
+abbrev TC8 := @ToolCollapse.effective_collapse_of_eventual_strict
+abbrev TC9 := @ToolCollapse.expBaseline
+abbrev TC10 := @ToolCollapse.linearTool
+abbrev TC11 := @ToolCollapse.linear_tool_eventual_strict
+abbrev TC12 := @ToolCollapse.linear_tool_effective_collapse
 
 -- Anchor-query node (AQ) handles
 abbrev AQ1 := @ClaimClosure.AQ1
