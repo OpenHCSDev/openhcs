@@ -3,6 +3,20 @@
 We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory \cite{savage1954foundations, raiffa1961applied}.
 The core definitions in this section are substrate-neutral: they specify the decision relation independently of implementation medium. Physical interpretation is introduced later through explicit encoding and assumption-transfer maps (Section~\ref{sec:physical-transport}).\claimstamp{D\ref{def:physical-core-encoding};P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}
 \leanmeta{\LH{CT6},\LH{CT4}.}
+Physical-state semantics are typed by a realizable state set: any state marked physical has an instance witness, and state-level claims transport over all physical states without substrate-specific axioms.
+\leanmeta{\LH{PS1},\LH{PS2},\LH{PS3},\LH{PS4}.}
+Observer classes induce effective quotient state spaces on the same physical domain; witness pairs certify observer-relative collapses/separations.
+\leanmeta{\LH{OR3},\LH{OR4},\LH{OR5},\LH{OR9}.}
+Two recurrent circuits coupled by a shared channel node are formalized with clamp-observed state, one-bit decision-event lower bounds, and typed YES/NO/ABSTAIN report projection into the claim-admissibility layer.
+\leanmeta{\LH{CV4},\LH{CV5},\LH{CV7},\LH{CV8},\LH{CV9},\LH{CV11},\LH{CV12},\LH{CV13},\LH{CV15},\LH{CV16}.}
+Under separating physical parameterizations, logic/time scaffolds do not determine a unique timed law/objective; deadline forcing yields forced action with positive Landauer/NV lower bounds, and with uncertainty yields nondegenerate belief.
+\leanmeta{\LH{CF2},\LH{CF4},\LH{CF6},\LH{CF8},\LH{CF9},\LH{CF7}.}
+Physical-collapse transfer is isolated as a conditional chain at requirement and canonical levels: declared collapse-map schema implies no physical collapse and yields the canonical \(P{=}NP\) physical-impossibility specialization. The map is also derived from an explicit SAT witness plus reduction-energy transport, and collapse is bounded by the sharp disjunction (unbounded budget or zero bit-cost or failed exponential lower bound) under bounded-budget/positive-cost/exponential-lower-bound premises; deterministic/probabilistic/sequential variants preserve the same form.
+\leanmeta{\LH{PH11},\LH{PH12},\LH{PH13},\LH{PH14},\LH{PH15},\LH{PH16},\LH{PH17},\LH{PH18},\LH{PH19},\LH{PH20},\LH{PH21},\LH{PH22},\LH{PH23},\LH{PH24},\LH{PH25},\LH{PH26},\LH{PH27},\LH{PH28},\LH{PH29},\LH{PH30},\LH{PH31},\LH{PH32},\LH{PH33}.}
+A layered graph module composes cycle witnesses, observer surprisal-plus-novelty nontriviality, entropy-normalized DQ, forced-belief/Bayes-update bridge, and thermodynamic/material lower-bound witnesses.
+\leanmeta{\LH{GN2},\LH{GN4},\LH{GN5},\LH{GN6},\LH{GN7},\LH{GN8},\LH{GN9},\LH{GN10},\LH{GN11},\LH{GN12},\LH{GN13}.}
+It also fixes the exact-claim admissibility boundary: exact reports require a certified-bit gap over raw payload, hardness-blocked exact claims collapse to raw-only accounting, and integrity/competence cannot both hold universally under hardness-blocked resources.\claimstamp{T\ref{thm:exact-certified-gap-iff-admissible};P\ref{prop:integrity-resource-bound};C\ref{cor:hardness-raw-only-exact}}{AR}
+\leanmeta{\LH{CC18},\LH{CC30},\LH{CC21}.}
 
 \subsection{Decision Problems with Coordinate Structure}
 
@@ -218,6 +232,54 @@ Unless explicitly stated otherwise, ``polynomial time'' refers to the succinct e
 \begin{remark}[Decision Questions vs Decision Problems]\label{rem:question-vs-problem}
 We distinguish between a \emph{decision question} and a \emph{decision problem}. A decision question is the encoding-independent predicate: ``is coordinate set $I$ sufficient for $\mathcal{D}$?'' This is a mathematical relation, fixed by the model contract (C1--C4). A decision problem is a decision question together with a specific encoding of its inputs. The same decision question yields different decision problems under different encodings, and these problems may belong to different complexity classes. Formally, each encoding regime $e$ induces a language $L_{\mathcal{D},e}$; complexity classification is a property of $L_{\mathcal{D},e}$, not of $\mathcal{D}$ alone.
 \end{remark}
+
+\begin{definition}[Anchor Query Object]\label{def:anchor-query-object}
+An anchor query object is a pair
+\[
+q=(\mathcal{D},I)
+\]
+where $\mathcal{D}$ is a decision problem and $I$ is a fixed coordinate set. Its truth predicate is
+\[
+\mathrm{AnchorTrue}(q)\iff
+\exists s_0\in S\ \forall s\in S,\ s_I=s_{0,I}\Rightarrow \Opt(s)=\Opt(s_0).
+\]
+\end{definition}
+
+\begin{definition}[Pose Operation for Anchor Queries]\label{def:pose-anchor-query}
+The pose operation is the constructor
+\[
+\mathrm{poseAnchor}:\ (\mathcal{D},I)\mapsto q.
+\]
+Posing is an operation; $q$ is the formal object.
+\end{definition}
+
+\begin{proposition}[Posing Produces a Formal Query Object]\label{prop:pose-anchor-object}
+For every $(\mathcal{D},I)$, $\mathrm{poseAnchor}(\mathcal{D},I)$ is a well-typed anchor query object with preserved components, and its truth predicate is exactly the anchored $\exists\forall$ condition in Definition~\ref{def:anchor-query-object}.
+\claimstamp{D\ref{def:anchor-query-object},\ref{def:pose-anchor-query};T\ref{thm:anchor-sigma2p}}{S}
+\leanmeta{\LH{AQ1},
+\LH{AQ2},
+\LH{AQ3}.}
+\end{proposition}
+
+\begin{proposition}[Typed Exact Claims on Posed Anchor Queries]\label{prop:posed-anchor-typed-exact}
+For posed anchor queries under the typed claim discipline:
+\[
+\text{Exact admissible}\iff\text{competent on the declared regime},\qquad
+\neg\text{competent}\Rightarrow\neg\text{exact admissible}.
+\]
+Under solver integrity, checker-accepted exact-\texttt{true} verdicts are semantically sound on the posed anchor query object.
+\claimstamp{P\ref{prop:typed-claim-admissibility},\ref{prop:integrity-competence-separation};C\ref{cor:no-uncertified-exact-claim}}{AR}
+\leanmeta{\LH{AQ4},
+\LH{AQ5},
+\LH{AQ6},
+\LH{AQ7}.}
+\end{proposition}
+
+\begin{corollary}[Certified-Confidence Gate for Posed Anchor Queries]\label{cor:posed-anchor-certified-gate}
+Under signal consistency, positive certified confidence implies typed admissibility of the posed anchor-query report.
+\claimstamp{D\ref{def:signal-consistency};P\ref{prop:certified-confidence-gate}}{AR}
+\leanmeta{\LH{AQ8}.}
+\end{corollary}
 
 \begin{proposition}[Under-Resolution Forces Representation Collision]\label{prop:under-resolution-collision}
 \claimstamp{P\ref{prop:under-resolution-collision}}{DM}

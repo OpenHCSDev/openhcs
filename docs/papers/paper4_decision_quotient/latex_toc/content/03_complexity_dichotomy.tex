@@ -1,9 +1,10 @@
 \section{Encoding-Regime Separation}\label{sec:dichotomy}
 
 The hardness results of Section~\ref{sec:hardness} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family. The complexity class is a property of the encoding measured against a fixed decision question (Remark~\ref{rem:question-vs-problem}), not a property of the question itself: the same sufficiency question admits polynomial-time algorithms under one encoding and worst-case exponential cost under another.
+Within the paper's full regime map, this section is the static access-layer decomposition; theorem-level stochastic and sequential core placements are given in Sections~\ref{sec:stochastic} and~\ref{sec:sequential}, with strict inter-regime separation in Section~\ref{sec:regime-hierarchy}.
 
-Physical reading: the separation is an access-and-budget separation for the same decision semantics. Explicit access assumes full boundary observability; succinct access assumes compressed structure that may require exponential expansion to certify universally; query access assumes bounded measurement interfaces.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:physical-claim-transport}}{E,S+ETH,Qf,AR}
-\leanmeta{\LH{CC16},\LH{CC50},\LH{CT6}.}
+Physical reading: the separation is an access-and-budget separation for the same decision semantics. Explicit access assumes full boundary observability; succinct access assumes compressed structure that may require exponential expansion to certify universally; query access assumes bounded measurement interfaces, and the obstruction persists across value-entry/state-batch interfaces with oracle-lattice transfer/strictness closures.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict},\ref{prop:physical-claim-transport}}{E,S+ETH,Qf,Qb,AR}
+\leanmeta{\LH{CC16},\LH{CC50},\LH{L9},\LH{L8},\LH{L21},\LH{L20},\LH{CT6}.}
 
 \paragraph{Model note.} Theorem~\ref{thm:dichotomy} has Part~1 in [E] (time polynomial in $|S|$) and Part~2 in [S+ETH] (time exponential in $n$). Proposition~\ref{prop:query-regime-obstruction} is [Q\_fin] (finite-state Opt-oracle core), while Propositions~\ref{prop:query-value-entry-lb} and~\ref{prop:query-state-batch-lb} are [Q\_bool] interface refinements (value-entry and state-batch). Relative to Definition~\ref{def:regime-simulation}, Propositions~\ref{prop:query-subproblem-transfer} and~\ref{prop:oracle-lattice-transfer} are explicit simulation-transfer instances. The [E] vs [S+ETH] split in Theorem~\ref{thm:dichotomy} is a same-question encoding/cost-model separation, not a bidirectional simulation claim between those regimes. These regimes are defined in Section~\ref{sec:encoding} and are not directly comparable as functions of one numeric input-length parameter.
 
@@ -211,6 +212,8 @@ Fix any collapse schema ``exact certification competence $\Rightarrow$ complexit
 The mechanized theorem \LH{CC3} bundles the crossover split with the same logical closure used in Proposition~\ref{prop:integrity-resource-bound}: representational feasibility and certification hardness are distinct predicates.
 \end{proof}
 
+The same closure form is isolated as a standalone physical-collapse chain: requirement-indexed collapse schemas (\LH{PH11}) induce no physical collapse at that requirement (\LH{PH12}); canonical specialization yields conditional \(P{=}NP\) physical impossibility under the declared collapse map (\LH{PH13}, \LH{PH14}, \LH{PH15}). The collapse map itself is derived in an explicit SAT bridge (polytime SAT witness + reduction bridge + runtime-to-energy transfer) (\LH{PH16}, \LH{PH17}, \LH{PH18}, \LH{PH19}, \LH{PH20}, \LH{PH21}, \LH{PH22}), and the assumption boundary is explicit: under bounded budget, positive per-bit cost, and exponential required-op lower bound, claimed collapse forces at least one assumption failure (\LH{PH26}, \LH{PH27}); finite-budget necessity is witnessed by explicit unbounded-budget collapse countermodels (\LH{PH31}, \LH{PH32}, \LH{PH33}).
+
 \begin{proposition}[Crossover Policy Closure Under Integrity]\label{prop:crossover-policy}
 \claimstamp{P\ref{prop:crossover-policy}}{H=exp-lb-conditional}
 In the certifying-solver model (Definitions~\ref{def:solver-integrity}--\ref{def:competence-regime}), assume:
@@ -262,14 +265,14 @@ Under the same integrity-resource collapse assumption as Proposition~\ref{prop:c
 \leanmeta{\LH{PBC11}, \LH{PBC12}.}
 \end{proposition}
 
-\subsection{Thermodynamic Lift in Declared Model}
+\subsection{Thermodynamic Lift and Cost Accounting}
 The crossover and hardness statements are complexity-theoretic.
 The thermodynamic lift follows the same assumption discipline as the rest of the paper:
-claims are exactly those derivable from the declared conversion model and declared bit-operation lower-bound premises.
+claims are exactly those derivable from the conversion model and bit-operation lower-bound premises.
 
 \begin{proposition}[Bit-to-Energy/Carbon Lift]\label{prop:thermo-lift}
 \claimstamp{P\ref{prop:thermo-lift}}{H=cost-growth}
-Fix a declared thermodynamic conversion model with constants $(\lambda,\rho)$ where $\lambda$ lower-bounds energy per irreversible bit operation and $\rho$ lower-bounds carbon per joule. If a bit-operation lower bound $b_{\mathrm{LB}} \le b_{\mathrm{used}}$ holds, then:
+Fix a thermodynamic conversion model with constants $(\lambda,\rho)$ where $\lambda$ lower-bounds energy per irreversible bit operation and $\rho$ lower-bounds carbon per joule. If a bit-operation lower bound $b_{\mathrm{LB}} \le b_{\mathrm{used}}$ holds, then:
 \[
 E_{\mathrm{LB}}=\lambda b_{\mathrm{LB}} \le \lambda b_{\mathrm{used}},\qquad
 C_{\mathrm{LB}}=\rho E_{\mathrm{LB}} \le \rho(\lambda b_{\mathrm{used}}).
@@ -286,7 +289,7 @@ Under the same non-collapse/collapse schema used by Proposition~\ref{prop:integr
 
 \begin{proposition}[Mandatory Physical Cost]\label{prop:thermo-mandatory-cost}
 \claimstamp{P\ref{prop:thermo-mandatory-cost}}{H=cost-growth}
-Within the declared linear thermodynamic model, if
+Within the linear thermodynamic model, if
 \[
 \lambda > 0,\quad \rho > 0,\quad b_{\mathrm{LB}} > 0,
 \]
@@ -300,7 +303,7 @@ C_{\mathrm{LB}}=\rho E_{\mathrm{LB}} > 0.
 
 \begin{proposition}[Conserved Additive Accounting]\label{prop:thermo-conservation-additive}
 \claimstamp{P\ref{prop:thermo-conservation-additive}}{H=cost-growth}
-Within the same declared linear model, lower-bound accounting is additive over composed bit-operation lower bounds:
+Within the same linear model, lower-bound accounting is additive over composed bit-operation lower bounds:
 \[
 E_{\mathrm{LB}}(b_1+b_2)=E_{\mathrm{LB}}(b_1)+E_{\mathrm{LB}}(b_2),\qquad
 C_{\mathrm{LB}}(b_1+b_2)=C_{\mathrm{LB}}(b_1)+C_{\mathrm{LB}}(b_2).
@@ -310,7 +313,7 @@ C_{\mathrm{LB}}(b_1+b_2)=C_{\mathrm{LB}}(b_1)+C_{\mathrm{LB}}(b_2).
 
 \begin{corollary}[Neukart--Vinokur Thermodynamic Duality]\label{cor:neukart-vinokur}
 \claimstamp{C\ref{cor:neukart-vinokur}}{AR}
-Let $C$ denote a complexity coordinate with $C = b_{\mathrm{LB}}$ from Proposition~\ref{prop:query-regime-obstruction}. Under the declared conversion model with $\lambda > 0$, the thermodynamic duality
+Let $C$ denote a complexity coordinate with $C = b_{\mathrm{LB}}$ from Proposition~\ref{prop:query-regime-obstruction}. For $\lambda > 0$ in the conversion model, the thermodynamic duality
 \[
 dU \ge \lambda\,dC
 \]
@@ -536,9 +539,11 @@ An update rule $U$ is \emph{admissible} if it satisfies:
 \end{enumerate}
 Then: $U$ is admissible $\Leftrightarrow$ $U$ is Bayesian updating.
 \leanmeta{\LH{FN14}.}
-\end theorem}
+\end{theorem}
 
-\begin proof}
+Before uniqueness, the model fixes a belief floor: if uncertainty is provable (no hypothesis has probability $1$) and action is forced, belief mass cannot collapse to a single hypothesis; nondegenerate belief is forced \LH{BF2}, \LH{BF3}. With a strictly informative evidence channel, a Bayes posterior exists on that belief state \LH{BF4}.
+
+\begin{proof}
 This is the Cox-Jaynes argument grounded in thermodynamics rather than Boolean logic.
 The three admissibility constraints are so restrictive that only Bayesian updating satisfies them:
 \begin{itemize}
@@ -742,7 +747,7 @@ A regime is a channel. Competence is the channel capacity of decision circuits w
 
 \begin{definition}[Regime-Channel Equivalence]\label{def:regime-channel}
 \claimstamp{D\ref{def:regime-channel}}{E,Q,S,AR}
-A \emph{regime} (Definition~\ref{def:regime-model}) corresponds to a \emph{channel} in the Shannon sense: a constraint on what information can flow. The explicit-state regime E, query-access regime Q, and succinct regime S define distinct channels with distinct capacity bounds.
+A \emph{regime} (Section~\ref{sec:encoding}) corresponds to a \emph{channel} in the Shannon sense: a constraint on what information can flow. The explicit-state regime E, query-access regime Q, and succinct regime S define distinct channels with distinct capacity bounds.
 \leanmeta{\LH{CH1}.}
 \end{definition}
 
