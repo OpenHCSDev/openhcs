@@ -11,9 +11,16 @@
   
   Key insight: Decision-relevance is about preserving information for a 
   specific task, not all information.
+
+  ## Triviality Level
+  TRIVIAL: This connects to information theory. The novelty is in the 
+  sufficiency definitions (Sufficiency.lean), not in applying entropy.
+
+  ## Dependencies
+  - Chain: Basic.lean → Sufficiency.lean (core) → here
+  - The nontrivial work is already in Sufficiency.lean definitions
 -/
 
-import DecisionQuotient.Basic
 import DecisionQuotient.Sufficiency
 import DecisionQuotient.Tractable
 import Mathlib.Analysis.SpecialFunctions.Log.Basic

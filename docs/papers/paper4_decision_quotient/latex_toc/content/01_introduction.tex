@@ -8,8 +8,11 @@ This is \emph{coordinate sufficiency}, the formalization of \emph{information su
 
 In information-theoretic terms, this is a task-conditional coding problem: the object preserved by projection is the decision boundary $s \mapsto \Opt(s)$, not the full source state. The same object appears in classical source-coding and fidelity viewpoints \cite{shannon1948mathematical,shannon1959coding,cover2006elements,slepian1973noiseless}, and in zero-error/confusability structure where exact recoverability depends on graph constraints rather than raw description length \cite{shannon1956zero,korner1973graphs,lovasz1979shannon,csiszar2011information}. The same separation also appears in model selection: short descriptions and certifiable adequacy are distinct \cite{rissanen1978modeling,grunwald2007minimum,li2008introduction,blahut1972computation}.
 
-For physical instantiations, the same tuple has a direct substrate reading: coordinates are measurable state degrees of freedom, actions are physically realizable interventions or transitions, and the optimizer map is the decision boundary induced by the declared objective contract. The physical-to-core encoding discipline in Section~\ref{sec:physical-transport} makes this bridge theorem-level rather than metaphorical.\claimstamp{P\ref{prop:physical-claim-transport},\ref{prop:law-instance-objective-bridge},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time};C\ref{cor:physical-counterexample-core-failure};T\ref{thm:physical-bridge-bundle}}{AR}
-\leanmeta{\LH{CT6},\LH{CT8},\LH{CT4},\LH{CT1},\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ541}.}
+For physical instantiations, the same tuple has a direct substrate reading: coordinates are measurable state degrees of freedom, actions are physically realizable interventions or transitions, and the optimizer map is the decision boundary induced by the declared objective contract. The physical-to-core encoding discipline in Section~\ref{sec:physical-transport} makes this bridge theorem-level with explicit assumptions.\claimstamp{P\ref{prop:physical-claim-transport},\ref{prop:law-instance-objective-bridge},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time};C\ref{cor:physical-counterexample-core-failure};T\ref{thm:physical-bridge-bundle}}{AR}
+\leanmeta{\LH{CT6},\LH{CT8},\LH{CT4},\LH{CT1},\LH{DT6},\LH{DT13},\LH{DT16},\LH{DT24}.}
+
+Scope restriction: theorem transfer is licensed only for declared physical encodings with explicit state, action, objective, observables, and assumption maps (Section~\ref{sec:physical-transport}).\claimstamp{D\ref{def:physical-core-encoding},\ref{def:physical-scope-gate};P\ref{prop:physical-claim-transport},\ref{prop:typed-physical-transport-requirement};T\ref{thm:physical-bridge-bundle}}{AR}
+Operationally, each instantiation must expose measurable observables and calibrated units for information/energy accounting (bits, joules, and \(kT\)-scaled bounds) before transfer claims are admitted.
 
 \paragraph{Compact claim-stamp notation.}
 We use compact provenance stamps of the form \([C:\cdots;R:\cdots]\): claim references are grouped by type
@@ -17,7 +20,8 @@ We use compact provenance stamps of the form \([C:\cdots;R:\cdots]\): claim refe
 (for example \(AR\)=active declared regime, \(DC\)=declared contract, \(CR\)=declared class/regime, \(Qf\)=query-finite, \(Qb\)=query-Boolean).
 Theorem-strength narrative statements are stamped and, where available, paired with compact Lean handle IDs; unstamped narrative remains explanatory or citation-only context.
 
-The paper's main line is: coNP/PP/PSPACE placement with strict static $\subset$ stochastic $\subset$ sequential regime separation (\LH{CC61}, \LH{DC9}, \LH{DC10}, \LH{DC1}, \LH{DC2}), coNP/\(\SigmaP{2}\) placement with encoding/query separation for static sufficiency (\LH{CC36}, \LH{CC5}, \LH{CC16}, \LH{CC50}), theorem-level physical bridge and exact represented-adjacent bridge boundary (\LH{CT4}, \LH{CC10}, \LH{CC9}, \LH{CC8}), static-class completeness boundaries (\LH{CC14}, \LH{CC76}), belief forcing from provable uncertainty plus forced action with Bayes-update existence under informative evidence (\LH{BF2}, \LH{BF3}, \LH{BF4}), logic/time-vs-parameter separation with deadline-forced thermodynamic lower bounds (\LH{CF2}, \LH{CF4}, \LH{CF8}, \LH{CF9}), Bayesian uniqueness under DQ/thermodynamic admissibility axioms (\LH{FN14}), layered graph nontriviality/entropy/belief/physical lift (\LH{GN2}, \LH{GN5}, \LH{GN7}, \LH{GN8}, \LH{GN9}, \LH{GN10}, \LH{GN11}, \LH{GN13}), conditional physical-collapse no-go transfer to canonical \(P{=}NP\) physical impossibility under declared collapse maps (\LH{PH11}, \LH{PH12}, \LH{PH13}, \LH{PH14}, \LH{PH15}), derived SAT-bridge map plus reduction-energy transfer (\LH{PH16}, \LH{PH17}, \LH{PH18}, \LH{PH19}, \LH{PH20}, \LH{PH21}, \LH{PH22}), assumption-necessity and disjunctive boundary (\LH{PH23}, \LH{PH24}, \LH{PH25}, \LH{PH26}, \LH{PH27}, \LH{PH31}, \LH{PH32}, \LH{PH33}), deterministic/probabilistic/sequential robustness (\LH{PH28}, \LH{PH29}, \LH{PH30}), recurrent shared-channel conversation clamp semantics with typed YES/NO/ABSTAIN projection (\LH{CV4}, \LH{CV7}, \LH{CV8}, \LH{CV9}, \LH{CV12}, \LH{CV13}, \LH{CV16}), explicit Neukart--Vinokur duality specialization from the thermodynamic lift (\LH{CC64}, \LH{CC65}), and formal dominance/amortization laws for hardness placement (\LH{HD1}, \LH{HD4}, \LH{HD3}). Later sections give full derivations and boundaries.
+The paper's main line is: coNP/PP/PSPACE placement with strict static $\subset$ stochastic $\subset$ sequential regime separation (\LH{CC61}, \LH{DC9}, \LH{DC10}, \LH{DC1}, \LH{DC2}), coNP/\(\SigmaP{2}\) placement with encoding/query separation for static sufficiency (\LH{CC36}, \LH{CC5}, \LH{CC16}, \LH{CC50}), theorem-level physical bridge and exact represented-adjacent bridge boundary (\LH{CT4}, \LH{CC10}, \LH{CC9}, \LH{CC8}), static-class completeness boundaries (\LH{CC14}, \LH{CC76}), belief forcing from provable uncertainty plus forced action with Bayes-update existence under informative evidence (\LH{BF2}, \LH{BF3}, \LH{BF4}), logic/time-vs-parameter separation with deadline-forced thermodynamic lower bounds (\LH{CF2}, \LH{CF4}, \LH{CF8}, \LH{CF9}), Bayesian uniqueness under DQ/thermodynamic admissibility axioms (\LH{FN14}), layered graph nontriviality/entropy/belief/physical lift (\LH{GN2}, \LH{GN5}, \LH{GN7}, \LH{GN8}, \LH{GN9}, \LH{GN10}, \LH{GN11}, \LH{GN13}), physical-collapse no-go transfer to canonical \(P{=}NP\) physical impossibility under declared collapse maps (\LH{PH11}, \LH{PH12}, \LH{PH13}, \LH{PH14}, \LH{PH15}), derived SAT-bridge map plus reduction-energy transfer (\LH{PH16}, \LH{PH17}, \LH{PH18}, \LH{PH19}, \LH{PH20}, \LH{PH21}, \LH{PH22}), assumption-necessity and disjunctive boundary (\LH{PH23}, \LH{PH24}, \LH{PH25}, \LH{PH26}, \LH{PH27}, \LH{PH31}, \LH{PH32}, \LH{PH33}), deterministic/probabilistic/sequential robustness (\LH{PH28}, \LH{PH29}, \LH{PH30}), recurrent shared-channel conversation clamp semantics with typed YES/NO/ABSTAIN projection (\LH{CV4}, \LH{CV7}, \LH{CV17}, \LH{CV18}, \LH{CV12}, \LH{CV13}, \LH{CV16}), explicit Neukart--Vinokur duality specialization from the thermodynamic lift (\LH{CC64}, \LH{CC65}), and formal dominance/amortization laws for hardness placement (\LH{HD1}, \LH{HD4}, \LH{HD3}). Later sections give full derivations and boundaries.
+An observer-collapse anchor layer is included in the same line: effective-state singleton criteria and physical seeded support close stochastic/sequential anchor checks under explicit hypotheses (\LH{PA1}, \LH{PA2}, \LH{PA3}, \LH{PA4}, \LH{PA5}, \LH{PA6}, \LH{PA7}, \LH{PA8}, \LH{PA9}).
 \claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace},\ref{thm:dichotomy},\ref{thm:regime-coverage},\ref{thm:typed-completeness-static},\ref{thm:physical-bridge-bundle},\ref{thm:bridge-boundary-represented},\ref{thm:bayes-from-dq},\ref{thm:centralization-dominance},\ref{thm:tax-conservation},\ref{thm:amortization};P\ref{prop:query-regime-obstruction},\ref{prop:thermo-lift},\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict};C\ref{cor:neukart-vinokur}}{E,S,S+ETH,Qf,Qb,AR,LC,H=cost-growth}
 
 SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, and ANCHOR-SUFFICIENCY are \emph{meta-problems}: each is parameterized by an arbitrary decision problem $\mathcal{D}$ and asks a structural question about $\mathcal{D}$'s coordinate space. The complexity results therefore apply to every problem with factored state space, not to a specific problem domain.\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p}}{S}
@@ -30,26 +34,35 @@ The formal object of this paper is the decision-problem tuple $\mathcal{D} = (A,
 This paper characterizes the complexity landscape of these meta-problems as a regime map with an internal static decomposition.
 
 The paper keeps two layers explicit throughout: a substrate-neutral decision core (for complexity classification) and an assumption-typed physical instantiation layer (for transport to concrete systems). This separation prevents conflating representational hardness with physical assumptions while preserving a formal bridge between them.\claimstamp{P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}
+The physical-to-core map is an added rigor layer, not a downgrade of physical status: physical claims remain physical claims, but with explicit premise tracking and machine-auditable transfer. This places accepted physics assumptions and this model on the same formal footing under one declared assumption discipline.\claimstamp{P\ref{prop:physical-claim-transport};C\ref{cor:physical-counterexample-core-failure};T\ref{thm:physical-bridge-bundle}}{AR}
 \leanmeta{\LH{CT6},\LH{CT4}.}
 
 Section~\ref{sec:encoding} fixes the computational model and input encodings used for all complexity claims.
 Section~\ref{sec:model-contract} gives the model contract and regime tags used to type every strong claim.
 Completeness claims are class-internal: complete for the static sufficiency class fixed by C1--C4 and the declared access regimes, while stochastic and sequential classes are stated as distinct typed classes with their own theorem-level placements.
 
-\begin{center}
-\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{0.96}
+\noindent
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.13\linewidth}>{\raggedright\arraybackslash}p{0.32\linewidth}>{\raggedright\arraybackslash}p{0.50\linewidth}@{}}
 \toprule
 \textbf{Regime} & \textbf{Canonical question} & \textbf{Placement and boundary} \\
 \midrule
-Static & SUFFICIENCY / MINIMUM / ANCHOR & \coNP / \coNP / \(\SigmaP{2}\); encoding split [E] vs [Q\_fin,Q\_bool] vs [S+ETH]; six structural polynomial subcases \\
-Stochastic & STOCHASTIC-SUFFICIENCY-CHECK / STOCHASTIC-ANCHOR-SUFFICIENCY-CHECK & \PP-complete core; anchor refinement formalized; strictly extends static under declared assumptions \\
-Sequential & SEQUENTIAL-SUFFICIENCY-CHECK / SEQUENTIAL-ANCHOR-SUFFICIENCY-CHECK & \PSPACE-complete core; anchor refinement formalized; strictly extends stochastic under declared assumptions \\
+Static & SUFFICIENCY\allowbreak/\allowbreak MINIMUM\allowbreak/\allowbreak ANCHOR & \coNP / \coNP / \(\SigmaP{2}\); encoding split [E] vs [Q\_fin,Q\_bool] vs [S+ETH]; six structural polynomial subcases \\
+Stochastic & STOCHASTIC-SUFFICIENCY-CHECK\allowbreak/\allowbreak STOCHASTIC-ANCHOR-SUFFICIENCY-CHECK & \PP-complete core; anchor refinement formalized; observer-collapse seeded anchor closure available under declared hypotheses; strictly extends static under declared assumptions \\
+Sequential & SEQUENTIAL-SUFFICIENCY-CHECK\allowbreak/\allowbreak SEQUENTIAL-ANCHOR-SUFFICIENCY-CHECK & \PSPACE-complete core; anchor refinement formalized; observer-collapse anchor closure available under declared hypotheses; strictly extends stochastic under declared assumptions \\
 \bottomrule
 \end{tabularx}
-\end{center}
+\endgroup
 
-\begin{center}
-\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{0.96}
+\noindent
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.23\linewidth}>{\raggedright\arraybackslash}p{0.29\linewidth}>{\raggedright\arraybackslash}p{0.43\linewidth}@{}}
 \toprule
 \textbf{Static decomposition layer} & \textbf{Object} & \textbf{Comparison axis} \\
 \midrule
@@ -58,27 +71,33 @@ Access layer & [E], [Q\_fin,Q\_bool], [S+ETH] & Polynomial explicit scan vs quer
 Structure layer & bounded actions, separable utility, low tensor rank, tree structure, bounded treewidth, coordinate symmetry & Certified polynomial recovery conditions inside the static class \\
 \bottomrule
 \end{tabularx}
-\end{center}
+\endgroup
 \claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace},\ref{thm:dichotomy},\ref{thm:tractable};P\ref{prop:query-regime-obstruction},\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict}}{E,S,S+ETH,Qf,Qb,RG}
 \leanmeta{\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{CCC3},\LH{CCC7},\LH{CC61},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{DC17},\LH{DC21}.}
 
 \subsection{Regime Reading Map}
 
+Formally: this subsection states regime-indexed class placements and bridge predicates for the fixed sufficiency query.
+
 Theorems in this paper are intended to be read as regime-indexed hardness/recovery statements for fixed decision semantics:
 \begin{enumerate}
 \item \textbf{Static core:} SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are \coNP-complete, and ANCHOR-SUFFICIENCY is \(\SigmaP{2}\)-complete; explicit/query/structured regimes supply polynomial or lower-bound refinements for the same fixed question.
-\item \textbf{Stochastic core:} STOCHASTIC-SUFFICIENCY-CHECK is \PP-complete; STOCHASTIC-ANCHOR-SUFFICIENCY-CHECK is the anchor refinement; strict MAJSAT reduces to the anchor check with the accept-label side condition; potential-dual and Landauer-floor statements fix expected-utility and physical-cost grounding.
-\item \textbf{Sequential core:} SEQUENTIAL-SUFFICIENCY-CHECK is \PSPACE-complete; SEQUENTIAL-ANCHOR-SUFFICIENCY-CHECK is the anchor refinement; TQBF reduces to the sequential anchor check at \(I=\emptyset\).
+\item \textbf{Stochastic core:} STOCHASTIC-SUFFICIENCY-CHECK is \PP-complete; STOCHASTIC-ANCHOR-SUFFICIENCY-CHECK is the anchor refinement; strict MAJSAT reduces to the anchor check with the accept-label side condition; potential-dual and Landauer-floor statements fix expected-utility and physical-cost grounding; observer-collapse + seeded support gives direct anchor-check closure.
+\item \textbf{Sequential core:} SEQUENTIAL-SUFFICIENCY-CHECK is \PSPACE-complete; SEQUENTIAL-ANCHOR-SUFFICIENCY-CHECK is the anchor refinement; TQBF reduces to the sequential anchor check at \(I=\emptyset\); observer-collapse gives direct sequential anchor-check closure.
 \item \textbf{Hierarchy and transfer boundary:} static \(\subset\) stochastic \(\subset\) sequential is strict under declared assumptions, and transfer from static claims is bridge-gated by one-step deterministic conditions.
 \end{enumerate}
 \claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace};P\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict},\ref{prop:one-step-bridge},\ref{prop:bridge-failure-horizon},\ref{prop:bridge-failure-stochastic},\ref{prop:bridge-failure-transition}}{S,RG,RA}
-\leanmeta{\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{DC19},\LH{DC23},\LH{DC25},\LH{DC28},\LH{DC33},\LH{DC37}.}
+\leanmeta{\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{DC19},\LH{DC23},\LH{DC25},\LH{DC28},\LH{DC33},\LH{DC37},\LH{PA4},\LH{PA5},\LH{PA6},\LH{PA7},\LH{PA9}.}
 
 An operational criterion follows later from the same chain: once decision-site count exceeds the amortization threshold \(n^*\), avoiding structural identification is more expensive than paying the one-time centralization cost (Theorem~\ref{thm:amortization}).\claimstamp{T\ref{thm:amortization}}{LC}
-\leanmeta{\LH{HD3},
-\LH{HD21}.}
+\leanmeta{\LH{HD4},
+\LH{HD26}.}
+
+Informally: this is the same core question, but different regimes change difficulty and transfer limits.
 
 \subsection{Landscape Summary}
+
+Formally: tractable and intractable cases are partitioned by declared encoding, access, and structure assumptions.
 
 \textbf{When is sufficiency checking tractable?} We identify six sufficient conditions:
 
@@ -109,9 +128,13 @@ Each condition is stated with its encoding assumption. Outside these regimes, th
 
 The explicit ETH lower bound is still a succinct worst-case statement; Proposition~\ref{prop:query-regime-obstruction} provides the finite-state query core and Propositions~\ref{prop:query-value-entry-lb}--\ref{prop:oracle-lattice-strict} provide theorem-level Boolean-interface refinements.
 \claimstamp{P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-subproblem-transfer},\ref{prop:query-state-batch-lb},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict}}{Qf,Qb}
-\leanmeta{\LH{CC50},\LH{L9},\LH{L11},\LH{L8},\LH{L21},\LH{L20}.}
+\leanmeta{\LH{CC50},\LH{CC29},\LH{CC28},\LH{CC43},\LH{CC52},\LH{CC27}.}
+
+Informally: when structure is visible, checks are fast; when access is compressed or restricted, lower bounds appear.
 
 \subsection{Main Theorems}
+
+Formally: the list below is a theorem-indexed map of class placement, bridge boundary, physical lift, and closure.
 
 \begin{enumerate}
 \item \textbf{Theorem~\ref{thm:sufficiency-conp}:} SUFFICIENCY-CHECK is \coNP-complete via reduction from TAUTOLOGY.
@@ -125,6 +148,7 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 \item \textbf{Theorem~\ref{th:sequential-sufficiency-pspace}:} SEQUENTIAL-SUFFICIENCY-CHECK is \PSPACE-complete.
 
 \item \textbf{Propositions~\ref{prop:stochastic-anchor-strict-reduction} and \ref{prop:sequential-anchor-tqbf-reduction}:} strict MAJSAT and TQBF reductions to the new anchor-check forms in stochastic and sequential regimes.
+\item \textbf{Observer-collapse anchor closure (\LH{PA1}--\LH{PA9}):} effective-state singleton criteria and physical seeded support conditions that force stochastic/sequential anchor-check truth under declared hypotheses.
 
 \item \textbf{Propositions~\ref{prop:stochastic-potential-duality} and \ref{prop:stochastic-landauer-floor}:} expected-utility/potential duality and Landauer-floor specialization for stochastic instances.
 
@@ -142,9 +166,13 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 \item \textbf{Propositions~\ref{prop:time-discrete}--\ref{prop:substrate-unit-time}:} the interface-time model is discrete, each decision event advances time by one unit, run-length equals elapsed interface time, and the unit-time law is substrate-invariant under the declared interface-consistency condition.
 \end{enumerate}
 \claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace},\ref{thm:dichotomy},\ref{thm:tractable},\ref{thm:physical-bridge-bundle},\ref{thm:bridge-boundary-represented},\ref{thm:exact-certified-gap-iff-admissible};P\ref{prop:stochastic-anchor-strict-reduction},\ref{prop:sequential-anchor-tqbf-reduction},\ref{prop:stochastic-potential-duality},\ref{prop:stochastic-landauer-floor},\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict},\ref{prop:thermo-lift},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time};C\ref{cor:neukart-vinokur},\ref{cor:hardness-raw-only-exact}}{E,S,S+ETH,AR,RG,H=cost-growth}
-\leanmeta{\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{DC25},\LH{DC28},\LH{DC33},\LH{DC37},\LH{CCC3},\LH{CCC7},\LH{CT4},\LH{CC67},\LH{CC69},\LH{CC85},\LH{CC76},\LH{CC77},\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ541}.}
+\leanmeta{\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{DC25},\LH{DC28},\LH{DC33},\LH{DC37},\LH{CCC3},\LH{CCC7},\LH{CT4},\LH{CC67},\LH{CC69},\LH{CC85},\LH{CC76},\LH{CC77},\LH{DT6},\LH{DT13},\LH{DT16},\LH{DT24}.}
+
+Informally: this list is the main map of class placement, bridge conditions, and physical transport.
 
 \subsection{Claim-Typing Theorems}
+
+Formally: this subsection states typed admissibility/evidence equivalences and integrity-competence boundaries.
 
 \begin{enumerate}
 \item \textbf{Proposition~\ref{prop:typed-claim-admissibility}:} report admissibility is typed by certificate class (\(\mathsf{ABSTAIN}\), \(\mathsf{EXACT}\), \(\mathsf{EPSILON}(\varepsilon)\)).
@@ -162,7 +190,11 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 \claimstamp{T\ref{thm:claim-integrity-meta};P\ref{prop:typed-claim-admissibility},\ref{prop:evidence-admissibility-equivalence},\ref{prop:empty-sufficient-constant},\ref{prop:insufficiency-counterexample},\ref{prop:exact-requires-evidence},\ref{prop:certified-confidence-gate},\ref{prop:no-evidence-zero-certified},\ref{prop:abstain-guess-self-signal},\ref{prop:self-confidence-not-certification},\ref{prop:steps-run-scalar},\ref{prop:no-fraction-without-bound},\ref{prop:fraction-defined-under-bound},\ref{prop:integrity-resource-bound},\ref{prop:physics-no-universal-exact};C\ref{cor:exact-no-competence-zero-certified},\ref{cor:physics-no-universal-exact-claim}}{DC,AR}
 \leanmeta{\LH{CC75},\LH{IC2},\LH{DP6},\LH{DP7},\LH{IC35},\LH{IC38},\LH{IC40},\LH{IC46},\LH{IC47},\LH{IC42},\LH{IC44},\LH{IC45},\LH{CC30},\LH{CC15},\LH{CC38}.}
 
+Informally: a report is valid only when its evidence and declared capability match.
+
 \subsection{Regime Separation Theorems}
+
+Formally: this subsection isolates same-question access separations and lower-bound transfer closures.
 
 \begin{enumerate}
 \item \textbf{Theorem~\ref{thm:dichotomy}:} same-question separation between explicit-state and succinct regimes (with [S+ETH] hard-family lower bound).
@@ -170,9 +202,13 @@ The explicit ETH lower bound is still a succinct worst-case statement; Propositi
 \item \textbf{Propositions~\ref{prop:query-value-entry-lb}--\ref{prop:oracle-lattice-strict}:} Boolean-interface refinements and transfer/strictness in [Q\_bool].
 \end{enumerate}
 \claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:query-subproblem-transfer},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict}}{E,S+ETH,Qf,Qb}
-\leanmeta{\LH{CC16},\LH{CC50},\LH{L9},\LH{L8},\LH{L11},\LH{L21},\LH{L20},\LH{L23}.}
+\leanmeta{\LH{CC16},\LH{CC50},\LH{CC29},\LH{CC28},\LH{CC43},\LH{CC52},\LH{CC27},\LH{CC58},\LH{CC59}.}
+
+Informally: this is one question across multiple access models, with clear boundaries on what transfers.
 
 \subsection{Machine-Checked Proofs}
+
+Formally: reduction correctness and key placement/closure claims are machine-verified; class labels are composed under declared assumptions.
 
 The reduction constructions and key equivalence theorems are machine-checked in Lean 4 \cite{Lean2015,demoura2021lean4,mathlib2020,forster2019verified,kunze2019formal} (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements). The formalization verifies TAUTOLOGY- and \(\exists\forall\)-SAT-based static reductions, and includes theorem-level stochastic/sequential class placements and strict hierarchy claims. Complexity placement in \coNP/\(\Sigma_2^P\)/\PP/\PSPACE follows by composition with standard complexity-theoretic results under the declared assumptions.
 
@@ -180,6 +216,8 @@ The reduction constructions and key equivalence theorems are machine-checked in 
 We contribute (i) formal definitions of decision-theoretic sufficiency in Lean; (ii) machine-checked proofs of reduction correctness for the TAUTOLOGY and $\exists\forall$-SAT reductions; (iii) a regime-first complexity map with theorem-level static/stochastic/sequential placements and strict separations; and (iv) a static inner-class decomposition (decision, access, and structure layers) used to derive theorem-indexed engineering corollaries, including typed coverage/completeness closures for the declared static class (Theorems~\ref{thm:regime-coverage}, \ref{thm:typed-completeness-static}). Prior work establishes hardness informally; we formalize the constructions and their regime-typed consequences.
 \claimstamp{T\ref{thm:regime-coverage},\ref{thm:typed-completeness-static},\ref{thm:sufficiency-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace};P\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict}}{CR,S,RG}
 \leanmeta{\LH{CC62},\LH{CC88},\LH{CCC6},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2}.}
+
+Informally: the proofs are checkable, and each strong claim points to explicit assumptions and Lean handles.
 
 \subsection{Paper Structure}
 
@@ -189,4 +227,4 @@ Section~\ref{sec:foundations}: decision-problem foundations and encoding model. 
 
 Sections~\ref{sec:engineering-justification}--\ref{sec:simplicity-tax} are not applied commentary. Every claim in those sections is a formal corollary, regime-typed by the framework of Section~\ref{sec:interpretive-foundations} and indexed to a machine-checked theorem handle. They complete the complexity landscape by characterizing when exact minimization is rational and when it is not: the rationality matrix (Proposition~\ref{prop:attempted-competence-matrix}), the dominance and conservation theorems (Theorems~\ref{thm:centralization-dominance}, \ref{thm:tax-conservation}), and the amortization threshold (Theorem~\ref{thm:amortization}) are all mechanized in Lean.
 \claimstamp{P\ref{prop:attempted-competence-matrix};T\ref{thm:centralization-dominance},\ref{thm:tax-conservation},\ref{thm:amortization}}{AR,LC}
-\leanmeta{\LH{IC27},\LH{HD1},\LH{HD4},\LH{HD3}.}
+\leanmeta{\LH{IC27},\LH{HD1},\LH{HD5},\LH{HD4}.}

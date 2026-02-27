@@ -4,7 +4,7 @@
   SubstrateCost.lean - Formalization of substrate-dependent costs
 
   Extends paper 4's integrity-competence framework with substrate cost κ.
-  Uses AgentType and MatrixCell from Basic.lean.
+  Uses substrate classes and MatrixCell from Basic.lean.
 -/
 
 import DecisionQuotient.StochasticSequential.Basic
@@ -18,10 +18,10 @@ The key insight: verdict (integrity-competence outcome) is substrate-independent
 but the cost to achieve that verdict is substrate-dependent (κ).
 -/
 
-/-- Substrate cost function: cell × agent type → cost -/
-def substrateCost (κ : MatrixCell → AgentType → ℝ)
-    (cell : MatrixCell) (agent : AgentType) : ℝ :=
-  κ cell agent
+/-- Substrate cost function: cell × substrate class → cost -/
+def substrateCost (κ : MatrixCell → SubstrateType → ℝ)
+    (cell : MatrixCell) (substrate : SubstrateType) : ℝ :=
+  κ cell substrate
 
 /-! ## Substrate-Dependent Trajectory -/
 
@@ -32,23 +32,23 @@ structure ProblemSequence (A S : Type*) where
 /-- Trajectory depends on substrate cost -/
 noncomputable def trajectory {A S : Type*}
     (σ : ProblemSequence A S)
-    (κ : MatrixCell → AgentType → ℝ)
-    (agent : AgentType) : List (MatrixCell × ℝ) :=
+    (κ : MatrixCell → SubstrateType → ℝ)
+    (substrate : SubstrateType) : List (MatrixCell × ℝ) :=
   σ.problems.map fun _ =>
     let cell : MatrixCell := {
       integrity := true
       attempted := true
       competenceAvailable := true
     }
-    (cell, κ cell agent)
+    (cell, κ cell substrate)
 
 /-! ## κ as Sufficient Statistic -/
 
 /-- κ captures all decision-relevant substrate information -/
 theorem kappa_sufficient_statistic {A S : Type*}
     (σ : ProblemSequence A S)
-    (κ : MatrixCell → AgentType → ℝ)
-    (τ₁ τ₂ : AgentType)
+    (κ : MatrixCell → SubstrateType → ℝ)
+    (τ₁ τ₂ : SubstrateType)
     (hκ : ∀ c, κ c τ₁ = κ c τ₂) :
     trajectory σ κ τ₁ = trajectory σ κ τ₂ := by
   simp [trajectory, hκ]

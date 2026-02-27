@@ -8,10 +8,10 @@ Physical-state semantics are typed by a realizable state set: any state marked p
 Observer classes induce effective quotient state spaces on the same physical domain; witness pairs certify observer-relative collapses/separations.
 \leanmeta{\LH{OR3},\LH{OR4},\LH{OR5},\LH{OR9}.}
 Two recurrent circuits coupled by a shared channel node are formalized with clamp-observed state, one-bit decision-event lower bounds, and typed YES/NO/ABSTAIN report projection into the claim-admissibility layer.
-\leanmeta{\LH{CV4},\LH{CV5},\LH{CV7},\LH{CV8},\LH{CV9},\LH{CV11},\LH{CV12},\LH{CV13},\LH{CV15},\LH{CV16}.}
+\leanmeta{\LH{CV4},\LH{CV5},\LH{CV7},\LH{CV17},\LH{CV18},\LH{CV11},\LH{CV12},\LH{CV13},\LH{CV15},\LH{CV16}.}
 Under separating physical parameterizations, logic/time scaffolds do not determine a unique timed law/objective; deadline forcing yields forced action with positive Landauer/NV lower bounds, and with uncertainty yields nondegenerate belief.
 \leanmeta{\LH{CF2},\LH{CF4},\LH{CF6},\LH{CF8},\LH{CF9},\LH{CF7}.}
-Physical-collapse transfer is isolated as a conditional chain at requirement and canonical levels: declared collapse-map schema implies no physical collapse and yields the canonical \(P{=}NP\) physical-impossibility specialization. The map is also derived from an explicit SAT witness plus reduction-energy transport, and collapse is bounded by the sharp disjunction (unbounded budget or zero bit-cost or failed exponential lower bound) under bounded-budget/positive-cost/exponential-lower-bound premises; deterministic/probabilistic/sequential variants preserve the same form.
+Physical-collapse transfer is isolated as an assumption-indexed chain at requirement and canonical levels: declared collapse-map schema implies no physical collapse and yields the canonical \(P{=}NP\) physical-impossibility specialization. The map is also derived from an explicit SAT witness plus reduction-energy transport, and collapse is bounded by the sharp disjunction (unbounded budget or zero bit-cost or failed exponential lower bound) under bounded-budget/positive-cost/exponential-lower-bound premises; deterministic/probabilistic/sequential variants preserve the same form.
 \leanmeta{\LH{PH11},\LH{PH12},\LH{PH13},\LH{PH14},\LH{PH15},\LH{PH16},\LH{PH17},\LH{PH18},\LH{PH19},\LH{PH20},\LH{PH21},\LH{PH22},\LH{PH23},\LH{PH24},\LH{PH25},\LH{PH26},\LH{PH27},\LH{PH28},\LH{PH29},\LH{PH30},\LH{PH31},\LH{PH32},\LH{PH33}.}
 A layered graph module composes cycle witnesses, observer surprisal-plus-novelty nontriviality, entropy-normalized DQ, forced-belief/Bayes-update bridge, and thermodynamic/material lower-bound witnesses.
 \leanmeta{\LH{GN2},\LH{GN4},\LH{GN5},\LH{GN6},\LH{GN7},\LH{GN8},\LH{GN9},\LH{GN10},\LH{GN11},\LH{GN12},\LH{GN13}.}
@@ -19,6 +19,8 @@ It also fixes the exact-claim admissibility boundary: exact reports require a ce
 \leanmeta{\LH{CC18},\LH{CC30},\LH{CC21}.}
 
 \subsection{Decision Problems with Coordinate Structure}
+
+Formally: this subsection fixes the core tuple, projection, optimizer, and sufficiency/relevance predicates used downstream.
 
 \begin{definition}[Decision Problem]\label{def:decision-problem}
 A \emph{decision problem with coordinate structure} is a tuple $\mathcal{D} = (A, X_1, \ldots, X_n, U)$ where:
@@ -178,6 +180,8 @@ Consider deciding whether to carry an umbrella:
 The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordinates 2 and 3 (temperature, day of week) are irrelevant.
 \end{example}
 
+Informally: all later results use this same sufficiency definition.
+
 \subsection{The Decision Quotient}
 
 \begin{definition}[Decision Equivalence]\label{def:decision-equiv}
@@ -206,6 +210,8 @@ Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal acti
 \end{proof}
 
 \subsection{Computational Model and Input Encoding}\label{sec:encoding}
+
+Formally: this subsection defines encoding/access regimes, cost measures, and regime-specific complexity interpretation.
 
 We fix the computational model used by the complexity claims.
 In physical deployments, these encodings correspond to different access conditions on the same underlying system: explicit tables correspond to fully exposed state/utility structure, succinct encodings correspond to compressed generative descriptions, and query regimes correspond to constrained measurement interfaces.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:physical-claim-transport}}{E,S+ETH,Qf,AR}
@@ -311,6 +317,8 @@ We say $R_1$ \emph{simulates} $R_2$ if there exists a polynomial-time transforme
 
 This paper uses that simulation spine in two explicit forms: restriction-map simulation (subproblem-to-full transfer; Proposition~\ref{prop:query-subproblem-transfer}) and oracle-transducer simulation (batch-to-entry transfer; Proposition~\ref{prop:oracle-lattice-transfer}).
 
+Informally: the same question can be easy or hard depending on representation and access, with explicit transfer requirements.
+
 \subsection{Model Contract and Regime Tags}\label{sec:model-contract}
 
 All theorem statements in this paper are typed by the following model contract:
@@ -340,7 +348,7 @@ For each claim, the active assumptions are exactly those appearing in its statem
 \end{remark}
 
 \begin{remark}[Modal Convention: Contract-Conditional Necessity]\label{rem:modal-should}
-In this paper, normative modal statements denote contract-conditional necessity: once an agent declares an objective/regime/assumption contract, admissible policy is fixed by typed admissibility and integrity under that contract.
+In this paper, normative modal statements denote contract-conditional necessity: once a physical-system model declares an objective/regime/assumption contract, admissible reports and interventions are fixed by typed admissibility and integrity under that contract.
 No unconditional external moral prescription is asserted.
 \end{remark}
 
@@ -411,6 +419,8 @@ For any substrate model that is consistent with the declared interface transitio
 
 \subsection{Physical-System Encoding and Theorem Transport}\label{sec:physical-transport}
 
+Formally: this subsection defines physical-to-core encoding and proves theorem transport via declared assumption maps.
+
 \begin{definition}[Physical-to-Core Encoding]\label{def:physical-core-encoding}
 Fix a physical instance class $\mathcal{P}$ and a core decision class $\mathcal{D}$. A \emph{physical-to-core encoding} is a map
 \[
@@ -418,6 +428,28 @@ E:\mathcal{P}\to\mathcal{D}.
 \]
 All physical claims below are typed relative to a declared encoding map $E$ and declared assumption transfer map from physical assumptions to core assumptions.
 \end{definition}
+
+\begin{definition}[Physical Scope Gate]\label{def:physical-scope-gate}
+A claim is in physical scope only if it declares:
+\begin{enumerate}
+\item a physical state class with observable coordinates,
+\item a physical-to-core encoding map \(E:\mathcal{P}\to\mathcal{D}\),
+\item calibrated measurement units for reported quantities (for example bits, joules, and \(kT\)-scaled bounds),
+\item a declared objective contract and admissible intervention class,
+\item an explicit physical-to-core assumption transfer map.
+\end{enumerate}
+Claims missing any item are untyped for theorem transport in this framework.
+\end{definition}
+
+\begin{proposition}[Typed Physical Transport Requirement]\label{prop:typed-physical-transport-requirement}
+Direct transfer of core theorems is licensed only through a declared physical scope gate instance (Definition~\ref{def:physical-scope-gate}) and a corresponding physical-to-core encoding (Definition~\ref{def:physical-core-encoding}). Absent that typed physical instance, transport is blocked by construction.
+\end{proposition}
+
+\begin{proof}
+By Definition~\ref{def:physical-scope-gate}, theorem transport is only defined for claims with explicit physical state, objective, intervention, encoding, and assumption-transfer declarations. Therefore untyped targets have no admissible transport map in this framework. Proposition~\ref{prop:physical-claim-transport} then applies only to typed instances.
+\end{proof}
+
+This scope gate is a typing rule, not a rhetorical caveat: the paper's transport theorems apply only after explicit encoding and assumption transfer are declared.\claimstamp{D\ref{def:physical-core-encoding},\ref{def:physical-scope-gate};P\ref{prop:typed-physical-transport-requirement},\ref{prop:physical-claim-transport}}{AR}
 
 \begin{proposition}[Heisenberg-Strong Binding Yields Nontrivial Decision Boundary]\label{prop:heisenberg-strong-nontrivial-opt}
 \claimstamp{P\ref{prop:heisenberg-strong-nontrivial-opt}}{AR}
@@ -427,7 +459,7 @@ Equivalently, under this declared physical ambiguity assumption, decision nontri
 \leanmeta{\LH{HS3}, \LH{HS5}, \LH{HS6}.}
 \end{proposition}
 
-\begin{proposition}[Conditional Physical Claim Transport]\label{prop:physical-claim-transport}
+\begin{proposition}[Physical Claim Transport]\label{prop:physical-claim-transport}
 Let $E:\mathcal{P}\to\mathcal{D}$ be an encoding. If
 \[
 \forall d\in\mathcal{D},\ \mathrm{CoreAssm}(d)\Rightarrow \mathrm{CoreClaim}(d)
@@ -500,6 +532,8 @@ Non-admissible represented adjacent classes (horizon, stochastic, transition-cou
 \end{tabularx}
 \end{center}
 
+Informally: physical conclusions apply when the stated physical assumptions line up with the core theorem assumptions.
+
 \subsection{Adjacent Objective Regimes and Bridge}
 
 \begin{definition}[Adjacent Sequential Objective Regime]\label{def:adjacent-sequential-regime}
@@ -507,7 +541,7 @@ An adjacent sequential objective instance consists of:
 \begin{itemize}
 \item finite action set $A$,
 \item finite coordinate state space $S = X_1 \times \cdots \times X_n$,
-\item horizon $T \in \mathbb{N}_{\ge 1}$ and history-dependent policy class,
+\item horizon $T \in \mathbb{N}_{\ge 1}$ and history-dependent control-law class,
 \item reward process $r_t$ and objective functional $J(\pi)$ (e.g., cumulative reward or regret).
 \end{itemize}
 \end{definition}
@@ -570,28 +604,30 @@ direct transfer of static sufficiency claims is licensed if and only if the clas
 \LH{CC8}.}
 \end{theorem}
 
-\begin{definition}[Agent Snapshot vs Agent Process Typing]\label{def:agent-snapshot-process}
+\begin{definition}[System Snapshot vs System Process Typing]\label{def:system-snapshot-process}
 Within the represented adjacent family, we type:
 \begin{itemize}
-\item \emph{agent snapshot}: fixed-parameter inference view (mapped to one-step deterministic class),
-\item \emph{agent process}: online/dynamical update views (horizon-extended, stochastic-criterion, or transition-coupled classes).
+\item \emph{system snapshot}: fixed-parameter inference view (mapped to one-step deterministic class),
+\item \emph{system process}: online/dynamical update views (horizon-extended, stochastic-criterion, or transition-coupled classes).
 \end{itemize}
 \end{definition}
 
 \begin{proposition}[Snapshot/Process Transfer Typing]\label{prop:snapshot-process-typing}
-In the represented adjacent family, direct transfer of static sufficiency claims is licensed if and only if the agent is typed as an \emph{agent snapshot}. Every process-typed represented class has an explicit mechanized bridge-failure witness.
+In the represented adjacent family, direct transfer of static sufficiency claims is licensed if and only if the system is typed as a \emph{system snapshot}. Every process-typed represented class has an explicit mechanized bridge-failure witness.
 \leanmeta{\LH{CC3},
 \LH{CC48},
 \LH{CC56}.}
 \end{proposition}
 
-Operationally: a trained model evaluated with fixed parameters during inference is an agent snapshot for this typing; once parameters or transition-relevant internals are updated online, the object is process-typed and transfer from static sufficiency theorems is blocked unless the one-step bridge conditions are re-established.\claimstamp{P\ref{prop:snapshot-process-typing}}{RA}
+Operationally: a fixed-parameter physical controller at runtime is a system snapshot for this typing; once parameters or transition-relevant internals are updated online, the object is process-typed and transfer from static sufficiency theorems is blocked unless the one-step bridge conditions are re-established.\claimstamp{P\ref{prop:snapshot-process-typing}}{RA}
 
 \section{Interpretive Foundations: Hardness and Solver Claims}\label{sec:interpretive-foundations}
 
 The claims in later applied sections are theorem-indexed consequences of this section and Sections~\ref{sec:hardness}--\ref{sec:tractable}.
 
 \subsection{Structural Complexity vs Representational Hardness}
+
+Formally: this subsection separates class placement from regime-indexed access cost and states typed completeness for the declared static family.
 
 \begin{definition}[Structural Complexity]\label{def:structural-complexity}
 For a fixed decision question (e.g., ``is $I$ sufficient for $\mathcal{D}$?''; see Remark~\ref{rem:question-vs-problem}), \emph{structural complexity} means its placement in standard complexity classes within the formal model (coNP, $\Sigma_2^P$, etc.), as established by class-membership arguments and reductions.
@@ -619,7 +655,11 @@ For the static sufficiency class fixed by C1--C4 and declared regime family $\ma
 \leanmeta{\LH{CC76}.}
 \end{theorem}
 
+Informally: the question stays fixed while representation changes cost, and the declared static regime set is fully covered.
+
 \subsection{Solver Integrity and Regime Competence}
+
+Formally: this subsection defines integrity, competence, typed report/evidence admissibility, and resource-bounded exact-claim limits.
 
 To keep practical corollaries type-safe, we separate \emph{integrity} (what a solver is allowed to assert) from \emph{competence} (what it can cover under a declared regime), following the certifying-algorithms schema \cite{mcconnell2010certifying,necula1997proof}.
 The induced-relation view used below is standard in complexity/computability presentations: algorithms are analyzed as machines deciding languages or computing functions/relations over encodings \cite{papadimitriou1994complexity,arora2009computational,forster2019verified}.
@@ -1238,6 +1278,8 @@ Hence admissible reporting must use $\mathsf{ABSTAIN}$ or explicitly weakened gu
 \leanmeta{\LH{CC38}.}
 \end{corollary}
 \claimstamp{P\ref{prop:physics-no-universal-exact};C\ref{cor:physics-no-universal-exact-claim}}{CR}
+
+Informally: honesty limits what you can claim, capability limits what you can solve, and hard regimes may require abstaining or using weaker exact claims.
 
 
 % Include the hardness proofs (already developed)

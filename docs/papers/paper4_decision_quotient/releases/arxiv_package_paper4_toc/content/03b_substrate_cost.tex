@@ -5,18 +5,18 @@ We extend the integrity-competence matrix from Paper 4 with substrate cost $\kap
 \subsection{Definition}
 
 \begin{definition}[Substrate Cost Function]\label{def:substrate-cost}
-$\kappa : (\text{MatrixCell} \times \text{AgentType}) \to (\mathbb{R}_{\ge 0}, \leq)$
+$\kappa : (\text{MatrixCell} \times \text{SubstrateType}) \to (\mathbb{R}_{\ge 0}, \leq)$
 
 Where:
 \begin{itemize}
 \item MatrixCell = (integrity, attempted, competenceAvailable) triple from Paper 4
-\item AgentType = opaque type representing substrate (silicon, carbon, formal system, etc.)
+\item SubstrateType = opaque type representing substrate (silicon, carbon, biochemical, etc.)
 \item The codomain is a totally ordered cost space
 \end{itemize}
 \end{definition}
 
 \begin{claim}{Verdict is substrate-independent}{th:substrate-independence-verdict}
-For all cells $c$ and agent types $\tau_1, \tau_2$:
+For all cells $c$ and substrate types $\tau_1, \tau_2$:
 \[
 \text{verdict}(c; \tau_1) = \text{verdict}(c; \tau_2).
 \]
@@ -26,7 +26,7 @@ For all cells $c$ and agent types $\tau_1, \tau_2$:
 \leanmeta{\LH{CC64}}
 
 \begin{claim}{Trajectory is substrate-dependent}{th:substrate-dependence-trajectory}
-There exist agent types $\tau_1, \tau_2$ and problem sequences $\sigma$ such that:
+There exist substrate types $\tau_1, \tau_2$ and problem sequences $\sigma$ such that:
 \[
 \text{trajectory}(\sigma; \tau_1) \neq \text{trajectory}(\sigma; \tau_2)
 \]
@@ -40,17 +40,17 @@ even though $\text{verdict}(\sigma_t; \tau_1) = \text{verdict}(\sigma_t; \tau_2)
 
 $\kappa$ is a placeholder for everything the $(A, S, U)$ tuple doesn't model:
 \begin{itemize}
-\item Memory
-\item Motivation
-\item Fatigue  
-\item Identity
-\item Embodiment
+\item interface latency / switching overhead
+\item thermal dissipation limits
+\item noise floor and correction burden
+\item material degradation rate
+\item energy-density constraints
 \end{itemize}
 
 We do NOT decompose $\kappa$. We acknowledge it exists, show where it enters the dynamics, and prove that the matrix verdict is $\kappa$-independent while the trajectory is $\kappa$-dependent.
 
 \begin{claim}{Minimal formal hook}{th:substrate-kappa-minimal}
-$\kappa(\text{cell}, \text{agentType})$ is the sufficient statistic of substrate for the trajectory problem.
+$\kappa(\text{cell}, \text{substrateType})$ is the sufficient statistic of substrate for the trajectory problem.
 \claimstamp{T\ref{th:substrate-kappa-minimal}}{RG}
 \end{claim}
 
@@ -58,7 +58,7 @@ $\kappa(\text{cell}, \text{agentType})$ is the sufficient statistic of substrate
 
 This is the clean separation: the model captures exactly the behaviorally relevant component of substrate, and nothing more.
 
-We do NOT prove that $\kappa$ captures all of subjective experience. We prove that $\kappa$ captures all of subjective experience that is \emph{decision-relevant}---i.e., that affects the agent's trajectory through the problem sequence.
+We do NOT claim that $\kappa$ captures every microscopic property of substrate physics. We claim that $\kappa$ captures the \emph{decision-relevant} substrate component that affects trajectory through the problem sequence.
 
 \subsection{Where Substrate Enters}
 
@@ -66,10 +66,10 @@ The matrix verdict is computed from (integrity, attempted, competenceAvailable).
 
 Substrate enters at exactly one point: the COST of being in a cell. This cost determines:
 \begin{itemize}
-\item Whether the agent attempts the next instance or rests
-\item How the agent allocates resources across a sequence
-\item The agent's effective learning rate (some substrates learn faster)
-\item The agent's abstention threshold (some substrates tolerate uncertainty better)
+\item Whether the system attempts the next instance or pauses
+\item How the system allocates resources across a sequence
+\item The effective adaptation rate under the substrate
+\item The abstention threshold under uncertainty and budget limits
 \end{itemize}
 
-This connects to Paper 5 (Credibility): $\kappa = \kappa_{\text{compute}} + \kappa_{\text{communicate}}$, where $\kappa_{\text{communicate}}$ is bounded by Paper 5's cheap talk framework.
+This connects to Paper 5 (Credibility): $\kappa = \kappa_{\text{compute}} + \kappa_{\text{communicate}}$, where $\kappa_{\text{communicate}}$ is bounded by costly/cheap signaling constraints.

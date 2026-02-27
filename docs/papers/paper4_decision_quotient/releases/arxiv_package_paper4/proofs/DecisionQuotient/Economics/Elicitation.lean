@@ -39,7 +39,9 @@ structure PolytimeElicitationMechanism (A S : Type*) (n : ℕ) [CoordinateSpace 
     ∀ (dp : FiniteDecisionProblem (A := A) (S := S)) (answers : List String),
       StructuredUtility (A := A) (S := S) dp → dp.isSufficient (aggregate answers)
 
-/-- Existence of a mechanism for structured utilities (stub). -/
+/-- Existence of a mechanism for structured utilities.
+    For structured utilities (state-invariant optimal actions), any set is sufficient,
+    so the trivial mechanism (ask nothing, return ∅) works. -/
 theorem polytime_elicitation_exists_structured
     : ∃ mech : PolytimeElicitationMechanism (A := A) (S := S) n,
         ∀ dp, StructuredUtility (A := A) (S := S) dp →

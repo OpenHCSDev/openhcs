@@ -42,6 +42,12 @@ where $\Opt_P = \arg\max_{a \in A} \mathbb{E}_{s \sim P}[U(a,s)]$.
 \textbf{STOCHASTIC-MINIMUM-SUFFICIENT-SET}: Given $\mathcal{D}_S$, find the minimal $I \subseteq \{1, \ldots, n\}$ that is stochastically sufficient.
 \end{decision}
 
+\begin{decision}\label{dec:stochastic-anchor-sufficiency-check}
+\textbf{STOCHASTIC-ANCHOR-SUFFICIENCY-CHECK}: Given stochastic decision problem $\mathcal{D}_S$ and coordinate set $I$, does there exist an anchor fiber whose conditional-optimal action is singleton and fiber-stable under agreement on $I$?
+\end{decision}
+
+\leanmeta{\LH{DC16},\LH{DC17},\LH{DC18}.}
+
 \subsection{Complexity: \PP-Completeness}
 
 \begin{theorem}[STOCHASTIC-SUFFICIENCY-CHECK is \PP-complete]\label{th:stochastic-sufficiency-pp}
@@ -49,6 +55,33 @@ STOCHASTIC-SUFFICIENCY-CHECK is \PP-complete.
 \claimstamp{T\ref{th:stochastic-sufficiency-pp}}{PP}
 \leanmeta{\LH{DC9}; membership: \LH{DC14}; hardness: \LH{DC15}.}
 \end{theorem}
+
+\begin{claim}{Stochastic anchor refinement}{prop:stochastic-anchor-refinement}
+If $I$ is stochastically sufficient, then $I$ is stochastically anchor-sufficient.
+\claimstamp{P\ref{prop:stochastic-anchor-refinement}}{PP}
+\end{claim}
+
+\leanmeta{\LH{DC19}.}
+
+\begin{claim}{Strict-side anchor reduction}{prop:stochastic-anchor-strict-reduction}
+For each formula $\varphi$ on $n \ge 1$ variables:
+\[
+\begin{aligned}
+\mathrm{StrictMAJSAT}(\varphi)
+\iff {} &
+\mathrm{STOCHASTIC\allowbreak-\allowbreak ANCHOR\allowbreak-\allowbreak SUFFICIENCY\allowbreak-\allowbreak CHECK}
+\bigl(\mathrm{reduceMAJSAT}(\varphi),\emptyset\bigr) \\
+& {}\land\;
+\Opt_{\mathrm{reduceMAJSAT}(\varphi)}=\{\mathrm{accept}\}.
+\end{aligned}
+\]
+\claimstamp{P\ref{prop:stochastic-anchor-strict-reduction}}{PP}
+\end{claim}
+
+\leanmeta{\LH{DC24},\LH{DC25},\LH{DC26}.}
+
+Observer-collapse closure for the stochastic anchor query is also mechanized: singleton effective-state structure yields global observational equivalence and, with seeded support, yields stochastic sufficiency and anchor-check truth under the declared hypotheses.
+\leanmeta{\LH{PA1},\LH{PA2},\LH{PA3},\LH{PA4},\LH{PA5},\LH{PA8},\LH{PA9}.}
 
 \begin{enumerate}
 \item \textbf{Membership in \PP}: Given $\mathcal{D}_S$ and $I$, we must check whether knowing $s_I$ determines the optimal action. This reduces to comparing expected utilities conditioned on $s_I$ versus unconditioned. For each action pair $(a, a')$, we compare:
@@ -92,6 +125,52 @@ Consider stochastic umbrella decision:
 \end{itemize}
 Expected utility: $E_P[U(\text{carry})] = 0.3(2) + 0.7(-1) = -0.1$, $E_P[U(\text{don't carry})] = 0.3(-2) + 0.7(0) = -0.6$. So carry is optimal. If we condition on forecast information, we check whether the conditional distribution changes the argmax.
 \end{example}
+
+\subsection{Potential and Physical Bounds}
+
+\begin{definition}[Potential Grounding]
+Let $\Phi : A \times S \to \mathbb{R}$ with grounding equation
+\[
+U(a,s) = -\Phi(a,s).
+\]
+Define expected action-potential
+\[
+\mathbb{E}[\Phi\mid a] := \sum_{s\in S} P(s)\,\Phi(a,s).
+\]
+\end{definition}
+
+\leanmeta{\LH{DC30},\LH{DC32}.}
+
+\begin{claim}{Expected-Utility/Potential Duality}{prop:stochastic-potential-duality}
+Under the grounding equation, for every action $a$:
+\[
+\mathbb{E}_{s\sim P}[U(a,s)] = -\,\mathbb{E}[\Phi\mid a],
+\]
+and for all $a,a'$:
+\[
+\mathbb{E}[U\mid a]\le \mathbb{E}[U\mid a']
+\iff
+\mathbb{E}[\Phi\mid a']\le \mathbb{E}[\Phi\mid a].
+\]
+\claimstamp{P\ref{prop:stochastic-potential-duality}}{PP}
+\end{claim}
+
+\leanmeta{\LH{DC31},\LH{DC33},\LH{DC34}.}
+
+\begin{claim}{Landauer Floor and State-Cardinality Specialization}{prop:stochastic-landauer-floor}
+For $T\ge 0$, the Landauer floor is nonnegative and monotone in erased bits:
+\[
+E_{\mathrm{L}}(b,T)\ge 0,\qquad
+b_1\le b_2 \implies E_{\mathrm{L}}(b_1,T)\le E_{\mathrm{L}}(b_2,T).
+\]
+At the room-temperature specialization used here:
+\[
+\mathrm{thermodynamicCost}(\mathcal{D}_S)=\mathrm{landauerConstant}\cdot |S|.
+\]
+\claimstamp{P\ref{prop:stochastic-landauer-floor}}{AR,H=cost-growth}
+\end{claim}
+
+\leanmeta{\LH{DC35},\LH{DC36},\LH{DC37}.}
 
 \subsection{Tractable Subcases}
 

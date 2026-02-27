@@ -19,6 +19,7 @@
 -/
 
 import DecisionQuotient.IntegrityCompetence
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 namespace DecisionQuotient
 namespace ThermodynamicLift
@@ -36,6 +37,31 @@ structure ThermoModel where
 def energyLowerBound (M : ThermoModel) (bitOpsLB : ℕ) : ℕ :=
   M.joulesPerBit * bitOpsLB
 
+/-- Landauer per-bit conversion in real units: `k_B * T * ln 2`. -/
+noncomputable def landauerJoulesPerBit (kB T : ℝ) : ℝ :=
+  kB * T * Real.log 2
+
+/-- Positivity of the Landauer conversion for positive Boltzmann constant and temperature. -/
+theorem landauerJoulesPerBit_pos {kB T : ℝ}
+    (hkB : 0 < kB) (hT : 0 < T) :
+    0 < landauerJoulesPerBit kB T := by
+  unfold landauerJoulesPerBit
+  have hlog2 : 0 < Real.log 2 := by
+    exact Real.log_pos (by norm_num : (1 : ℝ) < 2)
+  have hkT : 0 < kB * T := mul_pos hkB hT
+  exact mul_pos hkT hlog2
+
+/-- If a discrete thermodynamic model is calibrated to Landauer conversion,
+    positivity of `joulesPerBit` is derived, not postulated. -/
+theorem joulesPerBit_pos_of_landauer_calibration
+    (M : ThermoModel) {kB T : ℝ}
+    (hkB : 0 < kB) (hT : 0 < T)
+    (hCal : (M.joulesPerBit : ℝ) = landauerJoulesPerBit kB T) :
+    0 < M.joulesPerBit := by
+  have hLandauer : 0 < landauerJoulesPerBit kB T := landauerJoulesPerBit_pos hkB hT
+  have hCast : 0 < (M.joulesPerBit : ℝ) := by simpa [hCal] using hLandauer
+  exact_mod_cast hCast
+
 /-- Carbon lower bound induced by the same bit-operation lower bound. -/
 def carbonLowerBound (M : ThermoModel) (bitOpsLB : ℕ) : ℕ :=
   M.carbonPerJoule * energyLowerBound M bitOpsLB
@@ -48,6 +74,16 @@ theorem energy_lower_mandatory
     0 < energyLowerBound M b := by
   unfold energyLowerBound
   exact Nat.mul_pos hJ hb
+
+/-- Mandatory energy lower bound derived from Landauer calibration and positive
+    physical constants (`k_B > 0`, `T > 0`). -/
+theorem energy_lower_mandatory_of_landauer_calibration
+    (M : ThermoModel) {kB T : ℝ} {b : ℕ}
+    (hkB : 0 < kB) (hT : 0 < T)
+    (hCal : (M.joulesPerBit : ℝ) = landauerJoulesPerBit kB T)
+    (hb : 0 < b) :
+    0 < energyLowerBound M b := by
+  exact energy_lower_mandatory M (joulesPerBit_pos_of_landauer_calibration M hkB hT hCal) hb
 
 /-- Mandatory cost (carbon): under positive per-joule conversion and positive
 energy lower bound, carbon lower bound is strictly positive. -/

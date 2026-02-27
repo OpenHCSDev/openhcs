@@ -1,216 +1,42 @@
-\section{Lean Proof Listings}\label{appendix-lean}
+\section{Lean Proof Artifacts}\label{appendix-lean}
 
-Select Lean 4 proofs demonstrating machine-checked formalization.
+This appendix reports machine-check status and proof traceability directly from source and generated mapping artifacts.
 
-\subsection{On the Nature of Foundational Proofs}\label{foundational-proofs-nature}
+\subsection{Verification Status}
 
-Before presenting the proof listings, we address a potential misreading: a reader examining the Lean source code will notice that many proofs are remarkably short---sometimes just algebraic simplification or a direct application of definitions. This brevity is not a sign of triviality. It is characteristic of \emph{foundational} work, where the insight lies in the formalization, not the derivation.
-
-\textbf{Definitional vs. derivational proofs.} Our core theorems establish \emph{definitional} properties and algebraic relationships, not complex derivations. For example, Theorem 3.1 (Leverage Ordering is Antisymmetric) is proved by showing that if $A$ has higher leverage than $B$, then the inequality $C_A \times D_B > C_B \times D_A$ cannot simultaneously hold in the reverse direction. The proof follows from basic properties of arithmetic---it's an unfolding of what the inequality means, not a complex chain of reasoning.
-
-\textbf{Precedent in foundational CS.} This pattern appears throughout foundational computer science:
-
-\begin{itemize}
-\item \textbf{Turing's Halting Problem (1936):} The proof is a simple diagonal argument---perhaps 10 lines in modern notation. Yet it establishes a fundamental limit on computation that no future algorithm can overcome.
-\item \textbf{Brewer's CAP Theorem (2000):} The impossibility proof is straightforward: if a partition occurs, a system cannot be both consistent and available. The insight is in the \emph{formalization} of what consistency, availability, and partition-tolerance mean, not in the proof steps.
-\item \textbf{Arrow's Impossibility Theorem (1951):} Most voting systems violate basic fairness criteria. The proof is algebraic manipulation showing incompatible requirements. The profundity is in identifying the axioms, not deriving the contradiction.
-\end{itemize}
-
-\textbf{Why simplicity indicates strength.} A definitional theorem derived from precise formalization is \emph{stronger} than an empirical observation. When we prove that leverage ordering is transitive (Theorem 3.2), we are not saying ``all cases we examined show transitivity.'' We are saying something universal: \emph{any} leverage comparison must be transitive, because it follows from the algebraic properties of cross-multiplication. The proof is simple because the property is forced by the mathematics---there is no wiggle room.
-
-\textbf{Where the insight lies.} The semantic contribution of our formalization is:
-
-\begin{enumerate}
-\item \textbf{Precision forcing.} Formalizing ``leverage'' as $L = C/D$ in Lean requires stating exactly how to compare ratios using cross-multiplication (avoiding real division). This precision eliminates ambiguity about edge cases (what if $D = 0$? Answer: ruled out by $D > 0$ constraint in Architecture structure).
-
-\item \textbf{Compositionality.} Theorem 4.2 (Integration Theorem) proves that leverage \emph{multiplies} across decisions. This is not obvious from the definition---it requires proving that $L_{A+B} = L_A \times L_B$ for independent architectural decisions. The formalization forces us to state exactly what ``independent'' means.
-
-\item \textbf{Probability connection.} Theorem 5.4 (Expected Leverage Under Uncertainty) connects leverage to reliability theory. The proof shows that high-leverage patterns reduce expected modification cost more than low-leverage patterns when both are subject to identical error probabilities. This emerges from the formalization, not from intuition.
-\end{enumerate}
-
-\textbf{What machine-checking guarantees.} The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic arithmetic and probability theory). Zero \texttt{sorry} placeholders means zero unproven claims. The 1,634 lines establish a verified chain from basic definitions (Architecture, DOF, Capabilities) to the final theorems (Integration, Expected Leverage, Weighted Leverage). Reviewers need not trust our informal explanations---they can run \texttt{lake build} and verify the proofs themselves.
-
-\textbf{Comparison to informal architectural guidance.} Prior work on software architecture (Parnas~\cite{parnas1972criteria}, Garlan \& Shaw~\cite{garlan1993introduction}) provides compelling informal arguments about modularity and changeability but lacks machine-checked formalizations. Our contribution is not new \emph{wisdom}---the insight that reducing DOF and increasing capabilities are good is old. Our contribution is \emph{formalization}: making ``degrees of freedom'' and ``capabilities'' precise enough to mechanize, proving that leverage captures the tradeoff, and establishing that leverage is the \emph{right} metric (transitive, compositional, connects to probability).
-
-This follows the tradition of formalizing engineering principles: just as Liskov \& Wing~\cite{liskov1994behavioral} formalized behavioral subtyping and Cook et al.~\cite{cook1989inheritance} formalized inheritance semantics, we formalize architectural decision-making. The proofs are simple because the formalization makes the structure clear. Simple proofs from precise definitions are the goal, not a limitation.
-
-\subsection{Foundations Module}
-
-\begin{verbatim}
--- Leverage/Foundations.lean (excerpt)
-
-structure Architecture where
-  dof : Nat
-  capabilities : Nat
-  dof_pos : dof > 0
-
-def Architecture.higher_leverage (a b : Architecture) : Prop :=
-  a.capabilities * b.dof > b.capabilities * a.dof
-
-theorem dof_additive (a b : Architecture) :
-    (a.dof + b.dof) = a.dof + b.dof := rfl
-
-theorem capabilities_additive (a b : Architecture) :
-    (a.capabilities + b.capabilities) = a.capabilities + b.capabilities := rfl
-
-theorem higher_leverage_antisymm (a b : Architecture)
-    (hab : a.higher_leverage b) : ¬b.higher_leverage a := by
-  unfold higher_leverage at *
-  intro hba
-  have : a.capabilities * b.dof > b.capabilities * a.dof := hab
-  have : b.capabilities * a.dof > a.capabilities * b.dof := hba
-  exact Nat.lt_irrefl _ (Nat.lt_trans hab hba)
-\end{verbatim}
-
-\subsection{Probability Module}
-
-\begin{verbatim}
--- Leverage/Probability.lean (excerpt)
-
-/-- Map an architecture to its equivalent series system -/
-def Architecture.toSeriesSystem (a : Architecture) : SeriesSystem where
-  components := a.dof
-  components_pos := a.dof_pos
-
-/-- DOF-Reliability Isomorphism: DOF equals series system components -/
-theorem dof_reliability_isomorphism (a : Architecture) :
-    a.dof = a.toSeriesSystem.components := rfl
-
-/-- The isomorphism preserves failure ordering -/
-theorem isomorphism_preserves_failure_ordering (a₁ a₂ : Architecture)
-    (p : ErrorRate) (h_dof : a₁.dof < a₂.dof) (h_p : p.numerator > 0) :
-    (expected_errors a₁ p).1 < (expected_errors a₂ p).1 := by
-  simp only [expected_errors]
-  exact Nat.mul_lt_mul_of_pos_right h_dof h_p
-
-/-- Approximation error is O(n²p²) -/
-theorem approximation_error_bound (n : Nat) (p_num p_denom : Nat)
-    (h_n : n > 0) (h_denom : p_denom > 0) (h_valid : p_num < p_denom) :
-    n * n * p_num * p_num ≤ n * n * p_denom * p_denom := by
-  have h1 : p_num * p_num ≤ p_denom * p_denom := by
-    have := Nat.mul_le_mul (Nat.le_of_lt h_valid) (Nat.le_of_lt h_valid)
-    exact this
-  exact Nat.mul_le_mul_left (n * n) h1
-
-/-- DOF ratio predicts error ratio exactly -/
-theorem dof_ratio_predicts_error_ratio (a₁ a₂ : Architecture) (p : ErrorRate)
-    (h_p : p.numerator > 0) :
-    (expected_errors a₂ p).1 * a₁.dof = (expected_errors a₁ p).1 * a₂.dof := by
-  simp [expected_errors]; ring
-\end{verbatim}
-
-\subsection{Main Theorems Module}
-
-\begin{verbatim}
--- Leverage/Theorems.lean (excerpt)
-
-theorem leverage_error_tradeoff (a1 a2 : Architecture)
-    (h_caps : a1.capabilities = a2.capabilities)
-    (h_dof : a1.dof < a2.dof) (p_num p_denom : Nat) (hp : p_denom > 0) :
-    let (e1, d1) := error_probability a1.dof p_num p_denom
-    let (e2, d2) := error_probability a2.dof p_num p_denom
-    e1 * d2 < e2 * d1 := by
-  exact dof_error_monotone a1.dof a2.dof p_num p_denom hp h_dof
-
-theorem metaprogramming_dominance (base_caps n : Nat) (hn : n > 0) :
-    let meta : Architecture := { dof := 1, capabilities := base_caps + n,
-                                 dof_pos := by decide }
-    let manual : Architecture := { dof := n, capabilities := base_caps + n,
-                                   dof_pos := hn }
-    meta.higher_leverage manual := by
-  simp only [Architecture.higher_leverage]
-  exact Nat.mul_lt_mul_of_pos_left hn (Nat.add_pos_right base_caps hn)
-\end{verbatim}
-
-\subsection{Weighted Leverage Module (Key Result)}
-
-\begin{verbatim}
--- Leverage/WeightedLeverage.lean (excerpt)
-
-theorem higher_weighted_leverage_trans (a b c : WeightedDecision)
-    (hab : higher_weighted_leverage a b)
-    (hbc : higher_weighted_leverage b c) :
-    higher_weighted_leverage a c := by
-  -- Full algebraic proof using Nat.mul_assoc, Nat.mul_comm
-  -- and Nat.lt_of_mul_lt_mul_right (38 lines total)
-  ...
-  exact Nat.lt_of_mul_lt_mul_right h4
-
-theorem dof_one_pareto_optimal (a : WeightedDecision) (h : a.dof = 1) :
-    weighted_pareto_optimal a := by
-  unfold weighted_pareto_optimal pareto_dominated
-  intro ⟨b, _, h_dof⟩
-  rw [h] at h_dof
-  have := b.dof_pos
-  omega
-\end{verbatim}
-
-\subsection{$\lambda_{\text{DR}}$ Calculus Module}
-
-The core PL theory contribution: a calculus characterizing SSOT-capable languages.
-
-\begin{verbatim}
--- LambdaDR.lean (excerpt)
-
-/-- Language capabilities for SSOT -/
-structure LangCap where
-  hasDefHook : Bool      -- Execute code at definition time
-  hasIntrospection : Bool -- Query type hierarchy at runtime
-
-/-- SSOT-complete IFF both capabilities present -/
-def ssotComplete (lang : LangCap) : Prop :=
-  lang.hasDefHook ∧ lang.hasIntrospection
-
-/-- The core biconditional: SSOT IFF (defHook ∧ introspection) -/
-theorem ssot_iff_both_capabilities (lang : LangCap) :
-    ssotComplete lang ↔ (lang.hasDefHook ∧ lang.hasIntrospection) := rfl
-
-/-- Neither capability alone suffices -/
-theorem capabilities_independent :
-    ¬ssotComplete noHooks ∧ ¬ssotComplete noIntro := by
-  simp [ssotComplete, noHooks, noIntro]
-
-/-- Complexity gap is unbounded: O(1) vs O(n) -/
-theorem complexity_gap_unbounded :
-    ∀ k : Nat, ∃ n : Nat,
-      modComplexity minimal n - modComplexity fullLambdaDR n ≥ k := by
-  intro k; use k + 1
-  simp [modComplexity, ssotComplete, fullLambdaDR, minimal]; omega
-
-/-- Python unique among TIOBE top-10 -/
-theorem python_unique_mainstream : ssotViableInTiobe.length = 1 := by
-  native_decide
-
-/-- Four fragments partition all languages -/
-theorem fragment_partition (lang : LangCap) :
-    lang = fullLambdaDR ∨ lang = noHooks ∨
-    lang = noIntro ∨ lang = minimal := by
-  cases h1 : lang.hasDefHook <;> cases h2 : lang.hasIntrospection
-  -- ... exhaustive case analysis
-\end{verbatim}
-
-\subsection{Verification Summary}\label{sec:lean-summary}
+\noindent\textbf{Lean summary:} \LeanTotalLines{} lines, \LeanTotalTheorems{} theorems/lemmas, \LeanTotalSorry{} \texttt{sorry}, across \LeanTotalFiles{} files.
 
 \begin{center}
 \begin{tabular}{lcc}
 \toprule
-\textbf{File} & \textbf{Lines} & \textbf{Defs/Theorems} \\
+\textbf{File} & \textbf{Lines} & \textbf{Theorems/Lemmas} \\
 \midrule
-Foundations.lean & 194 & 22 \\
-Probability.lean & 316 & 24 \\
-Theorems.lean & 303 & 20 \\
-SSOT.lean & 192 & 18 \\
-Typing.lean & 209 & 23 \\
-Examples.lean & 184 & 14 \\
-WeightedLeverage.lean & 348 & 25 \\
-LambdaDR.lean & 343 & 28 \\
+\texttt{LambdaDR.lean} & \LeanLinesLambdaDR & \LeanTheoremsLambdaDR \\
+\texttt{Leverage.lean} & \LeanLinesLeverage & \LeanTheoremsLeverage \\
+\texttt{Leverage/Foundations.lean} & \LeanLinesLeverageFoundations & \LeanTheoremsLeverageFoundations \\
+\texttt{Leverage/Probability.lean} & \LeanLinesLeverageProbability & \LeanTheoremsLeverageProbability \\
+\texttt{Leverage/Theorems.lean} & \LeanLinesLeverageTheorems & \LeanTheoremsLeverageTheorems \\
+\texttt{Leverage/SSOT.lean} & \LeanLinesLeverageSSOT & \LeanTheoremsLeverageSSOT \\
+\texttt{Leverage/Typing.lean} & \LeanLinesLeverageTyping & \LeanTheoremsLeverageTyping \\
+\texttt{Leverage/Examples.lean} & \LeanLinesLeverageExamples & \LeanTheoremsLeverageExamples \\
+\texttt{Leverage/WeightedLeverage.lean} & \LeanLinesLeverageWeightedLeverage & \LeanTheoremsLeverageWeightedLeverage \\
+\texttt{lakefile.lean} & \LeanLinesLakefile & \LeanTheoremsLakefile \\
 \midrule
-\textbf{Total} & \textbf{2,089} & \textbf{174} \\
+\textbf{Total} & \textbf{\LeanTotalLines} & \textbf{\LeanTotalTheorems} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\textbf{All 174 definitions/theorems compile without \texttt{sorry} placeholders.} The proofs can be verified by running \texttt{lake build} in the \texttt{proofs/} directory. Every theorem in this paper corresponds to a machine-checked proof.
+\noindent Build command: \texttt{cd proofs \&\& lake build}
 
-\textbf{Complete source:} \texttt{proofs/Leverage/} (7 modules) + \texttt{proofs/LambdaDR.lean}.
+\subsection{Claim Coverage Matrix}
 
+\input{content/claim_mapping_auto.tex}
+
+\subsection{Lean Handle Map}
+
+\input{content/lean_handle_ids_auto.tex}
+
+\subsection{Proof Hardness Index}
+
+\input{content/proof_hardness_index_auto.tex}

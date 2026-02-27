@@ -33,44 +33,20 @@ L = \frac{|\text{Capabilities}|}{\text{DOF}}
 
 \subsection{DOF-Reliability Isomorphism}
 
-\begin{theorem}[Structure Preservation]\label{thm:dof-reliability}
-Define $\phi: \text{Architecture} \to \text{SeriesSystem}$ by $\phi(A) = (\text{DOF}(A), p)$ where $p$ is per-component error rate. Then:
+\textbf{Preview of Section~\ref{probability-model}.}
+The formal results establish:
 \begin{enumerate}
-\item $\phi$ is injective on architectures with equal capabilities
-\item $\phi$ preserves ordering: $\text{DOF}(A_1) < \text{DOF}(A_2) \iff P_{\text{error}}(\phi(A_1)) < P_{\text{error}}(\phi(A_2))$
-\item $\phi$ preserves composition: $\phi(A_1 \oplus A_2) = \phi(A_1) + \phi(A_2)$ (series connection)
+\item DOF-reliability isomorphism and round-trip identity (Theorem~\ref{thm:dof-reliability})
+\item Exact ordering preservation for linear vs. series error models (Theorem~\ref{thm:approx-bound})
+\item Quantitative leverage-gap identities for expected modification/error ratios (Theorem~\ref{thm:leverage-gap})
+\item Physical edit-energy floor with explicit positive per-edit conversion constant (Theorem~\ref{thm:physical-energy-floor})
+\item Budget feasibility boundary and explicit assumption-necessity witnesses (Theorem~\ref{thm:physical-budget-boundary}, Corollary~\ref{cor:physical-assumption-necessity})
 \end{enumerate}
-where $P_{\text{error}}(n, p) = 1 - (1-p)^n$ (standard reliability theory~\cite{patterson2013computer}).
-\end{theorem}
-
-\begin{theorem}[Linear Approximation]\label{thm:approx-bound}
-For $p \in (0, 0.05)$ and $n < 100$:
-\[
-\left|P_{\text{error}}(n, p) - np\right| < 0.025n^2p^2
-\]
-The linear model $P_{\text{error}}(n, p) \approx np$ preserves all pairwise orderings in this regime.
-\end{theorem}
-
-\begin{proof}
-Taylor expansion: $(1-p)^n = 1 - np + \binom{n}{2}p^2 - \cdots$. For $p < 0.05$, higher-order terms $< 0.025n^2p^2$. Ordering preservation: if $n_1 < n_2$, then $n_1p < n_2p$ (strict monotonicity).
-\end{proof}
 
 \subsection{Leverage Gap}
 
-\begin{theorem}[Modification Complexity]\label{thm:leverage-gap}
-For architectures $A_1, A_2$ with $\text{Capabilities}(A_1) = \text{Capabilities}(A_2)$:
-\[
-\mathbb{E}[\text{Modifications}(A_i)] = \text{DOF}(A_i) \cdot \Pr[\text{fact } F \text{ changes}]
-\]
-Therefore:
-\[
-\frac{\mathbb{E}[\text{Modifications}(A_2)]}{\mathbb{E}[\text{Modifications}(A_1)]} = \frac{\text{DOF}(A_2)}{\text{DOF}(A_1)}
-\]
-\end{theorem}
-
-\begin{proof}
-Each DOF is an independent modification point. When fact $F$ changes, each location encoding $F$ requires update. Expected modifications = (number of locations) $\times$ (probability of change).
-\end{proof}
+\textbf{Interpretation.}
+Given equal capabilities, DOF reduction simultaneously improves expected error and expected modification cost by the same ratio; Section~\ref{probability-model} formalizes this identity.
 
 \subsection{Building on Prior Results}
 
@@ -83,21 +59,7 @@ This paper does not \emph{subsume} Papers 1 and 2---it \emph{builds on} their ep
 \item \textbf{This paper} provides the optimization criterion \emph{within} the coherence constraint
 \end{enumerate}
 
-\begin{theorem}[Paper 2 Integration]\label{thm:paper2-instance}
-Paper 2's SSOT theorem is the coherence foundation. This paper adds: given DOF = 1 per fact (coherence), how do we compare architectures? Answer: by leverage.
-\end{theorem}
-
-\begin{proof}
-Paper 2 proves: $\text{DOF} > 1$ for a fact $F$ implies oracles can diverge (incoherence). Therefore coherent architecture requires $\text{DOF}(F) = 1$ for each fact $F$. Given this constraint, architectures differ in how many capabilities they derive from coherent representation. This ratio is leverage.
-\end{proof}
-
-\begin{theorem}[Paper 1 Integration]\label{thm:paper1-instance}
-Paper 1's axis orthogonality theorem enables error independence. Nominal typing achieves higher leverage than duck typing because it provides 4 additional capabilities (provenance, identity, enumeration, conflict resolution) without increasing DOF.
-\end{theorem}
-
-\begin{proof}
-By Paper 1, axes are orthogonal, so errors are independent (Theorem~\ref{thm:error-independence}). Nominal typing adds 4 B-dependent capabilities impossible with duck typing. DOF is comparable (both are type systems with similar annotation burden). Therefore $L_{\text{nominal}} = (c+4)/d > c/d = L_{\text{duck}}$.
-\end{proof}
+Paper 2 supplies the coherence constraint (DOF = 1 per structural fact); this paper supplies the optimization rule inside that feasible set (maximize leverage). Paper 1 supplies axis orthogonality; this paper transports that structure into an explicit probabilistic ordering over architectures.
 
 \subsection{Organization}
 
@@ -114,34 +76,11 @@ Section~\ref{foundations} defines Architecture, DOF, Capabilities, and Leverage.
 \end{itemize}
 
 \textbf{Scope:}
-Leverage characterizes the capability-to-DOF ratio. Performance, security, and other dimensions remain orthogonal concerns. The framework applies when requirements permit multiple architectural choices with different DOF. Error independence is \emph{derived} from Paper 1's axis orthogonality theorem, not assumed.
+Leverage characterizes the capability-to-DOF ratio. Performance, security, and other dimensions remain orthogonal concerns. The framework applies when requirements permit multiple architectural choices with different DOF. Error independence is \emph{derived} from Paper 1's axis orthogonality theorem, not assumed. Physical edit-energy claims use a single explicit calibration constant (`joulesPerEdit > 0`) and no additional architectural axioms.
 
 \subsection{Roadmap}
 
 Section 2 provides formal foundations (definitions). Section 3 derives the probability model from Papers 1 and 2. Section 4 proves main theorems. Section 5 presents instances (SSOT, typing, microservices, APIs, configuration, databases). Section 6 demonstrates practical application via before/after examples. Section 7 surveys related work. Section 8 concludes.
 
-\subsection{Anticipated Objections}\label{sec:objection-summary}
-
-Before proceeding, we address objections readers are likely forming. Each is refuted in detail in Appendix~\ref{appendix-rebuttals}; here we summarize the key points.
-
-\paragraph{``Leverage is just a heuristic, not rigorous.''}
-Leverage is \emph{formally defined} (Definition 1.4) and \emph{machine-checked} in Lean 4. Theorem 3.1 \emph{proves} that maximizing leverage minimizes error probability. The contribution is 1,463 lines of Lean proofs with zero \texttt{sorry} placeholders.
-
-\paragraph{``Different domains need different metrics.''}
-The framework is domain-agnostic. We demonstrate instances across programming languages (SSOT, nominal typing), system architecture (microservices), API design (REST), configuration (convention vs explicit), and database design (normalization). The same principle ($L = |\text{Cap}|/\text{DOF}$) applies universally.
-
-\paragraph{``Capabilities can't be quantified.''}
-We don't need absolute quantification. Theorem 3.1 requires only \emph{relative ordering}: if capabilities are equal and DOF differs, the lower-DOF architecture has higher leverage. For architectures with different capabilities, we count cardinality.
-
-\paragraph{``The independence assumption is unrealistic.''}
-Axiom 2.1 (independent errors) is clearly stated. Even with correlated errors (coefficient $\rho$), error probability remains monotonically increasing in DOF. High-leverage architectures remain preferable. Extension to correlated errors is noted as future work.
-
-\paragraph{``Performance matters more than error probability.''}
-We agree. The framework addresses \emph{one dimension}: error probability. Multi-objective optimization (Pareto frontier over leverage, performance, security) is recommended for full architectural evaluation. For domains where correctness dominates (safety-critical, financial), leverage should be primary.
-
-\paragraph{``The proofs are trivial.''}
-The value is not in difficulty but in \emph{existence}. Machine-checked proofs provide precision (every step explicit), verification (computer-checked), and reproducibility (anyone can run them). ``Trivial'' proofs that compile are more valuable than ``deep'' proofs with errors.
-
-\medskip
-\noindent\textbf{If you have an objection not listed above,} check Appendix~\ref{appendix-rebuttals} (8 objections addressed) before concluding it has not been considered.
-
+% Anticipated objections and rebuttals removed to maintain consistent, assertive tone.
+% See Appendix~\ref{appendix-assumptions} for concise notes on model assumptions and extensions.

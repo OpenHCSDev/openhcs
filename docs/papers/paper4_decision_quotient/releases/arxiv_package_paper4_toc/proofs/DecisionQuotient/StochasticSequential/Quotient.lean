@@ -150,6 +150,19 @@ theorem fiberOpt_of_agreeOn {A S : Type*} [Fintype A] [Fintype S] {n : ℕ}
         fiberExpectedUtility_of_agreeOn P I s s' hagree a']
     exact h a'
 
+theorem stochastic_anchor_sufficient_of_stochastic_sufficient
+    {A S : Type*} {n : ℕ} [Fintype A] [Fintype S] [DecidableEq A]
+    [CoordinateSpace S n] [Nonempty S]
+    (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) :
+    StochasticSufficient P I → StochasticAnchorSufficient P I := by
+  intro hSuff
+  let s₀ : S := Classical.arbitrary S
+  rcases hSuff s₀ with ⟨a, ha⟩
+  refine ⟨s₀, a, ha, ?_⟩
+  intro s hs
+  have hEq : fiberOpt P I s = fiberOpt P I s₀ := fiberOpt_of_agreeOn P I s s₀ hs
+  simpa [ha] using hEq
+
 /-- Observing more coordinates (J ⊇ I) and agreeing on those yields I-equivalence.
     This is the correct form of quotient refinement: agreeOn J → stochasticDecisionEquiv I.
 

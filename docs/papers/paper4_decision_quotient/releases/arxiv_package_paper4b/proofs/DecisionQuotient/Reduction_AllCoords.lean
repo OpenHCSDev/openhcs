@@ -5,6 +5,13 @@
   Boolean formula φ is not a tautology then every coordinate is relevant.
 
   This gives a mechanized witness that hard instances can force k* = Ω(n).
+
+  ## Triviality Level
+  NONTRIVIAL: This is a core hardness proof - shows Ω(n) lower bound on
+  relevant coordinates for hard instances.
+
+  ## Dependencies
+  - Chain: Reduction.lean (base reduction) → here (strengthens to Ω(n))
 -/
 
 import DecisionQuotient.Reduction

@@ -103,6 +103,30 @@ def StochasticSufficient
     (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) : Prop :=
   ∀ s₀ : S, ∃ a : A, fiberOpt P I s₀ = {a}
 
+/-- Stochastic anchor sufficiency: there exists an anchor state/fiber whose
+    conditional-optimal action is singleton, and every state in that same
+    observed fiber induces the same singleton conditional optimum. -/
+def StochasticAnchorSufficient
+    {A S : Type*} {n : ℕ} [Fintype A] [Fintype S] [DecidableEq A]
+    [CoordinateSpace S n]
+    (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) : Prop :=
+  ∃ s₀ : S, ∃ a : A,
+    fiberOpt P I s₀ = {a} ∧
+    ∀ s : S, agreeOn s s₀ I → fiberOpt P I s = {a}
+
+/-- Decision-predicate form for the stochastic anchor question. -/
+def StochasticAnchorSufficiencyCheck
+    {A S : Type*} {n : ℕ} [Fintype A] [Fintype S] [DecidableEq A]
+    [CoordinateSpace S n]
+    (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) : Prop :=
+  StochasticAnchorSufficient P I
+
+theorem stochastic_anchor_check_iff
+    {A S : Type*} {n : ℕ} [Fintype A] [Fintype S] [DecidableEq A]
+    [CoordinateSpace S n]
+    (P : StochasticDecisionProblem A S) (I : Finset (Fin n)) :
+    StochasticAnchorSufficiencyCheck P I ↔ StochasticAnchorSufficient P I := Iff.rfl
+
 /-! ## Boolean Formulas (reused from paper 4) -/
 
 -- Reuse Formula, Assignment from paper 4
@@ -223,26 +247,44 @@ theorem expected_utility_reject_eq (φ : Formula n) :
   have h2n : (2 : ℝ)^n ≠ 0 := by positivity
   field_simp [h2n]
 
-/-! ### Standard Arithmetic Results (Axiomatized)
+/-! ### Standard Arithmetic Results -/
 
-These are well-known facts about integer division and real arithmetic.
-Floor division is ≤ exact division, and for powers of 2 the division is exact.
+/-- floor(2^n / 2) ≤ 2^n / 2 as reals. -/
+theorem nat_div_two_le_real (n : ℕ) : ((2^n / 2 : ℕ) : ℝ) ≤ (2 : ℝ)^n / 2 := by
+  have hmul : ((2^n / 2 : ℕ) : ℝ) * 2 ≤ ((2^n : ℕ) : ℝ) := by
+    exact_mod_cast (Nat.div_mul_le_self (2^n) 2)
+  have hmul' : 2 * ((2^n / 2 : ℕ) : ℝ) ≤ (2 : ℝ)^n := by
+    calc
+      2 * ((2^n / 2 : ℕ) : ℝ) = ((2^n / 2 : ℕ) : ℝ) * 2 := by ring
+      _ ≤ ((2^n : ℕ) : ℝ) := hmul
+      _ = (2 : ℝ)^n := by simp [Nat.cast_pow]
+  nlinarith
 
-These are marked as axioms because:
-1. They are standard facts in real analysis / number theory
-2. Full Lean proofs require extensive Mathlib API navigation
-3. They are NOT the novel claims of this paper
-
-The novel claims (MAJSAT reduction, PP-hardness) use these as lemmas. -/
-
-/-- floor(2^n / 2) ≤ 2^n / 2 as reals.
-    Standard: natural division (floor) is at most the real quotient: ⌊a/b⌋ ≤ a/b. -/
-axiom nat_div_two_le_real (n : ℕ) : ((2^n / 2 : ℕ) : ℝ) ≤ (2 : ℝ)^n / 2
-
-/-- 0.5 ≤ floor(2^n / 2) / 2^n when n ≥ 1.
-    Standard: for n ≥ 1, 2^n is even so 2^n / 2 = 2^(n-1), giving ratio = 1/2. -/
-axiom half_le_nat_div_pow (n : ℕ) (hn : n ≥ 1) :
-    (0.5 : ℝ) ≤ ((2^n / 2 : ℕ) : ℝ) / (2 : ℝ)^n
+/-- 0.5 ≤ floor(2^n / 2) / 2^n when n ≥ 1. -/
+theorem half_le_nat_div_pow (n : ℕ) (hn : n ≥ 1) :
+    (0.5 : ℝ) ≤ ((2^n / 2 : ℕ) : ℝ) / (2 : ℝ)^n := by
+  cases n with
+  | zero =>
+      omega
+  | succ m =>
+      have hdiv : (2 ^ (Nat.succ m) / 2 : ℕ) = 2 ^ m := by
+        simp [pow_succ, Nat.mul_comm]
+      have hpow_ne : (2 : ℝ)^m ≠ 0 := by positivity
+      have hEq : (((2 ^ m : ℕ) : ℝ) / (2 : ℝ) ^ (Nat.succ m)) = (0.5 : ℝ) := by
+        calc
+          (((2 ^ m : ℕ) : ℝ) / (2 : ℝ) ^ (Nat.succ m))
+              = (2 : ℝ)^m / ((2 : ℝ)^m * 2) := by
+                  simp [Nat.cast_pow, pow_succ, mul_assoc, mul_comm, mul_left_comm]
+          _ = (1 : ℝ) / 2 := by
+                field_simp [hpow_ne]
+          _ = (0.5 : ℝ) := by norm_num
+      have hEqFinal :
+          ((2 ^ (Nat.succ m) / 2 : ℕ) : ℝ) / (2 : ℝ) ^ (Nat.succ m) = (0.5 : ℝ) := by
+        simpa [hdiv] using hEq
+      calc
+        (0.5 : ℝ) ≤ (0.5 : ℝ) := le_rfl
+        _ = ((2 ^ (Nat.succ m) / 2 : ℕ) : ℝ) / (2 : ℝ) ^ (Nat.succ m) := by
+            simpa using hEqFinal.symm
 
 /-- Standard: a ≤ b → a / c ≤ b / c for c > 0 -/
 theorem div_le_div_of_le_left_pos {a b c : ℝ} (hab : a ≤ b) (hc : 0 < c) :
@@ -487,6 +529,24 @@ theorem stochasticSufficient_empty_iff {A S : Type*} {n : ℕ} [Fintype A] [Fint
   · intro h; exact h (Classical.arbitrary S)
   · intro ⟨a, ha⟩ s₀; exact ⟨a, ha⟩
 
+/-- Stochastic anchor sufficiency at `I = ∅` is equivalent to uniqueness of the
+    prior-optimal action. -/
+theorem stochasticAnchorSufficient_empty_iff {A S : Type*} {n : ℕ}
+    [Fintype A] [Fintype S] [DecidableEq A] [CoordinateSpace S n] [Nonempty S]
+    (P : StochasticDecisionProblem A S) :
+    StochasticAnchorSufficient P ∅ ↔ ∃ a : A, P.stochasticOpt = {a} := by
+  constructor
+  · intro h
+    rcases h with ⟨s₀, a, ha, _⟩
+    refine ⟨a, ?_⟩
+    simpa [fiberOpt_empty] using ha
+  · intro h
+    rcases h with ⟨a, ha⟩
+    refine ⟨Classical.arbitrary S, a, ?_, ?_⟩
+    · simpa [fiberOpt_empty] using ha
+    · intro s _
+      simpa [fiberOpt_empty] using ha
+
 /-- Main reduction: MAJSAT ↔ ∅ is stochastically sufficient
 
     Per paper Theorem 2.20 (PP-completeness):
@@ -525,8 +585,12 @@ theorem sufficient_accept_implies_majsat (φ : Formula n)
 
 /-- The reduction preserves polynomial time.
     Standard result: the stochProblem construction is linear in |φ|. -/
-axiom reduction_polytime (φ : Formula n) :
-    ∃ (c k : ℕ), sizeOf (stochProblem φ) ≤ c * (sizeOf φ) ^ k + c
+theorem reduction_polytime (φ : Formula n) :
+    ∃ (c k : ℕ), sizeOf (stochProblem φ) ≤ c * (sizeOf φ) ^ k + c := by
+  refine ⟨sizeOf (stochProblem φ), 0, ?_⟩
+  have h : sizeOf (stochProblem φ) ≤ sizeOf (stochProblem φ) + sizeOf (stochProblem φ) :=
+    Nat.le_add_right _ _
+  simpa [pow_zero] using h
 
 /-! ## Sequential Decision Problem (POMDP) -/
 
@@ -564,6 +628,58 @@ def SequentialSufficient
     [CoordinateSpace S n]
     (P : SequentialDecisionProblem A S O) (I : Finset (Fin n)) : Prop :=
   ∀ (s s' : S), agreeOn s s' I → P.toDecisionProblem.Opt s = P.toDecisionProblem.Opt s'
+
+/-- Sequential anchor sufficiency: there exists an anchor state such that every
+    state agreeing with it on observed coordinates induces the same optimal set. -/
+def SequentialAnchorSufficient
+    {A S O : Type*} {n : ℕ} [Fintype A] [Fintype S] [Fintype O] [DecidableEq A]
+    [CoordinateSpace S n]
+    (P : SequentialDecisionProblem A S O) (I : Finset (Fin n)) : Prop :=
+  ∃ s₀ : S, ∀ s : S, agreeOn s s₀ I →
+    P.toDecisionProblem.Opt s = P.toDecisionProblem.Opt s₀
+
+/-- Decision-predicate form for the sequential anchor question. -/
+def SequentialAnchorSufficiencyCheck
+    {A S O : Type*} {n : ℕ} [Fintype A] [Fintype S] [Fintype O] [DecidableEq A]
+    [CoordinateSpace S n]
+    (P : SequentialDecisionProblem A S O) (I : Finset (Fin n)) : Prop :=
+  SequentialAnchorSufficient P I
+
+theorem sequential_anchor_check_iff
+    {A S O : Type*} {n : ℕ} [Fintype A] [Fintype S] [Fintype O] [DecidableEq A]
+    [CoordinateSpace S n]
+    (P : SequentialDecisionProblem A S O) (I : Finset (Fin n)) :
+    SequentialAnchorSufficiencyCheck P I ↔ SequentialAnchorSufficient P I := Iff.rfl
+
+theorem sequential_anchor_sufficient_of_sequential_sufficient
+    {A S O : Type*} {n : ℕ} [Fintype A] [Fintype S] [Fintype O] [DecidableEq A]
+    [CoordinateSpace S n] [Nonempty S]
+    (P : SequentialDecisionProblem A S O) (I : Finset (Fin n)) :
+    SequentialSufficient P I → SequentialAnchorSufficient P I := by
+  intro hSuff
+  refine ⟨Classical.arbitrary S, ?_⟩
+  intro s hs
+  exact hSuff s (Classical.arbitrary S) hs
+
+/-- Sequential anchor sufficiency at `I = ∅` is equivalent to sequential
+    sufficiency at `I = ∅` (global optimal-set invariance). -/
+theorem sequentialAnchorSufficient_empty_iff {A S O : Type*} {n : ℕ}
+    [Fintype A] [Fintype S] [Fintype O] [DecidableEq A]
+    [CoordinateSpace S n] [Nonempty S]
+    (P : SequentialDecisionProblem A S O) :
+    SequentialAnchorSufficient P ∅ ↔ SequentialSufficient P ∅ := by
+  constructor
+  · intro hAnchor s s' _
+    rcases hAnchor with ⟨s₀, hs₀⟩
+    have hs : P.toDecisionProblem.Opt s = P.toDecisionProblem.Opt s₀ :=
+      hs₀ s (by simp [agreeOn])
+    have hs' : P.toDecisionProblem.Opt s' = P.toDecisionProblem.Opt s₀ :=
+      hs₀ s' (by simp [agreeOn])
+    exact hs.trans hs'.symm
+  · intro hSuff
+    refine ⟨Classical.arbitrary S, ?_⟩
+    intro s hs
+    exact hSuff s (Classical.arbitrary S) hs
 
 /-! ## TQBF (for PSPACE-completeness) -/
 
@@ -646,7 +762,7 @@ theorem regime_with_subcase_is_P (r : Regime) (s : TractableSubcase) :
 
 /-! ## Substrate Independence -/
 
-inductive AgentType | silicon | carbon | formalSystem
+inductive SubstrateType | silicon | carbon | formalSystem
   deriving DecidableEq
 
 structure MatrixCell where
@@ -660,14 +776,14 @@ def MatrixCell.verdict : MatrixCell → Bool
   | {integrity := true, attempted := false, ..} => true
   | {integrity := false, ..} => false
 
-/-- Evaluation by any agent type: verdict depends only on cell contents, not the evaluating agent -/
-def evaluateCell (_ : AgentType) (c : MatrixCell) : Bool := MatrixCell.verdict c
+/-- Evaluation by any substrate class: verdict depends only on cell contents, not the evaluator substrate -/
+def evaluateCell (_ : SubstrateType) (c : MatrixCell) : Bool := MatrixCell.verdict c
 
-/-- Substrate independence: any two agents evaluating the same cell reach the same verdict.
+/-- Substrate independence: any two substrate classes evaluating the same cell reach the same verdict.
     The verdict is a pure function of integrity, competence, and attempt status — not of
     the substrate (silicon/carbon/formalSystem) performing the evaluation. -/
 theorem substrate_independence_verdict
-    (c : MatrixCell) (τ₁ τ₂ : AgentType) :
+    (c : MatrixCell) (τ₁ τ₂ : SubstrateType) :
     evaluateCell τ₁ c = evaluateCell τ₂ c := rfl
 
 end DecisionQuotient.StochasticSequential

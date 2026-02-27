@@ -7,11 +7,16 @@
 
   ## Structure
   1. PROVEN: Discrete state + dynamics → discrete effective time (transition points)
-  2. AXIOM: Lorentz invariance (cite: Einstein 1905, Minkowski 1908)
-  3. DERIVED: Discrete time + Lorentz → discrete space (cite: Snyder 1947)
-  4. AXIOM: Planck scale uniqueness from dimensional analysis (cite: Planck 1899)
-  5. AXIOM: Landauer bound (cite: Landauer 1961, Bennett 2003)
-  6. LINK: Connect to ThermodynamicLift.lean
+  2. THEOREM: Lorentz compatibility — discrete time ↔ discrete space at same scale
+              (trivial in ℕ; calibration handled explicitly below)
+              cite: Einstein 1905, Minkowski 1908, Snyder 1947
+  3. THEOREM: Planck-scale uniqueness under declared calibration
+              and explicit non-uniqueness without calibration
+              cite: Planck 1899 (calibration source)
+  4. THEOREM: Landauer bound — provable from linear energy model (Nat.mul_pos)
+              Physical content is in the declared constant joulesPerBit > 0
+              cite: Landauer 1961, Bennett 2003
+  5. LINK: Connect to ThermodynamicLift.lean
 
   ## Philosophy
   Each step is simple. The composition derives thermodynamics from computation.
@@ -107,10 +112,13 @@ theorem nontrivial_implies_bit_operation
   unfold isTransitionPoint trajectory
   exact hs
 
-/-! ## Part 2: Lorentz Invariance (AXIOM - cite Einstein 1905, Minkowski 1908)
+/-! ## Part 2: Lorentz Invariance (cite Einstein 1905, Minkowski 1908)
 
-We declare the physical axiom that spacetime intervals are Lorentz-invariant.
-This is not proven but cited as established physics.
+The physical content is that Lorentz invariance forces space and time to share the
+same discreteness scale (Snyder 1947). Formalized here as existence statements in
+ℕ: given a discrete temporal unit Δt, a compatible spatial unit Δx = Δt exists,
+and vice versa. These are mathematically trivial (take Δx := Δt); calibration to a
+specific physical unit is handled explicitly in Part 3.
 -/
 
 /-- Spacetime discreteness scale (abstract, to be instantiated). -/
@@ -124,16 +132,20 @@ structure DiscretenessScale where
   /-- Positive temporal unit. -/
   hTemporal : 0 < temporalUnit
 
-/-- AXIOM (Lorentz): Under Lorentz transformation, discrete temporal structure
-    implies discrete spatial structure with compatible scale.
+/-- THEOREM (Lorentz): Discrete temporal structure implies a compatible discrete
+    spatial scale exists (take Δx = Δt in natural units where c = 1).
+    Calibration to a specific physical unit is handled in Part 3.
     Citation: Snyder, H.S. (1947). Quantized Space-Time. Phys. Rev. 71:38-41. -/
-axiom lorentz_time_implies_space :
-    ∀ (Δt : ℕ), 0 < Δt → ∃ (Δx : ℕ), 0 < Δx ∧ Δx = Δt
+theorem lorentz_time_implies_space :
+    ∀ (Δt : ℕ), 0 < Δt → ∃ (Δx : ℕ), 0 < Δx ∧ Δx = Δt :=
+  fun _Δt h => ⟨_, h, rfl⟩
 
-/-- AXIOM (Lorentz): Discrete space implies discrete time (converse).
-    The spacetime interval s² = c²Δt² - Δx² invariance forces this. -/
-axiom lorentz_space_implies_time :
-    ∀ (Δx : ℕ), 0 < Δx → ∃ (Δt : ℕ), 0 < Δt ∧ Δt = Δx
+/-- THEOREM (Lorentz): Discrete spatial structure implies a compatible discrete
+    temporal scale exists (converse; take Δt = Δx).
+    Citation: Snyder, H.S. (1947). Quantized Space-Time. Phys. Rev. 71:38-41. -/
+theorem lorentz_space_implies_time :
+    ∀ (Δx : ℕ), 0 < Δx → ∃ (Δt : ℕ), 0 < Δt ∧ Δt = Δx :=
+  fun _Δx h => ⟨_, h, rfl⟩
 
 /-- THEOREM: Lorentz-compatible discreteness scale exists given discrete time. -/
 theorem lorentz_compatible_scale (Δt : ℕ) (hΔt : 0 < Δt) :
@@ -142,35 +154,75 @@ theorem lorentz_compatible_scale (Δt : ℕ) (hΔt : 0 < Δt) :
   refine ⟨⟨Δx, Δt, hΔx, hΔt⟩, rfl, ?_⟩
   exact hEq
 
-/-! ## Part 3: Planck Scale (AXIOM - cite Planck 1899)
+/-! ## Part 3: Planck Calibration (derived uniqueness under declared calibration)
 
-Dimensional analysis: the unique scale from ℏ, G, c.
-ℓ_P = √(ℏG/c³), t_P = ℓ_P/c = √(ℏG/c⁵)
+Dimensional analysis contributes a calibration source (ℏ, G, c), but in this
+abstract ℕ-scale model uniqueness is derivable only after declaring which unit
+value is selected. Without that calibration, Lorentz-invariant scales are not
+unique.
 -/
 
-/-- AXIOM (Planck): The Planck scale is the unique Lorentz-invariant discreteness
-    scale derivable from fundamental constants (ℏ, G, c).
-    Any two Lorentz-invariant scales (spatial = temporal) must be equal —
-    there is only one such scale at the Planck length.
-    Citation: Planck, M. (1899). Über irreversible Strahlungsvorgänge. -/
-axiom planck_unique_scale :
-    ∀ scale₁ scale₂ : DiscretenessScale,
-      scale₁.spatialUnit = scale₁.temporalUnit →
-      scale₂.spatialUnit = scale₂.temporalUnit →
-      scale₁ = scale₂
+/-- Declared Planck calibration: one positive discreteness unit selected by
+physical constants (e.g., via dimensional analysis from ℏ, G, c). -/
+structure PlanckCalibration where
+  unit : ℕ
+  hUnit : 0 < unit
 
-/-! ## Part 4: Landauer Bound (AXIOM - cite Landauer 1961, Bennett 2003)
+/-- A scale is Planck-calibrated when both axes match and equal the declared
+calibration unit. -/
+def IsPlanckCalibrated (C : PlanckCalibration) (scale : DiscretenessScale) : Prop :=
+  scale.spatialUnit = scale.temporalUnit ∧ scale.spatialUnit = C.unit
+
+/-- Existence: every declared calibration yields a Lorentz-compatible calibrated
+scale in this abstract model. -/
+theorem exists_planck_calibrated_scale (C : PlanckCalibration) :
+    ∃ scale : DiscretenessScale, IsPlanckCalibrated C scale := by
+  refine ⟨⟨C.unit, C.unit, C.hUnit, C.hUnit⟩, ?_⟩
+  exact ⟨rfl, rfl⟩
+
+/-- Uniqueness under calibration: any two calibrated scales share the same
+spatial unit value. -/
+theorem planck_unique_scale_of_calibration
+    (C : PlanckCalibration)
+    {scale₁ scale₂ : DiscretenessScale}
+    (h₁ : IsPlanckCalibrated C scale₁)
+    (h₂ : IsPlanckCalibrated C scale₂) :
+    scale₁.spatialUnit = scale₂.spatialUnit := by
+  rcases h₁ with ⟨_, h₁u⟩
+  rcases h₂ with ⟨_, h₂u⟩
+  calc
+    scale₁.spatialUnit = C.unit := h₁u
+    _ = scale₂.spatialUnit := h₂u.symm
+
+/-- Boundary theorem: in the abstract Lorentz-only model, invariant scales are
+not unique without calibration. -/
+theorem lorentz_invariant_scales_not_unique :
+    ∃ scale₁ scale₂ : DiscretenessScale,
+      scale₁.spatialUnit = scale₁.temporalUnit ∧
+      scale₂.spatialUnit = scale₂.temporalUnit ∧
+      scale₁.spatialUnit ≠ scale₂.spatialUnit := by
+  refine ⟨⟨1, 1, Nat.one_pos, Nat.one_pos⟩, ⟨2, 2, by decide, by decide⟩, rfl, rfl, ?_⟩
+  decide
+
+/-! ## Part 4: Landauer Bound (THEOREM - cite Landauer 1961, Bennett 2003)
 
 Each irreversible bit operation dissipates at least kT ln 2 energy.
+The physical content is in the declared constant joulesPerBit > 0 (Landauer's
+principle); positivity then follows by Nat.mul_pos.
 -/
 
-/-- AXIOM (Landauer): Irreversible computation has minimum energy cost.
+/-- THEOREM (Landauer): Irreversible computation has minimum energy cost.
+    Proven from the linear model energyLowerBound M b = joulesPerBit * b via Nat.mul_pos.
+    The physical content (kT ln 2 per bit-erasure) is carried by the declared conversion
+    constant joulesPerBit > 0; the positivity then follows mathematically.
     Citation: Landauer, R. (1961). Irreversibility and Heat Generation. -/
-axiom landauer_bound :
+theorem landauer_bound :
     ∀ (M : ThermoModel), 0 < M.joulesPerBit →
-      ∀ (bitOps : ℕ), 0 < bitOps → 0 < energyLowerBound M bitOps
+      ∀ (bitOps : ℕ), 0 < bitOps → 0 < energyLowerBound M bitOps := by
+  intro M hJ bitOps hb
+  exact energy_lower_mandatory M hJ hb
 
-/-! ## Part 5: The Full Chain (PROVEN from axioms)
+/-! ## Part 5: The Full Chain (PROVEN from declared assumptions + theorems)
 
 Discrete State → Discrete Time → Discrete Space → Planck Scale → Thermodynamics
 -/
@@ -181,7 +233,7 @@ Discrete State → Discrete Time → Discrete Space → Planck Scale → Thermod
     1. DiscreteSystem has finite state space (given)
     2. Non-trivial dynamics → transition points exist (proven: nontrivial_implies_bit_operation)
     3. Transition points are countable → effective time is discrete (proven: transitionPoints_countable)
-    4. Discrete time → discrete space (axiom: lorentz_time_implies_space)
+    4. Discrete time → discrete space (theorem: lorentz_time_implies_space)
     5. Discrete bit operations → energy lower bound (ThermodynamicLift)
 -/
 theorem discrete_computation_thermodynamic_chain
@@ -278,4 +330,3 @@ theorem neukart_vinokur_from_discrete_chain
 end DiscreteSpacetime
 end Physics
 end DecisionQuotient
-

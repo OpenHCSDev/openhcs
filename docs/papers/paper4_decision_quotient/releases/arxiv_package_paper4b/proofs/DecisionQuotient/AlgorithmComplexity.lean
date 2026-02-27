@@ -10,6 +10,13 @@
   - Counted monad for tracking computational steps
   - O(|S|²) bound for checkSufficiency algorithm
   - Polynomial-time characterization
+
+  ## Triviality Level
+  TRIVIAL: This is algorithmic analysis - proving polynomial bounds is standard.
+  The nontrivial work is in proving the hardness results.
+
+  ## Dependencies
+  - Chain: Sufficiency.lean → Computation.lean → here
 -/
 
 import DecisionQuotient.Sufficiency

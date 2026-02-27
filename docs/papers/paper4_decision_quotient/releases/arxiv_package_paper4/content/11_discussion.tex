@@ -121,3 +121,9 @@ If axis $a$ has importance $w_a$, define weighted tax:
 The incomplete tool pays $\sum w_a \times n$ while the complete tool pays 0. The qualitative result is unchanged.
 
 The ``cover important axes'' heuristic only works if you \emph{correctly identify} which axes are important. By Theorem~\ref{thm:sufficiency-conp}, this identification is coNP-complete; returning us to the original hardness result.
+
+\subsection{On Tool-Relative Collapse Claims}
+
+\textbf{Question:} ``Can we state `tools collapse complexity' rigorously without claiming universal complexity-class collapse?''
+
+\textbf{Response:} Yes. We formalize a baseline work model and a tool-augmented model with a pointwise no-worse condition, then define an effective-collapse predicate: never worse and eventually strictly better. Lean proves no-worse monotonicity and collapse construction from eventual strict improvement (`DecisionQuotient.ToolCollapse.tool\_never\_worse`, `DecisionQuotient.ToolCollapse.effective\_collapse\_of\_eventual\_strict`). A concrete witness family is fully mechanized: baseline work $2^n$ versus tool work $n$, yielding eventual strict improvement and effective collapse (`DecisionQuotient.ToolCollapse.linear\_tool\_eventual\_strict`, `DecisionQuotient.ToolCollapse.linear\_tool\_effective\_collapse`). This is explicitly model-relative and does not assert a universal class collapse.

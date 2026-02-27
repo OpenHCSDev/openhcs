@@ -6,6 +6,12 @@
   Σ₂ᴾ-hardness via ∃∀-SAT for a fixed-coordinate ("anchor") sufficiency problem:
   Given a decision problem and a fixed coordinate set I, does there exist a state
   s₀ such that Opt is constant over all states agreeing with s₀ on I?
+
+  ## Triviality Level
+  NONTRIVIAL: This is a core hardness proof - Σ₂ᴾ-completeness for anchor sufficiency.
+
+  ## Dependencies
+  - Chain: QBF.lean → here (anchor reduction)
 -/
 
 import DecisionQuotient.Basic

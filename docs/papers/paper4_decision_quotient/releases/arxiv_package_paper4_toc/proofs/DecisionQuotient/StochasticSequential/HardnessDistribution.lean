@@ -16,9 +16,7 @@ namespace DecisionQuotient.StochasticSequential
 noncomputable def probSufficient (n : ℕ) (_I : Finset (Fin n)) : ℝ :=
   1 / (2 : ℝ)^n
 
-/-- Standard: 1/2^n ≤ 1/2 for n ≥ 1 since 2^n ≥ 2. -/
-axiom prob_sufficient_exponential_decay (n : ℕ) (hn : n ≥ 1) :
-    probSufficient n ∅ ≤ 1 / 2
+-- prob_sufficient_exponential_decay (1/2^n ≤ 1/2 for n ≥ 1) was an unused axiom; removed.
 
 /-! ## Average-Case Hardness -/
 
@@ -31,9 +29,13 @@ theorem average_case_hard (n : ℕ) :
 
 /-! ## Smoothed Analysis -/
 
-/-- Standard: 2^(n/2) ≤ 2^n since n/2 ≤ n. -/
-axiom smoothed_easier_than_worst (n : ℕ) :
-    averageCaseComplexity n ≤ (2 : ℝ)^n
+/-- 2^(n/2) ≤ 2^n since n/2 ≤ n and 1 ≤ 2. -/
+theorem smoothed_easier_than_worst (n : ℕ) :
+    averageCaseComplexity n ≤ (2 : ℝ)^n := by
+  simp only [averageCaseComplexity]
+  gcongr
+  · norm_num
+  · exact Nat.div_le_self n 2
 
 /-! ## Instance Family Hardness -/
 

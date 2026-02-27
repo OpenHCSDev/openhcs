@@ -9,6 +9,7 @@ The independence of errors is not an axiom---it is a consequence of axis orthogo
 \begin{theorem}[Error Independence]\label{thm:error-independence}
 If axes $\{A_1, \ldots, A_n\}$ are orthogonal (Paper 1, Theorem \texttt{minimal\_complete\_unique\_orthogonal}), then errors along each axis are statistically independent.
 \end{theorem}
+\leanmeta{\LH{L_94799bf0}}
 
 \begin{proof}
 By Paper 1's orthogonality theorem, orthogonal axes satisfy:
@@ -33,6 +34,8 @@ This is the definition of statistical independence.
 \begin{corollary}[DOF = Independent Error Sources]\label{cor:dof-errors}
 DOF$(A) = n$ implies $n$ independent sources of error, each with probability $p$.
 \end{corollary}
+\leanmeta{\LH{L_a87ad5d3},
+\LH{L_94799bf0}}
 
 \begin{proof}
 DOF counts independent axes (Paper 2, Definition~\ref{def:dof}). By Theorem~\ref{thm:error-independence}, independent axes have independent errors.
@@ -41,6 +44,8 @@ DOF counts independent axes (Paper 2, Definition~\ref{def:dof}). By Theorem~\ref
 \begin{theorem}[Error Compounding]\label{thm:error-compound}
 For a system to be correct, all $n$ independent axes must be error-free. Errors compound multiplicatively.
 \end{theorem}
+\leanmeta{\LH{L_80dff953},
+\LH{L_09703163}}
 
 \begin{proof}
 By Paper 2's coherence theorem (\texttt{oracle\_arbitrary}), incoherence in any axis violates system correctness. An error in axis $A_i$ introduces incoherence along $A_i$. Therefore, correctness requires $\bigwedge_{i=1}^{n} \neg\text{error}(A_i)$. By Theorem~\ref{thm:error-independence}, this probability is $(1-p)^n$.
@@ -54,6 +59,8 @@ For architecture with $n$ DOF and per-component error rate $p$:
 P_{\text{error}}(n) = 1 - (1-p)^n
 \]
 \end{theorem}
+\leanmeta{\LH{L_f7d1d766},
+\LH{L_1aedfdca}}
 
 \begin{proof}
 By Theorem~\ref{thm:error-independence} (derived from Paper 1's orthogonality), each DOF has independent error probability $p$, so each is correct with probability $(1-p)$. By Theorem~\ref{thm:error-compound}, all $n$ DOF must be correct:
@@ -67,17 +74,13 @@ P_{\text{error}}(n) = 1 - P_{\text{correct}}(n) = 1 - (1-p)^n
 \end{proof}
 
 \begin{corollary}[Linear Approximation]\label{cor:linear-approx}
-For small $p$ (specifically, $p < 0.1$):
-\[
-P_{\text{error}}(n) \approx n \cdot p
-\]
-with relative error less than $10\%$.
+For fixed $p>0$, the linear expected-error model and the exact series model induce the same ordering on architectures by DOF.
 \end{corollary}
+\leanmeta{\LH{L_cd7df084},
+\LH{L_674e36f4}}
 
 \begin{proof}
-Using Taylor expansion: $(1-p)^n = e^{n \ln(1-p)} \approx e^{-np}$ for small $p$.
-Further: $e^{-np} \approx 1 - np$ for $np < 1$.
-Therefore: $P_{\text{error}}(n) = 1 - (1-p)^n \approx 1 - (1 - np) = np$.
+By Theorem~\ref{thm:approx-bound}, ordering equivalence is exact under the discrete model used in the mechanization.
 \end{proof}
 
 \begin{corollary}[DOF-Error Monotonicity]\label{cor:dof-monotone}
@@ -86,6 +89,7 @@ For architectures $A_1, A_2$:
 \text{DOF}(A_1) < \text{DOF}(A_2) \implies P_{\text{error}}(A_1) < P_{\text{error}}(A_2)
 \]
 \end{corollary}
+\leanmeta{\LH{L_bf24afdb}}
 
 \begin{proof}
 $P_{\text{error}}(n) = 1 - (1-p)^n$ is strictly increasing in $n$ for $p \in (0,1)$.
@@ -99,6 +103,8 @@ Expected number of errors in architecture $A$:
 \mathbb{E}[\text{\# errors}] = p \cdot \text{DOF}(A)
 \]
 \end{theorem}
+\leanmeta{\LH{L_55928d9f},
+\LH{L_bcf5655e}}
 
 \begin{proof}
 By linearity of expectation:
@@ -128,28 +134,33 @@ An architecture with DOF $= n$ is \emph{isomorphic} to a series reliability syst
 \item \textbf{Connects domains:} $P_{\text{error}}(n) = 1 - R_{\text{series}}(n)$ where $R_{\text{series}}(n) = (1-p)^n$
 \end{enumerate}
 \end{theorem}
+\leanmeta{\LH{L_917c2f4f},
+\LH{L_76f8fb86},
+\LH{L_e8b1c801}}
 
 \textbf{Interpretation:} Each DOF is a ``component'' that must work correctly. This is the reliability analog of Theorem~\ref{thm:error-independence}, which derives error independence from axis orthogonality.
 
-\begin{theorem}[Approximation Error Bound]\label{thm:approx-bound}
-The linear approximation $P_{\text{error}}(n) \approx n \cdot p$ has error $O(n^2 p^2)$. Specifically:
+\begin{theorem}[Ordering Equivalence (Exact)]\label{thm:approx-bound}
+For architectures $A_1,A_2$ with equal capabilities and error rate $p>0$, the linear model and the exact series model induce the same DOF ordering:
 \[
-|P_{\text{error}}(n) - n \cdot p| = \frac{n(n-1)p^2}{2} + O(n^3 p^3)
+\text{DOF}(A_1)\le \text{DOF}(A_2)
+\iff
+(\mathbb{E}[\text{errors}(A_1)]\cdot d)\le(\mathbb{E}[\text{errors}(A_2)]\cdot d),
 \]
-For $p = 0.01$ and $n = 10$: error $< 0.5\%$. The approximation preserves all ordering relationships.
+where $d$ is the denominator of the discrete error-rate representation.
 \end{theorem}
+\leanmeta{\LH{L_cd7df084},
+\LH{L_062d9169}}
 
 \begin{proof}
-By binomial expansion: $(1-p)^n = 1 - np + \binom{n}{2}p^2 - O(p^3)$.
-Therefore: $1 - (1-p)^n = np - \frac{n(n-1)}{2}p^2 + O(n^3 p^3)$.
-The quadratic correction is bounded by $n^2 p^2$, which is negligible in the software regime.
+This is theorem \texttt{ordering\_equivalence\_exact} in \texttt{Leverage/Probability.lean}.
 \end{proof}
 
 \textbf{Linear Approximation Justification:} For small $p$ (the software engineering regime where $p \approx 0.01$), the linear model $P_{\text{error}} \approx n \cdot p$ is:
 \begin{enumerate}
-\item Accurate (first-order Taylor expansion with proven $O(n^2 p^2)$ error bound)
-\item Preserves all ordering relationships (if $n_1 < n_2$, then $n_1 p < n_2 p$)
-\item Cleanly provable in natural number arithmetic (avoiding real analysis)
+\item Order-equivalent to the exact series model in the mechanized discrete representation
+\item Monotone in DOF for fixed positive error rate
+\item Cleanly formalized in natural-number arithmetic
 \end{enumerate}
 
 \subsection{Epistemic Grounding}
@@ -175,10 +186,12 @@ For architectures with equal capabilities, the modification cost ratio equals th
 \frac{\text{ModCost}(A_2)}{\text{ModCost}(A_1)} = \frac{\text{DOF}(A_2)}{\text{DOF}(A_1)} = \frac{L(A_1)}{L(A_2)}
 \]
 \end{theorem}
+\leanmeta{\LH{L_45cc4f88}}
 
 \begin{theorem}[Testable Prediction]\label{thm:testable-prediction}
 If architecture $A_1$ has $n\times$ lower DOF than $A_2$ (for equal capabilities), then $A_1$ requires $n\times$ fewer expected modifications. This is empirically testable against PR/commit data.
 \end{theorem}
+\leanmeta{\LH{L_55494009}}
 
 \begin{corollary}[DOF Ratio Predicts Error Ratio]\label{cor:dof-ratio}
 The ratio of expected errors between two architectures equals the ratio of their DOF:
@@ -186,6 +199,7 @@ The ratio of expected errors between two architectures equals the ratio of their
 \frac{\mathbb{E}[\text{errors}(A_2)]}{\mathbb{E}[\text{errors}(A_1)]} = \frac{\text{DOF}(A_2)}{\text{DOF}(A_1)}
 \]
 \end{corollary}
+\leanmeta{\LH{L_70adb6e2}}
 
 These theorems transform architectural intuitions into testable hypotheses. A claim that ``Pattern X is 3× better than Pattern Y'' can be verified by comparing DOF and measuring modification frequency in real codebases.
 
@@ -196,12 +210,12 @@ Formalized in \texttt{Leverage/Probability.lean}:
 \item \texttt{dof\_reliability\_isomorphism}: Theorem~\ref{thm:dof-reliability} (the central isomorphism)
 \item \texttt{isomorphism\_preserves\_failure\_ordering}: Ordering preservation
 \item \texttt{isomorphism\_roundtrip}: Invertibility proof
-\item \texttt{approximation\_error\_bound}: Theorem~\ref{thm:approx-bound} (Taylor bound)
-\item \texttt{linear\_model\_preserves\_ordering}: Ordering preservation under approximation
+\item \texttt{ordering\_equivalence\_exact}: Theorem~\ref{thm:approx-bound} (exact ordering equivalence)
+\item \texttt{linear\_model\_preserves\_ordering}: Linear ordering support
 \item \texttt{leverage\_gap}: Theorem~\ref{thm:leverage-gap}
 \item \texttt{testable\_modification\_prediction}: Theorem~\ref{thm:testable-prediction}
 \item \texttt{dof\_ratio\_predicts\_error\_ratio}: Corollary~\ref{cor:dof-ratio}
 \item \texttt{lower\_dof\_lower\_errors}: Corollary~\ref{cor:dof-monotone}
+\item \texttt{expected\_errors\_from\_linearity}: Theorem~\ref{thm:expected-errors}
 \item \texttt{ssot\_minimal\_errors}: SSOT minimality
 \end{itemize}
-

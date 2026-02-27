@@ -36,6 +36,11 @@ import DecisionQuotient.ThermodynamicLift
 import DecisionQuotient.Tractability.BoundedActions
 import DecisionQuotient.Tractability.SeparableUtility
 import DecisionQuotient.Tractability.TreeStructure
+import DecisionQuotient.Physics.DiscreteSpacetime
+import DecisionQuotient.Physics.DecisionEquivalence
+import DecisionQuotient.Physics.IntegrityEquilibrium
+import DecisionQuotient.Physics.MolecularIntegrity
+import DecisionQuotient.BayesFromDQ  -- Replaced BayesianDQ with rigorous derivation
 import Mathlib.Data.Rat.Init
 import Mathlib.Data.Finset.Card
 import Mathlib.Tactic
@@ -1507,6 +1512,121 @@ theorem typed_static_class_completeness
 
 end TypedCoverage
 
+/-! ## Anchor-query object and posing discipline (`#9`) -/
+
+section AnchorQueryPosing
+
+open IntegrityCompetence
+
+variable {A S W : Type*} {n : ℕ}
+variable [CoordinateSpace S n]
+
+/-- Formal object for the anchored decision question:
+fixed decision problem plus queried coordinate set. -/
+structure AnchorQueryObject (A S : Type*) (n : ℕ) [CoordinateSpace S n] where
+  problem : DecisionProblem A S
+  coords : Finset (Fin n)
+
+/-- Pose operation: construct the formal query object from `(dp, I)`. -/
+def poseAnchorQuery (dp : DecisionProblem A S) (I : Finset (Fin n)) :
+    AnchorQueryObject A S n :=
+  ⟨dp, I⟩
+
+/-- Truth predicate of a posed anchor query. -/
+def AnchorQueryObject.truth (q : AnchorQueryObject A S n) : Prop :=
+  q.problem.anchorSufficient q.coords
+
+/-- Posing returns a well-typed formal object with preserved components. -/
+theorem pose_returns_anchor_query_object
+    (dp : DecisionProblem A S) (I : Finset (Fin n)) :
+    (poseAnchorQuery dp I).problem = dp ∧
+      (poseAnchorQuery dp I).coords = I := by
+  constructor <;> rfl
+
+/-- Semantics of posed anchor query in witness form. -/
+theorem posed_anchor_query_truth_iff_exists_anchor
+    (dp : DecisionProblem A S) (I : Finset (Fin n)) :
+    (poseAnchorQuery dp I).truth ↔ ∃ s₀ : S, dp.isSufficientAt I s₀ := by
+  rfl
+
+/-- Equivalent quantified form used by the ANCHOR-SUFFICIENCY problem statement. -/
+theorem posed_anchor_query_truth_iff_exists_forall
+    (dp : DecisionProblem A S) (I : Finset (Fin n)) :
+    (poseAnchorQuery dp I).truth ↔
+      ∃ s₀ : S, ∀ s : S, agreeOn s s₀ I → dp.Opt s = dp.Opt s₀ := by
+  rfl
+
+/-- Canonical yes/no relation for anchor-query verdicts. -/
+def anchorQueryRelation : Set (AnchorQueryObject A S n × Bool) :=
+  {qb | (qb.2 = true ∧ qb.1.truth) ∨ (qb.2 = false ∧ ¬ qb.1.truth)}
+
+/-- A `true` verdict is equivalent to query truth. -/
+theorem anchor_query_relation_true_iff (q : AnchorQueryObject A S n) :
+    (q, true) ∈ anchorQueryRelation ↔ q.truth := by
+  constructor
+  · intro h
+    rcases h with hTrue | hFalse
+    · exact hTrue.2
+    · cases hFalse.1
+  · intro hq
+    exact Or.inl ⟨rfl, hq⟩
+
+/-- A `false` verdict is equivalent to query falsity. -/
+theorem anchor_query_relation_false_iff (q : AnchorQueryObject A S n) :
+    (q, false) ∈ anchorQueryRelation ↔ ¬ q.truth := by
+  constructor
+  · intro h
+    rcases h with hTrue | hFalse
+    · cases hTrue.1
+    · exact hFalse.2
+  · intro hq
+    exact Or.inr ⟨rfl, hq⟩
+
+variable (Rε : EpsilonRelation (AnchorQueryObject A S n) Bool)
+variable (Γ : Regime (AnchorQueryObject A S n))
+variable (Q : CertifyingSolver (AnchorQueryObject A S n) Bool W)
+
+/-- Exact claim admissibility on posed anchor queries is exactly regime competence. -/
+theorem posed_anchor_exact_claim_admissible_iff_competent :
+    ClaimAdmissible anchorQueryRelation Rε Γ Q ClaimReport.exact ↔
+      CompetentOn anchorQueryRelation Γ Q := by
+  simpa using
+    claim_admissible_exact_iff (R := anchorQueryRelation) (Rε := Rε) (Γ := Γ) (Q := Q)
+
+/-- Admissible exact claims on posed anchor queries carry exact evidence. -/
+theorem posed_anchor_exact_claim_requires_evidence
+    (hExact : ClaimAdmissible anchorQueryRelation Rε Γ Q ClaimReport.exact) :
+    Nonempty (EvidenceForReport anchorQueryRelation Rε Γ Q ClaimReport.exact) := by
+  exact exact_claim_requires_evidence
+    (R := anchorQueryRelation) (Rε := Rε) (Γ := Γ) (Q := Q) hExact
+
+/-- Without exact competence, exact posed-query claims are inadmissible. -/
+theorem posed_anchor_no_competence_no_exact_claim
+    (hNo : ¬ CompetentOn anchorQueryRelation Γ Q) :
+    ¬ ClaimAdmissible anchorQueryRelation Rε Γ Q ClaimReport.exact := by
+  simpa using
+    no_uncertified_exact_claim (R := anchorQueryRelation) (Rε := Rε) (Γ := Γ) (Q := Q) hNo
+
+/-- Integrity gate: checker-accepted `true` verdict implies posed-query truth. -/
+theorem posed_anchor_checked_true_implies_truth
+    (hInt : SolverIntegrity anchorQueryRelation Q)
+    (q : AnchorQueryObject A S n) (w : W)
+    (hCheck : Q.check q true w) :
+    q.truth := by
+  have hRel : (q, true) ∈ anchorQueryRelation := hInt.2 q true w hCheck
+  exact (anchor_query_relation_true_iff (q := q)).1 hRel
+
+/-- Signal gate: positive certified confidence implies typed admissibility. -/
+theorem posed_anchor_signal_positive_certified_implies_admissible
+    (σ : ReportSignal Bool)
+    (hSig : SignalConsistent anchorQueryRelation Rε Γ Q σ)
+    (hPos : 0 < σ.certifiedPct.1) :
+    ClaimAdmissible anchorQueryRelation Rε Γ Q σ.report := by
+  exact signal_certified_positive_implies_admissible
+    (R := anchorQueryRelation) (Rε := Rε) (Γ := Γ) (Q := Q) (σ := σ) hSig hPos
+
+end AnchorQueryPosing
+
 /-! ## Bridge boundary closure in the represented adjacent family (`#10`) -/
 
 section BridgeBoundary
@@ -1807,6 +1927,528 @@ theorem standard_assumption_ledger_unpack
     hStd.hRelevantCardCoNPComplete, hStd.hExistsForallSATSigma2PComplete, hStd.hETH⟩
 
 end AssumptionLedger
+
+/-! ## Discrete Spacetime Chain Exports (`DS1`--`DS6`)
+
+Re-exports from Physics.DiscreteSpacetime for paper claim handles.
+-/
+
+section DiscreteSpacetimeExports
+
+open Physics.DiscreteSpacetime
+
+/-- DS1: Transition points are countable (discrete effective time). -/
+abbrev DS1 := @transitionPoints_countable
+
+/-- DS2: Non-trivial dynamics implies at least one bit operation eventually. -/
+abbrev DS2 := @nontrivial_implies_bit_operation
+
+/-- DS3: Lorentz invariance: discrete time implies discrete space. -/
+abbrev DS3 := @lorentz_time_implies_space
+
+/-- DS4: Lorentz invariance: discrete space implies discrete time. -/
+abbrev DS4 := @lorentz_space_implies_time
+
+/-- DS5: Full computational-physical bundle (discrete time + space + energy). -/
+abbrev DS5 := @computational_physical_bundle
+
+/-- DS6: Non-trivial computation has energy cost. -/
+abbrev DS6 := @nontrivial_computation_has_energy_cost
+
+end DiscreteSpacetimeExports
+
+/-! ## Decision Equivalence Exports (`DE1`--`DE4`)
+
+Re-exports from Physics.DecisionEquivalence for paper claim handles.
+Decision = State Transition = Bit Operation = Thermodynamic Event
+-/
+
+section DecisionEquivalenceExports
+
+open Physics.DecisionEquivalence
+
+/-- DE1: Decision ↔ Transition (definitional equivalence). -/
+abbrev DE1 := @decision_iff_transition
+
+/-- DE2: Decision count = Bit operation count. -/
+abbrev DE2 := @decisionCount_eq_bitOperations
+
+/-- DE3: Positive decisions → positive energy cost. -/
+abbrev DE3 := @positive_decisions_positive_energy
+
+/-- DE4: Full four-way equivalence bundle. -/
+abbrev DE4 := @decision_thermodynamic_equivalence
+
+end DecisionEquivalenceExports
+
+/-! ## Decision Circuit Integrity Exports (`IE1`--`IE13`)
+
+Re-exports from Physics.DecisionCircuit for paper claim handles.
+Integrity = bit-erase resistance; competence = work/cycle; Landauer constraint.
+Temporal equilibrium; low-competence survival; phase transitions.
+-/
+
+section DecisionCircuitExports
+
+open Physics.DecisionCircuit
+
+/-- IE1: Acknowledgment chosen iff predicted integrity ≥ dismissal integrity. -/
+abbrev IE1 := @acknowledge_iff_integrity_geq
+
+/-- IE2: At equilibrium, acknowledgment is self-reinforcing. -/
+abbrev IE2 := @equilibrium_acknowledge_reinforcing
+
+/-- IE3: Low theorem count → dismissal chosen. -/
+abbrev IE3 := @low_theorems_dismiss
+
+/-- IE4: High theorem count → acknowledgment chosen. -/
+abbrev IE4 := @high_theorems_acknowledge
+
+/-- IE5: Theorem count inverts equilibrium (dismiss → acknowledge). -/
+abbrev IE5 := @theorems_invert_equilibrium
+
+/-- IE6: Landauer trap: dismissal fails when erasure cost exceeds competence. -/
+abbrev IE6 := @dismissal_requires_competence
+
+/-- IE7: Integrity self-preservation: circuits persist when erasure unaffordable. -/
+abbrev IE7 := @integrity_self_preserving
+
+/-- IE8: Low-competence attacks fail against high-integrity targets. -/
+abbrev IE8 := @low_competence_attack_fails
+
+/-- IE9: Integral circuits survive when all attackers lack competence. -/
+abbrev IE9 := @integral_circuit_survives
+
+/-- IE10: Integrity predicts future integrity (temporal equilibrium). -/
+abbrev IE10 := @integrity_predicts_future_integrity
+
+/-- IE11: Defection reduces future integrity probability. -/
+abbrev IE11 := @defection_reduces_future_integrity
+
+/-- IE12: Pre-publication equilibrium is neutral. -/
+abbrev IE12 := @pre_pub_neutral
+
+/-- IE13: Publication induces phase transition to integrity-dominated equilibrium. -/
+abbrev IE13 := @publication_phase_transition
+
+/-- IE14: Zero-integrity circuits have zero erasure cost. -/
+abbrev IE14 := @zero_integrity_no_cost
+
+/-- IE15: Zero-integrity circuits can be corrupted by any competence. -/
+abbrev IE15 := @zero_integrity_freely_corruptible
+
+/-- IE16: Zero-integrity circuits have no coherence constraint. -/
+abbrev IE16 := @zero_integrity_no_coherence_constraint
+
+/-- IE17: Integrity is prerequisite for logical coherence. -/
+abbrev IE17 := @integrity_prerequisite_for_coherence
+
+/-! ### Cycle Cost Theorems (CC1-CC12)
+
+Every state transition costs energy. Derived from Landauer bound.
+-/
+
+-- CC1: Landauer bound (physical constant). kT_ln2 > 0 is the energy per erased bit.
+-- Embedded in transitionCost; any cost bound carries kT_ln2 > 0 explicitly (see CC3).
+
+-- CC2: Irreversible state change erases information. Embedded in transitionCost:
+-- s ≠ s' → cost = max(1, s.bits) * kT_ln2 > 0 under kT_ln2 > 0 (see CC3).
+
+/-- CC3: Every state transition costs at least 1 unit. -/
+abbrev CC3 := @cycle_cost_lower_bound
+
+/-- CC4: Zero cost ↔ identical states. -/
+abbrev CC4 := @zero_cost_iff_identity
+
+/-- CC5: No free state change. Zero cost implies no transition. -/
+abbrev CC5 := @no_free_state_change
+
+/-- CC6: Every observation costs at least 1 unit. -/
+abbrev CC6 := @observation_costs_energy
+
+/-- CC7: Computation cost ≥ number of steps. -/
+abbrev CC7 := @computation_cost_lower_bound
+
+/-- CC8: No free computation. Zero cost means zero steps. -/
+abbrev CC8 := @no_free_computation
+
+/-- CC9: k transitions cost ≥ k units. -/
+abbrev CC9 := @k_transitions_cost_k
+
+/-- CC10: State persistence has zero transition cost. -/
+abbrev CC10 := @persistence_zero_cost
+
+/-- CC11: Every decision circuit cycle costs energy. -/
+abbrev CC11 := @decision_circuit_cycle_costs_energy
+
+/-- CC12: Running a pipeline costs energy. -/
+abbrev CC12 := @pipeline_costs_energy
+
+/-! ### Structural Asymmetry Theorems (SR1-SR5)
+
+Integrity is self-referential; competence is self-identical.
+The gap between them is where choice lives.
+-/
+
+/-- SR1: Competence is self-identical. c = c. -/
+abbrev SR1 := @competence_self_identical
+
+/-- SR2: Integrity has temporal self-reference. -/
+abbrev SR2 := @integrity_self_reference
+
+/-- SR3: The asymmetry exists. Integrity has structure competence lacks. -/
+abbrev SR3 := @integrity_competence_asymmetry
+
+/-- SR4: Competence can be imported (external resource). -/
+abbrev SR4 := @competence_importable
+
+/-- SR5: Integrity cannot be imported (must be self-generated). -/
+abbrev SR5 := @integrity_not_importable
+
+/-! ### Gap Energy Theorems (GE1-GE9)
+
+The gap between integrity (self-referential) and competence (self-identical) has energy cost.
+Gap energy = H(I_{t+1} | I_t) × kT ln 2. Every choice pays.
+-/
+
+/-- GE1: Gap entropy structure (conditional entropy). -/
+abbrev GE1 := @GapEntropy
+
+/-- GE2: Gap energy = gap entropy × Landauer unit. -/
+abbrev GE2 := @gapEnergy
+
+/-- GE3: Every choice pays gap energy. -/
+abbrev GE3 := @choice_pays_gap_energy
+
+/-- GE4: Zero gap = zero cost (deterministic). -/
+abbrev GE4 := @zero_gap_zero_cost
+
+/-- GE5: Positive gap = positive cost. -/
+abbrev GE5 := @positive_gap_positive_cost
+
+/-- GE6: Gap cost is monotonic in entropy. -/
+abbrev GE6 := @gap_cost_monotonic
+
+/-- GE7: Gap is where choice lives. -/
+abbrev GE7 := @gap_is_choice
+
+/-- GE8: Competence has no gap energy. -/
+abbrev GE8 := @competence_no_gap_energy
+
+/-- GE9: Integrity gap bounded by integrity bits. -/
+abbrev GE9 := @integrity_gap_bounded
+
+/-! ### Decision Quotient Theorems (DQ1-DQ8)
+
+Decision Quotient = Mutual Information / Total Uncertainty
+                  = 1 - Gap / Total
+Derived from Bayes/information theory. Measures decision relevance.
+-/
+
+/-- DQ1: Mutual information between current and future integrity. -/
+abbrev DQ1 := @mutualInformation
+
+/-- DQ2: Decision quotient structure. -/
+abbrev DQ2 := @DecisionQuotient
+
+/-- DQ3: DQ from gap entropy. -/
+abbrev DQ3 := @dq_from_gap
+
+/-- DQ4: Zero gap = DQ 1 (deterministic). -/
+abbrev DQ4 := @zero_gap_dq_one
+
+/-- DQ5: Max gap = DQ 0 (pure noise). -/
+abbrev DQ5 := @max_gap_dq_zero
+
+/-- DQ6: DQ + Gap = Total (complementary). -/
+abbrev DQ6 := @dq_gap_complementary
+
+/-- DQ7: DQ monotonic in gap reduction. -/
+abbrev DQ7 := @dq_monotonic_in_gap
+
+/-- DQ8: DQ has thermodynamic interpretation. -/
+abbrev DQ8 := @dq_energy_interpretation
+
+end DecisionCircuitExports
+
+/-! ## Molecular Integrity Exports (MI1-MI5) -/
+
+section MolecularIntegrityExports
+open Physics.MolecularIntegrity
+
+/-- MI1: Chemical stability is integrity trap at molecular scale. -/
+abbrev MI1 := @stability_is_integrity_trap
+
+/-- MI2: Low-energy environments preserve high-integrity molecules. -/
+abbrev MI2 := @low_competence_preserves_integrity
+
+/-- MI3: Reactions require sufficient environmental competence. -/
+abbrev MI3 := @reaction_requires_competence
+
+/-- MI4: High-barrier configurations persist. -/
+abbrev MI4 := @high_barrier_persistence
+
+/-- MI5: DNA persists at room temperature by integrity trap. -/
+abbrev MI5 := @dna_persists_room_temp
+
+end MolecularIntegrityExports
+
+/-! ## Self-Erosion Exports (SE1-SE6)
+
+Computation is self-consuming. Heat generation degrades the substrate.
+-/
+
+section SelfErosionExports
+open DecisionQuotient.Physics.DecisionCircuit
+
+/-- SE1: Every computational cycle generates at least 1 unit of heat (Landauer). -/
+abbrev SE1 := @SE1_heat_per_cycle_lb
+
+/-- SE2: Cumulative heat grows linearly with cycles. -/
+abbrev SE2 := @SE2_cumulative_heat
+
+/-- SE3: Heat above threshold causes substrate bit erasure. -/
+abbrev SE3 := @SE3_heat_causes_degradation
+
+/-- SE4: Degradation reduces substrate integrity. -/
+abbrev SE4 := @SE4_degradation_reduces_integrity
+
+/-- SE5: Finite integrity + finite heat capacity → bounded lifetime. -/
+abbrev SE5 := @SE5_finite_lifetime
+
+/-- SE6: Faster computation generates more heat per unit time. -/
+abbrev SE6 := @SE6_speed_integrity_tradeoff
+
+/-- SE6_cor: Faster circuits degrade faster when heat exceeds capacity. -/
+abbrev SE6_cor := @SE6_cor_faster_degrades_faster
+
+end SelfErosionExports
+
+/-! ## Channel Capacity Exports (CH1-CH6)
+
+A regime is a channel. Competence is channel capacity.
+Only decision circuits have competence.
+-/
+
+section ChannelCapacityExports
+open DecisionQuotient.Physics.DecisionCircuit
+
+/-- CH1: Competence IS channel capacity for decision circuits. -/
+abbrev CH1 := @CH1_competence_is_capacity
+
+/-- CH2: Substrate degradation reduces channel capacity. -/
+abbrev CH2 := @CH2_degradation_reduces_capacity
+
+/-- CH3: Zero capacity means no decisions possible. -/
+abbrev CH3 := @CH3_zero_capacity_no_decisions
+
+/-- CH5: Decision circuits are distinguished by requiring competence. -/
+abbrev CH5 := @CH5_decision_circuits_need_competence
+
+/-- CH6: Channel capacity degrades at the rate of substrate erosion. -/
+abbrev CH6 := @CH6_capacity_degrades_with_substrate
+
+end ChannelCapacityExports
+
+/-! ## Investment Exports (IV1-IV6)
+
+Economic theorems: growth requires time, conservation bounds receipts,
+deficit transfer creates deficit at source.
+-/
+
+section InvestmentExports
+open DecisionQuotient.Physics.DecisionCircuit
+
+/-- IV1: Investment requires upfront cost. -/
+abbrev IV1 := @IV1_investment_requires_payment
+
+/-- IV2: Growth requires time. -/
+abbrev IV2 := @IV2_growth_requires_time
+
+/-- IV3: More time means more growth. -/
+abbrev IV3 := @IV3_time_increases_growth
+
+/-- IV4: Conservation bounds receipts. -/
+abbrev IV4 := @IV4_conservation
+
+/-- IV5: Deficit transfer requires external source. -/
+abbrev IV5 := @IV5_deficit_requires_source
+
+/-- IV6: Deficit transfer creates deficit at source. -/
+abbrev IV6 := @IV6_deficit_at_source
+
+end InvestmentExports
+
+/-!
+## Atomic Circuit Exports (AC1-AC11)
+Matter as agent: atoms, electrons, molecules as decision circuits.
+-/
+
+namespace AtomicCircuitExports
+
+open DecisionQuotient.Physics.AtomicCircuit
+
+/-- AC1: Orbital transition is a state transition. -/
+abbrev AC1 := @AC1_orbital_transition_is_state_transition
+
+/-- AC3: Upward transition requires energy input. -/
+abbrev AC3 := @AC3_upward_costs
+
+/-- AC4: Downward transition releases energy. -/
+abbrev AC4 := @AC4_downward_releases
+
+/-- AC5: Transitioning atom is an agent. -/
+abbrev AC5 := @AC5_transitioning_atom_is_agent
+
+/-- AC6: Ground-state atom is passive. -/
+abbrev AC6 := @AC6_ground_state_is_passive
+
+/-- AC8: Symmetry tractability — orbit types reduce state space. -/
+abbrev AC8 := @AC8_symmetry_tractability
+
+/-- AC9: Matter moves matter by paying transition cost. -/
+abbrev AC9 := @AC9_matter_moves_matter
+
+/-- AC11: No free matter movement. -/
+abbrev AC11 := @AC11_no_free_movement
+
+end AtomicCircuitExports
+
+-- ============================================================================
+-- Information Access Exports (IA1-IA6)
+-- Pure information-theoretic argument: logic is complete, access isn't.
+-- ============================================================================
+
+section InformationAccessExports
+open DecisionQuotient.Physics.InformationAccess
+
+/-- IA1: Total information exists — the system has definite entropy. -/
+abbrev IA1 := @IA1_total_exists
+
+/-- IA2: Channel capacity bounds access. -/
+abbrev IA2 := @IA2_capacity_bounds_access
+
+/-- IA3: When total exceeds capacity, gap is positive. -/
+abbrev IA3 := @IA3_gap_when_exceeds
+
+/-- IA4: The gap is physical, not logical. -/
+abbrev IA4 := @IA4_gap_is_physical
+
+/-- IA5: Competence bounded by access. -/
+abbrev IA5 := @IA5_competence_bounded
+
+/-- IA6: Logic is complete; access isn't. -/
+abbrev IA6 := @IA6_logic_complete_access_not
+
+end InformationAccessExports
+
+-- ============================================================================
+-- Dimensional Complexity Exports (DC1-DC15)
+-- Each tractable subcase is a complexity class that collapses to P.
+-- ============================================================================
+
+section DimensionalComplexityExports
+
+open Physics.DimensionalComplexity
+
+/-- DC1: Each tractable subcase is a complexity class → P. -/
+abbrev DC1 := @subcaseComplexity
+
+/-- DC2: Bounded actions → complexity class P. -/
+abbrev DC2 := @DC2_bounded_actions_class
+
+/-- DC3: Separable utility → complexity class P. -/
+abbrev DC3 := @DC3_separable_class
+
+/-- DC4: Low tensor rank → complexity class P. -/
+abbrev DC4 := @DC4_low_rank_class
+
+/-- DC5: Tree structure → complexity class P. -/
+abbrev DC5 := @DC5_tree_class
+
+/-- DC6: Bounded treewidth → complexity class P. -/
+abbrev DC6 := @DC6_treewidth_class
+
+/-- DC7: Coordinate symmetry → complexity class P. -/
+abbrev DC7 := @DC7_symmetry_class
+
+/-- DC8: Fixed topology (stationary) preserves tractability. -/
+abbrev DC8 := @DC8_stationary_topology
+
+/-- DC9: Motion adds dimension, may break tractability. -/
+abbrev DC9 := @DC9_motion_adds_dimension
+
+/-- DC10: Tractability = bounded effective dimension. -/
+abbrev DC10 := @isTractable
+
+/-- DC11: Tractable ↔ in complexity class P. -/
+abbrev DC11 := @DC11_tractable_is_P
+
+/-- DC12: Untractable stays in base complexity class. -/
+abbrev DC12 := @DC12_untractable_base
+
+/-- DC13: All 6 subcases collapse to P. -/
+abbrev DC13 := @DC13_all_subcases_P
+
+/-- DC14: Dimension bound determines complexity class. -/
+abbrev DC14 := @DC14_dimension_determines_class
+
+/-- DC15: Complexity hierarchy P ⊂ coNP ⊂ PP ⊂ PSPACE. -/
+abbrev DC15 := @DC15_complexity_hierarchy
+
+end DimensionalComplexityExports
+
+/-! ## Anchor Query Handle Exports (AQ1-AQ8)
+
+These provide compact handles for the posed-anchor query object and its
+typed-claim/signal/integrity links.
+-/
+
+section AnchorQueryExports
+
+/-- AQ1: Posing constructs a formal anchor-query object with preserved components. -/
+abbrev AQ1 := @pose_returns_anchor_query_object
+
+/-- AQ2: Posed anchor-query truth iff existential anchor witness. -/
+abbrev AQ2 := @posed_anchor_query_truth_iff_exists_anchor
+
+/-- AQ3: Posed anchor-query truth iff the corresponding ∃∀ condition. -/
+abbrev AQ3 := @posed_anchor_query_truth_iff_exists_forall
+
+/-- AQ4: Exact admissibility on posed queries iff competence. -/
+abbrev AQ4 := @posed_anchor_exact_claim_admissible_iff_competent
+
+/-- AQ5: Admissible exact posed-query claims require evidence. -/
+abbrev AQ5 := @posed_anchor_exact_claim_requires_evidence
+
+/-- AQ6: No competence implies no admissible exact posed-query claim. -/
+abbrev AQ6 := @posed_anchor_no_competence_no_exact_claim
+
+/-- AQ7: Under integrity, checker-accepted `true` verdict implies posed-query truth. -/
+abbrev AQ7 := @posed_anchor_checked_true_implies_truth
+
+/-- AQ8: Positive certified-confidence signal implies typed admissibility. -/
+abbrev AQ8 := @posed_anchor_signal_positive_certified_implies_admissible
+
+end AnchorQueryExports
+
+/-! ## Decision Problem Handle Exports (DP6-DP8)
+
+These provide paper-compatible handles for the foundational sufficiency theorems.
+-/
+
+section DecisionProblemExtras
+
+/-- DP6: Empty-set sufficiency iff constant decision boundary (Bool-coordinate instance). -/
+abbrev DP6 := @DecisionProblem.emptySet_sufficient_iff_constant Bool (Fin 2 → Bool) 2 (functionCoordinateSpace Bool 2)
+
+/-- DP7: Non-sufficiency iff counterexample witness (Bool-coordinate instance). -/
+abbrev DP7 := @DecisionProblem.not_sufficient_iff_exists_counterexample Bool (Fin 2 → Bool) 2 (functionCoordinateSpace Bool 2)
+
+/-- DP8: Empty-set non-sufficiency iff distinct optimal sets (Bool-coordinate instance). -/
+abbrev DP8 := @DecisionProblem.emptySet_not_sufficient_iff_exists_opt_difference Bool (Fin 2 → Bool) 2 (functionCoordinateSpace Bool 2)
+
+end DecisionProblemExtras
 
 end ClaimClosure
 end DecisionQuotient

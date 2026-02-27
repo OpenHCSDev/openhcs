@@ -1,3 +1,18 @@
+/-
+  Paper 4: Decision-Relevant Uncertainty
+
+  Complexity.lean - Complexity Theory Interfaces
+
+  This file provides interfaces to computability theory: languages, encodings,
+  Turing machines. Connects to standard complexity theory.
+
+  ## Triviality Level
+  TRIVIAL: This wraps standard library complexity theory. No novel proofs.
+
+  ## Dependencies
+  - Chain: Basic.lean → Computation.lean → here
+-/
+
 import Mathlib.Computability.Language
 import Mathlib.Computability.Encoding
 import Mathlib.Computability.TMComputable

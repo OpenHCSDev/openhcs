@@ -3,7 +3,15 @@
 Regime for this section: the mechanized Boolean-coordinate model [S\_bool] plus the architecture cost model defined below. The centralization-vs-distribution framing follows established software-architecture criteria about modular decomposition and long-run maintenance tradeoffs \cite{parnas1972criteria, brooks1987no, bass2012software, shaw1996software}.
 Although phrased in software terms, the formal objects are substrate-agnostic: the same hardness-placement and amortization equations apply to physical architectures (for example, centralized vs distributed sensing/actuation computation) once mapped into the same coordinate/cost model.
 \claimstamp{P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle},\ref{thm:centralization-dominance},\ref{thm:tax-conservation},\ref{thm:amortization}}{AR,LC}
-\leanmeta{\LH{CT6},\LH{CT4},\LH{HD1},\LH{HD4},\LH{HD3}.}
+\leanmeta{\LH{CT6},\LH{CT4},\LH{HD1},\LH{HD5},\LH{HD4}.}
+
+In electrical implementations, the same architecture equations are energy equations: each distributed update path induces switching events and Joule expenditure, while centralized one-time structure pays setup cost and reduces repeated per-site electrical work. Under the declared thermodynamic lift, this is tracked as a typed transfer from bit-operation load to physical energy load.
+\claimstamp{P\ref{prop:thermo-lift};C\ref{cor:neukart-vinokur}}{AR,H=cost-growth}
+\leanmeta{\LH{CC76},\LH{CC77}.}
+
+Equivalently, repeated distributed cycles create a thermal duty: more update cycles imply more bit operations, which imply more unavoidable dissipated heat and therefore larger heat-transfer/removal requirements in the same substrate class.
+\claimstamp{P\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:thermo-lift}}{AR,H=cost-growth}
+\leanmeta{\LH{DT13},\LH{DT16},\LH{CV17},\LH{CV18},\LH{CC76}.}
 
 \subsection{Over-Specification as Diagnostic Signal}
 
@@ -41,9 +49,12 @@ Once exact competence is available in the active regime (Corollaries~\ref{cor:pr
 \leanmeta{\LH{IC18},
 \LH{IC25},
 \LH{IC7},
-\LH{L15},
-\LH{L16},
-\LH{L17},
+\LH{CC81},
+\LH{CC82},
+\LH{CC84},
+\LH{CC71},
+\LH{CC73},
+\LH{CC72},
 \LH{S2P1}.}
 \end{remark}
 
@@ -80,31 +91,31 @@ By \LH{S2P2}, sufficiency of size $\le k$ is equivalent to a relevance-cardinali
 \begin{corollary}[Bounded-Regime Tractability]\label{cor:practice-bounded}
 \claimstamp{C\ref{cor:practice-bounded}}{H=tractable-structured}
 When the bounded-action or explicit-state conditions of Theorem~\ref{thm:tractable} hold, minimal modeling can be solved in polynomial time in the stated input size.
-\leanmeta{\LH{L15}}
+\leanmeta{\LH{CC81}}
 \end{corollary}
 
 \begin{proof}
-This is the bounded-regime branch of Theorem~\ref{thm:tractable}, mechanized as \LH{L3}.
+This is the bounded-regime branch of Theorem~\ref{thm:tractable}, mechanized as \LH{CC81}.
 \end{proof}
 
 \begin{corollary}[Separable-Utility Tractability]\label{cor:practice-structured}
 \claimstamp{C\ref{cor:practice-structured}}{H=tractable-structured}
 When utility is separable with explicit factors, sufficiency checking is polynomial in the explicit-state regime.
-\leanmeta{\LH{L16}}
+\leanmeta{\LH{CC82}}
 \end{corollary}
 
 \begin{proof}
-This is the separable-utility branch of Theorem~\ref{thm:tractable}, mechanized as \LH{L4}.
+This is the separable-utility branch of Theorem~\ref{thm:tractable}, mechanized as \LH{CC82}.
 \end{proof}
 
 \begin{corollary}[Tree-Structured Tractability]\label{cor:practice-tree}
 \claimstamp{C\ref{cor:practice-tree}}{H=tractable-structured}
 When utility factors form a tree structure with explicit local factors, sufficiency checking is polynomial in the explicit-state regime.
-\leanmeta{\LH{L17}}
+\leanmeta{\LH{CC84}}
 \end{corollary}
 
 \begin{proof}
-This is the tree-factor branch of Theorem~\ref{thm:tractable}, mechanized as \LH{L5}.
+This is the tree-factor branch of Theorem~\ref{thm:tractable}, mechanized as \LH{CC84}.
 \end{proof}
 
 \begin{corollary}[Low-Tensor-Rank Tractability]\label{cor:practice-tensor}
@@ -139,11 +150,11 @@ This is the coordinate-symmetry branch of Theorem~\ref{thm:tractable}, mechanize
 
 \begin{corollary}[Mechanized Hard Family]\label{cor:practice-unstructured}
 There is a machine-checked family of reduction instances where, for non-tautological source formulas, every coordinate is relevant ($k^*=n$), exhibiting worst-case boundary complexity.
-\leanmeta{\LH{L1}}
+\leanmeta{\LH{CC26}}
 \end{corollary}
 
 \begin{proof}
-The strengthened reduction proves that non-tautological source formulas induce instances where every coordinate is relevant; this is mechanized as \LH{L1}.
+The strengthened reduction proves that non-tautological source formulas induce instances where every coordinate is relevant; this is mechanized as \LH{CC26}.
 \end{proof}
 
 \subsection{Hardness Distribution: Right Place vs Wrong Place}\label{sec:hardness-distribution}
@@ -165,7 +176,7 @@ For any problem family $P$ measured by $H(P;n)$ above, any solution architecture
 H_{\text{total}}(S) = H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S) \geq H(P;n).
 \]
 For SUFFICIENCY-CHECK, Theorem~\ref{thm:dichotomy} provides the baseline on the hard succinct family: $H(\text{SUFFICIENCY-CHECK};n)=2^{\Omega(n)}$ under ETH.
-\leanmeta{\LH{HD20}}
+\leanmeta{\LH{HD23},\LH{HD25}}
 \end{proposition}
 
 \begin{proof}
@@ -175,13 +186,13 @@ By definition, $H(P;n)$ is a worst-case lower bound for correct solutions in thi
 \begin{definition}[Hardness Efficiency]\label{def:hardness-efficiency}
 The \emph{hardness efficiency} of solution $S$ with $n$ use sites is:
 \[\eta(S, n) = \frac{H_{\text{central}}(S)}{H_{\text{central}}(S) + n \cdot H_{\text{distributed}}(S)}\]
-\leanmeta{\LH{HD10}}
+\leanmeta{\LH{HD11}}
 \end{definition}
 
 \begin{proposition}[Efficiency Equivalence]\label{prop:hardness-efficiency-interpretation}
 \claimstamp{P\ref{prop:hardness-efficiency-interpretation}}{H=cost-growth}
 For fixed $n$ and positive total hardness, larger $\eta(S,n)$ is equivalent to a larger central share of realized hardness.
-\leanmeta{\LH{HD10}}
+\leanmeta{\LH{HD11}}
 \end{proposition}
 
 \begin{proof}
@@ -194,8 +205,8 @@ For a solution architecture $S$ in this linear model:
 \text{right hardness} \iff H_{\mathrm{distributed}}(S)=0,\qquad
 \text{wrong hardness} \iff H_{\mathrm{distributed}}(S)>0.
 \]
-\leanmeta{\LH{HD11},
-\LH{HD12}}
+\leanmeta{\LH{HD12},
+\LH{HD13}}
 \end{definition}
 
 \begin{theorem}[Centralization Dominance]\label{thm:centralization-dominance}
@@ -233,11 +244,11 @@ H_{\mathrm{central}}(S_{\mathrm{right}}) + n\,H_{\mathrm{distributed}}(S_{\mathr
 <
 H_{\mathrm{central}}(S_{\mathrm{wrong}}) + n\,H_{\mathrm{distributed}}(S_{\mathrm{wrong}}).
 \]
-\leanmeta{\LH{HD16}}
+\leanmeta{\LH{HD19}}
 \end{corollary}
 
 \begin{proof}
-This is the mechanized theorem \LH{HD10}.
+This is the mechanized theorem \LH{HD19}.
 \end{proof}
 
 \begin{proposition}[Dominance Modes]\label{prop:dominance-modes}
@@ -277,11 +288,11 @@ n > H_{\mathrm{baseline}}(P),
 \]
 where $H_{\mathrm{baseline}}(P)$ corresponds to the Lean identifier
 \texttt{intrinsicDOF}(P) in module \nolinkurl{HardnessDistribution}.
-\leanmeta{\LH{HD14}}
+\leanmeta{\LH{HD15}}
 \end{corollary}
 
 \begin{proof}
-Immediate from \LH{HD9}.
+Immediate from \LH{HD15}.
 \end{proof}
 
 \subsection{Extension: Non-Additive Site-Cost Models}\label{sec:nonadditive-site-costs}
@@ -318,12 +329,12 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{right}},n)
 <
 H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).
 \]
-\leanmeta{\LH{HD8}}
+\leanmeta{\LH{HD9}}
 \end{theorem}
 
 \begin{proof}
 This is exactly the mechanized theorem
-\LH{HD6}.
+\LH{HD9}.
 \end{proof}
 
 \begin{corollary}[Eventual Generalized Dominance]\label{cor:generalized-eventual-dominance}
@@ -334,12 +345,12 @@ H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{right}},n)
 <
 H_{\text{total}}^{\mathrm{gen}}(S_{\mathrm{wrong}},n).
 \]
-\leanmeta{\LH{HD9}}
+\leanmeta{\LH{HD10}}
 \end{corollary}
 
 \begin{proof}
 Immediate from
-\LH{HD7}.
+\LH{HD10}.
 \end{proof}
 
 \begin{proposition}[Generalized Assumption Boundary]\label{prop:generalized-assumption-boundary}
@@ -349,8 +360,8 @@ In the generalized model, strict right-vs-wrong dominance is not unconditional. 
 \item If wrong-side growth lower bounds are dropped, right-side strict dominance can fail for all $n$.
 \item If right-side boundedness is dropped, strict dominance can fail for all $n$ even when wrong-side growth is linear.
 \end{enumerate}
-\leanmeta{\LH{HD7},
-\LH{HD6}}
+\leanmeta{\LH{HD8},
+\LH{HD7}}
 \end{proposition}
 
 \begin{proof}
@@ -381,8 +392,8 @@ K, & n>K,
 \end{cases}
 \]
 both $C_K$ and $n\mapsto H_{\text{central}}+C_K(n)$ are eventually saturating.
-\leanmeta{\LH{HD17},
-\LH{HD5}}
+\leanmeta{\LH{HD20},
+\LH{HD6}}
 \end{theorem}
 
 \begin{proof}
@@ -392,7 +403,7 @@ This is the explicit construction mechanized in Lean.
 \begin{corollary}[Positive Linear Slope Cannot Represent Saturation]\label{cor:linear-positive-no-saturation}
 \claimstamp{C\ref{cor:linear-positive-no-saturation}}{H=cost-growth}
 No positive-slope linear per-site model can represent the saturating family above for all $n$.
-\leanmeta{\LH{HD15}}
+\leanmeta{\LH{HD16}}
 \end{corollary}
 
 \begin{proof}

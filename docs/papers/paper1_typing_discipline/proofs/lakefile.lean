@@ -81,6 +81,12 @@ lean_lib «axis_framework» where
   -- Axis-parametric framework: generic minimality and uniqueness proofs
 
 @[default_target]
+lean_lib «lwd_converse» where
+  moreLeanArgs := moreLeanArgs
+  weakLeanArgs := weakLeanArgs
+  -- Finite counting converse used by downstream papers
+
+@[default_target]
 lean_lib «PrintAxioms» where
   moreLeanArgs := moreLeanArgs
   weakLeanArgs := weakLeanArgs

@@ -38,6 +38,7 @@ Date: 2025-01-08
 import Leverage.Foundations
 import Leverage.Probability
 import Leverage.Theorems
+import Leverage.Physical
 import Leverage.SSOT
 import Leverage.Typing
 import Leverage.Examples
@@ -66,6 +67,11 @@ import LambdaDR
 - `optimal_minimizes_error`: Optimal architecture minimizes error (Theorem 3.4)
 - `ssot_dominates_non_ssot`: SSOT dominates non-SSOT (same caps)
 - `ssot_pareto_optimal`: SSOT is Pareto-optimal
+
+### Physical Grounding (Leverage/Physical.lean)
+- `energyLowerBound_eq_joules_times_dof`: energy floor proportional to DOF
+- `lower_dof_lower_energy`: lower DOF implies strictly lower energy floor
+- `higher_leverage_same_caps_implies_lower_energy`: higher leverage lowers energy floor in fixed capability class
 
 ### SSOT Instance (Leverage/SSOT.lean)
 - `ssot_leverage_dominance`: SSOT dominates non-SSOT by factor n

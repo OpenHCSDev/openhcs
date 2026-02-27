@@ -33,7 +33,7 @@ open StochAction
 
 The gap between the two actions' expected utilities is the price signal.
 A positive gap means the prior already resolves the decision; no observation needed.
-A zero gap means the prior is indifferent; the agent must observe to act rationally.
+A zero gap means the prior is indifferent; the controller must observe to act rationally.
 -/
 
 /-- Observation is rational when the prior fails to resolve the decision.
@@ -59,7 +59,7 @@ theorem shouldObserve_iff_gap_zero {S : Type*} [Fintype S] [Nonempty S] {n : ℕ
     linarith
 
 /-- When the prior is sufficient (gap > 0), no observation is needed.
-    The agent already knows the optimal action; observing wastes resources. -/
+    The controller already has a unique optimal action under the prior; observing wastes resources. -/
 theorem no_observation_when_prior_sufficient {S : Type*} [Fintype S] {n : ℕ}
     [CoordinateSpace S n]
     (P : StochasticDecisionProblem StochAction S) :

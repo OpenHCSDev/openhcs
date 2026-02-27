@@ -31,24 +31,28 @@ The abstract realizability conditions (causal update propagation and provenance 
 Theorem~\ref{thm:ssot-iff} partitions languages into two classes:
 
 \begin{center}
-\begin{tabular}{lcc}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight\arraybackslash}p{0.18\linewidth}YY@{}}
 \toprule
 \textbf{Language} & \textbf{Def-time hooks} & \textbf{Introspection} \\
 \midrule
-\multicolumn{3}{l}{\emph{DOF-1-complete (both requirements):}} \\
-Python & \texttt{\_\_init\_subclass\_\_} & \texttt{\_\_subclasses\_\_()} \\
+\multicolumn{3}{@{}l}{\emph{DOF-1-complete (both requirements):}} \\
+Python & \LH{PYH1} & \LH{PYI1} \\
 CLOS & \texttt{:after} methods & MOP queries \\
 Smalltalk & class creation protocol & \texttt{subclasses} \\
 \midrule
-\multicolumn{3}{l}{\emph{DOF-1-incomplete (missing $\geq 1$ requirement):}} \\
-Java & \textemdash & reflection \\
-C++ & \textemdash & \textemdash \\
-Rust & proc macros (compile-time) & \textemdash \\
-Go & \textemdash & \textemdash \\
+\multicolumn{3}{@{}l}{\emph{DOF-1-incomplete (missing $\geq 1$ requirement):}} \\
+Java & -- & reflection \\
+C++ & -- & -- \\
+Rust & proc macros (compile-time) & -- \\
+Go & -- & -- \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 \textbf{Interpretation.} DOF-1-complete languages can achieve DOF = 1 for structural facts using language-native mechanisms. DOF-1-incomplete languages require external tooling (code generation, IDE refactoring) which operates outside language semantics and can be bypassed (cf.\ Theorem~\ref{thm:independence} on why external tools do not establish derivation).
+
+Viewed after formalization, the two requirements may appear straightforward. In this mainstream set, only Python satisfies both; Java has introspection without definition-time hooks, Rust has compile-time hooks without runtime introspection, and C++ and Go have neither.
 
 Supplement~A contains the complete evaluation with justifications, worked code examples demonstrating each mechanism, and discussion of edge cases.

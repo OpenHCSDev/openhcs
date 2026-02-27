@@ -50,7 +50,7 @@ inductive ClassDefEvent where
   | class_bound : PyId -> ClassDefEvent
 \end{code}
 
-The theorem \texttt{init\_subclass\_in\_class\_definition} is then \emph{derived} from this semantics---not assumed. The model is a direct encoding of Python's specification.
+The theorem \texttt{init\_subclass\_in\_class\_definition} is then \emph{derived} from this semantics--not assumed. The model is a direct encoding of Python's specification.
 
 \paragraph{Falsifiability.} The model makes testable predictions. To falsify it, produce Python code where:
 \begin{itemize}
@@ -104,16 +104,16 @@ The analysis characterizes DOF = 1 \emph{within system semantics}, where coheren
 
 \subsubsection{Objection: The Requirements Are Circular}
 
-\textbf{Objection:} ``You define `structural fact' as `fixed at definition time,' then prove you need definition-time hooks. The conclusion is embedded in the definition---this is circular.''
+\textbf{Objection:} ``You define `structural fact' as `fixed at definition time,' then prove you need definition-time hooks. The conclusion is embedded in the definition--this is circular.''
 
 \textbf{Response:} The definition does not assume definition-time hooks; it defines what structural facts \emph{are}. The derivation has three distinct steps:
 
 \begin{enumerate}
 \item \textbf{Definition:} A fact $F$ is \emph{structural} iff it is encoded in the syntactic structure of type definitions (class existence, method signatures, inheritance relationships). This is a classification, not a requirement.
 
-\item \textbf{Observation:} Structural facts are fixed when types are defined. This follows from what ``syntactic structure'' means---you cannot change a class's bases after the \texttt{class} statement completes.
+\item \textbf{Observation:} Structural facts are fixed when types are defined. This follows from what ``syntactic structure'' means--you cannot change a class's bases after the \texttt{class} statement completes.
 
-\item \textbf{Theorem:} Coherent derivation of structural facts requires hooks that execute at definition time. This is the actual result---it follows from the observation, not from the definition.
+\item \textbf{Theorem:} Coherent derivation of structural facts requires hooks that execute at definition time. This is the actual result--it follows from the observation, not from the definition.
 \end{enumerate}
 
 The circularity objection mistakes a \emph{consequence} for a \emph{premise}. We do not define structural facts as ``requiring definition-time hooks.'' We define them by their syntactic locus, observe when they become fixed, and derive the necessary language features.
@@ -217,7 +217,7 @@ Cross-system encoding (e.g., protobuf generating code for multiple languages) re
 
 \subsubsection{Objection: Inconsistency Is Only in Comments}
 
-\textbf{Objection:} ``The proofs don't formalize `inconsistency'---it only appears in comments. The heavy lifting is done by the comments, not by the formal system.''
+\textbf{Objection:} ``The proofs don't formalize `inconsistency'--it only appears in comments. The heavy lifting is done by the comments, not by the formal system.''
 
 \textbf{Response:} This critique was valid for earlier versions. We have since added \texttt{Ssot/Inconsistency.lean} (216 LOC, zero \texttt{sorry}), which formalizes inconsistency as a Lean \texttt{Prop}:
 
@@ -234,15 +234,15 @@ def inconsistent (c : ConfigSystem) : Prop :=
 The file proves:
 
 \begin{enumerate}
-\item \textbf{DOF $>$ 1 implies inconsistency possible:} \texttt{dof\_gt\_one\_implies\_inconsistency\_possible}---we constructively exhibit an inconsistent configuration for any $n > 1$.
+\item \textbf{DOF $>$ 1 implies inconsistency possible:} \texttt{dof\_gt\_one\_implies\_inconsistency\_possible}--we constructively exhibit an inconsistent configuration for any $n > 1$.
 
-\item \textbf{Guaranteed consistency requires DOF $\leq$ 1:} \texttt{consistency\_requires\_dof\_le\_one}---contrapositive of the above.
+\item \textbf{Guaranteed consistency requires DOF $\leq$ 1:} \texttt{consistency\_requires\_dof\_le\_one}--contrapositive of the above.
 
-\item \textbf{DOF = 0 means the fact is not encoded:} \texttt{dof\_zero\_means\_not\_encoded}---no locations implies the system cannot represent the value.
+\item \textbf{DOF = 0 means the fact is not encoded:} \texttt{dof\_zero\_means\_not\_encoded}--no locations implies the system cannot represent the value.
 
-\item \textbf{Independence formalized:} \texttt{update\_preserves\_other\_locations}---updating one location does not affect others, formalizing what ``independent'' means.
+\item \textbf{Independence formalized:} \texttt{update\_preserves\_other\_locations}--updating one location does not affect others, formalizing what ``independent'' means.
 
-\item \textbf{Oracle necessity:} \texttt{resolution\_requires\_external\_choice}---when locations disagree, there exist valid oracles that give different resolutions. Therefore, resolving disagreement requires an external, arbitrary choice. The system itself provides no basis to prefer one value over another.
+\item \textbf{Oracle necessity:} \texttt{resolution\_requires\_external\_choice}--when locations disagree, there exist valid oracles that give different resolutions. Therefore, resolving disagreement requires an external, arbitrary choice. The system itself provides no basis to prefer one value over another.
 \end{enumerate}
 
 This addresses the critique directly: inconsistency is now a formal property that Lean knows about, not a comment. The interpretation ``this models real configuration systems'' still requires mapping to reality, but every formalization eventually bottoms out in interpretation. The contribution is making assumptions \emph{explicit and attackable}, not eliminating interpretation entirely.
@@ -251,7 +251,7 @@ This addresses the critique directly: inconsistency is now a formal property tha
 
 \textbf{Objection:} ``Your two-axis model (B, S) ignores the type's name. Isn't N (the name) a third independent axis?''
 
-\textbf{Response:} No. N is not an independent axis---it is a slot on the type object, set at definition time and immutable thereafter. Technically, \texttt{\_\_name\_\_} is stored on the \texttt{PyTypeObject} struct (a C-level slot), not in \texttt{\_\_dict\_\_}. However, this does not make it independent:
+\textbf{Response:} No. N is not an independent axis--it is a slot on the type object, set at definition time and immutable thereafter. Technically, \texttt{\_\_name\_\_} is stored on the \texttt{PyTypeObject} struct (a C-level slot), not in \texttt{\_\_dict\_\_}. However, this does not make it independent:
 
 \begin{enumerate}
 \item \textbf{N is fixed at definition time.} The name is set by the \texttt{class} statement and cannot be changed without creating a new type.
@@ -283,7 +283,7 @@ This is why the model is (B, S) and not (B, S, N). N is a fixed label assigned a
 At runtime, you cannot distinguish hand-written code from macro-generated code.
 \end{quote}
 
-This is empirically testable. Challenge: produce Rust code that, at runtime, recovers whether a given struct was written by a human or expanded by a macro---without external metadata files, build logs, or source access.
+This is empirically testable. Challenge: produce Rust code that, at runtime, recovers whether a given struct was written by a human or expanded by a macro--without external metadata files, build logs, or source access.
 
 The model's \texttt{RuntimeItem} having no source field is \emph{observationally accurate}: real Rust binaries contain no such field. Whether rustc internally tracks provenance during compilation is irrelevant; what matters is that this information is not preserved in the final artifact.
 
@@ -302,12 +302,12 @@ The macro generates the registry at compile time. There's no second DOF that can
 \textbf{Response:} This conflates \emph{enabling} a pattern with \emph{enforcing} it. The critical distinction:
 
 \begin{enumerate}
-\item \textbf{Proc macros are per-item isolated.} When \texttt{\#[derive(AutoRegister)]} executes on \texttt{MyHandler}, it cannot see \texttt{OtherHandler}. Each macro invocation is independent---there is no shared state during compilation. Therefore, no single macro can generate a complete registry.
+\item \textbf{Proc macros are per-item isolated.} When \texttt{\#[derive(AutoRegister)]} executes on \texttt{MyHandler}, it cannot see \texttt{OtherHandler}. Each macro invocation is independent--there is no shared state during compilation. Therefore, no single macro can generate a complete registry.
 
 \item \textbf{Registration is bypassable.} You can write:
 \begin{code}
 struct SneakyHandler;
-impl Handler for SneakyHandler { ... }  // No #[derive]---NOT in registry
+impl Handler for SneakyHandler { ... }  // No #[derive]--NOT in registry
 \end{code}
 The impl exists; the registry entry does not. \textbf{DOF = 2}: the impl and the registry are independent locations that can disagree.
 
@@ -315,7 +315,7 @@ The impl exists; the registry entry does not. \textbf{DOF = 2}: the impl and the
 \begin{itemize}
 \tightlist
 \item Platform-specific (different on Linux, macOS, Windows)
-\item Not enforced---you can \texttt{impl Trait} without \texttt{\#[inventory::submit]}
+\item Not enforced--you can \texttt{impl Trait} without \texttt{\#[inventory::submit]}
 \item External to language semantics (depends on linker behavior)
 \end{itemize}
 \end{enumerate}
@@ -323,7 +323,7 @@ The impl exists; the registry entry does not. \textbf{DOF = 2}: the impl and the
 Contrast Python:
 \begin{code}
 class SneakyHandler(Registry):  # __init_subclass__ fires AUTOMATICALLY
-    pass  # Cannot create unregistered subclass---IMPOSSIBLE
+    pass  # Cannot create unregistered subclass--IMPOSSIBLE
 \end{code}
 
 In Python, the hook is \emph{unforgeable}. The language semantics guarantee that creating a subclass triggers \texttt{\_\_init\_subclass\_\_}. There is no syntax to bypass this. \textbf{DOF = 1} by construction.
@@ -344,7 +344,7 @@ The objection confuses ``can create a registry'' with ``can guarantee all items 
 With DOF $> 1$, consistency requires an external oracle to resolve disagreements.
 \end{quote}
 
-``Discipline'' is exactly that oracle---human memory, review processes, documentation conventions. This is not a counterargument; it is the theorem restated in different words.
+``Discipline'' is exactly that oracle--human memory, review processes, documentation conventions. This is not a counterargument; it is the theorem restated in different words.
 
 The question is whether the oracle is:
 \begin{itemize}
@@ -361,7 +361,7 @@ Language-level SSOT provides an internal oracle. Discipline provides an external
 
 \textbf{Response:} When you model correctly, theorems become definitional. This is a feature, not a bug.
 
-Consider: ``The sum of two even numbers is even.'' In a well-designed formalization, this can be \texttt{rfl}---not because it's trivial, but because the definition of ``even'' was chosen to make the property structural.
+Consider: ``The sum of two even numbers is even.'' In a well-designed formalization, this can be \texttt{rfl}--not because it's trivial, but because the definition of ``even'' was chosen to make the property structural.
 
 That said, not all proofs are \texttt{rfl}. The \texttt{rust\_lacks\_introspection} theorem is 40 lines of actual reasoning:
 

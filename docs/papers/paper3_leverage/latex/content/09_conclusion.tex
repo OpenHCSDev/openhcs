@@ -9,7 +9,7 @@ decision-making---while large language models (Claude, GPT-4) served as
 implementation partners for formalization, proof drafting, and LaTeX
 generation.
 
-The Lean 4 proofs (858 lines, 0 sorry placeholders) were iteratively
+The Lean 4 proofs (\LeanTotalLines{} lines, \LeanTotalSorry{} \texttt{sorry} placeholders) were iteratively
 developed: the author specified theorems, the LLM proposed proof
 strategies, and the Lean compiler verified correctness. This
 methodology is epistemically sound: machine-checked proofs are correct
@@ -37,13 +37,17 @@ We provided the first formal connection between software architecture and reliab
 
 \textbf{2. Leverage Gap Theorem (Theorem \ref{thm:leverage-gap}):} For equal-capability architectures, modification cost ratio equals DOF ratio. This is a \emph{testable prediction}: $k\times$ leverage yields $k\times$ fewer modifications.
 
-\textbf{3. Approximation Bounds (Theorem \ref{thm:approx-bound}):} The linear approximation $P_{error} \approx n \cdot p$ has bounded error $O(n^2 p^2)$, justifying its use for architectural decisions.
+\textbf{3. Ordering Equivalence (Theorem \ref{thm:approx-bound}):} The linear expected-error model and exact series model induce the same architecture ordering in the discrete formalization.
 
 \textbf{4. Leverage-Error Tradeoff (Theorem \ref{thm:leverage-error}):} Maximizing leverage minimizes error probability.
 
-\textbf{5. Unifying Framework:} SSOT and nominal typing are instances of leverage maximization.
+\textbf{5. Physical Edit-Energy Floor (Theorem \ref{thm:physical-energy-floor}, Corollary \ref{cor:leverage-energy}):} Under one explicit physical calibration constant, minimum edit-energy is proportional to DOF, and higher leverage in a fixed capability class yields strictly lower energy floor.
 
-\textbf{6. Practical Demonstration:} Before/after examples from OpenHCS demonstrating DOF collapse. PR \#44 provides a publicly verifiable instance.
+\textbf{6. Budget Boundary and Necessity (Theorem \ref{thm:physical-budget-boundary}, Corollary \ref{cor:physical-assumption-necessity}):} infeasibility is exactly budget-below-floor, and necessity witnesses isolate the two physical premises used in this layer.
+
+\textbf{7. Unifying Framework:} SSOT and nominal typing are instances of leverage maximization.
+
+\textbf{8. Practical Demonstration:} Before/after examples from OpenHCS demonstrating DOF collapse. PR \#44 provides a publicly verifiable instance.
 
 \subsection{Decision Procedure}
 
@@ -60,7 +64,7 @@ Given requirements $R$, choose optimal architecture via:
 
 \subsection{Limitations}
 
-\textbf{1. Independence Assumption (Axiom 2.1):} Assumes errors in different DOF are independent. Real systems may have correlated errors.
+\textbf{1. Independence Assumption:} The mechanized probability model treats DOF-level errors as independent under the orthogonality assumptions. Real systems may include additional correlated failure modes.
 
 \textbf{2. Constant Error Rate:} Assumes $p$ is constant across components. Reality: some components are more error-prone than others.
 
@@ -90,7 +94,7 @@ This work provides:
 
 \textbf{For Practitioners:} Principled method for architectural decisions. When choosing between alternatives, compute leverage and select maximum (subject to requirements).
 
-\textbf{For Researchers:} Unifying framework connecting SSOT, nominal typing, microservices, API design, configuration, and database normalization. Opens new research directions (weighted capabilities, correlated errors, tool support).
+\textbf{For Researchers:} Unifying framework connecting SSOT, nominal typing, microservices, API design, configuration, and database normalization. This integrates cleanly with Paper 4's decision-sufficiency viewpoint: Paper 4 characterizes when information is sufficient for an optimal decision, while Paper 3 provides a computable architectural objective within that sufficiency envelope.
 
 \textbf{For Educators:} Formal foundation for teaching software architecture. Explains \emph{why} design patterns work (leverage maximization).
 
@@ -104,4 +108,3 @@ We invite the community to apply the leverage framework to additional domains, d
 
 
 \appendix
-

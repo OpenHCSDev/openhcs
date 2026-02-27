@@ -11,6 +11,7 @@ import Ssot.Inconsistency
 import Ssot.Requirements
 import Ssot.Completeness
 import Ssot.Entropy
+import Ssot.DependencyBridge
 
 namespace ClaimClosure
 
@@ -158,5 +159,16 @@ theorem language_realizability_criterion (L : LanguageFeatures) :
        L.has_introspection = true ∧
        L.has_structural_modification = true) :=
   ssot_iff L
+
+/-- Paper 1 counting converse exposed at the Paper 2 closure layer. -/
+theorem collision_block_requires_bits_via_paper1
+    {a L : Nat} {Transcript : Type _}
+    (tag : Fin a → Fin (2 ^ L))
+    (transcript : Fin a → Transcript)
+    (decode : Fin (2 ^ L) → Transcript → Fin a)
+    (htranscript : ∀ c₁ c₂, transcript c₁ = transcript c₂)
+    (hzero : ∀ c, decode (tag c) (transcript c) = c) :
+    a ≤ 2 ^ L :=
+  Ssot.paper1_collision_block_requires_bits tag transcript decode htranscript hzero
 
 end ClaimClosure

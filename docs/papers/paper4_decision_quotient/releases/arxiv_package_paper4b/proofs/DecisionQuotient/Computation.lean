@@ -10,6 +10,14 @@
   2. Decision equivalence becomes decidable
   3. Sufficiency checking is implementable (but expensive - coNP)
   4. The complexity results from Hardness.lean are reflected in algorithm structure
+
+  ## Triviality Level
+  TRIVIAL: This connects theory to algorithms. The computational content
+  is straightforward given the abstract definitions.
+
+  ## Dependencies
+  - Depends on: Basic.lean
+  - Used by: ClaimClosure.lean, QueryComplexity.lean
 -/
 
 import DecisionQuotient.Basic

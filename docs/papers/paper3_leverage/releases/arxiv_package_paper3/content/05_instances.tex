@@ -41,6 +41,9 @@ For structural fact with $n$ use sites:
 \frac{L(A_{\text{SSOT}})}{L(A_{\text{non-SSOT}})} = n
 \]
 \end{theorem}
+\leanmeta{\LH{L_48108f64},
+\LH{L_3a9932b8},
+\LH{L_2027e0f3}}
 
 \begin{proof}
 Both architectures provide same capabilities: $|\text{Cap}(A_{\text{SSOT}})| = |\text{Cap}(A_{\text{non-SSOT}})| = c$.
@@ -120,6 +123,9 @@ Nominal and duck typing have similar implementation complexity (both are typing 
 L(\text{Nominal}) > L(\text{Duck})
 \]
 \end{theorem}
+\leanmeta{\LH{L_4372537d},
+\LH{L_d6782c96},
+\LH{L_dbf653bd}}
 
 \begin{proof}
 Let $c_{\text{duck}}  = |\text{Cap}(\text{Duck})|$ and $c_{\text{nominal}} = |\text{Cap}(\text{Nominal})|$.
@@ -166,7 +172,9 @@ Should a system use microservices or a monolith? How many services are optimal? 
 
 Let $c_0$ = capabilities provided by monolith.
 
-Let $\Delta c$ = additional capabilities from microservices = $|\{\text{indep. scaling, indep. deployment, fault isolation, team autonomy, polyglot}\}| = 5$.
+Let $\Delta c = 5$ denote the additional capabilities from microservices:
+independent scaling, independent deployment, fault isolation, team autonomy,
+and polyglot persistence.
 
 \textbf{Leverage:}
 \begin{align*}
@@ -221,7 +229,9 @@ L(\text{Specific}) &= n / n = 1
 
 \subsection{Instance 5: Configuration Systems}
 
-Convention over configuration (CoC) is a design paradigm that seeks to decrease the number of decisions that a developer is required to make without necessarily losing flexibility \cite{hansson2005rails}. It is leverage maximization via defaults.
+Convention over configuration (CoC) reduces developer decisions and preserves
+flexibility \cite{hansson2005rails}. In this framework it is leverage
+maximization via defaults.
 
 \subsubsection{Architecture Comparison}
 
@@ -298,8 +308,7 @@ L(\text{Denormalized}) &= c / 3
 
 \subsection{Summary of Instances}
 
-\begin{table}[h]
-\centering
+\begin{center}
 \begin{tabular}{lccc}
 \toprule
 \textbf{Instance} & \textbf{High Leverage} & \textbf{Low Leverage} & \textbf{Ratio} \\
@@ -312,10 +321,6 @@ Configuration & Convention (DOF = $k$) & Explicit (DOF = $m$) & $m/k$ \\
 Database & Normalized (DOF = 1) & Denormalized (DOF = $n$) & $n$ \\
 \bottomrule
 \end{tabular}
-\caption{Leverage ratios across instances}
-\label{tab:leverage-summary}
-\end{table}
+\end{center}
 
 \textbf{Pattern:} High leverage architectures achieve $n$-fold improvement where $n$ is the consolidation factor (use sites, services, endpoints, parameters, or redundant storage).
-
-

@@ -1,3 +1,23 @@
+/-
+  Paper 4: Decision-Relevant Uncertainty
+
+  Hardness/Sigma2PExhaustive/Summary.lean
+
+  Result of the exhaustive attack on MSS Σ₂ᴾ-completeness:
+
+  ## Vector Status
+
+  * **Vector A (size encoding):** Blocked. The size IS the relevant-set cardinality.
+  * **Vector B (non-Boolean):** Blocked. See `vectorB_blocked` below.
+  * **Vector C (ANCHOR lift):** Blocked. MSS is coNP; can't receive Σ₂ᴾ reduction.
+
+  ## Triviality Level
+  TRIVIAL: This is a summary/documentation file. No new proofs.
+
+  ## Dependencies
+  - Chain: Sigma2PHardness.lean + VectorE_CoNP.lean → here (summary)
+-/
+
 import DecisionQuotient.Hardness.Sigma2PHardness
 import DecisionQuotient.Hardness.Sigma2PExhaustive.VectorE_CoNP
 import DecisionQuotient.Sufficiency
@@ -44,7 +64,11 @@ The theorem `sufficient_contains_relevant` is proven in Sufficiency.lean for
 arbitrary ProductSpace S n. It makes no assumption about coordinate types.
 
 Therefore non-Boolean coordinates (Fin 3, etc.) do NOT escape the obstruction. -/
-theorem vectorB_blocked : True := trivial
+theorem vectorB_blocked
+    {A S : Type*} {n : ℕ} [CoordinateSpace S n]
+    (dp : DecisionProblem A S) (I : Finset (Fin n)) :
+    dp.isSufficient I → ∀ i, dp.isRelevant i → i ∈ I :=
+  DecisionProblem.sufficient_contains_relevant dp I
 -- The actual theorem is `sufficient_contains_relevant` in Sufficiency.lean.
 -- We reference it here to document that Vector B is closed.
 

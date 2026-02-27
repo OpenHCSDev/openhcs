@@ -59,7 +59,7 @@ theorem claim_stochastic_sequential_memoryless
 
 /-- Claim: verdict independent of substrate -/
 theorem claim_verdict_substrate_independent
-    (c : MatrixCell) (τ₁ τ₂ : AgentType) :
+    (c : MatrixCell) (τ₁ τ₂ : SubstrateType) :
     MatrixCell.verdict c = MatrixCell.verdict c := rfl
 
 /-- Problem sequence type -/
@@ -70,14 +70,14 @@ inductive ProblemSequence (A S : Type*)
 /-- Trajectory through problem sequence -/
 def trajectory {A S : Type*} 
     (σ : ProblemSequence A S) 
-    (κ : MatrixCell → AgentType → ℝ) 
-    (τ : AgentType) : ℝ := 0
+    (κ : MatrixCell → SubstrateType → ℝ) 
+    (τ : SubstrateType) : ℝ := 0
 
 /-- Claim: trajectory depends on substrate -/
 theorem claim_trajectory_substrate_dependent
     (σ : ProblemSequence A S)
-    (κ : MatrixCell → AgentType → ℝ)
-    (τ₁ τ₂ : AgentType)
+    (κ : MatrixCell → SubstrateType → ℝ)
+    (τ₁ τ₂ : SubstrateType)
     (hCost : ∃ c, κ c τ₁ ≠ κ c τ₂) :
     trajectory σ κ τ₁ ≠ trajectory σ κ τ₂ := by
   intro hEq

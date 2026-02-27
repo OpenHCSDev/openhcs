@@ -9,7 +9,7 @@ Let $E(\mathcal{O})$ be the number of locations that must be inspected to find a
 
 \begin{theorem}[Nominal-tag localization]\label{thm:nominal-localization}
 $E(\text{nominal-tag}) = O(1)$.
-\textit{(Lean: \nolinkurl{nominal_localization_constant_semantic}.)}
+\textit{(Lean: \LH{L_7fb66f42}.)}
 \end{theorem}
 
 \begin{proof}
@@ -18,7 +18,7 @@ Under nominal-tag observation, the constraint ``$v$ must be of class $A$'' is sa
 
 \begin{theorem}[Declared-attribute localization]\label{thm:declared-localization}
 $E(\text{attribute-only, declared}) = O(k)$ where $k$ = number of entity classes.
-\textit{(Lean: \nolinkurl{enumeration_checks_universe}.)}
+\textit{(Lean: \LH{L_1392387f}.)}
 \end{theorem}
 
 \begin{proof}
@@ -27,7 +27,7 @@ With declared attribute sets (interfaces in the PL instantiation), the constrain
 
 \begin{theorem}[Attribute-only localization]\label{thm:attribute-localization}
 $E(\text{attribute-only}) = \Omega(m)$ where $m$ = number of query sites.
-\textit{(Lean: \nolinkurl{duck_localization_linear}.)}
+\textit{(Lean: \LH{L_69127d7d}.)}
 \end{theorem}
 
 \begin{proof}
@@ -36,7 +36,7 @@ Under attribute-only observation, each query site independently checks ``does $v
 
 \begin{corollary}[Strict dominance]\label{cor:strict-dominance}
 Nominal-tag observation strictly dominates attribute-only: $E(\text{nominal-tag}) = O(1) < \Omega(m) = E(\text{attribute-only})$ for all $m > 1$.
-\textit{(Lean: \nolinkurl{encoding_location_gap}.)}
+\textit{(Lean: \LH{L_411150dc}.)}
 \end{corollary}
 
 \subsection{The Information Scattering Theorem}\label{the-information-scattering-theorem}
@@ -47,7 +47,7 @@ Let $I(\mathcal{O}, c)$ be the set of locations where constraint $c$ is encoded 
 
 \begin{theorem}[Attribute-only scattering]\label{thm:attribute-scattering}
 For attribute-only observation, $|I(\text{attribute-only}, c)| = O(m)$ where $m$ = query sites using constraint $c$.
-\textit{(Lean: \nolinkurl{duck_localization_linear}.)}
+\textit{(Lean: \LH{L_69127d7d}.)}
 \end{theorem}
 
 \begin{proof}
@@ -56,7 +56,7 @@ Each attribute query independently encodes the constraint. No shared reference e
 
 \begin{theorem}[Nominal-tag centralization]\label{thm:nominal-centralization}
 For nominal-tag observation, $|I(\text{nominal-tag}, c)| = O(1)$.
-\textit{(Lean: \nolinkurl{nominal_centralized}.)}
+\textit{(Lean: \LH{L_835ba535}.)}
 \end{theorem}
 
 \begin{proof}
@@ -65,5 +65,5 @@ The constraint ``must be of class $A$'' is encoded once in the definition of $A$
 
 \begin{corollary}[Maintenance entropy]\label{cor:maintenance-entropy}
 Attribute-only observation maximizes maintenance entropy; nominal-tag observation minimizes it.
-\textit{(Lean: \nolinkurl{complexity_gap_unbounded}.)}
+\textit{(Lean: \LH{L_284cf0c0}.)}
 \end{corollary}

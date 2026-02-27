@@ -1,9 +1,12 @@
 \section{Encoding-Regime Separation}\label{sec:dichotomy}
 
-The hardness results of Section~\ref{sec:hardness} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family. The complexity class is a property of the encoding measured against a fixed decision question (Remark~\ref{rem:question-vs-problem}), not a property of the question itself: the same sufficiency question admits polynomial-time algorithms under one encoding and worst-case exponential cost under another.
+Formally: this section proves regime-indexed access separation for a fixed sufficiency predicate, then lifts bit-operation bounds to thermodynamic/accounting consequences.
 
-Physical reading: the separation is an access-and-budget separation for the same decision semantics. Explicit access assumes full boundary observability; succinct access assumes compressed structure that may require exponential expansion to certify universally; query access assumes bounded measurement interfaces.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:physical-claim-transport}}{E,S+ETH,Qf,AR}
-\leanmeta{\LH{CC16},\LH{CC50},\LH{CT6}.}
+The hardness results of Section~\ref{sec:hardness} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family. The complexity class is a property of the encoding measured against a fixed decision question (Remark~\ref{rem:question-vs-problem}), not a property of the question itself: the same sufficiency question admits polynomial-time algorithms under one encoding and worst-case exponential cost under another.
+Within the paper's full regime map, this section is the static access-layer decomposition; theorem-level stochastic and sequential core placements are given in Sections~\ref{sec:stochastic} and~\ref{sec:sequential}, with strict inter-regime separation in Section~\ref{sec:regime-hierarchy}.
+
+Physical reading: the separation is an access-and-budget separation for the same decision semantics. Explicit access assumes full boundary observability; succinct access assumes compressed structure that may require exponential expansion to certify universally; query access assumes bounded measurement interfaces, and the obstruction persists across value-entry/state-batch interfaces with oracle-lattice transfer/strictness closures.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict},\ref{prop:physical-claim-transport}}{E,S+ETH,Qf,Qb,AR}
+\leanmeta{\LH{CC16},\LH{CC50},\LH{L9},\LH{L8},\LH{L21},\LH{L20},\LH{CT6}.}
 
 \paragraph{Model note.} Theorem~\ref{thm:dichotomy} has Part~1 in [E] (time polynomial in $|S|$) and Part~2 in [S+ETH] (time exponential in $n$). Proposition~\ref{prop:query-regime-obstruction} is [Q\_fin] (finite-state Opt-oracle core), while Propositions~\ref{prop:query-value-entry-lb} and~\ref{prop:query-state-batch-lb} are [Q\_bool] interface refinements (value-entry and state-batch). Relative to Definition~\ref{def:regime-simulation}, Propositions~\ref{prop:query-subproblem-transfer} and~\ref{prop:oracle-lattice-transfer} are explicit simulation-transfer instances. The [E] vs [S+ETH] split in Theorem~\ref{thm:dichotomy} is a same-question encoding/cost-model separation, not a bidirectional simulation claim between those regimes. These regimes are defined in Section~\ref{sec:encoding} and are not directly comparable as functions of one numeric input-length parameter.
 
@@ -48,9 +51,7 @@ Then there exist two decision problems $\mathcal{D}_{\mathrm{yes}},\mathcal{D}_{
 \item $\emptyset$ is not sufficient for $\mathcal{D}_{\mathrm{no}}$.
 \end{itemize}
 Consequently, no deterministic query procedure using fewer than $|S|$ state queries can solve SUFFICIENCY-CHECK on all such instances; the worst-case query complexity is $\Omega(|S|)$.
-\leanmeta{\LH{CC50},
-\LH{L7},
-\LH{L13}.}
+\leanmeta{\LH{CC50}, \LH{CC50}.}
 \end{proposition}
 
 \begin{proof}
@@ -70,9 +71,7 @@ Then
 \]
 Equivalently, any sound checker must inspect at least the witness budget
 \(W(n)=2^{n-1}\), so checking budget \(T(n)\) satisfies \(T(n)\ge W(n)\).
-\leanmeta{
-\LH{DQ587},
-\LH{DQ588}.}
+\leanmeta{\LH{WD3}, \LH{WD4}, \LH{WD5}.}
 \end{proposition}
 
 \begin{corollary}[Information Barrier in Query Regimes]\label{cor:information-barrier-query}
@@ -91,18 +90,16 @@ Hence the barrier is representational-access based: without querying enough of t
 \begin{corollary}[Boolean-Coordinate Instantiation]\label{cor:query-obstruction-bool}
 \claimstamp{C\ref{cor:query-obstruction-bool}}{H=query-lb}
 In the Boolean-coordinate state space $S=\{0,1\}^n$, Proposition~\ref{prop:query-regime-obstruction} yields the familiar $\Omega(2^n)$ worst-case query lower bound for Opt-oracle access.
-\leanmeta{\LH{CC49};
-core: \LH{L6}.}
+\leanmeta{\LH{CC49}, \LH{CC50}.}
 \end{corollary}
 
 \begin{proposition}[Value-Entry Query Lower Bound]\label{prop:query-value-entry-lb}
 In the mechanized Boolean value-entry query submodel [Q\_bool], for any deterministic procedure using fewer than $2^n$ value-entry queries $(a,s)\mapsto U(a,s)$, there exist two queried-value-indistinguishable instances with opposite truth values for SUFFICIENCY-CHECK on the $I=\emptyset$ subproblem. Therefore worst-case value-entry query complexity is also $\Omega(2^n)$.
-\leanmeta{\LH{L9},
-\LH{L19}.}
+\leanmeta{\LH{CC29}, \LH{CC50}.}
 \end{proposition}
 
 \begin{proof}
-The theorem \LH{L2} constructs, for any query set of cardinality $<2^n$, an unqueried hidden state $s_0$ and a yes/no instance pair that agree on all queried values but disagree on $\emptyset$-sufficiency. The auxiliary bound \LH{L6} ensures that fewer than $2^n$ value-entry queries cannot cover all states, so the indistinguishability argument applies in the worst case.
+The theorem \LH{CC50} constructs, for any query set of cardinality $<2^n$, an unqueried hidden state $s_0$ and a yes/no instance pair that agree on all queried values but disagree on $\emptyset$-sufficiency. The auxiliary bound \LH{CC50} ensures that fewer than $2^n$ value-entry queries cannot cover all states, so the indistinguishability argument applies in the worst case.
 \end{proof}
 
 \begin{proposition}[Subproblem-to-Full Transfer Rule]\label{prop:query-subproblem-transfer}
@@ -118,36 +115,31 @@ This is the restriction-map instance of Definition~\ref{def:regime-simulation}: 
 \claimstamp{P\ref{prop:query-randomized-robustness}}{H=query-lb}
 In [Q\_bool], for any query set with cardinality $<2^n$, the indistinguishable yes/no pair from Proposition~\ref{prop:query-regime-obstruction} forces one decoding error \emph{per random seed} for any seed-indexed decoder from oracle transcripts.
 Consequently, finite-support randomization does not remove the obstruction: averaging preserves a constant error floor on the hard pair.
-\leanmeta{\LH{L11},
-\LH{L12},
-\LH{L5}.}
+\leanmeta{\LH{CC50}, \LH{CC50}.}
 \end{proposition}
 
 \begin{proposition}[Randomized Robustness (Weighted Form)]\label{prop:query-randomized-weighted}
 \claimstamp{P\ref{prop:query-randomized-weighted}}{H=query-lb}
 For any finite-support seed weighting $\mu$, the same hard pair satisfies a weighted identity:
 the weighted sum of yes-error and no-error equals total seed weight. Hence randomization cannot collapse both errors simultaneously.
-\leanmeta{\LH{L23},
-\LH{L24}.}
+\leanmeta{\LH{CC50}, \LH{CC50}.}
 \end{proposition}
 
 \begin{proposition}[State-Batch Query Lower Bound]\label{prop:query-state-batch-lb}
 In [Q\_bool], the same $\Omega(2^n)$ lower bound holds for a state-batch oracle that returns the full Boolean-action utility tuple at each queried state.
-\leanmeta{\LH{L8},
-\LH{L14}.}
+\leanmeta{\LH{CC28}, \LH{CC50}.}
 \end{proposition}
 
 \begin{proposition}[Finite-State Empty-Subproblem Generalization]\label{prop:query-finite-state-generalization}
 \claimstamp{P\ref{prop:query-finite-state-generalization}}{H=query-lb}
 The empty-subproblem indistinguishability lower-bound core extends from Boolean-vector state spaces to any finite state type with at least two states.
-\leanmeta{\LH{L7},
-\LH{L13}.}
+\leanmeta{\LH{CC50}, \LH{CC50}.}
 \end{proposition}
 
 \begin{proposition}[Adversary-Family Tightness by Full Scan]\label{prop:query-tightness-full-scan}
 \claimstamp{P\ref{prop:query-tightness-full-scan}}{H=query-lb}
 For the const/spike adversary family used in the query lower bounds, querying all states distinguishes the pair; thus the lower-bound family is tight up to constant factors under full-state scan.
-\leanmeta{\LH{L10}.}
+\leanmeta{\LH{CC50}.}
 \end{proposition}
 
 \begin{proposition}[Weighted Query-Cost Transfer]\label{prop:query-weighted-transfer}
@@ -157,22 +149,19 @@ Any cardinality lower bound $|Q|\geq L$ lifts to weighted cost:
 \[
 \sum_{q\in Q} w(q)\ \ge\ w_{\min}\cdot L.
 \]
-\leanmeta{\LH{L21},
-\LH{L22}.}
+\leanmeta{\LH{CC50}, \LH{CC50}.}
 \end{proposition}
 
 \begin{proposition}[Oracle-Lattice Transfer: Batch $\Rightarrow$ Entry]\label{prop:oracle-lattice-transfer}
 In [Q\_bool], agreement on state-batch oracle views over touched states implies agreement on all value-entry views for the corresponding entry-query set.
-\leanmeta{\LH{L20},
-\LH{CC43}.}
+\leanmeta{\LH{CC43}, \LH{CC52}.}
 \end{proposition}
 
 This is the oracle-transducer instance of Definition~\ref{def:regime-simulation}: batch transcripts induce entry transcripts while preserving indistinguishability for the target sufficiency question.
 
 \begin{proposition}[Oracle-Lattice Strictness: Opt vs Value Entries]\label{prop:oracle-lattice-strict}
 `Opt`-oracle views are strictly coarser than value-entry views: there exist instances with identical `Opt` views but distinguishable value entries.
-\leanmeta{\LH{L3},
-\LH{L4}.}
+\leanmeta{\LH{CC27}, \LH{CC29}.}
 \end{proposition}
 
 \begin{remark}[Instantiation of Definitions~\ref{def:structural-complexity} and~\ref{def:representational-hardness}]
@@ -183,7 +172,11 @@ This regime-typed landscape identifies tractability under [E], a finite-state qu
 
 The structural reason for this separation is enumerable access. Under the explicit-state encoding, the mapping $s \mapsto \Opt(s)$ is directly inspectable and sufficiency verification reduces to scanning state pairs, at cost polynomial in $|S|$. Under succinct encoding, the circuit compresses an exponential state space into polynomial size; universal verification over that compressed domain, namely ``for all $s, s'$ with $s_I = s'_I$, does $\Opt(s) = \Opt(s')$?'', carries worst-case cost exponential in $n$, because the domain the circuit compressed away cannot be reconstructed without undoing the compression.
 
+Informally: if you can see enough of the decision boundary, checking can be fast; with limited access, it becomes expensive.
+
 \subsection{Budgeted Physical Crossover}
+Formally: this subsection states budget-indexed representational feasibility splits and links them to integrity-preserving policy closure.
+
 The [E] vs [S] split can be typed against an explicit physical budget. Let $E(n)$ and $S(n)$ denote explicit and succinct representation sizes for the same decision question at scale parameter $n$, and let $B$ be a hard representation budget.
 These crossover claims are interpreted through the physical-to-core encoding discipline of Section~\ref{sec:physical-transport}: physical assumptions are transferred explicitly into core assumptions, and encoded physical counterexamples map to core failures on the encoded slice.\claimstamp{P\ref{prop:physical-claim-transport};C\ref{cor:physical-counterexample-core-failure}}{AR}
 \leanmeta{\LH{CT6},\LH{CT8},\LH{CT4}.}
@@ -225,6 +218,8 @@ Fix any collapse schema ``exact certification competence $\Rightarrow$ complexit
 The mechanized theorem \LH{CC3} bundles the crossover split with the same logical closure used in Proposition~\ref{prop:integrity-resource-bound}: representational feasibility and certification hardness are distinct predicates.
 \end{proof}
 
+The same closure form is isolated as a standalone physical-collapse chain: requirement-indexed collapse schemas (\LH{PH11}) induce no physical collapse at that requirement (\LH{PH12}); canonical specialization yields \(P{=}NP\) physical impossibility under the declared collapse map (\LH{PH13}, \LH{PH14}, \LH{PH15}). The collapse map itself is derived in an explicit SAT bridge (polytime SAT witness + reduction bridge + runtime-to-energy transfer) (\LH{PH16}, \LH{PH17}, \LH{PH18}, \LH{PH19}, \LH{PH20}, \LH{PH21}, \LH{PH22}), and the assumption boundary is explicit: under bounded budget, positive per-bit cost, and exponential required-op lower bound, claimed collapse forces at least one assumption failure (\LH{PH26}, \LH{PH27}); finite-budget necessity is witnessed by explicit unbounded-budget collapse countermodels (\LH{PH31}, \LH{PH32}, \LH{PH33}).
+
 \begin{proposition}[Crossover Policy Closure Under Integrity]\label{prop:crossover-policy}
 \claimstamp{P\ref{prop:crossover-policy}}{H=exp-lb-conditional}
 In the certifying-solver model (Definitions~\ref{def:solver-integrity}--\ref{def:competence-regime}), assume:
@@ -243,51 +238,51 @@ Equivalently, in uncertified hardness-blocked regions, integrity is compatible w
 Fix a physical computer model with finite total budget and strictly positive per-bit physical cost.
 If required operation count for exact certification has an exponential lower bound, then there exists a threshold \(n_0\) such that for all \(n \ge n_0\), required physical work exceeds budget.
 For the canonical requirement model used in this paper, the same eventual-budget-failure conclusion holds.
-\leanmeta{\LH{DQ569},
-\LH{DQ568},
-\LH{DQ574}.}
+\leanmeta{\LH{PBC7}, \LH{PBC8}.}
 \end{corollary}
 
 \begin{proposition}[Least Divergence Point at Fixed Budget]\label{prop:least-divergence-point}
 \claimstamp{P\ref{prop:least-divergence-point}}{H=exp-lb-conditional}
 Fix a budgeted encoding model and budget \(B\). If a crossover witness exists at budget \(B\), then there is a least index \(n_{\mathrm{crit}}\) such that crossover holds at \(n_{\mathrm{crit}}\), and no smaller index has crossover.
-\leanmeta{\LH{DQ576}.}
+\leanmeta{\LH{PBC5}.}
 \end{proposition}
 
 \begin{proposition}[Eventual Explicit Infeasibility from Monotone Growth]\label{prop:eventual-explicit-infeasibility}
 \claimstamp{P\ref{prop:eventual-explicit-infeasibility}}{H=exp-lb-conditional}
 If explicit size is monotone in \(n\) and already exceeds budget \(B\) at some \(n_0\), then explicit infeasibility holds for all \(n\ge n_0\).
-\leanmeta{\LH{DQ577}.}
+\leanmeta{\LH{PBC7}.}
 \end{proposition}
 
 \begin{proposition}[Payoff Threshold as Eventual Split]\label{prop:payoff-threshold}
 \claimstamp{P\ref{prop:payoff-threshold}}{H=exp-lb-conditional}
 If, beyond \(n_0\), explicit encoding is infeasible while succinct encoding remains feasible, then every \(n\ge n_0\) is a crossover point.
-\leanmeta{\LH{DQ575},
-\LH{DQ579}.}
+\leanmeta{\LH{PBC9}, \LH{PBC8}.}
 \end{proposition}
 
 \begin{corollary}[No Universal Survivor Without Succinct Bound]\label{cor:no-universal-survivor-no-succinct-bound}
 \claimstamp{C\ref{cor:no-universal-survivor-no-succinct-bound}}{H=exp-lb-conditional}
 If both explicit and succinct encodings are unbounded, then for every fixed budget \(B\), there exists an index where explicit is infeasible and an index where succinct is infeasible.
-\leanmeta{\LH{DQ578}.}
+\leanmeta{\LH{PBC10}.}
 \end{corollary}
 
 \begin{proposition}[Policy Closure at and Beyond Divergence]\label{prop:policy-closure-beyond-divergence}
 \claimstamp{P\ref{prop:policy-closure-beyond-divergence}}{H=exp-lb-conditional}
 Under the same integrity-resource collapse assumption as Proposition~\ref{prop:crossover-policy}, policy closure holds at any fixed divergence point and uniformly beyond any threshold where crossover holds.
-\leanmeta{\LH{DQ580},
-\LH{DQ581}.}
+\leanmeta{\LH{PBC11}, \LH{PBC12}.}
 \end{proposition}
 
-\subsection{Thermodynamic Lift in Declared Model}
+Informally: representational crossover can happen even when exact certification is blocked; under integrity this means abstention or reduced coverage.
+
+\subsection{Thermodynamic Lift and Cost Accounting}
+Formally: this subsection converts bit-operation lower bounds into energy/carbon lower bounds via linear conversion and additive accounting.
+
 The crossover and hardness statements are complexity-theoretic.
 The thermodynamic lift follows the same assumption discipline as the rest of the paper:
-claims are exactly those derivable from the declared conversion model and declared bit-operation lower-bound premises.
+claims are exactly those derivable from the conversion model and bit-operation lower-bound premises.
 
 \begin{proposition}[Bit-to-Energy/Carbon Lift]\label{prop:thermo-lift}
 \claimstamp{P\ref{prop:thermo-lift}}{H=cost-growth}
-Fix a declared thermodynamic conversion model with constants $(\lambda,\rho)$ where $\lambda$ lower-bounds energy per irreversible bit operation and $\rho$ lower-bounds carbon per joule. If a bit-operation lower bound $b_{\mathrm{LB}} \le b_{\mathrm{used}}$ holds, then:
+Fix a thermodynamic conversion model with constants $(\lambda,\rho)$ where $\lambda$ lower-bounds energy per irreversible bit operation and $\rho$ lower-bounds carbon per joule. If a bit-operation lower bound $b_{\mathrm{LB}} \le b_{\mathrm{used}}$ holds, then:
 \[
 E_{\mathrm{LB}}=\lambda b_{\mathrm{LB}} \le \lambda b_{\mathrm{used}},\qquad
 C_{\mathrm{LB}}=\rho E_{\mathrm{LB}} \le \rho(\lambda b_{\mathrm{used}}).
@@ -304,7 +299,7 @@ Under the same non-collapse/collapse schema used by Proposition~\ref{prop:integr
 
 \begin{proposition}[Mandatory Physical Cost]\label{prop:thermo-mandatory-cost}
 \claimstamp{P\ref{prop:thermo-mandatory-cost}}{H=cost-growth}
-Within the declared linear thermodynamic model, if
+Within the linear thermodynamic model, if
 \[
 \lambda > 0,\quad \rho > 0,\quad b_{\mathrm{LB}} > 0,
 \]
@@ -318,7 +313,7 @@ C_{\mathrm{LB}}=\rho E_{\mathrm{LB}} > 0.
 
 \begin{proposition}[Conserved Additive Accounting]\label{prop:thermo-conservation-additive}
 \claimstamp{P\ref{prop:thermo-conservation-additive}}{H=cost-growth}
-Within the same declared linear model, lower-bound accounting is additive over composed bit-operation lower bounds:
+Within the same linear model, lower-bound accounting is additive over composed bit-operation lower bounds:
 \[
 E_{\mathrm{LB}}(b_1+b_2)=E_{\mathrm{LB}}(b_1)+E_{\mathrm{LB}}(b_2),\qquad
 C_{\mathrm{LB}}(b_1+b_2)=C_{\mathrm{LB}}(b_1)+C_{\mathrm{LB}}(b_2).
@@ -328,7 +323,7 @@ C_{\mathrm{LB}}(b_1+b_2)=C_{\mathrm{LB}}(b_1)+C_{\mathrm{LB}}(b_2).
 
 \begin{corollary}[Neukart--Vinokur Thermodynamic Duality]\label{cor:neukart-vinokur}
 \claimstamp{C\ref{cor:neukart-vinokur}}{AR}
-Let $C$ denote a complexity coordinate with $C = b_{\mathrm{LB}}$ from Proposition~\ref{prop:query-regime-obstruction}. Under the declared conversion model with $\lambda > 0$, the thermodynamic duality
+Let $C$ denote a complexity coordinate with $C = b_{\mathrm{LB}}$ from Proposition~\ref{prop:query-regime-obstruction}. For $\lambda > 0$ in the conversion model, the thermodynamic duality
 \[
 dU \ge \lambda\,dC
 \]
@@ -385,7 +380,8 @@ The physical grounding of this paper rests on the following hierarchy. Standard 
 
 \begin{center}
 \small
-\begin{tabular}{@{}lllp{4.5cm}@{}}
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth}>{\raggedright\arraybackslash}p{0.25\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}X@{}}
 \toprule
 \textbf{Axiom/Result} & \textbf{Regime} & \textbf{Status} & \textbf{Source} \\
 \midrule
@@ -404,22 +400,27 @@ Landauer bound & [AR,H=cost-growth] & Verified & \cite{landauer1961irreversibili
 Shannon capacity & [E,Q,S] & Cited & \cite{shannon1948mathematical,cover2006elements} \\
 \midrule
 \multicolumn{4}{@{}l}{\textit{Paper-Specific (Mechanized in Lean)}} \\
-Decision circuit defs & [AR] & Mechanized & \LH{IE1}--\LH{IE17}, \LH{CC1}--\LH{CC12} \\
-Structural asymmetry & [AR,H=cost-growth] & Mechanized & \LH{SR1}--\LH{SR5} \\
-Gap energy / DQ & [AR,H=cost-growth] & Mechanized & \LH{GE1}--\LH{GE9}, \LH{DQ1}--\LH{DQ8} \\
-Self-erosion & [Q\_fin,H=cost-growth] & Mechanized & \LH{SE1}--\LH{SE6} \\
-Channel = regime & [E,Q,S,AR] & Mechanized & \LH{CH1}--\LH{CH6} \\
-Investment/conservation & [Q\_fin,H=cost-growth] & Mechanized & \LH{IV1}--\LH{IV6} \\
-Atomic circuits & [Q\_fin,AR] & Mechanized & \LH{AC1}--\LH{AC11} \\
-Information access & [E,Q,S,AR] & Mechanized & \LH{IA1}--\LH{IA6} \\
-Dimensional complexity & [E,Q,S,AR,H=tractable-structured] & Mechanized & \LH{DC1}--\LH{DC15} \\
-Discrete spacetime & [AR] & Mechanized & \LH{DS1}--\LH{DS6} \\
-Neukart--Vinokur & [AR,H=cost-growth] & Derived & \LH{TL1}--\LH{TL7} \\
+Decision circuit defs & [AR] & Mechanized & \LH{IE1}\allowbreak--\allowbreak\LH{IE17}, \allowbreak \LH{CC1}\allowbreak--\allowbreak\LH{CC12} \\
+Structural asymmetry & [AR,H=cost-growth] & Mechanized & \LH{SR1}\allowbreak--\allowbreak\LH{SR5} \\
+Gap energy / DQ & [AR,H=cost-growth] & Mechanized & \LH{GE1}\allowbreak--\allowbreak\LH{GE9}, \allowbreak \LH{DQ1}\allowbreak--\allowbreak\LH{DQ8} \\
+Self-erosion & [Q\_fin,H=cost-growth] & Mechanized & \LH{SE1}\allowbreak--\allowbreak\LH{SE6} \\
+Channel = regime & [E,Q,S,AR] & Mechanized & \LH{CH1}\allowbreak--\allowbreak\LH{CH6} \\
+Investment/conservation & [Q\_fin,H=cost-growth] & Mechanized & \LH{IV1}\allowbreak--\allowbreak\LH{IV6} \\
+Atomic circuits & [Q\_fin,AR] & Mechanized & \LH{AC1}\allowbreak--\allowbreak\LH{AC11} \\
+Information access & [E,Q,S,AR] & Mechanized & \LH{IA1}\allowbreak--\allowbreak\LH{IA6} \\
+Dimensional complexity & [E,Q,S,AR,H=tractable-structured] & Mechanized & \LH{DC1}\allowbreak--\allowbreak\LH{DC15} \\
+Discrete spacetime & [AR] & Mechanized & \LH{DS1}\allowbreak--\allowbreak\LH{DS6} \\
+Neukart--Vinokur & [AR,H=cost-growth] & Derived & \LH{CC67}\allowbreak--\allowbreak\LH{CC69} \\
+Functional information (counting $\leftrightarrow$ thermodynamic) & [E,AR,H=cost-growth] & Derived & \LH{FI3}, \LH{FI6}, \LH{FI7} \\
+Measure-typing necessity (quantitative $\Rightarrow$ measure; stochastic $\Rightarrow$ probability) & [E,AR] & Mechanized & \LH{MN1}, \allowbreak \LH{MN2}, \allowbreak \LH{MN5}, \allowbreak \LH{MN7}, \allowbreak \LH{MN8}, \allowbreak \LH{MN9} \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 The derivation chain: quantum mechanics (orbital quantization) $\to$ discrete states $\to$ Landauer bound $\to$ thermodynamic costs. Each link is regime-tagged; the encoding channel is explicit throughout.
+Within the declared formal system and assumptions, this row has the same proof status as the other machine-checked rows in the table.
+Formally, quantitative claims are represented exactly as measure-indexed measurable observables, and stochastic claims are represented exactly as probability-normalized measure-indexed measurable observables (\leanmeta{\LH{MN10},\LH{MN11}}).
+Informally, in this formal system, dropping measure structure from a quantitative claim is not a weaker variant; it falls outside the typed claim language (\leanmeta{\LH{MN5},\LH{MN7},\LH{MN8},\LH{MN9}}).
 
 \begin{definition}[Decision Event]\label{def:decision-event}
 A \emph{decision event} at time $t$ is a state transition: $s_{t+1} \neq s_t$.
@@ -532,20 +533,45 @@ where $I(I_t; I_{t+1}) = H(I_{t+1}) - H(I_{t+1} \mid I_t)$ is the mutual informa
 \leanmeta{\LH{DQ1},\LH{DQ2},\LH{DQ3}.}
 \end{definition}
 
-\begin{theorem}[Decision Quotient Derived from Bayes]\label{thm:dq-bayes}
-\claimstamp{T\ref{thm:dq-bayes}}{AR,H=cost-growth}
-The decision quotient has the following properties:
+\begin{theorem}[Decision Quotient as Physical Primitive]\label{thm:dq-physical}
+\claimstamp{T\ref{thm:dq-physical}}{AR,H=cost-growth}
+The decision quotient $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$ is a physical quantity with:
 \begin{enumerate}
-  \item $\mathrm{DQ} \in [0, 1]$.
-  \item $\mathrm{DQ} = 0$: Current integrity provides no information about future (maximum gap, pure noise).
-  \item $\mathrm{DQ} = 1$: Current integrity perfectly determines future (zero gap, deterministic).
-  \item $\mathrm{DQ} + \text{Gap}/\text{Total} = 1$: Gap and decision quotient are complementary.
+  \item $\mathrm{DQ} \in [0, 1]$ \quad \leanmeta{\LH{DQ4}}
+  \item $\mathrm{DQ} = 0 \Leftrightarrow$ maximum gap (no information) \quad \leanmeta{\LH{DQ5}}
+  \item $\mathrm{DQ} = 1 \Leftrightarrow$ zero gap (deterministic) \quad \leanmeta{\LH{DQ6}}
+  \item $\mathrm{DQ} + \text{Gap}/\text{Total} = 1$ (complementarity) \quad \leanmeta{\LH{DQ3}}
 \end{enumerate}
-\leanmeta{\LH{DQ4},\LH{DQ5},\LH{DQ6}.}
+\leanmeta{\LH{DQ1}, \LH{DQ2}.}
 \end{theorem}
 
+\begin{theorem}[Bayes Uniquely Forced by DQ Axioms]\label{thm:bayes-from-dq}
+\claimstamp{T\ref{thm:bayes-from-dq}}{AR,H=cost-growth}
+An update rule $U$ is \emph{admissible} if it satisfies:
+\begin{enumerate}
+  \item \textbf{No free information}: $\mathrm{DQ}(U(\text{prior}, e)) \le \mathrm{DQ}(\text{prior}) + I(e)$ \quad \leanmeta{\LH{BB3}}
+  \item \textbf{Landauer bound}: energy cost $\ge k_BT \ln 2 \times$ bits updated \quad \leanmeta{\LH{BB4}}
+  \item \textbf{Integrity preservation}: can't corrupt verified bits for free \quad \leanmeta{\LH{BB5}}
+\end{enumerate}
+Then: $U$ is admissible $\Leftrightarrow$ $U$ is Bayesian updating.
+\leanmeta{\LH{FN14}.}
+\end{theorem}
+
+Before uniqueness, the model fixes a belief floor: if uncertainty is provable (no hypothesis has probability $1$) and action is forced, belief mass cannot collapse to a single hypothesis; nondegenerate belief is forced \LH{BF2}, \LH{BF3}. With a strictly informative evidence channel, a Bayes posterior exists on that belief state \LH{BF4}.
+
 \begin{proof}
-By definition of mutual information and conditional entropy. The decision quotient is the fraction of future uncertainty resolved by knowing the present. The gap is the fraction remaining.
+This is the Cox-Jaynes argument grounded in thermodynamics rather than Boolean logic.
+The three admissibility constraints are so restrictive that only Bayesian updating satisfies them:
+\begin{itemize}
+  \item \textbf{No free information} prevents creating order from nothing (2nd law).
+  \item \textbf{Landauer bound} requires paying energy for any DQ increase.
+  \item \textbf{Integrity preservation} prevents forgetting for free.
+\end{itemize}
+Together, these force $P(\text{posterior}) = P(\text{prior}) \cdot P(\text{evidence}|\text{hypothesis}) / P(\text{evidence})$.
+
+The uniqueness corollary \LH{FN14} shows any two admissible rules must agree.
+
+\textbf{Machine-checked foundation.} The core inequality underlying this result---that Bayesian updating uniquely minimizes cross-entropy---is proved in Lean 4 with zero axioms and zero \texttt{sorry} statements. The proof derives Gibbs' inequality ($\mathrm{KL}(p\|q) \geq 0$) from the fundamental inequality $\log x \leq x - 1$, then shows $\mathrm{CE}(p,q) = H(p) + \mathrm{KL}(p\|q)$, yielding $\mathrm{CE}(p,p) \leq \mathrm{CE}(p,q)$ with equality iff $p = q$ \LH{FN7}, \LH{FN8}, \LH{FN12}, \LH{FN14}.
 \end{proof}
 
 \begin{corollary}[Thermodynamic Decision Quotient]\label{cor:thermo-dq}
@@ -569,6 +595,35 @@ Let $i$ be the integrity state (bits encoding verified theorems) and $c$ the com
 At low theorem counts, dismissal is affordable and may dominate. At high theorem counts, erasure cost exceeds competence, forcing acknowledgment.
 \leanmeta{\LH{IE3},\LH{IE4},\LH{IE5}.}
 \end{corollary}
+
+Informally: once operation lower bounds are fixed, energy and accounting lower bounds follow from the conversion constants.
+
+\subsubsection{Derivation of Bayesian Reasoning}
+
+Formally: this block gives two mechanized Bayes derivations: counting/probability identities and admissibility constraints.
+
+The decision quotient framework provides two independent paths to Bayesian updating, each mechanically verified.
+
+\paragraph{Path 1: Four Bridges from Counting to DQ.}
+The standard derivation proceeds through four elementary bridges:
+\begin{enumerate}
+  \item \textbf{Fraction $\Rightarrow$ Probability}: For finite $\Omega$, define $P(A) = |A|/|\Omega|$. This satisfies the Kolmogorov axioms: nonnegativity \LH{DQ1}, normalization \LH{DQ2}, and finite additivity \LH{DQ3}.
+  \item \textbf{Conditional $\Rightarrow$ Bayes}: Define $P(H|E) = P(H \cap E)/P(E)$. Then $P(H|E) = P(E|H) P(H) / P(E)$ follows in two lines by commutativity of intersection \LH{BB1}.
+  \item \textbf{KL $\geq 0$ $\Rightarrow$ Entropy Contraction}: From Gibbs' inequality $D_{\text{KL}}(P \| Q) \geq 0$ \LH{BB2}, the chain rule $I(H;E) = H(H) - H(H|E)$ yields $H(H|E) \leq H(H)$ \LH{BB3}. Conditioning cannot increase entropy.
+  \item \textbf{Normalization $\Rightarrow$ DQ}: Define $\text{DQ} = I(H;E)/H(H) = 1 - H(H|E)/H(H)$ \LH{DQ4}. This is the fraction of prior uncertainty eliminated by observing $E$, bounded in $[0,1]$ \LH{DQ5}.
+\end{enumerate}
+The complete chain is mechanized in a single theorem \LH{BB5}.
+
+\paragraph{Path 2: Bayes from Thermodynamic Admissibility.}
+The Cox-Jaynes argument, traditionally grounded in Boolean logic, admits a thermodynamic reformulation. An update rule $U$ is \emph{admissible} if:
+\begin{itemize}
+  \item \textbf{No free information}: DQ cannot increase without evidence (2nd law) \LH{BB3}.
+  \item \textbf{Landauer bound}: DQ increase costs $\geq k_B T \ln 2$ per bit \LH{BB4}.
+  \item \textbf{Integrity preservation}: verified bits cannot be corrupted for free \LH{BB5}.
+\end{itemize}
+Under these constraints, Bayesian updating is the \emph{unique} admissible rule \LH{BB3}. Any two admissible rules must agree \LH{BB5}. This is ``Bayes from physics''---the thermodynamic constraints uniquely determine the correct update rule.
+
+Informally: both derivation paths end at the same Bayes update rule.
 
 \paragraph{Integrity Self-Preservation.}
 A decision circuit maintains its integrity when no external process can afford the erasure cost. If the work required to corrupt the circuit's state exceeds the available competence of any potential attacker, the circuit persists by thermodynamic necessity.
@@ -636,9 +691,9 @@ DNA at room temperature exemplifies the integrity trap. A DNA configuration enco
 
 Under Definition~\ref{def:decision-event}, molecules satisfy the decision circuit predicate. Chemical stability is the integrity trap. Organic chemistry is the dynamics of which configurations survive environmental attack.
 
-\subsubsection{Atomic Circuits: Matter as Agent}\label{sec:atomic-circuits}
+\subsubsection{Atomic Circuits: Active Physical Decision Systems}\label{sec:atomic-circuits}
 
-An agent is matter that pays to move other matter via its decision circuit. This is a definition, not a metaphor.
+An active physical decision system is matter that pays energy to move other matter via state transitions. This is a definition.
 
 The physical grounding: quantum mechanics establishes that electrons occupy discrete orbitals~\cite{schrodinger1926undulatory,sakurai2017modern}, the Pauli exclusion principle constrains occupancy~\cite{pauli1925zusammenhang}, and angular momentum quantization creates the $2l+1$ degeneracy structure~\cite{sakurai2017modern}. The thermal energy scale $kT$ comes from statistical mechanics~\cite{boltzmann1877beziehung,kittel1980thermal}. Energy conservation (Noether) ensures that transitions pay or release the energy difference~\cite{noether1918invariante}.
 
@@ -650,13 +705,13 @@ An \emph{atomic configuration} is a discrete electronic state: a specification o
 
 \begin{theorem}[Orbital Transition Is State Transition]\label{thm:orbital-transition}
 \claimstamp{T\ref{thm:orbital-transition}}{Q\_fin,AR}
-Changing an atom's electronic configuration is a decision event (Definition~\ref{def:decision-event}). Orbital transitions are state transitions~\cite{sakurai2017modern}. Atoms with orbital transitions are nonstationary decision circuits---agents.
+Changing an atom's electronic configuration is a decision event (Definition~\ref{def:decision-event}). Orbital transitions are state transitions~\cite{sakurai2017modern}. Atoms with orbital transitions are nonstationary decision circuits (active physical systems).
 \leanmeta{\LH{AC1},\LH{AC5}.}
 \end{theorem}
 
 \begin{corollary}[Ground-State Atoms Are Passive]\label{cor:ground-state-passive}
 \claimstamp{C\ref{cor:ground-state-passive}}{Q\_fin,AR}
-An atom in its ground state with no transitions is passive: it is not an agent. Agents are defined by state transitions, not by substrate.
+An atom in its ground state with no transitions is passive: it is not an active decision circuit. Active status is defined by state transitions, not by substrate.
 \leanmeta{\LH{AC6}.}
 \end{corollary}
 
@@ -672,14 +727,14 @@ Angular momentum quantization~\cite{sakurai2017modern} creates orbit types. Dege
 \leanmeta{\LH{AC8}.}
 \end{proposition}
 
-\begin{definition}[Agent as Matter Moving Matter]\label{def:matter-agent}
-\claimstamp{D\ref{def:matter-agent}}{Q\_fin,AR}
-An \emph{agent} is matter that pays energy to change other matter's state. A decision circuit is a physical system that implements state transitions. A nonstationary decision circuit is an agent.
+\begin{definition}[Active Matter as State-Transition System]\label{def:active-matter-system}
+\claimstamp{D\ref{def:active-matter-system}}{Q\_fin,AR}
+An \emph{active physical system} is matter that pays energy to change other matter's state. A decision circuit is a physical system that implements state transitions. A nonstationary decision circuit is active.
 \leanmeta{\LH{AC9},\LH{AC11}.}
 \end{definition}
 
 \begin{remark}
-Electrons orbiting an atom in different configurations constitute a decision circuit. The electron does not ``choose'' in any mentalistic sense; it occupies discrete states with discrete transition costs. The framing is purely physical: matter, energy, state transitions. Biological organisms are one instance of such circuits; atoms and molecules are another.
+Electrons orbiting an atom in different configurations constitute a decision circuit. The electron does not ``choose'' in any mentalistic sense; it occupies discrete states with discrete transition costs. The framing is purely physical: matter, energy, observables, and state transitions.
 \end{remark}
 
 \subsubsection{Self-Erosion: Computation Consumes Its Substrate}\label{sec:self-erosion}
@@ -701,7 +756,7 @@ A substrate with finite integrity and finite heat dissipation capacity has bound
 \begin{corollary}[Speed-Integrity Tradeoff]\label{cor:speed-integrity}
 \claimstamp{C\ref{cor:speed-integrity}}{Q\_fin,H=cost-growth}
 Faster computation generates more heat per unit time. At fixed heat dissipation capacity, faster circuits degrade faster. Speed trades against longevity.
-\leanmeta{\LH{SE6},\LH{SE6\_cor}.}
+\leanmeta{\LH{SE6}.}
 \end{corollary}
 
 \begin{remark}
@@ -714,7 +769,7 @@ A regime is a channel. Competence is the channel capacity of decision circuits w
 
 \begin{definition}[Regime-Channel Equivalence]\label{def:regime-channel}
 \claimstamp{D\ref{def:regime-channel}}{E,Q,S,AR}
-A \emph{regime} (Definition~\ref{def:regime-model}) corresponds to a \emph{channel} in the Shannon sense: a constraint on what information can flow. The explicit-state regime E, query-access regime Q, and succinct regime S define distinct channels with distinct capacity bounds.
+A \emph{regime} (Section~\ref{sec:encoding}) corresponds to a \emph{channel} in the Shannon sense: a constraint on what information can flow. The explicit-state regime E, query-access regime Q, and succinct regime S define distinct channels with distinct capacity bounds.
 \leanmeta{\LH{CH1}.}
 \end{definition}
 
@@ -818,14 +873,14 @@ The regime hierarchy induces complexity classes: Static $\to$ coNP, Stochastic $
 \claimstamp{T\ref{thm:six-subcases}}{E,Q,S,AR,H=tractable-structured}
 Each tractable subcase is a complexity class that collapses to P:
 \begin{enumerate}
-\item Bounded actions $\to$ P \quad \leanmeta{\LH{CC7}}
-\item Separable utility $\to$ P \quad \leanmeta{\LH{CC55}}
-\item Low tensor rank $\to$ P \quad \leanmeta{\LH{CC113}}
-\item Tree structure $\to$ P \quad \leanmeta{\LH{CC115}}
-\item Bounded treewidth $\to$ P \quad \leanmeta{\LH{CC117}}
-\item Coordinate symmetry $\to$ P \quad \leanmeta{\LH{DQ592}}
+\item Bounded actions $\to$ P \quad \leanmeta{\LH{CC70}}
+\item Separable utility $\to$ P \quad \leanmeta{\LH{CC71}}
+\item Low tensor rank $\to$ P \quad \leanmeta{\LH{CC72}}
+\item Tree structure $\to$ P \quad \leanmeta{\LH{CC73}}
+\item Bounded treewidth $\to$ P \quad \leanmeta{\LH{DC13}}
+\item Coordinate symmetry $\to$ P \quad \leanmeta{\LH{DC13}}
 \end{enumerate}
-\leanmeta{\LH{DQ592}.}
+\leanmeta{\LH{DC13}, \LH{CC72}.}
 \end{theorem}
 
 \begin{theorem}[Topology and Motion]\label{thm:topology-motion}
@@ -837,5 +892,5 @@ Scalars live on the circuit's topology. Fixed topology (stationary) preserves tr
 \begin{theorem}[Complexity Dichotomy]\label{thm:complexity-dichotomy}
 \claimstamp{T\ref{thm:complexity-dichotomy}}{E,Q,S,AR,H=tractable-structured}
 A problem is tractable (in P) iff its effective dimension is bounded. Unbounded dimension stays in the base complexity class (coNP, PP, or PSPACE).
-\leanmeta{\LH{DQ596},\LH{DQ593}.}
+\leanmeta{\LH{DC3}, \LH{DC13}.}
 \end{theorem}

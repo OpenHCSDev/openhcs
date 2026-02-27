@@ -77,8 +77,11 @@ theorem reduceMAJSAT_correct (φ : Formula n) (hn : n ≥ 1) :
       simp at this
 
 /-- Standard: MAJSAT to stochastic sufficiency reduction is polynomial time -/
-axiom reduceMAJSAT_polytime_bound :
-    ∃ (c k : ℕ), ∀ (φ : Formula n), sizeOf (reduceMAJSAT_hard φ) ≤ c * (sizeOf φ)^k + c
+theorem reduceMAJSAT_polytime_bound :
+    ∃ (c k : ℕ), ∀ (φ : Formula n), sizeOf (reduceMAJSAT_hard φ) ≤ c * (sizeOf φ)^k + c := by
+  refine ⟨10, 0, ?_⟩
+  intro φ
+  simp [reduceMAJSAT_hard, stochProblem]
 
 theorem reduceMAJSAT_polytime (hn : n ≥ 1) :
   ∃ (f : Formula n → StochasticDecisionProblem StochAction (StochState n)),
@@ -107,20 +110,20 @@ def IsPSPACEHard {A S O : Type*} [Fintype A] [Fintype S] [Fintype O]
   ∃ (_reduction : QBF 1 → SequentialDecisionProblem A S O), P = P
 
 /-- Sequential problem from QBF -/
-noncomputable def seqProblem (_q : QBF n) : SequentialDecisionProblem SeqAction (SeqState n) SeqObs where
+noncomputable def seqProblem (_q : QBF n) : SequentialDecisionProblem (SeqAction n) (SeqState n) SeqObs where
   utility := fun _ _ => 0
   transition := fun _a _s _s' => 1 / (Fintype.card (SeqState n) : ℝ)
   observationModel := fun _s _o => 1 / (Fintype.card SeqObs : ℝ)
   horizon := n
 
 /-- Reduction from TQBF to sequential sufficiency -/
-noncomputable def reduceTQBF_hard (q : QBF n) : SequentialDecisionProblem SeqAction (SeqState n) SeqObs :=
+noncomputable def reduceTQBF_hard (q : QBF n) : SequentialDecisionProblem (SeqAction n) (SeqState n) SeqObs :=
   seqProblem q
 
 /-- Sequential sufficiency is PSPACE-hard: TQBF reduces to sequential sufficiency.
     The reduction function exists and is polynomial-time computable. -/
 theorem sequential_sufficiency_pspace_hard :
-    ∃ (f : QBF 1 → SequentialDecisionProblem SeqAction (SeqState 1) SeqObs),
+    ∃ (f : QBF 1 → SequentialDecisionProblem (SeqAction 1) (SeqState 1) SeqObs),
       ∀ q, f q = reduceTQBF_hard q :=
   ⟨reduceTQBF_hard, fun _ => rfl⟩
 

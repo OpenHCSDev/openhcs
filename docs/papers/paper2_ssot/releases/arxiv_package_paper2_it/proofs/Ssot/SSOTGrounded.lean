@@ -16,7 +16,7 @@
   Together: The capability gap from Paper 1 explains WHY DOF > 1 is bad.
 -/
 
-import Ssot.AbstractClassSystem
+import abstract_class_system
 import Ssot.SSOT
 
 namespace SSOTGrounded
@@ -181,4 +181,3 @@ theorem dof_trichotomy : ∀ dof : Nat,
     exact dof_ge_two_permits_inconsistency (n + 2) (by omega)
 
 end SSOTGrounded
-

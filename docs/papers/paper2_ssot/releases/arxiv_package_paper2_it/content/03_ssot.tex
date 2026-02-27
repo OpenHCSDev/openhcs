@@ -5,7 +5,7 @@ Having established the encoding model (Section~\ref{sec:epistemic}), we now prov
 
 \subsection{DOF = 1 as Optimal Rate}\label{sec:ssot-def}
 
-DOF = 1 is not a design guideline. It is the information-theoretically optimal rate guaranteeing coherence for facts encoded in systems with modification constraints.
+DOF = 1 is not a design guideline. It is the information-theoretically optimal rate guaranteeing coherence for facts encoded in systems with modification constraints (\LH{COH1}, \LH{COH2}, \LH{BND1}).
 
 \begin{definition}[Optimal Encoding (DOF = 1)]\label{def:ssot}
 Encoding system $C$ achieves \emph{optimal encoding rate} for fact $F$ iff:
@@ -38,7 +38,7 @@ Hunt \& Thomas's ``single, unambiguous, authoritative representation''~\cite{hun
 \item \textbf{Authoritative:} The source determines all derived values (Definition~\ref{def:derived})
 \end{itemize}
 
-Our contribution is proving that SSOT is not a heuristic but an information-theoretic optimality condition.
+Our contribution is proving that SSOT is not a heuristic but an information-theoretic optimality condition (\LH{COH1}, \LH{COH2}, \LH{COH3}).
 
 \begin{corollary}[DOF = 1 Achieves $O(1)$ Update]\label{thm:ssot-optimal}
 If $\text{DOF}(C, F) = 1$, then coherence restoration requires $O(1)$ updates: modifying the single source maintains coherence automatically via derivation. \emph{(See Theorem~\ref{thm:upper-bound} for the full rate-complexity bound.)}
@@ -55,7 +55,7 @@ Multiple independent sources encoding the same fact permit incoherent states. DO
 \begin{proof}
 Direct application of Theorem~\ref{thm:dof-gt-one-incoherence}. With DOF $> 1$, independent locations can be modified separately, reaching states where they disagree.
 \end{proof}
-See the formal Zero-Incoherence Capacity statement in Section~\ref{sec:capacity} (Theorem~\ref{thm:coherence-capacity}). A concise proof sketch appears below; the full mechanized proof is provided in Supplement~A.
+See the formal Zero-Incoherence Capacity statement in Section~\ref{sec:capacity} (Theorem~\ref{thm:coherence-capacity}, \LH{COH3}). A concise proof sketch appears below; the full mechanized proof is provided in Supplement~A.
 
 \subsection{Information-theoretic proof sketches}
 \label{sec:info-sketches}
@@ -63,11 +63,11 @@ See the formal Zero-Incoherence Capacity statement in Section~\ref{sec:capacity}
 We give concise proof sketches connecting the combinatorial DOF arguments to standard information-theoretic tools:
 
 \begin{itemize}
-\item \textbf{Converse (Fano):} To show that limited side information cannot enable vanishing-error recovery of $F$, apply the Fano-style bound (Theorem~\ref{thm:fano-converse}). If the mutual information $I(F;S)$ provided by derived locations is $<\log K - o(1)$ for $K$ possible values, then any estimator has $P_e$ bounded away from zero. Thus perfect recoverability requires $I(F;S)\approx H(F)$, i.e. essentially $\log K$ bits.
+\item \textbf{Converse (Fano):} To show that limited side information cannot enable vanishing-error recovery of $F$, apply the Fano-style bound (Theorem~\ref{thm:fano-converse}, \LH{CIA3}). If the mutual information $I(F;S)$ provided by derived locations is $<\log K - o(1)$ for $K$ possible values, then any estimator has $P_e$ bounded away from zero. Thus perfect recoverability requires $I(F;S)\approx H(F)$, i.e. essentially $\log K$ bits.
 
-\item \textbf{Confusability graph:} Lemma~\ref{lem:confusability-clique} converts combinatorial indistinguishability (cliques) into information lower bounds: a $k$-clique forces $\log k$ bits of side information for vanishing error. This gives a language-independent certificate that side information is insufficient in environments with limited introspection.
+\item \textbf{Confusability graph:} Lemma~\ref{lem:confusability-clique} converts combinatorial indistinguishability (cliques) into information lower bounds: a $k$-clique forces $\log k$ bits of side information for vanishing error (\LH{CIA3}). This gives a language-independent certificate that side information is insufficient in environments with limited introspection.
 
-\item \textbf{DOF implication:} If side information cannot supply the required mutual information, the system must retain multiple independent encodings (higher DOF) to achieve correctness under modifications. Higher DOF incurs $\Omega(n)$ manual edits (Theorem~\ref{thm:lower-bound}), completing the converse chain from information constraints to modification complexity.
+\item \textbf{DOF implication:} If side information cannot supply the required mutual information, the system must retain multiple independent encodings (higher DOF) to achieve correctness under modifications. Higher DOF incurs $\Omega(n)$ manual edits (Theorem~\ref{thm:lower-bound}, \LH{BND2}), completing the converse chain from information constraints to modification complexity.
 \end{itemize}
 
 
@@ -113,7 +113,7 @@ Consider an encoding system where a fact $F$ = ``all processors must implement o
 
 \textbf{Computational realization (software):} Abstract base classes with enforcement (type checkers, runtime validation) achieve DOF = 1 for contract specifications. Changing the abstract method signature updates the contract; type checkers flag non-compliant implementations.
 
-Note: Implementations are separate facts. DOF = 1 for the contract specification does not eliminate implementation updates---it ensures the specification itself is determinate.
+Note: Implementations are separate facts. DOF = 1 for the contract specification does not eliminate implementation updates--it ensures the specification itself is determinate.
 \end{example}
 
 \subsection{Derivation: The Coherence Mechanism}\label{sec:derivation}
@@ -142,7 +142,7 @@ Query/Access time & Database views, computed columns, lazy evaluation \\
 \end{tabularx}
 \end{center}
 
-\textbf{Structural facts require definition-time derivation.} Structural facts (class existence, schema structure, service topology) are fixed when defined. Compile-time derivation that runs before the definition is fixed is too early (the declarative source is not yet fixed). Runtime is too late (structure already immutable). Definition-time is the unique opportunity for structural derivation.
+\textbf{Structural facts require definition-time derivation.} Structural facts (class existence, schema structure, service topology) are fixed when defined. Compile-time derivation that runs before the definition is fixed is too early (the declarative source is not yet fixed). Runtime is too late (structure already immutable). Definition-time is the unique opportunity for structural derivation (\LH{REQ1}, \LH{REQ2}).
 
 \begin{theorem}[Derivation Preserves Coherence]\label{thm:derivation-excludes}
 If $L_{\text{derived}}$ is derived from $L_{\text{source}}$, then $L_{\text{derived}}$ cannot diverge from $L_{\text{source}}$ and does not contribute to DOF.

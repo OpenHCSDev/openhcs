@@ -10,10 +10,13 @@ Recent LLM-evaluation work also highlights inference nondeterminism from numeric
 
 The complexity of decision-making has been studied extensively. Foundational treatments of computational complexity and strategic decision settings establish the baseline used here \cite{papadimitriou1994complexity,arora2009computational}. Our work extends this to the meta-question of identifying relevant information. Decision-theoretic and information-selection framing in this paper also sits in the tradition of statistical sufficiency and signaling/information economics \cite{fisher1922mathematical, spence1973job, myerson1979incentive, milgrom1986price, kamenica2011bayesian}.
 
-Large-sample Bayesian-network structure learning and causal identification are already known to be hard in adjacent formulations \cite{chickering2004large,shpitser2006identification,koller2009probabilistic}. Our object differs: we classify coordinate sufficiency for optimal-action invariance, with mechanized reductions and regime typing.
+Large-sample Bayesian-network structure learning and causal identification are already known to be hard in adjacent formulations \cite{chickering2004large,shpitser2006identification,koller2009probabilistic}. Our object differs: we classify coordinate sufficiency for optimal-action invariance across static/stochastic/sequential regimes, with theorem-level placements and mechanized reductions.
 
 \paragraph{Relation to prior hardness results.}
 Closest adjacent results are feature-selection/model-selection hardness results for predictive subset selection~\cite{blum1997selection, amaldi1998complexity}. Relative to those works, this paper changes two formal objects: (i) the reductions are machine-checked (TAUTOLOGY and $\exists\forall$-SAT mappings with explicit polynomial bounds), and (ii) the output is a regime-typed hardness/tractability map for decision relevance under explicit encoding assumptions. The target predicate here is decision relevance, not predictive compression.
+
+\paragraph{Functional information and selection.}
+Prior work defines function-relative information objects in physical systems. Szostak defines functional information as the negative log of the fraction of configurations achieving a specified function~\cite{szostak2003functional}. Wong et al.\ study function and selection in evolving systems and state an increasing-functional-information law under selection~\cite{wong2023roles}. This paper addresses a complementary object: the computational decision predicate for when projected coordinates are sufficient to preserve optimal-action correspondence, with explicit complexity placements and mechanized proofs.
 
 \subsection{Succinct Representations and Regime Separation}
 
@@ -25,7 +28,7 @@ The distinction in this paper is the object and scope of the classification: we 
 
 Query-access lower bounds are a standard source of computational hardness transfer~\cite{dobzinski2012query,buhrman2002complexity}. Our \texttt{[Q\_fin]} and \texttt{[Q\_bool]} results are in this tradition, but specialized to the same sufficiency predicate used throughout the paper: they establish access-obstruction lower bounds while keeping the underlying decision relation fixed across regimes.
 
-Complementary companion work studies zero-error identification under constrained observation and proves rate-query lower bounds plus matroid structure of minimal distinguishing query sets~\cite{simas2026identification}. Our object here is different: sufficiency of coordinates for optimal-action invariance in a decision problem, with coNP/$\Sigma_2^P$ classification and regime-typed transfer theorems.
+Complementary companion work studies zero-error identification under constrained observation and proves rate-query lower bounds plus matroid structure of minimal distinguishing query sets~\cite{simas2026identification}. Our object here is different: sufficiency of coordinates for optimal-action invariance in a decision problem, with regime-map placement (coNP/PP/PSPACE), static inner decomposition (coNP/$\Sigma_2^P$ decision layer plus access/structure layers), and regime-typed transfer theorems.
 
 \subsection{Energy Landscapes and Chemical Reaction Networks}
 
@@ -35,9 +38,9 @@ Section~\ref{sec:physical-transport} makes this transfer rule theorem-level: enc
 
 Under that mapping, the explicit-vs-succinct split is the mechanized statement of access asymmetry: [E] admits polynomial verification on explicit state access, while [S+ETH] admits worst-case exponential lower bounds on succinct inputs (Theorem~\ref{thm:dichotomy}); finite query access already exhibits indistinguishability barriers (Proposition~\ref{prop:query-regime-obstruction}). The complexity separation is mechanized.\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction}}{E,S+ETH,Q\_fin}\leanmeta{\LH{CC16},\LH{CC23},\LH{CC24},\LH{CC50}.}
 
-The geometric core is mechanized directly: product-space slice cardinality, hypercube node-count identity, and node-vs-edge separation are proved in Lean at the decision abstraction level, with edge witnesses tied exactly to non-sufficiency.\leanmeta{\LH{DQ3}, \LH{L25}, \LH{L68}, \LH{DP21}.}
+The geometric core is mechanized directly: product-space slice cardinality, hypercube node-count identity, and node-vs-edge separation are proved in Lean at the decision abstraction level, with edge witnesses tied exactly to non-sufficiency.\leanmeta{\LH{DG5}, \LH{DG6}, \LH{DG15}, \LH{DG16}, \LH{DG18}.}
 
-The circuit-to-decision instantiation is also mechanized in a separate bridge layer: geometry and dynamics are represented as typed components of a circuit object; decision circuits add an explicit interpretation layer; molecule-level constructors instantiate both views.\leanmeta{\LH{DQ519}, \LH{DQ518}, \LH{DQ517}, \LH{DQ155}, \LH{DQ154}, \LH{DQ159}, \LH{DQ160}.}
+The circuit-to-decision instantiation is also mechanized in a separate bridge layer: geometry and dynamics are represented as typed components of a circuit object; decision circuits add an explicit interpretation layer; molecule-level constructors instantiate both views.\leanmeta{\LH{IN4}, \LH{IN5}, \LH{IN6}, \LH{IN13}, \LH{IN14}, \LH{IN15}, \LH{IN16}.}
 
 Chemical reaction networks provide a concrete physical class where this encoding applies directly. Prior work establishes hardness for output optimization, reconfiguration, and reconstruction in CRN settings~\cite{andersen2012maximizing,alaniz2023complexity,flamml2013complexity}. Those domain-specific CRN complexity results are external literature claims, not mechanized in this Lean artifact. The mechanized statement here is the transfer principle: once a CRN decision task is encoded as a C1--C4 decision problem, it inherits the same sufficiency hardness/tractability regime map (Theorems~\ref{thm:config-reduction}, \ref{thm:sufficiency-conp}, \ref{thm:tractable}).\claimstamp{T\ref{thm:config-reduction},\ref{thm:sufficiency-conp},\ref{thm:tractable}}{E,S,TA}\leanmeta{\LH{CR1},\LH{CC61},\LH{CC69},\LH{CC70},\LH{CC71},\LH{CC72}.}
 
@@ -45,16 +48,17 @@ The physical bridge is not a single-domain add-on: Theorem~\ref{thm:physical-bri
 
 For matter-only dynamics, the law-induced objective specialization is mechanized for arbitrary universes (arbitrary state/action types and transition-feasibility relations): the utility schema is induced from transition laws, and under a strict allowed-vs-blocked gap with nonempty feasible set, the optimizer equals the feasible-action set; with logical determinism at the action layer, the optimizer is singleton.\claimstamp{P\ref{prop:law-instance-objective-bridge}}{AR}\leanmeta{\LH{DQ8}, \LH{DQ5}, \LH{DQ7}, \LH{DQ6}.}
 
-The interface-time semantics are also explicit and mechanized: timed states are $\mathbb{N}$-indexed, one decision event is exactly one tick, run length equals elapsed interface time, and this unit-time law is invariant across substrate tags under interface-consistency assumptions.\claimstamp{P\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time}}{AR}\leanmeta{\LH{DQ548},\LH{DQ537},\LH{DQ539},\LH{DQ534},\LH{DQ541},\LH{DQ549}.}
+The interface-time semantics are also explicit and mechanized: timed states are $\mathbb{N}$-indexed, one decision event is exactly one tick, run length equals elapsed interface time, and this unit-time law is invariant across substrate tags under interface-consistency assumptions.\claimstamp{P\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time}}{AR}\leanmeta{\LH{DT6},\LH{DT8},\LH{DT10},\LH{DT13},\LH{DT16},\LH{DT24}.}
 
-Regime-side interface machinery is also formalized as typed access objects with an explicit simulation preorder and certificate-upgrade statements. The access-channel and five-way composition theorems are encoded as assumption-explicit composition laws rather than informal metaphors.\claimstamp{P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}\leanmeta{\LH{PC10}, \LH{PC12}, \LH{PC15}, \LH{PC17}, \LH{PC19}, \LH{PC20}, \LH{PC21}.}
+Regime-side interface machinery is also formalized as typed access objects with an explicit simulation preorder and certificate-upgrade statements. The access-channel and five-way composition theorems are encoded as assumption-explicit composition laws.\claimstamp{P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}\leanmeta{\LH{ARG2}, \LH{ARG3}, \LH{ARG6}, \LH{ARG13}, \LH{ARG17}, \LH{ARG19}, \LH{ARG12}.}
 
 \subsection{Thermodynamic Costs and Landauer's Principle}
 
-The thermodynamic lift in Section~\ref{sec:dichotomy} converts declared bit-operation lower bounds into declared energy/carbon lower bounds via linear conversion constants. In this artifact, those conversion consequences are mechanized conditionally through Propositions~\ref{prop:thermo-lift}, \ref{prop:thermo-hardness-bundle}, \ref{prop:thermo-mandatory-cost}, and \ref{prop:thermo-conservation-additive}. Landauer's principle and reversible-computation context~\cite{landauer1961irreversibility,bennett2003notes} define the physical assumption set; the constants are declared premises, not Lean-derived constants.\claimstamp{P\ref{prop:thermo-lift},\ref{prop:thermo-hardness-bundle},\ref{prop:thermo-mandatory-cost},\ref{prop:thermo-conservation-additive}}{AR}\leanmeta{\LH{CC65},\LH{CC66},\LH{CC67},\LH{CC68},\LH{CC64}.}
+The thermodynamic lift in Section~\ref{sec:dichotomy} converts bit-operation lower bounds into energy/carbon lower bounds via linear conversion constants. In this artifact, those conversion consequences are mechanized with explicit premises through Propositions~\ref{prop:thermo-lift}, \ref{prop:thermo-hardness-bundle}, \ref{prop:thermo-mandatory-cost}, and \ref{prop:thermo-conservation-additive}. Landauer's principle and reversible-computation context~\cite{landauer1961irreversibility,bennett2003notes} define the physical assumption set; the constants are premises, not Lean-derived constants.\claimstamp{P\ref{prop:thermo-lift},\ref{prop:thermo-hardness-bundle},\ref{prop:thermo-mandatory-cost},\ref{prop:thermo-conservation-additive}}{AR}\leanmeta{\LH{CC65},\LH{CC66},\LH{CC67},\LH{CC68},\LH{CC64}.}
 
 \paragraph{Physics assumptions decompose into regime tags.}
-The paper does not create domain-specific tags for physics assumptions. Instead, every physics assumption decomposes into the same regime tags used throughout the paper. This uniformity is the formal statement that physics assumptions are not epistemically privileged---they are declared assumptions, tracked with the same discipline as the paper's own complexity-theoretic assumptions.
+The paper does not create domain-specific tags for physics assumptions. Instead, every physics assumption decomposes into the same regime tags used throughout the paper. This uniformity states that physics assumptions are not epistemically privileged; they are declared assumptions, tracked with the same discipline as the paper's complexity-theoretic assumptions.
+The explicit physical-to-core mapping does not make the results less physical. It standardizes premise exposure and transfer obligations: accepted physics assumptions and this model are handled under the same declared-assumption framework, then checked with the same mechanized proof discipline where formalized.
 
 \begin{table}[h]
 \centering
@@ -74,13 +78,13 @@ Physical-to-core encoding ($E$) & [AR] & Declared encoding map \\
 \end{tabular}
 \end{table}
 
-The decomposition in Table~\ref{tab:physics-regime-decomposition} makes explicit what the paper already practices: physics assumptions are declared premises in the [AR] (axiomatic regime) sense, and when they yield cost lower bounds, they inherit [H=cost-growth]. The finite-state query core [Q\_fin] captures the discrete-state assumption underlying the computational model. No physics assumption receives a special domain tag; all decompose into the existing regime taxonomy.\claimstamp{P\ref{prop:thermo-lift},\ref{prop:landauer-constraint},\ref{prop:lorentz-discrete},\ref{prop:discrete-state-time};T\ref{thm:physical-bridge-bundle}}{AR,H=cost-growth,Q\_fin}
+The decomposition in Table~\ref{tab:physics-regime-decomposition} makes explicit what the paper already practices: physics assumptions are declared premises in the [AR] (axiomatic regime) sense, and when they yield cost lower bounds, they inherit [H=cost-growth]. The finite-state query core [Q\_fin] captures the discrete-state assumption underlying the computational model. No physics assumption receives a special domain tag; all decompose into the existing regime taxonomy. This is a standardization claim about proof form, not a change in physical content.\claimstamp{P\ref{prop:thermo-lift},\ref{prop:landauer-constraint},\ref{prop:lorentz-discrete},\ref{prop:discrete-state-time};T\ref{thm:physical-bridge-bundle}}{AR,H=cost-growth,Q\_fin}
 
-Coupling this to integrity yields a mechanized policy condition: when exact competence is hardness-blocked in the declared regime, integrity requires abstention or explicitly weakened guarantees (Propositions~\ref{prop:integrity-resource-bound}, \ref{prop:attempted-competence-matrix}). A stronger behavioral claim such as ``abstention is globally utility-optimal for every objective'' is \emph{not} currently mechanized and remains objective-dependent.\claimstamp{P\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{AR}\leanmeta{\LH{IC26},\LH{IC24},\LH{CC30},\LH{IC27},\LH{IC7},\LH{IC6}.}
+Coupling this to integrity yields a mechanized policy condition: when exact competence is hardness-blocked in the active regime, integrity requires abstention or explicitly weakened guarantees (Propositions~\ref{prop:integrity-resource-bound}, \ref{prop:attempted-competence-matrix}). A stronger behavioral claim such as ``abstention is globally utility-optimal for every objective'' is \emph{not} currently mechanized and remains objective-dependent.\claimstamp{P\ref{prop:integrity-resource-bound},\ref{prop:attempted-competence-matrix}}{AR}\leanmeta{\LH{IC26},\LH{IC24},\LH{CC30},\LH{IC27},\LH{IC7},\LH{IC6}.}
 
 \subsection{Neukart--Vinokur Thermodynamic Duality}
 
-Neukart and Vinokur~\cite{neukart2025thermodynamic} propose a thermodynamic duality $dU = T\,dS - p\,dV + \lambda\,dC$ where $C$ is a ``complexity coordinate'' associated with computational irreversibility in spin-glass systems. Corollary~\ref{cor:neukart-vinokur} derives their duality as a specialization of our thermodynamic lift (Proposition~\ref{prop:thermo-lift}) under declared $\lambda > 0$.
+Neukart and Vinokur~\cite{neukart2025thermodynamic} propose a thermodynamic duality $dU = T\,dS - p\,dV + \lambda\,dC$ where $C$ is a ``complexity coordinate'' associated with computational irreversibility in spin-glass systems. Corollary~\ref{cor:neukart-vinokur} derives their duality as a specialization of our thermodynamic lift (Proposition~\ref{prop:thermo-lift}) for $\lambda > 0$.
 \claimstamp{C\ref{cor:neukart-vinokur};P\ref{prop:thermo-lift}}{AR}
 \leanmeta{\LH{CC65},\LH{CC50}.}
 
@@ -88,14 +92,14 @@ Their spin-glass phase transitions become regime-specific instances: our [S+ETH]
 \claimstamp{T\ref{thm:dichotomy},\ref{thm:physical-bridge-bundle}}{S+ETH,AR}
 \leanmeta{\LH{CC16},\LH{CT4}.}
 
-Thus Neukart--Vinokur $\subseteq$ [AR] regime: declared $\lambda,\rho > 0$, explicit encoding $E:\mathcal{P}\to\mathcal{D}$ $\Rightarrow$ their thermodynamic duality holds by assumption transfer through our \coNP-complete core (Proposition~\ref{prop:physical-claim-transport}).
+Thus Neukart--Vinokur $\subseteq$ [AR] regime: $\lambda,\rho > 0$, explicit encoding $E:\mathcal{P}\to\mathcal{D}$ $\Rightarrow$ their thermodynamic duality holds by assumption transfer through our \coNP-complete core (Proposition~\ref{prop:physical-claim-transport}).
 \claimstamp{P\ref{prop:physical-claim-transport}}{AR}
-\leanmeta{\LH{PC10}.}
+\leanmeta{\LH{CT6}.}
 
 \subsection{Feature Selection}
 
-In machine learning, feature selection asks which input features are relevant for prediction. This is known to be NP-hard in general~\cite{blum1997selection, guyon2003introduction}. Our results show the decision-theoretic analog is \coNP-complete for both checking and minimization.
-\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp}}{S}\leanmeta{\LH{CC61},\LH{CC36}.}
+In machine learning, feature selection asks which input features are relevant for prediction. This is known to be NP-hard in general~\cite{blum1997selection, guyon2003introduction}. Our results place the decision-theoretic analog in a regime map: static checking/minimization at \coNP-complete, stochastic sufficiency at PP-complete, and sequential sufficiency at PSPACE-complete.
+\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace}}{S,RG}\leanmeta{\LH{CC61},\LH{CC36},\LH{DC9},\LH{DC10}.}
 
 \subsection{Value of Information}
 

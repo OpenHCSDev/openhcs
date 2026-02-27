@@ -17,9 +17,14 @@ open Classical
 namespace AbstractClassSystem
 
 /-
-  PART 1: The Two-Axis Model (B, S)
+  PART 1: The N-Axis Type Theory — Instantiated for Class Systems as type(B, S)
 
-  A class system is characterized by two independent axes:
+  GENERAL THEORY:
+  A type of dimensionality n is type(A₁, A₂, ..., Aₙ) where each Aᵢ is an axis.
+  The type's value is the tuple of its axis projections.
+
+  INSTANTIATION FOR CLASS SYSTEMS:
+  We use dimensionality 2 with axes:
   - B: Bases (explicit parent types) — the inheritance hierarchy
   - S: Namespace (attribute declarations) — the shape/interface
 
@@ -31,13 +36,8 @@ namespace AbstractClassSystem
   - Two types with identical (B, S) are indistinguishable regardless of N
   - Theorem `obs_eq_bs` proves: (B, S) equality suffices; N adds nothing
 
-  The model is (B, S). Period. All capability gaps derive from B.
+  The model is type(B, S). All capability gaps derive from B.
   Shape-based typing observes only S; nominal typing observes (B, S).
-
-  We model types as records that *are* their two semantic axes:
-  - `ns` : the namespace (declared/visible attributes)
-  - `bs` : the list of base types (inheritance lineage)
-  Type identity is now definitional equality of these projections.
 -/
 
 -- Attribute names
@@ -53,17 +53,17 @@ noncomputable instance : DecidableEq Typ := Classical.decEq _
 /-!
   ## Axis-Parametric Foundation
 
-  We now establish that `Typ` is exactly a projection over the axis set {B, S}.
-  This connects our concrete model to the general n-axis framework and proves
-  that a type IS a projection of any natural number of axes.
+  A type of dimensionality n is a projection over an n-element axis set A:
+  - Each axis a has a carrier type Carrier(a)
+  - A type over axis set A is a dependent function: ∀ a ∈ A, Carrier(a)
+  - The dimensionality of the type equals |A|
 
-  The pattern is:
-  - An axis has a carrier type
-  - A type over axis set A is a dependent function ∀ a ∈ A, Carrier(a)
-  - Our concrete `Typ` is exactly this for A = {B, S}
+  This is the GENERAL framework. Other domains may use different axis sets
+  (e.g., type(B, S, H) for 3 dimensions, type(S) for 1 dimension).
 
-  This is not refactoring for elegance—it is completing the mathematical claim
-  that types are axis projections.
+  HERE: We instantiate for class systems with A = {B, S}, giving type(B, S).
+  
+  We prove `Typ` (our concrete record) ≃ `AxisProjection canonicalAxes` (the general form).
 -/
 
 /-- The axes of a class system.
@@ -134,18 +134,23 @@ noncomputable def Typ.equivProjection : Typ ≃ AxisProjection canonicalAxes whe
   left_inv := Typ.projection_roundtrip
   right_inv := Typ.projection_roundtrip_inv
 
-/-- **Core Definition: A type over n axes is a projection over those axes.**
+/-- **Core Definition: A type of dimensionality n is type(A₁, ..., Aₙ).**
 
-    For any axis set A, `GenericTyp A` defines types as dependent tuples
-    of axis values. Our concrete `Typ` is exactly `GenericTyp {B, S}`.
+    For any axis set A with |A| = n, `GenericTyp A` = type(A₁, ..., Aₙ) is a 
+    dependent tuple mapping each axis to its carrier value.
+    
+    The dimensionality equals |A|.
+    
+    Example: `GenericTyp canonicalAxes` = type(B, S) has dimensionality 2.
+    Our concrete `Typ` is isomorphic to this.
 -/
 def GenericTyp (A : List Axis) := AxisProjection A
 
-/-- The concrete `Typ` is isomorphic to `GenericTyp canonicalAxes`. -/
+/-- The concrete `Typ` is isomorphic to `GenericTyp canonicalAxes` = type(B, S). -/
 noncomputable def typ_equiv_generic : Typ ≃ GenericTyp canonicalAxes := Typ.equivProjection
 
-/-- For any n-axis set A, `GenericTyp A` is definitionally equal to `AxisProjection A`.
-    This establishes that a type over n axes IS a projection of n axes—by definition. -/
+/-- For any axis set A, `GenericTyp A` = `AxisProjection A` by definition.
+    A type of dimensionality n IS a projection over n axes. -/
 theorem n_axis_types_are_projections (A : List Axis) :
     GenericTyp A = AxisProjection A := rfl
 

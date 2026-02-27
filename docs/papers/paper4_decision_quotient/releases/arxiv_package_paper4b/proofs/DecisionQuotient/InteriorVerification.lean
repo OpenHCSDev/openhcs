@@ -13,6 +13,14 @@ import Mathlib.Tactic
   - interior Pareto dominance on tautological coordinates,
   - tractable (boolean-decider) certificate interface,
   - one-sidedness: interior dominance is not full sufficiency.
+
+  ## Triviality Level
+  TRIVIAL: This explores a different verification approach (interior vs exterior).
+  The nontrivial work is in the main sufficiency proofs.
+
+  ## Dependencies
+  - Chain: Sufficiency.lean (core definitions) → here
+  - The nontrivial work is already in Sufficiency.lean and Reduction.lean
 -/
 
 namespace DecisionQuotient

@@ -1,5 +1,7 @@
 \section{Encoding-Regime Separation}\label{sec:dichotomy}
 
+Formally: this section proves regime-indexed access separation for a fixed sufficiency predicate, then lifts bit-operation bounds to thermodynamic/accounting consequences.
+
 The hardness results of Section~\ref{sec:hardness} apply to worst-case instances under the succinct encoding. This section states an encoding-regime separation: an explicit-state upper bound versus a succinct-encoding worst-case lower bound, and an intermediate query-access obstruction family. The complexity class is a property of the encoding measured against a fixed decision question (Remark~\ref{rem:question-vs-problem}), not a property of the question itself: the same sufficiency question admits polynomial-time algorithms under one encoding and worst-case exponential cost under another.
 Within the paper's full regime map, this section is the static access-layer decomposition; theorem-level stochastic and sequential core placements are given in Sections~\ref{sec:stochastic} and~\ref{sec:sequential}, with strict inter-regime separation in Section~\ref{sec:regime-hierarchy}.
 
@@ -170,7 +172,11 @@ This regime-typed landscape identifies tractability under [E], a finite-state qu
 
 The structural reason for this separation is enumerable access. Under the explicit-state encoding, the mapping $s \mapsto \Opt(s)$ is directly inspectable and sufficiency verification reduces to scanning state pairs, at cost polynomial in $|S|$. Under succinct encoding, the circuit compresses an exponential state space into polynomial size; universal verification over that compressed domain, namely ``for all $s, s'$ with $s_I = s'_I$, does $\Opt(s) = \Opt(s')$?'', carries worst-case cost exponential in $n$, because the domain the circuit compressed away cannot be reconstructed without undoing the compression.
 
+Informally: if you can see enough of the decision boundary, checking can be fast; with limited access, it becomes expensive.
+
 \subsection{Budgeted Physical Crossover}
+Formally: this subsection states budget-indexed representational feasibility splits and links them to integrity-preserving policy closure.
+
 The [E] vs [S] split can be typed against an explicit physical budget. Let $E(n)$ and $S(n)$ denote explicit and succinct representation sizes for the same decision question at scale parameter $n$, and let $B$ be a hard representation budget.
 These crossover claims are interpreted through the physical-to-core encoding discipline of Section~\ref{sec:physical-transport}: physical assumptions are transferred explicitly into core assumptions, and encoded physical counterexamples map to core failures on the encoded slice.\claimstamp{P\ref{prop:physical-claim-transport};C\ref{cor:physical-counterexample-core-failure}}{AR}
 \leanmeta{\LH{CT6},\LH{CT8},\LH{CT4}.}
@@ -212,7 +218,7 @@ Fix any collapse schema ``exact certification competence $\Rightarrow$ complexit
 The mechanized theorem \LH{CC3} bundles the crossover split with the same logical closure used in Proposition~\ref{prop:integrity-resource-bound}: representational feasibility and certification hardness are distinct predicates.
 \end{proof}
 
-The same closure form is isolated as a standalone physical-collapse chain: requirement-indexed collapse schemas (\LH{PH11}) induce no physical collapse at that requirement (\LH{PH12}); canonical specialization yields conditional \(P{=}NP\) physical impossibility under the declared collapse map (\LH{PH13}, \LH{PH14}, \LH{PH15}). The collapse map itself is derived in an explicit SAT bridge (polytime SAT witness + reduction bridge + runtime-to-energy transfer) (\LH{PH16}, \LH{PH17}, \LH{PH18}, \LH{PH19}, \LH{PH20}, \LH{PH21}, \LH{PH22}), and the assumption boundary is explicit: under bounded budget, positive per-bit cost, and exponential required-op lower bound, claimed collapse forces at least one assumption failure (\LH{PH26}, \LH{PH27}); finite-budget necessity is witnessed by explicit unbounded-budget collapse countermodels (\LH{PH31}, \LH{PH32}, \LH{PH33}).
+The same closure form is isolated as a standalone physical-collapse chain: requirement-indexed collapse schemas (\LH{PH11}) induce no physical collapse at that requirement (\LH{PH12}); canonical specialization yields \(P{=}NP\) physical impossibility under the declared collapse map (\LH{PH13}, \LH{PH14}, \LH{PH15}). The collapse map itself is derived in an explicit SAT bridge (polytime SAT witness + reduction bridge + runtime-to-energy transfer) (\LH{PH16}, \LH{PH17}, \LH{PH18}, \LH{PH19}, \LH{PH20}, \LH{PH21}, \LH{PH22}), and the assumption boundary is explicit: under bounded budget, positive per-bit cost, and exponential required-op lower bound, claimed collapse forces at least one assumption failure (\LH{PH26}, \LH{PH27}); finite-budget necessity is witnessed by explicit unbounded-budget collapse countermodels (\LH{PH31}, \LH{PH32}, \LH{PH33}).
 
 \begin{proposition}[Crossover Policy Closure Under Integrity]\label{prop:crossover-policy}
 \claimstamp{P\ref{prop:crossover-policy}}{H=exp-lb-conditional}
@@ -265,7 +271,11 @@ Under the same integrity-resource collapse assumption as Proposition~\ref{prop:c
 \leanmeta{\LH{PBC11}, \LH{PBC12}.}
 \end{proposition}
 
+Informally: representational crossover can happen even when exact certification is blocked; under integrity this means abstention or reduced coverage.
+
 \subsection{Thermodynamic Lift and Cost Accounting}
+Formally: this subsection converts bit-operation lower bounds into energy/carbon lower bounds via linear conversion and additive accounting.
+
 The crossover and hardness statements are complexity-theoretic.
 The thermodynamic lift follows the same assumption discipline as the rest of the paper:
 claims are exactly those derivable from the conversion model and bit-operation lower-bound premises.
@@ -370,7 +380,8 @@ The physical grounding of this paper rests on the following hierarchy. Standard 
 
 \begin{center}
 \small
-\begin{tabular}{@{}lllp{4.5cm}@{}}
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth}>{\raggedright\arraybackslash}p{0.25\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}X@{}}
 \toprule
 \textbf{Axiom/Result} & \textbf{Regime} & \textbf{Status} & \textbf{Source} \\
 \midrule
@@ -389,22 +400,27 @@ Landauer bound & [AR,H=cost-growth] & Verified & \cite{landauer1961irreversibili
 Shannon capacity & [E,Q,S] & Cited & \cite{shannon1948mathematical,cover2006elements} \\
 \midrule
 \multicolumn{4}{@{}l}{\textit{Paper-Specific (Mechanized in Lean)}} \\
-Decision circuit defs & [AR] & Mechanized & \LH{IE1}--\LH{IE17}, \LH{CC1}--\LH{CC12} \\
-Structural asymmetry & [AR,H=cost-growth] & Mechanized & \LH{SR1}--\LH{SR5} \\
-Gap energy / DQ & [AR,H=cost-growth] & Mechanized & \LH{GE1}--\LH{GE9}, \LH{DQ1}--\LH{DQ8} \\
-Self-erosion & [Q\_fin,H=cost-growth] & Mechanized & \LH{SE1}--\LH{SE6} \\
-Channel = regime & [E,Q,S,AR] & Mechanized & \LH{CH1}--\LH{CH6} \\
-Investment/conservation & [Q\_fin,H=cost-growth] & Mechanized & \LH{IV1}--\LH{IV6} \\
-Atomic circuits & [Q\_fin,AR] & Mechanized & \LH{AC1}--\LH{AC11} \\
-Information access & [E,Q,S,AR] & Mechanized & \LH{IA1}--\LH{IA6} \\
-Dimensional complexity & [E,Q,S,AR,H=tractable-structured] & Mechanized & \LH{DC1}--\LH{DC15} \\
-Discrete spacetime & [AR] & Mechanized & \LH{DS1}--\LH{DS6} \\
-Neukart--Vinokur & [AR,H=cost-growth] & Derived & \LH{CC67}--\LH{CC69} \\
+Decision circuit defs & [AR] & Mechanized & \LH{IE1}\allowbreak--\allowbreak\LH{IE17}, \allowbreak \LH{CC1}\allowbreak--\allowbreak\LH{CC12} \\
+Structural asymmetry & [AR,H=cost-growth] & Mechanized & \LH{SR1}\allowbreak--\allowbreak\LH{SR5} \\
+Gap energy / DQ & [AR,H=cost-growth] & Mechanized & \LH{GE1}\allowbreak--\allowbreak\LH{GE9}, \allowbreak \LH{DQ1}\allowbreak--\allowbreak\LH{DQ8} \\
+Self-erosion & [Q\_fin,H=cost-growth] & Mechanized & \LH{SE1}\allowbreak--\allowbreak\LH{SE6} \\
+Channel = regime & [E,Q,S,AR] & Mechanized & \LH{CH1}\allowbreak--\allowbreak\LH{CH6} \\
+Investment/conservation & [Q\_fin,H=cost-growth] & Mechanized & \LH{IV1}\allowbreak--\allowbreak\LH{IV6} \\
+Atomic circuits & [Q\_fin,AR] & Mechanized & \LH{AC1}\allowbreak--\allowbreak\LH{AC11} \\
+Information access & [E,Q,S,AR] & Mechanized & \LH{IA1}\allowbreak--\allowbreak\LH{IA6} \\
+Dimensional complexity & [E,Q,S,AR,H=tractable-structured] & Mechanized & \LH{DC1}\allowbreak--\allowbreak\LH{DC15} \\
+Discrete spacetime & [AR] & Mechanized & \LH{DS1}\allowbreak--\allowbreak\LH{DS6} \\
+Neukart--Vinokur & [AR,H=cost-growth] & Derived & \LH{CC67}\allowbreak--\allowbreak\LH{CC69} \\
+Functional information (counting $\leftrightarrow$ thermodynamic) & [E,AR,H=cost-growth] & Derived & \LH{FI3}, \LH{FI6}, \LH{FI7} \\
+Measure-typing necessity (quantitative $\Rightarrow$ measure; stochastic $\Rightarrow$ probability) & [E,AR] & Mechanized & \LH{MN1}, \allowbreak \LH{MN2}, \allowbreak \LH{MN5}, \allowbreak \LH{MN7}, \allowbreak \LH{MN8}, \allowbreak \LH{MN9} \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 The derivation chain: quantum mechanics (orbital quantization) $\to$ discrete states $\to$ Landauer bound $\to$ thermodynamic costs. Each link is regime-tagged; the encoding channel is explicit throughout.
+Within the declared formal system and assumptions, this row has the same proof status as the other machine-checked rows in the table.
+Formally, quantitative claims are represented exactly as measure-indexed measurable observables, and stochastic claims are represented exactly as probability-normalized measure-indexed measurable observables (\leanmeta{\LH{MN10},\LH{MN11}}).
+Informally, in this formal system, dropping measure structure from a quantitative claim is not a weaker variant; it falls outside the typed claim language (\leanmeta{\LH{MN5},\LH{MN7},\LH{MN8},\LH{MN9}}).
 
 \begin{definition}[Decision Event]\label{def:decision-event}
 A \emph{decision event} at time $t$ is a state transition: $s_{t+1} \neq s_t$.
@@ -580,7 +596,11 @@ At low theorem counts, dismissal is affordable and may dominate. At high theorem
 \leanmeta{\LH{IE3},\LH{IE4},\LH{IE5}.}
 \end{corollary}
 
+Informally: once operation lower bounds are fixed, energy and accounting lower bounds follow from the conversion constants.
+
 \subsubsection{Derivation of Bayesian Reasoning}
+
+Formally: this block gives two mechanized Bayes derivations: counting/probability identities and admissibility constraints.
 
 The decision quotient framework provides two independent paths to Bayesian updating, each mechanically verified.
 
@@ -602,6 +622,8 @@ The Cox-Jaynes argument, traditionally grounded in Boolean logic, admits a therm
   \item \textbf{Integrity preservation}: verified bits cannot be corrupted for free \LH{BB5}.
 \end{itemize}
 Under these constraints, Bayesian updating is the \emph{unique} admissible rule \LH{BB3}. Any two admissible rules must agree \LH{BB5}. This is ``Bayes from physics''---the thermodynamic constraints uniquely determine the correct update rule.
+
+Informally: both derivation paths end at the same Bayes update rule.
 
 \paragraph{Integrity Self-Preservation.}
 A decision circuit maintains its integrity when no external process can afford the erasure cost. If the work required to corrupt the circuit's state exceeds the available competence of any potential attacker, the circuit persists by thermodynamic necessity.
@@ -669,9 +691,9 @@ DNA at room temperature exemplifies the integrity trap. A DNA configuration enco
 
 Under Definition~\ref{def:decision-event}, molecules satisfy the decision circuit predicate. Chemical stability is the integrity trap. Organic chemistry is the dynamics of which configurations survive environmental attack.
 
-\subsubsection{Atomic Circuits: Matter as Agent}\label{sec:atomic-circuits}
+\subsubsection{Atomic Circuits: Active Physical Decision Systems}\label{sec:atomic-circuits}
 
-An agent is matter that pays to move other matter via its decision circuit. This is a definition, not a metaphor.
+An active physical decision system is matter that pays energy to move other matter via state transitions. This is a definition.
 
 The physical grounding: quantum mechanics establishes that electrons occupy discrete orbitals~\cite{schrodinger1926undulatory,sakurai2017modern}, the Pauli exclusion principle constrains occupancy~\cite{pauli1925zusammenhang}, and angular momentum quantization creates the $2l+1$ degeneracy structure~\cite{sakurai2017modern}. The thermal energy scale $kT$ comes from statistical mechanics~\cite{boltzmann1877beziehung,kittel1980thermal}. Energy conservation (Noether) ensures that transitions pay or release the energy difference~\cite{noether1918invariante}.
 
@@ -683,13 +705,13 @@ An \emph{atomic configuration} is a discrete electronic state: a specification o
 
 \begin{theorem}[Orbital Transition Is State Transition]\label{thm:orbital-transition}
 \claimstamp{T\ref{thm:orbital-transition}}{Q\_fin,AR}
-Changing an atom's electronic configuration is a decision event (Definition~\ref{def:decision-event}). Orbital transitions are state transitions~\cite{sakurai2017modern}. Atoms with orbital transitions are nonstationary decision circuits---agents.
+Changing an atom's electronic configuration is a decision event (Definition~\ref{def:decision-event}). Orbital transitions are state transitions~\cite{sakurai2017modern}. Atoms with orbital transitions are nonstationary decision circuits (active physical systems).
 \leanmeta{\LH{AC1},\LH{AC5}.}
 \end{theorem}
 
 \begin{corollary}[Ground-State Atoms Are Passive]\label{cor:ground-state-passive}
 \claimstamp{C\ref{cor:ground-state-passive}}{Q\_fin,AR}
-An atom in its ground state with no transitions is passive: it is not an agent. Agents are defined by state transitions, not by substrate.
+An atom in its ground state with no transitions is passive: it is not an active decision circuit. Active status is defined by state transitions, not by substrate.
 \leanmeta{\LH{AC6}.}
 \end{corollary}
 
@@ -705,14 +727,14 @@ Angular momentum quantization~\cite{sakurai2017modern} creates orbit types. Dege
 \leanmeta{\LH{AC8}.}
 \end{proposition}
 
-\begin{definition}[Agent as Matter Moving Matter]\label{def:matter-agent}
-\claimstamp{D\ref{def:matter-agent}}{Q\_fin,AR}
-An \emph{agent} is matter that pays energy to change other matter's state. A decision circuit is a physical system that implements state transitions. A nonstationary decision circuit is an agent.
+\begin{definition}[Active Matter as State-Transition System]\label{def:active-matter-system}
+\claimstamp{D\ref{def:active-matter-system}}{Q\_fin,AR}
+An \emph{active physical system} is matter that pays energy to change other matter's state. A decision circuit is a physical system that implements state transitions. A nonstationary decision circuit is active.
 \leanmeta{\LH{AC9},\LH{AC11}.}
 \end{definition}
 
 \begin{remark}
-Electrons orbiting an atom in different configurations constitute a decision circuit. The electron does not ``choose'' in any mentalistic sense; it occupies discrete states with discrete transition costs. The framing is purely physical: matter, energy, state transitions. Biological organisms are one instance of such circuits; atoms and molecules are another.
+Electrons orbiting an atom in different configurations constitute a decision circuit. The electron does not ``choose'' in any mentalistic sense; it occupies discrete states with discrete transition costs. The framing is purely physical: matter, energy, observables, and state transitions.
 \end{remark}
 
 \subsubsection{Self-Erosion: Computation Consumes Its Substrate}\label{sec:self-erosion}

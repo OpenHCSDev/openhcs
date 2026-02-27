@@ -1,20 +1,20 @@
 \section{Temporal Learning}\label{sec:temporal-learning}
 
-We formalize how an agent learns structure classes across sequential problem instances.
+We formalize how a physical controller updates structure-class beliefs across sequential problem instances.
 
 \subsection{Setup}
 
-Agent faces a sequence of problem instances $I_1, I_2, \ldots$ drawn from an unknown distribution $D$ over problem structures.
+A controller faces a sequence of problem instances $I_1, I_2, \ldots$ drawn from an unknown distribution $D$ over problem structures.
 
-After solving instance $I_k$ (or abstaining), the agent observes:
+After solving instance $I_k$ (or abstaining), the controller observes:
 \begin{itemize}
 \item Whether $I_k$ belonged to a tractable subcase
 \item Which structure class $C_k$ was detected (if any)
-\item The cost paid (substrate-dependent $\kappa$)
+\item The physical cost paid (substrate-dependent $\kappa$)
 \end{itemize}
 
 \begin{claim}{Bayesian structure detection}{th:bayesian-learning}
-Agent maintains posterior $P(C \mid I_1, \ldots, I_k)$ over structure classes. Update rule: standard Bayesian update with likelihood $P(I_k \mid C)$.
+The controller maintains posterior $P(C \mid I_1, \ldots, I_k)$ over structure classes. Update rule: standard Bayesian update with likelihood $P(I_k \mid C)$.
 \claimstamp{T\ref{th:bayesian-learning}}{RG}
 \end{claim}
 
@@ -34,7 +34,7 @@ If structure classes $C$ are identifiable (distinct likelihood functions), then 
 \subsection{PAC Learning Connection}
 
 Sample complexity of structure detection:
-How many instances must the agent solve before it can identify the structure class with probability $\geq 1 - \delta$ and error $\leq \varepsilon$?
+How many instances must the controller solve before it can identify the structure class with probability $\geq 1 - \delta$ and error $\leq \varepsilon$?
 
 \begin{claim}{Sample complexity conjecture}{conj:sample-complexity}
 For the represented family (bounded actions, separable utility, tree structure), sample complexity is polynomial in $1/\varepsilon$ and $\log(1/\delta)$.
@@ -45,7 +45,7 @@ This connects to PAC learning theory---the structure classes are the hypothesis 
 
 \subsection{Learning Reduces Abstention}
 
-As the agent learns the structure class, it can apply regime-appropriate heuristics. The abstention frontier shrinks over time---not because the problem gets easier, but because the agent's model of the problem gets more accurate.
+As the controller learns the structure class, it can apply regime-appropriate heuristics. The abstention frontier shrinks over time, not because the problem gets easier, but because the model of the problem gets more accurate.
 
 Formally: let $A_k$ be the set of instances where integrity forces abstention at time $k$. Then:
 \[
@@ -60,6 +60,6 @@ $A_k$ is decreasing in $k$: $A_1 \supseteq A_2 \supseteq \ldots$.
 
 \leanmeta{\LH{CC68}}
 
-The agent's trajectory diverges based on $\kappa$ even though verdicts are $\kappa$-independent. Different substrates learn at different rates, have different abstention thresholds, and make different trade-offs between solving and abstaining.
+The trajectory diverges based on $\kappa$ even though verdicts are $\kappa$-independent. Different substrates adapt at different rates, have different abstention thresholds, and make different solving/abstention trade-offs.
 
-This connects to Paper 5: temporal learning produces costly signals. Each solved instance is a costly signal in Paper 5's sense: producing a correct solution has truth-dependent cost. The agent's track record is costly signal; self-assessment is cheap talk.
+This connects to Paper 5: temporal learning produces costly signals. Each solved instance is a costly signal in Paper 5's sense: producing a correct solution has truth-dependent cost. Runtime/energy traces are costly signals; self-report is cheap talk.

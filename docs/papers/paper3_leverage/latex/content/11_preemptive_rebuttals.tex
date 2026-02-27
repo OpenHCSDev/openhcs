@@ -1,81 +1,11 @@
-\section{Preemptive Rebuttals}\label{appendix-rebuttals}
+\section{Notes on assumptions and extensions}\label{appendix-assumptions}
 
-We address anticipated objections.
+This appendix lists the principal modeling assumptions and common extensions relevant when applying the leverage framework:
 
-\subsection{Objection 1: ``Leverage is just a heuristic, not rigorous''}
-
-\textbf{Response:} Leverage is \emph{formally defined} (Definition 1.4) and \emph{machine-checked} in Lean 4. Theorem 3.1 \emph{proves} (not assumes) that maximizing leverage minimizes error probability. This is mathematics, not heuristics.
-
-\textbf{Evidence:} 1,463 lines of Lean proofs, 125 definitions/theorems, 0 sorry placeholders, 0 axioms beyond standard probability theory (Axioms 2.1--2.2).
-
-\subsection{Objection 2: ``Different domains need different metrics''}
-
-\textbf{Response:} The framework is \emph{domain-agnostic}. We prove this by demonstrating instances across:
 \begin{itemize}
-\item Programming languages (SSOT, nominal typing)
-\item System architecture (microservices)
-\item API design (REST endpoints)
-\item Configuration (convention vs explicit)
-\item Database design (normalization)
+	\item \textbf{Independence and orthogonality:} Error-independence at the DOF level is derived from axis orthogonality assumptions; when dependencies are present, leverage remains a useful comparative metric but probabilistic models should be adjusted to account for correlation.
+	\item \textbf{Capability counting:} The core theorems require only relative ordering of capabilities; cardinality serves as a practical proxy for capability breadth in examples and case studies.
+	\item \textbf{Multi-objective concerns:} Leverage addresses error probability specifically. Performance, security, and other attributes require multi-objective analysis (e.g., Pareto frontiers) before operational decisions.
+	\item \textbf{Implementations:} SSOT and other instantiations depend on language and platform features; the theoretical principle is implementation-agnostic.
+	\item \textbf{Future work:} Extensions include explicit correlated-error models, weighted capability measures, and integration into multi-criteria architectural decision frameworks.
 \end{itemize}
-
-The same principle (maximize $L = |\text{Cap}|/\text{DOF}$) applies universally.
-
-\subsection{Objection 3: ``Capabilities can't be quantified''}
-
-\textbf{Response:} We \emph{don't need absolute quantification}. Theorem 3.1 requires only \emph{relative ordering}: if $\text{Cap}(A_1) = \text{Cap}(A_2)$ and $\text{DOF}(A_1) < \text{DOF}(A_2)$, then $L(A_1) > L(A_2)$.
-
-For architectures with \emph{different} capabilities, we count cardinality. This suffices for comparing alternatives (e.g., nominal vs duck: nominal has 4 additional capabilities).
-
-\subsection{Objection 4: ``SSOT is only relevant for Python''}
-
-\textbf{Response:} SSOT is \emph{implementable} in any language with definition-time hooks and introspection. Our prior work proved Python uniquely provides \emph{both} among mainstream languages, but:
-\begin{itemize}
-\item Common Lisp (CLOS) provides SSOT
-\item Smalltalk provides SSOT
-\item Future languages could provide SSOT
-\end{itemize}
-
-The \emph{principle} (leverage via SSOT) is universal. The \emph{implementation} depends on language features.
-
-\subsection{Objection 5: ``Independence assumption is unrealistic''}
-
-\textbf{Response:} Axiom 2.1 (independent errors) is an \emph{assumption}, clearly stated. Real systems may have correlated errors.
-
-\textbf{Mitigation:} Even with correlation, DOF remains relevant. If correlation coefficient is $\rho$, then:
-\[
-P_{\text{error}}(n) \approx n \cdot p \cdot (1 + (n-1)\rho)
-\]
-
-Still monotonically increasing in $n$. High-leverage architectures still preferable.
-
-\textbf{Future work:} Extend framework to correlated errors (Section 8.3).
-
-\subsection{Objection 6: ``Performance matters more than error probability''}
-
-\textbf{Response:} We \emph{agree}. Performance, security, and other quality attributes matter. Our framework addresses \emph{one dimension}: error probability.
-
-\textbf{Recommended approach:} Multi-objective optimization (Future Work, Section 8.3). Compute Pareto frontier over (leverage, performance, security).
-
-For domains where correctness dominates (safety-critical systems, financial software), leverage should be primary criterion.
-
-\subsection{Objection 7: ``Case studies are cherry-picked''}
-
-\textbf{Response:} The instances presented (SSOT, nominal typing, microservices, APIs, configuration, databases) demonstrate the framework's domain-agnostic applicability. Each instance is derived mathematically from the leverage definition, not selected based on favorable results.
-
-PR \#44 in OpenHCS provides a publicly verifiable example of DOF collapse in practice. The theoretical framework stands independently of any specific codebase.
-
-\subsection{Objection 8: ``The Lean proofs are trivial''}
-
-\textbf{Objection:} ``The Lean proofs just formalize obvious definitions. There's no deep mathematics here.''
-
-\textbf{Response:} The value is not in the difficulty of the proofs but in their \emph{existence}. Machine-checked proofs provide:
-
-\begin{enumerate}
-\item \textbf{Precision:} Informal arguments can be vague. Lean requires every step to be explicit.
-\item \textbf{Verification:} The proofs are checked by a computer. Human error is eliminated.
-\item \textbf{Reproducibility:} Anyone can run the proofs and verify the results.
-\end{enumerate}
-
-``Trivial'' proofs that compile are infinitely more valuable than ``deep'' proofs that contain errors. Every theorem in this paper has been validated by the Lean type checker.
-

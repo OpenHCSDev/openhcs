@@ -13,7 +13,7 @@ Our zero-incoherence capacity theorem extends classical source coding to interac
 
 \textbf{Multi-Version Coding.} Rashmi et al.~\cite{rashmi2015multiversion} formalize consistent distributed storage where multiple versions must be accessible while maintaining consistency. They prove an ``inevitable price, in terms of storage cost, to ensure consistency.'' Our DOF = 1 theorem is analogous: we prove the \emph{encoding rate} cost of ensuring coherence. Where multi-version coding trades storage for version consistency, we trade encoding rate for location coherence.
 
-\textbf{Write-Once Memory Codes.} Rivest and Shamir~\cite{rivest1982wom} introduced WOM codes for storage media where bits can only transition $0 \to 1$. Despite this irreversibility constraint, clever coding achieves capacity $\log_2(t+1)$ for $t$ writes---more than the naive $1$ bit.
+\textbf{Write-Once Memory Codes.} Rivest and Shamir~\cite{rivest1982wom} introduced WOM codes for storage media where bits can only transition $0 \to 1$. Despite this irreversibility constraint, clever coding achieves capacity $\log_2(t+1)$ for $t$ writes--more than the naive $1$ bit.
 
 Our structural facts have an analogous irreversibility: once defined, structure is fixed. The parallel:
 \begin{itemize}
@@ -35,7 +35,7 @@ Our framework extends this to \emph{storage} rather than communication: encoding
 
 \textbf{Minimum Description Length.} Rissanen~\cite{rissanen1978mdl} established MDL: the optimal model minimizes total description length (model + data given model). Grünwald~\cite{gruenwald2007mdl} proved uniqueness of MDL-optimal representations.
 
-DOF = 1 is the MDL-optimal encoding for redundant facts: the single source is the model; derived locations have zero marginal description length (fully determined by source). Additional independent encodings add description length without reducing uncertainty---pure overhead. Our Theorem~\ref{thm:dof-optimal} establishes analogous uniqueness for encoding systems under modification constraints.
+DOF = 1 is the MDL-optimal encoding for redundant facts: the single source is the model; derived locations have zero marginal description length (fully determined by source). Additional independent encodings add description length without reducing uncertainty--pure overhead. Our Theorem~\ref{thm:dof-optimal} establishes analogous uniqueness for encoding systems under modification constraints.
 
 \paragraph{Closest prior work and novelty.}
 The closest IT lineage is multi-version coding and zero-error/interactive source coding. These settings address consistency or decoding with side information, but they do not model \emph{modifiable} encodings with a coherence constraint over time. Our contribution is a formal encoding model with explicit modification operations, a coherence capacity theorem (unique rate for guaranteed coherence), an iff realizability characterization, and tight rate--complexity bounds.
@@ -63,31 +63,35 @@ Our Lean 4~\cite{demoura2021lean4} formalization follows the tradition of mechan
 To our knowledge, this is the first work to:
 \begin{enumerate}
 \tightlist
-\item \textbf{Define zero-incoherence capacity}---the maximum encoding rate guaranteeing zero probability of location disagreement, extending zero-error capacity to multi-location storage.
+\item \textbf{Define zero-incoherence capacity}--the maximum encoding rate guaranteeing zero probability of location disagreement, extending zero-error capacity to multi-location storage.
 
-\item \textbf{Prove a capacity theorem with achievability/converse}---$C_0 = 1$ exactly, with explicit achievability (Theorem~\ref{thm:capacity-achievability}) and converse (Theorem~\ref{thm:capacity-converse}) following the Shannon proof structure.
+\item \textbf{Prove a capacity theorem with achievability/converse}--$C_0 = 1$ exactly, with explicit achievability (Theorem~\ref{thm:capacity-achievability}) and converse (Theorem~\ref{thm:capacity-converse}) following the Shannon proof structure.
 
-\item \textbf{Quantify side information for resolution}---$\geq \log_2 k$ bits for $k$-way incoherence (Theorem~\ref{thm:side-info}), connecting to Slepian-Wolf decoder side information.
+\item \textbf{Quantify side information for resolution}--$\geq \log_2 k$ bits for $k$-way incoherence (Theorem~\ref{thm:side-info}), connecting to Slepian-Wolf decoder side information.
 
-\item \textbf{Characterize encoder realizability}---causal propagation (feedback) and provenance observability (side information) are necessary and sufficient for achieving capacity (Theorem~\ref{thm:ssot-iff}).
+\item \textbf{Characterize encoder realizability}--causal propagation (feedback) and provenance observability (side information) are necessary and sufficient for achieving capacity (Theorem~\ref{thm:ssot-iff}).
 
-\item \textbf{Establish rate-complexity tradeoffs}---$O(1)$ at capacity vs.\ $\Omega(n)$ above capacity, with unbounded gap (Theorem~\ref{thm:unbounded-gap}).
+\item \textbf{Establish rate-complexity tradeoffs}--$O(1)$ at capacity vs.\ $\Omega(n)$ above capacity, with unbounded gap (Theorem~\ref{thm:unbounded-gap}).
 \end{enumerate}
 
 \textbf{Relation to classical IT.}
 \begin{center}
-\begin{tabular}{lll}
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabularx}{\columnwidth}{@{}>{\RaggedRight\arraybackslash}p{0.32\columnwidth}>{\RaggedRight\arraybackslash}p{0.36\columnwidth}>{\RaggedRight\arraybackslash}p{0.24\columnwidth}@{}}
 \toprule
 \textbf{Classical IT Concept} & \textbf{This Work} & \textbf{Theorem} \\
 \midrule
 Zero-error capacity & Zero-incoherence capacity & \ref{thm:coherence-capacity} \\
-Channel capacity proof & Achievability + converse & \ref{thm:capacity-achievability}, \ref{thm:capacity-converse} \\
+Channel capacity proof & Achievability and converse & \ref{thm:capacity-achievability}; \ref{thm:capacity-converse} \\
 Slepian-Wolf side info & Resolution side info & \ref{thm:side-info} \\
 Multi-terminal correlation & Derivation as correlation & Def.~\ref{def:derived} \\
 Feedback channel & Causal propagation & Thm.~\ref{thm:causal-necessary} \\
 Rate-distortion tradeoff & Rate-complexity tradeoff & \ref{thm:unbounded-gap} \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\renewcommand{\arraystretch}{1.0}
 \end{center}
 
 \textbf{What is new:} The setting (interactive multi-location encoding with modifications), the capacity theorem for this setting, the side information bound, the encoder realizability iff, and the machine-checked proofs. The instantiations (programming languages, databases) are corollaries illustrating the abstract theory.

@@ -6,7 +6,7 @@ We address anticipated objections.
 
 \textbf{Response:} Leverage is \emph{formally defined} (Definition 1.4) and \emph{machine-checked} in Lean 4. Theorem 3.1 \emph{proves} (not assumes) that maximizing leverage minimizes error probability. This is mathematics, not heuristics.
 
-\textbf{Evidence:} 1,463 lines of Lean proofs, 125 definitions/theorems, 0 sorry placeholders, 0 axioms beyond standard probability theory (Axioms 2.1--2.2).
+\textbf{Evidence:} \LeanTotalLines{} lines, \LeanTotalTheorems{} theorems/lemmas, \LeanTotalSorry{} \texttt{sorry}. Claim-to-proof links are generated in the auto claim coverage matrix.
 
 \subsection{Objection 2: ``Different domains need different metrics''}
 
@@ -40,7 +40,7 @@ The \emph{principle} (leverage via SSOT) is universal. The \emph{implementation}
 
 \subsection{Objection 5: ``Independence assumption is unrealistic''}
 
-\textbf{Response:} Axiom 2.1 (independent errors) is an \emph{assumption}, clearly stated. Real systems may have correlated errors.
+\textbf{Response:} In the mechanization, independence is derived from orthogonality assumptions on axis structure (not inserted as an untracked theorem-level axiom). Real systems may still exhibit additional correlated failure modes outside this model.
 
 \textbf{Mitigation:} Even with correlation, DOF remains relevant. If correlation coefficient is $\rho$, then:
 \[
@@ -78,4 +78,3 @@ PR \#44 in OpenHCS provides a publicly verifiable example of DOF collapse in pra
 \end{enumerate}
 
 ``Trivial'' proofs that compile are infinitely more valuable than ``deep'' proofs that contain errors. Every theorem in this paper has been validated by the Lean type checker.
-

@@ -13,6 +13,13 @@ import Mathlib.Tactic
   - exact finite cardinalities of fibers,
   - geometric decay under coordinate fixation,
   - explicit node-count vs edge-structure separation.
+
+  ## Triviality Level
+  TRIVIAL: This provides geometric infrastructure. The nontrivial work is
+  in using this geometry to prove hardness results.
+
+  ## Dependencies
+  - Chain: Instances.lean → here → Instantiation.lean (physics)
 -/
 
 namespace DecisionQuotient

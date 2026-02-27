@@ -156,13 +156,53 @@ theorem ssot_max_leverage (a_ssot a_other : Architecture)
   simp
   exact Nat.le_mul_of_pos_right a_other.capabilities a_other.dof_pos
 
+/-- **Physical Necessity**: Maximum leverage (no architecture with same capabilities
+    beats it) forces DOF = 1.
+
+    Proof: If DOF > 1, construct challenger a' := ⟨1, same capabilities⟩.
+    Then a' has strictly higher leverage (same caps, lower DOF), contradicting maximality.
+    This is the converse of ssot_max_leverage, completing the biconditional. -/
+theorem max_leverage_forces_dof_one (a : Architecture)
+    (h_caps : a.capabilities > 0)
+    (h_max : ∀ a' : Architecture, a'.capabilities = a.capabilities → ¬ a'.higher_leverage a) :
+    a.dof = 1 := by
+  by_contra h_ne
+  have h_gt : a.dof > 1 := by have := a.dof_pos; omega
+  -- Challenger: DOF = 1, same capabilities
+  let a' : Architecture := ⟨1, a.capabilities, Nat.one_pos⟩
+  apply h_max a' rfl
+  -- a' strictly dominates a: same caps, DOF 1 < DOF of a
+  unfold Architecture.higher_leverage
+  -- goal: a'.capabilities * a.dof > a.capabilities * a'.dof
+  -- i.e.: a.capabilities * a.dof > a.capabilities * 1
+  -- goal: a'.capabilities * a.dof > a.capabilities * a'.dof
+  -- i.e.: a.capabilities * a.dof > a.capabilities * 1  (since a'.caps = a.caps, a'.dof = 1)
+  show a.capabilities * a.dof > a.capabilities * 1
+  exact Nat.mul_lt_mul_of_pos_left h_gt h_caps
+
+/-- **Biconditional**: An architecture with positive capabilities achieves maximum
+    leverage if and only if it is SSOT (DOF = 1).
+
+    Forward: ssot_max_leverage (already proved).
+    Backward: max_leverage_forces_dof_one (proved above). -/
+theorem dof_one_iff_max_leverage (a : Architecture) (h_caps : a.capabilities > 0) :
+    a.dof = 1 ↔
+    ∀ a' : Architecture, a'.capabilities = a.capabilities → ¬ a'.higher_leverage a := by
+  constructor
+  · intro h_ssot a' h_same h_higher
+    have hgeq := ssot_max_leverage a a' h_ssot h_same.symm
+    unfold Architecture.geq_leverage at hgeq
+    unfold Architecture.higher_leverage at h_higher
+    omega
+  · exact max_leverage_forces_dof_one a h_caps
+
 /-- Theorem: Leverage is anti-monotone in DOF for fixed capabilities -/
 theorem leverage_antimonotone_dof (caps : Nat) (d₁ d₂ : Nat)
     (h₁ : d₁ > 0) (h₂ : d₂ > 0) (h_lt : d₁ < d₂) (h_caps : caps > 0) :
     let a₁ := Architecture.mk d₁ caps h₁
     let a₂ := Architecture.mk d₂ caps h₂
     a₁.higher_leverage a₂ := by
-  simp only [Architecture.higher_leverage, Architecture.mk]
+  simp only [Architecture.higher_leverage]
   exact Nat.mul_lt_mul_of_pos_left h_lt h_caps
 
 /-!

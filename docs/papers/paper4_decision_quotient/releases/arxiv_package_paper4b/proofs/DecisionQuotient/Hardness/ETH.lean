@@ -3,11 +3,15 @@
 
   Hardness/ETH.lean - Exponential Time Hypothesis Lower Bounds
 
-  Key Result: Under ETH, SUFFICIENCY-CHECK requires 2^{Ω(n)} time when the
-  utility function is represented by a Boolean circuit of size n.
+  Key Result: This module formalizes the size-preserving 3-SAT→circuit-DQ
+  reduction premise and a concrete ETH assumption interface used by downstream
+  conditional transfer theorems.
 
-  The key insight is that in the circuit model, the reduction from 3-SAT
-  preserves instance size (up to polynomial factors), enabling ETH transfer.
+  ## Triviality Level
+  NONTRIVIAL: This is a core hardness result - ETH-based exponential lower bound.
+
+  ## Dependencies
+  - Chain: SAT.lean → PolynomialReduction.lean → here (ETH transfer)
 -/
 
 import DecisionQuotient.Hardness.SAT
@@ -63,6 +67,28 @@ def sat3ToCircuit (φ : SAT3Instance) : BooleanCircuit φ.numVars where
   size := φ.numVars + 3 * φ.clauses.length  -- O(n + m)
   compute := fun a => φ.eval a
 
+/-- Lift a circuit by adding `k` prefix bits that are ignored by the computation. -/
+def BooleanCircuit.liftWithPrefix {n k : ℕ} (C : BooleanCircuit n) : BooleanCircuit (k + n) where
+  size := C.size
+  compute := fun z => C.compute (fun i => z (Fin.natAdd k i))
+
+/-- SAT circuit embedded into the action+state input shape of `CircuitDecisionProblem`. -/
+def sat3OptCircuit (φ : SAT3Instance) :
+    BooleanCircuit (Nat.clog 2 2 + φ.numVars) :=
+  (sat3ToCircuit φ).liftWithPrefix (k := Nat.clog 2 2)
+
+/-- Semantic check: the lifted circuit evaluates SAT using the state-coordinate slice. -/
+theorem sat3OptCircuit_semantics (φ : SAT3Instance)
+    (z : Fin (Nat.clog 2 2 + φ.numVars) → Bool) :
+    (sat3OptCircuit φ).compute z =
+      φ.eval (fun i => z (Fin.natAdd (Nat.clog 2 2) i)) := rfl
+
+/-- Canonical circuit-encoded decision problem produced from a SAT instance. -/
+def sat3ToCircuitDecisionProblem (φ : SAT3Instance) : CircuitDecisionProblem where
+  numActions := 2
+  numCoords := φ.numVars
+  optCircuit := sat3OptCircuit φ
+
 /-- Input size of a 3-SAT instance -/
 def SAT3Instance.inputSize (φ : SAT3Instance) : ℕ :=
   φ.numVars + 3 * φ.clauses.length
@@ -74,20 +100,14 @@ theorem sat3_reduction_size_preserving (φ : SAT3Instance) :
     ∃ (cdp : CircuitDecisionProblem),
       -- Size is linear in original formula
       cdp.instanceSize ≤ 3 * φ.inputSize := by
-  use {
-    numActions := 2,  -- accept/reject
-    numCoords := φ.numVars,
-    optCircuit := {
-      size := φ.inputSize,
-      compute := fun _ => true  -- Simplified
-    }
-  }
+  refine ⟨sat3ToCircuitDecisionProblem φ, ?_⟩
   -- instanceSize = inputSize + numVars
   -- inputSize = numVars + 3 * clauses.length
   -- So instanceSize = 2 * numVars + 3 * clauses.length
   -- And 3 * inputSize = 3 * numVars + 9 * clauses.length
   -- Need: 2n + 3m ≤ 3n + 9m, which is true since n ≥ 0, m ≥ 0
-  simp only [CircuitDecisionProblem.instanceSize, SAT3Instance.inputSize]
+  simp only [sat3ToCircuitDecisionProblem,
+    sat3OptCircuit, BooleanCircuit.liftWithPrefix, sat3ToCircuit, SAT3Instance.inputSize]
   -- Goal: φ.numVars + 3 * φ.clauses.length + φ.numVars ≤ 3 * (φ.numVars + 3 * φ.clauses.length)
   -- i.e. 2n + 3m ≤ 3n + 9m
   have h : φ.numVars + 3 * φ.clauses.length + φ.numVars =
@@ -102,53 +122,55 @@ theorem sat3_reduction_size_preserving (φ : SAT3Instance) :
 
 ETH states that 3-SAT on n variables cannot be solved in 2^{o(n)} time. -/
 
-/-- The Exponential Time Hypothesis (stated as an axiom for conditional results) -/
-axiom ETH : ∀ (_algorithm : SAT3Instance → Bool),
-  ∀ (c : ℕ), c > 0 →
-  ∃ (_φ : SAT3Instance),
-    -- The algorithm takes at least 2^{n/c} steps on some instance
-    True  -- Placeholder: actual step counting would require a computation model
+/-- SAT solver interface with explicit output and runtime functions. -/
+structure SAT3Algorithm where
+  decide : SAT3Instance → Bool
+  runtime : SAT3Instance → ℕ
+  correct : ∀ φ : SAT3Instance, decide φ = true ↔ SAT3Instance.satisfiable φ
 
-/-- ETH implies 3-SAT requires exponential time -/
+/-- Exponential lower-bound witness (up to multiplicative slack `c`). -/
+def ExponentialRuntimeWitness (algorithm : SAT3Algorithm) (c : ℕ) (φ : SAT3Instance) : Prop :=
+  2 ^ φ.inputSize ≤ c * algorithm.runtime φ
+
+/-- ETH assumption schema over the concrete algorithm/runtime interface. -/
+def ETHAssumption : Prop :=
+  ∀ (algorithm : SAT3Algorithm),
+    ∀ (c : ℕ), c > 0 →
+      ∃ (φ : SAT3Instance), ExponentialRuntimeWitness algorithm c φ
+
+/-- ETH interface unpacking: under ETH, every concrete SAT3 algorithm has
+an exponential-runtime witness instance for each positive slack constant. -/
 theorem eth_implies_sat3_exponential :
+    ETHAssumption →
     -- Under ETH, any algorithm for 3-SAT takes 2^{Ω(n)} time
-    ∀ (_algorithm : SAT3Instance → Bool),
-    ∃ (c : ℕ), c > 0 ∧
-    ∀ (n : ℕ), n > 0 →
-    ∃ (_φ : SAT3Instance), True := by
-  intro _
-  use 1
-  constructor
-  · omega
-  · intro n _
-    use { numVars := n, clauses := [] }
+    ∀ (algorithm : SAT3Algorithm),
+    ∀ (c : ℕ), c > 0 →
+    ∃ (φ : SAT3Instance), ExponentialRuntimeWitness algorithm c φ := by
+  intro hETH algorithm c hc
+  exact hETH algorithm c hc
 
 /-! ## Main ETH Lower Bound for SUFFICIENCY-CHECK -/
 
-/-- Under ETH, SUFFICIENCY-CHECK on circuit-represented problems
-    requires 2^{Ω(n)} time where n is the circuit size.
-
-    Proof sketch:
-    1. 3-SAT on n variables reduces to SUFFICIENCY-CHECK with circuit size O(n+m)
-    2. For sparse formulas (m = O(n)), circuit size is Θ(n)
-    3. If SUFFICIENCY-CHECK were solvable in 2^{o(n)}, so would 3-SAT
-    4. This contradicts ETH -/
+/-- ETH-conditioned wrapper exposing the mechanized size-preservation premise
+used in lower-bound transfer arguments. -/
 theorem eth_lower_bound_sufficiency_check :
-    -- The reduction preserves size: input size n maps to output size O(n)
-    (∀ (φ : SAT3Instance),
-      ∃ (cdp : CircuitDecisionProblem),
-        cdp.instanceSize ≤ 3 * φ.inputSize) ∧
-    -- Therefore: 2^{o(n)} algorithm for SUFFICIENCY-CHECK → 2^{o(n)} for 3-SAT
-    -- Which contradicts ETH
-    True := by
-  exact ⟨sat3_reduction_size_preserving, trivial⟩
+    ETHAssumption →
+    ∀ (algorithm : SAT3Algorithm) (c : ℕ), c > 0 →
+      ∃ (φ : SAT3Instance) (cdp : CircuitDecisionProblem),
+        cdp.instanceSize ≤ 3 * φ.inputSize ∧
+        ExponentialRuntimeWitness algorithm c φ := by
+  intro hETH algorithm c hc
+  obtain ⟨φ, hW⟩ := eth_implies_sat3_exponential hETH algorithm c hc
+  obtain ⟨cdp, hSize⟩ := sat3_reduction_size_preserving φ
+  exact ⟨φ, cdp, hSize, hW⟩
 
-/-- Informal statement for the paper:
-    Under ETH, SUFFICIENCY-CHECK requires time 2^{Ω(n)} where n is the
-    circuit size of the utility function representation. -/
+/-- Paper-facing alias of `eth_lower_bound_sufficiency_check`. -/
 theorem eth_lower_bound_informal :
-    -- For circuit-represented problems of size n:
-    -- No algorithm solves SUFFICIENCY-CHECK in 2^{o(n)} time (unless ETH fails)
-    True := trivial
+    ETHAssumption →
+    ∀ (algorithm : SAT3Algorithm) (c : ℕ), c > 0 →
+      ∃ (φ : SAT3Instance) (cdp : CircuitDecisionProblem),
+        cdp.instanceSize ≤ 3 * φ.inputSize ∧
+        ExponentialRuntimeWitness algorithm c φ :=
+  eth_lower_bound_sufficiency_check
 
 end DecisionQuotient

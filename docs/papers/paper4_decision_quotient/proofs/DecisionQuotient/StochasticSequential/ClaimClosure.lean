@@ -20,9 +20,9 @@ open DecisionQuotient.Physics.DimensionalComplexity
 
 /-! ## Substrate Independence Claims -/
 
-/-- Claim: verdict independent of substrate — any two agents reach the same verdict -/
+/-- Claim: verdict independent of substrate class — any two substrate classes reach the same verdict -/
 theorem claim_verdict_substrate_independent
-    (c : MatrixCell) (τ₁ τ₂ : AgentType) :
+    (c : MatrixCell) (τ₁ τ₂ : SubstrateType) :
     evaluateCell τ₁ c = evaluateCell τ₂ c :=
   substrate_independence_verdict c τ₁ τ₂
 

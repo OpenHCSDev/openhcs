@@ -18,7 +18,10 @@ An \emph{architecture} is a tuple $A = (C, S, T, R)$ where:
 
 \begin{example}[Microservices Architecture]
 \begin{itemize}
-\item $C = \{\text{UserService}, \text{OrderService}, \text{PaymentService}\}$
+\item $C = \{U, O, P\}$ where
+  $U=\text{UserService}$,
+  $O=\text{OrderService}$,
+  $P=\text{PaymentService}$
 \item $S_{\text{UserService}} = \text{UserDB} \times \text{Endpoints} \times \text{Config}$
 \item Similar for other services
 \item $S = S_{\text{UserService}} \times S_{\text{OrderService}} \times S_{\text{PaymentService}}$
@@ -38,12 +41,17 @@ the dimension of the state space.
 \textbf{Operational meaning:} DOF counts independent modification points. If $\text{DOF}(A) = n$, then $n$ independent changes can be made to the architecture.
 
 \begin{proposition}[DOF Additivity]\label{prop:dof-additive}
-For architectures $A_1 = (C_1, S_1, T_1, R_1)$ and $A_2 = (C_2, S_2, T_2, R_2)$ with $C_1 \cap C_2 = \emptyset$:
+For disjoint architectures
+$A_1 = (C_1, S_1, T_1, R_1)$ and
+$A_2 = (C_2, S_2, T_2, R_2)$
+with $C_1 \cap C_2 = \emptyset$:
 \[
 \text{DOF}(A_1 \oplus A_2) = \text{DOF}(A_1) + \text{DOF}(A_2)
 \]
 where $A_1 \oplus A_2 = (C_1 \cup C_2, S_1 \times S_2, T_1 \times T_2, R_1 \cup R_2)$.
 \end{proposition}
+\leanmeta{\LH{L_d49a3a6e},
+\LH{L_1bc009bb}}
 
 \begin{proof}
 $\dim(S_1 \times S_2) = \dim(S_1) + \dim(S_2)$ by standard linear algebra.
@@ -140,6 +148,7 @@ M(A, \delta R) \leq \text{DOF}(A)
 \]
 with equality when $\delta R$ affects all components.
 \end{theorem}
+\leanmeta{\LH{L_54abf361}}
 
 \begin{proof}
 Each change modifies at most one DOF. Since there are $\text{DOF}(A)$ independent modification points, the maximum number of changes is $\text{DOF}(A)$.
@@ -158,12 +167,8 @@ Consider changing a structural fact $F$ with $n$ use sites:
 All definitions in this section are formalized in \texttt{Leverage/Foundations.lean}:
 \begin{itemize}
 \item \texttt{Architecture}: Structure with components, state, transitions, requirements
-\item \texttt{Architecture.dof}: Degrees of freedom calculation
-\item \texttt{Architecture.capabilities}: Capability set
 \item \texttt{Architecture.leverage}: Leverage metric
 \item \texttt{Architecture.dominates}: Dominance relation
-\item \texttt{dof\_additive}: Proposition \ref{prop:dof-additive}
-\item \texttt{modification\_bounded\_by\_dof}: Theorem \ref{thm:mod-bound}
+\item \texttt{compose\_dof}: Proposition \ref{prop:dof-additive}
+\item \texttt{modification\_eq\_dof}: Theorem \ref{thm:mod-bound}
 \end{itemize}
-
-

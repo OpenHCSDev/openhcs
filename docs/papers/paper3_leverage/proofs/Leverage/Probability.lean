@@ -341,7 +341,7 @@ theorem leverage_gap (a₁ a₂ : Architecture)
 
 /-- Corollary: DOF ratio predicts expected error ratio -/
 theorem dof_ratio_predicts_error_ratio (a₁ a₂ : Architecture) (p : ErrorRate)
-    (h_p : p.numerator > 0) :
+    (_h_p : p.numerator > 0) :
     -- E[errors(A₂)] / E[errors(A₁)] = DOF(A₂) / DOF(A₁)
     -- Formalized as: errors₂ * dof₁ = errors₁ * dof₂ (cross-multiplication)
     (expected_errors a₂ p).1 * a₁.dof = (expected_errors a₁ p).1 * a₂.dof := by
@@ -352,9 +352,9 @@ theorem dof_ratio_predicts_error_ratio (a₁ a₂ : Architecture) (p : ErrorRate
     If A₁ has n× lower DOF than A₂ (for same capabilities), then A₁ requires
     n× fewer expected modifications. This is empirically testable against PR data. -/
 theorem testable_modification_prediction (a₁ a₂ : Architecture) (n : Nat)
-    (h_caps : a₁.capabilities = a₂.capabilities)
+    (_h_caps : a₁.capabilities = a₂.capabilities)
     (h_dof : a₂.dof = n * a₁.dof)
-    (h_n : n > 0) :
+    (_h_n : n > 0) :
     a₂.modification_complexity = n * a₁.modification_complexity := by
   simp [Architecture.modification_complexity]
   exact h_dof
@@ -769,7 +769,7 @@ theorem error_probability_denom_pos (a : Architecture) (p : ErrorRate) :
 
     This means the leverage ordering is EXACT, not approximate. -/
 theorem ordering_equivalence_exact (a₁ a₂ : Architecture) (p : ErrorRate)
-    (h_eq_caps : a₁.capabilities = a₂.capabilities) (hp : p.numerator > 0) :
+    (_h_eq_caps : a₁.capabilities = a₂.capabilities) (hp : p.numerator > 0) :
     -- Linear model says: a₁ ≤ a₂ iff dof₁ ≤ dof₂
     -- Series model says: (1-p)^dof₁ ≥ (1-p)^dof₂ iff dof₁ ≤ dof₂
     -- These orderings are identical!

@@ -9,7 +9,7 @@
 
     1. DECISION CIRCUIT: Any physical system implementing state transitions under uncertainty
        - Substrate-neutral: biological neurons, silicon, any physical realization
-       - Agents contain decision circuits; claims about circuits apply to agents
+       - Physical systems contain decision circuits; claims apply at circuit level
 
     2. INTEGRITY (bit-erase resistance): Circuit's resistance to state corruption
        - Measured by: bits required to erase current state
@@ -32,6 +32,7 @@
 
 import Mathlib.Data.Fintype.Card
 import Mathlib.Order.Basic
+import Mathlib.Data.Real.Basic
 
 namespace DecisionQuotient
 namespace Physics
@@ -41,7 +42,7 @@ namespace DecisionCircuit
 
 /-- A decision circuit: any physical system implementing state transitions.
     Substrate-neutral: applies to neural circuits, silicon, any physical realization.
-    An agent contains a decision circuit; claims about circuits apply to agents. -/
+    A physical system contains a decision circuit; claims apply at circuit level. -/
 structure Circuit where
   /-- Circuit identifier. -/
   id : ℕ
@@ -58,7 +59,7 @@ inductive Strategy where
 structure EpistemicState where
   /-- Number of verified theorems (bits that would need erasure to dismiss). -/
   theoremCount : ℕ
-  /-- Visibility/citability (affects social cost of dismissal). -/
+  /-- External observability/citability (affects reproducibility pressure). -/
   visibility : ℕ
 
 /-! ## Part 2: Integrity (Bit-Erase Resistance) -/
@@ -558,7 +559,7 @@ def maintainsIntegrity (s₀ s₁ : CircuitState) : Prop :=
   s₁.integrity.bits ≥ s₀.integrity.bits
 
 /-- THEOREM 7: Circuits self-preserve when erasure cost exceeds external competence.
-    If no external agent can afford to erase, integrity persists. -/
+    If no external system can afford to erase, integrity persists. -/
 theorem integrity_self_preserving
     (s : CircuitState) (externalCompetence : Competence)
     (hProtected : erasureCost s.integrity > externalCompetence) :
@@ -743,45 +744,41 @@ structure ComputationalState where
   bits : ℕ
   deriving DecidableEq
 
-/-- CC1 (Axiom): Landauer Bound.
-    Erasing n bits costs at least n units of kT ln 2.
-    CITE: Landauer 1961, Bennett 2003, Bérut et al. 2012 (experimental). -/
-axiom landauer_bound : ∀ (n : ℕ), n ≥ 1 → ∃ (cost : ℕ), cost ≥ n
+/-- Transition cost in joules: erasing a state costs (bits erased) × kT_ln2.
+    Zero if states are identical (no erasure); proportional to bit content otherwise.
+    CC1 (Landauer): kT_ln2 = kT·ln(2) > 0 is the energy cost per erased bit.
+      CITE: Landauer 1961, Bennett 2003, Bérut et al. 2012 (experimental).
+    CC2 (Irreversibility): s ≠ s' implies at least 1 bit of s is erased, costing ≥ kT_ln2.
+    kT_ln2 is carried explicitly: every cost bound holds iff kT_ln2 > 0,
+    which any party claiming to operate in the physical world must accept. -/
+noncomputable def transitionCost (kT_ln2 : ℝ) (s s' : ComputationalState) : ℝ :=
+  if s = s' then 0 else (max 1 s.bits : ℝ) * kT_ln2
 
-/-- CC2 (Axiom): Irreversible State Change Erases Information.
-    A state transition s → s' where s ≠ s' erases at least 1 bit of the prior state.
-    CITE: Thermodynamics (second law), Landauer 1961. -/
-axiom irreversible_erases_info : ∀ (s s' : ComputationalState), s ≠ s' →
-  ∃ (bits_erased : ℕ), bits_erased ≥ 1
+/-- CC3 (Theorem): Every state transition costs at least kT_ln2.
+    Proof: s ≠ s' → max(1, s.bits) ≥ 1 → cost = max(1,s.bits)·kT_ln2 ≥ kT_ln2 > 0. -/
+theorem cycle_cost_lower_bound (kT_ln2 : ℝ) (hkT : 0 < kT_ln2)
+    (s s' : ComputationalState) (h : s ≠ s') :
+    0 < transitionCost kT_ln2 s s' := by
+  simp only [transitionCost, h, ↓reduceIte]
+  apply mul_pos _ hkT
+  exact_mod_cast Nat.lt_of_lt_of_le Nat.one_pos (Nat.le_max_left 1 s.bits)
 
-/-- Transition cost: energy required for state change, in units of kT ln 2.
-    Returns 0 if states are identical, ≥1 otherwise. -/
-def transitionCost (s s' : ComputationalState) : ℕ :=
-  if s = s' then 0 else 1
-
-/-- CC3 (Theorem): Every state transition costs at least 1 unit.
-    Derived from CC1 + CC2: different states ⟹ erasure ⟹ cost. -/
-theorem cycle_cost_lower_bound (s s' : ComputationalState) (h : s ≠ s') :
-    transitionCost s s' ≥ 1 := by
+/-- CC4 (Corollary): Zero cost implies identical states (under positive kT_ln2). -/
+theorem zero_cost_iff_identity (kT_ln2 : ℝ) (hkT : 0 < kT_ln2)
+    (s s' : ComputationalState) :
+    transitionCost kT_ln2 s s' = 0 ↔ s = s' := by
   simp only [transitionCost]
   split_ifs with heq
-  · exact absurd heq h
-  · rfl
-
-/-- CC4 (Corollary): Zero cost implies identical states.
-    Contrapositive of CC3. -/
-theorem zero_cost_iff_identity (s s' : ComputationalState) :
-    transitionCost s s' = 0 ↔ s = s' := by
-  unfold transitionCost
-  split_ifs with heq
   · simp [heq]
-  · simp; exact heq
+  · refine ⟨fun h => ?_, fun h => absurd h heq⟩
+    have hpos : 0 < (max 1 s.bits : ℝ) * kT_ln2 :=
+      mul_pos (by exact_mod_cast Nat.lt_of_lt_of_le Nat.one_pos (Nat.le_max_left 1 s.bits)) hkT
+    exact absurd h (ne_of_gt hpos)
 
-/-- CC5 (Theorem): No free state change.
-    If energy expended = 0, then no state change occurred.
-    This is the fundamental constraint: you pay for every transition. -/
-theorem no_free_state_change (s s' : ComputationalState) (hCost : transitionCost s s' = 0) :
-    s = s' := (zero_cost_iff_identity s s').mp hCost
+/-- CC5 (Theorem): No free state change under positive kT_ln2. -/
+theorem no_free_state_change (kT_ln2 : ℝ) (hkT : 0 < kT_ln2)
+    (s s' : ComputationalState) (hCost : transitionCost kT_ln2 s s' = 0) :
+    s = s' := (zero_cost_iff_identity kT_ln2 hkT s s').mp hCost
 
 /-- An observation is a state transition that produces output.
     Output is irreversible: the observer's state encodes the result. -/
@@ -793,11 +790,11 @@ structure Observation where
   /-- Observation produces distinct output (state changed). -/
   produces_output : before ≠ after
 
-/-- CC6 (Theorem): Every observation costs at least 1 unit.
+/-- CC6 (Theorem): Every observation costs at least kT_ln2.
     Observation = state transition producing output. Output is irreversible. -/
-theorem observation_costs_energy (obs : Observation) :
-    transitionCost obs.before obs.after ≥ 1 :=
-  cycle_cost_lower_bound obs.before obs.after obs.produces_output
+theorem observation_costs_energy (kT_ln2 : ℝ) (hkT : 0 < kT_ln2) (obs : Observation) :
+    0 < transitionCost kT_ln2 obs.before obs.after :=
+  cycle_cost_lower_bound kT_ln2 hkT obs.before obs.after obs.produces_output
 
 /-- A computation is a sequence of observations (state transitions).
     Each step transforms the computational state. -/
@@ -826,19 +823,18 @@ theorem k_transitions_cost_k (k : ℕ) (transitions : List Observation)
     (hLen : transitions.length = k) :
     k ≤ transitions.length := by omega
 
-/-- CC10 (Theorem): State persistence requires zero transitions.
-    If a state persists unchanged, zero energy was expended on state change.
-    Equivalently: persistence is free, change is not. -/
-theorem persistence_zero_cost (s : ComputationalState) :
-    transitionCost s s = 0 := by simp [transitionCost]
+/-- CC10 (Theorem): State persistence costs nothing.
+    Persistence is free; change is not. -/
+theorem persistence_zero_cost (kT_ln2 : ℝ) (s : ComputationalState) :
+    transitionCost kT_ln2 s s = 0 := by simp [transitionCost]
 
-/-- CC11 (Theorem): Every cycle of a decision circuit costs energy.
+/-- CC11 (Theorem): Every cycle of a decision circuit costs at least kT_ln2.
     A decision circuit executing a cycle performs a state transition.
-    State transitions cost ≥ 1 unit (CC3). Therefore cycles cost energy. -/
-theorem decision_circuit_cycle_costs_energy
+    Any state transition costs ≥ kT_ln2 (CC3). Therefore cycles cost energy. -/
+theorem decision_circuit_cycle_costs_energy (kT_ln2 : ℝ) (hkT : 0 < kT_ln2)
     (_c : Circuit) (s s' : ComputationalState) (hCycle : s ≠ s') :
-    transitionCost s s' ≥ 1 :=
-  cycle_cost_lower_bound s s' hCycle
+    0 < transitionCost kT_ln2 s s' :=
+  cycle_cost_lower_bound kT_ln2 hkT s s' hCycle
 
 /-- CC12 (Theorem): Running a pipeline costs energy.
     A pipeline is a computation (sequence of observations).
@@ -861,12 +857,21 @@ structure Substrate where
   heatCapacity : ℕ  -- max heat before degradation per cycle
   deriving DecidableEq
 
-/-- Heat generated per cycle in units of kT ln 2. -/
-def heatPerCycle : ℕ := 1  -- Landauer minimum
+/-- Heat generated per cycle, counted in units of kT_ln2.
+    The Landauer minimum is 1 bit erased per cycle = 1 unit of kT_ln2.
+    The physical energy in joules is heatPerCycle × kT_ln2. -/
+def heatPerCycle : ℕ := 1  -- 1 unit of kT_ln2 per cycle (Landauer minimum)
 
-/-- SE1: Every computational cycle generates at least 1 unit of heat.
-    This is the Landauer bound applied to substrate thermodynamics. -/
+/-- SE1: Every computational cycle generates at least 1 unit of heat (in units of kT_ln2).
+    In joules: heat ≥ kT_ln2 per cycle. Carrying kT_ln2 > 0 makes this physical. -/
 theorem SE1_heat_per_cycle_lb : heatPerCycle ≥ 1 := by decide
+
+/-- SE1 (physical form): heat per cycle in joules is strictly positive.
+    This is the form that carries the explicit physical constant kT_ln2 > 0. -/
+theorem SE1_heat_per_cycle_joules_pos (kT_ln2 : ℝ) (hkT : 0 < kT_ln2) :
+    0 < (heatPerCycle : ℝ) * kT_ln2 := by
+  simp [heatPerCycle]
+  exact hkT
 
 /-- Cumulative heat after k cycles. -/
 def cumulativeHeat (cycles : ℕ) : ℕ := cycles * heatPerCycle
@@ -1077,9 +1082,9 @@ theorem IV6_deficit_at_source (sourcePaid : ℕ) :
 end DecisionCircuit
 
 /-!
-## Part 17: Atomic Circuits — Matter as Agent
+## Part 17: Atomic Circuits — Matter as Active Physical System
 
-An agent is matter that pays to move other matter via its decision circuit.
+An active physical system is matter that pays to move other matter via its decision circuit.
 Electrons in orbitals, atoms in bonds, molecules in conformations — all are
 decision circuits with discrete states and transition costs.
 -/
@@ -1121,14 +1126,14 @@ theorem AC4_downward_releases (c1 c2 : AtomicConfig) (hDown : c1.energy > c2.ene
   · omega
   · exact Nat.sub_pos_of_lt hDown
 
-/-- An atom is nonstationary (an agent) when it transitions between configurations. -/
+/-- An atom is nonstationary when it transitions between configurations. -/
 def isNonstationary (transitions : ℕ) : Prop := transitions > 0
 
-/-- AC5: An atom with orbital transitions is an agent (nonstationary decision circuit). -/
-theorem AC5_transitioning_atom_is_agent (transitions : ℕ) (hTrans : transitions > 0) :
+/-- AC5: An atom with orbital transitions is a nonstationary decision circuit. -/
+theorem AC5_transitioning_atom_is_nonstationary_system (transitions : ℕ) (hTrans : transitions > 0) :
     isNonstationary transitions := hTrans
 
-/-- AC6: A ground-state atom with no transitions is passive (not an agent). -/
+/-- AC6: A ground-state atom with no transitions is passive. -/
 theorem AC6_ground_state_is_passive : ¬isNonstationary 0 := by
   simp only [isNonstationary, gt_iff_lt, Nat.lt_irrefl, not_false_eq_true]
 
@@ -1166,9 +1171,9 @@ theorem AC9_matter_moves_matter (i : MatterInteraction)
   apply hMove
   rw [h]
 
-/-- AC10: An agent is matter that pays to move other matter.
-    This is a definition, not a metaphor. -/
-def isAgent (m : MatterInteraction) : Prop :=
+/-- AC10: An active physical system is matter that pays to move other matter.
+    This is a definition. -/
+def isActivePhysicalSystem (m : MatterInteraction) : Prop :=
   m.energyPaid > 0 ∧ m.source ≠ m.target
 
 /-- AC11: No free matter movement — moving matter costs energy. -/
@@ -1366,4 +1371,3 @@ end DimensionalComplexity
 
 end Physics
 end DecisionQuotient
-

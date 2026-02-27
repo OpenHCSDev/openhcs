@@ -38,7 +38,7 @@ An encoding system is \emph{incoherent} iff some locations disagree:
 \]
 \end{definition}
 
-\textbf{The Resolution Problem.} When an encoding system is incoherent, no resolution procedure is information-theoretically justified. Any oracle selecting a value leaves another value disagreeing, creating an unresolvable ambiguity.
+\textbf{The Resolution Problem.} When an encoding system is incoherent, no resolution procedure is information-theoretically justified. Any oracle selecting a value leaves another value disagreeing, creating an unresolvable ambiguity (\LH{ORA1}).
 
 \begin{theorem}[Oracle Arbitrariness]\label{thm:oracle-arbitrary}
 For any incoherent encoding system $S$ and any oracle $O$ that resolves $S$ to a value $v \in S$, there exists a value $v' \in S$ such that $v' \neq v$.
@@ -74,23 +74,23 @@ With DOF $> 1$, at least two locations are independent. Independent locations ca
 If coherence must be guaranteed (no incoherent states reachable), then DOF = 1 is necessary and sufficient.
 \end{corollary}
 
-This is the information-theoretic foundation of optimal encoding under coherence constraints.
+This is the information-theoretic foundation of optimal encoding under coherence constraints (\LH{COH1}, \LH{COH2}, \LH{COH3}).
 
 \textbf{Connection to Minimum Description Length.} The DOF = 1 optimum directly generalizes Rissanen's MDL principle~\cite{rissanen1978mdl}. MDL states that the optimal representation minimizes total description length: $|$model$|$ + $|$data given model$|$. In encoding systems:
 
 \begin{itemize}
 \tightlist
 \item \textbf{DOF = 1:} The single source is the minimal model. All derived locations are ``data given model'' with zero additional description length (fully determined by the source). Total encoding rate is minimized.
-\item \textbf{DOF $>$ 1:} Redundant independent locations require explicit synchronization. Each additional independent location adds description length with no reduction in uncertainty---pure overhead serving no encoding purpose.
+\item \textbf{DOF $>$ 1:} Redundant independent locations require explicit synchronization. Each additional independent location adds description length with no reduction in uncertainty--pure overhead serving no encoding purpose.
 \end{itemize}
 
-Grünwald~\cite{gruenwald2007mdl} proves that MDL-optimal representations are unique under mild conditions. Theorem~\ref{thm:dof-optimal} establishes the analogous uniqueness for encoding systems under modification constraints: DOF = 1 is the unique coherence-guaranteeing rate.
+Grünwald~\cite{gruenwald2007mdl} proves that MDL-optimal representations are unique under mild conditions. Theorem~\ref{thm:dof-optimal} establishes the analogous uniqueness for encoding systems under modification constraints: DOF = 1 is the unique coherence-guaranteeing rate (\LH{INS1}, \LH{INS2}).
 
-\textbf{Generative Complexity.} Heering~\cite{heering2015generative} formalized this for computational systems: the \emph{generative complexity} of a program family is the length of the shortest generator. DOF = 1 systems achieve minimal generative complexity---the single source is the generator, derived locations are generated instances. This connects our framework to Kolmogorov complexity while remaining constructive (we provide the generator, not just prove existence).
+\textbf{Generative Complexity.} Heering~\cite{heering2015generative} formalized this for computational systems: the \emph{generative complexity} of a program family is the length of the shortest generator. DOF = 1 systems achieve minimal generative complexity--the single source is the generator, derived locations are generated instances. This connects our framework to Kolmogorov complexity while remaining constructive (we provide the generator, not just prove existence).
 
 The following sections show how computational systems instantiate this encoding model.
 
-%------------------------------------------------------------------------------
+% Section divider
 
 \subsection{Computational Realizations}\label{sec:edit-space}
 
@@ -111,7 +111,7 @@ The abstract encoding model (Definitions~\ref{def:encoding-system}--\ref{def:dof
 \item \textbf{Version control:} Merge resolution under concurrent modifications
 \end{itemize}
 
-We focus on \emph{computational realizations}---systems where locations are syntactic constructs manipulated by tools or humans. Software codebases are the primary example, but the encoding model is not software-specific. This subsection is illustrative; the core information-theoretic results do not depend on any particular computational domain.
+We focus on \emph{computational realizations}--systems where locations are syntactic constructs manipulated by tools or humans. Software codebases are the primary example, but the encoding model is not software-specific. This subsection is illustrative; the core information-theoretic results do not depend on any particular computational domain.
 
 \begin{definition}[Codebase (Software Realization)]
 A \emph{codebase} $C$ is a finite collection of source files, each containing syntactic constructs (classes, functions, statements, expressions). This is the canonical computational encoding system.
@@ -138,7 +138,9 @@ The granularity of facts is determined by the specification, not the implementat
 \noindent\textbf{Examples of facts:}
 
 \begin{center}
-\begin{tabularx}{\linewidth}{lY}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight\arraybackslash\hsize=0.95\hsize}X>{\RaggedRight\arraybackslash\hsize=1.05\hsize}X@{}}
 \toprule
 \textbf{Fact} & \textbf{Description} \\
 \midrule
@@ -154,7 +156,11 @@ $F_5$: ``\texttt{Config} has field \texttt{name: str}'' & A dataclass field \\
 \begin{definition}[Structural Fact]\label{def:structural-fact}
 A fact $F$ is \emph{structural} with respect to encoding system $C$ iff the locations encoding $F$ are fixed at definition time:
 \[
-\text{structural}(F, C) \Longleftrightarrow \forall L: \text{encodes}(L, F) \rightarrow L \in \text{DefinitionSyntax}(C)
+\begin{aligned}
+\text{structural}(F, C) \Longleftrightarrow\;
+&\forall L:\; \text{encodes}(L, F) \\
+&\rightarrow\; L \in \text{DefinitionSyntax}(C)
+\end{aligned}
 \]
 where $\text{DefinitionSyntax}(C)$ comprises declarative constructs that cannot change post-definition without recreation.
 \end{definition}
@@ -333,7 +339,7 @@ This is formalized as the Zero-Incoherence Capacity theorem (Theorem~\ref{thm:co
 %==============================================================================
 \subsection{Encoding-Theoretic CAP and FLP}\label{sec:cap-flp}
 
-We now formalize CAP and FLP inside the encoding model.
+We now formalize CAP and FLP inside the encoding model (\LH{CAP1}, \LH{FLP1}).
 
 \begin{definition}[Local Availability]\label{def:local-availability}
 An encoding system for fact $F$ is \emph{locally available} iff for every encoding location $L$ of $F$ and every value $v$, there exists a valid edit $\delta \in E(C)$ such that $\text{updated}(L, \delta)$ and for every other encoding location $L'$, $\neg \text{updated}(L', \delta)$. Informally: each encoding location can be updated without coordinating with others.
@@ -418,7 +424,7 @@ This quantifies the uncertainty about which value is ``correct.''
 %==============================================================================
 \subsection{Zero-Incoherence Capacity Theorem}\label{sec:capacity}
 
-We now establish the central capacity result. This extends zero-error capacity theory~\cite{korner1973graphs,lovasz1979shannon} to interactive encoding systems with modification constraints.
+We now establish the central capacity result. This extends zero-error capacity theory~\cite{korner1973graphs,lovasz1979shannon} to interactive encoding systems with modification constraints (\LH{COH3}, \LH{CAP2}, \LH{CAP3}).
 
 \textbf{Background: Zero-Error Capacity.} Shannon~\cite{shannon1956zero} introduced zero-error capacity: the maximum rate at which information can be transmitted with \emph{zero} probability of error (not vanishing, but exactly zero). Körner~\cite{korner1973graphs} and Lovász~\cite{lovasz1979shannon} characterized this via graph entropy and confusability graphs. Our zero-incoherence capacity is analogous: the maximum encoding rate guaranteeing \emph{zero} probability of incoherence.
 
@@ -474,7 +480,7 @@ Both modifications are valid (each location accepts values from $\mathcal{V}_F$)
 
 By Definition~\ref{def:incoherence}, this state is incoherent. Since it is reachable, zero incoherence is not achieved.
 
-\textbf{Fano-style argument.} We can also prove the converse via an entropy argument analogous to Fano's inequality. Let $X_i$ denote the value at location $L_i$. With DOF $= k > 1$, the $k$ independent locations have joint entropy $H(X_1, \ldots, X_k) = k \cdot H(F)$ (each independently samples from $\mathcal{V}_F$). For coherence, we require $X_1 = X_2 = \cdots = X_k$, which constrains the joint distribution to the diagonal $\{(v, v, \ldots, v) : v \in \mathcal{V}_F\}$---a set of measure zero in the product space when $k > 1$. Thus the probability of coherence under independent modifications is zero, and the probability of incoherence is one.
+\textbf{Fano-style argument.} We can also prove the converse via an entropy argument analogous to Fano's inequality. Let $X_i$ denote the value at location $L_i$. With DOF $= k > 1$, the $k$ independent locations have joint entropy $H(X_1, \ldots, X_k) = k \cdot H(F)$ (each independently samples from $\mathcal{V}_F$). For coherence, we require $X_1 = X_2 = \cdots = X_k$, which constrains the joint distribution to the diagonal $\{(v, v, \ldots, v) : v \in \mathcal{V}_F\}$--a set of measure zero in the product space when $k > 1$. Thus the probability of coherence under independent modifications is zero, and the probability of incoherence is one.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:coherence-capacity}]
@@ -488,9 +494,11 @@ Therefore $C_0 = 1$ exactly. The bound is tight: achieved at DOF $= 1$, not achi
 \textbf{Comparison to Shannon capacity.} The structure parallels Shannon's noisy channel coding theorem~\cite{shannon1948mathematical}:
 
 \begin{center}
-\begin{tabular}{lll}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight\arraybackslash}p{0.19\linewidth}YY@{}}
 \toprule
-& \textbf{Shannon (Channel)} & \textbf{This Work (Encoding)} \\
+\textbf{Aspect} & \textbf{Shannon (Channel)} & \textbf{This Work (Encoding)} \\
 \midrule
 Rate & Bits per channel use & Independent encoding locations \\
 Constraint & Error probability $\to 0$ & Incoherence probability $= 0$ \\
@@ -498,7 +506,7 @@ Achievability & $R < C$ achieves & DOF $= 1$ achieves \\
 Converse & $R > C$ fails & DOF $> 1$ fails \\
 Capacity & $C = \max I(X;Y)$ & $C_0 = 1$ \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{center}
 
 The key difference: Shannon capacity allows vanishing error; zero-incoherence capacity requires \emph{exactly} zero, paralleling zero-error capacity.
@@ -536,10 +544,10 @@ R(\epsilon) = \begin{cases}
 \begin{proof}
 For $\epsilon = 0$ (zero incoherence tolerated): By Theorem~\ref{thm:coherence-capacity}, the minimum rate achieving $P(\text{incoherence}) = 0$ is exactly DOF $= 1$. Thus $R(0) = 1$.
 
-For $\epsilon > 0$ (some incoherence tolerated): Any DOF $\geq 1$ is achievable---there is no upper bound on rate when incoherence is permitted. Thus $R(\epsilon) = \infty$ (no finite constraint).
+For $\epsilon > 0$ (some incoherence tolerated): Any DOF $\geq 1$ is achievable--there is no upper bound on rate when incoherence is permitted. Thus $R(\epsilon) = \infty$ (no finite constraint).
 \end{proof}
 
-\textbf{Interpretation.} Unlike rate-distortion, which exhibits smooth tradeoffs, the rate-incoherence function is discontinuous. There is no ``graceful degradation'': either you operate at capacity (DOF $= 1$, zero incoherence) or you have no coherence guarantee whatsoever. This discontinuity reflects the qualitative nature of correctness---a system is either coherent or it is not; there is no intermediate state.
+\textbf{Interpretation.} Unlike rate-distortion, which exhibits smooth tradeoffs, the rate-incoherence function is discontinuous. There is no ``graceful degradation'': either you operate at capacity (DOF $= 1$, zero incoherence) or you have no coherence guarantee whatsoever. This discontinuity reflects the qualitative nature of correctness--a system is either coherent or it is not; there is no intermediate state.
 
 \subsubsection{Design Necessity}
 
@@ -574,12 +582,12 @@ The capacity theorem admits a coding-theoretic interpretation: \emph{derivation 
 \tightlist
 \item The ``message'' is the fact $F$'s value
 \item The ``codeword'' is the encoding across all locations
-\item The ``code'' is the derivation structure---how locations depend on each other
+\item The ``code'' is the derivation structure--how locations depend on each other
 \end{itemize}
 
-A DOF $= 1$ derivation structure is a \emph{capacity-achieving code}: it encodes $F$ at exactly one independent location (rate 1) with zero incoherence (zero ``error''). Derived locations are redundant symbols determined by the source---they add reliability (the value is readable at multiple locations) without adding rate (no independent information).
+A DOF $= 1$ derivation structure is a \emph{capacity-achieving code}: it encodes $F$ at exactly one independent location (rate 1) with zero incoherence (zero ``error''). Derived locations are redundant symbols determined by the source--they add reliability (the value is readable at multiple locations) without adding rate (no independent information).
 
-\textbf{Redundancy without rate.} In classical coding, redundancy increases reliability at the cost of rate. In DOF-1 encoding, derived locations provide redundancy (multiple copies of $F$'s value) without rate cost---they are deterministic functions of the source. This is the information-theoretic sense in which derivation is ``free'': derived encodings do not consume encoding rate.
+\textbf{Redundancy without rate.} In classical coding, redundancy increases reliability at the cost of rate. In DOF-1 encoding, derived locations provide redundancy (multiple copies of $F$'s value) without rate cost--they are deterministic functions of the source. This is the information-theoretic sense in which derivation is ``free'': derived encodings do not consume encoding rate.
 
 \subsubsection{Connection to Confusability Graphs}
 
@@ -608,7 +616,7 @@ This connects our capacity theorem to the Körner-Lovász theory: zero-error/zer
 
 \subsection{Side Information for Resolution}\label{sec:side-information}
 
-When an encoding system is incoherent, resolution requires external side information. We establish a tight bound on the required side information, connecting to Slepian-Wolf distributed source coding.
+When an encoding system is incoherent, resolution requires external side information. We establish a tight bound on the required side information, connecting to Slepian-Wolf distributed source coding (\LH{CIA2}, \LH{SID1}, \LH{SID2}).
 
 \subsubsection{The Multi-Terminal View}
 
@@ -621,11 +629,11 @@ We can view an encoding system as a \emph{multi-terminal source coding} problem~
 \item The \emph{decoder} (any observer querying the system) must reconstruct $F$'s value
 \end{itemize}
 
-In Slepian-Wolf coding, correlated sources $(X, Y)$ can be encoded at rates $(R_X, R_Y)$ satisfying $R_X \geq H(X|Y)$, $R_Y \geq H(Y|X)$, $R_X + R_Y \geq H(X,Y)$. With perfect correlation ($Y = f(X)$), we have $H(X|Y) = 0$---the correlated source needs zero rate.
+In Slepian-Wolf coding, correlated sources $(X, Y)$ can be encoded at rates $(R_X, R_Y)$ satisfying $R_X \geq H(X|Y)$, $R_Y \geq H(Y|X)$, $R_X + R_Y \geq H(X,Y)$. With perfect correlation ($Y = f(X)$), we have $H(X|Y) = 0$--the correlated source needs zero rate.
 
-\textbf{Derivation as perfect correlation.} In our model, derivation creates perfect correlation: if $L_d$ is derived from $L_s$, then $\text{value}(L_d) = f(\text{value}(L_s))$ deterministically. The ``rate'' of $L_d$ is effectively zero---it contributes no independent information. This is why derived locations do not contribute to DOF.
+\textbf{Derivation as perfect correlation.} In our model, derivation creates perfect correlation: if $L_d$ is derived from $L_s$, then $\text{value}(L_d) = f(\text{value}(L_s))$ deterministically. The ``rate'' of $L_d$ is effectively zero--it contributes no independent information. This is why derived locations do not contribute to DOF.
 
-\textbf{Independence as zero correlation.} Independent locations have no correlation. Each can hold any value in $\mathcal{V}_F$. The total ``rate'' is DOF $\cdot H(F)$, but with DOF $> 1$, the locations can encode \emph{different} values---incoherence.
+\textbf{Independence as zero correlation.} Independent locations have no correlation. Each can hold any value in $\mathcal{V}_F$. The total ``rate'' is DOF $\cdot H(F)$, but with DOF $> 1$, the locations can encode \emph{different} values--incoherence.
 
 \subsubsection{Side Information Bound}
 
@@ -634,7 +642,7 @@ Given an incoherent encoding system with $k$ independent locations holding disti
 \end{theorem}
 
 \begin{proof}
-The $k$ independent locations partition the value space into $k$ equally plausible alternatives. By Theorem~\ref{thm:oracle-arbitrary}, no internal information distinguishes them---each is an equally valid ``source.''
+The $k$ independent locations partition the value space into $k$ equally plausible alternatives. By Theorem~\ref{thm:oracle-arbitrary}, no internal information distinguishes them--each is an equally valid ``source.''
 
 Let $S \in \{1, \ldots, k\}$ denote the index of the correct source. The decoder must determine $S$ to resolve correctly. Since $S$ is uniformly distributed over $k$ alternatives (by symmetry of the incoherent state):
 \[
@@ -691,7 +699,7 @@ Resolution requires $\log_2 3 \approx 1.58$ bits of side information:
 \item An explicit declaration: ``params.toml is authoritative'' (directly encodes source identity)
 \end{itemize}
 
-With DOF = 1, zero bits suffice---the single source is self-evidently authoritative.
+With DOF = 1, zero bits suffice--the single source is self-evidently authoritative.
 \end{example}
 
 \subsubsection{Multi-Terminal Capacity Interpretation}
@@ -706,11 +714,11 @@ An encoding system achieves zero incoherence iff all terminals are perfectly cor
 Perfect correlation means DOF = 1 (only the root is independent). By Theorem~\ref{thm:capacity-achievability}, this achieves zero incoherence. If any two terminals are independent (not perfectly correlated through the root), DOF $\geq 2$, and by Theorem~\ref{thm:capacity-converse}, incoherence is reachable.
 \end{proof}
 
-This connects to network information theory: in a multi-terminal network, achieving coherence requires complete dependence on a single source---no ``multicast'' of independent copies.
+This connects to network information theory: in a multi-terminal network, achieving coherence requires complete dependence on a single source--no ``multicast'' of independent copies.
 
 \subsection{Structure Theorems: The Derivation Lattice}\label{sec:derivation-structure}
 
-The set of derivation relations on an encoding system has algebraic structure. We characterize this structure and its computational implications.
+The set of derivation relations on an encoding system has algebraic structure. We characterize this structure and its computational implications (\LH{DER1}, \LH{AXM1}, \LH{CPL1}).
 
 \begin{definition}[Derivation Relation]\label{def:derivation-relation}
 A \emph{derivation relation} $D \subseteq L \times L$ on locations $L$ is a directed relation where $(L_s, L_d) \in D$ means $L_d$ is derived from $L_s$. We require $D$ be acyclic (no location derives from itself through any chain).
@@ -763,7 +771,7 @@ Adding a derivation edge $(L_s, L_d)$ to $D$ can only decrease DOF: if $L_d$ was
 A derivation relation $D$ with DOF($D$) = 1 is \emph{minimal} iff removing any edge increases DOF.
 \end{corollary}
 
-\textbf{Computational implication:} Given an encoding system, there can be multiple DOF-1-achieving derivation structures. The minimal ones use the fewest derivation edges---the most economical way to achieve coherence.
+\textbf{Computational implication:} Given an encoding system, there can be multiple DOF-1-achieving derivation structures. The minimal ones use the fewest derivation edges--the most economical way to achieve coherence.
 
 \textbf{Representation model for complexity.} For the algorithmic results below, we assume the derivation relation $D$ is given explicitly as a DAG over the location set $L$. The input size is $|L| + |D|$, and all complexity bounds are measured in this explicit representation.
 

@@ -64,7 +64,7 @@ theorem posterior_converges {C : Type*} [Fintype C] [DecidableEq C]
 
 /-! ## Abstention Reduction -/
 
-/-- Abstention set shrinks as agent learns -/
+/-- Abstention set shrinks as posterior evidence accumulates -/
 def abstentionSet {C : Type*}
     (_k : ℕ)
     (post : C → ℝ)

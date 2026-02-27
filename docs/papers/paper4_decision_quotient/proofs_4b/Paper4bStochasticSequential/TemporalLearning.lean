@@ -70,7 +70,7 @@ theorem posterior_uniform_prior {C : Type*} [Fintype C] [Nonempty C]
 
 /-! ## Abstention Reduction -/
 
-/-- Abstention set shrinks as agent learns -/
+/-- Abstention set shrinks as posterior evidence accumulates -/
 def abstentionSet {C : Type*} 
     (k : ℕ) 
     (posterior : C → ℝ)

@@ -27,7 +27,10 @@ import DecisionQuotient.Physics.PhysicalHardness
 import DecisionQuotient.Physics.DecisionTime
 import DecisionQuotient.Physics.Conversation
 import DecisionQuotient.Physics.ConstraintForcing
+import DecisionQuotient.Physics.MeasureNecessity
+import DecisionQuotient.Physics.AssumptionNecessity
 import DecisionQuotient.Physics.ObserverRelativeState
+import DecisionQuotient.Physics.AnchorChecks
 import DecisionQuotient.Physics.PhysicalIncompleteness
 import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.Physics.Uncertainty
@@ -48,6 +51,7 @@ import DecisionQuotient.BayesianBridge
 import DecisionQuotient.BayesFromDQ
 import DecisionQuotient.BayesFoundations
 import DecisionQuotient.BayesOptimalityProof
+import DecisionQuotient.FunctionalInformation
 
 namespace DecisionQuotient
 
@@ -55,7 +59,7 @@ namespace CC
 export DecisionQuotient.ClaimClosure (
   RegimeSimulation
   adq_ordering
-  agent_transfer_licensed_iff_snapshot
+  system_transfer_licensed_iff_snapshot
   anchor_sigma2p_complete_conditional
   anchor_sigma2p_reduction_core
   anchor_query_relation_false_iff
@@ -786,7 +790,7 @@ abbrev PH34 := @PhysicalComplexity.CoherentDQRejectionAtRequirement
 abbrev PH35 := @PhysicalComplexity.coherent_dq_rejection_impossible_at_requirement
 abbrev PH36 := @PhysicalComplexity.coherent_dq_rejection_impossible_canonical
 
--- Bayes-from-DQ (BF) handles - belief forcing before Bayes uniqueness
+-- Bayes-from-DQ (BF) handles - nondegenerate-prior forcing before Bayes uniqueness
 abbrev BF1 := @certainty_of_not_nondegenerateBelief
 abbrev BF2 := @nondegenerateBelief_of_uncertaintyForced
 abbrev BF3 := @forced_action_under_uncertainty
@@ -802,6 +806,26 @@ abbrev CF6 := @Physics.ConstraintForcing.actionForced_of_deadline
 abbrev CF7 := @Physics.ConstraintForcing.nondegenerateBelief_of_deadline_and_uncertainty
 abbrev CF8 := @Physics.ConstraintForcing.forced_decision_implies_positive_landauer_cost
 abbrev CF9 := @Physics.ConstraintForcing.forced_decision_implies_positive_nv_work
+
+-- Measure-necessity (MN) handles - quantitative vs stochastic typing requirements
+abbrev MN1 := @Physics.MeasureNecessity.quantitative_claim_has_measure
+abbrev MN2 := @Physics.MeasureNecessity.stochastic_claim_has_probability_measure
+abbrev MN3 := @Physics.MeasureNecessity.stochastic_claim_has_measure
+abbrev MN4 := @Physics.MeasureNecessity.count_univ_bool
+abbrev MN5 := @Physics.MeasureNecessity.counting_measure_not_probability_on_bool
+abbrev MN6 := @Physics.MeasureNecessity.deterministic_dirac_is_probability
+abbrev MN7 := @Physics.MeasureNecessity.quantitative_value_depends_on_measure
+abbrev MN8 := @Physics.MeasureNecessity.deterministic_models_still_measure_based
+abbrev MN9 := @Physics.MeasureNecessity.measure_does_not_imply_probability
+abbrev MN10 := @Physics.MeasureNecessity.quantitative_measure_is_logical_prerequisite
+abbrev MN11 := @Physics.MeasureNecessity.stochastic_probability_is_logical_prerequisite
+
+-- Assumption-necessity meta (AN) handles - universal sound-system schema
+abbrev AN1 := @Physics.AssumptionNecessity.no_assumption_free_proof_of_refutable_claim
+abbrev AN2 := @Physics.AssumptionNecessity.countermodel_violates_some_assumption
+abbrev AN3 := @Physics.AssumptionNecessity.physical_claim_requires_physical_assumption
+abbrev AN4 := @Physics.AssumptionNecessity.physical_claim_requires_empirically_justified_physical_assumption
+abbrev AN5 := @Physics.AssumptionNecessity.strong_physical_no_go_meta
 
 -- Physical-state universality (PS) handles - generic physical-state semantics
 abbrev PS1 := @Physics.ClaimTransport.PhysicalStateSemantics
@@ -819,6 +843,17 @@ abbrev OR6 := @Physics.ObserverRelativeState.PhysicalObserverClass
 abbrev OR7 := @Physics.ObserverRelativeState.PhysicalStateSpace
 abbrev OR8 := @Physics.ObserverRelativeState.physical_state_space_has_instance_witness
 abbrev OR9 := @Physics.ObserverRelativeState.physical_observer_relative_effective_space
+
+-- Physical anchor-check (PA) handles - observer collapse to anchor-check implications
+abbrev PA1 := @Physics.AnchorChecks.obsEquiv_all_of_effective_subsingleton
+abbrev PA2 := @Physics.AnchorChecks.stochasticAnchorSufficient_iff_exists_anchor_singleton
+abbrev PA3 := @Physics.AnchorChecks.stochastic_anchor_check_iff_exists_anchor_singleton
+abbrev PA4 := @Physics.AnchorChecks.stochastic_sufficient_of_observer_collapse_and_seed
+abbrev PA5 := @Physics.AnchorChecks.stochastic_anchor_check_of_observer_collapse_and_seed
+abbrev PA6 := @Physics.AnchorChecks.sequential_sufficient_of_observer_collapse
+abbrev PA7 := @Physics.AnchorChecks.sequential_anchor_check_of_observer_collapse
+abbrev PA8 := @Physics.AnchorChecks.physical_observer_collapse_implies_obsEquiv_all
+abbrev PA9 := @Physics.AnchorChecks.physical_stochastic_anchor_check_of_observer_collapse_and_seed
 
 -- Graph nontriviality (GN) handles - cycles, observer surprisal, Bayes/DQ/physics bridge
 abbrev GN1 := @LogicGraph.isCycle
@@ -843,6 +878,15 @@ abbrev FN12 := @BayesOptimalityProof.crossEntropy_eq_entropy_add_KL
 abbrev FN14 := @BayesOptimalityProof.bayes_is_optimal
 abbrev FN15 := @BayesOptimalityProof.KL_eq_sum_klFun
 abbrev FN16 := @BayesOptimalityProof.KL_eq_zero_iff_eq
+
+-- Functional-information (FI) handles - counting and thermodynamic derivations
+noncomputable abbrev FI1 := @FunctionalInformation.functionalFraction
+noncomputable abbrev FI2 := @FunctionalInformation.functionalInformationBits
+abbrev FI3 := @FunctionalInformation.functional_information_from_counting
+noncomputable abbrev FI4 := @FunctionalInformation.minimumFunctionalEnergy
+noncomputable abbrev FI5 := @FunctionalInformation.functionalInformationBitsFromEnergy
+abbrev FI6 := @FunctionalInformation.functional_information_from_thermodynamics
+abbrev FI7 := @FunctionalInformation.first_principles_thermo_coincide
 
 -- Thermodynamic-lift (TL) handles - Landauer calibration -> positive per-bit conversion
 noncomputable abbrev TL1 := @ThermodynamicLift.landauerJoulesPerBit

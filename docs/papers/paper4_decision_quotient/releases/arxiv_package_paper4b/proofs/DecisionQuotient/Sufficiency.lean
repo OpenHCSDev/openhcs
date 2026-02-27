@@ -10,6 +10,15 @@
   - Sufficient set I: knowing coordinates in I determines Opt
   - Minimal sufficient set: smallest such I
   - Relevant coordinate: a coordinate that can change Opt
+
+  ## Triviality Level
+  NONTRIVIAL: This defines the core mathematical objects (sufficiency, relevance)
+  that the entire paper builds on. These are NOT trivial - they are the
+  fundamental definitions that enable all complexity proofs.
+
+  ## Dependencies
+  - Depends on: Basic.lean (core definitions)
+  - Used by: ClaimClosure.lean, Reduction.lean, all hardness proofs
 -/
 
 import DecisionQuotient.Basic
@@ -24,7 +33,7 @@ namespace DecisionQuotient
 
 /-- A coordinate projection from a product state space.
     For S = X₁ × ... × Xₙ, proj I s returns the tuple (sᵢ)_{i ∈ I} -/
-class CoordinateSpace (S : Type*) (n : ℕ) where
+class CoordinateSpace (S : Type*) (n : outParam ℕ) where
   /-- The i-th coordinate type -/
   Coord : Fin n → Type*
   /-- Project to coordinate i -/

@@ -176,7 +176,7 @@ theorem error_linear_scaling (d₁ d₂ : Nat) (h₁ : d₁ > 0) (h₂ : d₂ > 
     let a₂ := Architecture.mk d₂ 1 h₂
     (expected_errors a₁ p_one_percent).1 * d₂ =
     (expected_errors a₂ p_one_percent).1 * d₁ := by
-  simp only [expected_errors, p_one_percent, Architecture.mk]
+  simp only [expected_errors, p_one_percent]
   -- d₁ * 1 * d₂ = d₂ * 1 * d₁
   simp only [Nat.mul_one]
   exact Nat.mul_comm d₁ d₂

@@ -1,3 +1,19 @@
+/-
+  Paper 4: Decision-Relevant Uncertainty
+
+  Hardness/Sigma2PHardness.lean - Σ₂ᴾ Completeness Proofs
+
+  This module proves Σ₂ᴾ-completeness for decision-quotient problems:
+  - Shows MINIMUM-SUFFICIENT-SET is Σ₂ᴾ-complete
+  - Gadget constructions for QBF encoding
+
+  ## Triviality Level
+  NONTRIVIAL: This is a core hardness proof - Σ₂ᴾ completeness.
+
+  ## Dependencies
+  - Chain: QBF.lean + Sufficiency.lean → here (Σ₂ᴾ reduction)
+-/
+
 import DecisionQuotient.Basic
 import DecisionQuotient.Sufficiency
 import DecisionQuotient.Instances

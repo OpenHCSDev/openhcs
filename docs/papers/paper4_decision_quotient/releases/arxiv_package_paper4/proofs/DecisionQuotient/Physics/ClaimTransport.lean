@@ -34,6 +34,55 @@ universe u v w
 structure PhysicalEncoding (PInst : Type u) (A : Type v) (S : Type w) where
   encode : PInst → DecisionProblem A S
 
+/-! ## Physical-state universality (axiom-light) -/
+
+/-- Physical-state semantics over a core state type.
+`isPhysical s` marks physically admissible states, and `realizable` requires
+that every such state has an instance witness under `observe`. -/
+structure PhysicalStateSemantics (PInst : Type u) (S : Type w) where
+  observe : PInst → S
+  isPhysical : S → Prop
+  realizable : ∀ s : S, isPhysical s → ∃ p : PInst, observe p = s
+
+/-- Every state marked physical has an instance witness by construction. -/
+theorem physical_state_has_witness
+    {PInst : Type u} {S : Type w}
+    (M : PhysicalStateSemantics PInst S) :
+    ∀ s : S, M.isPhysical s → ∃ p : PInst, M.observe p = s :=
+  M.realizable
+
+/-- Strong substrate-generic transport:
+if a state-level claim holds on observed states of all instances, then it holds
+for every state declared physical (via witness extraction), independent of
+substrate-specific physics axioms. -/
+theorem physical_state_claim_of_instance_claim
+    {PInst : Type u} {A : Type v} {S : Type w}
+    (E : PhysicalEncoding PInst A S)
+    (M : PhysicalStateSemantics PInst S)
+    (StateClaim : DecisionProblem A S → S → Prop)
+    (hInst : ∀ p : PInst, StateClaim (E.encode p) (M.observe p)) :
+    ∀ s : S, M.isPhysical s →
+      ∃ p : PInst, M.observe p = s ∧ StateClaim (E.encode p) s := by
+  intro s hs
+  rcases M.realizable s hs with ⟨p, hp⟩
+  refine ⟨p, hp, ?_⟩
+  simpa [hp] using hInst p
+
+/-- Universal-core specialization:
+if a claim is state-universal for all core decision problems, then every
+physical state satisfies it under any physical encoding. -/
+theorem physical_state_claim_of_universal_core
+    {PInst : Type u} {A : Type v} {S : Type w}
+    (E : PhysicalEncoding PInst A S)
+    (M : PhysicalStateSemantics PInst S)
+    (StateClaim : DecisionProblem A S → S → Prop)
+    (hCore : ∀ d : DecisionProblem A S, ∀ s : S, StateClaim d s) :
+    ∀ s : S, M.isPhysical s →
+      ∃ p : PInst, M.observe p = s ∧ StateClaim (E.encode p) s := by
+  refine physical_state_claim_of_instance_claim E M StateClaim ?_
+  intro p
+  exact hCore (E.encode p) (M.observe p)
+
 /-- Conditional claim transport:
 core theorem + physical-to-core assumption transfer gives a physical theorem. -/
 theorem physical_claim_lifts_from_core_conditional

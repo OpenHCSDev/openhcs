@@ -32,7 +32,7 @@ noncomputable def entropy {S : Type*} [Fintype S] (P : StochasticDecisionProblem
 /-! ## Decision Gap
 
 The decision gap is the absolute margin between the two actions' expected utilities.
-It is zero iff the prior leaves the agent indifferent (a tie), and positive iff one
+It is zero iff the prior leaves the controller indifferent (a tie), and positive iff one
 action strictly dominates — i.e., the optimal action is uniquely determined.
 -/
 

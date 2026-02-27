@@ -7,6 +7,14 @@
   (Part 2). It introduces a concrete, finite representation of decision
   problems using `Finset`s, plus computable notions of optimal actions,
   sufficiency, and the decision quotient metric.
+
+  ## Triviality Level
+  TRIVIAL: This is concrete instantiation of abstract definitions to finite types.
+  The nontrivial work is proving hardness of the abstract sufficiency problem.
+
+  ## Dependencies
+  - Chain: Basic.lean (definitions) → Sufficiency.lean (core definitions) → [NONTRIVIAL: Reduction.lean hardness proof] → here
+  - This file just applies the theory to finite types
 -/
 
 import DecisionQuotient.Basic

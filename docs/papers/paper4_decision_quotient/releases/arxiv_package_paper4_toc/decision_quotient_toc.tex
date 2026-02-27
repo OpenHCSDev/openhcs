@@ -10,10 +10,27 @@
 }
 \date{\today}
 
-% Keep claim stamps and Lean tags inline and wrap-friendly (avoid superscript overflow/clipping).
+% Keep claim stamps and Lean tags inline and wrap-friendly (avoid overflow/clipping).
 % C = grouped claim refs (D/P/C/T/L/R), R = compact regime codes.
-\newcommand{\claimstamp}[2]{\allowbreak{\scriptsize\textit{[C:#1;R:#2]}}}
-\newcommand{\leanmeta}[1]{\allowbreak{\scriptsize\textit{(L: #1)}}}
+% Insert explicit break opportunities after comma separators.
+\makeatletter
+\@ifundefined{ifdq@first}{\newif\ifdq@first}{}
+\newcommand{\dqcommabreak}[1]{%
+  \dq@firsttrue
+  \@for\dq@item:=#1\do{%
+    \ifdq@first
+      \dq@item
+      \dq@firstfalse
+    \else
+      , \allowbreak\dq@item
+    \fi
+  }%
+}
+\makeatother
+\providecommand{\claimstamp}[2]{}
+\providecommand{\leanmeta}[1]{}
+\renewcommand{\claimstamp}[2]{\allowbreak{\scriptsize\textit{[C:\dqcommabreak{#1};R:\dqcommabreak{#2}]}}}
+\renewcommand{\leanmeta}[1]{\allowbreak{\scriptsize\textit{(L: \dqcommabreak{#1})}}}
 % Compact inline handle-id token used inside \leanmeta.
 % Shared preamble defines this globally; keep local fallback only if absent.
 \providecommand{\LH}[1]{\hyperlink{lh:#1}{\texttt{#1}}}
@@ -37,6 +54,9 @@ License: \url{https://creativecommons.org/licenses/by/4.0/}
 
 \input{content/01_introduction.tex}
 \input{content/02_formal_foundations.tex}
+\input{content/02b_stochastic.tex}
+\input{content/02c_sequential.tex}
+\input{content/02d_regime_hierarchy.tex}
 \input{content/03_complexity_dichotomy.tex}
 \input{content/04_tractable_special_cases.tex}
 \input{content/05_mathematical_justification_of_engineering_practice.tex}

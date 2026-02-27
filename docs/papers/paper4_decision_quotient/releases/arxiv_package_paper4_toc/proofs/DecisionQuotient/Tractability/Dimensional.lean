@@ -28,7 +28,11 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Defs
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Data.Fintype.BigOperators
 import Mathlib.Data.Fintype.Perm
+import Mathlib.Data.List.FinRange
 import Mathlib.Data.Nat.Choose.Basic
+import Mathlib.Data.Sym.Basic
+import Mathlib.Data.Sym.Card
+import Mathlib.Tactic
 
 namespace DecisionQuotient
 
@@ -114,6 +118,22 @@ def DimensionalStateSpace.orbitType {k d : ℕ} (s : DimensionalStateSpace k d) 
     Finset (Fin k × ℕ) := by
   -- Count how many times each value appears
   exact Finset.image (fun v : Fin k => (v, Finset.card (Finset.filter (fun i => s.state i = v) Finset.univ))) Finset.univ
+
+/-- Multiset representation of a state as a symmetric tuple of length `d`. -/
+noncomputable def DimensionalStateSpace.toSym {k d : ℕ}
+    (s : DimensionalStateSpace k d) : Sym (Fin k) d :=
+  (List.Vector.ofFn s.state : List.Vector (Fin k) d)
+
+/-- Coordinate permutations preserve the multiset representation. -/
+theorem DimensionalStateSpace.toSym_permute {k d : ℕ}
+    (s : DimensionalStateSpace k d) (σ : CoordinatePermutation d) :
+    (s.permute σ).toSym = s.toSym := by
+  apply Sym.ext
+  change (((List.Vector.ofFn (fun i : Fin d => s.state (σ.symm i)) : List.Vector (Fin k) d).toList : Multiset (Fin k))
+      = ((List.Vector.ofFn s.state : List.Vector (Fin k) d).toList : Multiset (Fin k)))
+  refine Quot.sound ?_
+  simpa [List.Vector.toList_ofFn, Function.comp] using
+    (Equiv.Perm.ofFn_comp_perm (σ := σ.symm) (f := s.state))
 
 /-- Permuting coordinates preserves the orbit type (value histogram) -/
 theorem orbitType_permute {k d : ℕ} (s : DimensionalStateSpace k d)
@@ -272,9 +292,10 @@ theorem symmetric_utility_opt_constant_on_orbitType
 
 /-! ## Reduction to Standard Results -/
 
-/-- The orbit type setoid: states are equivalent iff they have the same orbit type. -/
+/-- The orbit-type setoid: states are equivalent iff they induce the same
+    multiset of coordinate values (symmetric tuple representation). -/
 def orbitTypeSetoid (k d : ℕ) : Setoid (DimensionalStateSpace k d) where
-  r := fun s s' => s.orbitType = s'.orbitType
+  r := fun s s' => s.toSym = s'.toSym
   iseqv := ⟨fun _ => rfl, fun h => h.symm, fun h1 h2 => h1.trans h2⟩
 
 /-- The quotient space of orbit types. -/
@@ -284,16 +305,44 @@ def OrbitTypeQuotient (k d : ℕ) := Quotient (orbitTypeSetoid k d)
 noncomputable instance {k d : ℕ} : Fintype (OrbitTypeQuotient k d) :=
   Quotient.fintype (orbitTypeSetoid k d)
 
-/-- **Reduction Axiom (Stars-and-Bars)**: The number of distinct orbit types
-    is bounded by the stars-and-bars formula.
+/-- Canonical map from orbit-type quotient classes to symmetric tuples. -/
+noncomputable def orbitTypeQuotientToSym (k d : ℕ) :
+    OrbitTypeQuotient k d → Sym (Fin k) d :=
+  Quotient.lift (fun s : DimensionalStateSpace k d => s.toSym) (by
+    intro s s' h
+    simpa [orbitTypeSetoid] using h)
 
-    This is a standard combinatorial result: orbit types are compositions of d
-    into k parts, counted by (d + k - 1 choose k - 1).
+/-- The quotient-to-symmetric-tuple map is injective by construction. -/
+theorem orbitTypeQuotientToSym_injective (k d : ℕ) :
+    Function.Injective (orbitTypeQuotientToSym k d) := by
+  intro q q' hq
+  revert hq
+  refine Quotient.inductionOn₂ q q' ?_
+  intro s s' hs
+  exact Quotient.sound hs
 
-    We state this as an axiom citing the standard result rather than re-proving
-    the full stars-and-bars bijection in Lean. -/
-axiom orbitType_count_bound (k d : ℕ) (hk : 0 < k) :
-    Fintype.card (OrbitTypeQuotient k d) ≤ Nat.choose (d + k - 1) (k - 1)
+/-- The number of distinct orbit types is bounded by the stars-and-bars formula.
+
+    We inject orbit classes into `Sym (Fin k) d` and apply
+    `Sym.card_sym_eq_choose` plus `Nat.choose_symm`. -/
+theorem orbitType_count_bound (k d : ℕ) (hk : 0 < k) :
+    Fintype.card (OrbitTypeQuotient k d) ≤ Nat.choose (d + k - 1) (k - 1) := by
+  have hInj := orbitTypeQuotientToSym_injective k d
+  have hCard :
+      Fintype.card (OrbitTypeQuotient k d) ≤ Fintype.card (Sym (Fin k) d) :=
+    Fintype.card_le_of_injective (orbitTypeQuotientToSym k d) hInj
+  have hSym :
+      Fintype.card (Sym (Fin k) d) = Nat.choose (d + k - 1) d := by
+    simpa [Nat.add_comm, Fintype.card_fin] using (Sym.card_sym_eq_choose (α := Fin k) d)
+  have hChoose :
+      Nat.choose (d + k - 1) d = Nat.choose (d + k - 1) (k - 1) := by
+    have hle : d ≤ d + k - 1 := by omega
+    have hsub : d + k - 1 - d = k - 1 := by omega
+    rw [← Nat.choose_symm hle, hsub]
+  calc
+    Fintype.card (OrbitTypeQuotient k d) ≤ Fintype.card (Sym (Fin k) d) := hCard
+    _ = Nat.choose (d + k - 1) d := hSym
+    _ = Nat.choose (d + k - 1) (k - 1) := hChoose
 
 /-- **Key Reduction Lemma**: Under symmetric utility, if two states have the
     same orbit type, then optimalActions is identical.
