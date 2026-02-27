@@ -1,9 +1,13 @@
-\textbf{Abstract}
+	extbf{Abstract}
 
-We characterize which coordinates of a factored state space determine optimal actions. For decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times X_n$, coordinate set $I$ is \emph{sufficient} if $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. We prove: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants rise to PP- and PSPACE-completeness respectively, with strict static $\subset$ stochastic $\subset$ sequential separation. Six structural subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds.
+We identify which coordinates of a factored state space suffice to determine optimal actions, and we quantify the algorithmic and physical costs of exploiting that structure. For a decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times X_n$, a coordinate set $I$ is \emph{sufficient} when identical $I$-projections imply identical optimal actions. Our principal technical contributions are:
 
-Bayesian updating is unconditionally optimal: from no axioms beyond Lean's type theory and Mathlib, we prove it uniquely minimizes expected log loss. The argument is Gibbs' inequality and nothing else.
+- Complexity landscape: deciding sufficiency and finding minimum sufficient sets are intractable in general (coNP- and $\Sigma_2^P$-hard depending on formulation); stochastic and sequential variants incur higher complexity (up to PP and PSPACE), while six structural subcases admit polynomial-time algorithms. Under ETH, succinct encodings imply $2^{\Omega(n)}$ lower bounds.
 
-The thermodynamic consequences are conditional on Landauer's principle ($k_BT\ln 2$ per irreversible bit erasure, established experimentally since 1961), composed with the bit-operation lower bounds above. The inequality $dU\geq\lambda\,dC$ follows by multiplication. Rejecting it requires rejecting Landauer.
+- Information-theoretic optimality: Bayesian updating uniquely minimizes expected log loss from first principles; the derivation requires only basic information inequalities (Gibbs' inequality) and explicit assumptions recorded in our machine-generated ledger.
 
-All results are machine-checked in Lean~4 with no \texttt{sorry} placeholders. Complexity results carry their hypotheses as explicit Lean theorem parameters. A machine-generated assumption ledger records all conditional dependencies. There are no hidden axioms.
+- Thermodynamic and operational consequences: combining the bit-operation lower bounds with Landauer's principle yields explicit trade-offs between computational decision cost and thermodynamic work (energy per information change), making the physical cost of decision refinement quantitatively explicit.
+
+Relationship to the series: this work builds on the prior formal concepts developed in the project—axis orthogonality (Paper 1) and Single Source of Truth / DOF = 1 (Paper 2)—and connects them to decision-theoretic sufficiency and computational/physical cost.
+
+All core theorems are machine-checked in Lean~4 without \texttt{sorry} placeholders; complexity statements carry explicit hypotheses as Lean parameters and the assumption ledger accompanies the proofs. The paper presents constructive algorithms for tractable subcases and an explicit mutual-information argument for the side-information bounds.
