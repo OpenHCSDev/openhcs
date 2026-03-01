@@ -1,20 +1,85 @@
 #!/usr/bin/env python3
 """
-Unified paper build system for all TOPLAS papers.
+Unified paper build system for the OpenHCS paper series.
 
-OpenHCS Architecture:
-  - Declarative: Configuration in YAML, not code
-  - Fail-Loud: Explicit validation, no silent failures
-  - Orthogonal: One responsibility per function
-  - Explicit Dependency Injection: No hidden state
-  - Compile-Time Validation: Check everything upfront
+All configuration lives in scripts/papers.yaml. The script reads it once at
+startup and derives every path, target, and dependency from that single source
+of truth. No path guessing, no string-matching heuristics.
 
-STRUCTURAL INVARIANTS (mathematical constraints):
-  1. Content: ∀p ∈ Papers: content(p) ⊂ paper_dir(p)/latex/content/*.tex
-  2. Proofs:  ∀p ∈ Papers: proofs(p) ⊂ paper_dir(p)/meta(p).proofs_dir/ (declared in papers.yaml)
-  3. Output:  ∀p ∈ Papers: releases(p) = {pdf, md, copy_paste.txt, BUILD_LOG.txt, tar.gz, zip}
+─────────────────────────────────────────────────────────────────────────────
+DESIGN PRINCIPLES
+─────────────────────────────────────────────────────────────────────────────
 
-All papers follow identical structure. No special cases.
+  Declarative   — papers.yaml is the SSOT. Code derives, never guesses.
+  Fail-Loud     — validate structure upfront; abort with a clear message.
+  Orthogonal    — one method, one responsibility. No side-channel coupling.
+  Idempotent    — every step can be re-run safely; lake caching handles dedup.
+
+─────────────────────────────────────────────────────────────────────────────
+STRUCTURAL INVARIANTS  (all derived from papers.yaml)
+─────────────────────────────────────────────────────────────────────────────
+
+  1. Content:  paper_dir / meta.latex_dir / "content" / *.tex
+  2. Proofs:   paper_dir / meta.proofs_dir /             (lake project root)
+  3. Output:   paper_dir / "releases" /                  (pdf, md, tar.gz …)
+  4. Graphs:   graph_infra / "graphs" / <paper_id>.json  (every packaged paper)
+
+─────────────────────────────────────────────────────────────────────────────
+BUILD PIPELINE  (release order)
+─────────────────────────────────────────────────────────────────────────────
+
+  build_lean()
+    ├─ _sync_local_lean_dependency_dirs   symlink dep_<id>/ for lake path deps
+    ├─ lake build                         compile all targets
+    └─ _collect_graph_json                parse .lean sources → graph_infra/graphs/<id>.json
+
+  build_latex()
+    ├─ _sync_shared_preambles             keep paper-preamble.sty in sync from shared/
+    ├─ _write_latex_lean_stats            lean_stats.tex  (line/theorem/sorry counts)
+    ├─ _write_lean_handle_ids_auto        lean_handle_ids_auto.tex  (LH{} ID table)
+    ├─ _write_assumption_ledger_auto      assumption_ledger_auto.tex
+    ├─ _normalize_and_fill_claimstamps    standardise \claimstamp{} metadata
+    ├─ _write_claim_mapping_auto          claim_mapping_auto.tex  (claim→Lean matrix)
+    ├─ _write_proof_hardness_index_auto   proof_hardness_index_auto.tex
+    ├─ _rewrite_content_lean_handles_to_ids  \nolinkurl{handle} → \LH{code}
+    └─ pdflatex → bibtex → pdflatex → pdflatex
+
+  build_markdown()    pandoc LaTeX → Markdown, expand \Lean* macros
+
+  package_arxiv()     curated tar.gz + zip with sources, proofs, build log
+
+─────────────────────────────────────────────────────────────────────────────
+GRAPH INFRASTRUCTURE
+─────────────────────────────────────────────────────────────────────────────
+
+  docs/papers/graph_infra/DependencyGraph.lean defines two Lean command
+  elaborators:
+
+    #extract_dependency_graph     — logs stats + orphan integrity check at
+                                    elaboration time (useful in editor/CI)
+
+    #export_graph_json "path"     — writes {nodes, edges} JSON to path
+                                    during elaboration (side-effect of lake build)
+
+  The build pipeline copies DependencyGraph.lean into each paper's proofs dir
+  and generates GraphExport.lean that calls #export_graph_json "graph.json".
+  Because GraphExport is registered as a lean_lib target, lake elaborates it
+  automatically and the JSON is written as a build side-effect — no separate
+  invocation needed.
+
+  Output lands in graph_infra/graphs/<paper_id>.json, ready for the React/D3
+  visualisers (dependency-graph.jsx, rejection-trace.jsx).
+
+─────────────────────────────────────────────────────────────────────────────
+USAGE
+─────────────────────────────────────────────────────────────────────────────
+
+  python scripts/build_papers.py release              # all papers, full build
+  python scripts/build_papers.py release paper4_toc   # one paper
+  python scripts/build_papers.py lean paper1 -v       # Lean only, verbose
+  python scripts/build_papers.py latex paper2         # LaTeX only
+  python scripts/build_papers.py scaffold paper6      # create boilerplate
+  python scripts/build_papers.py claim-check paper4   # verify theorem coverage
 """
 
 import sys
@@ -905,6 +970,68 @@ end {module_root}
                     dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns(".lake", "build", "*.olean", "*.ilean"),
                 )
+
+    def _extract_graph_from_source(self, paper_id: str) -> dict:
+        """Extract proof dependency graph by parsing .lean source files.
+
+        Nodes: every theorem/lemma/def/abbrev/class/structure/instance declaration.
+        Edges: every import statement between modules.
+
+        No Lean metaprogramming. Runs on plain source text after lake build.
+        """
+        import json
+
+        decl_re = re.compile(
+            r"^\s*(?:private\s+|protected\s+)?(?:noncomputable\s+)?"
+            r"(theorem|lemma|def|abbrev|class|structure|instance)\s+"
+            r"([A-Za-z_][A-Za-z0-9_'.]*)"
+        )
+        import_re = re.compile(r"^import\s+([A-Za-z][A-Za-z0-9_.]*)")
+
+        nodes: List[dict] = []
+        edges: List[dict] = []
+        seen_ids: Set[str] = set()
+
+        for src_paper_id, proofs_dir in self._iter_lean_roots_for_paper(paper_id):
+            for lean_file in self._iter_paper_lean_files(proofs_dir):
+                module = str(
+                    lean_file.relative_to(proofs_dir).with_suffix("")
+                ).replace("/", ".")
+                content = lean_file.read_text(encoding="utf-8", errors="replace")
+                stripped = self._strip_lean_comments(content)
+
+                for line in stripped.splitlines():
+                    m = import_re.match(line)
+                    if m:
+                        edges.append({"source": module, "target": m.group(1)})
+                        continue
+                    m = decl_re.match(line)
+                    if m:
+                        kind, name = m.group(1), m.group(2)
+                        node_id = f"{module}.{name}"
+                        if node_id not in seen_ids:
+                            seen_ids.add(node_id)
+                            nodes.append({
+                                "id": node_id,
+                                "kind": kind,
+                                "group": src_paper_id,
+                            })
+
+        return {"nodes": nodes, "edges": edges}
+
+    def _collect_graph_json(self, paper_id: str) -> None:
+        """Parse .lean sources → graph_infra/graphs/<paper_id>.json."""
+        import json
+
+        graphs_dir = self.repo_root / "docs" / "papers" / "graph_infra" / "graphs"
+        graphs_dir.mkdir(exist_ok=True)
+        data = self._extract_graph_from_source(paper_id)
+        dst = graphs_dir / f"{paper_id}.json"
+        dst.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        print(
+            f"[graph] ✓ {paper_id} → {dst.relative_to(self.repo_root)} "
+            f"({len(data['nodes'])} nodes, {len(data['edges'])} edges)"
+        )
 
     def _iter_lean_roots_for_paper(self, paper_id: str) -> List[Tuple[str, Path]]:
         """Return `(source_paper_id, proofs_dir)` for paper + transitive dependencies."""
@@ -2672,6 +2799,8 @@ end {module_root}
         # Store for BUILD_LOG.txt
         self._lean_build_output = output_text
         print(f"[build] ✓ {paper_id} Lean complete")
+
+        self._collect_graph_json(paper_id)
         return output_text
 
     def build_latex(self, paper_id: str, verbose: bool = False):
@@ -3679,6 +3808,7 @@ end {module_root}
         self._copy_latex_sources(paper_id, package_dir)
         self._copy_lean_proofs(paper_id, package_dir)
         self._copy_experiments(paper_id, package_dir)
+        self._copy_graph_visualizer(paper_id, package_dir)
 
         if self.arxiv_config.include_build_log:
             self._create_build_log(paper_id, package_dir)
@@ -3963,6 +4093,171 @@ end {module_root}
 
         if copied_count > 0:
             print(f"[arxiv]   Experiments: {copied_count} files")
+
+    def _copy_graph_visualizer(self, paper_id: str, package_dir: Path) -> None:
+        """Copy dependency graph JSON(s) and viewer into the release package.
+
+        Every package includes:
+          graphs/<paper_id>.json          — this paper's proof dependency graph
+          graphs/<dep_id>.json            — one per transitive lean_dependency
+          graphs/dependency-graph.jsx     — interactive force-directed visualizer
+          graphs/rejection-trace.jsx      — rejection cascade trace visualizer
+          graphs/index.html               — standalone viewer (D3 via CDN)
+
+        This is unconditional — every packaged paper ships its graph.
+        """
+        graphs_dir_src = self.repo_root / "docs" / "papers" / "graph_infra" / "graphs"
+        infra_dir = self.repo_root / "docs" / "papers" / "graph_infra"
+        graphs_dest = package_dir / "graphs"
+        graphs_dest.mkdir(exist_ok=True)
+
+        # Collect paper ids whose graphs we want: this paper + all lean deps
+        dep_ids = self._collect_lean_dependency_closure(paper_id)
+        all_ids = [paper_id] + list(dep_ids)
+
+        copied_jsons: List[str] = []
+        for pid in all_ids:
+            src = graphs_dir_src / f"{pid}.json"
+            if src.exists():
+                shutil.copy2(src, graphs_dest / f"{pid}.json")
+                copied_jsons.append(f"{pid}.json")
+
+        # Copy JSX visualizer sources
+        for jsx in ["dependency-graph.jsx", "rejection-trace.jsx"]:
+            src = infra_dir / jsx
+            if src.exists():
+                shutil.copy2(src, graphs_dest / jsx)
+
+        # Generate standalone index.html — D3 via CDN, loads paper JSON by default
+        self._write_graph_index_html(paper_id, all_ids, copied_jsons, graphs_dest)
+
+        print(f"[arxiv]   Graphs: {len(copied_jsons)} JSON(s) + viewer → graphs/")
+
+    def _write_graph_index_html(
+        self,
+        paper_id: str,
+        all_ids: List[str],
+        available_jsons: List[str],
+        graphs_dest: Path,
+    ) -> None:
+        """Write a standalone D3 force-graph viewer as graphs/index.html."""
+        meta = self._get_paper_meta(paper_id)
+
+        options_html = "\n".join(
+            f'        <option value="{pid}.json"{"  selected" if pid == paper_id else ""}>'
+            f"{pid}</option>"
+            for pid in all_ids
+            if f"{pid}.json" in available_jsons
+        )
+
+        html = f"""\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Proof Dependency Graph — {meta.name}</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {{ margin: 0; font-family: monospace; background: #0f0f0f; color: #ccc; }}
+    #header {{ padding: 12px 16px; background: #1a1a1a; border-bottom: 1px solid #333;
+               display: flex; align-items: center; gap: 16px; }}
+    #header h1 {{ margin: 0; font-size: 14px; color: #eee; }}
+    select {{ background: #222; color: #ccc; border: 1px solid #444; padding: 4px 8px;
+              font-family: monospace; font-size: 13px; }}
+    #stats {{ font-size: 12px; color: #888; }}
+    svg {{ width: 100vw; height: calc(100vh - 48px); display: block; }}
+    .node circle {{ stroke-width: 1.5px; cursor: pointer; }}
+    .node text {{ font-size: 10px; fill: #aaa; pointer-events: none; }}
+    .link {{ stroke: #444; stroke-opacity: 0.6; }}
+    .node.theorem circle {{ fill: #3b82f6; stroke: #60a5fa; }}
+    .node.definition circle {{ fill: #8b5cf6; stroke: #a78bfa; }}
+    .node.axiom circle {{ fill: #ef4444; stroke: #f87171; }}
+    .node.other circle {{ fill: #555; stroke: #777; }}
+    .tooltip {{ position: absolute; background: #222; border: 1px solid #444;
+                padding: 6px 10px; font-size: 11px; pointer-events: none;
+                max-width: 400px; word-break: break-all; color: #eee; }}
+  </style>
+</head>
+<body>
+<div id="header">
+  <h1>Proof Dependency Graph — {meta.name}</h1>
+  <select id="picker" onchange="loadGraph(this.value)">
+{options_html}
+  </select>
+  <span id="stats"></span>
+  <span style="color:#555;font-size:11px">
+    ● theorem &nbsp; ■ definition &nbsp; ◆ axiom &nbsp;
+    | open dependency-graph.jsx for interactive version
+  </span>
+</div>
+<svg id="svg"></svg>
+<div class="tooltip" id="tip" style="display:none"></div>
+<script>
+const color = {{ theorem: "#3b82f6", definition: "#8b5cf6", axiom: "#ef4444" }};
+
+function loadGraph(file) {{
+  fetch(file)
+    .then(r => r.json())
+    .then(data => render(data))
+    .catch(() => document.getElementById("stats").textContent = "⚠ " + file + " not found");
+}}
+
+function render(data) {{
+  const nodes = data.nodes.map(d => ({{ ...d }}));
+  const links = data.edges.map(d => ({{ source: d.source, target: d.target }}));
+
+  const stats = document.getElementById("stats");
+  const th = nodes.filter(n => n.kind === "theorem").length;
+  const df = nodes.filter(n => n.kind === "definition").length;
+  const ax = nodes.filter(n => n.kind === "axiom").length;
+  stats.textContent = `${{nodes.length}} nodes (${{th}} thm, ${{df}} def, ${{ax}} axiom)  ${{links.length}} edges`;
+
+  const svg = d3.select("#svg");
+  svg.selectAll("*").remove();
+  const w = svg.node().clientWidth, h = svg.node().clientHeight;
+  const g = svg.append("g");
+  svg.call(d3.zoom().on("zoom", e => g.attr("transform", e.transform)));
+
+  const sim = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d => d.id).distance(60))
+    .force("charge", d3.forceManyBody().strength(-80))
+    .force("center", d3.forceCenter(w / 2, h / 2));
+
+  const link = g.append("g").selectAll("line").data(links).join("line")
+    .attr("class", "link").attr("stroke-width", 0.8);
+
+  const tip = document.getElementById("tip");
+  const node = g.append("g").selectAll("g").data(nodes).join("g")
+    .attr("class", d => "node " + (d.kind || "other"))
+    .call(d3.drag()
+      .on("start", (e, d) => {{ if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }})
+      .on("drag", (e, d) => {{ d.fx = e.x; d.fy = e.y; }})
+      .on("end", (e, d) => {{ if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }}))
+    .on("mouseover", (e, d) => {{
+      tip.style.display = "block";
+      tip.style.left = (e.pageX + 12) + "px";
+      tip.style.top = (e.pageY - 8) + "px";
+      tip.textContent = d.id + " [" + (d.kind || "?") + "]";
+    }})
+    .on("mouseout", () => tip.style.display = "none");
+
+  node.append("circle").attr("r", d => d.kind === "axiom" ? 7 : 4);
+  node.append("text").attr("x", 6).attr("y", 3)
+    .text(d => d.id.split(".").slice(-1)[0]);
+
+  sim.on("tick", () => {{
+    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
+  }});
+}}
+
+loadGraph("{paper_id}.json");
+</script>
+</body>
+</html>
+"""
+        (graphs_dest / "index.html").write_text(html, encoding="utf-8")
 
     def _generate_paper_lakefile(
         self, paper_id: str, paper_files: list, lean_dest: Path
