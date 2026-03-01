@@ -53,9 +53,17 @@
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem{example}[theorem]{Example}
 \newtheorem{problem}[theorem]{Problem}
+\newtheorem{decision}[theorem]{Decision}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{construction}[theorem]{Construction}
+\newtheorem{claimthm}[theorem]{Claim}
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{observation}[theorem]{Observation}
+
+% Common two-argument claim wrapper used by paper4 variants:
+% \begin{claim}{Title}{label-id} ... \end{claim}
+\newenvironment{claim}[2]{\begin{claimthm}[#1]\label{#2}}{\end{claimthm}}
 
 % Hyperref setup
 \hypersetup{
@@ -65,8 +73,10 @@
   urlcolor=blue
 }
 
-% Clickable Lean-handle IDs. Papers may override if needed.
-\providecommand{\LH}[1]{\hyperlink{lh:#1}{\texttt{#1}}}
+% Clickable Lean-handle IDs. `\nolinkurl` keeps underscores safe in text mode.
+\providecommand{\LH}[1]{\hyperlink{lh:#1}{\nolinkurl{#1}}}
+% Inline Lean-support marker used by claim mapping extraction.
+\providecommand{\leanmeta}[1]{\allowbreak{\scriptsize\textit{(L: #1)}}}
 
 % Listings setup for code blocks
 \lstset{
@@ -101,6 +111,7 @@
 \DeclareUnicodeCharacter{2115}{\ensuremath{\mathbb{N}}}
 \DeclareUnicodeCharacter{2208}{\ensuremath{\in}}
 \DeclareUnicodeCharacter{2218}{\ensuremath{\circ}}
+\DeclareUnicodeCharacter{2228}{\ensuremath{\vee}}
 \DeclareUnicodeCharacter{2081}{\textsubscript{1}}
 \DeclareUnicodeCharacter{2082}{\textsubscript{2}}
 \DeclareUnicodeCharacter{03C8}{\ensuremath{\psi}}

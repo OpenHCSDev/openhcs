@@ -341,7 +341,7 @@ theorem adversary_construction (m : DerivationMechanism) (h : m ≠ .source_hook
 -- The adversary can exploit the failure mode to create DOF > 1
 -- This is the IMPOSSIBILITY proof: there is no other way
 
-theorem impossibility :
+theorem derivation_impossibility :
     ∀ m : DerivationMechanism, m ≠ .source_hooks → achieves_ssot m = false :=
   adversary_construction
 

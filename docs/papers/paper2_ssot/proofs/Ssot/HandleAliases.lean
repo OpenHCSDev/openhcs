@@ -1,26 +1,30 @@
-/-!
-Stable, semantic Lean-handle IDs for Paper 2 (IT).
-
-The build system parses `abbrev CODE := target` and uses these IDs in
-`lean_handle_ids_auto.tex`, which then powers `\LH{CODE}` links in the PDF.
--/
-
 import Ssot.Basic
 import Ssot.Bounds
 import Ssot.ClaimClosure
 import Ssot.Coherence
 import Ssot.Completeness
+import Ssot.CrossPaperDependencies  -- Bridge theorems linking Paper 2 → Paper 1
 import Ssot.Entropy
 import Ssot.Foundations
 import Ssot.Inconsistency
 import Ssot.LangPython
 import Ssot.Requirements
+import axis_framework
+
+/-- Stable, semantic Lean-handle IDs for Paper 2 (IT).
+
+    The build system parses `abbrev CODE := target` and uses these IDs in
+    `lean_handle_ids_auto.tex`, which then powers `\LH{CODE}` links in the PDF. -/
 
 abbrev ENT1 := Entropy.ClassicalEntropyAssumptions
 abbrev CIA1 := ClaimClosure.ClassicalInfoAssumptions
-abbrev CIA2 := ClaimClosure.side_information_requirement_conditional
-abbrev CIA3 := ClaimClosure.fano_converse_conditional
-abbrev CIA4 := ClaimClosure.info_dof_conditional
+-- CIA2-CIA4 require ClassicalInfoAssumptions instance; define as functions taking instance explicitly
+abbrev CIA2 := fun (inst : ClaimClosure.ClassicalInfoAssumptions) =>
+  @ClaimClosure.side_information_requirement_conditional inst
+abbrev CIA3 := fun (inst : ClaimClosure.ClassicalInfoAssumptions) =>
+  @ClaimClosure.fano_converse_conditional inst
+abbrev CIA4 := fun (inst : ClaimClosure.ClassicalInfoAssumptions) =>
+  @ClaimClosure.info_dof_conditional inst
 
 abbrev ORA1 := oracle_arbitrary
 abbrev COH1 := dof_one_implies_coherent
@@ -46,12 +50,14 @@ abbrev DES1 := ClaimClosure.design_necessity
 abbrev SID1 := ClaimClosure.dof1_zero_side_information
 abbrev SID2 := ClaimClosure.side_information_scales_with_redundancy
 
-abbrev DER1 := all_derived_from_source
+-- DER1: all_derived_from_source requires Location, DerivationSystem, source, and all_locations parameters
+-- Use: `all_derived_from_source D source locations` where D : DerivationSystem Location
+abbrev DER1 := @all_derived_from_source
 abbrev DER2 := ClaimClosure.derivation_preserves_coherence_core
-abbrev AXM1 := complete_mono
-abbrev AXM2 := completeD_mono
-abbrev AXM3 := minimal_no_redundant_axes
-abbrev AXM4 := semantically_minimal_implies_independent
+abbrev AXM1 := @complete_mono
+abbrev AXM2 := @completeD_mono
+abbrev AXM3 := @minimal_no_redundant_axes
+abbrev AXM4 := @semantically_minimal_implies_independent
 abbrev CPL1 := cost_ratio_eq_dof
 abbrev REQ1 := structural_facts_fixed_at_definition
 abbrev REQ2 := definition_hooks_necessary

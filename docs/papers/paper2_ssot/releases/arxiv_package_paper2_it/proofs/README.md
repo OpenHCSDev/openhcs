@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Coherence Theory (IT).
 
-- **Lines:** 9672
-- **Theorems:** 466
+- **Lines:** 3378
+- **Theorems:** 176
 - **`sorry` placeholders:** 0
 
 
@@ -25,36 +25,29 @@ lake build
 
 | File | Module |
 |------|--------|
-| `AbstractClassSystem.lean` | AbstractClassSystem |
-| `AxisFramework.lean` | AxisFramework |
 | `Basic.lean` | Basic |
 | `Bounds.lean` | Bounds |
 | `CaseStudies.lean` | CaseStudies |
 | `ClaimClosure.lean` | ClaimClosure |
 | `Coherence.lean` | Coherence |
 | `Completeness.lean` | Completeness |
-| `ContextFormalization.lean` | ContextFormalization |
+| `DependencyBridge.lean` | DependencyBridge |
 | `Derivation.lean` | Derivation |
-| `DisciplineMigration.lean` | DisciplineMigration |
 | `Dof.lean` | Dof |
 | `EditDynamics.lean` | EditDynamics |
 | `Entropy.lean` | Entropy |
 | `Foundations.lean` | Foundations |
+| `HandleAliases.lean` | HandleAliases |
 | `Inconsistency.lean` | Inconsistency |
-| `JavaInstantiation.lean` | JavaInstantiation |
 | `LangEvaluation.lean` | LangEvaluation |
 | `LangPython.lean` | LangPython |
 | `LangRust.lean` | LangRust |
 | `LangStatic.lean` | LangStatic |
 | `Languages.lean` | Languages |
-| `NominalResolution.lean` | NominalResolution |
 | `ObserverModel.lean` | ObserverModel |
-| `PythonInstantiation.lean` | PythonInstantiation |
 | `Requirements.lean` | Requirements |
-| `RustInstantiation.lean` | RustInstantiation |
 | `SSOT.lean` | SSOT |
 | `SSOTGrounded.lean` | SSOTGrounded |
-| `TypeScriptInstantiation.lean` | TypeScriptInstantiation |
 | `lakefile.lean` | lakefile |
 
 ## Verification

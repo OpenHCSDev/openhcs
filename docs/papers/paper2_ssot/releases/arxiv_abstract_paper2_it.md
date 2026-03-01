@@ -11,7 +11,7 @@ The paper frames encoding locations as terminals in a multi-terminal source-codi
 
 Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
 
-**Index Terms---**zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
+Index Terms--zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
 ```
 
 ## Abstract (Unicode, Zenodo-ready)
@@ -23,5 +23,5 @@ The paper frames encoding locations as terminals in a multi-terminal source-codi
 
 Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
 
-Index Terms—zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
+Index Terms–zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
 ```

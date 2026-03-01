@@ -26,6 +26,7 @@ Equivalently: exactly one independent encoding location exists for $F$.
 
 \begin{theorem}[SSOT Eliminates Indeterminacy]\label{thm:ssot-determinate}
 If $\text{DOF}(C, F) = 1$, then for all reachable states of $C$, the value of $F$ is determinate: all encodings agree.
+\LH{INS2}
 \end{theorem}
 
 \begin{proof}
@@ -42,6 +43,7 @@ Hunt \& Thomas's ``single, unambiguous, authoritative representation''~\cite{hun
 
 \begin{theorem}[SSOT Optimality]\label{thm:ssot-optimal}
 If $C$ satisfies SSOT for $F$, then modification complexity is 1: updating the single source maintains coherence.
+\LH{INS3}
 \end{theorem}
 
 \begin{proof}
@@ -60,6 +62,7 @@ Coherence restoration requires 1 edit.
 
 \begin{theorem}[SSOT Uniqueness]\label{thm:ssot-unique}
 SSOT (DOF=1) is the \textbf{unique} coherent representation for structural facts. DOF = 0 fails to represent; DOF $> 1$ permits incoherence.
+\LH{INS4}
 \end{theorem}
 
 \begin{proof}
@@ -73,6 +76,7 @@ Therefore, DOF = 1 is uniquely coherent. This is epistemic necessity, not design
 
 \begin{corollary}[Incoherence Under Redundancy]\label{cor:no-redundancy}
 Multiple independent sources encoding the same fact permit incoherent states. DOF $> 1 \Rightarrow$ incoherence reachable.
+\LH{RED1}
 \end{corollary}
 
 \begin{proof}
@@ -143,6 +147,7 @@ For \emph{structural facts}, derivation must occur at \emph{definition time}. St
 
 \begin{theorem}[Derivation Preserves Coherence]\label{thm:derivation-excludes}
 If $L_{\text{derived}}$ is derived from $L_{\text{source}}$, then $L_{\text{derived}}$ cannot diverge from $L_{\text{source}}$ and does not contribute to DOF.
+\LH{DER2}
 \end{theorem}
 
 \begin{proof}
@@ -153,6 +158,7 @@ There is no reachable state where $L_s = v'$ and $L_d = f(v)$ with $v' \neq v$. 
 
 \begin{corollary}[Derivation Achieves Coherence]\label{cor:metaprogramming}
 If all encodings of $F$ except one are derived from that one, then $\text{DOF}(C, F) = 1$ and coherence is guaranteed.
+\LH{DER1}
 \end{corollary}
 
 \begin{proof}

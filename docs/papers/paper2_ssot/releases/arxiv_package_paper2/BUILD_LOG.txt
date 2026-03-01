@@ -2,49 +2,42 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper2 - Formal Foundations for the Single Source of Truth Principle: A Language Design Specification Derived from Epistemic Coherence
-Package Date: 2026-02-22T22:21:30.553014
+Package Date: 2026-02-26T21:18:16.836684
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 31
-Lines of Code: 9672
-Theorems: 466
+Lean Files: 24
+Lines of Code: 3378
+Theorems: 176
 Sorry Placeholders: 0
 
 
 Proof Files:
 ------------
-  - AbstractClassSystem.lean
-  - AxisFramework.lean
   - Basic.lean
   - Bounds.lean
   - CaseStudies.lean
   - ClaimClosure.lean
   - Coherence.lean
   - Completeness.lean
-  - ContextFormalization.lean
+  - DependencyBridge.lean
   - Derivation.lean
-  - DisciplineMigration.lean
   - Dof.lean
   - EditDynamics.lean
   - Entropy.lean
   - Foundations.lean
+  - HandleAliases.lean
   - Inconsistency.lean
-  - JavaInstantiation.lean
   - LangEvaluation.lean
   - LangPython.lean
   - LangRust.lean
   - LangStatic.lean
   - Languages.lean
-  - NominalResolution.lean
   - ObserverModel.lean
-  - PythonInstantiation.lean
   - Requirements.lean
-  - RustInstantiation.lean
   - SSOT.lean
   - SSOTGrounded.lean
-  - TypeScriptInstantiation.lean
   - lakefile.lean
 
 Note: Run 'python3 scripts/build_papers.py release' to include compilation output.

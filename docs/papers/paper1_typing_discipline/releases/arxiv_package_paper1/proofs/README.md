@@ -4,7 +4,7 @@
 
 This directory contains the complete Lean 4 formalization for Typing Discipline.
 
-- **Lines:** 6707
+- **Lines:** 6718
 - **Theorems:** 296
 - **`sorry` placeholders:** 0
 

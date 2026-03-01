@@ -1,12 +1,12 @@
 # Paper: Identification Capacity and Rate-Query Tradeoffs in Classification Systems
 
-**Status**: JSAIT-ready | **Lean**: 6707 lines, 296 theorems
+**Status**: JSAIT-ready | **Lean**: 6718 lines, 296 theorems
 
 ---
 
 ## Abstract
 
-We study zero-error class identification under constrained observations with three resources: tag rate $L$ (bits per entity), identification cost $W$ (attribute queries), and distortion $D$ (misidentification probability). We prove an information barrier: if the attribute-profile map $\pi$ is not injective on classes, then attribute-only observation cannot identify class identity with zero error. Let $A_\pi := \max_u |\{c : \pi(c)=u\}|$ be collision multiplicity. Any $D=0$ scheme must satisfy $L \ge \log_2 A_\pi$, and this bound is tight. In maximal-barrier domains ($A_\pi=k$), the nominal point $(L,W,D)=(\lceil\log_2 k\rceil,O(1),0)$ is the unique Pareto-optimal zero-error point. Without tags ($L=0$), zero-error identification requires $W=\Omega(d)$ queries, where $d$ is the distinguishing dimension (worst case $d=n$, so $W=\Omega(n)$). Minimal sufficient query sets form the bases of a matroid, making $d$ well-defined and linking the model to zero-error source coding via graph entropy. We also state fixed-axis incompleteness: a fixed observation axis is complete only for axis-measurable properties. Results instantiate to databases, biology, typed software systems, and model registries, and are machine-checked in Lean 4 (6707 lines, 296 theorem/lemma statements, 0 `sorry`).
+We study zero-error class identification under constrained observations with three resources: tag rate $L$ (bits per entity), identification cost $W$ (attribute queries), and distortion $D$ (misidentification probability). We prove an information barrier: if the attribute-profile map $\pi$ is not injective on classes, then attribute-only observation cannot identify class identity with zero error. Let $A_\pi := \max_u |\{c : \pi(c)=u\}|$ be collision multiplicity. Any $D=0$ scheme must satisfy $L \ge \log_2 A_\pi$, and this bound is tight. In maximal-barrier domains ($A_\pi=k$), the nominal point $(L,W,D)=(\lceil\log_2 k\rceil,O(1),0)$ is the unique Pareto-optimal zero-error point. Without tags ($L=0$), zero-error identification requires $W=\Omega(d)$ queries, where $d$ is the distinguishing dimension (worst case $d=n$, so $W=\Omega(n)$). Minimal sufficient query sets form the bases of a matroid, making $d$ well-defined and linking the model to zero-error source coding via graph entropy. We also state fixed-axis incompleteness: a fixed observation axis is complete only for axis-measurable properties. Results instantiate to databases, biology, typed software systems, and model registries, and are machine-checked in Lean 4 (6718 lines, 296 theorem/lemma statements, 0 `sorry`).
 
 **Keywords:** rate-distortion theory, identification capacity, zero-error source coding, query complexity, matroid structure, classification systems
 
@@ -74,7 +74,7 @@ A semantic property is a function $P: \mathcal{V} \to \{0,1\}$ (or more generall
 ## The Information Barrier
 
 ::: theorem
-[]{#thm:information-barrier label="thm:information-barrier"} Let $P: \mathcal{V} \to Y$ be any function. If $P$ is attribute-computable, then $P$ is constant on $\sim$-equivalence classes: $$v \sim w \implies P(v) = P(w)$$ Equivalently: no attribute-only observer can compute any property that varies within an equivalence class. *(Lean: `shape_cannot_distinguish`.)*
+[]{#thm:information-barrier label="thm:information-barrier"} Let $P: \mathcal{V} \to Y$ be any function. If $P$ is attribute-computable, then $P$ is constant on $\sim$-equivalence classes: $$v \sim w \implies P(v) = P(w)$$ Equivalently: no attribute-only observer can compute any property that varies within an equivalence class. *(Lean: L_35fe55aa.)*
 :::
 
 ::: proof
@@ -90,7 +90,7 @@ Theorem [\[thm:information-barrier\]](#thm:information-barrier){reference-type=
 :::
 
 ::: corollary
-[]{#cor:provenance-barrier label="cor:provenance-barrier"} Let $C: \mathcal{V} \to \{1,\ldots,k\}$ be the class assignment function. If there exist values $v, w$ with $\pi(v) = \pi(w)$ but $C(v) \neq C(w)$, then class identity is not attribute-computable. *(Lean: `shape_provenance_impossible`.)*
+[]{#cor:provenance-barrier label="cor:provenance-barrier"} Let $C: \mathcal{V} \to \{1,\ldots,k\}$ be the class assignment function. If there exist values $v, w$ with $\pi(v) = \pi(w)$ but $C(v) \neq C(w)$, then class identity is not attribute-computable. *(Lean: L_3ec45995.)*
 :::
 
 ::: proof
@@ -120,7 +120,7 @@ Unless specified, $W$ refers to $W_{\text{eq}}$.
 :::
 
 ::: theorem
-[]{#thm:constant-witness label="thm:constant-witness"} Under nominal-tag access, class identity checking has constant witness cost: $$W(\text{class-identity}) = O(1)$$ Specifically, the witness procedure is: return $\tau(v_1) = \tau(v_2)$. *(Lean: `nominal_localization_constant_semantic`.)*
+[]{#thm:constant-witness label="thm:constant-witness"} Under nominal-tag access, class identity checking has constant witness cost: $$W(\text{class-identity}) = O(1)$$ Specifically, the witness procedure is: return $\tau(v_1) = \tau(v_2)$. *(Lean: L_7fb66f42.)*
 :::
 
 ::: proof
@@ -128,7 +128,7 @@ Unless specified, $W$ refers to $W_{\text{eq}}$.
 :::
 
 ::: theorem
-[]{#thm:interface-lower-bound label="thm:interface-lower-bound"} For attribute-only observers, class identity checking requires: $$W(\text{class-identity}) = \Omega(d)$$ in the worst case, where $d$ is the distinguishing dimension (Definition [\[def:distinguishing-dimension\]](#def:distinguishing-dimension){reference-type="ref" reference="def:distinguishing-dimension"}). *(Lean: `adversary_forces_n_minus_1_queries`.)*
+[]{#thm:interface-lower-bound label="thm:interface-lower-bound"} For attribute-only observers, class identity checking requires: $$W(\text{class-identity}) = \Omega(d)$$ in the worst case, where $d$ is the distinguishing dimension (Definition [\[def:distinguishing-dimension\]](#def:distinguishing-dimension){reference-type="ref" reference="def:distinguishing-dimension"}). *(Lean: L_67f09d33.)*
 :::
 
 ::: proof
@@ -151,7 +151,7 @@ This paper establishes the following results:
 
 5.  **$(L, W, D)$ Optimality** (Section [\[sec:lwd\]](#sec:lwd){reference-type="ref" reference="sec:lwd"}): We characterize the zero-error converse via collision multiplicity $A_\pi$ and prove uniqueness of the nominal point in the maximal-barrier regime ($A_\pi=k$).
 
-6.  **Machine-Checked Proofs**: All results formalized in Lean 4 (6707 lines, 296 theorem/lemma statements, 0 `sorry` placeholders).
+6.  **Machine-Checked Proofs**: All results formalized in Lean 4 (6718 lines, 296 theorem/lemma statements, 0 `sorry` placeholders).
 
 ## Related Work and Positioning
 
@@ -197,7 +197,7 @@ All theorems in this paper quantify over all such schemes.
 This definition is intentionally broad: schemes may be adaptive, randomized, or computationally unbounded. The constraint is *observational*, not computational.
 
 ::: theorem
-[]{#thm:info-barrier label="thm:info-barrier"} For all classification schemes with access only to $\Phi$ (no nominal tag), the output is constant on $\sim_\Phi$-equivalence classes. Therefore, no such scheme can compute any property that varies within a $\sim_\Phi$-class. *(Lean: `shape_cannot_distinguish`.)*
+[]{#thm:info-barrier label="thm:info-barrier"} For all classification schemes with access only to $\Phi$ (no nominal tag), the output is constant on $\sim_\Phi$-equivalence classes. Therefore, no such scheme can compute any property that varies within a $\sim_\Phi$-class. *(Lean: L_35fe55aa.)*
 :::
 
 ::: proof
@@ -205,7 +205,7 @@ This definition is intentionally broad: schemes may be adaptive, randomized, or 
 :::
 
 ::: proposition
-[]{#prop:model-capture label="prop:model-capture"} Any real-world classification protocol whose evidence consists solely of attribute-membership queries is representable as a scheme in the above model. Conversely, any additional capability corresponds to adding new observations to $\Phi$. *(Lean: `observer_factors`.)*
+[]{#prop:model-capture label="prop:model-capture"} Any real-world classification protocol whose evidence consists solely of attribute-membership queries is representable as a scheme in the above model. Conversely, any additional capability corresponds to adding new observations to $\Phi$. *(Lean: L_03e8b7ad.)*
 :::
 
 This proposition forces any objection into a precise form: to claim the theorem does not apply, one must name the additional observation capability not in $\Phi$. "Different universe" is not a coherent objection; it must reduce to "I have access to oracle $X \notin \Phi$."
@@ -230,7 +230,7 @@ In the PL instantiation, $B$ is carried by the runtime lineage order (e.g., C3/M
 :::
 
 ::: theorem
-[]{#thm:model-completeness label="thm:model-completeness"} Let a fixed-axis domain be specified by an axis map $\alpha: \mathcal{V} \to \mathcal{A}$ and an observation family $\Phi$ such that each primitive query $q \in \Phi$ factors through $\alpha$. Then every in-scope semantic property (i.e., any property computable by an admissible $\Phi$-only strategy) factors through $\alpha$: there exists $\tilde{P}$ with $$P(v) = \tilde{P}(\alpha(v)) \quad \text{for all } v \in \mathcal{V}.$$ *(Lean: `model_completeness`.)*
+[]{#thm:model-completeness label="thm:model-completeness"} Let a fixed-axis domain be specified by an axis map $\alpha: \mathcal{V} \to \mathcal{A}$ and an observation family $\Phi$ such that each primitive query $q \in \Phi$ factors through $\alpha$. Then every in-scope semantic property (i.e., any property computable by an admissible $\Phi$-only strategy) factors through $\alpha$: there exists $\tilde{P}$ with $$P(v) = \tilde{P}(\alpha(v)) \quad \text{for all } v \in \mathcal{V}.$$ *(Lean: L_9a9b84cd.)*
 :::
 
 In the PL instantiation, $\alpha(v) = (B(v), S(v))$, so in-scope semantic properties are functions of $(B,S)$.
@@ -240,7 +240,7 @@ In the PL instantiation, $\alpha(v) = (B(v), S(v))$, so in-scope semantic proper
 :::
 
 ::: corollary
-[]{#cor:fixed-axis-incompleteness label="cor:fixed-axis-incompleteness"} Any fixed-axis classification system is complete only for properties measurable on the fixed axis map $\alpha$, and incomplete for any property that varies within an $\alpha$-fiber. Equivalently, if $\alpha(v)=\alpha(w)$ but $P(v)\neq P(w)$, then no admissible $\Phi$-only strategy can compute $P$ with zero error. *(Lean: `fixed_axis_incompleteness`.)*
+[]{#cor:fixed-axis-incompleteness label="cor:fixed-axis-incompleteness"} Any fixed-axis classification system is complete only for properties measurable on the fixed axis map $\alpha$, and incomplete for any property that varies within an $\alpha$-fiber. Equivalently, if $\alpha(v)=\alpha(w)$ but $P(v)\neq P(w)$, then no admissible $\Phi$-only strategy can compute $P$ with zero error. *(Lean: L_9fe85b02.)*
 :::
 
 ## Attribute Equivalence and Observational Limits
@@ -252,11 +252,11 @@ Values $v, w \in \mathcal{V}$ are attribute-equivalent, written $v \sim w$, iff 
 :::
 
 ::: proposition
-[]{#prop:equivalence-class-structure label="prop:equivalence-class-structure"} The relation $\sim$ partitions $\mathcal{V}$ into equivalence classes. Let $\mathcal{V}/{\sim}$ denote the quotient space. An attribute-only observer effectively operates on $\mathcal{V}/{\sim}$, not $\mathcal{V}$. *(Lean: `observer_factors`.)*
+[]{#prop:equivalence-class-structure label="prop:equivalence-class-structure"} The relation $\sim$ partitions $\mathcal{V}$ into equivalence classes. Let $\mathcal{V}/{\sim}$ denote the quotient space. An attribute-only observer effectively operates on $\mathcal{V}/{\sim}$, not $\mathcal{V}$. *(Lean: L_03e8b7ad.)*
 :::
 
 ::: corollary
-[]{#cor:information-loss-quantification label="cor:information-loss-quantification"} The information lost by attribute-only observation is: $$H(\mathcal{V}) - H(\mathcal{V}/{\sim}) = H(\mathcal{V} | \pi)$$ where $H$ denotes entropy. This quantity is positive whenever multiple classes share the same attribute profile. *(Lean: `shape_cannot_distinguish`.)*
+[]{#cor:information-loss-quantification label="cor:information-loss-quantification"} The information lost by attribute-only observation is: $$H(\mathcal{V}) - H(\mathcal{V}/{\sim}) = H(\mathcal{V} | \pi)$$ where $H$ denotes entropy. This quantity is positive whenever multiple classes share the same attribute profile. *(Lean: L_35fe55aa.)*
 :::
 
 ## Identification Capacity {#sec:identification-capacity}
@@ -271,7 +271,7 @@ The *identification channel* induced by observation family $\Phi$ is the mapping
 []{#thm:identification-capacity label="thm:identification-capacity"} Let $\mathcal{C} = \{1, \ldots, k\}$ be the class space. The *zero-error identification capacity* of the observation channel is: $$C_{\text{id}} = \begin{cases}
 \log_2 k & \text{if } \pi \text{ is injective on classes} \\
 0 & \text{otherwise}
-\end{cases}$$ That is, zero-error identification of all $k$ classes is achievable if and only if every class has a distinct attribute profile. When $\pi$ is not class-injective, no rate of identification is achievable with zero error. *(Lean: `shape_cannot_distinguish`.)*
+\end{cases}$$ That is, zero-error identification of all $k$ classes is achievable if and only if every class has a distinct attribute profile. When $\pi$ is not class-injective, no rate of identification is achievable with zero error. *(Lean: L_35fe55aa.)*
 :::
 
 ::: proof
@@ -295,7 +295,7 @@ Theorem [\[thm:identification-capacity\]](#thm:identification-capacity){referen
 The key insight is that tagging provides a *side channel* that restores identifiability when the attribute channel fails:
 
 ::: theorem
-[]{#thm:tag-restored label="thm:tag-restored"} A class-injective nominal tag of length $L \geq \lceil \log_2 k \rceil$ bits suffices for zero-error identification, regardless of whether $\pi$ is class-injective. *(Lean: `nominal_localization_constant_semantic`.)*
+[]{#thm:tag-restored label="thm:tag-restored"} A class-injective nominal tag of length $L \geq \lceil \log_2 k \rceil$ bits suffices for zero-error identification, regardless of whether $\pi$ is class-injective. *(Lean: L_7fb66f42.)*
 :::
 
 ::: proof
@@ -331,7 +331,7 @@ Witness cost is a form of query complexity [@buhrman2002complexity] specialized 
 
 3.  With nominal-tag access: $W(\text{class-identity}) = O(1)$
 
-*(Lean: `shape_cannot_distinguish`, `nominal_localization_constant_semantic`, `adversary_forces_n_minus_1_queries`.)*
+*(Lean: L_35fe55aa, L_7fb66f42, L_67f09d33.)*
 :::
 
 ## The $(L, W, D)$ Tradeoff
@@ -409,7 +409,7 @@ The main result of Section [\[sec:lwd\]](#sec:lwd){reference-type="ref" referen
 ::: theorem
 []{#thm:converse label="thm:converse"} For any classification domain, any scheme achieving $D=0$ requires $$2^L \ge A_\pi
 \quad\text{equivalently}\quad
-L \ge \log_2 A_\pi,$$ where $A_\pi$ is the collision multiplicity from Definition [\[def:collision-multiplicity\]](#def:collision-multiplicity){reference-type="ref" reference="def:collision-multiplicity"}. *(Lean: `LWDConverse.collision_block_requires_bits`.)*
+L \ge \log_2 A_\pi,$$ where $A_\pi$ is the collision multiplicity from Definition [\[def:collision-multiplicity\]](#def:collision-multiplicity){reference-type="ref" reference="def:collision-multiplicity"}. *(Lean: LWDC_a51c40b9.)*
 :::
 
 ::: proof
@@ -417,7 +417,7 @@ L \ge \log_2 A_\pi,$$ where $A_\pi$ is the collision multiplicity from Definitio
 :::
 
 ::: corollary
-[]{#cor:max-barrier-converse label="cor:max-barrier-converse"} If the domain is maximal-barrier ($A_\pi = k$), any zero-error scheme satisfies $L \ge \log_2 k$. *(Lean: `LWDConverse.maximal_barrier_requires_bits`.)*
+[]{#cor:max-barrier-converse label="cor:max-barrier-converse"} If the domain is maximal-barrier ($A_\pi = k$), any zero-error scheme satisfies $L \ge \log_2 k$. *(Lean: LWDC_62964e1b.)*
 :::
 
 ## Lossy Regime: Deterministic vs Noisy Models
@@ -460,7 +460,7 @@ Let $E(\mathcal{O})$ be the number of locations that must be inspected to find a
 :::
 
 ::: theorem
-[]{#thm:nominal-localization label="thm:nominal-localization"} $E(\text{nominal-tag}) = O(1)$. *(Lean: `nominal_localization_constant_semantic`.)*
+[]{#thm:nominal-localization label="thm:nominal-localization"} $E(\text{nominal-tag}) = O(1)$. *(Lean: L_7fb66f42.)*
 :::
 
 ::: proof
@@ -468,7 +468,7 @@ Let $E(\mathcal{O})$ be the number of locations that must be inspected to find a
 :::
 
 ::: theorem
-[]{#thm:declared-localization label="thm:declared-localization"} $E(\text{attribute-only, declared}) = O(k)$ where $k$ = number of entity classes. *(Lean: `enumeration_checks_universe`.)*
+[]{#thm:declared-localization label="thm:declared-localization"} $E(\text{attribute-only, declared}) = O(k)$ where $k$ = number of entity classes. *(Lean: L_1392387f.)*
 :::
 
 ::: proof
@@ -476,7 +476,7 @@ Let $E(\mathcal{O})$ be the number of locations that must be inspected to find a
 :::
 
 ::: theorem
-[]{#thm:attribute-localization label="thm:attribute-localization"} $E(\text{attribute-only}) = \Omega(m)$ where $m$ = number of query sites. *(Lean: `duck_localization_linear`.)*
+[]{#thm:attribute-localization label="thm:attribute-localization"} $E(\text{attribute-only}) = \Omega(m)$ where $m$ = number of query sites. *(Lean: L_69127d7d.)*
 :::
 
 ::: proof
@@ -484,7 +484,7 @@ Let $E(\mathcal{O})$ be the number of locations that must be inspected to find a
 :::
 
 ::: corollary
-[]{#cor:strict-dominance label="cor:strict-dominance"} Nominal-tag observation strictly dominates attribute-only: $E(\text{nominal-tag}) = O(1) < \Omega(m) = E(\text{attribute-only})$ for all $m > 1$. *(Lean: `encoding_location_gap`.)*
+[]{#cor:strict-dominance label="cor:strict-dominance"} Nominal-tag observation strictly dominates attribute-only: $E(\text{nominal-tag}) = O(1) < \Omega(m) = E(\text{attribute-only})$ for all $m > 1$. *(Lean: L_411150dc.)*
 :::
 
 ## The Information Scattering Theorem
@@ -494,7 +494,7 @@ Let $I(\mathcal{O}, c)$ be the set of locations where constraint $c$ is encoded 
 :::
 
 ::: theorem
-[]{#thm:attribute-scattering label="thm:attribute-scattering"} For attribute-only observation, $|I(\text{attribute-only}, c)| = O(m)$ where $m$ = query sites using constraint $c$. *(Lean: `duck_localization_linear`.)*
+[]{#thm:attribute-scattering label="thm:attribute-scattering"} For attribute-only observation, $|I(\text{attribute-only}, c)| = O(m)$ where $m$ = query sites using constraint $c$. *(Lean: L_69127d7d.)*
 :::
 
 ::: proof
@@ -502,7 +502,7 @@ Let $I(\mathcal{O}, c)$ be the set of locations where constraint $c$ is encoded 
 :::
 
 ::: theorem
-[]{#thm:nominal-centralization label="thm:nominal-centralization"} For nominal-tag observation, $|I(\text{nominal-tag}, c)| = O(1)$. *(Lean: `nominal_centralized`.)*
+[]{#thm:nominal-centralization label="thm:nominal-centralization"} For nominal-tag observation, $|I(\text{nominal-tag}, c)| = O(1)$. *(Lean: L_835ba535.)*
 :::
 
 ::: proof
@@ -510,7 +510,7 @@ Let $I(\mathcal{O}, c)$ be the set of locations where constraint $c$ is encoded 
 :::
 
 ::: corollary
-[]{#cor:maintenance-entropy label="cor:maintenance-entropy"} Attribute-only observation maximizes maintenance entropy; nominal-tag observation minimizes it. *(Lean: `complexity_gap_unbounded`.)*
+[]{#cor:maintenance-entropy label="cor:maintenance-entropy"} Attribute-only observation maximizes maintenance entropy; nominal-tag observation minimizes it. *(Lean: L_284cf0c0.)*
 :::
 
 
@@ -521,11 +521,11 @@ Model contract (fixed-axis domain). A domain is specified by a fixed observation
 We adopt $\Phi$ as the complete observation universe for this paper: to claim applicability to a concrete runtime one must either (i) exhibit mappings from each runtime observable into $\Phi$, or (ii) enforce the admissibility constraints (no external registries, no reflection, no preprocessing/amortization). Under either condition the theorems apply without qualification.
 
 ::: proposition
-[]{#prop:observational-quotient label="prop:observational-quotient"} For any admissible strategy using only $\Phi$, the entire interaction transcript (and hence the output) depends only on $\alpha(v)$. Equivalently, any in-scope semantic property $P$ factors through $\alpha$: there exists $\tilde{P}$ with $P(v) = \tilde{P}(\alpha(v))$ for all $v$. *(Lean: `observer_factors`.)*
+[]{#prop:observational-quotient label="prop:observational-quotient"} For any admissible strategy using only $\Phi$, the entire interaction transcript (and hence the output) depends only on $\alpha(v)$. Equivalently, any in-scope semantic property $P$ factors through $\alpha$: there exists $\tilde{P}$ with $P(v) = \tilde{P}(\alpha(v))$ for all $v$. *(Lean: L_03e8b7ad.)*
 :::
 
 ::: corollary
-[]{#cor:ad-hoc-add-axis label="cor:ad-hoc-add-axis"} If two values $v, w$ satisfy $\alpha(v) = \alpha(w)$, then no admissible $\Phi$-only strategy can distinguish them with zero error. Any mechanism that does distinguish such pairs must introduce additional information not present in $\alpha$ (equivalently, refine the axis map by adding a new axis/tag). *(Lean: `shape_cannot_distinguish`.)*
+[]{#cor:ad-hoc-add-axis label="cor:ad-hoc-add-axis"} If two values $v, w$ satisfy $\alpha(v) = \alpha(w)$, then no admissible $\Phi$-only strategy can distinguish them with zero error. Any mechanism that does distinguish such pairs must introduce additional information not present in $\alpha$ (equivalently, refine the axis map by adding a new axis/tag). *(Lean: L_35fe55aa.)*
 :::
 
 ## Query Families and Distinguishing Sets
@@ -565,7 +565,7 @@ Let $E = \Phi\;(=\mathcal{Q})$ be the ground set of primitive queries (attribute
 :::
 
 ::: lemma
-[]{#lem:basis-exchange label="lem:basis-exchange"} For any $B_1, B_2 \in \mathcal{B}$ and any $q \in B_1 \setminus B_2$, there exists $q' \in B_2 \setminus B_1$ such that $(B_1 \setminus \{q\}) \cup \{q'\} \in \mathcal{B}$. *(Lean: `orthogonal_exchange`, `orthogonal_implies_exchange`.)*
+[]{#lem:basis-exchange label="lem:basis-exchange"} For any $B_1, B_2 \in \mathcal{B}$ and any $q \in B_1 \setminus B_2$, there exists $q' \in B_2 \setminus B_1$ such that $(B_1 \setminus \{q\}) \cup \{q'\} \in \mathcal{B}$. *(Lean: L_1915208b, L_165f5010.)*
 :::
 
 ::: proof
@@ -581,7 +581,7 @@ Minimal distinguishing sets are exactly the bases of the matroid defined by this
 :::
 
 ::: theorem
-[]{#thm:matroid-bases label="thm:matroid-bases"} $\mathcal{B}$ is the set of bases of a matroid on ground set $E$. *(Lean: `matroid_basis_equicardinality`, `orthogonal_implies_exchange`.)*
+[]{#thm:matroid-bases label="thm:matroid-bases"} $\mathcal{B}$ is the set of bases of a matroid on ground set $E$. *(Lean: L_5e84d979, L_165f5010.)*
 :::
 
 ::: proof
@@ -597,13 +597,13 @@ Let $n := |\mathcal{I}|$ be the ambient number of available attributes. Clearly 
 :::
 
 ::: corollary
-[]{#cor:well-defined-distinguishing-dimension label="cor:well-defined-distinguishing-dimension"} All minimal distinguishing sets have equal cardinality. Thus the distinguishing dimension (Definition [\[def:distinguishing-dimension\]](#def:distinguishing-dimension){reference-type="ref" reference="def:distinguishing-dimension"}) is well-defined. *(Lean: `matroid_basis_equicardinality`, `closureInducedBasisEquicardinality`.)*
+[]{#cor:well-defined-distinguishing-dimension label="cor:well-defined-distinguishing-dimension"} All minimal distinguishing sets have equal cardinality. Thus the distinguishing dimension (Definition [\[def:distinguishing-dimension\]](#def:distinguishing-dimension){reference-type="ref" reference="def:distinguishing-dimension"}) is well-defined. *(Lean: L_5e84d979, `closureInducedBasisEquicardinality`.)*
 :::
 
 ## Implications for Witness Cost
 
 ::: corollary
-[]{#cor:attribute-only-witness-lb label="cor:attribute-only-witness-lb"} For any attribute-only observer, $W(\text{class-identity}) \geq d$ where $d$ is the distinguishing dimension. *(Lean: `adversary_forces_n_minus_1_queries`.)*
+[]{#cor:attribute-only-witness-lb label="cor:attribute-only-witness-lb"} For any attribute-only observer, $W(\text{class-identity}) \geq d$ where $d$ is the distinguishing dimension. *(Lean: L_67f09d33.)*
 :::
 
 ::: proof
@@ -622,7 +622,7 @@ Recall from Section 2 that the witness cost $W(P)$ is the minimum number of prim
 
 Specifically, the witness is a single tag read: compare $\text{tag}(v_1) = \text{tag}(v_2)$.
 
-Attribute-only observers require $W_{\text{eq}} = \Omega(d)$ where $d$ is the distinguishing dimension (and $d \le n$, with worst-case $d = n$). *(Lean: `nominal_localization_constant_semantic`, `adversary_forces_n_minus_1_queries`.)*
+Attribute-only observers require $W_{\text{eq}} = \Omega(d)$ where $d$ is the distinguishing dimension (and $d \le n$, with worst-case $d = n$). *(Lean: L_7fb66f42, L_67f09d33.)*
 :::
 
 ::: proof
@@ -692,7 +692,7 @@ In information-barrier domains, attribute-only observers (the $L=0$ face) satisf
 
 -   **Distortion**: $D > 0$ (probability of misclassification is strictly positive due to collisions)
 
-*(Lean: `LWDConverse.collision_block_requires_bits`, `LWDConverse.maximal_barrier_requires_bits`, `LWDConverse.impossible_when_bits_too_small`.)*
+*(Lean: LWDC_a51c40b9, LWDC_62964e1b, LWDC_f643a602.)*
 :::
 
 ::: proof
@@ -927,7 +927,7 @@ The core claims in this paper are machine-checked in Lean 4. We keep the appendi
 ::: table*
   Module                            Lines      Theorems   Purpose
   --------------------------------- ---------- ---------- -----------------------------------------------
-  `abstract_class_system.lean`      3278       155        Two-axis instantiation, barrier, dominance
+  `abstract_class_system.lean`      3283       155        Two-axis instantiation, barrier, dominance
   `axis_framework.lean`             1816       63         Query families, closure, matroid bridge
   `nominal_resolution.lean`         609        27         Nominal identification and witness procedures
   `discipline_migration.lean`       142        11         Discipline vs. migration consequences
@@ -937,7 +937,7 @@ The core claims in this paper are machine-checked in Lean 4. We keep the appendi
   `java_instantiation.lean`         63         4          Java instantiation
   `rust_instantiation.lean`         64         4          Rust instantiation
   `lwd_converse.lean`               64         4          Zero-error converse chain on collision blocks
-  **Core modules subtotal**         **6565**   **296**    **10 representative modules shown**
+  **Core modules subtotal**         **6570**   **296**    **10 representative modules shown**
 :::
 
 #### What is in scope in the mechanization.
@@ -950,7 +950,7 @@ Implementation-specific operational details and extended code listings are inclu
 
 #### Artifact totals.
 
-The complete artifact contains 14 Lean files totaling 6707 lines and 296 theorem/lemma statements; the table above highlights the core modules directly used by the main-text derivations. The remaining utility files (`Paper1.lean`, `PrintAxioms.lean`, `check_axioms.lean`, `lakefile.lean`) contribute 142 lines and 0 theorem/lemma statements.
+The complete artifact contains 14 Lean files totaling 6718 lines and 296 theorem/lemma statements; the table above highlights the core modules directly used by the main-text derivations. The remaining utility files (`Paper1.lean`, `PrintAxioms.lean`, `check_axioms.lean`, `lakefile.lean`) contribute 148 lines and 0 theorem/lemma statements.
 
 ## Attribute-Only Formalization {#interface-only-formalization}
 
@@ -1030,6 +1030,6 @@ The full Lean development is provided in supplementary material. To verify local
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper1_typing_discipline/proofs/`
-- Lines: 6707
+- Lines: 6718
 - Theorems: 296
 - `sorry` placeholders: 0

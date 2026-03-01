@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-02-22T22:21:37.632066
+Generated: 2026-02-26T21:18:33.177867
 
 === HUMAN COPY/PASTE ===
 
@@ -12,7 +12,7 @@ The paper frames encoding locations as terminals in a multi-terminal source-codi
 
 Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
 
-Index Terms—zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
+Index Terms–zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
 
 Abstract (MathJax, for arXiv):
 We introduce the zero-incoherence capacity for interactive multi-location encoding systems: the maximum encoding rate that guarantees exactly zero probability of disagreement among replicated encodings. Our main information-theoretic results are compact and self-contained: an exact capacity theorem ($C_0=1$), a tight side-information lower bound for resolution ($\geq\log_2 k$ bits for $k$-way incoherence), and a rate--complexity separation (modification cost $O(1)$ at capacity vs $\Omega(n)$ above).
@@ -21,10 +21,10 @@ The paper frames encoding locations as terminals in a multi-terminal source-codi
 
 Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
 
-**Index Terms---**zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
+Index Terms--zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
 
 arXiv Comments:
-IEEE Transactions on Information Theory submission. Lean 4 artifact: 9672 lines, 466 theorems/lemmas across 31 files (0 sorry placeholders).
+IEEE Transactions on Information Theory submission. Lean 4 artifact: 3378 lines, 176 theorems/lemmas across 24 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper2_it
@@ -57,7 +57,7 @@ zenodo:
     standard Fano-inequality techniques.
 
 
-    Index Terms—zero-error capacity, multi-terminal source coding, side information,
+    Index Terms–zero-error capacity, multi-terminal source coding, side information,
     mutual information, confusability graph'
 arxiv:
   title: 'Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability,
@@ -87,10 +87,10 @@ arxiv:
     standard Fano-inequality techniques.
 
 
-    **Index Terms---**zero-error capacity, multi-terminal source coding, side information,
+    Index Terms--zero-error capacity, multi-terminal source coding, side information,
     mutual information, confusability graph'
   comments: 'IEEE Transactions on Information Theory submission. Lean 4 artifact:
-    9672 lines, 466 theorems/lemmas across 31 files (0 sorry placeholders).'
+    3378 lines, 176 theorems/lemmas across 24 files (0 sorry placeholders).'
 abstract_variants:
   unicode: 'We introduce the zero-incoherence capacity for interactive multi-location
     encoding systems: the maximum encoding rate that guarantees exactly zero probability
@@ -116,7 +116,7 @@ abstract_variants:
     standard Fano-inequality techniques.
 
 
-    Index Terms—zero-error capacity, multi-terminal source coding, side information,
+    Index Terms–zero-error capacity, multi-terminal source coding, side information,
     mutual information, confusability graph'
   mathjax: 'We introduce the zero-incoherence capacity for interactive multi-location
     encoding systems: the maximum encoding rate that guarantees exactly zero probability
@@ -143,5 +143,5 @@ abstract_variants:
     standard Fano-inequality techniques.
 
 
-    **Index Terms---**zero-error capacity, multi-terminal source coding, side information,
+    Index Terms--zero-error capacity, multi-terminal source coding, side information,
     mutual information, confusability graph'
