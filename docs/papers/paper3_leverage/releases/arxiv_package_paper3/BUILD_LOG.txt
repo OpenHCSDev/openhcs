@@ -1,23 +1,27 @@
 OpenHCS Paper Build Log
 ========================
 
-Paper: paper3 - Leverage-Driven Software Architecture: A Probabilistic Framework for Architectural Decision-Making
-Package Date: 2026-02-22T22:21:47.814740
+Paper: paper3 - Leverage-Driven Software Architecture: Five Independent Frameworks Select the Same Architectural Ground State
+Package Date: 2026-03-01T01:15:05.538012
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 10
-Lines of Code: 2737
-Theorems: 139
+Lean Files: 14
+Lines of Code: 3691
+Theorems: 201
 Sorry Placeholders: 0
 
 
 Proof Files:
 ------------
   - LambdaDR.lean
+  - BridgeToDQ.lean
+  - CrossPaperDependencies.lean
   - Examples.lean
+  - FiveWayEquivalence.lean
   - Foundations.lean
+  - Physical.lean
   - Probability.lean
   - SSOT.lean
   - Theorems.lean

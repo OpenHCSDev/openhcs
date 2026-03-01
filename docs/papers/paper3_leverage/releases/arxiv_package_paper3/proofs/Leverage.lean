@@ -43,6 +43,8 @@ import Leverage.SSOT
 import Leverage.Typing
 import Leverage.Examples
 import Leverage.WeightedLeverage
+import Leverage.FiveWayEquivalence
+import Leverage.CrossPaperDependencies
 import LambdaDR
 
 /-!

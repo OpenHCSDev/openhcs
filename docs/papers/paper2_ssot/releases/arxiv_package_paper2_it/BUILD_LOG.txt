@@ -2,14 +2,14 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper2_it - Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability, Converse, and Side Information Bounds
-Package Date: 2026-02-26T21:18:38.422656
+Package Date: 2026-03-01T01:14:50.995274
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 24
-Lines of Code: 3378
-Theorems: 176
+Lean Files: 25
+Lines of Code: 3469
+Theorems: 185
 Sorry Placeholders: 0
 
 
@@ -21,6 +21,7 @@ Proof Files:
   - ClaimClosure.lean
   - Coherence.lean
   - Completeness.lean
+  - CrossPaperDependencies.lean
   - DependencyBridge.lean
   - Derivation.lean
   - Dof.lean

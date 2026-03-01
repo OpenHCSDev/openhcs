@@ -22,48 +22,44 @@ A signal maximizing one domain does not necessarily affect the other.
 
 \textbf{Remark (Credibility Domain Conflict).} When a signal achieves $C_M \to 1$ but $C_S \approx 0$, the mathematical and social domains are in conflict. A rational response in the mathematical domain (engage with proofs) differs from a rational response in the social domain (defer to hierarchy). Observers may respond in either domain. This paper's theorems apply within each domain separately; cross-domain dynamics require modeling both simultaneously.
 
-\subsection{Dual Truth Framework}\label{dual-truth-framework}
-
-This paper introduces a dual truth framework that distinguishes between objective validity and subjective acceptance:
-
-\textbf{Definition 2.0e (Epistemic Truth, $E$).} \emph{Epistemic truth} measures the probability that a claim corresponds to objective reality or logical truth. It is measurable via empirical evidence, logical proof, or formal verification. Range: $E \in [0, 1]$, where $E = 1$ indicates absolute truth and $E = 0$ indicates absolute falsity. Properties: objective, verifiable, independent of observer.
-
-\textbf{Definition 2.0f (Ego-Driven Truth, $G$).} \emph{Ego-driven truth} measures the probability that a claim aligns with an agent's self-interest, beliefs, or identity. It is measurable via incentive analysis, bias detection, or psychological modeling. Range: $G \in [0, 1]$, where $G = 1$ indicates perfect alignment and $G = 0$ indicates complete contradiction. Properties: subjective, observer-dependent, context-sensitive.
-
-\textbf{Definition 2.0g (Truth Vector).} The \emph{truth vector} is a 2D vector:
-\[
-\vec{T} = (E, G) \in [0, 1]^2
-\]
-representing both the objective validity and subjective acceptance of a claim. This vector captures the dual nature of truth in epistemic communication.
-
-\textbf{Theorem 2.0h (Truth Orthogonality).} Epistemic truth and ego-driven truth are orthogonal dimensions:
-\[
-E \perp G \quad \text{(no direct causal relationship)}
-\]
-A change in one dimension does not necessarily affect the other. This orthogonality is analogous to the independence of mathematical and social credibility domains.
-
-\emph{Proof.} Constructive. (1) High $E$, low $G$: a scientifically proven fact that contradicts an agent's deeply held beliefs (e.g., climate change for a fossil fuel executive). (2) Low $E$, high $G$: a comforting lie that aligns perfectly with an agent's self-interest (e.g., "I'm a great driver" despite poor performance). \qed
-
-\textbf{Corollary 2.0i (Truth Tradeoff).} For high-magnitude claims (low prior probability), there exists a threshold where increasing epistemic truth decreases ego-driven truth and vice versa:
-\[
-\exists k^* \in [0,1] : \forall E > k^* \implies \frac{\partial G}{\partial E} < 0
-\]
-
 \subsection{Signals and Costs}\label{signals-and-costs}
 
 \textbf{Definition 2.1 (Signal).} A \emph{signal} is a tuple
-\(s = (c, v, p)\) where: - \(c\) is the \emph{content} (what is
-communicated) - \(v \in \{\top, \bot\}\) is the \emph{truth value}
-(whether content is true) - \(p : \mathbb{R}_{\geq 0}\) is the
-\emph{production cost}
+\(s = (c, v, p)\) where: \(c\) is the \emph{content} (what is
+communicated), \(v \in \{\top, \bot\}\) is the \emph{truth value}
+(whether content is true), and \(p \in \mathbb{R}_{\geq 0}\) is the
+\emph{production cost}.
+
+\textbf{Physical grounding of cost.}
+Production cost is measured in joules. By Landauer's principle \cite{landauer1961}, each
+irreversible bit operation erases at minimum
+\[
+E_{\min} = k_B T \ln 2 \;\approx\; 2.8 \times 10^{-21}~\text{J at } T = 300\,\text{K},
+\]
+where $k_B$ is Boltzmann's constant. Paper 4's Energy Lower Bound (Theorem 13) shows that
+srank bits of structural information carry a minimum physical energy cost
+proportional to $\text{srank} \cdot k_B T \ln 2$. Signal production cost inherits this floor.
 
 \textbf{Definition 2.2 (Cheap Talk).} A signal \(s\) is \emph{cheap
 talk} if production cost is truth-independent:
 \[\text{Cost}(s | v = \top) = \text{Cost}(s | v = \bot)\]
+In physical units: the joules expended to produce $s$ do not depend on whether $v = \top$ or $v = \bot$.
+Typed text is cheap talk: the Landauer cost of typing ``true'' equals the cost of typing ``false.''
 
 \textbf{Definition 2.3 (Costly Signal).} A signal \(s\) is \emph{costly}
-if: \[\text{Cost}(s | v = \bot) > \text{Cost}(s | v = \top)\] Producing
-the signal when false costs more than when true.
+if:
+\[\Delta := \text{Cost}(s | v = \bot) - \text{Cost}(s | v = \top) > 0\]
+Producing the signal when false costs strictly more than when true. The quantity $\Delta$
+(in joules) is the \emph{cost differential}.
+
+\textbf{Remark (Lean proofs as physical signals).}
+A machine-checked Lean proof is a costly signal with $\Delta \to \infty$. To produce a
+compiling proof of a false theorem, the type-checker's false-positive rate satisfies
+$\varepsilon_F \to 0$ (soundness). By Paper 4's Counting Gap (Theorem 3):
+$\varepsilon \cdot N \leq C \Rightarrow N \leq C / \varepsilon$. With $\varepsilon_F \to 0$,
+the number of false proofs that pass verification is bounded by $C \cdot \varepsilon_F \to 0$.
+Producing one would require traversing a search space of diverging size, hence diverging energy.
+Therefore $\Delta_{\text{Lean}} = \infty$: the Lean type-checker physically separates true from false.
 
 \textbf{Intuition:} Verbal assertions are cheap talk---saying ``I'm
 honest'' costs the same whether you're honest or not. A PhD from MIT is
@@ -110,19 +106,19 @@ All theorem statements in this paper are typed by the following contract:
 
 We use the following regime tags:
 \begin{itemize}
-\item \texttt{[CT]}: cheap-talk channel (truth-independent signal cost),
-\item \texttt{[VS]}: verifier-backed signal channel (\(\varepsilon_T,\varepsilon_F\) model),
+\item \texttt{[CT]}: cheap-talk channel (truth-independent signal cost, $\Delta = 0$),
+\item \texttt{[VS]}: verifier-backed signal channel ($\varepsilon_T, \varepsilon_F$ model, $\Delta \to \infty$),
 \item \texttt{[M]}: mathematical credibility domain,
-\item \texttt{[S]}: social credibility domain,
-\item \texttt{[D]}: dual-truth vector extensions (\(E,G\)).
+\item \texttt{[S]}: social credibility domain.
 \end{itemize}
 
 \begin{proposition}[Declared Regime Coverage for Credibility Claims]\label{prop:credibility-regime-coverage}
 Each declared regime above has at least one theorem-level mechanized core in Lean:
 \texttt{[CT]} via \texttt{cheap\_talk\_bound}, \texttt{magnitude\_penalty}, \texttt{emphasis\_penalty};
 \texttt{[VS]} via \texttt{verified\_signal\_credibility}, \texttt{proof\_as\_ultimate\_signal};
-\texttt{[M]/[S]} via \texttt{domain\_independence\_math\_not\_implies\_social} and
-\texttt{domain\_independence\_social\_not\_implies\_math}.
+\texttt{[M]/[S]} via \texttt{domain\_independence\_math\_not\_implies\_social} and \texttt{domain\_independence\_social\_not\_implies\_math}.
+The physical connection between \texttt{[CT]} ($\Delta=0$) and \texttt{[VS]} ($\Delta\to\infty$)
+is grounded in Landauer's principle and Paper 4's Counting Gap (Theorem 3).
 \end{proposition}
 
 \begin{proof}

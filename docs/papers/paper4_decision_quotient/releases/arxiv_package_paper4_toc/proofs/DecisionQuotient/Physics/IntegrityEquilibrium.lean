@@ -1243,6 +1243,88 @@ theorem IA6_logic_complete_access_not (s : SystemInformation) (o : ObserverChann
     ∃ gap : ℕ, gap > 0 ∧ gap = s.totalEntropy - o.capacity :=
   ⟨informationGap s o, IA3_gap_when_exceeds s o hExceeds, rfl⟩
 
+-- ============================================================================
+-- Part 18b: EC2 Derivation from Uncertainty (IA7-IA12)
+-- If uncertainty exists, observer capacity must be bounded.
+-- This derives EC2 (finite resources) from the existence of uncertainty.
+-- ============================================================================
+
+/-- Uncertainty exists when system has more information than observer accessed. -/
+def uncertaintyExists (s : SystemInformation) (o : ObserverChannel) : Prop :=
+  o.accessed < s.totalEntropy
+
+/-- IA7: Uncertainty means there's information you don't have. -/
+theorem IA7_uncertainty_is_gap (s : SystemInformation) (o : ObserverChannel)
+    (hUncert : uncertaintyExists s o) :
+    s.totalEntropy - o.accessed > 0 :=
+  Nat.sub_pos_of_lt hUncert
+
+/-- IA8: If capacity ≥ system entropy, observer CAN access everything.
+    (Whether they DO is a separate question, but they CAN.) -/
+theorem IA8_sufficient_capacity_enables_full_access (s : SystemInformation) (C : ℕ)
+    (hSufficient : C ≥ s.totalEntropy) :
+    ∃ o : ObserverChannel, o.capacity = C ∧ o.accessed = s.totalEntropy :=
+  ⟨⟨C, s.totalEntropy, hSufficient⟩, rfl, rfl⟩
+
+/-- IA9: Full access eliminates uncertainty.
+    If accessed = totalEntropy, no uncertainty remains. -/
+theorem IA9_full_access_no_uncertainty (s : SystemInformation) (o : ObserverChannel)
+    (hFull : o.accessed = s.totalEntropy) :
+    ¬uncertaintyExists s o := by
+  unfold uncertaintyExists
+  omega
+
+/-- IA10: Contrapositive of IA9 — uncertainty implies incomplete access.
+    If uncertainty exists, observer hasn't accessed everything. -/
+theorem IA10_uncertainty_implies_incomplete (s : SystemInformation) (o : ObserverChannel)
+    (hUncert : uncertaintyExists s o) :
+    o.accessed < s.totalEntropy :=
+  hUncert
+
+/-- IA11: Incomplete access under bounded capacity implies capacity < ∞ matters.
+    More precisely: if uncertainty exists despite maximal access (accessed = capacity),
+    then capacity itself is the bottleneck. -/
+theorem IA11_uncertainty_from_capacity_bound (s : SystemInformation) (o : ObserverChannel)
+    (hUncert : uncertaintyExists s o)
+    (hMaxAccess : o.accessed = o.capacity) :
+    o.capacity < s.totalEntropy := by
+  unfold uncertaintyExists at hUncert
+  omega
+
+/-- IA12: The key derivation — uncertainty + maximal access → bounded capacity.
+    If you're uncertain AND you've accessed all you can, your capacity is finite
+    relative to the system. This is EC2: finite resources.
+
+    The chain:
+    1. We observe uncertainty (hUncert: accessed < totalEntropy)
+    2. We assume observer uses full capacity (hMaxAccess: accessed = capacity)
+    3. Therefore capacity < totalEntropy (bounded)
+    4. Therefore capacity is finite relative to system (EC2)
+
+    Note: "infinite capacity" would mean capacity ≥ any system's entropy,
+    which contradicts uncertainty existing. -/
+theorem IA12_ec2_from_uncertainty (s : SystemInformation) (o : ObserverChannel)
+    (hUncert : uncertaintyExists s o)
+    (hMaxAccess : o.accessed = o.capacity) :
+    o.capacity < s.totalEntropy ∧ o.capacity < s.totalEntropy + 1 := by
+  have h := IA11_uncertainty_from_capacity_bound s o hUncert hMaxAccess
+  exact ⟨h, Nat.lt_succ_of_lt h⟩
+
+/-- IA13: The philosophical statement — to be uncertain is to be bounded.
+    Equivalently: to be unbounded is to be certain.
+
+    Contrapositive: If for all systems s, uncertainty exists for observer o,
+    then o's capacity is bounded by every system's entropy.
+    An "unbounded" observer would have capacity ≥ all entropies,
+    contradicting universal uncertainty. -/
+theorem IA13_unbounded_implies_certainty (o : ObserverChannel)
+    (hUnbounded : ∀ s : SystemInformation, o.capacity ≥ s.totalEntropy) :
+    ∀ s : SystemInformation, o.accessed = o.capacity → ¬uncertaintyExists s o := by
+  intro s hMax
+  unfold uncertaintyExists
+  have hCap := hUnbounded s
+  omega
+
 end InformationAccess
 
 -- ============================================================================

@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-02-26T21:18:33.177867
+Generated: 2026-03-01T01:14:50.674264
 
 === HUMAN COPY/PASTE ===
 
@@ -10,7 +10,7 @@ We introduce the zero-incoherence capacity for interactive multi-location encodi
 
 The paper frames encoding locations as terminals in a multi-terminal source-coding model. Derivation (automatic deterministic dependence) is interpreted as perfect correlation that reduces effective rate; only complete derivation (one independent source) achieves zero incoherence. We give concise achievability and converse proofs in IT style, formalize the confusability/incoherence graph connection, and present an explicit mutual-information argument for the side-information bound.
 
-Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
+Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). Detailed language evaluation, extended code examples, and the full Lean proof corpus are provided in the supplementary material; the main text contains concise instantiations. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
 
 Index Terms–zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
 
@@ -19,12 +19,12 @@ We introduce the zero-incoherence capacity for interactive multi-location encodi
 
 The paper frames encoding locations as terminals in a multi-terminal source-coding model. Derivation (automatic deterministic dependence) is interpreted as perfect correlation that reduces effective rate; only complete derivation (one independent source) achieves zero incoherence. We give concise achievability and converse proofs in IT style, formalize the confusability/incoherence graph connection, and present an explicit mutual-information argument for the side-information bound.
 
-Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
+Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). Detailed language evaluation, extended code examples, and the full Lean proof corpus are provided in the supplementary material; the main text contains concise instantiations. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
 
 Index Terms--zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
 
 arXiv Comments:
-IEEE Transactions on Information Theory submission. Lean 4 artifact: 3378 lines, 176 theorems/lemmas across 24 files (0 sorry placeholders).
+IEEE Transactions on Information Theory submission. Lean 4 artifact: 3469 lines, 185 theorems/lemmas across 25 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper2_it
@@ -50,11 +50,11 @@ zenodo:
 
 
     Theoretical contributions are supplemented by constructive instantiations (programming-language
-    patterns and a software case study). For TIT submission we move detailed language
-    evaluation, extended code examples, and the full Lean proof corpus to supplementary
-    material; the main text contains brief instantiations only. Core theorems (capacity,
-    realizability, bounds) are machine-checked in Lean 4; entropy arguments apply
-    standard Fano-inequality techniques.
+    patterns and a software case study). Detailed language evaluation, extended code
+    examples, and the full Lean proof corpus are provided in the supplementary material;
+    the main text contains concise instantiations. Core theorems (capacity, realizability,
+    bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality
+    techniques.
 
 
     Index Terms–zero-error capacity, multi-terminal source coding, side information,
@@ -80,17 +80,17 @@ arxiv:
 
 
     Theoretical contributions are supplemented by constructive instantiations (programming-language
-    patterns and a software case study). For TIT submission we move detailed language
-    evaluation, extended code examples, and the full Lean proof corpus to supplementary
-    material; the main text contains brief instantiations only. Core theorems (capacity,
-    realizability, bounds) are machine-checked in Lean 4; entropy arguments apply
-    standard Fano-inequality techniques.
+    patterns and a software case study). Detailed language evaluation, extended code
+    examples, and the full Lean proof corpus are provided in the supplementary material;
+    the main text contains concise instantiations. Core theorems (capacity, realizability,
+    bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality
+    techniques.
 
 
     Index Terms--zero-error capacity, multi-terminal source coding, side information,
     mutual information, confusability graph'
   comments: 'IEEE Transactions on Information Theory submission. Lean 4 artifact:
-    3378 lines, 176 theorems/lemmas across 24 files (0 sorry placeholders).'
+    3469 lines, 185 theorems/lemmas across 25 files (0 sorry placeholders).'
 abstract_variants:
   unicode: 'We introduce the zero-incoherence capacity for interactive multi-location
     encoding systems: the maximum encoding rate that guarantees exactly zero probability
@@ -109,11 +109,11 @@ abstract_variants:
 
 
     Theoretical contributions are supplemented by constructive instantiations (programming-language
-    patterns and a software case study). For TIT submission we move detailed language
-    evaluation, extended code examples, and the full Lean proof corpus to supplementary
-    material; the main text contains brief instantiations only. Core theorems (capacity,
-    realizability, bounds) are machine-checked in Lean 4; entropy arguments apply
-    standard Fano-inequality techniques.
+    patterns and a software case study). Detailed language evaluation, extended code
+    examples, and the full Lean proof corpus are provided in the supplementary material;
+    the main text contains concise instantiations. Core theorems (capacity, realizability,
+    bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality
+    techniques.
 
 
     Index Terms–zero-error capacity, multi-terminal source coding, side information,
@@ -136,11 +136,11 @@ abstract_variants:
 
 
     Theoretical contributions are supplemented by constructive instantiations (programming-language
-    patterns and a software case study). For TIT submission we move detailed language
-    evaluation, extended code examples, and the full Lean proof corpus to supplementary
-    material; the main text contains brief instantiations only. Core theorems (capacity,
-    realizability, bounds) are machine-checked in Lean 4; entropy arguments apply
-    standard Fano-inequality techniques.
+    patterns and a software case study). Detailed language evaluation, extended code
+    examples, and the full Lean proof corpus are provided in the supplementary material;
+    the main text contains concise instantiations. Core theorems (capacity, realizability,
+    bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality
+    techniques.
 
 
     Index Terms--zero-error capacity, multi-terminal source coding, side information,

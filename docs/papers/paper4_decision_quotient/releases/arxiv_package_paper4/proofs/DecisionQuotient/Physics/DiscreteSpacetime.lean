@@ -5,22 +5,36 @@
 
   Derivation chain: Discrete State → Discrete Time → Discrete Space → Thermodynamics
 
-  ## Structure
-  1. PROVEN: Discrete state + dynamics → discrete effective time (transition points)
-  2. THEOREM: Lorentz compatibility — discrete time ↔ discrete space at same scale
-              (trivial in ℕ; calibration handled explicitly below)
-              cite: Einstein 1905, Minkowski 1908, Snyder 1947
-  3. THEOREM: Planck-scale uniqueness under declared calibration
-              and explicit non-uniqueness without calibration
-              cite: Planck 1899 (calibration source)
-  4. THEOREM: Landauer bound — provable from linear energy model (Nat.mul_pos)
-              Physical content is in the declared constant joulesPerBit > 0
-              cite: Landauer 1961, Bennett 2003
-  5. LINK: Connect to ThermodynamicLift.lean
+  ## Foundational Stance
 
-  ## Philosophy
-  Each step is simple. The composition derives thermodynamics from computation.
-  The triviality objection fails because trivial steps compose into non-trivial reach.
+  A *process* is a sequence of distinguishable states.
+  A *sequence* is a function `ℕ → X` (Mathlib: `Nat → X`).
+
+  This is not an assumption about physics — it is the DEFINITION of "counting."
+  The natural numbers ℕ are the primitive mathematical object. The real numbers ℝ
+  are CONSTRUCTED from ℕ (via ℤ → ℚ → ℝ using Dedekind cuts or Cauchy sequences),
+  not the other way around.
+
+  Continuous-time dynamics (flows, ODEs) are a different mathematical object,
+  not a generalization of discrete processes. Asking "what if process time were
+  continuous?" is asking "what if sequences weren't indexed by naturals?" —
+  which is definitionally incoherent.
+
+  The theorems below make EXPLICIT what follows from these definitions.
+  They are not empirical claims requiring justification. Theorems marked
+  DEFINITIONAL follow immediately from definitions; theorems marked DERIVED
+  require additional hypotheses (e.g., joulesPerBit > 0 for thermodynamics).
+
+  ## Structure
+  1. DEFINITIONAL: Process time is ℕ-indexed by definition of sequence
+  2. DEFINITIONAL: Transition points inherit countability from ℕ
+  3. THEOREM: Lorentz compatibility — discrete time ↔ discrete space at same scale
+              cite: Einstein 1905, Minkowski 1908, Snyder 1947
+  4. THEOREM: Planck-scale uniqueness under declared calibration
+              cite: Planck 1899 (calibration source)
+  5. DERIVED: Landauer bound — requires joulesPerBit > 0
+              cite: Landauer 1961, Bennett 2003
+  6. LINK: Connect to ThermodynamicLift.lean
 
   ## Citations
   - Einstein, A. (1905). On the Electrodynamics of Moving Bodies.
@@ -42,12 +56,14 @@ namespace DiscreteSpacetime
 
 open ThermodynamicLift
 
-/-! ## Part 1: Discrete State → Discrete Time (PROVEN)
+/-! ## Part 1: Definitional Core — Process Time is ℕ-indexed
 
-The core lemma: if state space is finite and dynamics is non-trivial,
-the set of transition points in any trajectory is discrete (countable,
-locally finite).
+A process is a sequence of states. A sequence is `ℕ → State` by definition.
+These theorems make explicit what follows from the definition of counting.
+They are not empirical claims — they are the meaning of "sequence" and "process."
 -/
+
+section DefinitionalCore
 
 /-- A discrete dynamical system: finite state space with transition function. -/
 structure DiscreteSystem where
@@ -66,27 +82,43 @@ attribute [instance] DiscreteSystem.hFin DiscreteSystem.hDec
 def hasNontrivialDynamics (sys : DiscreteSystem) : Prop :=
   ∃ s : sys.State, sys.step s ≠ s
 
-/-- Trajectory: sequence of states over discrete time steps. -/
+/-- DEFINITIONAL: A trajectory is a function `ℕ → State`.
+    Process time is ℕ-indexed BY DEFINITION of what "sequence" means.
+    This is not an assumption — it is the meaning of "counting states in order." -/
 def trajectory (sys : DiscreteSystem) (s₀ : sys.State) : ℕ → sys.State
   | 0 => s₀
   | n + 1 => sys.step (trajectory sys s₀ n)
 
+/-- DEFINITIONAL: Process time is the natural numbers.
+    This makes explicit that trajectory is ℕ-indexed by definition. -/
+abbrev ProcessTime := ℕ
+
 /-- Transition point: a time step where state changes. -/
-def isTransitionPoint (sys : DiscreteSystem) (s₀ : sys.State) (t : ℕ) : Prop :=
+def isTransitionPoint (sys : DiscreteSystem) (s₀ : sys.State) (t : ProcessTime) : Prop :=
   trajectory sys s₀ (t + 1) ≠ trajectory sys s₀ t
 
-/-- The set of transition points in a trajectory. -/
-def transitionPoints (sys : DiscreteSystem) (s₀ : sys.State) : Set ℕ :=
+/-- DEFINITIONAL: Transition points are a subset of ℕ by construction. -/
+def transitionPoints (sys : DiscreteSystem) (s₀ : sys.State) : Set ProcessTime :=
   { t | isTransitionPoint sys s₀ t }
 
-/-- LEMMA 1: Transition points are countable (time is effectively discrete).
-    This is immediate since ℕ is countable and transitionPoints ⊆ ℕ. -/
-theorem transitionPoints_countable (sys : DiscreteSystem) (s₀ : sys.State) :
-    Set.Countable (transitionPoints sys s₀) := by
-  exact Set.Countable.mono (Set.subset_univ _) (Set.countable_univ)
+/-- DEFINITIONAL: Transition points are countable.
+
+    This is IMMEDIATE from the definition: transitionPoints ⊆ ℕ and ℕ is countable.
+    No physics is involved. This is what "subset of a countable set" MEANS.
+
+    The theorem makes explicit what follows from definitions — it is not an
+    empirical claim about the physical universe. -/
+theorem transitionPoints_countable_by_defn (sys : DiscreteSystem) (s₀ : sys.State) :
+    Set.Countable (transitionPoints sys s₀) :=
+  Set.Countable.mono (Set.subset_univ _) (Set.countable_univ)
+
+/-- DEFINITIONAL: Any subset of ℕ is countable.
+    This is the general principle that transitionPoints_countable_by_defn instantiates. -/
+theorem countable_of_nat_subset (S : Set ℕ) : S.Countable :=
+  Set.Countable.mono (Set.subset_univ _) (Set.countable_univ)
 
 /-- Decidability of transition predicate (needed for filtering). -/
-instance transitionDecidable (sys : DiscreteSystem) (s₀ : sys.State) (t : ℕ) :
+instance transitionDecidable (sys : DiscreteSystem) (s₀ : sys.State) (t : ProcessTime) :
     Decidable (isTransitionPoint sys s₀ t) :=
   inferInstanceAs (Decidable (trajectory sys s₀ (t + 1) ≠ trajectory sys s₀ t))
 
@@ -94,8 +126,9 @@ instance transitionDecidable (sys : DiscreteSystem) (s₀ : sys.State) (t : ℕ)
 def bitOperations (sys : DiscreteSystem) (s₀ : sys.State) (n : ℕ) : ℕ :=
   (Finset.range n).filter (fun t => isTransitionPoint sys s₀ t) |>.card
 
-/-- LEMMA 2: Bit operations are bounded by time steps. -/
-theorem bitOperations_le_time (sys : DiscreteSystem) (s₀ : sys.State) (n : ℕ) :
+/-- DEFINITIONAL: Bit operations are bounded by time steps.
+    This follows from: filtered subset has cardinality ≤ original set. -/
+theorem bitOperations_le_time_by_defn (sys : DiscreteSystem) (s₀ : sys.State) (n : ℕ) :
     bitOperations sys s₀ n ≤ n := by
   unfold bitOperations
   have h1 : ((Finset.range n).filter (fun t => isTransitionPoint sys s₀ t)).card
@@ -103,23 +136,53 @@ theorem bitOperations_le_time (sys : DiscreteSystem) (s₀ : sys.State) (n : ℕ
   simp only [Finset.card_range] at h1
   exact h1
 
-/-- LEMMA 3: Non-trivial dynamics implies at least one bit operation eventually. -/
-theorem nontrivial_implies_bit_operation
+/-- DEFINITIONAL: Non-trivial dynamics implies at least one bit operation eventually.
+    This follows from: if ∃ s with step s ≠ s, then t=0 is a transition point for s. -/
+theorem nontrivial_implies_bit_operation_by_defn
     (sys : DiscreteSystem) (h : hasNontrivialDynamics sys) :
-    ∃ s₀ : sys.State, ∃ t : ℕ, isTransitionPoint sys s₀ t := by
+    ∃ s₀ : sys.State, ∃ t : ProcessTime, isTransitionPoint sys s₀ t := by
   obtain ⟨s, hs⟩ := h
   refine ⟨s, 0, ?_⟩
   unfold isTransitionPoint trajectory
   exact hs
 
-/-! ## Part 2: Lorentz Invariance (cite Einstein 1905, Minkowski 1908)
+end DefinitionalCore
+
+/-! ## Backward Compatibility Aliases
+
+These preserve the original theorem names for existing code that imports this file.
+The `_by_defn` variants above make the definitional status explicit. -/
+
+/-- Alias for backward compatibility. See `transitionPoints_countable_by_defn`. -/
+theorem transitionPoints_countable (sys : DiscreteSystem) (s₀ : sys.State) :
+    Set.Countable (transitionPoints sys s₀) :=
+  transitionPoints_countable_by_defn sys s₀
+
+/-- Alias for backward compatibility. See `bitOperations_le_time_by_defn`. -/
+theorem bitOperations_le_time (sys : DiscreteSystem) (s₀ : sys.State) (n : ℕ) :
+    bitOperations sys s₀ n ≤ n :=
+  bitOperations_le_time_by_defn sys s₀ n
+
+/-- Alias for backward compatibility. See `nontrivial_implies_bit_operation_by_defn`. -/
+theorem nontrivial_implies_bit_operation
+    (sys : DiscreteSystem) (h : hasNontrivialDynamics sys) :
+    ∃ s₀ : sys.State, ∃ t : ℕ, isTransitionPoint sys s₀ t :=
+  nontrivial_implies_bit_operation_by_defn sys h
+
+/-! ## Part 2: Lorentz Invariance — Physical Theorems (cite Einstein 1905, Minkowski 1908)
 
 The physical content is that Lorentz invariance forces space and time to share the
 same discreteness scale (Snyder 1947). Formalized here as existence statements in
 ℕ: given a discrete temporal unit Δt, a compatible spatial unit Δx = Δt exists,
 and vice versa. These are mathematically trivial (take Δx := Δt); calibration to a
 specific physical unit is handled explicitly in Part 3.
+
+NOTE: These are PHYSICAL theorems — they encode physical postulates (Lorentz invariance)
+as mathematical existence statements. The triviality of the proof (take Δx := Δt)
+reflects that the physical content is in the POSTULATE, not the derivation.
 -/
+
+section PhysicalTheorems
 
 /-- Spacetime discreteness scale (abstract, to be instantiated). -/
 structure DiscretenessScale where
@@ -204,37 +267,58 @@ theorem lorentz_invariant_scales_not_unique :
   refine ⟨⟨1, 1, Nat.one_pos, Nat.one_pos⟩, ⟨2, 2, by decide, by decide⟩, rfl, rfl, ?_⟩
   decide
 
-/-! ## Part 4: Landauer Bound (THEOREM - cite Landauer 1961, Bennett 2003)
+/-! ## Part 4: Landauer Bound — Derived Theorems (cite Landauer 1961, Bennett 2003)
 
 Each irreversible bit operation dissipates at least kT ln 2 energy.
 The physical content is in the declared constant joulesPerBit > 0 (Landauer's
 principle); positivity then follows by Nat.mul_pos.
+
+NOTE: These are DERIVED theorems — they require the hypothesis joulesPerBit > 0,
+which encodes the physical content of Landauer's principle. Given that hypothesis,
+the energy bound follows mathematically.
 -/
 
-/-- THEOREM (Landauer): Irreversible computation has minimum energy cost.
-    Proven from the linear model energyLowerBound M b = joulesPerBit * b via Nat.mul_pos.
-    The physical content (kT ln 2 per bit-erasure) is carried by the declared conversion
-    constant joulesPerBit > 0; the positivity then follows mathematically.
+section DerivedTheorems
+
+/-- DERIVED (Landauer): Irreversible computation has minimum energy cost.
+
+    Physical content: Landauer's principle states that erasing one bit of information
+    requires dissipating at least k_B · T · ln(2) joules of energy.
+
+    Mathematical content: Given joulesPerBit > 0 and bitOps > 0,
+    energyLowerBound = joulesPerBit * bitOps > 0 by Nat.mul_pos.
+
     Citation: Landauer, R. (1961). Irreversibility and Heat Generation. -/
-theorem landauer_bound :
+theorem landauer_bound_derived :
     ∀ (M : ThermoModel), 0 < M.joulesPerBit →
       ∀ (bitOps : ℕ), 0 < bitOps → 0 < energyLowerBound M bitOps := by
   intro M hJ bitOps hb
   exact energy_lower_mandatory M hJ hb
 
-/-! ## Part 5: The Full Chain (PROVEN from declared assumptions + theorems)
+/-- Alias for backward compatibility. See `landauer_bound_derived`. -/
+theorem landauer_bound :
+    ∀ (M : ThermoModel), 0 < M.joulesPerBit →
+      ∀ (bitOps : ℕ), 0 < bitOps → 0 < energyLowerBound M bitOps :=
+  landauer_bound_derived
+
+/-! ## Part 5: The Full Chain — Composition of Definitional + Derived
 
 Discrete State → Discrete Time → Discrete Space → Planck Scale → Thermodynamics
+
+The chain composes:
+- DEFINITIONAL: Process time is ℕ-indexed (from Part 1)
+- PHYSICAL: Lorentz compatibility (from Part 2)
+- DERIVED: Thermodynamic bounds given joulesPerBit > 0 (from Part 4)
 -/
 
-/-- MAIN THEOREM: Discrete computation implies thermodynamic lower bounds.
+/-- DERIVED: Discrete computation implies thermodynamic lower bounds.
 
     Chain of derivation:
     1. DiscreteSystem has finite state space (given)
-    2. Non-trivial dynamics → transition points exist (proven: nontrivial_implies_bit_operation)
-    3. Transition points are countable → effective time is discrete (proven: transitionPoints_countable)
-    4. Discrete time → discrete space (theorem: lorentz_time_implies_space)
-    5. Discrete bit operations → energy lower bound (ThermodynamicLift)
+    2. Non-trivial dynamics → transition points exist (DEFINITIONAL: nontrivial_implies_bit_operation)
+    3. Transition points are countable (DEFINITIONAL: transitionPoints_countable_by_defn)
+    4. Discrete time → discrete space (PHYSICAL: lorentz_time_implies_space)
+    5. Discrete bit operations → energy lower bound (DERIVED: requires joulesPerBit > 0)
 -/
 theorem discrete_computation_thermodynamic_chain
     (sys : DiscreteSystem)
@@ -315,7 +399,7 @@ The Neukart-Vinokur duality dU ≥ λ·dC follows when:
 - λ = joulesPerBit
 -/
 
-/-- Neukart-Vinokur follows from the discrete computation chain. -/
+/-- DERIVED: Neukart-Vinokur follows from the discrete computation chain. -/
 theorem neukart_vinokur_from_discrete_chain
     (sys : DiscreteSystem)
     (_hDyn : hasNontrivialDynamics sys)
@@ -327,6 +411,8 @@ theorem neukart_vinokur_from_discrete_chain
       nvLambda M * bitOperations sys s₀ n := by
   exact neukart_vinokur_duality M (bitOperations sys s₀ n)
 
+end DerivedTheorems
+end PhysicalTheorems
 end DiscreteSpacetime
 end Physics
 end DecisionQuotient

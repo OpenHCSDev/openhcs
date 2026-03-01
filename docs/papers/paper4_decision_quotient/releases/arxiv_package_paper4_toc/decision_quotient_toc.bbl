@@ -34,6 +34,12 @@ Len Bass, Paul Clements, and Rick Kazman.
 \newblock {\em Software Architecture in Practice}.
 \newblock Addison-Wesley Professional, 3rd edition, 2012.
 
+\bibitem{bennett1982thermodynamics}
+Charles~H. Bennett.
+\newblock The thermodynamics of computation---a review.
+\newblock {\em International Journal of Theoretical Physics}, 21(12):905--940,
+  1982.
+
 \bibitem{bennett2003notes}
 Charles~H. Bennett.
 \newblock Notes on landauer's principle, reversible computation, and maxwell's
@@ -122,6 +128,11 @@ Leonardo de~Moura and Sebastian Ullrich.
 \newblock The {Lean} 4 theorem prover and programming language.
 \newblock In {\em Automated Deduction -- CADE 28}, pages 625--635. Springer,
   2021.
+
+\bibitem{dirac1930principles}
+Paul A.~M. Dirac.
+\newblock The principles of quantum mechanics.
+\newblock {\em Oxford University Press}, 1930.
 
 \bibitem{dobzinski2012query}
 Shahar Dobzinski and Jan Vondr{\'a}k.
@@ -374,6 +385,11 @@ Max Planck.
   Wissenschaften zu Berlin}, pages 440--480, 1899.
 \newblock Introduced Planck units.
 
+\bibitem{planck1901distribution}
+Max Planck.
+\newblock {\"U}ber das gesetz der energieverteilung im normalspektrum.
+\newblock {\em Annalen der Physik}, 309(3):553--563, 1901.
+
 \bibitem{raiffa1961applied}
 Howard Raiffa and Robert Schlaifer.
 \newblock {\em Applied Statistical Decision Theory}.
@@ -473,6 +489,11 @@ Mervyn Stone.
 \newblock {\em Journal of the Royal Statistical Society: Series B
   (Methodological)}, 36(2):111--133, 1974.
 
+\bibitem{szostak2003functional}
+Jack~W. Szostak.
+\newblock Functional information: Molecular messages.
+\newblock {\em Nature}, 423(6941):689, 2003.
+
 \bibitem{mathlib2020}
 {The mathlib Community}.
 \newblock The {Lean} mathematical library.
@@ -502,6 +523,14 @@ Gregory Wheeler.
 \newblock Bounded rationality.
 \newblock The Stanford Encyclopedia of Philosophy, 2024.
 \newblock First published 2018; substantive revision 13 Dec 2024.
+
+\bibitem{wong2023roles}
+Michael Wong, Carol Cleland, Daniel~R. Arend, Stuart Bartlett, H.~James
+  Cleaves, Heather Demarest, Aditi Prabhu, Jonathan~I. Lunine, and Robert~M.
+  Hazen.
+\newblock On the roles of function and selection in evolving systems.
+\newblock {\em Proceedings of the National Academy of Sciences},
+  120(44):e2310223120, 2023.
 
 \bibitem{yuan2025fp32}
 Jiayi Yuan, Hao Li, Xinheng Ding, Wenya Xie, Yu-Jhe Li, Wentian Zhao, Kun Wan,

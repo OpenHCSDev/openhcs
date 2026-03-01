@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Leverage Framework.
 
-- **Lines:** 2737
-- **Theorems:** 139
+- **Lines:** 3691
+- **Theorems:** 201
 - **`sorry` placeholders:** 0
 
 
@@ -26,8 +26,12 @@ lake build
 | File | Module |
 |------|--------|
 | `LambdaDR.lean` | LambdaDR |
+| `BridgeToDQ.lean` | BridgeToDQ |
+| `CrossPaperDependencies.lean` | CrossPaperDependencies |
 | `Examples.lean` | Examples |
+| `FiveWayEquivalence.lean` | FiveWayEquivalence |
 | `Foundations.lean` | Foundations |
+| `Physical.lean` | Physical |
 | `Probability.lean` | Probability |
 | `SSOT.lean` | SSOT |
 | `Theorems.lean` | Theorems |

@@ -1,5 +1,10 @@
-import Mathlib
-import abstract_class_system
+import Mathlib.Logic.Basic
+import Mathlib.Data.Set.Basic
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.List.Basic
+import Mathlib.Order.Lattice
+import Mathlib.Tactic
+import AbstractClassSystem.AxisClosure
 
 /-!
 # Axis-Parametric Type Theory: Formal Foundations

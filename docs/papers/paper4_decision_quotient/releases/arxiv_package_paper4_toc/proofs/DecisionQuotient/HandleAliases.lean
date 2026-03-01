@@ -35,11 +35,22 @@ import DecisionQuotient.Physics.PhysicalIncompleteness
 import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.Physics.Uncertainty
 import DecisionQuotient.Physics.HeisenbergStrong
+import DecisionQuotient.Physics.BoundedAcquisition
+import DecisionQuotient.Physics.TUR
+import DecisionQuotient.Physics.WassersteinIntegrity
+import DecisionQuotient.Physics.TransportCost
+import DecisionQuotient.Physics.InvariantAgreement
+import DecisionQuotient.Physics.LocalityPhysics
 import DecisionQuotient.GraphNontriviality
 import DecisionQuotient.WitnessCheckingDuality
 import DecisionQuotient.Summary
 import DecisionQuotient.Dichotomy
 import DecisionQuotient.Tractability.StructuralRank
+import DecisionQuotient.Information
+import DecisionQuotient.Information.RateDistortion
+import DecisionQuotient.Information.RDSrank
+import DecisionQuotient.ThermodynamicLift
+import DecisionQuotient.Statistics.FisherInformation
 import DecisionQuotient.StochasticSequential.ClaimClosure
 import DecisionQuotient.StochasticSequential.Basic
 import DecisionQuotient.StochasticSequential.Quotient
@@ -52,6 +63,7 @@ import DecisionQuotient.BayesFromDQ
 import DecisionQuotient.BayesFoundations
 import DecisionQuotient.BayesOptimalityProof
 import DecisionQuotient.FunctionalInformation
+import DecisionQuotient.Quotient
 
 namespace DecisionQuotient
 
@@ -673,6 +685,13 @@ abbrev IA3 := ClaimClosure.IA3
 abbrev IA4 := ClaimClosure.IA4
 abbrev IA5 := ClaimClosure.IA5
 abbrev IA6 := ClaimClosure.IA6
+abbrev IA7 := ClaimClosure.IA7
+abbrev IA8 := ClaimClosure.IA8
+abbrev IA9 := ClaimClosure.IA9
+abbrev IA10 := ClaimClosure.IA10
+abbrev IA11 := ClaimClosure.IA11
+abbrev IA12 := ClaimClosure.IA12
+abbrev IA13 := ClaimClosure.IA13
 
 -- Gap Energy (GE) handles
 abbrev GE1 := ClaimClosure.GE1
@@ -917,5 +936,379 @@ abbrev AQ5 := @ClaimClosure.AQ5
 abbrev AQ6 := @ClaimClosure.AQ6
 abbrev AQ7 := @ClaimClosure.AQ7
 abbrev AQ8 := @ClaimClosure.AQ8
+
+/-! ## First-Principles Introduction Theorems (IT, EI, BA, FS)
+
+These handles support the 8 core first-principles theorems in the paper introduction.
+The derivation chain is:
+  1. Counting Gap (BA10) - pure math first principle
+  2. Bounded Acquisition (BA1-BA9) - SR + QM bridges
+  3. Entropy-Rank Inequality (IT1-IT3) - information theory
+  4. Energy-Information Duality (EI1-EI2) - Landauer lift
+  5. Fisher-Rank Identity (FS1-FS3) - statistical geometry
+
+TD (Thermodynamics) is NOT a first principle - it supplies the empirical value
+ε = k_B T ln 2 per Landauer, which calibrates the Counting Gap.
+-/
+
+-- BA: Bounded Acquisition (Physics/BoundedAcquisition.lean)
+-- BA10 is the Counting Gap Theorem - the primary first principle
+abbrev BA1 := @Physics.BoundedAcquisition.BoundedRegion
+abbrev BA2 := @Physics.BoundedAcquisition.acquisition_rate_bound
+abbrev BA3 := @Physics.BoundedAcquisition.acquisitions_are_transitions
+abbrev BA4 := @Physics.BoundedAcquisition.one_bit_per_transition
+abbrev BA5 := @Physics.BoundedAcquisition.resolution_reads_sufficient
+abbrev BA6 := @Physics.BoundedAcquisition.srank_le_resolution_bits
+abbrev BA7 := @Physics.BoundedAcquisition.energy_ge_srank_cost
+abbrev BA8 := @Physics.BoundedAcquisition.srank_one_energy_minimum
+abbrev BA9 := @Physics.BoundedAcquisition.physical_grounding_bundle
+abbrev BA10 := @Physics.BoundedAcquisition.counting_gap_theorem
+
+-- IT: Information Theory (Information.lean)
+-- IT3 is the Entropy-Rank Inequality: H(D) ≤ srank
+abbrev IT1 := @DecisionProblem.numOptClasses
+noncomputable abbrev IT2 := @DecisionProblem.quotientEntropy
+abbrev IT3 := @quotientEntropy_le_srank_binary
+abbrev IT4 := @numOptClasses_le_pow_srank_binary
+abbrev IT5 := @nontrivial_bounds_binary
+abbrev IT6 := @nontrivial_implies_srank_pos
+
+-- EI: Energy-Information Duality (ThermodynamicLift.lean)
+-- EI1 is the main Energy-Information theorem: E ≥ k_B T · H_nats
+abbrev EI1 := @ThermodynamicLift.energy_ge_kbt_nat_entropy
+abbrev EI2 := @ThermodynamicLift.energy_ground_state_tracks_entropy
+noncomputable abbrev EI3 := @ThermodynamicLift.landauerJoulesPerBit
+abbrev EI4 := @ThermodynamicLift.landauerJoulesPerBit_pos
+abbrev EI5 := @ThermodynamicLift.neukart_vinokur_duality
+
+-- FS: Fisher Statistics (Statistics/FisherInformation.lean)
+-- FS1 is the Fisher-Rank Identity: sum of Fisher scores = srank
+abbrev FS1 := @Statistics.sum_fisherScore_eq_srank
+abbrev FS2 := @Statistics.fisherMatrix_rank_eq_srank
+abbrev FS3 := @Statistics.fisherMatrix_trace_eq_srank
+abbrev FS4 := @Statistics.fisherScore_relevant
+abbrev FS5 := @Statistics.fisherScore_irrelevant
+
+/-! ## First-Principles Introduction Additions
+
+Additional novel first-principles theorems for the introduction:
+- QT: Quotient Theory (Universal Property / Theorem A)
+- WD: Witness-Checking Duality (certificate lower bounds)
+- BC: Bayes from Counting (probability axioms from counting measure)
+-/
+
+-- QT: Quotient Theory (Quotient.lean)
+-- QT1 is Theorem A: the Decision Quotient is the coarsest abstraction preserving Opt
+abbrev QT1 := @DecisionProblem.quotient_is_coarsest
+abbrev QT2 := @DecisionProblem.quotientMap_preservesOpt
+abbrev QT3 := @DecisionProblem.quotient_represents_opt_equiv
+abbrev QT4 := @DecisionProblem.factors_implies_respects
+
+-- WD: Witness-Checking Duality (WitnessCheckingDuality.lean)
+-- WD1 is the main duality: any sound checker needs ≥ 2^(n-1) witness pairs
+abbrev WD1 := @checking_witnessing_duality_budget
+abbrev WD2 := @no_sound_checker_below_witness_budget
+abbrev WD3 := @checking_time_ge_witness_budget
+abbrev WD4 := @witnessBudgetEmpty
+abbrev WD5 := @checkingBudgetPairs
+
+-- BC: Bayes from Counting (BayesFoundations.lean)
+-- BC1-BC3 are the Kolmogorov axioms derived from counting measure
+abbrev BC1 := @Foundations.counting_nonneg
+abbrev BC2 := @Foundations.counting_total
+abbrev BC3 := @Foundations.counting_additive
+abbrev BC4 := @Foundations.bayes_from_conditional
+abbrev BC5 := @Foundations.entropy_contraction
+
+/-! ## Thermodynamic Uncertainty Relations (TUR) handles
+    Physics/TUR.lean - Independent bridge: precision costs entropy production
+    TUR: Var(J)/⟨J⟩² ≥ 2/σ_Σ
+-/
+
+-- TUR1: Transition probabilities are non-negative
+abbrev TUR1 := @Physics.transitionProb_nonneg
+-- TUR2: Transition probabilities sum to 1
+abbrev TUR2 := @Physics.transitionProb_sum_one
+-- TUR3: Entropy production is non-negative (Second Law) [axiom]
+-- Note: entropyProduction_nonneg is an axiom, handle separately if needed
+-- TUR4: The TUR bound itself [axiom]
+-- Note: tur_bound is an axiom, handle separately if needed
+-- TUR5: The TUR bridge theorem
+abbrev TUR5 := @Physics.tur_bridge
+-- TUR6: Multiple futures imply positive entropy production
+abbrev TUR6 := @Physics.multiple_futures_entropy_production
+
+/-! ## Wasserstein/Optimal Transport (W) handles
+    Physics/WassersteinIntegrity.lean - Independent bridge: state change costs transport
+-/
+
+-- W1: Diagonal coupling has zero transport cost
+abbrev W1 := @Physics.single_future_zero_cost
+-- W2: Off-diagonal mass implies positive transport cost
+abbrev W2 := @Physics.transportCost_pos_of_offDiag
+-- W3: Integrity is the centroid (minimal transport)
+abbrev W3 := @Physics.integrity_is_centroid
+-- W4: The Wasserstein bridge statement
+abbrev W4 := @Physics.wasserstein_bridge
+
+/-! ## Transport Cost (XC) handles
+    Physics/TransportCost.lean - DOF > 1 implies higher transport
+    (Using XC to avoid conflict with existing TC prefix for ToolCollapse)
+-/
+
+-- XC1: srank determines state space size
+abbrev XC1 := @Physics.srank_determines_states
+-- XC2: More states means more transport cost
+abbrev XC2 := @Physics.more_states_more_transport
+-- XC3: Transport cost lower bound by srank
+abbrev XC3 := @Physics.transport_lower_bound
+-- XC4: Transport independent of energy (Landauer)
+abbrev XC4 := @Physics.transport_independent_of_energy
+-- XC5: Transport independent of precision (TUR)
+abbrev XC5 := @Physics.transport_independent_of_precision
+-- XC6: srank is the unified complexity measure
+abbrev XC6 := @Physics.srank_unified_complexity
+-- XC7: Complete bridge set (five independent derivations)
+abbrev XC7 := @Physics.complete_bridge_set
+
+/-! ## Rate-Distortion (RD) handles
+    Information/RateDistortion.lean - Independent bridge: compression requires bits
+-/
+
+-- RD1: Shannon entropy is non-negative
+abbrev RD1 := @Information.shannonEntropy_nonneg
+-- RD2: Rate at zero distortion equals entropy
+abbrev RD2 := @Information.rate_zero_distortion
+-- RD3: Rate is monotonically decreasing in distortion
+abbrev RD3 := @Information.rate_monotone
+
+/-! ## Rate-Distortion/srank Bridge (RS) handles
+    Information/RDSrank.lean - Bridge: R(0) = srank
+-/
+
+-- RS1: Decision equivalence preserves decision outcome
+abbrev RS1 := @Information.equiv_preserves_decision
+-- RS2: Rate equals srank theorem
+abbrev RS2 := @Information.rate_equals_srank
+-- RS3: Compression below srank fails
+abbrev RS3 := @Information.compression_below_srank_fails
+-- RS4: srank bits are sufficient for decision
+abbrev RS4 := @Information.srank_bits_sufficient
+-- RS5: The rate-distortion bridge statement
+abbrev RS5 := @Information.rate_distortion_bridge
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Locality Physics (LP) handles — P ≠ NP as necessary for physics
+-- ════════════════════════════════════════════════════════════════════════════
+
+/-! ### Part 0: Premises
+
+EP1-EP3: Empirical axioms (physics)
+FP1-FP7: First principles (pure math) — THE NONTRIVIALITY PROOF
+EP4: DERIVED (not an axiom) — follows from FP1-FP7 + observation
+-/
+
+-- EP1: Landauer principle (empirical axiom)
+abbrev EP1 := @Physics.LocalityPhysics.landauer_principle
+-- EP2: Finite regional energy (empirical axiom)
+abbrev EP2 := @Physics.LocalityPhysics.finite_regional_energy
+-- EP3: Finite signal speed (empirical axiom)
+abbrev EP3 := @Physics.LocalityPhysics.finite_signal_speed
+
+-- FP1-FP7: First principles — THE NONTRIVIALITY PROOF (no physics)
+-- FP1: Trivial states → all equal (cardinality)
+abbrev FP1 := @Physics.LocalityPhysics.trivial_states_all_equal
+-- FP2: All equal → constant function (logic)
+abbrev FP2 := @Physics.LocalityPhysics.equal_states_constant_function
+-- FP3: Constant function → singleton image (set theory)
+abbrev FP3 := @Physics.LocalityPhysics.constant_function_singleton_image
+-- FP4: Singleton → zero entropy (log 1 = 0)
+abbrev FP4 := @Physics.LocalityPhysics.singleton_image_zero_entropy
+-- FP5: Zero entropy → no information (definition)
+abbrev FP5 := @Physics.LocalityPhysics.zero_entropy_no_information
+-- FP6: MASTER THEOREM — Triviality → no information
+abbrev FP6 := @Physics.LocalityPhysics.triviality_implies_no_information
+-- FP7: CONTRAPOSITIVE — Information → nontriviality
+abbrev FP7 := @Physics.LocalityPhysics.information_requires_nontriviality
+
+-- EP4: Nontrivial physics (DERIVED, not axiom — follows from FP7 + observation)
+abbrev EP4 := @Physics.LocalityPhysics.nontrivial_physics
+
+-- FP8-FP15: THE SECOND LAW FROM COUNTING (first principles)
+-- FP8: Atypical states are rare (counting)
+abbrev FP8 := @Physics.LocalityPhysics.atypical_states_rare
+-- FP9: Random selection misses target (probability)
+abbrev FP9 := @Physics.LocalityPhysics.random_misses_target
+-- FP10: Errors accumulate without checking (multiplication)
+abbrev FP10 := @Physics.LocalityPhysics.errors_accumulate
+-- FP11: Wrong paths dominate (exponentiation)
+abbrev FP11 := @Physics.LocalityPhysics.wrong_paths_dominate
+-- FP12: SECOND LAW STRUCTURE — maintaining order requires information
+abbrev FP12 := @Physics.LocalityPhysics.second_law_from_counting
+-- FP13: Verification is information (definition)
+abbrev FP13 := @Physics.LocalityPhysics.verification_is_information
+-- FP14: Entropy = information (definition)
+abbrev FP14 := @Physics.LocalityPhysics.entropy_is_information
+-- FP15: LANDAUER STRUCTURE — erasure increases environment entropy
+abbrev FP15 := @Physics.LocalityPhysics.landauer_structure
+-- EP1': Landauer with calibration (empirical part is only kT)
+abbrev EP1' := @Physics.LocalityPhysics.landauer_with_calibration
+
+-- FPT1-FPT10: TIME POSITIVITY FROM NON-CONTRADICTION (first principles)
+-- "A computational step must take >0 time, otherwise we could count through all proofs."
+-- This is pure logic: law of non-contradiction + definition of function.
+-- FPT1: Timeline — assigns unique state to each moment (definition)
+abbrev FPT1 := @Physics.LocalityPhysics.Timeline
+-- FPT2: Functions are deterministic (reflexivity)
+abbrev FPT2 := @Physics.LocalityPhysics.FPT2_function_deterministic
+-- FPT3: Different outputs imply different inputs (contrapositive)
+abbrev FPT3 := @Physics.LocalityPhysics.FPT3_outputs_differ_inputs_differ
+-- FPT3': Computational step structure (state change definition)
+abbrev FPT3' := @Physics.LocalityPhysics.ComputationalStep
+-- FPT4: THE CORE THEOREM — A step requires distinct moments (non-contradiction)
+abbrev FPT4 := @Physics.LocalityPhysics.FPT4_step_requires_distinct_moments
+-- FPT5: Distinct moments with ordering → positive duration (arithmetic)
+abbrev FPT5 := @Physics.LocalityPhysics.FPT5_distinct_moments_positive_duration
+-- FPT6: Every computational step takes positive time (FPT4 + FPT5)
+abbrev FPT6 := @Physics.LocalityPhysics.FPT6_step_takes_positive_time
+-- FPT7: No instantaneous steps exist (restatement of FPT4)
+abbrev FPT7 := @Physics.LocalityPhysics.FPT7_no_instantaneous_steps
+-- FPT8: Propagation takes time (steps × step_time > 0)
+abbrev FPT8 := @Physics.LocalityPhysics.FPT8_propagation_takes_time
+-- FPT9: Speed bounded by positive time (distance/time ≤ distance)
+abbrev FPT9 := @Physics.LocalityPhysics.FPT9_speed_bounded_by_positive_time
+-- FPT10: EC3 IS LOGICAL — finite propagation speed follows from t > 0
+abbrev FPT10 := @Physics.LocalityPhysics.FPT10_ec3_is_logical
+
+-- IP1-IP7: INDEPENDENCE PROOFS — The empirical claims are irreducible
+-- IP1: EC1 (temperature) can be true
+abbrev IP1 := @Physics.LocalityPhysics.ec1_can_be_true
+-- IP2: EC1 independent of EC2, EC3
+abbrev IP2 := @Physics.LocalityPhysics.ec1_independent_of_ec2_ec3
+-- IP3: EC2 (finite resources) can be true
+abbrev IP3 := @Physics.LocalityPhysics.ec2_can_be_true
+-- IP4: EC2 independent of EC1, EC3
+abbrev IP4 := @Physics.LocalityPhysics.ec2_independent_of_ec1_ec3
+-- IP5: EC3 (local causality) can be true
+abbrev IP5 := @Physics.LocalityPhysics.ec3_can_be_true
+-- IP6: EC3 independent of EC1, EC2
+abbrev IP6 := @Physics.LocalityPhysics.ec3_independent_of_ec1_ec2
+-- IP7: MASTER INDEPENDENCE — All three claims are mutually independent
+abbrev IP7 := @Physics.LocalityPhysics.empirical_claims_mutually_independent
+
+-- LP1: Spacetime point structure
+abbrev LP1 := @Physics.LocalityPhysics.SpacetimePoint
+-- LP2: Light cone definition
+abbrev LP2 := @Physics.LocalityPhysics.lightCone
+-- LP3: Causal past definition
+abbrev LP3 := @Physics.LocalityPhysics.causalPast
+-- LP4: Self in light cone
+abbrev LP4 := @Physics.LocalityPhysics.self_in_lightCone
+-- LP5: Self in causal past
+abbrev LP5 := @Physics.LocalityPhysics.self_in_causalPast
+-- LP6: Local region structure
+abbrev LP6 := @Physics.LocalityPhysics.LocalRegion
+-- LP7: canObserve predicate
+abbrev LP7 := @Physics.LocalityPhysics.canObserve
+-- LP8: Spacelike separated definition
+abbrev LP8 := @Physics.LocalityPhysics.spacelikeSeparated
+-- LP9: Spacelike disjoint observation
+abbrev LP9 := @Physics.LocalityPhysics.spacelike_disjoint_observation
+-- LP10a: Bounded region has spacelike complement
+abbrev LP10a := @Physics.LocalityPhysics.bounded_region_has_spacelike_complement
+-- LP10b: Distant regions are spacelike separated
+abbrev LP10b := @Physics.LocalityPhysics.distant_regions_spacelike_separated
+-- LP10c: Spacelike separated regions exist (constructive)
+abbrev LP10c := @Physics.LocalityPhysics.spacelike_separated_regions_exist
+-- LP11: Local configuration structure
+abbrev LP11 := @Physics.LocalityPhysics.LocalConfiguration
+-- LP12: Locally valid predicate
+abbrev LP12 := @Physics.LocalityPhysics.isLocallyValid
+-- LP13: Board merge result type
+abbrev LP13 := @Physics.LocalityPhysics.MergeResult
+-- LP14: Board merge operation
+abbrev LP14 := @Physics.LocalityPhysics.boardMerge
+-- LP15: Independent configs can disagree
+abbrev LP15 := @Physics.LocalityPhysics.independent_configs_can_disagree
+-- LP16: Merge compatible iff
+abbrev LP16 := @Physics.LocalityPhysics.merge_compatible_iff
+-- LP17: Merge contradiction iff
+abbrev LP17 := @Physics.LocalityPhysics.merge_contradiction_iff
+-- LP18: Locality implies possible contradiction
+abbrev LP18 := @Physics.LocalityPhysics.locality_implies_possible_contradiction
+-- LP19: Superposition definition
+abbrev LP19 := @Physics.LocalityPhysics.Superposition
+-- LP20: Superposition can contain contradictions
+abbrev LP20 := @Physics.LocalityPhysics.superposition_can_contain_contradictions
+-- LP21: Superposition requires separation
+abbrev LP21 := @Physics.LocalityPhysics.superposition_requires_separation
+-- LP22: Bell separation is real
+abbrev LP22 := @Physics.LocalityPhysics.bell_separation_is_real
+-- LP23: Measurement is merge contradiction
+abbrev LP23 := @Physics.LocalityPhysics.measurement_is_merge_contradiction
+-- LP24: Entanglement is shared origin
+abbrev LP24 := @Physics.LocalityPhysics.entanglement_is_shared_origin
+-- LP31: Complete knowledge requires all queries
+abbrev LP31 := @Physics.LocalityPhysics.complete_knowledge_requires_all_queries
+-- LP32: Finite energy constraint
+abbrev LP32 := @Physics.LocalityPhysics.finite_energy_constraint
+-- LP33: Self knowledge impossible if insufficient energy
+abbrev LP33 := @Physics.LocalityPhysics.self_knowledge_impossible_if_insufficient_energy
+-- LP34: Bounded energy forces locality
+abbrev LP34 := @Physics.LocalityPhysics.bounded_energy_forces_locality
+-- LP35: Locality implies independent regions
+abbrev LP35 := @Physics.LocalityPhysics.locality_implies_independent_regions
+-- LP36: Independent regions imply possible contradiction
+abbrev LP36 := @Physics.LocalityPhysics.independent_regions_imply_possible_contradiction
+-- LP38: THE GRAND THEOREM — P ≠ NP necessary for physics
+abbrev LP38 := @Physics.LocalityPhysics.pne_np_necessary_for_physics
+-- LP39: Matter exists because P ≠ NP
+abbrev LP39 := @Physics.LocalityPhysics.matter_exists_because_pne_np
+-- LP40: Physics is the game
+abbrev LP40 := @Physics.LocalityPhysics.physics_is_the_game
+-- LP41: Without positive query cost, no bound
+abbrev LP41 := @Physics.LocalityPhysics.without_positive_query_cost_no_bound
+-- LP42: Without nontrivial states, no disagreement
+abbrev LP42 := @Physics.LocalityPhysics.without_nontrivial_states_no_disagreement
+-- LP43: Without separation, no independence
+abbrev LP43 := @Physics.LocalityPhysics.without_separation_no_independence
+-- LP44: Without finite capacity, no gap
+abbrev LP44 := @Physics.LocalityPhysics.without_finite_capacity_no_gap
+-- LP45: All premises used
+abbrev LP45 := @Physics.LocalityPhysics.all_premises_used
+-- LP46: Premises necessary and sufficient
+abbrev LP46 := @Physics.LocalityPhysics.premises_necessary_and_sufficient
+
+/-! ### Part VI: Value Requires Intractability (LP50-LP56) -/
+
+-- LP50: Shannon — Information value IS intractability
+abbrev LP50 := @Physics.LocalityPhysics.shannon_value_is_intractability
+-- LP51: Economics — Value requires scarcity (intractable supply)
+abbrev LP51 := @Physics.LocalityPhysics.economic_value_requires_scarcity
+-- LP52: Thermodynamics — Work requires gradients (intractable equilibrium)
+abbrev LP52 := @Physics.LocalityPhysics.thermodynamic_value_requires_gradient
+-- LP53: Decision theory — VOI requires uncertainty (intractable knowledge)
+abbrev LP53 := @Physics.LocalityPhysics.voi_requires_uncertainty
+-- LP54: Physics — Matter requires locality (intractable self-knowledge)
+abbrev LP54 := @Physics.LocalityPhysics.physics_requires_intractability
+-- LP55: The value theorem — Value is the intractable part
+abbrev LP55 := @Physics.LocalityPhysics.value_is_intractability
+-- LP56: Observers value what they cannot fully observe
+abbrev LP56 := @Physics.LocalityPhysics.observers_value_the_intractable
+
+/-! ### Part VII: The Gap Is Time (LP57-LP61) -/
+
+-- LP57: Finite steps cover finite states
+abbrev LP57 := @Physics.LocalityPhysics.finite_steps_finite_coverage
+-- LP58: The counting gap
+abbrev LP58 := @Physics.LocalityPhysics.counting_gap
+-- LP59: Time is steps times step duration
+abbrev LP59 := @Physics.LocalityPhysics.time_is_counting
+-- LP60: Gap equivalence (measure = counting = time = energy)
+abbrev LP60 := @Physics.LocalityPhysics.gap_equivalence
+-- LP60': Simplified gap equivalence
+abbrev LP60' := @Physics.LocalityPhysics.gap_equivalence_simple
+-- LP61: Light cone is the time gap in spacetime
+abbrev LP61 := @Physics.LocalityPhysics.light_cone_is_time_gap
 
 end DecisionQuotient

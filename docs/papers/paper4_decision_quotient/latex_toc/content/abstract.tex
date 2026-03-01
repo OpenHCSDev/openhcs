@@ -1,18 +1,33 @@
+\textbf{Abstract}
 
-We characterize which coordinates of a factored state space determine optimal actions. For decision problem 
- with 
-, coordinate set 
- is sufficient if 
-. We prove: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is 
--complete; stochastic and sequential variants rise to PP- and PSPACE-completeness respectively, with strict static 
- stochastic 
- sequential separation. Six structural subcases admit polynomial algorithms. Under ETH, succinct encodings carry 
- lower bounds.
+We characterize which coordinates of a factored state space determine optimal actions. For 
+decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times X_n$, coordinate set $I$ is 
+sufficient if $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. 
 
-Bayesian updating is unconditionally optimal: from no axioms beyond Lean's type theory and Mathlib, we prove it uniquely minimizes expected log loss. The argument is Gibbs' inequality and nothing else.
+We prove fourteen first-principles theorems: thirteen from pure mathematics and logic, one from empirical assumption (temperature). The decision quotient $Q=S/{\sim}$ (where
+$s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the minimal
+abstraction: any other abstraction preserving optimal actions factors uniquely through $Q$.
+Verification has a lower bound: any sound checker for the empty-set sufficiency core requires
+$\geq 2^{n-1}$ witness pairs. The chain from counting measure to probability
+to Bayes' theorem to the Decision Quotient follows from finite set cardinality.
+Fisher information, entropy bounds, optimal transport, rate-distortion, and thermodynamics each independently recover $\mathrm{srank}$ as the decision complexity measure.
 
-The thermodynamic consequences are conditional on Landauer's principle (
- per irreversible bit erasure; proposed 1961; experimentally supported in 2012), composed with the bit-operation lower bounds above. The inequality 
- follows by multiplication. Rejecting it requires rejecting Landauer.
+Complexity classifications: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; 
+ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants are PP- and 
+PSPACE-complete respectively, with strict static $\subset$ stochastic $\subset$ sequential 
+separation. Six structural subcases admit polynomial algorithms. Under ETH, succinct encodings 
+carry $2^{\Omega(n)}$ lower bounds.
 
-All results are machine-checked in Lean 4 with no `sorry` placeholders. Complexity results carry their hypotheses as explicit Lean theorem parameters. A machine-generated assumption ledger records all conditional dependencies. There are no hidden axioms.
+Bayesian updating is optimal: from $\log x\leq x-1$ alone we prove it uniquely 
+minimizes expected log loss.
+
+Two results carry empirical conditions. Conditional on Landauer's principle ($k_BT\ln 2$ per
+irreversible bit erasure, experimentally supported since 1961), composed with the bit-operation
+lower bounds above, the inequality $dU\geq\lambda\,dC$ follows by multiplication; rejecting it
+requires rejecting Landauer. Conditional on stochastic thermodynamics (Barato--Seifert 2015),
+the thermodynamic uncertainty relation $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$
+bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$.
+
+All results are machine-checked in Lean~4 with no \texttt{sorry} placeholders. Complexity results 
+carry their hypotheses as explicit Lean theorem parameters. A machine-generated assumption ledger 
+records all conditional dependencies. There are no hidden axioms.

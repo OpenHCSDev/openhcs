@@ -285,7 +285,7 @@ def TQBF (q : QBF n) : Prop := ∀ a : Assignment n, q.eval a = true
 
 /-! ## Substrate Independence -/
 
-inductive AgentType | silicon | carbon | formalSystem
+inductive SubstrateType | silicon | carbon | formalSystem
 
 structure MatrixCell where
   integrity : Bool
@@ -299,7 +299,7 @@ def MatrixCell.verdict : MatrixCell → Bool
   | {integrity := false, ..} => false
 
 theorem substrate_independence_verdict 
-    (c : MatrixCell) (τ₁ τ₂ : AgentType) :
+    (c : MatrixCell) (τ₁ τ₂ : SubstrateType) :
     MatrixCell.verdict c = MatrixCell.verdict c := rfl
 
 end Paper4bStochasticSequential

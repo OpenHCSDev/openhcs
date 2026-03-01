@@ -1,6 +1,6 @@
 # Paper: Zero-Incoherence Capacity of Interactive Encoding Systems: Achievability, Converse, and Side Information Bounds
 
-**Status**: IEEE Transactions on Information Theory-ready | **Lean**: 3378 lines, 176 theorems
+**Status**: IEEE Transactions on Information Theory-ready | **Lean**: 3469 lines, 185 theorems
 
 ---
 
@@ -10,7 +10,7 @@ We introduce the zero-incoherence capacity for interactive multi-location encodi
 
 The paper frames encoding locations as terminals in a multi-terminal source-coding model. Derivation (automatic deterministic dependence) is interpreted as perfect correlation that reduces effective rate; only complete derivation (one independent source) achieves zero incoherence. We give concise achievability and converse proofs in IT style, formalize the confusability/incoherence graph connection, and present an explicit mutual-information argument for the side-information bound.
 
-Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). For TIT submission we move detailed language evaluation, extended code examples, and the full Lean proof corpus to supplementary material; the main text contains brief instantiations only. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
+Theoretical contributions are supplemented by constructive instantiations (programming-language patterns and a software case study). Detailed language evaluation, extended code examples, and the full Lean proof corpus are provided in the supplementary material; the main text contains concise instantiations. Core theorems (capacity, realizability, bounds) are machine-checked in Lean 4; entropy arguments apply standard Fano-inequality techniques.
 
 **Index Terms--**zero-error capacity, multi-terminal source coding, side information, mutual information, confusability graph
 
@@ -102,7 +102,7 @@ An encoding system achieves $C_0 = 1$ iff it provides both causal propagation an
 
 ## Paper Organization {#overview}
 
-Core theorems (capacity, realizability, complexity bounds) are machine-checked in Lean 4 [@demoura2021lean4] (3378 lines, 176 theorem/lemma statements, 0 `sorry` placeholders). The entropy and mutual-information arguments in Section [\[sec:info-converse\]](#sec:info-converse){reference-type="ref" reference="sec:info-converse"} are encoded as explicit classical-information assumptions in the Lean closure layer, matching paper-level conditional usage of Fano-style bounds [@cover2006elements].
+Core theorems (capacity, realizability, complexity bounds) are machine-checked in Lean 4 [@demoura2021lean4] (3469 lines, 185 theorem/lemma statements, 0 `sorry` placeholders). The entropy and mutual-information arguments in Section [\[sec:info-converse\]](#sec:info-converse){reference-type="ref" reference="sec:info-converse"} are encoded as explicit classical-information assumptions in the Lean closure layer, matching paper-level conditional usage of Fano-style bounds [@cover2006elements].
 
 **Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference="sec:foundations"}--Encoding Model and Capacity.** We define multi-location encoding systems, encoding rate (DOF), and coherence/incoherence. We introduce information-theoretic quantities (value entropy, redundancy, incoherence entropy). We prove the **zero-incoherence capacity theorem** ($C_0 = 1$) with explicit achievability/converse structure, and the **side information bound** ($\geq \log_2 k$ bits for $k$-way resolution). We formalize encoding-theoretic CAP/FLP.
 
@@ -1339,7 +1339,7 @@ Both settings involve achieving optimal encoding under irreversibility constrain
 ::: center
 :::
 
-**Mechanization status.** The core requirement chain is machine-checked in Lean 4; current build statistics are 3378 lines, 176 theorem/lemma statements, and 0 `sorry` placeholders.
+**Mechanization status.** The core requirement chain is machine-checked in Lean 4; current build statistics are 3469 lines, 185 theorem/lemma statements, and 0 `sorry` placeholders.
 
 ## Concrete Impossibility Demonstration {#sec:impossibility}
 
@@ -1904,7 +1904,7 @@ The Lean 4 formalization is included as supplementary material [@openhcsLeanPro
 
 # Mechanized Proofs (Lean 4) {#sec:lean .unnumbered}
 
-Core theorem chains in this paper are machine-checked in Lean 4. The current build statistics are: **3378 lines across 24 files, 176 theorem/lemma statements, 0 `sorry` placeholders.**
+Core theorem chains in this paper are machine-checked in Lean 4. The current build statistics are: **3469 lines across 25 files, 185 theorem/lemma statements, 0 `sorry` placeholders.**
 
 ## Mechanization Contract {#mechanization-contract .unnumbered}
 
@@ -2057,6 +2057,6 @@ Entries marked **Full (conditional classical)** are machine-checked closure theo
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper2_ssot/proofs/`
-- Lines: 3378
-- Theorems: 176
+- Lines: 3469
+- Theorems: 185
 - `sorry` placeholders: 0

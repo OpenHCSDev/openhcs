@@ -1,6 +1,6 @@
 # Paper: Formal Foundations for the Single Source of Truth Principle: A Language Design Specification Derived from Epistemic Coherence
 
-**Status**: Draft-ready | **Lean**: 3378 lines, 176 theorems
+**Status**: Draft-ready | **Lean**: 3469 lines, 185 theorems
 
 ---
 
@@ -309,7 +309,7 @@ Before formalizing codebases and edits, we establish the epistemic structure tha
 **The Epistemic Problem.** When an encoding system is incoherent, which value is "true"? This question has no answer internal to the system.
 
 ::: theorem
-[]{#thm:oracle-arbitrary label="thm:oracle-arbitrary"} For any incoherent encoding system $S$ and any oracle $O$ that resolves $S$ to a value $v \in S$, there exists a value $v' \in S$ such that $v' \neq v$.
+[]{#thm:oracle-arbitrary label="thm:oracle-arbitrary"} For any incoherent encoding system $S$ and any oracle $O$ that resolves $S$ to a value $v \in S$, there exists a value $v' \in S$ such that $v' \neq v$. ORA1
 :::
 
 ::: proof
@@ -323,7 +323,7 @@ Before formalizing codebases and edits, we establish the epistemic structure tha
 :::
 
 ::: theorem
-[]{#thm:dof-one-coherence label="thm:dof-one-coherence"} If DOF = 1, then the encoding system is coherent in all reachable states.
+[]{#thm:dof-one-coherence label="thm:dof-one-coherence"} If DOF = 1, then the encoding system is coherent in all reachable states. COH1
 :::
 
 ::: proof
@@ -331,7 +331,7 @@ Before formalizing codebases and edits, we establish the epistemic structure tha
 :::
 
 ::: theorem
-[]{#thm:dof-gt-one-incoherence label="thm:dof-gt-one-incoherence"} If DOF $> 1$, then incoherent states are reachable.
+[]{#thm:dof-gt-one-incoherence label="thm:dof-gt-one-incoherence"} If DOF $> 1$, then incoherent states are reachable. COH2
 :::
 
 ::: proof
@@ -339,7 +339,7 @@ Before formalizing codebases and edits, we establish the epistemic structure tha
 :::
 
 ::: corollary
-[]{#cor:coherence-forces-ssot label="cor:coherence-forces-ssot"} If coherence must be guaranteed (no incoherent states reachable), then DOF = 1 is necessary and sufficient.
+[]{#cor:coherence-forces-ssot label="cor:coherence-forces-ssot"} If coherence must be guaranteed (no incoherent states reachable), then DOF = 1 is necessary and sufficient. COH3
 :::
 
 This is the epistemic foundation of SSOT.
@@ -439,7 +439,7 @@ If $F$ changes (e.g., to "`PNGLoader` handles `png` and `apng`"), all three loca
 Modification complexity is the central metric of this paper. It measures the *cost* of changing a fact. A codebase with $M(C, \delta_F) = 47$ requires 47 edits to correctly implement a change to fact $F$. A codebase with $M(C, \delta_F) = 1$ requires only 1 edit.
 
 ::: theorem
-[]{#thm:correctness-forcing label="thm:correctness-forcing"} $M(C, \delta_F)$ is the **minimum** number of edits required for correctness. Fewer edits imply an incorrect program.
+[]{#thm:correctness-forcing label="thm:correctness-forcing"} $M(C, \delta_F)$ is the **minimum** number of edits required for correctness. Fewer edits imply an incorrect program. BAS1
 :::
 
 ::: proof
@@ -500,7 +500,7 @@ Here $L_2$ is derived from $L_1$. Updating the class definition automatically up
 DOF is the key metric. Modification complexity $M$ counts all encoding locations. DOF counts only the independent ones. If all but one encoding location is derived, DOF = 1 even though $M$ may be large.
 
 ::: theorem
-[]{#thm:dof-inconsistency label="thm:dof-inconsistency"} $\text{DOF}(C, F) = k$ implies $k$ different values for $F$ can coexist in $C$ simultaneously. With $k > 1$, incoherent states are reachable.
+[]{#thm:dof-inconsistency label="thm:dof-inconsistency"} $\text{DOF}(C, F) = k$ implies $k$ different values for $F$ can coexist in $C$ simultaneously. With $k > 1$, incoherent states are reachable. BAS2
 :::
 
 ::: proof
@@ -508,7 +508,7 @@ DOF is the key metric. Modification complexity $M$ counts all encoding locations
 :::
 
 ::: corollary
-[]{#cor:dof-risk label="cor:dof-risk"} $\text{DOF}(C, F) > 1$ implies incoherent states are reachable. The codebase can enter a state where different locations encode different values for the same fact.
+[]{#cor:dof-risk label="cor:dof-risk"} $\text{DOF}(C, F) > 1$ implies incoherent states are reachable. The codebase can enter a state where different locations encode different values for the same fact. BAS3
 :::
 
 ## The DOF Lattice {#sec:dof-lattice}
@@ -531,6 +531,8 @@ DOF values form a lattice with distinct epistemic meanings:
 2.  DOF = 1: Coherence guaranteed (by Theorem [\[thm:dof-one-coherence\]](#thm:dof-one-coherence){reference-type="ref" reference="thm:dof-one-coherence"})
 
 3.  DOF $>$ 1: Incoherence reachable (by Theorem [\[thm:dof-gt-one-incoherence\]](#thm:dof-gt-one-incoherence){reference-type="ref" reference="thm:dof-gt-one-incoherence"})
+
+INS1
 :::
 
 ::: proof
@@ -569,7 +571,7 @@ SSOT is not a design guideline. It is the unique representation guaranteeing epi
 -   Truth is determinate: the single source IS the value of $F$
 
 ::: theorem
-[]{#thm:ssot-determinate label="thm:ssot-determinate"} If $\text{DOF}(C, F) = 1$, then for all reachable states of $C$, the value of $F$ is determinate: all encodings agree.
+[]{#thm:ssot-determinate label="thm:ssot-determinate"} If $\text{DOF}(C, F) = 1$, then for all reachable states of $C$, the value of $F$ is determinate: all encodings agree. INS2
 :::
 
 ::: proof
@@ -585,7 +587,7 @@ Hunt & Thomas's "single, unambiguous, authoritative representation" [@hunt1999p
 -   **Authoritative:** The source determines all derived values
 
 ::: theorem
-[]{#thm:ssot-optimal label="thm:ssot-optimal"} If $C$ satisfies SSOT for $F$, then modification complexity is 1: updating the single source maintains coherence.
+[]{#thm:ssot-optimal label="thm:ssot-optimal"} If $C$ satisfies SSOT for $F$, then modification complexity is 1: updating the single source maintains coherence. INS3
 :::
 
 ::: proof
@@ -603,7 +605,7 @@ Coherence restoration requires 1 edit. ◻
 :::
 
 ::: theorem
-[]{#thm:ssot-unique label="thm:ssot-unique"} SSOT (DOF=1) is the **unique** coherent representation for structural facts. DOF = 0 fails to represent; DOF $> 1$ permits incoherence.
+[]{#thm:ssot-unique label="thm:ssot-unique"} SSOT (DOF=1) is the **unique** coherent representation for structural facts. DOF = 0 fails to represent; DOF $> 1$ permits incoherence. INS4
 :::
 
 ::: proof
@@ -615,7 +617,7 @@ Therefore, DOF = 1 is uniquely coherent. This is epistemic necessity, not design
 :::
 
 ::: corollary
-[]{#cor:no-redundancy label="cor:no-redundancy"} Multiple independent sources encoding the same fact permit incoherent states. DOF $> 1 \Rightarrow$ incoherence reachable.
+[]{#cor:no-redundancy label="cor:no-redundancy"} Multiple independent sources encoding the same fact permit incoherent states. DOF $> 1 \Rightarrow$ incoherence reachable. RED1
 :::
 
 ::: proof
@@ -673,7 +675,7 @@ Derivation can occur at different times:
 For *structural facts*, derivation must occur at *definition time*. Structural facts (class existence, method signatures) are fixed when the class is defined. Compile-time is too early (source not parsed). Runtime is too late (structure already fixed).
 
 ::: theorem
-[]{#thm:derivation-excludes label="thm:derivation-excludes"} If $L_{\text{derived}}$ is derived from $L_{\text{source}}$, then $L_{\text{derived}}$ cannot diverge from $L_{\text{source}}$ and does not contribute to DOF.
+[]{#thm:derivation-excludes label="thm:derivation-excludes"} If $L_{\text{derived}}$ is derived from $L_{\text{source}}$, then $L_{\text{derived}}$ cannot diverge from $L_{\text{source}}$ and does not contribute to DOF. DER2
 :::
 
 ::: proof
@@ -683,7 +685,7 @@ There is no reachable state where $L_s = v'$ and $L_d = f(v)$ with $v' \neq v$. 
 :::
 
 ::: corollary
-[]{#cor:metaprogramming label="cor:metaprogramming"} If all encodings of $F$ except one are derived from that one, then $\text{DOF}(C, F) = 1$ and coherence is guaranteed.
+[]{#cor:metaprogramming label="cor:metaprogramming"} If all encodings of $F$ except one are derived from that one, then $\text{DOF}(C, F) = 1$ and coherence is guaranteed. DER1
 :::
 
 ::: proof
@@ -826,7 +828,7 @@ Java's `class` declaration is *not* executable---it is a static declaration proc
 The timing constraint has profound implications for derivation:
 
 ::: theorem
-[]{#thm:timing-forces label="thm:timing-forces"} Derivation for structural facts must occur at or before the moment the structure is fixed.
+[]{#thm:timing-forces label="thm:timing-forces"} Derivation for structural facts must occur at or before the moment the structure is fixed. REQ1
 :::
 
 ::: proof
@@ -881,7 +883,7 @@ This concept has theoretical foundations in metaobject protocols [@kiczales1991
 The registration happens at definition time, not at first use. When the `class PNGHandler` statement executes, `__init_subclass__` runs and adds the handler to the registry.
 
 ::: theorem
-[]{#thm:hooks-necessary label="thm:hooks-necessary"} SSOT for structural facts requires definition-time hooks.
+[]{#thm:hooks-necessary label="thm:hooks-necessary"} SSOT for structural facts requires definition-time hooks. REQ2
 :::
 
 ::: proof
@@ -940,7 +942,7 @@ Definition-time hooks enable derivation. But SSOT also requires *verification*--
 This verification is only possible because Python provides `__subclasses__()`. In languages without this capability, the programmer cannot enumerate what subclasses exist.
 
 ::: theorem
-[]{#thm:introspection-necessary label="thm:introspection-necessary"} Verifying that SSOT holds requires introspection.
+[]{#thm:introspection-necessary label="thm:introspection-necessary"} Verifying that SSOT holds requires introspection. REQ3
 :::
 
 ::: proof
@@ -977,6 +979,8 @@ The two requirements---definition-time hooks and introspection---are independent
 1.  A language can have definition-time hooks without introspection
 
 2.  A language can have introspection without definition-time hooks
+
+IND1
 :::
 
 ::: proof
@@ -995,6 +999,8 @@ Therefore, the requirements are independent. ◻
 1.  $L$ provides definition-time hooks, AND
 
 2.  $L$ provides introspectable derivation results
+
+SOT1
 :::
 
 ::: proof
@@ -1016,7 +1022,7 @@ The if-and-only-if follows. ◻
 :::
 
 ::: corollary
-[]{#cor:ssot-complete label="cor:ssot-complete"} A language is *SSOT-complete* iff it satisfies both requirements. A language is *SSOT-incomplete* otherwise.
+[]{#cor:ssot-complete label="cor:ssot-complete"} A language is *SSOT-complete* iff it satisfies both requirements. A language is *SSOT-incomplete* otherwise. LNG1
 :::
 
 ## The Logical Chain (Summary) {#sec:chain}
@@ -1075,7 +1081,7 @@ DOF = 1. The `format="png"` in the class definition is the *single source*. The 
 DOF = 2. The `@Handler(format = "png")` annotation is *data*, not code. It does not execute when the class is defined. The registry must be maintained separately.
 
 ::: theorem
-[]{#thm:generated-second label="thm:generated-second"} A generated source file constitutes a second encoding, not a derivation. Therefore, code generation does not achieve SSOT.
+[]{#thm:generated-second label="thm:generated-second"} A generated source file constitutes a second encoding, not a derivation. Therefore, code generation does not achieve SSOT. GEN1
 :::
 
 ::: proof
@@ -1107,7 +1113,7 @@ Contrast with Python, where the registry entry exists only in memory, created by
 **Why Rust proc macros don't help:**
 
 ::: theorem
-[]{#thm:opaque-expansion label="thm:opaque-expansion"} If macro/template expansion is opaque at runtime, SSOT cannot be verified.
+[]{#thm:opaque-expansion label="thm:opaque-expansion"} If macro/template expansion is opaque at runtime, SSOT cannot be verified. CAP1
 :::
 
 ::: proof
@@ -1322,7 +1328,7 @@ Rust's procedural macros are compile-time and opaque [@rustref2024]:
 **Consequence:** Rust achieves *compile-time* SSOT but not *runtime* SSOT. For applications requiring runtime reflection (ORMs, serialization frameworks, dependency injection), Rust requires manual synchronization or external codegen tools.
 
 ::: theorem
-[]{#thm:python-unique label="thm:python-unique"} Among mainstream languages, Python is the only language satisfying all SSOT requirements.
+[]{#thm:python-unique label="thm:python-unique"} Among mainstream languages, Python is the only language satisfying all SSOT requirements. PYH1PYI1
 :::
 
 ::: proof
@@ -1382,7 +1388,7 @@ Ruby provides hooks but with limitations [@flanagan2020ruby]:
 Ruby is close to full SSOT support but the structural modification limitations (no parameterized class creation, no pre-body hook) prevent complete SSOT for use cases requiring definition-time configuration.
 
 ::: theorem
-[]{#thm:three-lang label="thm:three-lang"} Exactly three languages in common use satisfy complete SSOT requirements: Python, Common Lisp (CLOS), and Smalltalk.
+[]{#thm:three-lang label="thm:three-lang"} Exactly three languages in common use satisfy complete SSOT requirements: Python, Common Lisp (CLOS), and Smalltalk. LNG1
 :::
 
 ::: proof
@@ -1437,7 +1443,7 @@ We now prove the complexity bounds that make SSOT valuable. The key result: the 
 ## Upper Bound: SSOT Achieves O(1) {#sec:upper-bound}
 
 ::: theorem
-[]{#thm:upper-bound label="thm:upper-bound"} For a codebase satisfying SSOT for fact $F$: $$M_{\text{effective}}(C, \delta_F) = O(1)$$ Effective modification complexity is constant regardless of codebase size.
+[]{#thm:upper-bound label="thm:upper-bound"} For a codebase satisfying SSOT for fact $F$: $$M_{\text{effective}}(C, \delta_F) = O(1)$$ Effective modification complexity is constant regardless of codebase size. BND1
 :::
 
 ::: proof
@@ -1459,7 +1465,7 @@ The number of derived locations $k$ may grow with codebase size, but the number 
 ## Lower Bound: Non-SSOT Requires $\Omega(n)$ {#sec:lower-bound}
 
 ::: theorem
-[]{#thm:lower-bound label="thm:lower-bound"} For a codebase *not* satisfying SSOT for fact $F$, if $F$ is encoded at $n$ independent locations: $$M_{\text{effective}}(C, \delta_F) = \Omega(n)$$
+[]{#thm:lower-bound label="thm:lower-bound"} For a codebase *not* satisfying SSOT for fact $F$, if $F$ is encoded at $n$ independent locations: $$M_{\text{effective}}(C, \delta_F) = \Omega(n)$$ BND2
 :::
 
 ::: proof
@@ -1479,7 +1485,7 @@ Therefore, $M_{\text{effective}}(C, \delta_F) = \Omega(n)$. ◻
 ## The Unbounded Gap {#sec:gap}
 
 ::: theorem
-[]{#thm:unbounded-gap label="thm:unbounded-gap"} The ratio of modification complexity between SSOT-incomplete and SSOT-complete architectures grows without bound: $$\lim_{n \to \infty} \frac{M_{\text{incomplete}}(n)}{M_{\text{complete}}} = \lim_{n \to \infty} \frac{n}{1} = \infty$$
+[]{#thm:unbounded-gap label="thm:unbounded-gap"} The ratio of modification complexity between SSOT-incomplete and SSOT-complete architectures grows without bound: $$\lim_{n \to \infty} \frac{M_{\text{incomplete}}(n)}{M_{\text{complete}}} = \lim_{n \to \infty} \frac{n}{1} = \infty$$ BND3
 :::
 
 ::: proof
@@ -1493,7 +1499,7 @@ As $n \to \infty$, the ratio $\to \infty$. The gap is unbounded. ◻
 :::
 
 ::: corollary
-[]{#cor:arbitrary-reduction label="cor:arbitrary-reduction"} For any constant $k$, there exists a codebase size $n$ such that SSOT provides at least $k\times$ reduction in modification complexity.
+[]{#cor:arbitrary-reduction label="cor:arbitrary-reduction"} For any constant $k$, there exists a codebase size $n$ such that SSOT provides at least $k\times$ reduction in modification complexity. BND4
 :::
 
 ::: proof
@@ -1535,6 +1541,8 @@ The complexity bounds assume a single modification. Over the lifetime of a codeb
 -   SSOT: $O(m)$
 
 -   Non-SSOT: $O(mn)$
+
+REG4
 :::
 
 ::: proof
@@ -2934,6 +2942,6 @@ These grounded proofs connect the abstract DOF formalization to concrete operati
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper2_ssot/proofs/`
-- Lines: 3378
-- Theorems: 176
+- Lines: 3469
+- Theorems: 185
 - `sorry` placeholders: 0

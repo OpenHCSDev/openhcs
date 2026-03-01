@@ -29,7 +29,7 @@ This paper establishes a fundamental limit on rational decision-making under unc
 
 > **Determining what you need to know is harder than knowing everything.**
 
-This is not metaphor. It is a theorem. Specifically: given a decision problem with $n$ dimensions of uncertainty, *checking* whether a subset of dimensions suffices for optimal action is -complete. *Finding* the minimal sufficient subset is -complete. These results hold universally---for any decision problem with coordinate structure.
+ It is a theorem. Specifically: given a decision problem with $n$ dimensions of uncertainty, *checking* whether a subset of dimensions suffices for optimal action is -complete. *Finding* the minimal sufficient subset is -complete. These results hold universally---for any decision problem with coordinate structure.
 
 The implications are immediate and far-reaching. Engineers who include "irrelevant" information in their models are not exhibiting poor discipline. They are responding optimally to a computational constraint that admits no workaround. Climate scientists modeling atmospheric chemistry, financial analysts tracking hundreds of indicators, software architects specifying dozens of parameters---all are exhibiting computationally rational behavior. The alternative (identifying precisely which variables matter) requires solving -complete problems.
 
@@ -775,7 +775,7 @@ These results establish a fundamental principle of rational decision-making unde
 
 > **Determining what you need to know is harder than knowing everything.**
 
-This is not a metaphor or heuristic observation. It is a mathematical theorem with universal scope. Any agent facing structured uncertainty---whether a climate scientist, financial analyst, software engineer, or artificial intelligence---faces the same computational constraint. The ubiquity of over-modeling across domains is not coincidence, laziness, or poor discipline. It is the provably optimal response to intractability.
+This is  It is a mathematical theorem with universal scope. Any agent facing structured uncertainty---whether a climate scientist, financial analyst, software engineer, or artificial intelligence---faces the same computational constraint. The ubiquity of over-modeling across domains is not coincidence, laziness, or poor discipline. It is the provably optimal response to intractability.
 
 The principle has immediate normative force: stop criticizing engineers for including "irrelevant" parameters. Stop demanding minimal models. Stop building tools that promise to identify "what really matters." These aspirations conflict with computational reality. The dichotomy theorem (Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"}) characterizes exactly when tractability holds; outside those boundaries, over-modeling is not a failure mode---it is the only rational strategy.
 

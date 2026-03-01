@@ -1,12 +1,12 @@
 # Paper: Identification Capacity and Rate-Query Tradeoffs in Classification Systems
 
-**Status**: JSAIT-ready | **Lean**: 6718 lines, 296 theorems
+**Status**: JSAIT-ready | **Lean**: 6862 lines, 306 theorems
 
 ---
 
 ## Abstract
 
-We study zero-error class identification under constrained observations with three resources: tag rate $L$ (bits per entity), identification cost $W$ (attribute queries), and distortion $D$ (misidentification probability). We prove an information barrier: if the attribute-profile map $\pi$ is not injective on classes, then attribute-only observation cannot identify class identity with zero error. Let $A_\pi := \max_u |\{c : \pi(c)=u\}|$ be collision multiplicity. Any $D=0$ scheme must satisfy $L \ge \log_2 A_\pi$, and this bound is tight. In maximal-barrier domains ($A_\pi=k$), the nominal point $(L,W,D)=(\lceil\log_2 k\rceil,O(1),0)$ is the unique Pareto-optimal zero-error point. Without tags ($L=0$), zero-error identification requires $W=\Omega(d)$ queries, where $d$ is the distinguishing dimension (worst case $d=n$, so $W=\Omega(n)$). Minimal sufficient query sets form the bases of a matroid, making $d$ well-defined and linking the model to zero-error source coding via graph entropy. We also state fixed-axis incompleteness: a fixed observation axis is complete only for axis-measurable properties. Results instantiate to databases, biology, typed software systems, and model registries, and are machine-checked in Lean 4 (6718 lines, 296 theorem/lemma statements, 0 `sorry`).
+We study zero-error class identification under constrained observations with three resources: tag rate $L$ (bits per entity), identification cost $W$ (attribute queries), and distortion $D$ (misidentification probability). We prove an information barrier: if the attribute-profile map $\pi$ is not injective on classes, then attribute-only observation cannot identify class identity with zero error. Let $A_\pi := \max_u |\{c : \pi(c)=u\}|$ be collision multiplicity. Any $D=0$ scheme must satisfy $L \ge \log_2 A_\pi$, and this bound is tight. In maximal-barrier domains ($A_\pi=k$), the nominal point $(L,W,D)=(\lceil\log_2 k\rceil,O(1),0)$ is the unique Pareto-optimal zero-error point. Without tags ($L=0$), zero-error identification requires $W=\Omega(d)$ queries, where $d$ is the distinguishing dimension (worst case $d=n$, so $W=\Omega(n)$). Minimal sufficient query sets form the bases of a matroid, making $d$ well-defined and linking the model to zero-error source coding via graph entropy. We also state fixed-axis incompleteness: a fixed observation axis is complete only for axis-measurable properties. Results instantiate to databases, biology, typed software systems, and model registries, and are machine-checked in Lean 4 (6862 lines, 306 theorem/lemma statements, 0 `sorry`).
 
 **Keywords:** rate-distortion theory, identification capacity, zero-error source coding, query complexity, matroid structure, classification systems
 
@@ -151,7 +151,7 @@ This paper establishes the following results:
 
 5.  **$(L, W, D)$ Optimality** (Section [\[sec:lwd\]](#sec:lwd){reference-type="ref" reference="sec:lwd"}): We characterize the zero-error converse via collision multiplicity $A_\pi$ and prove uniqueness of the nominal point in the maximal-barrier regime ($A_\pi=k$).
 
-6.  **Machine-Checked Proofs**: All results formalized in Lean 4 (6718 lines, 296 theorem/lemma statements, 0 `sorry` placeholders).
+6.  **Machine-Checked Proofs**: All results formalized in Lean 4 (6862 lines, 306 theorem/lemma statements, 0 `sorry` placeholders).
 
 ## Related Work and Positioning
 
@@ -925,19 +925,19 @@ This work was developed with AI assistance (Claude, Anthropic). The AI contribut
 The core claims in this paper are machine-checked in Lean 4. We keep the appendix concise for JSAIT and move full operational listings and implementation-level proof scripts to the supplementary artifact.
 
 ::: table*
-  Module                            Lines      Theorems   Purpose
-  --------------------------------- ---------- ---------- -----------------------------------------------
-  `abstract_class_system.lean`      3283       155        Two-axis instantiation, barrier, dominance
-  `axis_framework.lean`             1816       63         Query families, closure, matroid bridge
-  `nominal_resolution.lean`         609        27         Nominal identification and witness procedures
-  `discipline_migration.lean`       142        11         Discipline vs. migration consequences
-  `context_formalization.lean`      215        7          Greenfield/retrofit context model
-  `python_instantiation.lean`       249        17         Python instantiation
-  `typescript_instantiation.lean`   65         4          TypeScript instantiation
-  `java_instantiation.lean`         63         4          Java instantiation
-  `rust_instantiation.lean`         64         4          Rust instantiation
-  `lwd_converse.lean`               64         4          Zero-error converse chain on collision blocks
-  **Core modules subtotal**         **6570**   **296**    **10 representative modules shown**
+  Module                            Lines                                   Theorems                     Purpose
+  --------------------------------- --------------------------------------- ---------------------------- -----------------------------------------------
+  `abstract_class_system.lean`                                                                           Two-axis instantiation, barrier, dominance
+  `axis_framework.lean`             1821                                    63                           Query families, closure, matroid bridge
+  `nominal_resolution.lean`         609                                     27                           Nominal identification and witness procedures
+  `discipline_migration.lean`       142                                     11                           Discipline vs. migration consequences
+  `context_formalization.lean`      215                                     7                            Greenfield/retrofit context model
+  `python_instantiation.lean`       249                                     17                           Python instantiation
+  `typescript_instantiation.lean`   65                                      4                            TypeScript instantiation
+  `java_instantiation.lean`         63                                      4                            Java instantiation
+  `rust_instantiation.lean`         64                                      4                            Rust instantiation
+  `lwd_converse.lean`               64                                      4                            Zero-error converse chain on collision blocks
+  **Core modules subtotal**         **+1821+609+142+215+249+65+63+64+64**   **+63+27+11+7+17+4+4+4+4**   **10 representative modules shown**
 :::
 
 #### What is in scope in the mechanization.
@@ -950,7 +950,7 @@ Implementation-specific operational details and extended code listings are inclu
 
 #### Artifact totals.
 
-The complete artifact contains 14 Lean files totaling 6718 lines and 296 theorem/lemma statements; the table above highlights the core modules directly used by the main-text derivations. The remaining utility files (`Paper1.lean`, `PrintAxioms.lean`, `check_axioms.lean`, `lakefile.lean`) contribute 148 lines and 0 theorem/lemma statements.
+The complete artifact contains 21 Lean files totaling 6862 lines and 306 theorem/lemma statements; the table above highlights the core modules directly used by the main-text derivations. The remaining utility files (`Paper1.lean`, `PrintAxioms.lean`, `check_axioms.lean`, `lakefile.lean`) contribute \--609-142-215-249-65-63-64-64 lines and \--27-11-7-17-4-4-4-4 theorem/lemma statements.
 
 ## Attribute-Only Formalization {#interface-only-formalization}
 
@@ -1030,6 +1030,6 @@ The full Lean development is provided in supplementary material. To verify local
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper1_typing_discipline/proofs/`
-- Lines: 6718
-- Theorems: 296
+- Lines: 6862
+- Theorems: 306
 - `sorry` placeholders: 0

@@ -14,11 +14,11 @@ namespace Paper4bStochasticSequential
 
 /-! ## Substrate Cost -/
 
-/-- Agent type represents substrate (silicon, carbon, formal system) -/
-inductive AgentType
-  | silicon : AgentType
-  | carbon : AgentType
-  | formalSystem : AgentType
+/-- Substrate type (silicon, carbon, formal system) -/
+inductive SubstrateType
+  | silicon : SubstrateType
+  | carbon : SubstrateType
+  | formalSystem : SubstrateType
 
 /-- Matrix cell from paper 4 -/
 structure MatrixCell where
@@ -26,20 +26,20 @@ structure MatrixCell where
   attempted : Bool  
   competenceAvailable : Bool
 
-/-- Substrate cost function: cell × agent type → cost -/
-def substrateCost (κ : MatrixCell → AgentType → ℝ) 
-    (cell : MatrixCell) (agent : AgentType) : ℝ :=
-  κ cell agent
+/-- Substrate cost function: cell × substrate type → cost -/
+def substrateCost (κ : MatrixCell → SubstrateType → ℝ) 
+    (cell : MatrixCell) (substrate : SubstrateType) : ℝ :=
+  κ cell substrate
 
 /-- Verdict (from paper 4) is substrate-independent -/
 theorem MatrixCell.verdict_substrate_independent 
-    (c : MatrixCell) (τ₁ τ₂ : AgentType) :
+    (c : MatrixCell) (τ₁ τ₂ : SubstrateType) :
     DecisionQuotient.IntegrityCompetence.verdict c = 
     DecisionQuotient.IntegrityCompetence.verdict c := rfl
 
 /-- The integrity-competence matrix verdict doesn't depend on substrate -/
 theorem integrity_competence_verdict_independent 
-    (τ₁ τ₂ : AgentType) 
+    (τ₁ τ₂ : SubstrateType) 
     (Γ : DecisionQuotient.IntegrityCompetence.Regime S) :
     DecisionQuotient.IntegrityCompetence.verdictMatrix = 
     DecisionQuotient.IntegrityCompetence.verdictMatrix := rfl
@@ -53,21 +53,21 @@ structure ProblemSequence (A S : Type*) where
 /-- Trajectory depends on substrate cost -/
 def trajectory {A S : Type*} 
     (σ : ProblemSequence A S) 
-    (κ : MatrixCell → AgentType → ℝ)
-    (agent : AgentType) : List (MatrixCell × ℝ) :=
+    (κ : MatrixCell → SubstrateType → ℝ)
+    (substrate : SubstrateType) : List (MatrixCell × ℝ) :=
   σ.problems.map fun dp =>
     let cell := {
       integrity := true
       attempted := true
       competenceAvailable := true
     }
-    (cell, κ cell agent)
+    (cell, κ cell substrate)
 
 /-- Trajectory can differ across substrates -/
 theorem trajectory_substrate_dependent 
     (σ : ProblemSequence A S)
-    (κ : MatrixCell → AgentType → ℝ)
-    (τ₁ τ₂ : AgentType)
+    (κ : MatrixCell → SubstrateType → ℝ)
+    (τ₁ τ₂ : SubstrateType)
     (hCost : ∃ c, κ c τ₁ ≠ κ c τ₂) :
     trajectory σ κ τ₁ ≠ trajectory σ τ₂ := by
   intro hEq
@@ -81,7 +81,7 @@ theorem trajectory_substrate_dependent
 /-- κ captures all decision-relevant substrate information -/
 theorem kappa_sufficient_statistic 
     (σ : ProblemSequence A S)
-    (τ₁ τ₂ : AgentType)
+    (τ₁ τ₂ : SubstrateType)
     (hκ : ∀ c, κ c τ₁ = κ c τ₂) :
     trajectory σ κ τ₁ = trajectory σ κ τ₂ := by
   simp [trajectory, hκ]

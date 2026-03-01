@@ -209,14 +209,14 @@ PROVEN FROM FIRST PRINCIPLES (no axioms, no sorry):
 
 PHYSICAL INTERPRETATION:
 
-- Belief.potentialEnergy: entropy = information content = potential work
+- PriorState.potentialEnergy: entropy = information content = potential work
 - Decision.energy: entropy reduction = information extracted = work done
 - Decision.dq: efficiency = fraction of potential actually used
 - Bayes optimality: using true posterior wastes no energy (KL = 0)
 
 THE KEY INSIGHT:
 
-Beliefs are physical objects with potential energy (entropy).
+Probability states are physical information states with potential energy (entropy).
 Decisions are transitions that extract this energy.
 Bayes is the unique thermodynamically efficient update:
 it achieves the minimum possible cross-entropy (expected log loss).

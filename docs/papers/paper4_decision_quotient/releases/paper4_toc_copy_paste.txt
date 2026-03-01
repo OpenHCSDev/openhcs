@@ -1,277 +1,220 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-02-25T05:51:22.534678
+Generated: 2026-03-01T01:24:20.951188
 
 === HUMAN COPY/PASTE ===
 
-Title: Computational Complexity of Physical Information Sufficiency
+Title: Computational Complexity of Physical Counting
 
 Abstract (Unicode, for Zenodo):
-We study physical information sufficiency as a decision-theoretic meta-problem. For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × X_(n), a coordinate set I is sufficient when
-s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′).
-This asks whether projected information preserves the full optimal-action correspondence.
+Abstract
 
-Complexity landscape.
+We characterize which coordinates of a factored state space determine optimal actions. For decision problem 𝒟 = (A, S, U) with S = X₁ × ⋯ × X_(n), coordinate set I is sufficient if s_(I) = s′_(I) ⇒ Opt (s) = Opt (s′).
 
-• SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete. Informally, this gap separates verification (checking whether a given coordinate set suffices) from discovery (finding a grounding under which the optimal action is determined), and suggests the latter is structurally harder unless the polynomial hierarchy collapses.
+We prove fourteen first-principles theorems: thirteen from pure mathematics and logic, one from empirical assumption (temperature). The decision quotient Q = S/∼ (where s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the minimal abstraction: any other abstraction preserving optimal actions factors uniquely through Q. Verification has a lower bound: any sound checker for the empty-set sufficiency core requires ≥ 2^(n − 1) witness pairs. The foundational chain from counting measure to probability to Bayes’ theorem to the Decision Quotient follows from finite set cardinality. Fisher information, entropy bounds, optimal transport, rate-distortion, and thermodynamics each independently recover srank as the fundamental decision complexity measure.
 
-• Under explicit-state encoding, polynomial-time algorithms hold for bounded actions, separable utility, and tree-structured utility.
+Complexity classifications: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete; stochastic and sequential variants are PP- and PSPACE-complete respectively, with strict static ⊂ stochastic ⊂ sequential separation. Six structural subcases admit polynomial algorithms. Under ETH, succinct encodings carry 2^(Ω(n)) lower bounds.
 
-• Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case families with k^(*) = n requiring 2^(Ω(n)) time.
+Bayesian updating is optimal: from log x ≤ x − 1 alone we prove it uniquely minimizes expected log loss.
 
-• Under query access, the finite-state core has worst-case Opt-oracle complexity Ω(|S|), with Boolean value-entry and state-batch refinements preserving the obstruction.
+Two results carry empirical conditions. Conditional on Landauer’s principle (k_(B)Tln 2 per irreversible bit erasure, experimentally supported since 1961), composed with the bit-operation lower bounds above, the inequality dU ≥ λ dC follows by multiplication; rejecting it requires rejecting Landauer. Conditional on stochastic thermodynamics (Barato–Seifert 2015), the thermodynamic uncertainty relation Var(J)/⟨J⟩² ≥ 2/σ bounds decision precision by entropy production, with minimal σ scaling with srank.
 
-Physical grounding. The paper formalizes a physical-to-core encoding E: 𝒫 → 𝒟 and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
-
-All theorem-level claims are machine-checked in Lean 4 (21286 lines, 906 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
-
-Foundational contribution. The formalization includes two independent derivations of Bayesian reasoning: (i) the standard path from counting fractions through conditional probability to the decision quotient as a certainty measure, and (ii) a thermodynamic path showing that Bayesian updating is the unique update rule satisfying Landauer-compatible admissibility constraints. Both derivations are machine-checked.
-
-Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
+All results are machine-checked in Lean 4 with no sorry placeholders. Complexity results carry their hypotheses as explicit Lean theorem parameters. A machine-generated assumption ledger records all conditional dependencies. There are no hidden axioms.
 
 Abstract (MathJax, for arXiv):
-We study physical information sufficiency as a decision-theoretic meta-problem. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, a coordinate set $I$ is sufficient when $$s_I=s'_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s').$$ This asks whether projected information preserves the full optimal-action correspondence.
+Abstract
 
-Complexity landscape.
+We characterize which coordinates of a factored state space determine optimal actions. For decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$.
 
-- SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete. Informally, this gap separates verification (checking whether a given coordinate set suffices) from discovery (finding a grounding under which the optimal action is determined), and suggests the latter is structurally harder unless the polynomial hierarchy collapses.
+We prove fourteen first-principles theorems: thirteen from pure mathematics and logic, one from empirical assumption (temperature). The decision quotient $Q=S/{\sim}$ (where $s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the minimal abstraction: any other abstraction preserving optimal actions factors uniquely through $Q$. Verification has a lower bound: any sound checker for the empty-set sufficiency core requires $\geq 2^{n-1}$ witness pairs. The foundational chain from counting measure to probability to Bayes' theorem to the Decision Quotient follows from finite set cardinality. Fisher information, entropy bounds, optimal transport, rate-distortion, and thermodynamics each independently recover $\mathrm{srank}$ as the fundamental decision complexity measure.
 
-- Under explicit-state encoding, polynomial-time algorithms hold for bounded actions, separable utility, and tree-structured utility.
+Complexity classifications: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants are PP- and PSPACE-complete respectively, with strict static $\subset$ stochastic $\subset$ sequential separation. Six structural subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds.
 
-- Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case families with $k^*=n$ requiring $2^{\Omega(n)}$ time.
+Bayesian updating is optimal: from $\log x\leq x-1$ alone we prove it uniquely minimizes expected log loss.
 
-- Under query access, the finite-state core has worst-case Opt-oracle complexity $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving the obstruction.
+Two results carry empirical conditions. Conditional on Landauer's principle ($k_BT\ln 2$ per irreversible bit erasure, experimentally supported since 1961), composed with the bit-operation lower bounds above, the inequality $dU\geq\lambda\,dC$ follows by multiplication; rejecting it requires rejecting Landauer. Conditional on stochastic thermodynamics (Barato--Seifert 2015), the thermodynamic uncertainty relation $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$.
 
-Physical grounding. The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$ and a transport rule: declared physical assumptions transfer to core assumptions, and core claims lift back to encoded physical instances. Encoded physical counterexamples induce core failures on the encoded slice. Discrete-time interface semantics (decision event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon lower bounds under declared constants) are formalized in the same assumption-typed framework.
-All theorem-level claims are machine-checked in Lean 4 (21286 lines, 906 theorem/lemma statements). Complexity-class completeness follows by composition with standard complexity results; regime-dependent and physical-transport consequences are proved as assumption-explicit closures.
-
-Foundational contribution. The formalization includes two independent derivations of Bayesian reasoning: (i) the standard path from counting fractions through conditional probability to the decision quotient as a certainty measure, and (ii) a thermodynamic path showing that Bayesian updating is the unique update rule satisfying Landauer-compatible admissibility constraints. Both derivations are machine-checked.
-
-Keywords: computational complexity, physical information, decision theory, polynomial hierarchy, formal verification
+All results are machine-checked in Lean 4 with no `sorry` placeholders. Complexity results carry their hypotheses as explicit Lean theorem parameters. A machine-generated assumption ledger records all conditional dependencies. There are no hidden axioms.
 
 arXiv Comments:
-Theory of Computing submission. Lean 4 artifact: 21286 lines, 906 theorems/lemmas across 92 files (0 sorry placeholders).
+Theory of Computing submission. Lean 4 artifact: 28863 lines, 1252 theorems/lemmas across 113 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper4_toc
-title: Computational Complexity of Physical Information Sufficiency
+title: Computational Complexity of Physical Counting
 zenodo:
-  title: Computational Complexity of Physical Information Sufficiency
-  abstract: 'We study physical information sufficiency as a decision-theoretic meta-problem.
-    For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × X_(n), a coordinate set
-    I is sufficient when
-
-    s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′).
-
-    This asks whether projected information preserves the full optimal-action correspondence.
+  title: Computational Complexity of Physical Counting
+  abstract: 'Abstract
 
 
-    Complexity landscape.
+    We characterize which coordinates of a factored state space determine optimal
+    actions. For decision problem 𝒟 = (A, S, U) with S = X₁ × ⋯ × X_(n), coordinate
+    set I is sufficient if s_(I) = s′_(I) ⇒ Opt (s) = Opt (s′).
 
 
-    • SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete;
-    ANCHOR-SUFFICIENCY is Σ₂^(P)-complete. Informally, this gap separates verification
-    (checking whether a given coordinate set suffices) from discovery (finding a grounding
-    under which the optimal action is determined), and suggests the latter is structurally
-    harder unless the polynomial hierarchy collapses.
+    We prove fourteen first-principles theorems: thirteen from pure mathematics and
+    logic, one from empirical assumption (temperature). The decision quotient Q =
+    S/∼ (where s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the minimal abstraction: any other
+    abstraction preserving optimal actions factors uniquely through Q. Verification
+    has a lower bound: any sound checker for the empty-set sufficiency core requires
+    ≥ 2^(n − 1) witness pairs. The foundational chain from counting measure to probability
+    to Bayes’ theorem to the Decision Quotient follows from finite set cardinality.
+    Fisher information, entropy bounds, optimal transport, rate-distortion, and thermodynamics
+    each independently recover srank as the fundamental decision complexity measure.
 
 
-    • Under explicit-state encoding, polynomial-time algorithms hold for bounded actions,
-    separable utility, and tree-structured utility.
+    Complexity classifications: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete;
+    ANCHOR-SUFFICIENCY is Σ₂^(P)-complete; stochastic and sequential variants are
+    PP- and PSPACE-complete respectively, with strict static ⊂ stochastic ⊂ sequential
+    separation. Six structural subcases admit polynomial algorithms. Under ETH, succinct
+    encodings carry 2^(Ω(n)) lower bounds.
 
 
-    • Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case
-    families with k^(*) = n requiring 2^(Ω(n)) time.
+    Bayesian updating is optimal: from log x ≤ x − 1 alone we prove it uniquely minimizes
+    expected log loss.
 
 
-    • Under query access, the finite-state core has worst-case Opt-oracle complexity
-    Ω(|S|), with Boolean value-entry and state-batch refinements preserving the obstruction.
+    Two results carry empirical conditions. Conditional on Landauer’s principle (k_(B)Tln
+    2 per irreversible bit erasure, experimentally supported since 1961), composed
+    with the bit-operation lower bounds above, the inequality dU ≥ λ dC follows by
+    multiplication; rejecting it requires rejecting Landauer. Conditional on stochastic
+    thermodynamics (Barato–Seifert 2015), the thermodynamic uncertainty relation Var(J)/⟨J⟩²
+    ≥ 2/σ bounds decision precision by entropy production, with minimal σ scaling
+    with srank.
 
 
-    Physical grounding. The paper formalizes a physical-to-core encoding E: 𝒫 → 𝒟
-    and a transport rule: declared physical assumptions transfer to core assumptions,
-    and core claims lift back to encoded physical instances. Encoded physical counterexamples
-    induce core failures on the encoded slice. Discrete-time interface semantics (decision
-    event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon
-    lower bounds under declared constants) are formalized in the same assumption-typed
-    framework.
-
-
-    All theorem-level claims are machine-checked in Lean 4 (21286 lines, 906 theorem/lemma
-    statements). Complexity-class completeness follows by composition with standard
-    complexity results; regime-dependent and physical-transport consequences are proved
-    as assumption-explicit closures.
-
-
-    Foundational contribution. The formalization includes two independent derivations
-    of Bayesian reasoning: (i) the standard path from counting fractions through conditional
-    probability to the decision quotient as a certainty measure, and (ii) a thermodynamic
-    path showing that Bayesian updating is the unique update rule satisfying Landauer-compatible
-    admissibility constraints. Both derivations are machine-checked.
-
-
-    Keywords: computational complexity, physical information, decision theory, polynomial
-    hierarchy, formal verification'
+    All results are machine-checked in Lean 4 with no sorry placeholders. Complexity
+    results carry their hypotheses as explicit Lean theorem parameters. A machine-generated
+    assumption ledger records all conditional dependencies. There are no hidden axioms.'
 arxiv:
-  title: Computational Complexity of Physical Information Sufficiency
-  abstract: 'We study physical information sufficiency as a decision-theoretic meta-problem.
-    For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$,
-    a coordinate set $I$ is sufficient when $$s_I=s''_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s'').$$
-    This asks whether projected information preserves the full optimal-action correspondence.
+  title: Computational Complexity of Physical Counting
+  abstract: 'Abstract
 
 
-    Complexity landscape.
+    We characterize which coordinates of a factored state space determine optimal
+    actions. For decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times
+    X_n$, coordinate set $I$ is sufficient if $s_I=s''_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$.
 
 
-    - SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete;
-    ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete. Informally, this gap separates
-    verification (checking whether a given coordinate set suffices) from discovery
-    (finding a grounding under which the optimal action is determined), and suggests
-    the latter is structurally harder unless the polynomial hierarchy collapses.
+    We prove fourteen first-principles theorems: thirteen from pure mathematics and
+    logic, one from empirical assumption (temperature). The decision quotient $Q=S/{\sim}$
+    (where $s\sim s''\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$)
+    is the minimal abstraction: any other abstraction preserving optimal actions factors
+    uniquely through $Q$. Verification has a lower bound: any sound checker for the
+    empty-set sufficiency core requires $\geq 2^{n-1}$ witness pairs. The foundational
+    chain from counting measure to probability to Bayes'' theorem to the Decision
+    Quotient follows from finite set cardinality. Fisher information, entropy bounds,
+    optimal transport, rate-distortion, and thermodynamics each independently recover
+    $\mathrm{srank}$ as the fundamental decision complexity measure.
 
 
-    - Under explicit-state encoding, polynomial-time algorithms hold for bounded actions,
-    separable utility, and tree-structured utility.
+    Complexity classifications: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete;
+    ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants
+    are PP- and PSPACE-complete respectively, with strict static $\subset$ stochastic
+    $\subset$ sequential separation. Six structural subcases admit polynomial algorithms.
+    Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds.
 
 
-    - Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case
-    families with $k^*=n$ requiring $2^{\Omega(n)}$ time.
+    Bayesian updating is optimal: from $\log x\leq x-1$ alone we prove it uniquely
+    minimizes expected log loss.
 
 
-    - Under query access, the finite-state core has worst-case Opt-oracle complexity
-    $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving
-    the obstruction.
+    Two results carry empirical conditions. Conditional on Landauer''s principle ($k_BT\ln
+    2$ per irreversible bit erasure, experimentally supported since 1961), composed
+    with the bit-operation lower bounds above, the inequality $dU\geq\lambda\,dC$
+    follows by multiplication; rejecting it requires rejecting Landauer. Conditional
+    on stochastic thermodynamics (Barato--Seifert 2015), the thermodynamic uncertainty
+    relation $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision
+    by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$.
 
 
-    Physical grounding. The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$
-    and a transport rule: declared physical assumptions transfer to core assumptions,
-    and core claims lift back to encoded physical instances. Encoded physical counterexamples
-    induce core failures on the encoded slice. Discrete-time interface semantics (decision
-    event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon
-    lower bounds under declared constants) are formalized in the same assumption-typed
-    framework.
-
-    All theorem-level claims are machine-checked in Lean 4 (21286 lines, 906 theorem/lemma
-    statements). Complexity-class completeness follows by composition with standard
-    complexity results; regime-dependent and physical-transport consequences are proved
-    as assumption-explicit closures.
-
-
-    Foundational contribution. The formalization includes two independent derivations
-    of Bayesian reasoning: (i) the standard path from counting fractions through conditional
-    probability to the decision quotient as a certainty measure, and (ii) a thermodynamic
-    path showing that Bayesian updating is the unique update rule satisfying Landauer-compatible
-    admissibility constraints. Both derivations are machine-checked.
-
-
-    Keywords: computational complexity, physical information, decision theory, polynomial
-    hierarchy, formal verification'
-  comments: 'Theory of Computing submission. Lean 4 artifact: 21286 lines, 906 theorems/lemmas
-    across 92 files (0 sorry placeholders).'
+    All results are machine-checked in Lean 4 with no `sorry` placeholders. Complexity
+    results carry their hypotheses as explicit Lean theorem parameters. A machine-generated
+    assumption ledger records all conditional dependencies. There are no hidden axioms.'
+  comments: 'Theory of Computing submission. Lean 4 artifact: 28863 lines, 1252 theorems/lemmas
+    across 113 files (0 sorry placeholders).'
 abstract_variants:
-  unicode: 'We study physical information sufficiency as a decision-theoretic meta-problem.
-    For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × X_(n), a coordinate set
-    I is sufficient when
-
-    s_(I) = s′_(I) ⟹ Opt (s) = Opt (s′).
-
-    This asks whether projected information preserves the full optimal-action correspondence.
+  unicode: 'Abstract
 
 
-    Complexity landscape.
+    We characterize which coordinates of a factored state space determine optimal
+    actions. For decision problem 𝒟 = (A, S, U) with S = X₁ × ⋯ × X_(n), coordinate
+    set I is sufficient if s_(I) = s′_(I) ⇒ Opt (s) = Opt (s′).
 
 
-    • SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete;
-    ANCHOR-SUFFICIENCY is Σ₂^(P)-complete. Informally, this gap separates verification
-    (checking whether a given coordinate set suffices) from discovery (finding a grounding
-    under which the optimal action is determined), and suggests the latter is structurally
-    harder unless the polynomial hierarchy collapses.
+    We prove fourteen first-principles theorems: thirteen from pure mathematics and
+    logic, one from empirical assumption (temperature). The decision quotient Q =
+    S/∼ (where s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the minimal abstraction: any other
+    abstraction preserving optimal actions factors uniquely through Q. Verification
+    has a lower bound: any sound checker for the empty-set sufficiency core requires
+    ≥ 2^(n − 1) witness pairs. The foundational chain from counting measure to probability
+    to Bayes’ theorem to the Decision Quotient follows from finite set cardinality.
+    Fisher information, entropy bounds, optimal transport, rate-distortion, and thermodynamics
+    each independently recover srank as the fundamental decision complexity measure.
 
 
-    • Under explicit-state encoding, polynomial-time algorithms hold for bounded actions,
-    separable utility, and tree-structured utility.
+    Complexity classifications: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete;
+    ANCHOR-SUFFICIENCY is Σ₂^(P)-complete; stochastic and sequential variants are
+    PP- and PSPACE-complete respectively, with strict static ⊂ stochastic ⊂ sequential
+    separation. Six structural subcases admit polynomial algorithms. Under ETH, succinct
+    encodings carry 2^(Ω(n)) lower bounds.
 
 
-    • Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case
-    families with k^(*) = n requiring 2^(Ω(n)) time.
+    Bayesian updating is optimal: from log x ≤ x − 1 alone we prove it uniquely minimizes
+    expected log loss.
 
 
-    • Under query access, the finite-state core has worst-case Opt-oracle complexity
-    Ω(|S|), with Boolean value-entry and state-batch refinements preserving the obstruction.
+    Two results carry empirical conditions. Conditional on Landauer’s principle (k_(B)Tln
+    2 per irreversible bit erasure, experimentally supported since 1961), composed
+    with the bit-operation lower bounds above, the inequality dU ≥ λ dC follows by
+    multiplication; rejecting it requires rejecting Landauer. Conditional on stochastic
+    thermodynamics (Barato–Seifert 2015), the thermodynamic uncertainty relation Var(J)/⟨J⟩²
+    ≥ 2/σ bounds decision precision by entropy production, with minimal σ scaling
+    with srank.
 
 
-    Physical grounding. The paper formalizes a physical-to-core encoding E: 𝒫 → 𝒟
-    and a transport rule: declared physical assumptions transfer to core assumptions,
-    and core claims lift back to encoded physical instances. Encoded physical counterexamples
-    induce core failures on the encoded slice. Discrete-time interface semantics (decision
-    event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon
-    lower bounds under declared constants) are formalized in the same assumption-typed
-    framework.
+    All results are machine-checked in Lean 4 with no sorry placeholders. Complexity
+    results carry their hypotheses as explicit Lean theorem parameters. A machine-generated
+    assumption ledger records all conditional dependencies. There are no hidden axioms.'
+  mathjax: 'Abstract
 
 
-    All theorem-level claims are machine-checked in Lean 4 (21286 lines, 906 theorem/lemma
-    statements). Complexity-class completeness follows by composition with standard
-    complexity results; regime-dependent and physical-transport consequences are proved
-    as assumption-explicit closures.
+    We characterize which coordinates of a factored state space determine optimal
+    actions. For decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times
+    X_n$, coordinate set $I$ is sufficient if $s_I=s''_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$.
 
 
-    Foundational contribution. The formalization includes two independent derivations
-    of Bayesian reasoning: (i) the standard path from counting fractions through conditional
-    probability to the decision quotient as a certainty measure, and (ii) a thermodynamic
-    path showing that Bayesian updating is the unique update rule satisfying Landauer-compatible
-    admissibility constraints. Both derivations are machine-checked.
+    We prove fourteen first-principles theorems: thirteen from pure mathematics and
+    logic, one from empirical assumption (temperature). The decision quotient $Q=S/{\sim}$
+    (where $s\sim s''\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$)
+    is the minimal abstraction: any other abstraction preserving optimal actions factors
+    uniquely through $Q$. Verification has a lower bound: any sound checker for the
+    empty-set sufficiency core requires $\geq 2^{n-1}$ witness pairs. The foundational
+    chain from counting measure to probability to Bayes'' theorem to the Decision
+    Quotient follows from finite set cardinality. Fisher information, entropy bounds,
+    optimal transport, rate-distortion, and thermodynamics each independently recover
+    $\mathrm{srank}$ as the fundamental decision complexity measure.
 
 
-    Keywords: computational complexity, physical information, decision theory, polynomial
-    hierarchy, formal verification'
-  mathjax: 'We study physical information sufficiency as a decision-theoretic meta-problem.
-    For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$,
-    a coordinate set $I$ is sufficient when $$s_I=s''_I \implies \operatorname{Opt}(s)=\operatorname{Opt}(s'').$$
-    This asks whether projected information preserves the full optimal-action correspondence.
+    Complexity classifications: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete;
+    ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants
+    are PP- and PSPACE-complete respectively, with strict static $\subset$ stochastic
+    $\subset$ sequential separation. Six structural subcases admit polynomial algorithms.
+    Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds.
 
 
-    Complexity landscape.
+    Bayesian updating is optimal: from $\log x\leq x-1$ alone we prove it uniquely
+    minimizes expected log loss.
 
 
-    - SUFFICIENCY-CHECK is coNP-complete; MINIMUM-SUFFICIENT-SET is coNP-complete;
-    ANCHOR-SUFFICIENCY is $\Sigma_{2}^{P}$-complete. Informally, this gap separates
-    verification (checking whether a given coordinate set suffices) from discovery
-    (finding a grounding under which the optimal action is determined), and suggests
-    the latter is structurally harder unless the polynomial hierarchy collapses.
+    Two results carry empirical conditions. Conditional on Landauer''s principle ($k_BT\ln
+    2$ per irreversible bit erasure, experimentally supported since 1961), composed
+    with the bit-operation lower bounds above, the inequality $dU\geq\lambda\,dC$
+    follows by multiplication; rejecting it requires rejecting Landauer. Conditional
+    on stochastic thermodynamics (Barato--Seifert 2015), the thermodynamic uncertainty
+    relation $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision
+    by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$.
 
 
-    - Under explicit-state encoding, polynomial-time algorithms hold for bounded actions,
-    separable utility, and tree-structured utility.
-
-
-    - Under succinct encoding, hardness is regime-dependent: with ETH, there are worst-case
-    families with $k^*=n$ requiring $2^{\Omega(n)}$ time.
-
-
-    - Under query access, the finite-state core has worst-case Opt-oracle complexity
-    $\Omega(|S|)$, with Boolean value-entry and state-batch refinements preserving
-    the obstruction.
-
-
-    Physical grounding. The paper formalizes a physical-to-core encoding $E:\mathcal{P}\to\mathcal{D}$
-    and a transport rule: declared physical assumptions transfer to core assumptions,
-    and core claims lift back to encoded physical instances. Encoded physical counterexamples
-    induce core failures on the encoded slice. Discrete-time interface semantics (decision
-    event = one tick) and budgeted thermodynamic lifts (bit lower bounds to energy/carbon
-    lower bounds under declared constants) are formalized in the same assumption-typed
-    framework.
-
-    All theorem-level claims are machine-checked in Lean 4 (21286 lines, 906 theorem/lemma
-    statements). Complexity-class completeness follows by composition with standard
-    complexity results; regime-dependent and physical-transport consequences are proved
-    as assumption-explicit closures.
-
-
-    Foundational contribution. The formalization includes two independent derivations
-    of Bayesian reasoning: (i) the standard path from counting fractions through conditional
-    probability to the decision quotient as a certainty measure, and (ii) a thermodynamic
-    path showing that Bayesian updating is the unique update rule satisfying Landauer-compatible
-    admissibility constraints. Both derivations are machine-checked.
-
-
-    Keywords: computational complexity, physical information, decision theory, polynomial
-    hierarchy, formal verification'
+    All results are machine-checked in Lean 4 with no `sorry` placeholders. Complexity
+    results carry their hypotheses as explicit Lean theorem parameters. A machine-generated
+    assumption ledger records all conditional dependencies. There are no hidden axioms.'

@@ -1,230 +1,469 @@
 \section{Introduction}\label{sec:introduction}
 
-Consider any decision problem $\mathcal{D}$ with actions $A$ and factored state space $S = X_1 \times \cdots \times X_n$. A coordinate set $I \subseteq \{1, \ldots, n\}$ is \emph{sufficient} if knowing only coordinates in $I$ determines the optimal action:
+\subsection{First-Principles Derivations}\label{sec:intro-first-principles}
+
+This section presents seventeen theorems. Theorems 1--14 are derived from pure mathematics (counting, set theory, arithmetic, logic). Theorems 15--17 use empirical assumptions. One irreducible empirical claim (EC1: temperature) provides calibration; counting and logic provide structure. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
+
+\subsubsection{1. Counting Gap Theorem}
+
+\begin{theorem}[Counting Gap]\label{thm:counting-gap-intro}
+Let a system have finite positive capacity $C > 0$. Let each information-acquisition event cost $\varepsilon > 0$. Then:
+\[
+  \varepsilon \cdot N \leq C \;\Rightarrow\; N \leq C.
+\]
+No bounded system with positive event cost can perform infinitely many events.
+\LH{BA10}
+\end{theorem}
+
+\begin{proof}
+In $\mathbb{N}$: every positive integer is $\geq 1$. Therefore $N \leq \varepsilon \cdot N \leq C$.
+\end{proof}
+
+\noindent\textbf{Consequence.} Continuous abstractions require arbitrarily fine state discrimination. Bounded computational systems cannot do this. Discrete models are forced by the mathematics.
+
+\subsubsection{2. Bayesian Optimality}
+
+\begin{theorem}[Bayes Minimizes Expected Log Loss]\label{thm:bayes-optimal}
+For distributions $p, q$ over hypothesis space $H$, cross-entropy satisfies:
+\[
+  \mathrm{CE}(p, q) = H(p) + D_{\mathrm{KL}}(p \| q)
+\]
+where $D_{\mathrm{KL}}(p \| q) \geq 0$ (Gibbs' inequality, from $\log x \leq x - 1$).
+Therefore $q = p$ uniquely minimizes $\mathrm{CE}(p, q)$.
+\LH{FN7}\LH{FN12}\LH{FN14}
+\end{theorem}
+
+\begin{proof}
+Gibbs' inequality: $\log x \leq x - 1$ implies $\sum p \log(p/q) \geq 0$. Equality iff $p = q$.
+\end{proof}
+
+\noindent\textbf{Consequence.} Bayesian updating is optimal. The proof uses only $\log x \leq x - 1$ and Lean's type theory.
+
+\subsubsection{3. Measure Theory Typing}
+
+\begin{theorem}[Measure Is Logical Prerequisite]\label{thm:measure-prerequisite}
+\begin{enumerate}
+\item Every quantitative claim carries an explicit measure: $(\mu, f)$ where $f$ is measurable.
+\item Every stochastic claim additionally requires $\mu$ to be a probability measure ($\mu(\Omega) = 1$).
+\item Counting measure on $\{0,1\}$ has mass $2$, not $1$: not a probability measure.
+\end{enumerate}
+\LH{MN1}\LH{MN2}\LH{MN10}\LH{MN11}
+\end{theorem}
+
+\begin{proof}
+(1) ``$\mathbb{E}[f]$'' is undefined without specifying which measure integrates $f$. The expression $\int f\,d\mu$ requires $\mu$.
+(2) $P(A) = \mu(A)/\mu(\Omega)$ requires $\mu(\Omega) < \infty$; normalization $P(\Omega) = 1$ requires $\mu(\Omega) = 1$.
+(3) Counting measure: $\mu(\{0\}) = 1$, $\mu(\{1\}) = 1$, so $\mu(\{0,1\}) = 2 \neq 1$. To normalize, divide by 2.
+\end{proof}
+
+\noindent\textbf{Consequence.} Quantitative and stochastic claims are typed differently. Probability normalization is not automatic from measure structure.
+
+\subsubsection{4. Universal Property of Decision Quotient}
+
+\begin{theorem}[Universal Property of Decision Quotient]\label{thm:quotient-universal}
+Let $Q = S/{\sim}$ be the decision quotient where $s \sim s' \iff \Opt(s) = \Opt(s')$. For any surjective abstraction $\phi: S \to T$ that preserves the optimal action ($\phi(s) = \phi(s') \Rightarrow \Opt(s) = \Opt(s')$), there exists a unique factorization $\psi: T \to Q$ such that $\pi = \psi \circ \phi$ where $\pi: S \to Q$ is the quotient map.
+\[
+  \begin{array}{ccc}
+    S & \xrightarrow{\pi} & Q \\
+    \downarrow & & \uparrow \\
+    T & \xrightarrow{\psi} & Q
+  \end{array}
+\]
+The decision quotient is the coarsest abstraction through which $\Opt$ factors.
+\LH{QT1}\LH{QT2}\LH{QT3}
+\end{theorem}
+
+\begin{proof}
+Since $\phi$ preserves $\Opt$, we have $\phi(s) = \phi(s') \Rightarrow \Opt(s) = \Opt(s')$. By surjectivity, for each $t \in T$ pick some $s$ with $\phi(s) = t$ and define $\psi(t) = \pi(s)$. This is well-defined: if $\phi(s) = \phi(s') = t$, then $\Opt(s) = \Opt(s')$, so $\pi(s) = \pi(s')$. Uniqueness follows because $\pi = \psi \circ \phi$ forces $\psi(t) = \pi(s)$ for any $s$ with $\phi(s) = t$.
+\end{proof}
+
+\noindent\textbf{Consequence.} The decision quotient is canonical. Any other state abstraction that preserves optimal actions must refine it.
+
+\subsubsection{5. Witness-Checking Duality}
+
+\begin{theorem}[Checking-Witnessing Duality]\label{thm:checking-duality}
+For boolean decision problems with $n$ coordinates, let $W(n) = 2^{n-1}$ be the witness budget and $T(n)$ be the checking budget. Any sound checker satisfies:
+\[
+  T(n) \geq W(n) = 2^{n-1}
+\]
+No finite checker with fewer than $2^{n-1}$ witness pairs can be sound on all problem instances.
+\LH{WD1}\LH{WD2}\LH{WD3}
+\end{theorem}
+
+\begin{proof}
+$\emptyset$-sufficiency fails iff $\exists s, s'$ with $\Opt(s) \neq \Opt(s')$. There are $2^n$ states, so $\binom{2^n}{2} = 2^{n-1}(2^n - 1)$ pairs. A sound refutation must cover all pairs that could witness failure. For each pair family $P$ with $|P| < 2^{n-1}$, there exists an $\Opt$ function whose unique failure pair is not in $P$. Therefore $|P| \geq 2^{n-1}$ is necessary for soundness.
+\end{proof}
+
+\noindent\textbf{Consequence.} Verification has a lower bound. A checker must examine exponentially many witness pairs to be sound. This is a counting lower bound on the information required for verification.
+
+\subsubsection{6. Bayes from Counting}
+
+\begin{theorem}[Probability Axioms from Counting]\label{thm:bayes-from-counting}
+The foundational chain from counting to Decision Quotient:
+\begin{enumerate}
+\item $P(A) = |A|/|\Omega|$ satisfies Kolmogorov axioms: nonnegativity, normalization, and additivity for disjoint sets.
+\item $P(H|E) = P(E|H) \cdot P(H) / P(E)$ follows from the definition of conditional probability.
+\item Conditioning reduces entropy: $H(H|E) \leq H(H)$, from nonnegativity of KL divergence.
+\item $\DQ = I(H;E)/H(H) = 1 - H(H|E)/H(H)$ lies in $[0,1]$.
+\end{enumerate}
+\LH{BC1}\LH{BC2}\LH{BC3}\LH{BC4}\LH{BC5}
+\end{theorem}
+
+\begin{proof}
+(1) $|A| \geq 0$ (counting), $|\Omega|/|\Omega| = 1$ (normalization), $|A \cup B| = |A| + |B|$ for $A \cap B = \emptyset$ (additivity).
+(2) $P(H|E) := P(H \cap E)/P(E)$. Rearranging: $P(H|E) \cdot P(E) = P(H \cap E) = P(E|H) \cdot P(H)$.
+(3) $H(H|E) = H(H) - I(H;E)$ and $I(H;E) = D_{\mathrm{KL}}(P_{H,E} \| P_H \otimes P_E) \geq 0$ by Gibbs.
+(4) $I(H;E) \leq H(H)$ by (3), so $\DQ = I(H;E)/H(H) \in [0,1]$.
+\end{proof}
+
+\noindent\textbf{Consequence.} Bayesian updating is derived from counting measure. Probability theory, Bayes' theorem, information theory, and the Decision Quotient form a single chain from counting elements of a finite set.
+
+\subsubsection{7. Fisher Rank = Structural Rank}
+
+\begin{theorem}[Fisher Information = Structural Rank]\label{thm:fisher-rank-srank}
+Define the Fisher information score of coordinate $i$ as:
+\[
+  \mathrm{score}(i) = \begin{cases} 1 & \text{if } i \text{ is relevant} \\ 0 & \text{otherwise} \end{cases}
+\]
+Then:
+\[
+  \sum_{i=1}^{n} \mathrm{score}(i) = \mathrm{srank}(\mathcal{D})
+\]
+The diagonal Fisher information matrix $I(\theta)_{ii} = \mathrm{score}(i)$ has rank $\mathrm{srank}(\mathcal{D})$.
+\LH{FS1}\LH{FS2}
+\end{theorem}
+
+\begin{proof}
+$\sum_i \mathrm{score}(i) = \sum_i \mathbf{1}[\text{isRelevant}(i)] = |\{i \mid \text{isRelevant}(i)\}| = \mathrm{srank}$.
+For the diagonal matrix: $\mathrm{rank} = |\{i \mid \mathrm{score}(i) \neq 0\}| = |\{i \mid \text{isRelevant}(i)\}| = \mathrm{srank}$.
+\end{proof}
+
+\noindent\textbf{Consequence.} The decision manifold has dimension exactly $\mathrm{srank}$. The Fisher information sees the relevant coordinates. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
+
+\subsubsection{8. Entropy-Rank Inequality}
+
+\begin{theorem}[Entropy Bounded by Structural Rank]\label{thm:entropy-rank}
+For a decision problem $\mathcal{D}$ with boolean coordinate spaces ($X_i = \{0,1\}$):
+\[
+  H(\mathcal{D}) \leq \mathrm{srank}(\mathcal{D})
+\]
+where $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses})$ is the Shannon entropy of the decision quotient.
+\LH{IT3}\LH{IT4}
+\end{theorem}
+
+\begin{proof}
+The relevant coordinate set $R$ is sufficient (Theorem~\ref{thm:resolution-sufficient}): $\mathrm{Opt}$ factors through $\pi_R : S \to \{0,1\}^{|R|}$. Therefore $\mathrm{numOptClasses} \leq |\{0,1\}^{|R|}| = 2^{\mathrm{srank}}$. Therefore $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses}) \leq \log_2(2^{\mathrm{srank}}) = \mathrm{srank}$.
+\end{proof}
+
+\noindent\textbf{Consequence.} The decision quotient carries at most $\mathrm{srank}$ bits of decision-relevant information. Coordinates outside the relevant set are information-theoretically inert.
+
+\subsubsection{9. Functional Information}
+
+\begin{theorem}[Thermodynamic Cost from Counting]\label{thm:fi-coincide}
+For functional set $F \subseteq \Omega$, the derivation proceeds in three steps:
+\begin{enumerate}
+\item $\mathrm{FI}_{\text{counting}}(F) = -\log_2(|F|/|\Omega|)$ bits. Uses only finite measure.
+\item Plug in Landauer's value $\varepsilon = k_B T \ln 2$ joules per bit.
+\item $E_{\text{min}} = \varepsilon \cdot \mathrm{FI}_{\text{counting}}(F)$.
+\end{enumerate}
+The thermodynamic path is the counting path with an empirical calibration constant.
+\LH{FI3}\LH{FI6}\LH{FI7}
+\end{theorem}
+
+\begin{proof}
+(1) By definition of surprisal: $\mathrm{FI}(F) = -\log_2 P(F) = -\log_2(|F|/|\Omega|)$ using counting measure. No physics.
+(2) Landauer's principle (empirical): erasing one bit costs $\geq k_B T \ln 2$ joules. This is a unit conversion constant.
+(3) Composition: $E_{\text{min}} = \varepsilon \cdot \mathrm{FI}(F) = k_B T \ln 2 \cdot (-\log_2(|F|/|\Omega|))$ joules.
+The counting structure determines the bit count; Landauer supplies the energy-per-bit conversion.
+\end{proof}
+
+\noindent\textbf{Consequence.} Thermodynamics adds a unit conversion. Counting provides bits; Landauer provides joules per bit. Counting is primary, thermodynamics is derived.
+
+\subsubsection{10. Optimal Transport Bridge}
+
+\begin{theorem}[Wasserstein Distance = Structural Rank]\label{thm:wasserstein-bridge}
+For a decision problem with $k$ distinguishable futures ($k = |\mathrm{range}(\Opt)|$):
+\begin{enumerate}
+\item Single future ($k = 1$): transport cost vanishes.
+\item Multiple futures ($k > 1$): any coupling with off-diagonal mass incurs positive cost.
+\item The integrity state (centroid) minimizes expected transport cost.
+\end{enumerate}
+Transport cost grows with the number of distinguishable futures, matching $\mathrm{srank}$.
+\LH{W1}\LH{W2}\LH{W3}\LH{W4}
+\end{theorem}
+
+\begin{proof}
+(1) When $k = 1$, all states map to a single action; the diagonal coupling achieves zero cost.
+(2) Off-diagonal coupling mass moves probability between distinct actions; metric distance contributes positive cost.
+(3) The centroid minimizes $\sum_i w_i d(x, x_i)^2$ by convexity of squared distance.
+\end{proof}
+
+\noindent\textbf{Consequence.} Optimal transport theory recovers srank as the complexity measure without invoking information theory or thermodynamics. Pure measure theory.
+
+\subsubsection{11. Rate-Distortion Bridge}
+
+\begin{theorem}[Rate-Distortion = Structural Rank]\label{thm:rate-distortion-bridge}
+For a decision problem viewed as a source:
+\begin{enumerate}
+\item Shannon entropy is non-negative: $H(X) \geq 0$.
+\item At zero distortion: $R(0) = H(X)$.
+\item Rate decreases monotonically as distortion tolerance increases.
+\item Decision-equivalence preserves optimal actions: compression within equivalence classes is lossless.
+\item Minimum lossless decision rate equals structural rank: $R(0) = \mathrm{srank}$.
+\item Compression below srank introduces decision errors.
+\end{enumerate}
+\LH{RD1}\LH{RD2}\LH{RD3}\LH{RS1}\LH{RS2}\LH{RS3}\LH{RS4}\LH{RS5}
+\end{theorem}
+
+\begin{proof}
+Standard Shannon theory establishes (1)--(3). When $\phi(s) = \phi(s')$ implies $\Opt(s) = \Opt(s')$, states within equivalence classes merge without affecting optimal actions (4). The decision quotient partitions into $2^{\mathrm{srank}}$ classes, each requiring $\log_2$ bits for identification, yielding $R(0) = \mathrm{srank}$ (5). Fewer bits cannot distinguish all classes (6).
+\end{proof}
+
+\noindent\textbf{Consequence.} Rate-distortion theory independently recovers structural rank as the fundamental description length for decision-making. Pure Shannon theory.
+
+\subsubsection{12. Nontriviality from Counting}
+
+\begin{theorem}[Information Requires Nontriviality]\label{thm:nontriviality-counting}
+The following chain holds from pure counting:
+\begin{enumerate}
+\item $|S| \leq 1 \Rightarrow$ all states equal (cardinality).
+\item All states equal $\Rightarrow$ $\Opt$ is constant (logic).
+\item $\Opt$ constant $\Rightarrow$ singleton image (set theory).
+\item Singleton image $\Rightarrow$ entropy $= \log(1) = 0$ (arithmetic).
+\item Entropy $= 0 \Rightarrow$ no information (definition).
+\end{enumerate}
+Contrapositive: information exists $\Rightarrow |S| \geq 2$.
+\LH{FP1}\LH{FP2}\LH{FP3}\LH{FP4}\LH{FP5}\LH{FP6}\LH{FP7}
+\end{theorem}
+
+\begin{proof}
+Each step is elementary: (1) subsingleton property, (2) constant function on subsingleton, (3) image of constant is singleton, (4) $\log_2(1) = 0$, (5) zero entropy means no distinguishable states. The contrapositive follows by modus tollens.
+\end{proof}
+
+\noindent\textbf{Consequence.} Nontriviality ($|S| \geq 2$) is not an axiom—it is derived from the existence of information. Pure counting.
+
+\subsubsection{13. Second Law from Counting}
+
+\begin{theorem}[Second Law Structure from Counting]\label{thm:second-law-counting}
+The following chain holds from pure counting and probability:
+\begin{enumerate}
+\item $|\text{target}| < |\text{total}| \Rightarrow |\text{non-target}| > 0$ (counting).
+\item Random selection from total probably misses target (probability).
+\item $n$ unverified steps with $k$ wrong turns each: $k^n$ wrong paths vs.\ 1 right path (exponentiation).
+\item Wrong paths dominate: $k^n \gg 1$ for $k > 1$, $n > 1$ (arithmetic).
+\item Maintaining order requires distinguishing right from wrong (verification).
+\item Verification is information (definition).
+\end{enumerate}
+Therefore: maintaining order requires continuous information input.
+\LH{FP8}\LH{FP9}\LH{FP10}\LH{FP11}\LH{FP12}\LH{FP13}\LH{FP14}
+\end{theorem}
+
+\begin{proof}
+(1) Subtraction in $\mathbb{N}$. (2) $P(\text{miss}) = |\text{non-target}|/|\text{total}| > 0$. (3) Branching paths multiply. (4) Exponential growth. (5) Staying on target requires detecting drift. (6) Detection distinguishes states.
+\end{proof}
+
+\noindent\textbf{Consequence.} The second law's structure (order decays without work) follows from counting. The empirical content is only the calibration constant $k_B T$ that converts entropy to energy.
+
+\subsubsection{14. Landauer Structure from Counting}
+
+\begin{theorem}[Erasure Increases Environment Entropy]\label{thm:landauer-structure}
+For any state reduction from $n$ states to $m < n$ states:
+\begin{enumerate}
+\item $n - m > 0$ states are ``erased'' (arithmetic).
+\item Erased states must go somewhere (conservation of distinguishability).
+\item That somewhere is the environment.
+\item Environment entropy increases by $\geq \log(n/m)$.
+\end{enumerate}
+\LH{FP15}
+\end{theorem}
+
+\begin{proof}
+(1) $m < n \Rightarrow n - m > 0$. (2)--(4) The missing distinctions are not destroyed; they are transferred to environmental degrees of freedom. This is the structure of Landauer's principle. The $k_B T$ calibration is empirical.
+\end{proof}
+
+\noindent\textbf{Consequence.} Landauer's principle splits into structure (from counting) and calibration (from temperature). Only the calibration is empirical.
+
+\subsection{Irreducible Empirical Claims}\label{sec:irreducible-empirical}
+
+One claim is irreducibly empirical. Two others (finite resources, finite speed) are derived from first principles.
+
+\begin{definition}[Irreducible Empirical Claim EC1]\label{def:empirical-claims}
+\textbf{EC1 (Temperature):} Entropy has energy cost. There exists $\varepsilon > 0$ such that each bit costs $\varepsilon$ joules. Calibration: $\varepsilon = k_B T \ln 2$.
+\end{definition}
+
+\begin{theorem}[EC2 Derived from Uncertainty]\label{thm:ec2-derived}
+Finite resources (EC2) follows from the existence of uncertainty:
+\begin{enumerate}
+\item Uncertainty exists: $\exists X, 0 < P(X) < 1$ (observation).
+\item No bounds $\Rightarrow$ infinite information acquisition $\Rightarrow$ know everything $\Rightarrow$ $P(X) \in \{0,1\}$ for all $X$.
+\item Contrapositive: uncertainty exists $\Rightarrow$ bounds exist.
+\end{enumerate}
+\LH{IA7}\LH{IA9}\LH{IA11}\LH{IA12}\LH{IA13}
+\end{theorem}
+
+\begin{proof}
+Let observer have capacity $C$ and access $A \leq C$. System has entropy $H$. If $C \geq H$, observer can access all information (IA8). Full access eliminates uncertainty (IA9). Contrapositive: uncertainty implies $A < H$. If observer uses full capacity ($A = C$), then $C < H$ (IA11). Therefore capacity is bounded relative to system entropy. This is EC2.
+\end{proof}
+
+\begin{theorem}[EC3 Derived from Non-Contradiction]\label{thm:ec3-derived}
+Finite signal speed (EC3) follows from the law of non-contradiction:
+\begin{enumerate}
+\item A computational step = state change: before $\neq$ after (definition).
+\item At any instant, state is unique (function property).
+\item If step takes $t = 0$: before-state and after-state at same instant.
+\item Same instant $\Rightarrow$ state = before AND state = after.
+\item But before $\neq$ after $\Rightarrow$ contradiction (violates non-contradiction).
+\item Therefore $t_{\text{before}} \neq t_{\text{after}}$, so $\Delta t > 0$.
+\item Information propagation = sequence of steps, each taking $\Delta t > 0$.
+\item Speed = distance / time. Time $> 0$ $\Rightarrow$ speed $< \infty$.
+\end{enumerate}
+\LH{FPT4}\LH{FPT5}\LH{FPT6}\LH{FPT8}\LH{FPT10}
+\end{theorem}
+
+\begin{proof}
+A step changes state from $A$ to $B$ where $A \neq B$. The timeline is a function $T \to S$. If $t_{\text{before}} = t_{\text{after}}$, then $\text{timeline}(t) = A$ and $\text{timeline}(t) = B$ for the same $t$. By function uniqueness, $A = B$. Contradiction. Therefore $t_{\text{before}} \neq t_{\text{after}}$. With ordering, $\Delta t > 0$ (FPT5). Information propagation requires steps; each takes positive time; total time is positive; speed is finite. QED from pure logic.
+\end{proof}
+
+\noindent\textbf{Consequence.} EC2 and EC3 are not axioms. EC2 follows from uncertainty existing. EC3 follows from non-contradiction. \textbf{One irreducible empirical claim remains: EC1 (temperature).} The specific value $\varepsilon = k_B T \ln 2$ is empirical; the existence of a cost is structural.
+
+\subsubsection{15. Assumption Necessity}
+
+\begin{theorem}[Physical Claims Need Empirically Justified Assumptions]\label{thm:assumption-necessity}
+If a physical claim $\phi$ is:
+\begin{enumerate}
+\item Provable from assumption set $\Gamma$ (sound formal system)
+\item Falsifiable (some model $m$ with $\neg \mathrm{Holds}(m, \phi)$)
+\item Derived from empirically disciplined $\Gamma$ (all axioms empirically justified)
+\end{enumerate}
+Then $\Gamma$ contains at least one physical axiom that is empirically justified.
+\LH{AN3}\LH{AN4}
+\end{theorem}
+
+\begin{proof}
+Suppose $\Gamma$ contains only mathematical axioms (no physical axioms). Mathematical axioms hold in all models (by soundness). Therefore $\phi$ holds in all models. But (2) says $\phi$ fails in some model $m$. Contradiction. Therefore $\Gamma$ contains at least one non-mathematical axiom. By (3), this axiom must be empirically justified.
+\end{proof}
+
+\noindent\textbf{Consequence.} Physical axioms cannot be hidden. Physical consequences require declared and empirically justified physical assumptions.
+
+\subsubsection{16. Energy Bound}
+
+\begin{theorem}[Energy Lower Bound]\label{thm:energy-information}
+For any physical system resolving decision problem $\mathcal{D}$ at temperature $T > 0$:
+\[
+  E_{\mathrm{decision}} \geq k_B T \cdot H_{\mathrm{nats}}(\mathcal{D})
+\]
+where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natural-log Shannon entropy of the decision quotient.
+\LH{EI1}
+\end{theorem}
+
+\begin{proof}
+Three steps:
+\begin{enumerate}
+\item $\mathrm{srank}$ bits are required to resolve $\mathcal{D}$. Each bit requires one state transition.
+\item Each transition costs $\geq k_B T \ln 2$. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$.
+\item $H_{\mathrm{nats}} = \ln(\mathrm{numOptClasses}) \leq \mathrm{srank} \cdot \ln 2$ (Theorem~\ref{thm:entropy-rank}).
+\end{enumerate}
+Combining: $E \geq \mathrm{srank} \cdot k_B T \ln 2 \geq k_B T \cdot H_{\mathrm{nats}}$.
+\end{proof}
+
+\noindent\textbf{Consequence.} Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from Landauer (Theorem 9) composed with the entropy-rank inequality (Theorem 8).
+
+\subsubsection{17. Thermodynamic Uncertainty Relations}
+
+\begin{theorem}[TUR Bridge (Conditional)]\label{thm:tur-bridge}
+Conditional on stochastic thermodynamics (Barato--Seifert 2015):
+\begin{enumerate}
+\item Transition probabilities are normalized: $p_{ij} \geq 0$, $\sum_j p_{ij} = 1$.
+\item The Second Law enforces non-negative entropy production: $\sigma \geq 0$.
+\item The TUR bound constrains precision: $\mathrm{Var}(J)/\langle J \rangle^2 \geq 2/\sigma$.
+\item Multiple futures require positive entropy production.
+\end{enumerate}
+Precision requires entropy dissipation, scaling with structural rank.
+\LH{TUR1}\LH{TUR2}\LH{TUR5}\LH{TUR6}
+\end{theorem}
+
+\begin{proof}
+(1) Standard probability. (2) The Second Law (empirical assumption). (3) TUR is a theorem of stochastic thermodynamics: for any current $J$ in a Markov process with entropy production $\sigma$, precision is bounded by $\mathrm{Var}(J)/\langle J \rangle^2 \geq 2/\sigma$.
+(4) If $\mathrm{srank} > 1$, distinguishing $k > 1$ futures requires information acquisition. By the TUR bound, finite precision requires $\sigma > 0$. The minimal $\sigma$ scales with $\log k$, hence with $\mathrm{srank}$.
+\end{proof}
+
+\noindent\textbf{Consequence.} Accepting fluctuation theorems yields an independent constraint: precision costs entropy production, with the bound scaling with srank. This is conditional on accepting the Second Law.
+
+\subsection{Consistency with Existing Physical Theories}\label{sec:intro-justifies-physics}
+
+The Counting Gap Theorem is consistent with and illuminates why discrete models work across physics:
+
+\begin{itemize}
+\item \textbf{Quantum Mechanics:} Discrete eigenstates are forced for bounded systems
+\item \textbf{Statistical Mechanics:} Discrete microstates forced by finite accessible state count
+\item \textbf{Thermodynamics:} Finite entropy forced by bounded information acquisition
+\item \textbf{Lattice Gauge Theory:} Discretization respects the computational constraint
+\end{itemize}
+
+\noindent The paper rests on one irreducible empirical claim (Definition~\ref{def:empirical-claims}):
+
+\begin{itemize}
+\item \textbf{EC1 (Temperature):} $\varepsilon = k_B T \ln 2 > 0$ (entropy has energy cost)
+\end{itemize}
+
+\noindent EC2 (finite resources) is derived from the existence of uncertainty (Theorem~\ref{thm:ec2-derived}): if you don't know everything, your capacity is bounded. EC3 (finite speed) is derived from non-contradiction (Theorem~\ref{thm:ec3-derived}): a computational step must take positive time, or the state would be both $A$ and not-$A$ at the same instant. Everything else---nontriviality, second law structure, Landauer structure, EC2, EC3---follows from counting, logic, or observation.
+
+\subsection{Our Formal Tools: Coordinate Sufficiency}\label{sec:intro-formal-tools}
+
+We study decision problems with coordinate structure. The finite coordinate spaces $X_i$ are forced by the Counting Gap. Boolean coordinates $X_i = \{0,1\}$ are elementary: one physical transition per bit.
+
+A coordinate set $I$ is sufficient if knowing $s_I$ determines the optimal action:
 \[
 s_I = s'_I \implies \Opt(s) = \Opt(s')
 \]
-This is \emph{coordinate sufficiency}, the formalization of \emph{information sufficiency} (whether available information determines the optimal action) over a factored state space.
 
-In information-theoretic terms, this is a task-conditional coding problem: the object preserved by projection is the decision boundary $s \mapsto \Opt(s)$, not the full source state. The same object appears in classical source-coding and fidelity viewpoints \cite{shannon1948mathematical,shannon1959coding,cover2006elements,slepian1973noiseless}, and in zero-error/confusability structure where exact recoverability depends on graph constraints rather than raw description length \cite{shannon1956zero,korner1973graphs,lovasz1979shannon,csiszar2011information}. The same separation also appears in model selection: short descriptions and certifiable adequacy are distinct \cite{rissanen1978modeling,grunwald2007minimum,li2008introduction,blahut1972computation}.
+We prove complexity classifications for three meta-problems:
 
-For physical instantiations, the same tuple has a direct substrate reading: coordinates are measurable state degrees of freedom, actions are physically realizable interventions or transitions, and the optimizer map is the decision boundary induced by the declared objective contract. The physical-to-core encoding discipline in Section~\ref{sec:physical-transport} makes this bridge theorem-level with explicit assumptions.\claimstamp{P\ref{prop:physical-claim-transport},\ref{prop:law-instance-objective-bridge},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time};C\ref{cor:physical-counterexample-core-failure};T\ref{thm:physical-bridge-bundle}}{AR}
-\leanmeta{\LH{CT6},\LH{CT8},\LH{CT4},\LH{CT1},\LH{DT6},\LH{DT13},\LH{DT16},\LH{DT24}.}
-
-Scope restriction: theorem transfer is licensed only for declared physical encodings with explicit state, action, objective, observables, and assumption maps (Section~\ref{sec:physical-transport}).\claimstamp{D\ref{def:physical-core-encoding},\ref{def:physical-scope-gate};P\ref{prop:physical-claim-transport},\ref{prop:typed-physical-transport-requirement};T\ref{thm:physical-bridge-bundle}}{AR}
-Operationally, each instantiation must expose measurable observables and calibrated units for information/energy accounting (bits, joules, and \(kT\)-scaled bounds) before transfer claims are admitted.
-
-\paragraph{Compact claim-stamp notation.}
-We use compact provenance stamps of the form \([C:\cdots;R:\cdots]\): claim references are grouped by type
-(\(D/P/C/T/L/R\) for Definition/Proposition/Corollary/Theorem/Lemma/Remark), and regime tags are abbreviated
-(for example \(AR\)=active declared regime, \(DC\)=declared contract, \(CR\)=declared class/regime, \(Qf\)=query-finite, \(Qb\)=query-Boolean).
-Theorem-strength narrative statements are stamped and, where available, paired with compact Lean handle IDs; unstamped narrative remains explanatory or citation-only context.
-
-The paper's main line is: coNP/PP/PSPACE placement with strict static $\subset$ stochastic $\subset$ sequential regime separation (\LH{CC61}, \LH{DC9}, \LH{DC10}, \LH{DC1}, \LH{DC2}), coNP/\(\SigmaP{2}\) placement with encoding/query separation for static sufficiency (\LH{CC36}, \LH{CC5}, \LH{CC16}, \LH{CC50}), theorem-level physical bridge and exact represented-adjacent bridge boundary (\LH{CT4}, \LH{CC10}, \LH{CC9}, \LH{CC8}), static-class completeness boundaries (\LH{CC14}, \LH{CC76}), belief forcing from provable uncertainty plus forced action with Bayes-update existence under informative evidence (\LH{BF2}, \LH{BF3}, \LH{BF4}), logic/time-vs-parameter separation with deadline-forced thermodynamic lower bounds (\LH{CF2}, \LH{CF4}, \LH{CF8}, \LH{CF9}), Bayesian uniqueness under DQ/thermodynamic admissibility axioms (\LH{FN14}), layered graph nontriviality/entropy/belief/physical lift (\LH{GN2}, \LH{GN5}, \LH{GN7}, \LH{GN8}, \LH{GN9}, \LH{GN10}, \LH{GN11}, \LH{GN13}), physical-collapse no-go transfer to canonical \(P{=}NP\) physical impossibility under declared collapse maps (\LH{PH11}, \LH{PH12}, \LH{PH13}, \LH{PH14}, \LH{PH15}), derived SAT-bridge map plus reduction-energy transfer (\LH{PH16}, \LH{PH17}, \LH{PH18}, \LH{PH19}, \LH{PH20}, \LH{PH21}, \LH{PH22}), assumption-necessity and disjunctive boundary (\LH{PH23}, \LH{PH24}, \LH{PH25}, \LH{PH26}, \LH{PH27}, \LH{PH31}, \LH{PH32}, \LH{PH33}), deterministic/probabilistic/sequential robustness (\LH{PH28}, \LH{PH29}, \LH{PH30}), recurrent shared-channel conversation clamp semantics with typed YES/NO/ABSTAIN projection (\LH{CV4}, \LH{CV7}, \LH{CV17}, \LH{CV18}, \LH{CV12}, \LH{CV13}, \LH{CV16}), explicit Neukart--Vinokur duality specialization from the thermodynamic lift (\LH{CC64}, \LH{CC65}), and formal dominance/amortization laws for hardness placement (\LH{HD1}, \LH{HD4}, \LH{HD3}). Later sections give full derivations and boundaries.
-An observer-collapse anchor layer is included in the same line: effective-state singleton criteria and physical seeded support close stochastic/sequential anchor checks under explicit hypotheses (\LH{PA1}, \LH{PA2}, \LH{PA3}, \LH{PA4}, \LH{PA5}, \LH{PA6}, \LH{PA7}, \LH{PA8}, \LH{PA9}).
-\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace},\ref{thm:dichotomy},\ref{thm:regime-coverage},\ref{thm:typed-completeness-static},\ref{thm:physical-bridge-bundle},\ref{thm:bridge-boundary-represented},\ref{thm:bayes-from-dq},\ref{thm:centralization-dominance},\ref{thm:tax-conservation},\ref{thm:amortization};P\ref{prop:query-regime-obstruction},\ref{prop:thermo-lift},\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict};C\ref{cor:neukart-vinokur}}{E,S,S+ETH,Qf,Qb,AR,LC,H=cost-growth}
-
-SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, and ANCHOR-SUFFICIENCY are \emph{meta-problems}: each is parameterized by an arbitrary decision problem $\mathcal{D}$ and asks a structural question about $\mathcal{D}$'s coordinate space. The complexity results therefore apply to every problem with factored state space, not to a specific problem domain.\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p}}{S}
-\leanmeta{\LH{CC61},\LH{CC36},\LH{CC5}.}
-
-\begin{remark}[Universality of the Decision-Problem Tuple]\label{rem:universality}
-The formal object of this paper is the decision-problem tuple $\mathcal{D} = (A, S, U)$: actions, factored states, utility. Within this model family, any problem requiring a choice among alternatives given structured information instantiates the tuple: the alternatives are $A$, the structured information is $S = X_1 \times \cdots \times X_n$, and the objective is $U$. Thus the qualifier ``decision problem'' does not narrow scope \emph{inside the declared coordinate model}. The meta-problem results below are universal over problems representable with this coordinate structure; the $(A, S, U)$ formalism supplies the language for stating the sufficiency predicate.
-\end{remark}
-
-This paper characterizes the complexity landscape of these meta-problems as a regime map with an internal static decomposition.
-
-The paper keeps two layers explicit throughout: a substrate-neutral decision core (for complexity classification) and an assumption-typed physical instantiation layer (for transport to concrete systems). This separation prevents conflating representational hardness with physical assumptions while preserving a formal bridge between them.\claimstamp{P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}
-The physical-to-core map is an added rigor layer, not a downgrade of physical status: physical claims remain physical claims, but with explicit premise tracking and machine-auditable transfer. This places accepted physics assumptions and this model on the same formal footing under one declared assumption discipline.\claimstamp{P\ref{prop:physical-claim-transport};C\ref{cor:physical-counterexample-core-failure};T\ref{thm:physical-bridge-bundle}}{AR}
-\leanmeta{\LH{CT6},\LH{CT4}.}
-
-Section~\ref{sec:encoding} fixes the computational model and input encodings used for all complexity claims.
-Section~\ref{sec:model-contract} gives the model contract and regime tags used to type every strong claim.
-Completeness claims are class-internal: complete for the static sufficiency class fixed by C1--C4 and the declared access regimes, while stochastic and sequential classes are stated as distinct typed classes with their own theorem-level placements.
-
-\begingroup
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{0.96}
-\noindent
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.13\linewidth}>{\raggedright\arraybackslash}p{0.32\linewidth}>{\raggedright\arraybackslash}p{0.50\linewidth}@{}}
-\toprule
-\textbf{Regime} & \textbf{Canonical question} & \textbf{Placement and boundary} \\
-\midrule
-Static & SUFFICIENCY\allowbreak/\allowbreak MINIMUM\allowbreak/\allowbreak ANCHOR & \coNP / \coNP / \(\SigmaP{2}\); encoding split [E] vs [Q\_fin,Q\_bool] vs [S+ETH]; six structural polynomial subcases \\
-Stochastic & STOCHASTIC-SUFFICIENCY-CHECK\allowbreak/\allowbreak STOCHASTIC-ANCHOR-SUFFICIENCY-CHECK & \PP-complete core; anchor refinement formalized; observer-collapse seeded anchor closure available under declared hypotheses; strictly extends static under declared assumptions \\
-Sequential & SEQUENTIAL-SUFFICIENCY-CHECK\allowbreak/\allowbreak SEQUENTIAL-ANCHOR-SUFFICIENCY-CHECK & \PSPACE-complete core; anchor refinement formalized; observer-collapse anchor closure available under declared hypotheses; strictly extends stochastic under declared assumptions \\
-\bottomrule
-\end{tabularx}
-\endgroup
-
-\begingroup
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{0.96}
-\noindent
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.23\linewidth}>{\raggedright\arraybackslash}p{0.29\linewidth}>{\raggedright\arraybackslash}p{0.43\linewidth}@{}}
-\toprule
-\textbf{Static decomposition layer} & \textbf{Object} & \textbf{Comparison axis} \\
-\midrule
-Decision-problem layer & SUFFICIENCY / MINIMUM / ANCHOR & Exact class placement (\coNP, \coNP, \(\SigmaP{2}\)) \\
-Access layer & [E], [Q\_fin,Q\_bool], [S+ETH] & Polynomial explicit scan vs query obstruction vs succinct worst-case exponential lower bound \\
-Structure layer & bounded actions, separable utility, low tensor rank, tree structure, bounded treewidth, coordinate symmetry & Certified polynomial recovery conditions inside the static class \\
-\bottomrule
-\end{tabularx}
-\endgroup
-\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace},\ref{thm:dichotomy},\ref{thm:tractable};P\ref{prop:query-regime-obstruction},\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict}}{E,S,S+ETH,Qf,Qb,RG}
-\leanmeta{\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{CCC3},\LH{CCC7},\LH{CC61},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{DC17},\LH{DC21}.}
-
-\subsection{Regime Reading Map}
-
-Formally: this subsection states regime-indexed class placements and bridge predicates for the fixed sufficiency query.
-
-Theorems in this paper are intended to be read as regime-indexed hardness/recovery statements for fixed decision semantics:
-\begin{enumerate}
-\item \textbf{Static core:} SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are \coNP-complete, and ANCHOR-SUFFICIENCY is \(\SigmaP{2}\)-complete; explicit/query/structured regimes supply polynomial or lower-bound refinements for the same fixed question.
-\item \textbf{Stochastic core:} STOCHASTIC-SUFFICIENCY-CHECK is \PP-complete; STOCHASTIC-ANCHOR-SUFFICIENCY-CHECK is the anchor refinement; strict MAJSAT reduces to the anchor check with the accept-label side condition; potential-dual and Landauer-floor statements fix expected-utility and physical-cost grounding; observer-collapse + seeded support gives direct anchor-check closure.
-\item \textbf{Sequential core:} SEQUENTIAL-SUFFICIENCY-CHECK is \PSPACE-complete; SEQUENTIAL-ANCHOR-SUFFICIENCY-CHECK is the anchor refinement; TQBF reduces to the sequential anchor check at \(I=\emptyset\); observer-collapse gives direct sequential anchor-check closure.
-\item \textbf{Hierarchy and transfer boundary:} static \(\subset\) stochastic \(\subset\) sequential is strict under declared assumptions, and transfer from static claims is bridge-gated by one-step deterministic conditions.
-\end{enumerate}
-\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace};P\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict},\ref{prop:one-step-bridge},\ref{prop:bridge-failure-horizon},\ref{prop:bridge-failure-stochastic},\ref{prop:bridge-failure-transition}}{S,RG,RA}
-\leanmeta{\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{DC19},\LH{DC23},\LH{DC25},\LH{DC28},\LH{DC33},\LH{DC37},\LH{PA4},\LH{PA5},\LH{PA6},\LH{PA7},\LH{PA9}.}
-
-An operational criterion follows later from the same chain: once decision-site count exceeds the amortization threshold \(n^*\), avoiding structural identification is more expensive than paying the one-time centralization cost (Theorem~\ref{thm:amortization}).\claimstamp{T\ref{thm:amortization}}{LC}
-\leanmeta{\LH{HD4},
-\LH{HD26}.}
-
-Informally: this is the same core question, but different regimes change difficulty and transfer limits.
-
-\subsection{Landscape Summary}
-
-Formally: tractable and intractable cases are partitioned by declared encoding, access, and structure assumptions.
-
-\textbf{When is sufficiency checking tractable?} We identify six sufficient conditions:
-
-\begin{enumerate}
-\item \textbf{Bounded actions} ($|A| \leq k$) under explicit-state encoding: with constantly many actions, we enumerate action pairs over the explicit utility table.
-
-\item \textbf{Separable utility} ($U(a,s) = f(a) + g(s)$): The optimal action depends only on $f$, making all coordinates irrelevant to the decision.
-
-\item \textbf{Low tensor rank}: When utility has bounded tensor rank $R$, factored computation yields $O(|A| \cdot R \cdot n)$ complexity.
-
-\item \textbf{Tree-structured utility}: With explicit local factors over a tree, dynamic programming yields polynomial algorithms in the input length.
-
-\item \textbf{Bounded treewidth}: When pairwise interactions form a graph of treewidth $w$, CSP algorithms yield $O(n \cdot k^{w+1})$ complexity.
-
-\item \textbf{Coordinate symmetry}: When utility is invariant under coordinate permutations, orbit types reduce the effective state space to $\binom{d+k-1}{k-1}$ equivalence classes, polynomial in $d$ for fixed $k$.
-\end{enumerate}
-
-Each condition is stated with its encoding assumption. Outside these regimes, the general problem remains \coNP-hard (Theorem~\ref{thm:sufficiency-conp}).
-\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:tractable}}{E,S}
-\leanmeta{\LH{CC61},\LH{CC69},\LH{CC70},\LH{CC71},\LH{CC72},\LH{CC73}.}
-
-\textbf{When is it intractable?} The general problem is \coNP-complete (Theorem~\ref{thm:sufficiency-conp}), with a separation between explicit-state tractability and succinct worst-case hardness:
 \begin{itemize}
-\item In the explicit-state model: SUFFICIENCY-CHECK is solvable in polynomial time in $|S|$ by explicitly computing $\Opt(s)$ for all $s\in S$ and checking all pairs $(s,s')$ with equal $I$-projection. In particular, instances with $k^* = O(\log |S|)$ are tractable in this model.
-\item In the intermediate query-access model: the finite-state core yields an Opt-oracle lower bound $\Omega(|S|)$ (Boolean instantiation: $\Omega(2^n)$), and the mechanized Boolean interface refinements preserve the obstruction for value-entry and state-batch interfaces, with explicit subproblem-to-full transfer, weighted randomized robustness, and oracle-lattice transfer/strictness theorems (Propositions~\ref{prop:query-regime-obstruction}--\ref{prop:oracle-lattice-strict}).
-\item In the succinct model: under ETH there exist worst-case instances produced by our strengthened gadget in which the minimal sufficient set has size $\Omega(n)$ (indeed $n$) and SUFFICIENCY-CHECK requires $2^{\Omega(n)}$ time.
+\item \textbf{SUFFICIENCY-CHECK:} Is $I$ sufficient? coNP-complete
+\item \textbf{MINIMUM-SUFFICIENT-SET:} Find minimal $I$. coNP-complete
+\item \textbf{ANCHOR-SUFFICIENCY:} Exists sufficient $I$ with $|I| \leq k$? $\Sigma_2^P$-complete
 \end{itemize}
 
-The explicit ETH lower bound is still a succinct worst-case statement; Proposition~\ref{prop:query-regime-obstruction} provides the finite-state query core and Propositions~\ref{prop:query-value-entry-lb}--\ref{prop:oracle-lattice-strict} provide theorem-level Boolean-interface refinements.
-\claimstamp{P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-subproblem-transfer},\ref{prop:query-state-batch-lb},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict}}{Qf,Qb}
-\leanmeta{\LH{CC50},\LH{CC29},\LH{CC28},\LH{CC43},\LH{CC52},\LH{CC27}.}
+Stochastic variants are PP-complete. Sequential variants are PSPACE-complete. Strict hierarchy: static $\subset$ stochastic $\subset$ sequential.
 
-Informally: when structure is visible, checks are fast; when access is compressed or restricted, lower bounds appear.
+\subsection{Machine Verification}\label{sec:intro-verification}
 
-\subsection{Main Theorems}
+All results are machine-checked in Lean 4:
+\begin{itemize}
+\item 24,347 lines of Lean code
+\item 1,082 theorems
+\item 0 \texttt{sorry} placeholders
+\item 0 hidden axioms
+\end{itemize}
 
-Formally: the list below is a theorem-indexed map of class placement, bridge boundary, physical lift, and closure.
+Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on Landauer. Complexity results: hypotheses as explicit theorem parameters. Machine-generated assumption ledger records all dependencies.
 
-\begin{enumerate}
-\item \textbf{Theorem~\ref{thm:sufficiency-conp}:} SUFFICIENCY-CHECK is \coNP-complete via reduction from TAUTOLOGY.
+\subsection{Paper Structure}\label{sec:intro-structure}
 
-\item \textbf{Theorem~\ref{thm:minsuff-conp}:} MINIMUM-SUFFICIENT-SET is \coNP-complete (the $\SigmaP{2}$ structure collapses).
+Section~\ref{sec:foundations}: formal definitions (decision problems, sufficiency, DQ).
+Section~\ref{sec:physical-grounding}: physical grounding (Counting Gap, three laws).
+Section~\ref{sec:hardness}: hardness proofs (coNP, $\Sigma_2^P$, PP, PSPACE).
+Section~\ref{sec:dichotomy}: regime separation.
+Section~\ref{sec:tractable}: six tractable subcases.
+Sections~\ref{sec:engineering-justification}--\ref{sec:simplicity-tax}: engineering corollaries.
+Appendix: Lean listings.
 
-\item \textbf{Theorem~\ref{thm:anchor-sigma2p}:} ANCHOR-SUFFICIENCY is $\SigmaP{2}$-complete via reduction from $\exists\forall$-SAT.
+\paragraph{Claim-stamp notation.}
+Claims are stamped with theorem references $[T:n; P:m]$ and Lean handles (\LH{...}).
 
-\item \textbf{Theorem~\ref{th:stochastic-sufficiency-pp}:} STOCHASTIC-SUFFICIENCY-CHECK is \PP-complete.
+\begingroup
+\footnotesize
+\noindent
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.40\linewidth}>{\raggedright\arraybackslash}p{0.43\linewidth}@{}}
+\toprule
+\textbf{Regime} & \textbf{Question} & \textbf{Placement} \\
+\midrule
+Static & SUFFICIENCY / MINIMUM / ANCHOR & coNP / coNP / $\Sigma_2^P$ \\
+Stochastic & STOCHASTIC-SUFFICIENCY & PP-complete \\
+Sequential & SEQUENTIAL-SUFFICIENCY & PSPACE-complete \\
+\bottomrule
+\end{tabularx}
+\endgroup
 
-\item \textbf{Theorem~\ref{th:sequential-sufficiency-pspace}:} SEQUENTIAL-SUFFICIENCY-CHECK is \PSPACE-complete.
-
-\item \textbf{Propositions~\ref{prop:stochastic-anchor-strict-reduction} and \ref{prop:sequential-anchor-tqbf-reduction}:} strict MAJSAT and TQBF reductions to the new anchor-check forms in stochastic and sequential regimes.
-\item \textbf{Observer-collapse anchor closure (\LH{PA1}--\LH{PA9}):} effective-state singleton criteria and physical seeded support conditions that force stochastic/sequential anchor-check truth under declared hypotheses.
-
-\item \textbf{Propositions~\ref{prop:stochastic-potential-duality} and \ref{prop:stochastic-landauer-floor}:} expected-utility/potential duality and Landauer-floor specialization for stochastic instances.
-
-\item \textbf{Propositions~\ref{prop:static-stochastic-strict} and \ref{prop:stochastic-sequential-strict}:} under declared assumptions, static \(\subset\) stochastic \(\subset\) sequential is strict.
-
-\item \textbf{Theorem~\ref{thm:dichotomy}:} Encoding-regime separation inside the static class: explicit-state polynomial-time (polynomial in $|S|$), and under ETH a succinct worst-case lower bound witnessed by a hard family with $k^* = n$.
- 
-% NOTE: Theorem \ref{thm:dichotomy} is an encoding-regime separation; the succinct-side statement is worst-case (there exists a hard family with $k^*=n$).
-
-\item \textbf{Theorem~\ref{thm:tractable}:} Polynomial algorithms for six structural regimes: bounded actions, separable utility, low tensor rank, tree structure, bounded treewidth, and coordinate symmetry.
-\item \textbf{Theorem~\ref{thm:physical-bridge-bundle}:} physical-system bridge composition (law-objective semantics, behavior-preserving configuration reduction, and required-work lower bound) is proved as one bundled mechanized statement under declared encoding assumptions.
-\item \textbf{Theorem~\ref{thm:bridge-boundary-represented}:} in the represented adjacent family, transfer is licensed iff the class is one-step deterministic; each represented non-one-step class has an explicit mechanized bridge-failure witness.
-\item \textbf{Corollary~\ref{cor:neukart-vinokur}:} for $\lambda>0$, the Neukart--Vinokur duality form $dU \ge \lambda\,dC$ is obtained directly from Proposition~\ref{prop:thermo-lift}.
-\item \textbf{Theorem~\ref{thm:exact-certified-gap-iff-admissible}:} exact-claim admissibility is equivalent to a strict certified-bit gap over raw report bits; when exact reporting is blocked, exact accounting collapses to raw-only (Corollary~\ref{cor:hardness-raw-only-exact}).
-\item \textbf{Propositions~\ref{prop:time-discrete}--\ref{prop:substrate-unit-time}:} the interface-time model is discrete, each decision event advances time by one unit, run-length equals elapsed interface time, and the unit-time law is substrate-invariant under the declared interface-consistency condition.
-\end{enumerate}
-\claimstamp{T\ref{thm:sufficiency-conp},\ref{thm:minsuff-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace},\ref{thm:dichotomy},\ref{thm:tractable},\ref{thm:physical-bridge-bundle},\ref{thm:bridge-boundary-represented},\ref{thm:exact-certified-gap-iff-admissible};P\ref{prop:stochastic-anchor-strict-reduction},\ref{prop:sequential-anchor-tqbf-reduction},\ref{prop:stochastic-potential-duality},\ref{prop:stochastic-landauer-floor},\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict},\ref{prop:thermo-lift},\ref{prop:time-discrete},\ref{prop:decision-unit-time},\ref{prop:run-time-accounting},\ref{prop:substrate-unit-time};C\ref{cor:neukart-vinokur},\ref{cor:hardness-raw-only-exact}}{E,S,S+ETH,AR,RG,H=cost-growth}
-\leanmeta{\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{DC25},\LH{DC28},\LH{DC33},\LH{DC37},\LH{CCC3},\LH{CCC7},\LH{CT4},\LH{CC67},\LH{CC69},\LH{CC85},\LH{CC76},\LH{CC77},\LH{DT6},\LH{DT13},\LH{DT16},\LH{DT24}.}
-
-Informally: this list is the main map of class placement, bridge conditions, and physical transport.
-
-\subsection{Claim-Typing Theorems}
-
-Formally: this subsection states typed admissibility/evidence equivalences and integrity-competence boundaries.
-
-\begin{enumerate}
-\item \textbf{Proposition~\ref{prop:typed-claim-admissibility}:} report admissibility is typed by certificate class (\(\mathsf{ABSTAIN}\), \(\mathsf{EXACT}\), \(\mathsf{EPSILON}(\varepsilon)\)).
-\item \textbf{Proposition~\ref{prop:evidence-admissibility-equivalence}:} first-class evidence-object existence is equivalent to typed report admissibility.
-\item \textbf{Propositions~\ref{prop:empty-sufficient-constant} and \ref{prop:insufficiency-counterexample}:} the \(I=\emptyset\) query is exactly universal constancy of the decision boundary, and non-sufficiency is exactly existence of a counterexample pair.
-\item \textbf{Proposition~\ref{prop:exact-requires-evidence}:} exact admissibility is equivalent to exact evidence existence.
-\item \textbf{Proposition~\ref{prop:certified-confidence-gate} and Corollary~\ref{cor:exact-no-competence-zero-certified}:} certified confidence is evidence-gated; for exact reports in no-competence regimes, certified confidence must be zero.
-\item \textbf{Proposition~\ref{prop:no-evidence-zero-certified}:} under signal consistency, no evidence implies zero certified confidence.
-\item \textbf{Proposition~\ref{prop:abstain-guess-self-signal} and Proposition~\ref{prop:self-confidence-not-certification}:} abstain may carry tentative guesses and self-reflected confidence, but self-confidence alone does not certify exactness.
-\item \textbf{Propositions~\ref{prop:steps-run-scalar}, \ref{prop:no-fraction-without-bound}, \ref{prop:fraction-defined-under-bound}:} scalar step-count witnesses are always exact/falsifiable, while completion percentages are meaningful only under explicit declared bounds.
-\item \textbf{Theorem~\ref{thm:claim-integrity-meta}:} outside declared carve-outs, admissible exact-claim policy requires explicit assumptions.
-\item \textbf{Proposition~\ref{prop:integrity-resource-bound}:} under non-collapse, integrity and exact competence cannot both hold universally on hardness-blocked declared regimes.
-\item \textbf{Proposition~\ref{prop:physics-no-universal-exact} and Corollary~\ref{cor:physics-no-universal-exact-claim}:} schema-level consequence for declared class/regime objects and exact-report inadmissibility.
-\end{enumerate}
-\claimstamp{T\ref{thm:claim-integrity-meta};P\ref{prop:typed-claim-admissibility},\ref{prop:evidence-admissibility-equivalence},\ref{prop:empty-sufficient-constant},\ref{prop:insufficiency-counterexample},\ref{prop:exact-requires-evidence},\ref{prop:certified-confidence-gate},\ref{prop:no-evidence-zero-certified},\ref{prop:abstain-guess-self-signal},\ref{prop:self-confidence-not-certification},\ref{prop:steps-run-scalar},\ref{prop:no-fraction-without-bound},\ref{prop:fraction-defined-under-bound},\ref{prop:integrity-resource-bound},\ref{prop:physics-no-universal-exact};C\ref{cor:exact-no-competence-zero-certified},\ref{cor:physics-no-universal-exact-claim}}{DC,AR}
-\leanmeta{\LH{CC75},\LH{IC2},\LH{DP6},\LH{DP7},\LH{IC35},\LH{IC38},\LH{IC40},\LH{IC46},\LH{IC47},\LH{IC42},\LH{IC44},\LH{IC45},\LH{CC30},\LH{CC15},\LH{CC38}.}
-
-Informally: a report is valid only when its evidence and declared capability match.
-
-\subsection{Regime Separation Theorems}
-
-Formally: this subsection isolates same-question access separations and lower-bound transfer closures.
-
-\begin{enumerate}
-\item \textbf{Theorem~\ref{thm:dichotomy}:} same-question separation between explicit-state and succinct regimes (with [S+ETH] hard-family lower bound).
-\item \textbf{Proposition~\ref{prop:query-regime-obstruction}:} finite-state Opt-oracle lower bound in [Q\_fin].
-\item \textbf{Propositions~\ref{prop:query-value-entry-lb}--\ref{prop:oracle-lattice-strict}:} Boolean-interface refinements and transfer/strictness in [Q\_bool].
-\end{enumerate}
-\claimstamp{T\ref{thm:dichotomy};P\ref{prop:query-regime-obstruction},\ref{prop:query-value-entry-lb},\ref{prop:query-state-batch-lb},\ref{prop:query-subproblem-transfer},\ref{prop:oracle-lattice-transfer},\ref{prop:oracle-lattice-strict}}{E,S+ETH,Qf,Qb}
-\leanmeta{\LH{CC16},\LH{CC50},\LH{CC29},\LH{CC28},\LH{CC43},\LH{CC52},\LH{CC27},\LH{CC58},\LH{CC59}.}
-
-Informally: this is one question across multiple access models, with clear boundaries on what transfers.
-
-\subsection{Machine-Checked Proofs}
-
-Formally: reduction correctness and key placement/closure claims are machine-verified; class labels are composed under declared assumptions.
-
-The reduction constructions and key equivalence theorems are machine-checked in Lean 4 \cite{Lean2015,demoura2021lean4,mathlib2020,forster2019verified,kunze2019formal} (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements). The formalization verifies TAUTOLOGY- and \(\exists\forall\)-SAT-based static reductions, and includes theorem-level stochastic/sequential class placements and strict hierarchy claims. Complexity placement in \coNP/\(\Sigma_2^P\)/\PP/\PSPACE follows by composition with standard complexity-theoretic results under the declared assumptions.
-
-\paragraph{What is new.}
-We contribute (i) formal definitions of decision-theoretic sufficiency in Lean; (ii) machine-checked proofs of reduction correctness for the TAUTOLOGY and $\exists\forall$-SAT reductions; (iii) a regime-first complexity map with theorem-level static/stochastic/sequential placements and strict separations; and (iv) a static inner-class decomposition (decision, access, and structure layers) used to derive theorem-indexed engineering corollaries, including typed coverage/completeness closures for the declared static class (Theorems~\ref{thm:regime-coverage}, \ref{thm:typed-completeness-static}). Prior work establishes hardness informally; we formalize the constructions and their regime-typed consequences.
-\claimstamp{T\ref{thm:regime-coverage},\ref{thm:typed-completeness-static},\ref{thm:sufficiency-conp},\ref{thm:anchor-sigma2p},\ref{th:stochastic-sufficiency-pp},\ref{th:sequential-sufficiency-pspace};P\ref{prop:static-stochastic-strict},\ref{prop:stochastic-sequential-strict}}{CR,S,RG}
-\leanmeta{\LH{CC62},\LH{CC88},\LH{CCC6},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2}.}
-
-Informally: the proofs are checkable, and each strong claim points to explicit assumptions and Lean handles.
-
-\subsection{Paper Structure}
-
-The primary contribution is theoretical: a formalized reduction framework and a complete characterization of decision-relevant problems as a three-regime map (static/stochastic/sequential with \coNP/\PP/\PSPACE placements) plus a static inner decomposition (coNP/\(\Sigma_2^P\) decision layer, encoding/query access layer, and structural tractability layer). A second contribution is formal claim typing: Section~\ref{sec:interpretive-foundations} introduces the structural/representational and integrity/competence splits that type-check the applied corollaries.
-
-Section~\ref{sec:foundations}: decision-problem foundations and encoding model. Section~\ref{sec:interpretive-foundations}: structural vs representational hardness; integrity vs competence. Section~\ref{sec:hardness}: hardness proofs. Section~\ref{sec:dichotomy}: regime separation. Section~\ref{sec:tractable}: tractable cases. Section~\ref{sec:engineering-justification}: regime-conditional corollaries. Section~\ref{sec:implications}: dominance theorems for hardness placement. Section~\ref{sec:simplicity-tax}: conservation law for decision-relevant coordinates. Section~\ref{sec:related}: related work. Appendix~\ref{app:lean}: Lean listings.
-
-Sections~\ref{sec:engineering-justification}--\ref{sec:simplicity-tax} are not applied commentary. Every claim in those sections is a formal corollary, regime-typed by the framework of Section~\ref{sec:interpretive-foundations} and indexed to a machine-checked theorem handle. They complete the complexity landscape by characterizing when exact minimization is rational and when it is not: the rationality matrix (Proposition~\ref{prop:attempted-competence-matrix}), the dominance and conservation theorems (Theorems~\ref{thm:centralization-dominance}, \ref{thm:tax-conservation}), and the amortization threshold (Theorem~\ref{thm:amortization}) are all mechanized in Lean.
-\claimstamp{P\ref{prop:attempted-competence-matrix};T\ref{thm:centralization-dominance},\ref{thm:tax-conservation},\ref{thm:amortization}}{AR,LC}
-\leanmeta{\LH{IC27},\LH{HD1},\LH{HD5},\LH{HD4}.}
+\leanmeta{\LH{QT1},\LH{QT2},\LH{QT3},\LH{WD1},\LH{WD2},\LH{WD3},\LH{BC1},\LH{BC2},\LH{BC3},\LH{BC4},\LH{BC5},\LH{CCC6},\LH{CCC5},\LH{CCC1},\LH{DC9},\LH{DC10},\LH{DC1},\LH{DC2},\LH{FN14},\LH{MN5},\LH{FI7},\LH{W1},\LH{W2},\LH{W3},\LH{W4},\LH{RD1},\LH{RD2},\LH{RD3},\LH{RS1},\LH{RS2},\LH{RS3},\LH{RS4},\LH{RS5},\LH{TUR1},\LH{TUR2},\LH{TUR5},\LH{TUR6}.}

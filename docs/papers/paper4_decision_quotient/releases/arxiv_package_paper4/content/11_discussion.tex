@@ -2,6 +2,37 @@
 
 We address anticipated questions about the scope and implications of the main results.
 
+\subsection{On Physical Grounding of Computational Hardness}\label{sec:locality-physics}
+
+The complexity results rest on $\P \neq \coNP$ (equivalently, $\P \neq \NP$). We make precise what rejecting this assumption requires.
+
+Consider a bounded spacetime region $R$ with finite energy capacity $E$. Any observation requires energy (Landauer's principle: $kT\ln 2$ per bit~\cite{landauer1961irreversibility}). If the state space has $|S|$ configurations and each query costs $\varepsilon > 0$ energy, then $E < |S| \cdot \varepsilon$ implies the region cannot observe all configurations (\LH{LP32}, \LH{LP33}).
+
+This forces \emph{locality}: bounded regions cannot have complete knowledge of the universe (\LH{LP34}). But locality implies \emph{independent local configurations}: spacelike-separated regions maintain configurations that need not agree (\LH{LP35}, \LH{LP10c}). When such regions interact (``board merge''), their configurations may contradict (\LH{LP36}, \LH{LP18}).
+
+\begin{theorem}[P $\neq$ NP Necessary for Physics, informal]\label{thm:pne-np-physics}
+Under:
+\begin{enumerate}
+\item Landauer's principle (queries cost energy) --- \LH{LP41}
+\item Nontrivial state space ($|S| > 1$) --- \LH{LP42}
+\item Finite signal speed (special relativity) --- \LH{LP43}
+\item Finite universe energy --- \LH{LP44}
+\end{enumerate}
+spacelike-separated regions can hold locally valid configurations that contradict on merge (\LH{LP38}).
+\end{theorem}
+
+The formal statement and proof are in \texttt{LocalityPhysics.lean} (\LH{LP38}). If $\P = \NP$, bounded-energy observers could determine global consistency in polynomial time, eliminating the locality that makes spatially distributed matter possible (\LH{LP39}, \LH{LP40}).
+
+To reject this theorem, one must deny:
+\begin{itemize}
+\item Landauer's principle (empirically verified~\cite{berut2012experimental}), or
+\item that physics has multiple states (we observe them), or
+\item special relativity (signal speed is finite), or
+\item finite universe energy (thermodynamics)
+\end{itemize}
+
+Each denial contradicts established physics. The ``integrity trap'' (\LH{LP45}) is that rejecting the mathematical claim requires rejecting physical law.
+
 \subsection{On Tractability Despite Hardness}
 
 \textbf{Question:} ``coNP-complete problems have good heuristics or approximations in practice. Does the hardness result preclude practical solutions?''

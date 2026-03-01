@@ -16,16 +16,35 @@ Sanjeev Arora and Boaz Barak.
 \newblock {\em Computational Complexity: A Modern Approach}.
 \newblock Cambridge University Press, 2009.
 
+\bibitem{berut2012experimental}
+Antoine B{\'e}rut, Artak Arakelyan, Artyom Petrosyan, Sergio Ciliberto, Raoul
+  Dillenschneider, and Eric Lutz.
+\newblock Experimental verification of {L}andauer's principle linking
+  information and thermodynamics.
+\newblock {\em Nature}, 483:187--189, 2012.
+
 \bibitem{blum1997selection}
 Avrim~L. Blum and Pat Langley.
 \newblock Selection of relevant features and examples in machine learning.
 \newblock {\em Artificial Intelligence}, 97(1-2):245--271, 1997.
+
+\bibitem{bodlaender1993tourist}
+Hans~L. Bodlaender.
+\newblock A tourist guide through treewidth.
+\newblock In {\em Acta Cybernetica}, volume~11, pages 1--21, 1993.
 
 \bibitem{chickering2004large}
 David~Maxwell Chickering, David Heckerman, and Christopher Meek.
 \newblock Large-sample learning of {Bayesian} networks is {NP}-hard.
 \newblock In {\em Journal of Machine Learning Research}, volume~5, pages
   1287--1330, 2004.
+
+\bibitem{cichocki2016tensor}
+Andrzej Cichocki, Namgil Lee, Ivan Oseledets, Anh-Huy Phan, Qibin Zhao, and
+  Danilo~P. Mandic.
+\newblock {\em Tensor Networks for Dimensionality Reduction and Large-Scale
+  Optimization}, volume~9.
+\newblock Now Publishers, 2016.
 
 \bibitem{cook1971complexity}
 Stephen~A. Cook.
@@ -61,6 +80,11 @@ Yannick Forster, Edith Heiter, and Gert Smolka.
 \newblock In {\em Proceedings of the 8th ACM SIGPLAN International Conference
   on Certified Programs and Proofs}, pages 114--127. ACM, 2019.
 
+\bibitem{freuder1990complexity}
+Eugene~C. Freuder.
+\newblock Complexity of k-tree structured constraint satisfaction problems.
+\newblock {\em Proceedings of AAAI}, pages 4--9, 1990.
+
 \bibitem{grunwald2007minimum}
 Peter~D. Gr{\"u}nwald.
 \newblock {\em The Minimum Description Length Principle}.
@@ -94,12 +118,22 @@ Richard~M. Karp.
 \newblock In {\em Complexity of Computer Computations}, pages 85--103.
   Springer, 1972.
 
+\bibitem{kolda2009tensor}
+Tamara~G. Kolda and Brett~W. Bader.
+\newblock Tensor decompositions and applications.
+\newblock {\em SIAM Review}, 51(3):455--500, 2009.
+
 \bibitem{kunze2019formal}
 Fabian Kunze, Gert Smolka, and Yannick Forster.
 \newblock Formal small-step verification of a call-by-value lambda calculus
   machine.
 \newblock In {\em Asian Symposium on Programming Languages and Systems}, pages
   264--283. Springer, 2019.
+
+\bibitem{landauer1961irreversibility}
+Rolf Landauer.
+\newblock Irreversibility and heat generation in the computing process.
+\newblock {\em IBM Journal of Research and Development}, 5(3):183--191, 1961.
 
 \bibitem{lehmann1950completeness}
 Erich~L. Lehmann and Henry Scheff{\'e}.

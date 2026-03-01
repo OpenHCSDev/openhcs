@@ -2340,6 +2340,27 @@ abbrev IA5 := @IA5_competence_bounded
 /-- IA6: Logic is complete; access isn't. -/
 abbrev IA6 := @IA6_logic_complete_access_not
 
+/-- IA7: Uncertainty means there's information you don't have. -/
+abbrev IA7 := @IA7_uncertainty_is_gap
+
+/-- IA8: Sufficient capacity enables full access. -/
+abbrev IA8 := @IA8_sufficient_capacity_enables_full_access
+
+/-- IA9: Full access eliminates uncertainty. -/
+abbrev IA9 := @IA9_full_access_no_uncertainty
+
+/-- IA10: Uncertainty implies incomplete access. -/
+abbrev IA10 := @IA10_uncertainty_implies_incomplete
+
+/-- IA11: Uncertainty from capacity bound. -/
+abbrev IA11 := @IA11_uncertainty_from_capacity_bound
+
+/-- IA12: EC2 from uncertainty — bounded capacity follows from uncertainty + maximal access. -/
+abbrev IA12 := @IA12_ec2_from_uncertainty
+
+/-- IA13: Unbounded implies certainty — contrapositive of EC2 derivation. -/
+abbrev IA13 := @IA13_unbounded_implies_certainty
+
 end InformationAccessExports
 
 -- ============================================================================

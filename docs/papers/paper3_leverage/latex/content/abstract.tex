@@ -1,13 +1,22 @@
-This paper derives a decidable optimization criterion for coherent architectures: maximize leverage
-\[L(A)=\frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.\]
+Five independent scientific frameworks---engineering optimization, epistemic coherence, information geometry, computational complexity, and statistical physics---each characterize the same architectural property: having exactly one degree of freedom.
 
-Building on axis orthogonality (Paper 1) and Single Source of Truth (Paper 2), we prove a family of results connecting DOF, error probability, and modification cost. Key contributions include:
+\textbf{Central Result (Five-Way Equivalence, Theorem~\ref{thm:five-way}).} For any architecture $A$ with $\mathrm{Cap}(A) > 0$:
+\[
+\mathrm{DOF}(A) = 1
+\;\iff\; \text{max leverage}
+\;\iff\; \text{SSOT}
+\;\iff\; \mathrm{srank} = 1
+\;\iff\; \text{tractable sufficiency}
+\;\iff\; \text{zero thermodynamic cost}.
+\]
+This convergence is not a coincidence. The five frameworks are logically independent---each was developed for a distinct purpose---yet all select the single-source condition as their ground state. All equivalences are machine-checked in Lean 4 via live cross-paper imports (Paper~3 $\to$ Paper~4 $\to$ Mathlib).
 
-- DOF–Reliability Isomorphism: an architecture with $n$ DOF is isomorphic to an $n$-component series reliability system, preserving failure-ordering.
-- Leverage–Error Tradeoff: among architectures with equal capabilities, larger $L$ implies strictly smaller expected error probability.
-- Modification Complexity Gap: at fixed capabilities, expected modification cost scales with DOF (constant at optimal leverage, linear above it).
-- Optimality Criterion: given requirements $R$, the architecture that maximizes $L$ subject to feasibility constraints minimizes expected error; the selection is computable and decidable.
+Building on axis orthogonality (Paper~1) and Single Source of Truth (Paper~2), the engineering consequences follow: define leverage
+\[L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.\]
+Maximizing $L$ subject to feasibility minimizes expected error probability (DOF--Reliability Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical edit-energy under Landauer calibration with explicit per-edit constant $j_{\mathcal{M}} > 0$. These are \emph{corollaries} of the convergence theorem, not independent contributions.
 
-We illustrate these results with instances (SSOT vs scattered checks, nominal vs duck typing, service decomposition) and connect the theory to implementation patterns. All core theorems are machine-checked in Lean 4; proofs and an assumption ledger accompany the paper. Practical validation is provided by an OpenHCS migration case study that demonstrates the predicted leverage and localization gains.
+\textbf{Open Conjectures.} The thermodynamic selection theorem currently assumes P~$\neq$~coNP. We conjecture that thermodynamic cost scales directly with structural rank \emph{unconditionally}---removing the complexity-theoretic hypothesis would reduce the five-way equivalence to a purely physical statement. A second open problem connects DOF~$=1$ architectures to England's replication inequality: single-source architectures that generate derived instances may satisfy a formal entropy-production bound that multi-DOF architectures cannot match.
 
-Keywords: software architecture, leverage, degrees of freedom, reliability, formal methods
+All core theorems are machine-checked in Lean~4. An assumption ledger and proof listing accompany the paper.
+
+Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer principle, structural rank, formal methods

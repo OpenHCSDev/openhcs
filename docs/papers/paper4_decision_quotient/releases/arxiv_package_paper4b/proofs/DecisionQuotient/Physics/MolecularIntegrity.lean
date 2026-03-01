@@ -3,7 +3,7 @@
 
   Grounding integrity in molecular mechanics.
   
-  A molecule is an agent (nonstationary decision circuit).
+  A molecule is an active physical decision circuit (nonstationary).
   Integrity = configuration bits = erasure cost in units of kT.
   Chemical stability = integrity trap at molecular scale.
   
@@ -27,7 +27,7 @@ structure Configuration where
   /-- Bits encoding this configuration (determines erasure cost). -/
   bits : ℕ
 
-/-- Molecule: a decision circuit in the molecular regime.
+/-- Molecule: an active physical decision circuit in the molecular regime.
     State = configuration; transitions = reactions/conformational changes. -/
 structure Molecule where
   /-- Current configuration. -/
@@ -146,4 +146,3 @@ theorem dna_persists_room_temp :
 end MolecularIntegrity
 end Physics
 end DecisionQuotient
-

@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for SSOT Foundations.
 
-- **Lines:** 3378
-- **Theorems:** 176
+- **Lines:** 3469
+- **Theorems:** 185
 - **`sorry` placeholders:** 0
 
 
@@ -31,6 +31,7 @@ lake build
 | `ClaimClosure.lean` | ClaimClosure |
 | `Coherence.lean` | Coherence |
 | `Completeness.lean` | Completeness |
+| `CrossPaperDependencies.lean` | CrossPaperDependencies |
 | `DependencyBridge.lean` | DependencyBridge |
 | `Derivation.lean` | Derivation |
 | `Dof.lean` | Dof |

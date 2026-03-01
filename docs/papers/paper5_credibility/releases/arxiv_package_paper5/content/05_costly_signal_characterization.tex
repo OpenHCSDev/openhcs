@@ -21,29 +21,6 @@ Applying Theorem~\ref{thm:cheap-talk-bound} with $\alpha = 1$:
 \]
 \end{proof}
 
-\begin{theorem}[Dual-Cost Signal Effectiveness]\label{thm:dual-cost-signal}
-For dual-cost signal $s$ with epistemic cost differential
-$\Delta_E = \text{Cost}_E(s | E=0) - \text{Cost}_E(s | E=1) > 0$ and ego cost differential
-$\Delta_G = \text{Cost}_G(s | G=0) - \text{Cost}_G(s | G=1) > 0$:
-\[
-\Pr[\vec{T} \text{ coherent} \mid S] \to 1 \text{ as } \min(\Delta_E, \Delta_G) \to \infty
-\]
-Dual-cost signals can achieve arbitrarily high credibility for coherent truth claims.
-\end{theorem}
-
-\begin{proof}
-A dual-cost signal with both $\Delta_E > 0$ and $\Delta_G > 0$ is costly for two reasons:
-1. Epistemically false claims have higher epistemic cost
-2. Ego-conflicting claims have higher ego cost
-
-For a claim to be deceptive in a coherent way, it would need to be both epistemically false and ego-aligned, but the high $\Delta_E$ makes this costly. For a claim to be ego-driven but epistemically true, the high $\Delta_G$ makes this costly. Thus, only coherent claims (both epistemically true and ego-aligned) can afford to produce the signal.
-
-As $\min(\Delta_E, \Delta_G) \to \infty$, the probability of deceptive signals $\beta := \Pr[S \mid \vec{T} \text{ incoherent}] \to 0$. Applying the same Bayes update form as Theorem~\ref{thm:cheap-talk-bound} to the coherence event:
-\[
-\Pr[\vec{T} \text{ coherent} \mid S] = \frac{p}{p + (1-p)\beta} \to 1 \text{ as } \beta \to 0.
-\]
-\end{proof}
-
 \begin{theorem}[Verified signals drive credibility to $1$]\label{thm:verified-signal}
 Let $C\in\{0,1\}$ with prior $p=\Pr[C=1]$. Suppose a verifier produces an
 acceptance event $A$ such that
@@ -102,31 +79,6 @@ Maximum \\
 Verbal assertion & \textasciitilde0 & \textasciitilde0 & Bounded \\
 \end{longtable}
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1786}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2286}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2286}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3643}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Dual-Cost Signal
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Epistemic Cost Differential
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Ego Cost Differential
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Coherence Credibility
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Public peer review & Refutation risk & Reputation damage & High \\
-Independent audit & Investigation cost & Legal liability & Very High \\
-Open-source contribution & Debugging effort & Community backlash & Moderate-High \\
-Personal apology & Humility cost & Ego preservation cost & High \\
-\end{longtable}
-
 \textbf{Key insight:} Lean proofs with \passthrough{\lstinline!0 sorry!}
 are \emph{maximally costly signals}. You cannot produce a compiling
 proof of a false theorem. The cost differential is infinite
@@ -144,6 +96,25 @@ where $\varepsilon$ accounts only for proof assistant bugs.
 This is a special case of Theorem~\ref{thm:verified-signal} with
 $\varepsilon_T \approx 0$ (proof exists if claim is true and provable) and
 $\varepsilon_F \approx 0$ (proof assistant soundness). See \cite{demoura2021lean4,debruijn1970automath}.
+\end{proof}
+
+\begin{corollary}[Counting Gap grounds $\Delta_{\text{Lean}} = \infty$]\label{cor:counting-gap-lean}
+The infinite cost differential of a machine-checked proof is a consequence of Paper 4's
+Counting Gap (Theorem 3: $\varepsilon \cdot N \leq C \Rightarrow N \leq C/\varepsilon$)
+applied to the type-checker channel.
+\end{corollary}
+
+\begin{proof}
+Let $N$ = number of false proofs that compile, $C$ = capacity of the type-checker channel,
+$\varepsilon = \varepsilon_F$ = false-positive rate. The Counting Gap gives $N \leq C / \varepsilon_F$.
+By soundness of Lean's kernel \cite{demoura2021lean4}, $\varepsilon_F \to 0$, so $N \to 0$.
+To produce a single false proof that compiles, an agent must either:
+(a) find a kernel bug (probability $\varepsilon_F \to 0$), or
+(b) search the space of all type-correct proof terms for one that proves a false theorem.
+Space (b) has size at most $C / \varepsilon_F \to \infty$, requiring diverging computational work.
+By Paper 4's Energy Lower Bound (Theorem 13), computational work translates to physical energy at rate
+$\geq k_B T \ln 2$ per bit. Therefore $\Delta_{\text{Lean}} = \text{Cost}(s \mid \bot) - \text{Cost}(s \mid \top) = \infty$
+in joules. The cost differential is not a modeling assumption; it follows from counting.
 \end{proof}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}

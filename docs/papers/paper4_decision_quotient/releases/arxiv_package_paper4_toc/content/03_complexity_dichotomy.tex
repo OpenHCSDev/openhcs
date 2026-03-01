@@ -443,7 +443,7 @@ The equivalence (1)$\Leftrightarrow$(2)$\Leftrightarrow$(3) holds by definition:
 \end{proof}
 
 \paragraph{Decision Circuits and the Landauer Constraint.}
-The above equivalence applies to any physical system implementing state transitions---a \emph{decision circuit}. This framing is substrate-neutral: biological neural circuits, silicon processors, and any other physical realization of discrete dynamics fall under the same analysis.
+The above equivalence applies to any physical system implementing state transitions, a \emph{decision circuit}. This framing is substrate-neutral: biological neural circuits, silicon processors, and any other physical realization of discrete dynamics fall under the same analysis.
 
 \begin{theorem}[Cycle Cost Lower Bound]\label{thm:cycle-cost}
 \claimstamp{T\ref{thm:cycle-cost}}{AR,H=cost-growth}
@@ -571,7 +571,7 @@ Together, these force $P(\text{posterior}) = P(\text{prior}) \cdot P(\text{evide
 
 The uniqueness corollary \LH{FN14} shows any two admissible rules must agree.
 
-\textbf{Machine-checked foundation.} The core inequality underlying this result---that Bayesian updating uniquely minimizes cross-entropy---is proved in Lean 4 with zero axioms and zero \texttt{sorry} statements. The proof derives Gibbs' inequality ($\mathrm{KL}(p\|q) \geq 0$) from the fundamental inequality $\log x \leq x - 1$, then shows $\mathrm{CE}(p,q) = H(p) + \mathrm{KL}(p\|q)$, yielding $\mathrm{CE}(p,p) \leq \mathrm{CE}(p,q)$ with equality iff $p = q$ \LH{FN7}, \LH{FN8}, \LH{FN12}, \LH{FN14}.
+\textbf{Machine-checked foundation.} The core inequality underlying this result (that Bayesian updating uniquely minimizes cross-entropy) is proved in Lean 4 with zero axioms and zero \texttt{sorry} statements. The proof derives Gibbs' inequality ($\mathrm{KL}(p\|q) \geq 0$) from the fundamental inequality $\log x \leq x - 1$, then shows $\mathrm{CE}(p,q) = H(p) + \mathrm{KL}(p\|q)$, yielding $\mathrm{CE}(p,p) \leq \mathrm{CE}(p,q)$ with equality iff $p = q$ \LH{FN7}, \LH{FN8}, \LH{FN12}, \LH{FN14}.
 \end{proof}
 
 \begin{corollary}[Thermodynamic Decision Quotient]\label{cor:thermo-dq}
@@ -621,7 +621,7 @@ The Cox-Jaynes argument, traditionally grounded in Boolean logic, admits a therm
   \item \textbf{Landauer bound}: DQ increase costs $\geq k_B T \ln 2$ per bit \LH{BB4}.
   \item \textbf{Integrity preservation}: verified bits cannot be corrupted for free \LH{BB5}.
 \end{itemize}
-Under these constraints, Bayesian updating is the \emph{unique} admissible rule \LH{BB3}. Any two admissible rules must agree \LH{BB5}. This is ``Bayes from physics''---the thermodynamic constraints uniquely determine the correct update rule.
+Under these constraints, Bayesian updating is the \emph{unique} admissible rule \LH{BB3}. Any two admissible rules must agree \LH{BB5}. The thermodynamic constraints uniquely determine the correct update rule.
 
 Informally: both derivation paths end at the same Bayes update rule.
 
@@ -855,7 +855,7 @@ The information gap is a physical constraint on access, not a logical incomplete
 
 \begin{theorem}[Competence Bounded by Access]\label{thm:competence-access}
 \claimstamp{T\ref{thm:competence-access}}{E,Q,S,AR}
-Competence is bounded by what you can access, not by logical consistency. For any system with more information than your channel capacity, there exist truths you cannot verify---not because logic fails, but because you lack the bits.
+Competence is bounded by what you can access, not by logical consistency. For any system with more information than your channel capacity, there exist truths you cannot verify, not because logic fails, but because you lack the bits.
 \leanmeta{\LH{IA5},\LH{IA6}.}
 \end{theorem}
 

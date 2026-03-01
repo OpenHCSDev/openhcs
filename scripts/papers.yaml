@@ -66,6 +66,8 @@ papers:
     latex_dir: "latex_it"
     latex_file: "coherence_it.tex"
     venue: "IEEE Transactions on Information Theory"
+    lean_dependencies:
+      - "paper1"
     assumption_ledger_sources:
       - "Ssot/ClaimClosure.lean"
     claim_mapping_file: "content/11_lean_proofs.tex"
@@ -77,6 +79,10 @@ papers:
     latex_dir: "latex"
     latex_file: "leverage_arxiv.tex"
     venue: "Draft"
+    lean_dependencies:
+      - "paper1"
+      - "paper2"
+      - "paper4"
 
   paper4:
     name: "Decision Quotient"
@@ -85,6 +91,9 @@ papers:
     latex_dir: "latex"
     latex_file: "decision_quotient_arxiv.tex"
     venue: "Draft"
+    lean_dependencies:
+      - "paper1"
+      - "paper2"
     assumption_ledger_sources:
       - "DecisionQuotient/ClaimClosure.lean"
     claim_mapping_file: "content/claim_mapping_auto.tex"

@@ -29,6 +29,7 @@ An encoding system is \emph{incoherent} iff some locations disagree:
 
 \begin{theorem}[Oracle Arbitrariness]\label{thm:oracle-arbitrary}
 For any incoherent encoding system $S$ and any oracle $O$ that resolves $S$ to a value $v \in S$, there exists a value $v' \in S$ such that $v' \neq v$.
+\LH{ORA1}
 \end{theorem}
 
 \begin{proof}
@@ -43,6 +44,7 @@ The \emph{degrees of freedom} (DOF) of an encoding system is the number of locat
 
 \begin{theorem}[DOF = 1 Guarantees Coherence]\label{thm:dof-one-coherence}
 If DOF = 1, then the encoding system is coherent in all reachable states.
+\LH{COH1}
 \end{theorem}
 
 \begin{proof}
@@ -51,6 +53,7 @@ With DOF = 1, exactly one location is independent. All other locations are deriv
 
 \begin{theorem}[DOF $>$ 1 Permits Incoherence]\label{thm:dof-gt-one-incoherence}
 If DOF $> 1$, then incoherent states are reachable.
+\LH{COH2}
 \end{theorem}
 
 \begin{proof}
@@ -59,6 +62,7 @@ With DOF $> 1$, at least two locations are independent. Independent locations ca
 
 \begin{corollary}[Coherence Forces DOF = 1]\label{cor:coherence-forces-ssot}
 If coherence must be guaranteed (no incoherent states reachable), then DOF = 1 is necessary and sufficient.
+\LH{COH3}
 \end{corollary}
 
 This is the epistemic foundation of SSOT.
@@ -177,6 +181,7 @@ Modification complexity is the central metric of this paper. It measures the \em
 
 \begin{theorem}[Correctness Forcing]\label{thm:correctness-forcing}
 $M(C, \delta_F)$ is the \textbf{minimum} number of edits required for correctness. Fewer edits imply an incorrect program.
+\LH{BAS1}
 \end{theorem}
 
 \begin{proof}
@@ -244,6 +249,7 @@ DOF is the key metric. Modification complexity $M$ counts all encoding locations
 
 \begin{theorem}[DOF = Incoherence Potential]\label{thm:dof-inconsistency}
 $\text{DOF}(C, F) = k$ implies $k$ different values for $F$ can coexist in $C$ simultaneously. With $k > 1$, incoherent states are reachable.
+\LH{BAS2}
 \end{theorem}
 
 \begin{proof}
@@ -252,6 +258,7 @@ Each independent location can hold a different value. By Definition~\ref{def:ind
 
 \begin{corollary}[DOF $>$ 1 Implies Incoherence Risk]\label{cor:dof-risk}
 $\text{DOF}(C, F) > 1$ implies incoherent states are reachable. The codebase can enter a state where different locations encode different values for the same fact.
+\LH{BAS3}
 \end{corollary}
 
 \subsection{The DOF Lattice}\label{sec:dof-lattice}
@@ -278,6 +285,7 @@ For any fact $F$ that must be encoded, $\text{DOF}(C, F) = 1$ is the unique valu
 \item DOF = 1: Coherence guaranteed (by Theorem~\ref{thm:dof-one-coherence})
 \item DOF $>$ 1: Incoherence reachable (by Theorem~\ref{thm:dof-gt-one-incoherence})
 \end{enumerate}
+\LH{INS1}
 \end{theorem}
 
 \begin{proof}

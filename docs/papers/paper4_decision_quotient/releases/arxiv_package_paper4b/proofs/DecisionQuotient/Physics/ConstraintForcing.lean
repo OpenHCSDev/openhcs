@@ -14,7 +14,7 @@ import Mathlib.Tactic
   - physical law parameterization (timed allowed-action families),
   - forcing consequences (deadline compels action),
   - thermodynamic consequence (forced decision has positive Landauer lower bound),
-  - belief consequence under uncertainty (nondegenerate belief is forced).
+  - prior-mass consequence under uncertainty (nondegenerate prior is forced).
 
   No new axioms are introduced.
 -/
@@ -172,8 +172,8 @@ theorem actionForced_of_deadline
   rcases hDeadline s hs with ⟨a, _ha⟩
   exact ⟨a⟩
 
-/-- Bridge to belief theorem: deadline-forced action plus provable uncertainty
-    implies nondegenerate belief. -/
+/-- Bridge to nondegenerate-prior theorem: deadline-forced action plus provable
+    uncertainty implies nondegenerate prior mass. -/
 theorem nondegenerateBelief_of_deadline_and_uncertainty
     (F : LogicTimeScaffold S)
     (L : TimedLawFamily Θ S A)

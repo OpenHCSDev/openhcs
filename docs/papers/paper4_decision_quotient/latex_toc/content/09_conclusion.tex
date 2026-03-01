@@ -13,11 +13,23 @@ Informally: this conclusion combines previously proved blocks under explicit tag
 
 The Lean 4 proofs were iteratively refined: the author specified the target statements, the LLM proposed proof strategies, and the Lean compiler served as the arbiter of correctness. The complexity-theoretic reductions required careful human oversight to ensure the polynomial bounds were correctly established.
 
-\textbf{What the author contributed:} The problem formulations (SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, ANCHOR-SUFFICIENCY), the hardness conjectures, the tractability conditions, and the connection to over-modeling in engineering practice.
+\textbf{What the author contributed:} The informal problem formulations (SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, ANCHOR-SUFFICIENCY), the informal hardness conjectures, the informal tractability conditions, and the connection to over-modeling in engineering practice.
 
 \textbf{What LLMs contributed:} \LaTeX{} drafting, Lean tactic exploration, reduction construction assistance, and prose refinement.
 
 The proofs are machine-checked; their validity is independent of generation method. This methodology is disclosed for academic transparency.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection*{Acknowledgments}
+
+This work depends on results whose authors made possible the insights that could then be machine-verified.
+
+\textbf{Fundamental physics.} Albert Einstein established special relativity and the light-speed bound \cite{einstein1905electrodynamics}; Hermann Minkowski gave it the spacetime formulation \cite{minkowski1908space}. Max Planck established energy quantization and the constant $k_B$ \cite{planck1901distribution}. Rolf Landauer proved that erasure costs thermodynamic work \cite{landauer1961irreversibility}; Charles Bennett showed that reversible computation circumvents this bound \cite{bennett1982thermodynamics}. Bérut et al.\ experimentally verified Landauer's principle \cite{berut2012experimental}. The counting gap theorem (BA10) proves that some finite $c$ must exist from pure mathematics; Einstein told us which one.
+
+\textbf{Proof infrastructure.} The Lean 4 proof assistant \cite{demoura2021lean4} served as the arbiter of correctness. Leonardo de Moura, Sebastian Ullrich, and the Lean 4 team built a tool that transforms mathematical claims into mechanically verified theorems. The Mathlib library \cite{mathlib2020} provided the formal infrastructure: order theory, linear algebra, complexity-theoretic definitions, and the lemmas that made the formalization possible.
+
+\textbf{Methodological note.} The proofs in this paper are machine-checked; their validity is independent of generation method. The human author contributed the informal problem formulations, informal hardness conjectures, informal tractability conditions, and the connection to over-modeling in engineering practice. The machine contributors (Claude, GPT-4, Lean 4) served as proof assistants, tactic explorers, and drafting partners. The final arbiter was the Lean compiler: if it accepts the proof, the theorem holds.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 

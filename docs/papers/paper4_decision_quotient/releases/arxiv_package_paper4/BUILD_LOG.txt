@@ -2,14 +2,14 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper4 - Verified Polynomial-Time Reductions in Lean 4: Formalizing the Complexity of Decision-Relevant Information
-Package Date: 2026-02-23T23:59:02.540422
+Package Date: 2026-03-01T01:15:15.380473
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 58
-Lines of Code: 13391
-Theorems: 597
+Lean Files: 113
+Lines of Code: 28863
+Theorems: 1252
 Sorry Placeholders: 0
 
 
@@ -17,16 +17,25 @@ Proof Files:
 ------------
   - AlgorithmComplexity.lean
   - Basic.lean
+  - BayesFoundations.lean
+  - BayesFromDQ.lean
+  - BayesOptimalityProof.lean
+  - BayesianBridge.lean
+  - CheckAxioms.lean
   - ClaimClosure.lean
   - Complexity.lean
   - ComplexityMain.lean
   - Computation.lean
+  - ComputationalDecisionProblem.lean
+  - CrossPaperDependencies.lean
   - DecisionGeometry.lean
   - Dichotomy.lean
   - Approximation.lean
   - Elicitation.lean
   - ValueOfInformation.lean
   - Finite.lean
+  - FunctionalInformation.lean
+  - GraphNontriviality.lean
   - HandleAliases.lean
   - ApproximationHardness.lean
   - ConfigReduction.lean
@@ -41,31 +50,77 @@ Proof Files:
   - Sigma2PHardness.lean
   - Hardness.lean
   - HardnessDistribution.lean
+  - RDSrank.lean
+  - RateDistortion.lean
   - Information.lean
   - Instances.lean
   - IntegrityCompetence.lean
   - InteriorVerification.lean
   - PhysicalBudgetCrossover.lean
   - AccessRegime.lean
+  - AnchorChecks.lean
+  - AssumptionNecessity.lean
+  - BoundedAcquisition.lean
   - ClaimTransport.lean
+  - ConstraintForcing.lean
+  - Conversation.lean
+  - DecisionEquivalence.lean
   - DecisionTime.lean
+  - DiscreteSpacetime.lean
   - HeisenbergStrong.lean
   - Instantiation.lean
+  - IntegrityEquilibrium.lean
+  - InvariantAgreement.lean
+  - LocalityPhysics.lean
+  - MeasureNecessity.lean
+  - MolecularIntegrity.lean
+  - ObserverRelativeState.lean
   - PhysicalCore.lean
   - PhysicalHardness.lean
   - PhysicalIncompleteness.lean
+  - TUR.lean
+  - TransportCost.lean
   - Uncertainty.lean
+  - WassersteinIntegrity.lean
   - PolynomialReduction.lean
   - QueryComplexity.lean
   - Quotient.lean
   - Reduction.lean
   - Reduction_AllCoords.lean
+  - FisherInformation.lean
+  - ProbabilisticBridge.lean
+  - AlgorithmComplexity.lean
+  - Basic.lean
+  - ClaimClosure.lean
+  - Computation.lean
+  - CrossRegime.lean
+  - Dichotomy.lean
+  - Economics.lean
+  - Finite.lean
+  - Hardness.lean
+  - HardnessDistribution.lean
+  - Hierarchy.lean
+  - Information.lean
+  - Instances.lean
+  - PolynomialReduction.lean
+  - QueryComplexity.lean
+  - Quotient.lean
+  - SubstrateCost.lean
+  - Summary.lean
+  - TemporalIntegrity.lean
+  - TemporalLearning.lean
+  - ThermodynamicLift.lean
+  - Tractability.lean
+  - StochasticSequential.lean
   - Sufficiency.lean
   - Summary.lean
   - ThermodynamicLift.lean
+  - ToolCollapse.lean
   - BoundedActions.lean
+  - Dimensional.lean
   - FPT.lean
   - SeparableUtility.lean
+  - StructuralRank.lean
   - Tightness.lean
   - TreeStructure.lean
   - Tractable.lean

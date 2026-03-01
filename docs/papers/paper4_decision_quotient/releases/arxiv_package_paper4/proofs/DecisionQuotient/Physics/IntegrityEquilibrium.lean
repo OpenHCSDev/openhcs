@@ -9,7 +9,7 @@
 
     1. DECISION CIRCUIT: Any physical system implementing state transitions under uncertainty
        - Substrate-neutral: biological neurons, silicon, any physical realization
-       - Agents contain decision circuits; claims about circuits apply to agents
+       - Physical systems contain decision circuits; claims apply at circuit level
 
     2. INTEGRITY (bit-erase resistance): Circuit's resistance to state corruption
        - Measured by: bits required to erase current state
@@ -42,7 +42,7 @@ namespace DecisionCircuit
 
 /-- A decision circuit: any physical system implementing state transitions.
     Substrate-neutral: applies to neural circuits, silicon, any physical realization.
-    An agent contains a decision circuit; claims about circuits apply to agents. -/
+    A physical system contains a decision circuit; claims apply at circuit level. -/
 structure Circuit where
   /-- Circuit identifier. -/
   id : ℕ
@@ -59,7 +59,7 @@ inductive Strategy where
 structure EpistemicState where
   /-- Number of verified theorems (bits that would need erasure to dismiss). -/
   theoremCount : ℕ
-  /-- Visibility/citability (affects social cost of dismissal). -/
+  /-- External observability/citability (affects reproducibility pressure). -/
   visibility : ℕ
 
 /-! ## Part 2: Integrity (Bit-Erase Resistance) -/
@@ -559,7 +559,7 @@ def maintainsIntegrity (s₀ s₁ : CircuitState) : Prop :=
   s₁.integrity.bits ≥ s₀.integrity.bits
 
 /-- THEOREM 7: Circuits self-preserve when erasure cost exceeds external competence.
-    If no external agent can afford to erase, integrity persists. -/
+    If no external system can afford to erase, integrity persists. -/
 theorem integrity_self_preserving
     (s : CircuitState) (externalCompetence : Competence)
     (hProtected : erasureCost s.integrity > externalCompetence) :
@@ -1082,9 +1082,9 @@ theorem IV6_deficit_at_source (sourcePaid : ℕ) :
 end DecisionCircuit
 
 /-!
-## Part 17: Atomic Circuits — Matter as Agent
+## Part 17: Atomic Circuits — Matter as Active Physical System
 
-An agent is matter that pays to move other matter via its decision circuit.
+An active physical system is matter that pays to move other matter via its decision circuit.
 Electrons in orbitals, atoms in bonds, molecules in conformations — all are
 decision circuits with discrete states and transition costs.
 -/
@@ -1126,14 +1126,14 @@ theorem AC4_downward_releases (c1 c2 : AtomicConfig) (hDown : c1.energy > c2.ene
   · omega
   · exact Nat.sub_pos_of_lt hDown
 
-/-- An atom is nonstationary (an agent) when it transitions between configurations. -/
+/-- An atom is nonstationary when it transitions between configurations. -/
 def isNonstationary (transitions : ℕ) : Prop := transitions > 0
 
-/-- AC5: An atom with orbital transitions is an agent (nonstationary decision circuit). -/
-theorem AC5_transitioning_atom_is_agent (transitions : ℕ) (hTrans : transitions > 0) :
+/-- AC5: An atom with orbital transitions is a nonstationary decision circuit. -/
+theorem AC5_transitioning_atom_is_nonstationary_system (transitions : ℕ) (hTrans : transitions > 0) :
     isNonstationary transitions := hTrans
 
-/-- AC6: A ground-state atom with no transitions is passive (not an agent). -/
+/-- AC6: A ground-state atom with no transitions is passive. -/
 theorem AC6_ground_state_is_passive : ¬isNonstationary 0 := by
   simp only [isNonstationary, gt_iff_lt, Nat.lt_irrefl, not_false_eq_true]
 
@@ -1171,9 +1171,9 @@ theorem AC9_matter_moves_matter (i : MatterInteraction)
   apply hMove
   rw [h]
 
-/-- AC10: An agent is matter that pays to move other matter.
+/-- AC10: An active physical system is matter that pays to move other matter.
     This is a definition. -/
-def isAgent (m : MatterInteraction) : Prop :=
+def isActivePhysicalSystem (m : MatterInteraction) : Prop :=
   m.energyPaid > 0 ∧ m.source ≠ m.target
 
 /-- AC11: No free matter movement — moving matter costs energy. -/
@@ -1242,6 +1242,88 @@ theorem IA6_logic_complete_access_not (s : SystemInformation) (o : ObserverChann
     (hExceeds : s.totalEntropy > o.capacity) :
     ∃ gap : ℕ, gap > 0 ∧ gap = s.totalEntropy - o.capacity :=
   ⟨informationGap s o, IA3_gap_when_exceeds s o hExceeds, rfl⟩
+
+-- ============================================================================
+-- Part 18b: EC2 Derivation from Uncertainty (IA7-IA12)
+-- If uncertainty exists, observer capacity must be bounded.
+-- This derives EC2 (finite resources) from the existence of uncertainty.
+-- ============================================================================
+
+/-- Uncertainty exists when system has more information than observer accessed. -/
+def uncertaintyExists (s : SystemInformation) (o : ObserverChannel) : Prop :=
+  o.accessed < s.totalEntropy
+
+/-- IA7: Uncertainty means there's information you don't have. -/
+theorem IA7_uncertainty_is_gap (s : SystemInformation) (o : ObserverChannel)
+    (hUncert : uncertaintyExists s o) :
+    s.totalEntropy - o.accessed > 0 :=
+  Nat.sub_pos_of_lt hUncert
+
+/-- IA8: If capacity ≥ system entropy, observer CAN access everything.
+    (Whether they DO is a separate question, but they CAN.) -/
+theorem IA8_sufficient_capacity_enables_full_access (s : SystemInformation) (C : ℕ)
+    (hSufficient : C ≥ s.totalEntropy) :
+    ∃ o : ObserverChannel, o.capacity = C ∧ o.accessed = s.totalEntropy :=
+  ⟨⟨C, s.totalEntropy, hSufficient⟩, rfl, rfl⟩
+
+/-- IA9: Full access eliminates uncertainty.
+    If accessed = totalEntropy, no uncertainty remains. -/
+theorem IA9_full_access_no_uncertainty (s : SystemInformation) (o : ObserverChannel)
+    (hFull : o.accessed = s.totalEntropy) :
+    ¬uncertaintyExists s o := by
+  unfold uncertaintyExists
+  omega
+
+/-- IA10: Contrapositive of IA9 — uncertainty implies incomplete access.
+    If uncertainty exists, observer hasn't accessed everything. -/
+theorem IA10_uncertainty_implies_incomplete (s : SystemInformation) (o : ObserverChannel)
+    (hUncert : uncertaintyExists s o) :
+    o.accessed < s.totalEntropy :=
+  hUncert
+
+/-- IA11: Incomplete access under bounded capacity implies capacity < ∞ matters.
+    More precisely: if uncertainty exists despite maximal access (accessed = capacity),
+    then capacity itself is the bottleneck. -/
+theorem IA11_uncertainty_from_capacity_bound (s : SystemInformation) (o : ObserverChannel)
+    (hUncert : uncertaintyExists s o)
+    (hMaxAccess : o.accessed = o.capacity) :
+    o.capacity < s.totalEntropy := by
+  unfold uncertaintyExists at hUncert
+  omega
+
+/-- IA12: The key derivation — uncertainty + maximal access → bounded capacity.
+    If you're uncertain AND you've accessed all you can, your capacity is finite
+    relative to the system. This is EC2: finite resources.
+
+    The chain:
+    1. We observe uncertainty (hUncert: accessed < totalEntropy)
+    2. We assume observer uses full capacity (hMaxAccess: accessed = capacity)
+    3. Therefore capacity < totalEntropy (bounded)
+    4. Therefore capacity is finite relative to system (EC2)
+
+    Note: "infinite capacity" would mean capacity ≥ any system's entropy,
+    which contradicts uncertainty existing. -/
+theorem IA12_ec2_from_uncertainty (s : SystemInformation) (o : ObserverChannel)
+    (hUncert : uncertaintyExists s o)
+    (hMaxAccess : o.accessed = o.capacity) :
+    o.capacity < s.totalEntropy ∧ o.capacity < s.totalEntropy + 1 := by
+  have h := IA11_uncertainty_from_capacity_bound s o hUncert hMaxAccess
+  exact ⟨h, Nat.lt_succ_of_lt h⟩
+
+/-- IA13: The philosophical statement — to be uncertain is to be bounded.
+    Equivalently: to be unbounded is to be certain.
+
+    Contrapositive: If for all systems s, uncertainty exists for observer o,
+    then o's capacity is bounded by every system's entropy.
+    An "unbounded" observer would have capacity ≥ all entropies,
+    contradicting universal uncertainty. -/
+theorem IA13_unbounded_implies_certainty (o : ObserverChannel)
+    (hUnbounded : ∀ s : SystemInformation, o.capacity ≥ s.totalEntropy) :
+    ∀ s : SystemInformation, o.accessed = o.capacity → ¬uncertaintyExists s o := by
+  intro s hMax
+  unfold uncertaintyExists
+  have hCap := hUnbounded s
+  omega
 
 end InformationAccess
 
@@ -1371,4 +1453,3 @@ end DimensionalComplexity
 
 end Physics
 end DecisionQuotient
-

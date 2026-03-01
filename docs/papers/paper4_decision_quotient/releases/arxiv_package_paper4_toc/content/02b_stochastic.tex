@@ -109,7 +109,7 @@ This is exactly MAJSAT, which is \PP-complete.
 \LH{CC55}}
 
 \begin{proof}
-For membership: We reduce to a \PP predicate. For each $a \in A$, compute $\mathbb{E}_P[U(a,s)]$ and compare. The comparison involves summing over $s \in S$ weighted by $P(s)$, which is polynomial in $|S|$ and the representation of $P$. The decision is whether the argmax is unique or whether knowing $s_I$ changes it---this is a majority-vote comparison, hence in \PP.
+For membership: We reduce to a \PP predicate. For each $a \in A$, compute $\mathbb{E}_P[U(a,s)]$ and compare. The comparison involves summing over $s \in S$ weighted by $P(s)$, which is polynomial in $|S|$ and the representation of $P$. The decision is whether the argmax is unique or whether knowing $s_I$ changes it; this is a majority-vote comparison, hence in \PP.
 
 For hardness: The reduction from MAJSAT constructs the uniform distribution. If $\varphi$ is true on $\geq 1/2$ of assignments, the expected utility of accepting is $\geq 1/2$, making accept optimal regardless of state observation. If $< 1/2$, reject is optimal. Thus $\emptyset$ is sufficient exactly when MAJSAT is true.
 \end{proof}

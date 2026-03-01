@@ -832,6 +832,9 @@ end {module_root}
             rel_parts = lean_file.relative_to(proofs_dir).parts
             if any(part in excluded_dirs for part in rel_parts):
                 continue
+            # Dependency mirrors are build-time wiring, not local proof content.
+            if rel_parts and rel_parts[0].startswith("dep_"):
+                continue
             lean_files.append(lean_file)
         return sorted(lean_files)
 
@@ -861,6 +864,47 @@ end {module_root}
 
         visit(paper_id)
         return ordered
+
+    def _sync_local_lean_dependency_dirs(self, paper_id: str) -> None:
+        """Materialize dependency aliases (`dep_<paper_id>`) for local `lake build`.
+
+        Source trees keep dependencies in their own paper folders; this method
+        creates local alias directories so lake path-dependencies remain stable
+        across source and packaged builds.
+        """
+        proofs_dir = self._get_paper_proofs_dir(paper_id)
+        if not proofs_dir.exists():
+            return
+
+        dep_ids = self._collect_lean_dependency_closure(paper_id)
+        for dep_id in dep_ids:
+            src = self._get_paper_proofs_dir(dep_id)
+            if not src.exists():
+                continue
+            alias = proofs_dir / f"dep_{dep_id}"
+
+            if alias.is_symlink():
+                try:
+                    if alias.resolve() == src.resolve():
+                        continue
+                except FileNotFoundError:
+                    pass
+                alias.unlink()
+            elif alias.exists():
+                if alias.is_file():
+                    alias.unlink()
+                else:
+                    shutil.rmtree(alias)
+
+            try:
+                alias.symlink_to(src.resolve(), target_is_directory=True)
+            except OSError:
+                shutil.copytree(
+                    src,
+                    alias,
+                    dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns(".lake", "build", "*.olean", "*.ilean"),
+                )
 
     def _iter_lean_roots_for_paper(self, paper_id: str) -> List[Tuple[str, Path]]:
         """Return `(source_paper_id, proofs_dir)` for paper + transitive dependencies."""
@@ -1218,6 +1262,43 @@ end {module_root}
         )
         return sorted(set(handles))
 
+    def _parse_theorem_lemma_handles(self, content: str) -> List[str]:
+        """Extract theorem/lemma declaration names."""
+        handles = re.findall(
+            r"(?m)^\s*(?:theorem|lemma)\s+([A-Za-z0-9_']+)\b",
+            content,
+        )
+        return sorted(set(handles))
+
+    def _parse_alias_abbrev_map(
+        self, content: str, namespace: Optional[str]
+    ) -> Dict[str, str]:
+        """Extract `abbrev ID := target` alias mappings."""
+        aliases: Dict[str, str] = {}
+        for match in re.finditer(
+            r"(?m)^\s*(?:noncomputable\s+)?abbrev\s+([A-Za-z][A-Za-z0-9_]*)\s*:=\s*(.+)$",
+            content,
+        ):
+            alias = match.group(1).strip()
+            rhs = match.group(2).split("--", 1)[0].strip()
+            if not alias or not rhs:
+                continue
+            if rhs.startswith("@"):
+                rhs = rhs[1:].strip()
+            if not rhs:
+                continue
+            target = rhs.split()[0].strip()
+            if not target:
+                continue
+            if namespace:
+                if "." in target:
+                    if not target.startswith(namespace + "."):
+                        target = f"{namespace}.{target}"
+                else:
+                    target = f"{namespace}.{target}"
+            aliases[alias] = target
+        return aliases
+
     def _write_assumption_ledger_auto(self, paper_id: str) -> None:
         """Write auto-generated assumption-ledger snippet when available."""
         meta = self._get_paper_meta(paper_id)
@@ -1237,6 +1318,8 @@ end {module_root}
 
         all_bundles: Dict[str, List[str]] = {}
         all_conditional_handles: Set[str] = set()
+        bayes_alias_ids: Dict[str, str] = {}
+        bayes_theorem_handles: Set[str] = set()
         source_labels: List[str] = []
 
         proofs_dir = self._get_paper_proofs_dir(paper_id)
@@ -1254,6 +1337,26 @@ end {module_root}
             for handle in self._parse_conditional_handles(content):
                 full_handle = f"{ns}.{handle}" if ns else handle
                 all_conditional_handles.add(full_handle)
+
+            if src.name == "HandleAliases.lean":
+                alias_map = self._parse_alias_abbrev_map(content, ns)
+                for alias, target in alias_map.items():
+                    if re.match(r"^(?:FN|BB|BF)\d+$", alias):
+                        bayes_alias_ids[alias] = target
+
+        bayes_sources = [
+            proofs_dir / "DecisionQuotient" / "BayesFoundations.lean",
+            proofs_dir / "DecisionQuotient" / "BayesOptimalityProof.lean",
+            proofs_dir / "DecisionQuotient" / "BayesianBridge.lean",
+        ]
+        for bayes_src in bayes_sources:
+            if not bayes_src.exists() or not bayes_src.is_file():
+                continue
+            bayes_content = bayes_src.read_text(encoding="utf-8", errors="replace")
+            bayes_ns = self._extract_primary_namespace(bayes_content)
+            for handle in self._parse_theorem_lemma_handles(bayes_content):
+                full_handle = f"{bayes_ns}.{handle}" if bayes_ns else handle
+                bayes_theorem_handles.add(full_handle)
 
         lines: List[str] = [
             "% Auto-generated by scripts/build_papers.py. Do not edit manually.",
@@ -1298,6 +1401,45 @@ end {module_root}
             lines.append(r"\item (No conditional theorem handles parsed.)")
         lines.append(r"\end{itemize}")
 
+        lines.extend(
+            [
+                r"\paragraph{First-principles Bayes derivation handles.}",
+                r"\begin{itemize}",
+            ]
+        )
+        if bayes_theorem_handles:
+            for handle in sorted(bayes_theorem_handles):
+                lines.append(rf"\item \nolinkurl{{{self._compact_lean_handle(handle)}}}")
+        else:
+            lines.append(r"\item (No Bayes-derivation theorem handles found.)")
+        lines.append(r"\end{itemize}")
+
+        lines.extend(
+            [
+                r"\paragraph{Compact Bayes handle IDs.}",
+                r"\begin{itemize}",
+            ]
+        )
+        if bayes_alias_ids:
+            prefix_order = {"FN": 0, "BB": 1, "BF": 2}
+
+            def _alias_sort_key(alias_id: str) -> Tuple[int, int, str]:
+                m = re.match(r"^([A-Z]+)(\d+)$", alias_id)
+                if not m:
+                    return (99, 10**9, alias_id)
+                prefix = m.group(1)
+                number = int(m.group(2))
+                return (prefix_order.get(prefix, 50), number, alias_id)
+
+            for alias_id in sorted(bayes_alias_ids.keys(), key=_alias_sort_key):
+                target = self._compact_lean_handle(bayes_alias_ids[alias_id])
+                lines.append(
+                    rf"\item \nolinkurl{{{alias_id}}} $\to$ \nolinkurl{{{target}}}"
+                )
+        else:
+            lines.append(r"\item (No compact Bayes alias IDs found.)")
+        lines.append(r"\end{itemize}")
+
         out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     def _read_existing_lean_handle_rows(
@@ -1310,18 +1452,28 @@ end {module_root}
             return []
 
         text = map_file.read_text(encoding="utf-8", errors="replace")
+        hyper_code_pattern = re.compile(r"\\hypertarget\{lh:([^}]+)\}")
         code_pattern = re.compile(r"\\text(?:tt|sf)\{([^}]+)\}")
+        code_url_pattern = re.compile(r"\\hypertarget\{lh:[^}]+\}\{\\nolinkurl\{([^}]+)\}\}")
         handle_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
         rows: List[Tuple[str, str]] = []
         for raw_line in text.splitlines():
-            if "&" not in raw_line or r"\nolinkurl{" not in raw_line:
+            if r"\nolinkurl{" not in raw_line:
                 continue
+            hyper_match = hyper_code_pattern.search(raw_line)
             code_match = code_pattern.search(raw_line)
-            handle_match = handle_pattern.search(raw_line)
-            if not code_match or not handle_match:
+            code_url_match = code_url_pattern.search(raw_line)
+            handle_matches = handle_pattern.findall(raw_line)
+            code: str = ""
+            if hyper_match:
+                code = hyper_match.group(1).strip()
+            elif code_url_match:
+                code = code_url_match.group(1).strip()
+            elif code_match:
+                code = code_match.group(1).strip().replace(r"\_", "_")
+            if not code or not handle_matches:
                 continue
-            code = code_match.group(1).strip()
-            handle = handle_match.group(1).strip().replace(r"\_", "_")
+            handle = handle_matches[-1].strip().replace(r"\_", "_")
             if code and handle:
                 rows.append((code, handle))
         return rows
@@ -1649,6 +1801,14 @@ end {module_root}
             support_handles.update(handles)
 
         candidate_handles = set(referenced_handles) | set(support_handles)
+        # Recovery fallback:
+        # if content already uses only \LH{ID} references and the current map file
+        # is empty/stale, parsing can become circular (no IDs -> no handles -> empty map).
+        # Break the cycle by deriving from declared Lean handles in the local proof graph.
+        if not candidate_handles and referenced_ids:
+            candidate_handles = self._extract_declared_lean_handles(
+                paper_id, include_dependencies=True
+            )
 
         # Preserve explicit alias assignments from HandleAliases.lean and
         # include those handles in the universe to ensure they remain stable.
@@ -1657,7 +1817,7 @@ end {module_root}
 
         # Single derived universe: local references + derived theorem support
         # plus any explicitly-declared alias handles.
-        all_handles = set(referenced_handles) | set(support_handles) | preserved_handles | set(alias_by_code.values())
+        all_handles = set(candidate_handles) | preserved_handles | set(alias_by_code.values())
 
         handle_to_code = self._assign_compact_handle_ids(all_handles, preserved_rows)
         code_to_handle = {code: handle for handle, code in handle_to_code.items()}
@@ -1674,15 +1834,15 @@ end {module_root}
             r"\begingroup",
             r"\scriptsize",
             r"\setlength{\tabcolsep}{3pt}",
-            r"\renewcommand{\arraystretch}{0.92}",
+            r"\renewcommand{\arraystretch}{0.90}",
             r"\urlstyle{same}",
-            r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.10\linewidth}>{\raggedright\arraybackslash}p{0.86\linewidth}@{}}",
+            r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{\linewidth}@{}}",
             r"\toprule",
-            r"ID & Full Lean handle \\",
+            r"Lean handle entry \\",
             r"\midrule",
             r"\endfirsthead",
             r"\toprule",
-            r"ID & Full Lean handle (continued) \\",
+            r"Lean handle entry (continued) \\",
             r"\midrule",
             r"\endhead",
         ]
@@ -1690,12 +1850,11 @@ end {module_root}
         if code_to_handle:
             for code in sorted(code_to_handle.keys(), key=sort_key):
                 handle = code_to_handle[code]
-                escaped = handle.replace("_", r"\_")
                 lines.append(
-                    rf"\hypertarget{{lh:{code}}}{{\textsf{{{code}}}}} & \nolinkurl{{{escaped}}} \\"
+                    rf"\hypertarget{{lh:{code}}}{{\nolinkurl{{{code}}}}}\hspace{{0.35em}}\nolinkurl{{{handle}}} \\"
                 )
         else:
-            lines.append(r"\multicolumn{2}{@{}l@{}}{\textit{No Lean handles parsed yet.}} \\")
+            lines.append(r"\textit{No Lean handles parsed yet.} \\")
 
         lines.extend([r"\bottomrule", r"\end{longtable}", r"\endgroup", ""])
         out_file.write_text("\n".join(lines), encoding="utf-8")
@@ -2004,18 +2163,19 @@ end {module_root}
             r"\begingroup",
             r"\scriptsize",
             r"\sloppy",
-            r"\setlength{\tabcolsep}{4pt}",
-            r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}p{0.40\linewidth}@{}}",
+            r"\setlength{\tabcolsep}{3pt}",
+            r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.19\linewidth}>{\raggedright\arraybackslash}p{0.13\linewidth}>{\raggedright\arraybackslash}p{0.26\linewidth}>{\raggedright\arraybackslash}p{0.38\linewidth}@{}}",
             r"\toprule",
             r"\textbf{Paper handle} & \textbf{Hardness profile} & \textbf{Regime tags} & \textbf{Lean support} \\",
             r"\midrule",
         ]
 
         for label, profile, tags_cell, support_cell in rows:
-            # tags_cell may contain math mode (e.g., "P $\neq$ \coNP") which breaks
-            # inside \nolinkurl{}. Use \texttt{} for tags, \nolinkurl{} for others.
+            # Make regime-tag cells explicitly breakable to prevent spillover into
+            # Lean-support column on narrow pages.
+            tags_tex = tags_cell.replace(",", r",\allowbreak ")
             lines.append(
-                rf"\nolinkurl{{{label}}} & \nolinkurl{{{profile}}} & \texttt{{{tags_cell}}} & {support_cell} \\"
+                rf"\nolinkurl{{{label}}} & \nolinkurl{{{profile}}} & {tags_tex} & {support_cell} \\"
             )
 
         lines.extend([r"\bottomrule", r"\end{longtable}", r"\endgroup", ""])
@@ -2248,20 +2408,31 @@ end {module_root}
         text = map_file.read_text(encoding="utf-8", errors="replace")
         id_to_handle: Dict[str, str] = {}
         # Format-robust parse:
-        # - ID cell may use \texttt{ID} or \textsf{ID}
+        # - ID can be read from \hypertarget{lh:ID}{...} anchor (preferred)
+        # - ID cell may use \texttt{ID}, \textsf{ID}, or \nolinkurl{ID}
         # - handle cell may be wrapped (e.g., {\footnotesize\nolinkurl{...}})
         # - optional \hypertarget prefixes may appear before the ID cell
+        hyper_code_pattern = re.compile(r"\\hypertarget\{lh:([^}]+)\}")
         code_pattern = re.compile(r"\\text(?:tt|sf)\{([^}]+)\}")
+        code_url_pattern = re.compile(r"\\hypertarget\{lh:[^}]+\}\{\\nolinkurl\{([^}]+)\}\}")
         handle_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
         for raw_line in text.splitlines():
-            if "&" not in raw_line or r"\nolinkurl{" not in raw_line:
+            if r"\nolinkurl{" not in raw_line:
                 continue
+            hyper_match = hyper_code_pattern.search(raw_line)
             code_match = code_pattern.search(raw_line)
-            handle_match = handle_pattern.search(raw_line)
-            if not code_match or not handle_match:
+            code_url_match = code_url_pattern.search(raw_line)
+            handle_matches = handle_pattern.findall(raw_line)
+            code: str = ""
+            if hyper_match:
+                code = hyper_match.group(1).strip()
+            elif code_url_match:
+                code = code_url_match.group(1).strip()
+            elif code_match:
+                code = code_match.group(1).strip().replace(r"\_", "_")
+            if not code or not handle_matches:
                 continue
-            code = code_match.group(1).strip()
-            handle = handle_match.group(1).strip().replace(r"\_", "_")
+            handle = handle_matches[-1].strip().replace(r"\_", "_")
             if code and handle:
                 id_to_handle[code] = handle
         return id_to_handle
@@ -2424,6 +2595,9 @@ end {module_root}
         if not lakefile.exists():
             print(f"[build] No lakefile.lean in {proofs_dir}, skipping...")
             return ""
+
+        # Ensure local dependency aliases (dep_<paper>) are present for path deps.
+        self._sync_local_lean_dependency_dirs(paper_id)
 
         print(f"[build] Building {paper_id} Lean...")
         print(f"[build]   Directory: {proofs_dir.relative_to(self.repo_root)}")
@@ -2910,7 +3084,10 @@ end {module_root}
         mathjax = mathjax.replace(r"\coNP", "coNP")
         mathjax = mathjax.replace(r"\NP", "NP")
         mathjax = mathjax.replace(r"\Pclass", "P")
+        mathjax = mathjax.replace(r"\PP", "PP")
+        mathjax = mathjax.replace(r"\PSPACE", "PSPACE")
         mathjax = mathjax.replace(r"\Opt", r"\operatorname{Opt}")
+        mathjax = re.sub(r"\\LH\{([^}]+)\}", r"\1", mathjax)
         mathjax = re.sub(r"\\claimstamp\{[^}]*\}\{[^}]*\}", "", mathjax)
 
         # Strip Markdown bold/italic markers for arXiv compatibility.
@@ -3273,9 +3450,12 @@ end {module_root}
                 r"\newcommand{\coNP}{coNP}",
                 r"\newcommand{\NP}{NP}",
                 r"\newcommand{\Pclass}{P}",
+                r"\newcommand{\PP}{PP}",
+                r"\newcommand{\PSPACE}{PSPACE}",
                 r"\newcommand{\SigmaP}[1]{\Sigma_{#1}^{P}}",
                 r"\newcommand{\PiP}[1]{\Pi_{#1}^{P}}",
                 r"\newcommand{\Opt}{\operatorname{Opt}}",
+                r"\newcommand{\LH}[1]{#1}",
                 r"\newcommand{\claimstamp}[2]{ [D:#1; R:#2]}",
             ]
         )
@@ -3289,7 +3469,10 @@ end {module_root}
         converted markdown can become concatenated (``coNPcharacterization``).
         Insert the missing separator for known complexity-class tokens.
         """
-        return re.sub(r"\bcoNP(?=[A-Za-z])", "coNP ", text)
+        normalized = re.sub(r"\bcoNP(?=[A-Za-z])", "coNP ", text)
+        normalized = re.sub(r"\bPP(?=[A-Za-z])", "PP ", normalized)
+        normalized = re.sub(r"\bPSPACE(?=[A-Za-z])", "PSPACE ", normalized)
+        return normalized
 
     def _get_claim_mapping_file(self, paper_id: str) -> Optional[Path]:
         """Locate theorem-handle mapping file for claim coverage checks."""
@@ -3300,6 +3483,7 @@ end {module_root}
             return explicit if explicit.exists() else None
 
         candidates = [
+            latex_dir / "content" / "claim_mapping_auto.tex",
             latex_dir / "content" / "11_lean_proofs.tex",
             latex_dir / "content" / "10_lean_4_proof_listings.tex",
             latex_dir / "content" / "10_lean_proof_listings.tex",
@@ -3609,33 +3793,59 @@ end {module_root}
 
             for src_file in self._iter_paper_lean_files(source_dir):
                 rel_path = src_file.relative_to(source_dir)
-                dest_file = lean_dest / rel_path
-                dest_file.parent.mkdir(parents=True, exist_ok=True)
+                root_dest = lean_dest / rel_path
+                root_dest.parent.mkdir(parents=True, exist_ok=True)
 
-                if dest_file.exists():
-                    if self._files_identical(src_file, dest_file):
+                if root_dest.exists():
+                    if self._files_identical(src_file, root_dest):
                         identical_skips += 1
-                        continue
-                    fallback_dest = lean_dest / f"dep_{source_paper_id}" / rel_path
-                    fallback_dest.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(src_file, fallback_dest)
-                    conflict_fallbacks += 1
-                    copied_count += 1
+                    else:
+                        fallback_dest = (
+                            lean_dest / f"dep_{source_paper_id}" / rel_path
+                        )
+                        fallback_dest.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(src_file, fallback_dest)
+                        conflict_fallbacks += 1
+                        copied_count += 1
                 else:
-                    shutil.copy2(src_file, dest_file)
+                    shutil.copy2(src_file, root_dest)
                     copied_count += 1
+
+                # Also maintain a full dependency mirror for path-based requires.
+                if source_paper_id != paper_id:
+                    dep_dest = lean_dest / f"dep_{source_paper_id}" / rel_path
+                    dep_dest.parent.mkdir(parents=True, exist_ok=True)
+                    if dep_dest.exists() and self._files_identical(src_file, dep_dest):
+                        pass
+                    else:
+                        shutil.copy2(src_file, dep_dest)
+                        copied_count += 1
 
                 if source_paper_id == paper_id:
                     paper_files.append(src_file)
                 else:
                     dep_file_count += 1
 
-        # Copy config files from main paper
+        # Copy config files from main paper.
         config_files = ["lean-toolchain", "lake-manifest.json"]
         for fname in config_files:
             src = proofs_dir / fname
             if src.exists():
                 shutil.copy2(src, lean_dest / fname)
+
+        # Copy dependency package config files (needed for `require ... from "./dep_*"`).
+        dep_config_files = ["lean-toolchain", "lake-manifest.json", "lakefile.lean"]
+        for dep_paper_id in dep_ids:
+            dep_src = self._get_paper_proofs_dir(dep_paper_id)
+            if not dep_src.exists():
+                continue
+            dep_dest = lean_dest / f"dep_{dep_paper_id}"
+            dep_dest.mkdir(parents=True, exist_ok=True)
+            for fname in dep_config_files:
+                src = dep_src / fname
+                if src.exists():
+                    shutil.copy2(src, dep_dest / fname)
+            self._rewrite_packaged_lakefile_srcdirs(dep_dest / "lakefile.lean")
 
         self._rewrite_packaged_lakefile_srcdirs(lean_dest / "lakefile.lean")
         self._write_dependency_bridge_module(paper_id, lean_dest, dep_ids)

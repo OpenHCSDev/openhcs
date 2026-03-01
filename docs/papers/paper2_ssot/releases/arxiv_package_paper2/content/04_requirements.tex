@@ -87,6 +87,7 @@ The timing constraint has profound implications for derivation:
 
 \begin{theorem}[Timing Forces Definition-Time Derivation]\label{thm:timing-forces}
 Derivation for structural facts must occur at or before the moment the structure is fixed.
+\LH{REQ1}
 \end{theorem}
 
 \begin{proof}
@@ -148,6 +149,7 @@ The registration happens at definition time, not at first use. When the \texttt{
 
 \begin{theorem}[Definition-Time Hooks are Necessary]\label{thm:hooks-necessary}
 SSOT for structural facts requires definition-time hooks.
+\LH{REQ2}
 \end{theorem}
 
 \begin{proof}
@@ -213,6 +215,7 @@ This verification is only possible because Python provides \texttt{\_\_subclasse
 
 \begin{theorem}[Introspection is Necessary for Verifiable SSOT]\label{thm:introspection-necessary}
 Verifying that SSOT holds requires introspection.
+\LH{REQ3}
 \end{theorem}
 
 \begin{proof}
@@ -249,6 +252,7 @@ The two requirements---definition-time hooks and introspection---are independent
 \item A language can have definition-time hooks without introspection
 \item A language can have introspection without definition-time hooks
 \end{enumerate}
+\LH{IND1}
 \end{theorem}
 
 \begin{proof}
@@ -268,6 +272,7 @@ A language $L$ enables complete SSOT for structural facts if and only if:
 \item $L$ provides definition-time hooks, AND
 \item $L$ provides introspectable derivation results
 \end{enumerate}
+\LH{SOT1}
 \end{theorem}
 
 \begin{proof}
@@ -291,6 +296,7 @@ The if-and-only-if follows.
 
 \begin{corollary}[SSOT-Complete Languages]\label{cor:ssot-complete}
 A language is \emph{SSOT-complete} iff it satisfies both requirements. A language is \emph{SSOT-incomplete} otherwise.
+\LH{LNG1}
 \end{corollary}
 
 \subsection{The Logical Chain (Summary)}\label{sec:chain}
@@ -376,6 +382,7 @@ DOF = 2. The \texttt{@Handler(format = "png")} annotation is \emph{data}, not co
 
 \begin{theorem}[Generated Files Are Second Encodings]\label{thm:generated-second}
 A generated source file constitutes a second encoding, not a derivation. Therefore, code generation does not achieve SSOT.
+\LH{GEN1}
 \end{theorem}
 
 \begin{proof}
@@ -411,6 +418,7 @@ Contrast with Python, where the registry entry exists only in memory, created by
 
 \begin{theorem}[Opaque Expansion Prevents Verification]\label{thm:opaque-expansion}
 If macro/template expansion is opaque at runtime, SSOT cannot be verified.
+\LH{CAP1}
 \end{theorem}
 
 \begin{proof}

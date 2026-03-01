@@ -1696,67 +1696,67 @@ theorem bridge_boundary_represented_family :
 
 end BridgeBoundary
 
-/-! ## Agent snapshot/process typing over the represented bridge family (`#11`) -/
+/-! ## System snapshot/process typing over the represented bridge family (`#11`) -/
 
-section AgentSnapshotProcess
+section SystemSnapshotProcess
 
-/-- Typed agent views used by scope prose:
+/-- Typed system views used by scope prose:
 `snapshotFixed` models fixed-parameter inference;
 `process*` constructors model online/dynamical update regimes. -/
-inductive AgentRegime where
+inductive SystemRegime where
   | snapshotFixed
   | processHorizonExtended
   | processStochasticCriterion
   | processTransitionCoupled
   deriving DecidableEq, Repr
 
-/-- Projection from agent-typing vocabulary to represented bridge classes. -/
-def agentBridgeClass : AgentRegime → BridgeTypedClass
+/-- Projection from system-typing vocabulary to represented bridge classes. -/
+def systemBridgeClass : SystemRegime → BridgeTypedClass
   | .snapshotFixed => BridgeTypedClass.oneStepDeterministic
   | .processHorizonExtended => BridgeTypedClass.horizonExtended
   | .processStochasticCriterion => BridgeTypedClass.stochasticCriterion
   | .processTransitionCoupled => BridgeTypedClass.transitionCoupled
 
 /-- In the represented family, transfer license is equivalent to snapshot typing. -/
-theorem agent_transfer_licensed_iff_snapshot (r : AgentRegime) :
-    bridgeTransferLicensed (agentBridgeClass r) ↔ r = AgentRegime.snapshotFixed := by
-  cases r <;> simp [agentBridgeClass, bridgeTransferLicensed]
+theorem system_transfer_licensed_iff_snapshot (r : SystemRegime) :
+    bridgeTransferLicensed (systemBridgeClass r) ↔ r = SystemRegime.snapshotFixed := by
+  cases r <;> simp [systemBridgeClass, bridgeTransferLicensed]
 
 /-- Every process-typed represented class has an explicit bridge-failure witness. -/
 theorem process_bridge_failure_witness
-    (r : AgentRegime) (hr : r ≠ AgentRegime.snapshotFixed) :
-    bridgeFailureWitness (agentBridgeClass r) := by
+    (r : SystemRegime) (hr : r ≠ SystemRegime.snapshotFixed) :
+    bridgeFailureWitness (systemBridgeClass r) := by
   cases r with
   | snapshotFixed =>
       cases hr rfl
   | processHorizonExtended =>
-      simpa [agentBridgeClass] using
+      simpa [systemBridgeClass] using
         bridge_failure_witness_non_one_step
           (c := BridgeTypedClass.horizonExtended) (hc := by decide)
   | processStochasticCriterion =>
-      simpa [agentBridgeClass] using
+      simpa [systemBridgeClass] using
         bridge_failure_witness_non_one_step
           (c := BridgeTypedClass.stochasticCriterion) (hc := by decide)
   | processTransitionCoupled =>
-      simpa [agentBridgeClass] using
+      simpa [systemBridgeClass] using
         bridge_failure_witness_non_one_step
           (c := BridgeTypedClass.transitionCoupled) (hc := by decide)
 
 /-- Packaged snapshot/process boundary result used by theorem-indexed prose. -/
 theorem snapshot_vs_process_typed_boundary :
-    bridgeTransferLicensed (agentBridgeClass AgentRegime.snapshotFixed) ∧
-    bridgeFailureWitness (agentBridgeClass AgentRegime.processHorizonExtended) ∧
-    bridgeFailureWitness (agentBridgeClass AgentRegime.processStochasticCriterion) ∧
-    bridgeFailureWitness (agentBridgeClass AgentRegime.processTransitionCoupled) := by
-  refine ⟨by simp [agentBridgeClass, bridgeTransferLicensed], ?_, ?_, ?_⟩
+    bridgeTransferLicensed (systemBridgeClass SystemRegime.snapshotFixed) ∧
+    bridgeFailureWitness (systemBridgeClass SystemRegime.processHorizonExtended) ∧
+    bridgeFailureWitness (systemBridgeClass SystemRegime.processStochasticCriterion) ∧
+    bridgeFailureWitness (systemBridgeClass SystemRegime.processTransitionCoupled) := by
+  refine ⟨by simp [systemBridgeClass, bridgeTransferLicensed], ?_, ?_, ?_⟩
   · exact process_bridge_failure_witness
-      (r := AgentRegime.processHorizonExtended) (hr := by decide)
+      (r := SystemRegime.processHorizonExtended) (hr := by decide)
   · exact process_bridge_failure_witness
-      (r := AgentRegime.processStochasticCriterion) (hr := by decide)
+      (r := SystemRegime.processStochasticCriterion) (hr := by decide)
   · exact process_bridge_failure_witness
-      (r := AgentRegime.processTransitionCoupled) (hr := by decide)
+      (r := SystemRegime.processTransitionCoupled) (hr := by decide)
 
-end AgentSnapshotProcess
+end SystemSnapshotProcess
 
 /-! ## Regime simulation abstraction (`#12`) -/
 
@@ -2281,7 +2281,7 @@ end InvestmentExports
 
 /-!
 ## Atomic Circuit Exports (AC1-AC11)
-Matter as agent: atoms, electrons, molecules as decision circuits.
+Matter as active physical decision system: atoms, electrons, molecules as decision circuits.
 -/
 
 namespace AtomicCircuitExports
@@ -2297,8 +2297,8 @@ abbrev AC3 := @AC3_upward_costs
 /-- AC4: Downward transition releases energy. -/
 abbrev AC4 := @AC4_downward_releases
 
-/-- AC5: Transitioning atom is an agent. -/
-abbrev AC5 := @AC5_transitioning_atom_is_agent
+/-- AC5: Transitioning atom is a nonstationary decision circuit. -/
+abbrev AC5 := @AC5_transitioning_atom_is_nonstationary_system
 
 /-- AC6: Ground-state atom is passive. -/
 abbrev AC6 := @AC6_ground_state_is_passive
@@ -2339,6 +2339,27 @@ abbrev IA5 := @IA5_competence_bounded
 
 /-- IA6: Logic is complete; access isn't. -/
 abbrev IA6 := @IA6_logic_complete_access_not
+
+/-- IA7: Uncertainty means there's information you don't have. -/
+abbrev IA7 := @IA7_uncertainty_is_gap
+
+/-- IA8: Sufficient capacity enables full access. -/
+abbrev IA8 := @IA8_sufficient_capacity_enables_full_access
+
+/-- IA9: Full access eliminates uncertainty. -/
+abbrev IA9 := @IA9_full_access_no_uncertainty
+
+/-- IA10: Uncertainty implies incomplete access. -/
+abbrev IA10 := @IA10_uncertainty_implies_incomplete
+
+/-- IA11: Uncertainty from capacity bound. -/
+abbrev IA11 := @IA11_uncertainty_from_capacity_bound
+
+/-- IA12: EC2 from uncertainty — bounded capacity follows from uncertainty + maximal access. -/
+abbrev IA12 := @IA12_ec2_from_uncertainty
+
+/-- IA13: Unbounded implies certainty — contrapositive of EC2 derivation. -/
+abbrev IA13 := @IA13_unbounded_implies_certainty
 
 end InformationAccessExports
 

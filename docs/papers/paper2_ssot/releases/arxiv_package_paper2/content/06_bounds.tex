@@ -25,6 +25,7 @@ For a codebase satisfying SSOT for fact $F$:
 M_{\text{effective}}(C, \delta_F) = O(1)
 \]
 Effective modification complexity is constant regardless of codebase size.
+\LH{BND1}
 \end{theorem}
 
 \begin{proof}
@@ -50,6 +51,7 @@ For a codebase \emph{not} satisfying SSOT for fact $F$, if $F$ is encoded at $n$
 \[
 M_{\text{effective}}(C, \delta_F) = \Omega(n)
 \]
+\LH{BND2}
 \end{theorem}
 
 \begin{proof}
@@ -73,6 +75,7 @@ The ratio of modification complexity between SSOT-incomplete and SSOT-complete a
 \[
 \lim_{n \to \infty} \frac{M_{\text{incomplete}}(n)}{M_{\text{complete}}} = \lim_{n \to \infty} \frac{n}{1} = \infty
 \]
+\LH{BND3}
 \end{theorem}
 
 \begin{proof}
@@ -90,6 +93,7 @@ As $n \to \infty$, the ratio $\to \infty$. The gap is unbounded.
 
 \begin{corollary}[Arbitrary Reduction Factor]\label{cor:arbitrary-reduction}
 For any constant $k$, there exists a codebase size $n$ such that SSOT provides at least $k\times$ reduction in modification complexity.
+\LH{BND4}
 \end{corollary}
 
 \begin{proof}
@@ -136,6 +140,7 @@ Let fact $F$ be modified $m$ times over the project lifetime. Let $n$ be the num
 \item SSOT: $O(m)$
 \item Non-SSOT: $O(mn)$
 \end{itemize}
+\LH{REG4}
 \end{theorem}
 
 \begin{proof}

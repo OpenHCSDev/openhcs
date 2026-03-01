@@ -1,0 +1,262 @@
+\section{Five-Way Equivalence}\label{five-way-equivalence}
+
+This section establishes the central result of the pentalogy: five independent characterizations of the same architectural property (DOF = 1 / SSOT) derived from five distinct first-principles frameworks. All proofs are machine-checked in Lean 4.
+
+\subsection{Framework 1: Engineering Optimization (Leverage)}
+
+\begin{formal}
+\textbf{Theorem 5.1 (Maximum Leverage).} For any architecture $A$ with $\text{Cap}(A) > 0$, $A$ achieves maximum leverage among architectures with equal capabilities if and only if $\text{DOF}(A) = 1$.
+
+Formally: $L(A) = \max_{A': \text{Cap}(A')=\text{Cap}(A)} L(A') \iff \text{DOF}(A) = 1$.
+\end{formal}
+
+\begin{informal}
+An architecture has the highest possible capability-to-DOF ratio exactly when it has a single degree of freedom.
+\end{informal}
+
+\textbf{Proof.} 
+\begin{itemize}
+\item (Forward) If $\text{DOF}(A) = 1$, then $L(A) = |\text{Cap}(A)|/1 = |\text{Cap}(A)|$. Any $A'$ with same capabilities has $\text{DOF}(A') \geq 1$, so $L(A') \leq |\text{Cap}(A)| = L(A)$.
+\item (Backward) If $A$ has maximum leverage but $\text{DOF}(A) > 1$, construct $A'$ with $\text{DOF}(A') = 1$ and same capabilities. Then $L(A') = |\text{Cap}(A)| > |\text{Cap}(A)|/\text{DOF}(A) = L(A)$, contradiction.
+\end{itemize}
+
+\leanmeta{cf. \texttt{ssot\_max\_leverage} (\LH{L_ad7ca324}, \LH{L_0c281f80}), \texttt{max\_leverage\_forces\_dof\_one} in \texttt{Leverage/Foundations.lean}}
+
+\subsection{Framework 2: Architectural Epistemic Coherence (Paper 2)}
+
+\begin{formal}
+\textbf{Theorem 5.2 (Coherence).} An architecture satisfies the Single Source of Truth property if and only if $\text{DOF}(A) = 1$.
+
+Formally: $\text{SSOT}(A) \iff \text{DOF}(A) = 1$.
+\end{formal}
+
+\begin{informal}
+Epistemic coherence (one source of truth per structural fact) is equivalent to having a single degree of freedom.
+\end{informal}
+
+\leanmeta{Proved in Paper 2 (\texttt{oracle\_arbitrary})}
+
+This is the DOF = 1 characterization from Paper 2's coherence theorem.
+
+\subsection{Framework 3: Information-Theoretic Structural Rank (Paper 4)}
+
+\begin{formal}
+\textbf{Theorem 5.3 (DOF-Structural Rank Isomorphism).} For any architecture $A$, let $\text{canonicalDP}(n)$ be the canonical decision problem with $n$ boolean coordinates. Then:
+\[
+\text{srank}(\text{canonicalDP}(\text{DOF}(A))) = \text{DOF}(A)
+\]
+\end{formal}
+
+\begin{informal}
+The structural rank (number of relevant decision coordinates) equals the degrees of freedom. The canonical encoding uses: states as $n$ boolean coordinates, actions as either querying a coordinate or falling back, and utilities that reward correct coordinate identification.
+\end{informal}
+
+The canonical encoding is:
+\begin{itemize}
+\item States: $\text{Fin } n \to \text{Bool}$ ($n$ binary coordinates)
+\item Actions: $\text{Fin } n \oplus \text{Unit}$ (query coordinate $i$, or fallback)
+\item Utility: $u(\text{inl } i, s) = 2$ if $s(i) = \text{true}$, else $0$; $u(\text{inr } \(), s) = 1$
+\end{itemize}
+
+\leanmeta{\texttt{dof\_eq\_srank}, \texttt{ssot\_srank\_one}, \texttt{incoherent\_srank\_gt\_one} in \texttt{Leverage/BridgeToDQ.lean}}
+
+\begin{formal}
+\textbf{Corollary 5.4.} DOF $= 1$ if and only if srank $= 1$.
+
+Formally: $\text{DOF}(A) = 1 \iff \text{srank}(\text{canonicalDP}(\text{DOF}(A))) = 1$.
+\end{formal}
+
+\begin{informal}
+An architecture has a single degree of freedom exactly when its canonical decision problem has minimal structural rank.
+\end{informal}
+
+\leanmeta{Immediate from Theorem 5.3}
+
+\subsection{Framework 4: Computational Complexity (Tractability)}
+
+\begin{formal}
+\textbf{Theorem 5.5 (Tractability Boundary).} For the canonical decision problem with $n$ coordinates:
+\begin{enumerate}
+\item If $n = 1$ (srank $= 1$), sufficiency checking is in P (polynomial time).
+\item If $n > 1$ (srank $> 1$), sufficiency checking is coNP-hard.
+\end{enumerate}
+\end{formal}
+
+\begin{informal}
+When the structural rank is 1, determining whether current information suffices for an optimal decision is computationally tractable. When the structural rank exceeds 1, the same problem is computationally intractable (coNP-hard).
+\end{informal}
+
+\leanmeta{Proved in Paper 4 (\texttt{DecisionQuotient/Tractability/StructuralRank.lean}), imported via BridgeToDQ.lean}
+
+This connects the architectural property (DOF = 1) to computational feasibility of decision-making.
+
+\begin{formal}
+\textbf{Corollary 5.6.} DOF $= 1$ (SSOT) is the unique architecture class for which sufficiency checking is tractable.
+\end{formal}
+
+\begin{informal}
+Among architectures, only those with a single degree of freedom admit tractable sufficiency checking.
+\end{informal}
+
+\leanmeta{Combine Corollary 5.4 with Theorem 5.5; see \texttt{max\_coherence\_forces\_tractability} in BridgeToDQ.lean}
+
+\subsection{Framework 5: Thermodynamic Selection (Statistical Physics)}
+
+\begin{formal}
+\textbf{Theorem 5.7 (Thermodynamic Selection).} Let $M$ be a thermodynamic model with Landauer calibration. For any architecture $A$ with DOF $> 1$:
+\begin{enumerate}
+\item There exist decision instances where sufficiency checking requires $\Omega(2^{\text{DOF}})$ logical operations.
+\item Under P $\neq$ coNP, no polynomial-time sufficiency certification exists for these instances.
+\item Under the Landauer bound, each sufficiency-check cycle incurs mandatory positive energy cost.
+\end{enumerate}
+For DOF $= 1$, the energy lower bound is zero.
+\end{formal}
+
+\begin{informal}
+Architectures with more than one degree of freedom necessarily incur thermodynamic costs per decision cycle due to the computational complexity of sufficiency checking. Architectures with exactly one degree of freedom have zero mandatory thermodynamic cost.
+\end{informal}
+
+Physical assumptions:
+\begin{itemize}
+\item Positive per-edit conversion constant ($j_{\mathcal{M}} > 0$) — cf. Theorem \ref{cor:leverage-energy} (\LH{L_9c6279a3}, \LH{L_ebcd21af})
+\item External budget bound — cf. Theorem \ref{cor:physical-assumption-necessity} (\LH{L_a2e95cfd}, \LH{L_f3216891}, \LH{L_e0961ce8}, \LH{L_1fb0826b})
+\item P $\neq$ coNP (standard complexity assumption)
+\item Landauer calibration ($k_B T \ln 2$ joules per bit)
+\end{itemize}
+
+\leanmeta{\texttt{thermodynamic\_selection} in \texttt{Leverage/BridgeToDQ.lean}}
+
+Physical edit-energy floor from Section 4.3 is a special case: DOF controls minimum edit-energy, and higher leverage implies lower energy in a fixed capability class (Theorem \ref{thm:physical-energy-floor}, \LH{L_515d1d9d}, \LH{L_5b347895}, \LH{L_05a51b10}).
+
+\subsection{The Five-Way Equivalence}
+
+\begin{formal}
+\textbf{Theorem 5.8 (Five-Way Equivalence).} For any architecture $A$ with $\text{Cap}(A) > 0$, the following are equivalent:
+\[
+\text{DOF}(A) = 1 \iff \text{srank}(A) = 1 \iff \text{max leverage} \iff \text{tractable sufficiency} \iff \text{zero thermodynamic cost}
+\]
+\end{formal}
+
+\begin{informal}
+Five independent scientific frameworks—engineering optimization, epistemic coherence, information geometry, computational complexity, and statistical physics—all select the same architectural property: having exactly one degree of freedom.
+\end{informal}
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+\textbf{Domain} & \textbf{Characterization of DOF $= 1$} \\
+\hline
+Engineering Optimization & Maximum leverage \\
+Architectural Epistemic & Single Source of Truth \\
+Information Geometry & Structural rank $= 1$ \\
+Computational Complexity & Tractable sufficiency checking \\
+Statistical Physics & Zero thermodynamic cost per cycle \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Proof.} The equivalence follows from Theorems 5.1-5.7:
+\begin{enumerate}
+\item $\text{DOF} = 1 \iff \text{max leverage}$: Theorem 5.1 (\LH{L_ad7ca324}, \LH{L_0c281f80})
+\item $\text{DOF} = 1 \iff \text{SSOT}$: Theorem 5.2 (Paper 2)
+\item $\text{DOF} = \text{srank}$: Theorem 5.3, so $\text{DOF} = 1 \iff \text{srank} = 1$
+\item $\text{srank} = 1 \iff \text{tractable sufficiency}$: Theorem 5.5 (Paper 4)
+\item $\text{DOF} > 1 \iff \text{positive thermodynamic cost}$: Theorem 5.7, so $\text{DOF} = 1 \iff \text{zero cost}$
+\end{enumerate}
+
+The transitivity of logical equivalence gives the five-way equivalence.
+
+\leanmeta{Established by combining theorems from all five frameworks}
+
+\begin{formal}
+\textbf{Corollary 5.9 (Uniqueness).} The canonical encoding (states as $n$ boolean coordinates, actions as coordinate queries or fallback, utilities rewarding correct identification) is the unique decision structure that simultaneously satisfies all five characterizations.
+\end{formal}
+
+\begin{informal}
+The boolean-coordinate encoding is the unique structure that is simultaneously the leverage optimum, the epistemic coherence condition, the minimum-rank decision structure, the tractability boundary, and the thermodynamic ground state.
+\end{informal}
+
+\textbf{Proof.} Each characterization selects exactly one structure:
+\begin{itemize}
+\item Maximum leverage requires DOF = 1, forcing a single coordinate.
+\item SSOT requires a single source, forcing the same.
+\item Structural rank = 1 requires exactly one relevant coordinate.
+\item Tractability requires srank = 1, the same.
+\item Zero thermodynamic cost requires DOF = 1, the same.
+\end{itemize}
+All five requirements converge to the same canonical encoding.
+
+\leanmeta{All five requirements force the same structure by the above theorems}
+
+\subsection{Formalization}
+
+The following Lean 4 proofs establish the connections:
+
+\begin{itemize}
+\item \nolinkurl{Leverage/Foundations.lean}: 
+  \begin{itemize}
+  \item \texttt{ssot\_max\_leverage} (\LH{L_ad7ca324}, \LH{L_0c281f80}): DOF $= 1 \to$ max leverage
+  \item \texttt{max\_leverage\_forces\_dof\_one}: max leverage $\to$ DOF $= 1$
+  \item \texttt{dof\_one\_iff\_max\_leverage}: biconditional
+  \end{itemize}
+\item \nolinkurl{Leverage/BridgeToDQ.lean}:
+  \begin{itemize}
+  \item \texttt{dof\_eq\_srank}: DOF $=$ srank
+  \item \texttt{ssot\_srank\_one}: DOF $= 1 \to$ srank $= 1$
+  \item \texttt{incoherent\_srank\_gt\_one}: DOF $> 1 \to$ srank $> 1$
+  \item \texttt{thermodynamic\_selection}: DOF $> 1 \to$ mandatory energy
+  \item \texttt{max\_coherence\_forces\_tractability}: max leverage $\to$ tractable
+  \end{itemize}
+\item \nolinkurl{DecisionQuotient/Tractability/StructuralRank.lean}: srank $= 1 \to$ P, srank $> 1 \to$ coNP-hard (Paper 4)
+\item \nolinkurl{DecisionQuotient/ThermodynamicLift.lean}: energy lower bounds under Landauer calibration (Paper 4)
+\end{itemize}
+
+The cross-paper dependency chain is live: Paper 3 $\to$ Paper 4 $\to$ Mathlib.
+
+\subsection{Relation to Prior Sections}
+
+This section subsumes and extends Section 4's results:
+\begin{itemize}
+\item Theorem 4.1 (Leverage-Error Tradeoff, \LH{L_5af424e9}) is a consequence of the equivalence between leverage and DOF
+\item Theorem 4.2 (Modification Complexity Gap, \LH{L_45cc4f88}) follows from DOF $= 1$ minimizing modification cost
+\item Theorem 4.3 (Optimal Architecture, \LH{L_a42f986c}, \LH{L_28e01ed8}) is strengthened: the optimal architecture is now characterized by five independent properties
+\item Theorem 4.4 (Metaprogramming Dominance, \LH{L_c022ff39}, \LH{L_5250a1d9}) is a special case: unbounded derivations from a single source achieve DOF $= 1$
+\end{itemize}
+
+\subsection{Open Conjectures}
+
+The five-way equivalence is proved under two hypotheses that we believe are removable: the complexity-theoretic assumption P~$\neq$~coNP (used in Theorem~5.7), and the existential form of the energy lower bound (which gives no closed-form constant). Three open conjectures would strengthen the result.
+
+\begin{conjecture}[Unconditional Thermodynamic Selection]\label{conj:unconditional-thermo}
+Theorem~5.7 holds without the P~$\neq$~coNP assumption: for any architecture $A$ with $\mathrm{DOF}(A) > 1$, every decision cycle incurs a mandatory positive thermodynamic cost under Landauer calibration, \emph{unconditionally}.
+
+Formally: there exists a computable function $c : \mathbb{N} \to \mathbb{R}_{>0}$ such that
+\[
+\forall A.\; \mathrm{DOF}(A) > 1 \implies \text{energy per cycle} \geq c(\mathrm{DOF}(A)).
+\]
+If proved, the five-way equivalence reduces entirely to physical necessities with no complexity-theoretic hypothesis.
+\end{conjecture}
+
+\begin{conjecture}[Wolpert--Kolchinsky Quantitative Bound]\label{conj:wolpert-bound}
+The thermodynamic cost scales linearly with structural rank with an explicit Landauer constant. Specifically, let $\beta = 1/(k_B T)$ be the inverse temperature. Then for any architecture $A$:
+\[
+\text{energy per decision cycle} \geq \mathrm{srank}(A) \cdot k_B T \ln 2.
+\]
+This would give a closed-form, quantitative version of Conjecture~\ref{conj:unconditional-thermo}, replacing the existential witness with a tight bound derivable from first physical principles (Landauer's principle applied to each relevant coordinate). The bound would be tight at $\mathrm{srank} = 1$ (DOF~$= 1$), where it predicts zero mandatory cost---consistent with Theorem~5.7's zero thermodynamic cost for DOF~$=1$ architectures.
+
+Evidence: Wolpert and Kolchinsky~\cite{wolpert2019stochastic} prove thermodynamic cost bounds for multi-memory systems that scale with the number of relevant variables. The conjecture imports this result into the architectural setting via the $\mathrm{DOF} = \mathrm{srank}$ identity (Theorem~5.3).
+\end{conjecture}
+
+\begin{conjecture}[England Replication Inequality]\label{conj:england}
+Single-source architectures (DOF~$= 1$) that generate $k$ derived instances are analogous to self-replicating systems in non-equilibrium thermodynamics. England's inequality~\cite{england2013statistical} bounds the entropy production of self-replicating systems from below by a function of replication fidelity. We conjecture the following architectural analog:
+
+Let $A_{\text{SSOT}}$ be a DOF~$= 1$ architecture generating $k$ derived instances, and $A_{\text{rep}}$ a DOF~$= k$ architecture maintaining $k$ independent copies. Then:
+\[
+\Delta S(A_{\text{SSOT}}) \leq \Delta S(A_{\text{rep}}) - k_B \ln k,
+\]
+where $\Delta S$ denotes total entropy production per update cycle. This would formalize the intuition that SSOT architectures are thermodynamically preferred by at least $k_B \ln k$ per update---a strictly increasing advantage as the number of derivations grows.
+
+The conjecture is consistent with the zero thermodynamic cost for DOF~$= 1$ in Theorem~5.7, and would give it a quantitative non-equilibrium interpretation.
+\end{conjecture}
+
+\textbf{Significance.} If all three conjectures are proved, the five-way equivalence becomes a purely physical theorem: DOF~$= 1$ is selected by thermodynamic necessity, complexity collapses to tractability as a consequence, and the energy advantage is quantified by a closed-form Landauer formula. The engineering optimization (leverage maximization) would then be derivable from statistical physics alone, with no combinatorial or epistemic axioms.

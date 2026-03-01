@@ -3,44 +3,44 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: leverage_arxiv.aux
 The style file: plain.bst
 Database file #1: references.bib
-You've used 28 entries,
+You've used 26 entries,
             2118 wiz_defined-function locations,
-            658 strings with 8103 characters,
-and the built_in function-call counts, 9164 in all, are:
-= -- 914
-> -- 401
-< -- 7
-+ -- 169
-- -- 130
-* -- 597
-:= -- 1507
-add.period$ -- 90
-call.type$ -- 28
-change.case$ -- 144
+            650 strings with 7801 characters,
+and the built_in function-call counts, 8141 in all, are:
+= -- 799
+> -- 364
+< -- 4
++ -- 154
+- -- 118
+* -- 530
+:= -- 1363
+add.period$ -- 82
+call.type$ -- 26
+change.case$ -- 132
 chr.to.int$ -- 0
-cite$ -- 28
-duplicate$ -- 347
-empty$ -- 749
-format.name$ -- 130
-if$ -- 1934
+cite$ -- 26
+duplicate$ -- 305
+empty$ -- 666
+format.name$ -- 118
+if$ -- 1700
 int.to.chr$ -- 0
-int.to.str$ -- 28
-missing$ -- 28
-newline$ -- 146
-num.names$ -- 56
-pop$ -- 176
+int.to.str$ -- 26
+missing$ -- 26
+newline$ -- 136
+num.names$ -- 52
+pop$ -- 161
 preamble$ -- 1
-purify$ -- 121
+purify$ -- 111
 quote$ -- 0
-skip$ -- 244
+skip$ -- 209
 stack$ -- 0
-substring$ -- 577
-swap$ -- 72
-text.length$ -- 7
+substring$ -- 489
+swap$ -- 53
+text.length$ -- 4
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 100
+type$ -- 92
 warning$ -- 0
-while$ -- 93
-width$ -- 30
-write$ -- 310
+while$ -- 81
+width$ -- 28
+write$ -- 285

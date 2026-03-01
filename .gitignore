@@ -170,3 +170,10 @@ docs/generated_md/
 
 # Lean 4 Lake build artifacts
 .lake/
+
+# Local Lean dependency aliases (materialized by build_papers.py)
+docs/papers/*/proofs/dep_*/
+docs/papers/*/proofs_*/dep_*/
+docs/papers/*/proofs/dep_*
+docs/papers/*/proofs_*/dep_*
+.lake-shared-packages/

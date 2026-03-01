@@ -2,7 +2,7 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper4b - Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency
-Package Date: 2026-02-23T15:27:34.193805
+Package Date: 2026-03-01T01:15:44.901349
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
@@ -45,16 +45,7 @@ Proof Files:
   - Paper4bStochasticSequential.lean
   - lakefile.lean
 
-================================================================================
-COMPILATION OUTPUT (lake build)
-================================================================================
-
-Build completed successfully (0 jobs).
-
-
-================================================================================
-END COMPILATION OUTPUT
-================================================================================
+Note: Run 'python3 scripts/build_papers.py release' to include compilation output.
 
 Build Instructions:
 -------------------

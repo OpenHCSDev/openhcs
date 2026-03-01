@@ -885,6 +885,14 @@ theorem integrity_not_competent_of_nonempty_scope
   Integrity-resource closure (conditional pattern):
   if universal competence would force a complexity collapse, then under
   non-collapse universal competence is impossible.
+
+  ## Design Note
+
+  The proof below is modus tollens — intentionally so. The complexity-theoretic
+  content lives in the `hCollapse` hypothesis, which is instantiated from
+  hardness reductions (see Reduction.lean, Hardness.lean). Factoring the
+  logical step from the reduction allows clean composition: supply any
+  collapse-inducing predicate to obtain the corresponding impossibility.
 -/
 
 /-- Integrity-Resource Bound (logical core): if universal competence implies

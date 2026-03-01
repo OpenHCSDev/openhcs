@@ -87,28 +87,40 @@ identical; the prior probability differs.
 \subsection{The Emphasis Penalty}\label{the-emphasis-penalty}
 
 \begin{theorem}[Emphasis Penalty]\label{thm:emphasis-penalty}
-Let \(s_1, s_2, ..., s_n\) be cheap talk signals all asserting claim \(c\). There exists \(k^*\) such that for \(n > k^*\): \[\frac{\partial C(c, s_{1..n})}{\partial n} < 0\]
-Additional emphasis \emph{decreases} credibility past a threshold.
+Let \(s_1, s_2, \ldots, s_n\) be cheap talk signals all asserting claim \(c\) with the
+same mimicability $q$ and prior $p = \Pr[C=1]$. Assume the signaling equilibrium condition:
+\begin{itemize}
+\item[(EP)] Deceptive agents produce repetitions at least as readily as honest agents:
+$\Pr[s_k \mid C{=}0,\, s_{1..k-1}] \;\geq\; \Pr[s_k \mid C{=}1,\, s_{1..k-1}]$ for $k > k^*$.
+\end{itemize}
+Then for $n > k^*$: $\frac{\partial C(c, s_{1..n})}{\partial n} \leq 0$, with strict decrease whenever
+the inequality in (EP) is strict.
 
 \LH{C_10ce8e6e} \LH{C_5efdc080} \LH{C_cd94ef32}
 \end{theorem}
 
 \begin{proof}
-The key insight: excessive signaling is itself informative. Define the
-\emph{suspicion function}:
-\[\sigma(n) = P(\text{deceptive} | n \text{ assertions})\]
+Let $p_k := \Pr[C=1 \mid s_1,\ldots,s_k]$ denote the posterior after $k$ assertions.
+By Bayes' rule applied to the $k$-th update:
+\[
+p_k \;=\; \frac{p_{k-1}\,\alpha_k}{p_{k-1}\,\alpha_k + (1-p_{k-1})\,\beta_k}
+\]
+where $\alpha_k := \Pr[s_k \mid C{=}1, s_{1..k-1}]$ and $\beta_k := \Pr[s_k \mid C{=}0, s_{1..k-1}]$.
 
-Honest agents have less need to over-assert. Therefore:
-\[P(n \text{ assertions} | \text{deceptive}) > P(n \text{ assertions} | \text{honest}) \text{ for large } n\]
+The odds form is:
+\[
+\frac{p_k}{1-p_k} \;=\; \frac{p_{k-1}}{1-p_{k-1}} \cdot \frac{\alpha_k}{\beta_k}.
+\]
+Under condition (EP), $\alpha_k / \beta_k \leq 1$ for $k > k^*$.
+Therefore the odds ratio is non-increasing, i.e., $p_k \leq p_{k-1}$ for $k > k^*$.
+When (EP) holds with strict inequality, $p_k < p_{k-1}$, giving $\partial C / \partial n < 0$.
 
-By Bayes' rule, \(\sigma(n)\) is increasing in \(n\) past some
-threshold.
-
-Substituting into the credibility update:
-\[C(c, s_{1..n}) = \frac{P(c) \cdot (1 - \sigma(n))}{P(c) \cdot (1 - \sigma(n)) + (1 - P(c)) \cdot \sigma(n)}\]
-
-This is decreasing in \(\sigma(n)\), hence decreasing in \(n\) for
-\(n > k^*\).
+\textit{Physical interpretation.} Since all assertions are cheap talk ($\Delta = 0$ in joules),
+additional assertions carry zero energy cost differential. A rational receiver therefore
+assigns the repetition count $n$ the same analysis as any cheap-talk signal:
+it is informative only about the sender's strategy. Under common knowledge of rationality,
+deceptive senders choose large $n$ to mimic honest senders; receivers anticipate this, making
+(EP) the equilibrium condition.
 \end{proof}
 
 \textbf{Interpretation:} ``Trust me, I'm serious, this is absolutely

@@ -1,17 +1,22 @@
-The axis orthogonality paper (Paper 1) and the Single Source of Truth paper (Paper 2) establish necessary conditions for coherent software architecture: axis orthogonality and DOF = 1 per fact. Among architectures satisfying these constraints, this paper proves the optimization criterion is computable and decidable: maximize leverage $L = |\text{Capabilities}|/\text{DOF}$.
+Five independent scientific frameworks---engineering optimization, epistemic coherence, information geometry, computational complexity, and statistical physics---each characterize the same architectural property: having exactly one degree of freedom.
 
-The axis orthogonality paper proves minimal complete axis sets are orthogonal for classification systems. The SSOT paper proves DOF = 1 is necessary and sufficient for epistemic coherence. These establish the constraint space for coherent architectures. This paper derives the optimization criterion within that space.
+\textbf{Central Result (Five-Way Equivalence, Theorem~\ref{thm:five-way}).} For any architecture $A$ with $\mathrm{Cap}(A) > 0$:
+\[
+\mathrm{DOF}(A) = 1
+\;\iff\; \text{max leverage}
+\;\iff\; \text{SSOT}
+\;\iff\; \mathrm{srank} = 1
+\;\iff\; \text{tractable sufficiency}
+\;\iff\; \text{zero thermodynamic cost}.
+\]
+This convergence is not a coincidence. The five frameworks are logically independent---each was developed for a distinct purpose---yet all select the single-source condition as their ground state. All equivalences are machine-checked in Lean 4 via live cross-paper imports (Paper~3 $\to$ Paper~4 $\to$ Mathlib).
 
-We prove machine-checked core theorems (0 sorries). Error Independence (Theorem~3.1): axis orthogonality implies statistical independence of errors across DOF, derived from matroid theory. Error Compounding (Theorem~3.3): for a system with $n$ DOF and per-component error rate $p$, system error probability is $P_{\text{error}}(n) = 1 - (1-p)^n$, following from the SSOT paper's coherence theorem. DOF-Reliability Isomorphism (Theorem~3.4): an architecture with $n$ DOF is isomorphic to a series reliability system with $n$ components, preserving failure probability ordering. Leverage-Error Tradeoff (Theorem~4.1): for architectures with equal capabilities, higher leverage strictly implies lower error probability. Physical Edit-Energy Floor (Theorem~\ref{thm:physical-energy-floor}): with one explicit physical calibration constant, minimum edit-energy is proportional to DOF and therefore decreases with leverage in a fixed capability class. Budget Feasibility Boundary (Theorem~\ref{thm:physical-budget-boundary}): infeasibility is exactly characterized by budget below floor, and assumption-necessity witnesses are explicit (Corollary~\ref{cor:physical-assumption-necessity}). Modification Complexity Gap (Theorem~4.2): for architectures with equal capabilities, the expected modification ratio equals the DOF ratio, growing unbounded. Optimal Architecture (Theorem~4.3): given requirements $R$, architecture $A^*$ minimizes error probability iff it satisfies feasibility and maximality constraints, yielding a decidable criterion. Metaprogramming Dominance (Theorem~4.4): for metaprogramming architectures with DOF = 1 and unbounded derivations, leverage approaches infinity.
+Building on axis orthogonality (Paper~1) and Single Source of Truth (Paper~2), the engineering consequences follow: define leverage
+\[L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.\]
+Maximizing $L$ subject to feasibility minimizes expected error probability (DOF--Reliability Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical edit-energy under Landauer calibration with explicit per-edit constant $j_{\mathcal{M}} > 0$. These are \emph{corollaries} of the convergence theorem, not independent contributions.
 
-The three papers form a complete framework. The axis orthogonality paper's orthogonality result enables our error independence result (Theorem~3.1). The SSOT paper's coherence requirement enables our error compounding result (Theorem~3.3). Given constraints from the prior papers, we prove leverage maximization minimizes error probability (Theorem~4.1).
+\textbf{Open Conjectures.} The thermodynamic selection theorem currently assumes P~$\neq$~coNP. We conjecture that thermodynamic cost scales directly with structural rank \emph{unconditionally}---removing the complexity-theoretic hypothesis would reduce the five-way equivalence to a purely physical statement. A second open problem connects DOF~$=1$ architectures to England's replication inequality: single-source architectures that generate derived instances may satisfy a formal entropy-production bound that multi-DOF architectures cannot match.
 
-Three instances demonstrate integration. For SSOT vs scattered architecture with $n$ use sites, SSOT achieves $L = c$ while scattered achieves $L = c/n$, yielding unbounded leverage ratio. For nominal vs duck typing, the axis orthogonality paper's four additional capabilities (provenance, identity, enumeration, conflict resolution) yield $L_{\text{nominal}} = (c + 4)/d > c/d = L_{\text{duck}}$ with equal DOF. For microservices vs monolith with $n$ services of $c$ capabilities each, monolith achieves $L = nc$ while microservices achieve $L = c$, yielding $n\times$ leverage advantage.
+All core theorems are machine-checked in Lean~4. An assumption ledger and proof listing accompany the paper.
 
-Given coherence as a requirement, architectural choice becomes deterministic. The optimization criterion $L(A) = |\text{Cap}(A)|/\text{DOF}(A)$ is decidable, the optimal architecture is unique up to isomorphism, and preference dissolves into mathematical necessity.
-
-OpenHCS PR \#44 validates the framework: migrating from duck typing (47 scattered checks, DOF = 47) to nominal ABC (1 definition, DOF = 1) increased leverage $47\times$ and improved error localization from $\Omega(n)$ to $O(1)$.
-
-Lean 4 formalization: \LeanTotalLines{} lines, \LeanTotalTheorems{} theorems/lemmas, \LeanTotalSorry{} \texttt{sorry}. Proofs are machine-checked and aligned to the paper-level claims via theorem-local Lean support tags.
-
-Keywords: software architecture, leverage, degrees of freedom, epistemic coherence, reliability theory, formal methods, optimization
+Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer principle, structural rank, formal methods

@@ -1,15 +1,15 @@
 OpenHCS Paper Build Log
 ========================
 
-Paper: paper4_toc - Computational Complexity of Physical Information Sufficiency
-Package Date: 2026-02-25T04:15:27.877234
+Paper: paper4_toc - Computational Complexity of Physical Counting
+Package Date: 2026-03-01T01:24:21.264409
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 88
-Lines of Code: 20251
-Theorems: 880
+Lean Files: 113
+Lines of Code: 28863
+Theorems: 1252
 Sorry Placeholders: 0
 
 
@@ -17,16 +17,25 @@ Proof Files:
 ------------
   - AlgorithmComplexity.lean
   - Basic.lean
+  - BayesFoundations.lean
+  - BayesFromDQ.lean
+  - BayesOptimalityProof.lean
+  - BayesianBridge.lean
+  - CheckAxioms.lean
   - ClaimClosure.lean
   - Complexity.lean
   - ComplexityMain.lean
   - Computation.lean
+  - ComputationalDecisionProblem.lean
+  - CrossPaperDependencies.lean
   - DecisionGeometry.lean
   - Dichotomy.lean
   - Approximation.lean
   - Elicitation.lean
   - ValueOfInformation.lean
   - Finite.lean
+  - FunctionalInformation.lean
+  - GraphNontriviality.lean
   - HandleAliases.lean
   - ApproximationHardness.lean
   - ConfigReduction.lean
@@ -41,29 +50,44 @@ Proof Files:
   - Sigma2PHardness.lean
   - Hardness.lean
   - HardnessDistribution.lean
+  - RDSrank.lean
+  - RateDistortion.lean
   - Information.lean
   - Instances.lean
   - IntegrityCompetence.lean
   - InteriorVerification.lean
   - PhysicalBudgetCrossover.lean
   - AccessRegime.lean
+  - AnchorChecks.lean
+  - AssumptionNecessity.lean
+  - BoundedAcquisition.lean
   - ClaimTransport.lean
+  - ConstraintForcing.lean
+  - Conversation.lean
   - DecisionEquivalence.lean
   - DecisionTime.lean
   - DiscreteSpacetime.lean
   - HeisenbergStrong.lean
   - Instantiation.lean
   - IntegrityEquilibrium.lean
+  - InvariantAgreement.lean
+  - LocalityPhysics.lean
+  - MeasureNecessity.lean
   - MolecularIntegrity.lean
+  - ObserverRelativeState.lean
   - PhysicalCore.lean
   - PhysicalHardness.lean
   - PhysicalIncompleteness.lean
+  - TUR.lean
+  - TransportCost.lean
   - Uncertainty.lean
+  - WassersteinIntegrity.lean
   - PolynomialReduction.lean
   - QueryComplexity.lean
   - Quotient.lean
   - Reduction.lean
   - Reduction_AllCoords.lean
+  - FisherInformation.lean
   - ProbabilisticBridge.lean
   - AlgorithmComplexity.lean
   - Basic.lean
@@ -91,6 +115,7 @@ Proof Files:
   - Sufficiency.lean
   - Summary.lean
   - ThermodynamicLift.lean
+  - ToolCollapse.lean
   - BoundedActions.lean
   - Dimensional.lean
   - FPT.lean

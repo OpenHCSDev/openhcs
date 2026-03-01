@@ -46,12 +46,6 @@ Edgar~F. Codd.
 \newblock A relational model of data for large shared data banks.
 \newblock {\em Communications of the ACM}, 13(6):377--387, 1970.
 
-\bibitem{cook1989inheritance}
-William~R. Cook, Walter Hill, and Peter~S. Canning.
-\newblock Inheritance is not subtyping.
-\newblock In {\em Proceedings of the 17th ACM SIGPLAN-SIGACT Symposium on
-  Principles of Programming Languages}, pages 125--135. ACM, 1990.
-
 \bibitem{cunningham1992wycash}
 Ward Cunningham.
 \newblock The wycash portfolio management system.
@@ -62,6 +56,11 @@ Ward Cunningham.
 Christopher~J. Date.
 \newblock {\em An Introduction to Database Systems}.
 \newblock Pearson Education, 2003.
+
+\bibitem{england2013statistical}
+Jeremy~L. England.
+\newblock Statistical physics of self-replication.
+\newblock {\em The Journal of Chemical Physics}, 139(12):121923, 2013.
 
 \bibitem{fowler2014microservices}
 Martin Fowler and James Lewis.
@@ -84,12 +83,6 @@ David Garlan, Robert~T. Monroe, and David Wile.
 \newblock Acme: An architecture description interchange language.
 \newblock In {\em Proceedings of CASCON '97}, pages 169--183, 1997.
 
-\bibitem{garlan1993introduction}
-David Garlan and Mary Shaw.
-\newblock An introduction to software architecture.
-\newblock In {\em Advances in Software Engineering and Knowledge Engineering},
-  volume~1, pages 1--39. World Scientific, 1993.
-
 \bibitem{hansson2005rails}
 David~Heinemeier Hansson.
 \newblock The rails doctrine.
@@ -105,12 +98,6 @@ Rick Kazman, Mark Klein, and Paul Clements.
 Gregor Kiczales, Jim des Rivi{\`e}res, and Daniel~G. Bobrow.
 \newblock {\em The Art of the Metaobject Protocol}.
 \newblock MIT Press, 1991.
-
-\bibitem{liskov1994behavioral}
-Barbara~H. Liskov and Jeannette~M. Wing.
-\newblock A behavioral notion of subtyping.
-\newblock {\em ACM Transactions on Programming Languages and Systems},
-  16(6):1811--1841, 1994.
 
 \bibitem{mackay2022necessity}
 Julian Mackay, Sophia Drossopoulou, James Noble, and Susan Eisenbach.
@@ -128,11 +115,6 @@ Thomas~J. McCabe.
 \newblock A complexity measure.
 \newblock {\em IEEE Transactions on Software Engineering}, SE-2(4):308--320,
   1976.
-
-\bibitem{parnas1972criteria}
-David~L. Parnas.
-\newblock On the criteria to be used in decomposing systems into modules.
-\newblock {\em Communications of the ACM}, 15(12):1053--1058, 1972.
 
 \bibitem{patterson2013computer}
 David~A. Patterson and John~L. Hennessy.
@@ -156,5 +138,11 @@ Mary Shaw and David Garlan.
 Wayne~P. Stevens, Glenford~J. Myers, and Larry~L. Constantine.
 \newblock Structured design.
 \newblock {\em IBM Systems Journal}, 13(2):115--139, 1974.
+
+\bibitem{wolpert2019stochastic}
+David~H. Wolpert.
+\newblock The stochastic thermodynamics of computation.
+\newblock {\em Journal of Physics A: Mathematical and Theoretical},
+  52(19):193001, 2019.
 
 \end{thebibliography}

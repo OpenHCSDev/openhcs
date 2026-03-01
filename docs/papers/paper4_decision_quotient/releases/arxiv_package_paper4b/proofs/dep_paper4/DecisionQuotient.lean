@@ -30,13 +30,17 @@ import DecisionQuotient.Information
 import DecisionQuotient.IntegrityCompetence
 import DecisionQuotient.PhysicalBudgetCrossover
 import DecisionQuotient.ThermodynamicLift
+import DecisionQuotient.FunctionalInformation
 import DecisionQuotient.Physics.AccessRegime
 import DecisionQuotient.Physics.PhysicalHardness
 import DecisionQuotient.Physics.Instantiation
 import DecisionQuotient.Physics.DecisionTime
 import DecisionQuotient.Physics.Conversation
 import DecisionQuotient.Physics.ConstraintForcing
+import DecisionQuotient.Physics.MeasureNecessity
+import DecisionQuotient.Physics.AssumptionNecessity
 import DecisionQuotient.Physics.ObserverRelativeState
+import DecisionQuotient.Physics.AnchorChecks
 import DecisionQuotient.Physics.PhysicalIncompleteness
 import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.Physics.PhysicalCore
@@ -52,3 +56,4 @@ import DecisionQuotient.Economics.Approximation
 import DecisionQuotient.ComplexityMain
 import DecisionQuotient.WitnessCheckingDuality
 import DecisionQuotient.StochasticSequential
+import DecisionQuotient.ComputationalDecisionProblem

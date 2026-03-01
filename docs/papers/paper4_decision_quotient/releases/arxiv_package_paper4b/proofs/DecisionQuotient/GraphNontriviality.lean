@@ -14,7 +14,7 @@ import Mathlib.Tactic
   Layered formalization of observer-conditioned nontriviality on logic graphs:
   1) path/cycle structure on directed graphs;
   2) observer-conditioned path probability, surprisal, novelty score;
-  3) bridge to belief forcing and Bayes-update existence;
+  3) bridge to forced nondegenerate prior mass and Bayes-update existence;
   4) DQ/entropy normalization bridge;
   5) thermodynamic and atomic/material lower-bound lift.
 
@@ -81,7 +81,7 @@ theorem pathProb_nonneg
   · simp [hEq, prior.nonneg h]
   · simp [hEq]
 
-/-- Observer belief mass on any hypothesis is at most one. -/
+/-- Observer prior mass on any hypothesis is at most one. -/
 theorem hypothesisProb_le_one
     (prior : ProbDist H) (h : H) :
     prior.prob h ≤ 1 := by
@@ -208,15 +208,15 @@ theorem dqFromEntropy_in_unit_interval
 
 end Observer
 
-/-! ## Layer 3: Bayes/Belief Forcing Bridge -/
+/-! ## Layer 3: Bayes / Nondegenerate-Prior Bridge -/
 
-section BeliefBridge
+section PriorBridge
 
 variable {H : Type v} [Fintype H]
 variable {E : Type u}
 variable {V : Type w}
 
-/-- Forced action + provable uncertainty forces nondegenerate belief mass
+/-- Forced action + provable uncertainty forces nondegenerate prior mass
     (independent of Bayesian uniqueness). -/
 theorem path_belief_forced_under_uncertainty
     (A : Type*) (hAction : ActionForced A)
@@ -224,7 +224,7 @@ theorem path_belief_forced_under_uncertainty
     ∃ _ : A, NondegenerateBelief prior := by
   exact forced_action_under_uncertainty hAction prior hUnc
 
-/-- Under nondegenerate belief and strictly informative likelihood support,
+/-- Under nondegenerate prior mass and strictly informative likelihood support,
     Bayes update exists for observer path hypotheses. -/
 theorem bayes_update_exists_for_observer_paths
     (decode : H → List V)
@@ -241,7 +241,7 @@ theorem bayes_update_exists_for_observer_paths
   exact bayes_update_exists_of_nondegenerateBelief
     likelihood hLikeNonneg hLikePosWitness prior hBelief
 
-end BeliefBridge
+end PriorBridge
 
 /-! ## Layer 4: Physical Lift (Landauer + Atomic/Material) -/
 

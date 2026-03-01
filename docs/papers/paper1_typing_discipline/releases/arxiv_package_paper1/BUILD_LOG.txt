@@ -2,19 +2,26 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper1 - Impossibility Theorems for Fixed-Axis Classification Systems: With Application to Type Theory
-Package Date: 2026-02-26T21:17:51.675445
+Package Date: 2026-03-01T01:14:27.794452
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 14
-Lines of Code: 6718
-Theorems: 296
+Lean Files: 21
+Lines of Code: 6862
+Theorems: 306
 Sorry Placeholders: 0
 
 
 Proof Files:
 ------------
+  - AxisClosure.lean
+  - Bridge.lean
+  - Core.lean
+  - Extended.lean
+  - Typing.lean
+  - AbstractClassSystem.lean
+  - CrossPaperDependencies.lean
   - Paper1.lean
   - PrintAxioms.lean
   - abstract_class_system.lean

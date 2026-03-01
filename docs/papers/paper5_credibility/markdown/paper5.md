@@ -6,19 +6,23 @@
 
 ## Abstract
 
-A counterintuitive phenomenon pervades epistemic communication: emphatic assertions of trustworthiness often *decrease* perceived trustworthiness. "Trust me" invites suspicion; excessive qualification triggers doubt rather than alleviating it. This paper provides the first formal framework explaining this phenomenon through the lens of signaling theory.
+Credibility is a physical quantity. This paper grounds signaling theory in the thermodynamics of information processing, deriving computable bounds on rational belief update from Landauer's principle and Paper 4's Counting Gap.
 
-**Theorem (Cheap Talk Bound).** For any signal $s$ whose production cost is truth-independent, posterior credibility is bounded: $\Pr[C{=}1 \mid s] \leq p/(p + (1-p)q)$, where $p$ is the prior and $q$ is the mimicability of the signal. Verbal assertions---including assertions about credibility---are cheap talk and therefore subject to this bound.
+**Physical grounding.** Signal production cost is measured in joules. By Landauer's principle, each irreversible bit operation costs at minimum $k_B T \ln 2$. A *cheap talk* signal has cost differential $\Delta = \text{Cost}(s \mid \bot) - \text{Cost}(s \mid \top) = 0$: the energy expenditure to produce the signal is truth-independent. A *costly signal* has $\Delta > 0$ in joules. Machine-checked proofs achieve $\Delta = \infty$: by Paper 4's Counting Gap ($\varepsilon \cdot N \leq C \Rightarrow N \leq C/\varepsilon$), the false-positive rate $\varepsilon_F \to 0$ of a sound type-checker implies that producing a false compiling proof requires traversing a diverging search space, hence diverging energy.
 
-**Theorem (Emphasis Penalty).** There exists a threshold $k^*$ such that for $n > k^*$ repeated assertions of claim $c$: $\partial C(c, s_{1..n})/\partial n < 0$. Additional emphasis *decreases* credibility, as excessive signaling is itself informative of deceptive intent.
+**Theorem (Cheap Talk Bound).** For any signal $s$ with $\Delta = 0$, posterior credibility is bounded: $\Pr[C{=}1 \mid s] \leq p/(p + (1-p)q)$, where $p$ is the prior and $q$ is the mimicability of $s$. Text is cheap talk. All meta-assertions about credibility are cheap talk.
 
-**Theorem (Text Credibility Bound).** For high-magnitude claims (low prior probability), no text string achieves credibility above threshold $\tau < 1$. This is an impossibility result: rephrasing cannot escape the cheap talk bound.
+**Theorem (Emphasis Penalty).** Under the signaling equilibrium condition that deceptive agents produce repetitions at least as readily as honest agents, $n$ repeated assertions give $\partial C(c, s_{1..n})/\partial n \leq 0$ for $n > k^*$. Additional assertions at $\Delta = 0$ carry no energy cost differential and therefore cannot increase rational credibility past the threshold.
 
-**Theorem (Costly Signal Escape).** Signals with truth-dependent costs---where $\text{Cost}(s \mid \text{false}) > \text{Cost}(s \mid \text{true})$---can achieve arbitrarily high credibility as the cost differential increases. Machine-checked proofs are maximally costly signals: producing a compiling proof of a false theorem has infinite cost.
+**Theorem (Text Credibility Bound).** For high-magnitude claims (prior $p < e^{-M^*}$), no text string achieves credibility above $\tau < 1$. Rephrasing is energy-neutral; it cannot escape the bound.
 
-These results integrate with the leverage framework (Paper 3): credibility leverage $L_C = \Delta C / \text{Signal Cost}$ is maximized by minimizing cheap talk and maximizing costly signal exposure. Claims are regime-typed by channel (`[CT]` cheap-talk, `[VS]` verifier-backed) and audience domain (`[M]`, `[S]`). The theorems are formalized in Lean 4.
+**Theorem (Costly Signal Escape).** As $\Delta \to \infty$, $\Pr[C=1 \mid s] \to 1$. Machine-checked proofs achieve this limit. The cost differential is grounded by the Counting Gap, not assumed.
 
-**Keywords:** signaling theory, cheap talk, credibility, Bayesian epistemology, costly signals, formal verification, Lean 4
+**Corollary (Counting Gap grounds $\Delta_\text{Lean}$).** $\Delta_\text{Lean} = \infty$ follows from Paper 4, Theorem 3 (Counting Gap) and Theorem 13 (Energy Lower Bound). The impossibility of compiling a false proof is arithmetic, not a design choice.
+
+Credibility leverage $L_C = \Delta C / \text{Signal Cost}$ is maximized by concentrating energy budget on high-$\Delta$ channels (proofs, demonstrations) and minimizing cheap talk. The theorems are formalized in Lean 4; all Lean proofs compile with 0 sorry.
+
+**Keywords:** signaling theory, cheap talk, physical information theory, Landauer's principle, Counting Gap, Bayesian epistemology, costly signals, formal verification, Lean 4
 
 
 # Introduction
@@ -149,29 +153,17 @@ This paper distinguishes two fundamentally different credibility domains that ob
 
 **Remark (Credibility Domain Conflict).** When a signal achieves $C_M \to 1$ but $C_S \approx 0$, the mathematical and social domains are in conflict. A rational response in the mathematical domain (engage with proofs) differs from a rational response in the social domain (defer to hierarchy). Observers may respond in either domain. This paper's theorems apply within each domain separately; cross-domain dynamics require modeling both simultaneously.
 
-## Dual Truth Framework
-
-This paper introduces a dual truth framework that distinguishes between objective validity and subjective acceptance:
-
-**Definition 2.0e (Epistemic Truth, $E$).** *Epistemic truth* measures the probability that a claim corresponds to objective reality or logical truth. It is measurable via empirical evidence, logical proof, or formal verification. Range: $E \in [0, 1]$, where $E = 1$ indicates absolute truth and $E = 0$ indicates absolute falsity. Properties: objective, verifiable, independent of observer.
-
-**Definition 2.0f (Ego-Driven Truth, $G$).** *Ego-driven truth* measures the probability that a claim aligns with an agent's self-interest, beliefs, or identity. It is measurable via incentive analysis, bias detection, or psychological modeling. Range: $G \in [0, 1]$, where $G = 1$ indicates perfect alignment and $G = 0$ indicates complete contradiction. Properties: subjective, observer-dependent, context-sensitive.
-
-**Definition 2.0g (Truth Vector).** The *truth vector* is a 2D vector: $$\vec{T} = (E, G) \in [0, 1]^2$$ representing both the objective validity and subjective acceptance of a claim. This vector captures the dual nature of truth in epistemic communication.
-
-**Theorem 2.0h (Truth Orthogonality).** Epistemic truth and ego-driven truth are orthogonal dimensions: $$E \perp G \quad \text{(no direct causal relationship)}$$ A change in one dimension does not necessarily affect the other. This orthogonality is analogous to the independence of mathematical and social credibility domains.
-
-*Proof.* Constructive. (1) High $E$, low $G$: a scientifically proven fact that contradicts an agent's deeply held beliefs (e.g., climate change for a fossil fuel executive). (2) Low $E$, high $G$: a comforting lie that aligns perfectly with an agent's self-interest (e.g., \"I'm a great driver\" despite poor performance). 0◻
-
-**Corollary 2.0i (Truth Tradeoff).** For high-magnitude claims (low prior probability), there exists a threshold where increasing epistemic truth decreases ego-driven truth and vice versa: $$\exists k^* \in [0,1] : \forall E > k^* \implies \frac{\partial G}{\partial E} < 0$$
-
 ## Signals and Costs
 
-**Definition 2.1 (Signal).** A *signal* is a tuple $s = (c, v, p)$ where: - $c$ is the *content* (what is communicated) - $v \in \{\top, \bot\}$ is the *truth value* (whether content is true) - $p : \mathbb{R}_{\geq 0}$ is the *production cost*
+**Definition 2.1 (Signal).** A *signal* is a tuple $s = (c, v, p)$ where: $c$ is the *content* (what is communicated), $v \in \{\top, \bot\}$ is the *truth value* (whether content is true), and $p \in \mathbb{R}_{\geq 0}$ is the *production cost*.
 
-**Definition 2.2 (Cheap Talk).** A signal $s$ is *cheap talk* if production cost is truth-independent: $$\text{Cost}(s | v = \top) = \text{Cost}(s | v = \bot)$$
+**Physical grounding of cost.** Production cost is measured in joules. By Landauer's principle [@landauer1961], each irreversible bit operation erases at minimum $$E_{\min} = k_B T \ln 2 \;\approx\; 2.8 \times 10^{-21}~\text{J at } T = 300\,\text{K},$$ where $k_B$ is Boltzmann's constant. Paper 4's Energy Lower Bound (Theorem 13) shows that srank bits of structural information carry a minimum physical energy cost proportional to $\text{srank} \cdot k_B T \ln 2$. Signal production cost inherits this floor.
 
-**Definition 2.3 (Costly Signal).** A signal $s$ is *costly* if: $$\text{Cost}(s | v = \bot) > \text{Cost}(s | v = \top)$$ Producing the signal when false costs more than when true.
+**Definition 2.2 (Cheap Talk).** A signal $s$ is *cheap talk* if production cost is truth-independent: $$\text{Cost}(s | v = \top) = \text{Cost}(s | v = \bot)$$ In physical units: the joules expended to produce $s$ do not depend on whether $v = \top$ or $v = \bot$. Typed text is cheap talk: the Landauer cost of typing "true" equals the cost of typing "false."
+
+**Definition 2.3 (Costly Signal).** A signal $s$ is *costly* if: $$\Delta := \text{Cost}(s | v = \bot) - \text{Cost}(s | v = \top) > 0$$ Producing the signal when false costs strictly more than when true. The quantity $\Delta$ (in joules) is the *cost differential*.
+
+**Remark (Lean proofs as physical signals).** A machine-checked Lean proof is a costly signal with $\Delta \to \infty$. To produce a compiling proof of a false theorem, the type-checker's false-positive rate satisfies $\varepsilon_F \to 0$ (soundness). By Paper 4's Counting Gap (Theorem 3): $\varepsilon \cdot N \leq C \Rightarrow N \leq C / \varepsilon$. With $\varepsilon_F \to 0$, the number of false proofs that pass verification is bounded by $C \cdot \varepsilon_F \to 0$. Producing one would require traversing a search space of diverging size, hence diverging energy. Therefore $\Delta_{\text{Lean}} = \infty$: the Lean type-checker physically separates true from false.
 
 **Intuition:** Verbal assertions are cheap talk---saying "I'm honest" costs the same whether you're honest or not. A PhD from MIT is a costly signal [@spence1973job]---obtaining it while incompetent is much harder than while competent. Similarly, price and advertising can serve as signals of quality [@milgrom1986price].
 
@@ -203,18 +195,16 @@ All theorem statements in this paper are typed by the following contract:
 
 We use the following regime tags:
 
--   `[CT]`: cheap-talk channel (truth-independent signal cost),
+-   `[CT]`: cheap-talk channel (truth-independent signal cost, $\Delta = 0$),
 
--   `[VS]`: verifier-backed signal channel ($\varepsilon_T,\varepsilon_F$ model),
+-   `[VS]`: verifier-backed signal channel ($\varepsilon_T, \varepsilon_F$ model, $\Delta \to \infty$),
 
 -   `[M]`: mathematical credibility domain,
 
--   `[S]`: social credibility domain,
-
--   `[D]`: dual-truth vector extensions ($E,G$).
+-   `[S]`: social credibility domain.
 
 ::: proposition
-[]{#prop:credibility-regime-coverage label="prop:credibility-regime-coverage"} Each declared regime above has at least one theorem-level mechanized core in Lean: `[CT]` via `cheap_talk_bound`, `magnitude_penalty`, `emphasis_penalty`; `[VS]` via `verified_signal_credibility`, `proof_as_ultimate_signal`; `[M]/[S]` via `domain_independence_math_not_implies_social` and `domain_independence_social_not_implies_math`.
+[]{#prop:credibility-regime-coverage label="prop:credibility-regime-coverage"} Each declared regime above has at least one theorem-level mechanized core in Lean: `[CT]` via `cheap_talk_bound`, `magnitude_penalty`, `emphasis_penalty`; `[VS]` via `verified_signal_credibility`, `proof_as_ultimate_signal`; `[M]/[S]` via `domain_independence_math_not_implies_social` and `domain_independence_social_not_implies_math`. The physical connection between `[CT]` ($\Delta=0$) and `[VS]` ($\Delta\to\infty$) is grounded in Landauer's principle and Paper 4's Counting Gap (Theorem 3).
 :::
 
 ::: proof
@@ -234,7 +224,7 @@ We use the following regime tags:
 ::: theorem
 []{#thm:cheap-talk-bound label="thm:cheap-talk-bound"} Let $C\in\{0,1\}$ denote the truth of a claim ($C=1$ true), with prior $p := \Pr[C=1]\in(0,1)$. Let $S$ be the event that the receiver observes a particular message-pattern (signal) $s$.
 
-`Credibility.cheap_talk_bound` `Credibility.CheapTalk.cheapTalkBound`
+C_c6e273f0 C_123d1f33
 
 Define the emission rates $$\alpha := \Pr[S \mid C=1],\qquad \beta := \Pr[S \mid C=0].$$ Then the posterior credibility of the claim given observation of $s$ is $$\Pr[C=1 \mid S] \;=\; \frac{p\,\alpha}{p\,\alpha + (1-p)\,\beta}.$$ Equivalently, in odds form, $$\frac{\Pr[C=1 \mid S]}{\Pr[C=0 \mid S]}
 \;=\;
@@ -264,7 +254,7 @@ then credibility obeys the tight upper bound $$\Pr[C=1 \mid S] \;\le\; \frac{p}{
 ::: theorem
 []{#thm:magnitude-penalty label="thm:magnitude-penalty"} For claims $c_1, c_2$ with $M(c_1) < M(c_2)$ (i.e., $p_1 := P(c_1) > p_2 := P(c_2)$) and identical cheap talk signals $s$ with mimicability $q$: $$\Pr[c_1 \mid S] > \Pr[c_2 \mid S]$$ Higher-magnitude claims receive less credibility from identical signals.
 
-`Credibility.CheapTalk.magnitude_penalty` `Credibility.CheapTalk.cheapTalkBound_strictMono_prior`
+C_6c29d508 C_a54e07fe
 :::
 
 ::: proof
@@ -276,21 +266,21 @@ then credibility obeys the tight upper bound $$\Pr[C=1 \mid S] \;\le\; \frac{p}{
 ## The Emphasis Penalty
 
 ::: theorem
-[]{#thm:emphasis-penalty label="thm:emphasis-penalty"} Let $s_1, s_2, ..., s_n$ be cheap talk signals all asserting claim $c$. There exists $k^*$ such that for $n > k^*$: $$\frac{\partial C(c, s_{1..n})}{\partial n} < 0$$ Additional emphasis *decreases* credibility past a threshold.
+[]{#thm:emphasis-penalty label="thm:emphasis-penalty"} Let $s_1, s_2, \ldots, s_n$ be cheap talk signals all asserting claim $c$ with the same mimicability $q$ and prior $p = \Pr[C=1]$. Assume the signaling equilibrium condition:
 
-`Credibility.CheapTalk.emphasis_penalty` `Credibility.CheapTalk.suspicion_mono` `Credibility.CheapTalk.credibilityWithEmphasis`
+-   Deceptive agents produce repetitions at least as readily as honest agents: $\Pr[s_k \mid C{=}0,\, s_{1..k-1}] \;\geq\; \Pr[s_k \mid C{=}1,\, s_{1..k-1}]$ for $k > k^*$.
+
+Then for $n > k^*$: $\frac{\partial C(c, s_{1..n})}{\partial n} \leq 0$, with strict decrease whenever the inequality in (EP) is strict.
+
+C_10ce8e6e C_5efdc080 C_cd94ef32
 :::
 
 ::: proof
-*Proof.* The key insight: excessive signaling is itself informative. Define the *suspicion function*: $$\sigma(n) = P(\text{deceptive} | n \text{ assertions})$$
+*Proof.* Let $p_k := \Pr[C=1 \mid s_1,\ldots,s_k]$ denote the posterior after $k$ assertions. By Bayes' rule applied to the $k$-th update: $$p_k \;=\; \frac{p_{k-1}\,\alpha_k}{p_{k-1}\,\alpha_k + (1-p_{k-1})\,\beta_k}$$ where $\alpha_k := \Pr[s_k \mid C{=}1, s_{1..k-1}]$ and $\beta_k := \Pr[s_k \mid C{=}0, s_{1..k-1}]$.
 
-Honest agents have less need to over-assert. Therefore: $$P(n \text{ assertions} | \text{deceptive}) > P(n \text{ assertions} | \text{honest}) \text{ for large } n$$
+The odds form is: $$\frac{p_k}{1-p_k} \;=\; \frac{p_{k-1}}{1-p_{k-1}} \cdot \frac{\alpha_k}{\beta_k}.$$ Under condition (EP), $\alpha_k / \beta_k \leq 1$ for $k > k^*$. Therefore the odds ratio is non-increasing, i.e., $p_k \leq p_{k-1}$ for $k > k^*$. When (EP) holds with strict inequality, $p_k < p_{k-1}$, giving $\partial C / \partial n < 0$.
 
-By Bayes' rule, $\sigma(n)$ is increasing in $n$ past some threshold.
-
-Substituting into the credibility update: $$C(c, s_{1..n}) = \frac{P(c) \cdot (1 - \sigma(n))}{P(c) \cdot (1 - \sigma(n)) + (1 - P(c)) \cdot \sigma(n)}$$
-
-This is decreasing in $\sigma(n)$, hence decreasing in $n$ for $n > k^*$. ◻
+*Physical interpretation.* Since all assertions are cheap talk ($\Delta = 0$ in joules), additional assertions carry zero energy cost differential. A rational receiver therefore assigns the repetition count $n$ the same analysis as any cheap-talk signal: it is informative only about the sender's strategy. Under common knowledge of rationality, deceptive senders choose large $n$ to mimic honest senders; receivers anticipate this, making (EP) the equilibrium condition. ◻
 :::
 
 **Interpretation:** "Trust me, I'm serious, this is absolutely true, I swear" is *less* credible than just stating the claim. The emphasis signals desperation.
@@ -300,7 +290,7 @@ This is decreasing in $\sigma(n)$, hence decreasing in $n$ for $n > k^*$. ◻
 ::: theorem
 []{#thm:meta-assertion-trap label="thm:meta-assertion-trap"} Let $a$ be a cheap talk assertion and $m$ be a meta-assertion "assertion $a$ is credible." Then: $$C(c, a \cup m) \leq C(c, a) + \epsilon$$ where $\epsilon \to 0$ as common knowledge of rationality increases.
 
-`Credibility.CheapTalk.meta_assertion_trap` `Credibility.CheapTalk.meta_assertion_decreases` `Credibility.CheapTalk.meta_assertion_boost_nonpositive`
+C_95cbc13f C_a0cb6371 C_d80a8806
 :::
 
 ::: proof
@@ -326,7 +316,7 @@ The signal provides negligible information; $\epsilon \to 0$. ◻
 ::: theorem
 []{#thm:costly-signal label="thm:costly-signal"} For costly signal $s$ with cost differential $\Delta = \text{Cost}(s | \bot) - \text{Cost}(s | \top) > 0$: $$\Pr[C=1 \mid S] \to 1 \text{ as } \Delta \to \infty$$ Costly signals can achieve arbitrarily high credibility.
 
-`Credibility.CostlySignals.costly_dominates_cheap` `Credibility.CostlySignals.verified_signal_limit_one`
+C_7c5234ea C_8b7be42f
 :::
 
 ::: proof
@@ -334,23 +324,11 @@ The signal provides negligible information; $\epsilon \to 0$. ◻
 :::
 
 ::: theorem
-[]{#thm:dual-cost-signal label="thm:dual-cost-signal"} For dual-cost signal $s$ with epistemic cost differential $\Delta_E = \text{Cost}_E(s | E=0) - \text{Cost}_E(s | E=1) > 0$ and ego cost differential $\Delta_G = \text{Cost}_G(s | G=0) - \text{Cost}_G(s | G=1) > 0$: $$\Pr[\vec{T} \text{ coherent} \mid S] \to 1 \text{ as } \min(\Delta_E, \Delta_G) \to \infty$$ Dual-cost signals can achieve arbitrarily high credibility for coherent truth claims.
-:::
-
-::: proof
-*Proof.* A dual-cost signal with both $\Delta_E > 0$ and $\Delta_G > 0$ is costly for two reasons: 1. Epistemically false claims have higher epistemic cost 2. Ego-conflicting claims have higher ego cost
-
-For a claim to be deceptive in a coherent way, it would need to be both epistemically false and ego-aligned, but the high $\Delta_E$ makes this costly. For a claim to be ego-driven but epistemically true, the high $\Delta_G$ makes this costly. Thus, only coherent claims (both epistemically true and ego-aligned) can afford to produce the signal.
-
-As $\min(\Delta_E, \Delta_G) \to \infty$, the probability of deceptive signals $\beta := \Pr[S \mid \vec{T} \text{ incoherent}] \to 0$. Applying the same Bayes update form as Theorem [\[thm:cheap-talk-bound\]](#thm:cheap-talk-bound){reference-type="ref" reference="thm:cheap-talk-bound"} to the coherence event: $$\Pr[\vec{T} \text{ coherent} \mid S] = \frac{p}{p + (1-p)\beta} \to 1 \text{ as } \beta \to 0.$$ ◻
-:::
-
-::: theorem
 []{#thm:verified-signal label="thm:verified-signal"} Let $C\in\{0,1\}$ with prior $p=\Pr[C=1]$. Suppose a verifier produces an acceptance event $A$ such that $$\Pr[A \mid C=1]\ge 1-\varepsilon_T,\qquad \Pr[A \mid C=0]\le \varepsilon_F,$$ for some $\varepsilon_T,\varepsilon_F\in[0,1]$. Then $$\Pr[C=1 \mid A]
 \;\ge\;
 \frac{p(1-\varepsilon_T)}{p(1-\varepsilon_T) + (1-p)\varepsilon_F}.$$ In particular, if $\varepsilon_F\to 0$ and $\varepsilon_T$ is bounded away from $1$, then $\Pr[C=1\mid A]\to 1$.
 
-`Credibility.CostlySignals.verified_signal_credibility` `Credibility.CostlySignals.verifiedCredibilityBound`
+C_7971dded C_03727cf1
 :::
 
 ::: proof
@@ -368,23 +346,24 @@ As $\min(\Delta_E, \Delta_G) \to \infty$, the probability of deceptive signals $
   Verified Lean proofs   Proof effort       Impossible (won't compile)   Maximum
   Verbal assertion       \~0                \~0                          Bounded
 
-  Dual-Cost Signal           Epistemic Cost Differential   Ego Cost Differential   Coherence Credibility
-  -------------------------- ----------------------------- ----------------------- -----------------------
-  Public peer review         Refutation risk               Reputation damage       High
-  Independent audit          Investigation cost            Legal liability         Very High
-  Open-source contribution   Debugging effort              Community backlash      Moderate-High
-  Personal apology           Humility cost                 Ego preservation cost   High
-
 **Key insight:** Lean proofs with `0 sorry` are *maximally costly signals*. You cannot produce a compiling proof of a false theorem. The cost differential is infinite [@demoura2021lean4; @debruijn1970automath].
 
 ::: theorem
 []{#thm:proof-ultimate label="thm:proof-ultimate"} Let $s$ be a machine-checked proof of claim $c$. Then: $$\Pr[c \mid s] = 1 - \varepsilon$$ where $\varepsilon$ accounts only for proof assistant bugs.
 
-`Credibility.CostlySignals.proof_as_ultimate_signal` `Credibility.CostlySignals.verified_signal_limit_one`
+C_d7a1a4c0 C_8b7be42f
 :::
 
 ::: proof
 *Proof.* This is a special case of Theorem [\[thm:verified-signal\]](#thm:verified-signal){reference-type="ref" reference="thm:verified-signal"} with $\varepsilon_T \approx 0$ (proof exists if claim is true and provable) and $\varepsilon_F \approx 0$ (proof assistant soundness). See [@demoura2021lean4; @debruijn1970automath]. ◻
+:::
+
+::: corollary
+[]{#cor:counting-gap-lean label="cor:counting-gap-lean"} The infinite cost differential of a machine-checked proof is a consequence of Paper 4's Counting Gap (Theorem 3: $\varepsilon \cdot N \leq C \Rightarrow N \leq C/\varepsilon$) applied to the type-checker channel.
+:::
+
+::: proof
+*Proof.* Let $N$ = number of false proofs that compile, $C$ = capacity of the type-checker channel, $\varepsilon = \varepsilon_F$ = false-positive rate. The Counting Gap gives $N \leq C / \varepsilon_F$. By soundness of Lean's kernel [@demoura2021lean4], $\varepsilon_F \to 0$, so $N \to 0$. To produce a single false proof that compiles, an agent must either: (a) find a kernel bug (probability $\varepsilon_F \to 0$), or (b) search the space of all type-correct proof terms for one that proves a false theorem. Space (b) has size at most $C / \varepsilon_F \to \infty$, requiring diverging computational work. By Paper 4's Energy Lower Bound (Theorem 13), computational work translates to physical energy at rate $\geq k_B T \ln 2$ per bit. Therefore $\Delta_{\text{Lean}} = \text{Cost}(s \mid \bot) - \text{Cost}(s \mid \top) = \infty$ in joules. The cost differential is not a modeling assumption; it follows from counting. ◻
 :::
 
 ::: center
@@ -400,7 +379,7 @@ As $\min(\Delta_E, \Delta_G) \to \infty$, the probability of deceptive signals $
 ::: theorem
 []{#thm:text-bound label="thm:text-bound"} For any text string $T$ (memory content, assertion, etc.) and high-magnitude claim $c$ with $M(c) > M^*$ (i.e., prior $p < e^{-M^*}$): $$\Pr[c \mid T] < \tau$$ where $\tau < 1$ is determined by the mimicability $q$ and $M^*$. No text achieves full credibility for exceptional claims.
 
-`Credibility.Impossibility.text_credibility_bound` `Credibility.Impossibility.high_magnitude_credibility_small` `Credibility.Impossibility.memory_iteration_futility`
+C_5ff60f8e C_375d1a60 C_e1a45e3f
 :::
 
 ::: proof
@@ -448,7 +427,7 @@ Applying the leverage framework (Paper 3) [@paper3_leverage]:
 ::: theorem
 []{#thm:credibility-leverage label="thm:credibility-leverage"} For cheap-talk signals with nonnegative credibility impact, leverage is maximized by minimizing word count: $$\arg\max_s L_S(s) = \arg\min_s |s|$$ subject to conveying the claim.
 
-`Credibility.Leverage.brevity_principle` `Credibility.Leverage.credibility_leverage_minimization` `Credibility.Leverage.leverage_inverse_effort`
+C_c960ce0f C_c49e8c99 C_55861ab0
 :::
 
 ::: proof
@@ -457,45 +436,17 @@ Applying the leverage framework (Paper 3) [@paper3_leverage]:
 
 **Interpretation:** Shorter, terser memory entries achieve higher credibility leverage than verbose explanations. "70k lines, deployed in 3 labs" beats lengthy justification.
 
-## Optimal Memory Design
+## Energy Budget Interpretation
 
-Given Theorems 5.1-5.3 and 6.1, optimal memory content should:
+The cost differential $\Delta$ (in joules) induces a natural budget interpretation. Let $B$ be an agent's total energy budget for signal production. Then:
 
-1.  **State facts without meta-justification** (reduces Emphasis Penalty)
+-   A cheap-talk strategy exhausts $B$ producing signals with $\Delta = 0$, yielding credibility bounded by Theorem [\[thm:cheap-talk-bound\]](#thm:cheap-talk-bound){reference-type="ref" reference="thm:cheap-talk-bound"} regardless of $B$.
 
-2.  **Include verifiable anchors** (third-party deployments, citations)
+-   A costly-signal strategy concentrates $B$ on signals with large $\Delta$, yielding credibility approaching $1$ as $\Delta \to \infty$ (Theorem [\[thm:costly-signal\]](#thm:costly-signal){reference-type="ref" reference="thm:costly-signal"}).
 
-3.  **Specify mechanism** (explains how exceptional output is achievable)
+-   Optimal credibility leverage (Theorem [\[thm:credibility-leverage\]](#thm:credibility-leverage){reference-type="ref" reference="thm:credibility-leverage"}) therefore allocates budget entirely to high-$\Delta$ channels: *demonstrations, working code, machine-checked proofs* rather than assertions.
 
-4.  **Direct behavioral calibration** (tell model how to act, not what to believe)
-
-## Practical Applications
-
-The dual truth framework has broad applications across domains where communication involves both epistemic truth and ego-driven truth:
-
-### Scientific Communication
-
-In scientific publishing, the peer review process serves as a dual-cost signal: - **Epistemic cost:** Authors must conduct rigorous experiments, analyze data, and write a detailed manuscript - **Ego cost:** Authors must subject their work to criticism and potential rejection by peers
-
-A paper with multiple independent replications has higher coherence: - Epistemic truth: Results are reproducible - Ego truth: Authors' reputation is enhanced by independent validation
-
-### Political Communication
-
-Political speeches often exhibit low coherence between epistemic and ego-driven truth: - **Epistemic truth:** Objective facts about policy impacts - **Ego truth:** What the audience wants to hear to support the politician
-
-Fact-checking serves as a costly signal that increases coherence by penalizing epistemic falsehoods.
-
-### Climate Change Communication {#climate-communication}
-
-Climate change denial exhibits high incoherence: - Epistemic truth: Scientific consensus on human-caused climate change - Ego truth: Economic or ideological interests that conflict with climate action
-
-Climate scientists use dual-cost signals such as peer-reviewed papers and data sharing to increase coherence.
-
-### Corporate Communication
-
-Corporate social responsibility (CSR) reports can exhibit varying degrees of coherence: - **High coherence:** Companies that back up claims with transparent data and independent audits - **Low coherence:** Companies that use greenwashing (superficial claims without action)
-
-Independent sustainability audits serve as dual-cost signals that increase credibility.
+**Corollary (Minimality of honest signaling).** An honest agent with true claim $c$ achieves maximal $L_C$ by producing the minimal proof of $c$: one correctly compiling Lean file, zero additional assertions. Additional words add DOF (increase $|s|$) without increasing $\Delta$, strictly decreasing leverage.
 
 ::: center
 
