@@ -11,7 +11,7 @@ OpenHCS Architecture:
 
 STRUCTURAL INVARIANTS (mathematical constraints):
   1. Content: ∀p ∈ Papers: content(p) ⊂ paper_dir(p)/latex/content/*.tex
-  2. Proofs:  ∀p ∈ Papers: proofs(p) ⊂ proofs_dir/paper{id}_*.lean
+  2. Proofs:  ∀p ∈ Papers: proofs(p) ⊂ paper_dir(p)/meta(p).proofs_dir/ (declared in papers.yaml)
   3. Output:  ∀p ∈ Papers: releases(p) = {pdf, md, copy_paste.txt, BUILD_LOG.txt, tar.gz, zip}
 
 All papers follow identical structure. No special cases.
@@ -1183,6 +1183,28 @@ end {module_root}
             lines.append(
                 f"\\providecommand{{\\LeanSorry{suffix}}}{{{stats.sorry_count}}}"
             )
+
+        # Add aggregate stats for each declared lean dependency whose proofs exist.
+        # Macro suffix uses the actual Lean module root name (e.g. DecisionQuotient, Ssot),
+        # not the paper ID (paper4, paper2), so citations in LaTeX are unambiguous.
+        for dep_paper_id in meta.lean_dependencies:
+            if dep_paper_id not in self.papers:
+                continue
+            dep_proofs_dir = self._get_paper_proofs_dir(dep_paper_id)
+            if not dep_proofs_dir.exists():
+                continue
+            dep_stats = self._compute_lean_stats(dep_proofs_dir)
+            dep_roots = self._derive_module_roots(dep_paper_id)
+            dep_module = dep_roots[0] if dep_roots else dep_paper_id
+            dep_suffix = self._lean_macro_suffix(dep_module)
+            dep_full_name = self.papers[dep_paper_id].full_name
+            lines.extend([
+                f"% Lean dependency: {dep_module} ({dep_full_name})",
+                f"\\providecommand{{\\LeanDepLines{dep_suffix}}}{{{dep_stats.line_count}}}",
+                f"\\providecommand{{\\LeanDepTheorems{dep_suffix}}}{{{dep_stats.theorem_count}}}",
+                f"\\providecommand{{\\LeanDepSorry{dep_suffix}}}{{{dep_stats.sorry_count}}}",
+                f"\\providecommand{{\\LeanDepFiles{dep_suffix}}}{{{dep_stats.file_count}}}",
+            ])
 
         (content_dir / "lean_stats.tex").write_text(
             "\n".join(lines) + "\n", encoding="utf-8"
@@ -4162,33 +4184,21 @@ Repository: https://github.com/trissim/openhcs
         axiom_check: bool = False,
         claim_check: bool = False,
     ):
-        """Full release build: Lean + LaTeX + Markdown + arXiv package.
-
-        For variants (e.g., paper1_jsait), only build Lean once (shared proofs).
-        """
+        """Full release build: Lean + LaTeX + Markdown + arXiv package."""
         meta = self._get_paper_meta(paper_id)
         print(f"\n{'=' * 60}")
         print(f"[release] Building {paper_id}: {meta.name}")
         print(f"{'=' * 60}\n")
 
-        # For variants, only build Lean if it's the base paper
-        is_variant = paper_id != meta.dir_name.replace("_", "").lower()
-
         # Build in order: Lean → LaTeX → Markdown → Package
-        if not is_variant:
-            self.build_lean(paper_id, verbose=verbose)
-        else:
-            print(
-                f"[release] Skipping Lean build for variant {paper_id} (shared proofs)"
-            )
-
+        self.build_lean(paper_id, verbose=verbose)
         self.build_latex(paper_id, verbose=verbose)
         self.build_markdown(paper_id)
         if claim_check:
             self.check_claim_coverage(paper_id, fail_on_missing=True)
         self.package_arxiv(paper_id)
 
-        if axiom_check and not is_variant:
+        if axiom_check:
             self.check_axioms(paper_id, verbose=verbose)
 
         releases_dir = self._get_releases_dir(paper_id)
