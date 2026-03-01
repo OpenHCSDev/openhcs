@@ -143,7 +143,11 @@ theorem opt_falsifying (φ : Formula n) (a : Assignment n) (hfalse : φ.eval a =
 
 /-! ## Main Theorem: Tautology ⟺ Sufficient -/
 
-/-- The empty set of coordinates (we use a trivial 1-coordinate space) -/
+/-- The coordinate space is intentionally degenerate: a single Unit-valued
+    coordinate means `agreeOn s s' ∅` is satisfied for all state pairs,
+    reducing sufficiency of ∅ to Opt-constancy across the entire state space.
+    This is the standard reduction technique — the structure carries the
+    encoding, not additional coordinate data. -/
 instance : CoordinateSpace (ReductionState n) 1 where
   Coord := fun _ => Unit
   proj := fun _ _ => ()

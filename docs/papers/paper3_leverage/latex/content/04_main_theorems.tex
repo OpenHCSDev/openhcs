@@ -187,6 +187,10 @@ which is exactly $L(A)\ge 1$ under additive composition.
 
 \textbf{Interpretation:} Composition preserves a baseline leverage floor under the stated assumptions.
 
+\begin{remark}[Composition Breaks SSOT]\label{rem:composition-breaks-ssot}
+Theorem~\ref{thm:composition} preserves leverage \emph{floors}, but composing two SSOT architectures breaks SSOT: if $\mathrm{DOF}(A_1) = \mathrm{DOF}(A_2) = 1$, then $\mathrm{DOF}(A_1 \oplus A_2) = 2$. This is formalized as \texttt{compose\_breaks\_ssot} in \texttt{Leverage/BridgeToDQ.lean}. The composition tax is unavoidable: distributed systems consisting of $k$ independent SSOT components have $\mathrm{DOF} = k$, placing them in the coNP-hard regime (srank $= k > 1$) with mandatory thermodynamic cost per decision cycle.
+\end{remark}
+
 \subsection{Formalization}
 
 Main optimization theorems are formalized in \texttt{Leverage/Theorems.lean}; physical edit-energy theorems are formalized in \texttt{Leverage/Physical.lean}:

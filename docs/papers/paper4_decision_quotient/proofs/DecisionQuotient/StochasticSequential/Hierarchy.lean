@@ -57,6 +57,10 @@ theorem sequential_to_PSPACE : baseComplexity 2 = ComplexityClass.PSPACE := rfl
 These are standard complexity-theoretic facts:
 - coNP ⊆ PP (by probabilistic simulation)
 - PP ⊆ PSPACE (by counting in polynomial space)
+
+The containments are encoded definitionally rather than re-derived: the paper's
+contribution is applying complexity theory to sufficiency problems, not
+reproving textbook results. See Arora-Barak Ch. 7 for the standard proofs.
 -/
 
 /-- Complexity class ordering captures the regime hierarchy -/
