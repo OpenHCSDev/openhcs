@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 Unified paper build system for the OpenHCS paper series.
 
 All configuration lives in scripts/papers.yaml. The script reads it once at
@@ -98,6 +98,38 @@ from datetime import datetime
 import re
 import hashlib
 import json
+
+try:
+    from pylatexenc.latex2text import LatexNodes2Text
+    HAS_PYLATEXENC = True
+except ImportError:
+    HAS_PYLATEXENC = False
+
+# Unicode subscript/superscript mappings for math rendering
+UNICODE_SUBSCRIPTS = {
+    '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+    '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+    'a': 'ₐ', 'e': 'ₑ', 'h': 'ₕ', 'i': 'ᵢ', 'j': 'ⱼ',
+    'k': 'ₖ', 'l': 'ₗ', 'm': 'ₘ', 'n': 'ₙ', 'o': 'ₒ',
+    'p': 'ₚ', 'r': 'ᵣ', 's': 'ₛ', 't': 'ₜ', 'u': 'ᵤ',
+    'v': 'ᵥ', 'x': 'ₓ',
+    '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎',
+}
+
+UNICODE_SUPERSCRIPTS = {
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+    'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ',
+    'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ',
+    'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ',
+    'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ',
+    'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ',
+    '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾',
+    'A': 'ᴬ', 'B': 'ᴮ', 'D': 'ᴰ', 'E': 'ᴱ', 'G': 'ᴳ',
+    'H': 'ᴴ', 'I': 'ᴵ', 'J': 'ᴶ', 'K': 'ᴷ', 'L': 'ᴸ',
+    'M': 'ᴹ', 'N': 'ᴺ', 'O': 'ᴼ', 'P': 'ᴾ', 'R': 'ᴿ',
+    'T': 'ᵀ', 'U': 'ᵁ', 'V': 'ⱽ', 'W': 'ᵂ',
+}
 
 
 @dataclass(frozen=True)
@@ -1828,8 +1860,18 @@ end {module_root}
             )
 
         # Add aggregate stats for each declared lean dependency whose proofs exist.
-        # Macro suffix uses the actual Lean module root name (e.g. DecisionQuotient, Ssot),
-        # not the paper ID (paper4, paper2), so citations in LaTeX are unambiguous.
+        # Macro suffixes should use the public Lean namespace roots referenced in prose
+        # (e.g. AbstractClassSystem, Ssot, DecisionQuotient), not arbitrary package
+        # roots like nominal_resolution.
+        tool_roots = {
+            "DeclInfoExport",
+            "DependencyGraph",
+            "GraphExport",
+            "HandleAliases",
+            "CrossPaperDependencies",
+            "PrintAxioms",
+            "check_axioms",
+        }
         for dep_paper_id in meta.lean_dependencies:
             if dep_paper_id not in self.papers:
                 continue
@@ -1838,18 +1880,38 @@ end {module_root}
                 continue
             dep_stats = self._compute_lean_stats(dep_proofs_dir)
             dep_roots = self._derive_module_roots(dep_paper_id)
-            dep_module = dep_roots[0] if dep_roots else dep_paper_id
-            dep_suffix = self._lean_macro_suffix(dep_module)
             dep_full_name = self.papers[dep_paper_id].full_name
-            lines.extend(
-                [
-                    f"% Lean dependency: {dep_module} ({dep_full_name})",
-                    f"\\providecommand{{\\LeanDepLines{dep_suffix}}}{{{dep_stats.line_count}}}",
-                    f"\\providecommand{{\\LeanDepTheorems{dep_suffix}}}{{{dep_stats.theorem_count}}}",
-                    f"\\providecommand{{\\LeanDepSorry{dep_suffix}}}{{{dep_stats.sorry_count}}}",
-                    f"\\providecommand{{\\LeanDepFiles{dep_suffix}}}{{{dep_stats.file_count}}}",
-                ]
-            )
+            public_roots: List[str] = []
+            for root in dep_roots:
+                if root in tool_roots or re.fullmatch(r"Paper\d+[A-Za-z]*", root):
+                    continue
+                if root[:1].isupper() and root not in public_roots:
+                    public_roots.append(root)
+
+            if not public_roots:
+                for root in dep_roots:
+                    if root in tool_roots:
+                        continue
+                    if root not in public_roots:
+                        public_roots.append(root)
+
+            if not public_roots:
+                public_roots = [dep_paper_id]
+
+            for i, dep_module in enumerate(public_roots):
+                dep_suffix = self._lean_macro_suffix(dep_module)
+                if i == 0:
+                    lines.append(f"% Lean dependency: {dep_module} ({dep_full_name})")
+                else:
+                    lines.append(f"% Lean dependency alias: {dep_module}")
+                lines.extend(
+                    [
+                        f"\\providecommand{{\\LeanDepLines{dep_suffix}}}{{{dep_stats.line_count}}}",
+                        f"\\providecommand{{\\LeanDepTheorems{dep_suffix}}}{{{dep_stats.theorem_count}}}",
+                        f"\\providecommand{{\\LeanDepSorry{dep_suffix}}}{{{dep_stats.sorry_count}}}",
+                        f"\\providecommand{{\\LeanDepFiles{dep_suffix}}}{{{dep_stats.file_count}}}",
+                    ]
+                )
 
         (content_dir / "lean_stats.tex").write_text(
             "\n".join(lines) + "\n", encoding="utf-8"
@@ -2249,7 +2311,33 @@ end {module_root}
         for tex_file in sorted(content_dir.glob("*.tex")):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             ids.update(m.strip() for m in re.findall(r"\\LH\{([^}]+)\}", text))
-        return {code for code in ids if code}
+        return {code for code in ids if re.match(r"^[A-Za-z]+\d+$", code)}
+
+    def _extract_referenced_lh_handles_from_content(self, paper_id: str) -> Set[str]:
+        """Extract raw Lean handles still referenced via `\\LH{handle_name}`."""
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return set()
+
+        compact_id_pattern = re.compile(r"^[A-Za-z]+\d+$")
+        paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
+        handles: Set[str] = set()
+
+        for tex_file in self._iter_manual_content_tex(paper_id):
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            for raw in re.findall(r"\\LH\{([^}]+)\}", text):
+                handle = raw.strip().replace(r"\_", "_")
+                if not handle or compact_id_pattern.match(handle):
+                    continue
+                if paper_handle_pattern.match(handle):
+                    continue
+                if handle.endswith(".lean"):
+                    continue
+                if "." not in handle and "_" not in handle:
+                    continue
+                handles.add(handle)
+
+        return handles
 
     def _extract_alias_code_map_from_handle_aliases(
         self, paper_id: str, include_dependencies: bool = True
@@ -2461,6 +2549,9 @@ end {module_root}
         referenced_handles = self._extract_referenced_lean_handles_from_content(
             paper_id
         )
+        referenced_lh_handles = self._extract_referenced_lh_handles_from_content(
+            paper_id
+        )
         referenced_ids = self._extract_lh_ids_from_content(paper_id)
         referenced_id_handles = {
             previous_id_to_handle[code]
@@ -2478,7 +2569,10 @@ end {module_root}
             support_handles.update(handles)
 
         candidate_handles = (
-            set(referenced_handles) | set(support_handles) | set(referenced_id_handles)
+            set(referenced_handles)
+            | set(referenced_lh_handles)
+            | set(support_handles)
+            | set(referenced_id_handles)
         )
         # Recovery fallback:
         # if content already uses only \LH{ID} references and the current map file
@@ -2587,6 +2681,9 @@ end {module_root}
                 new_code = old_id_to_new_id.get(old_code) or legacy_hash_to_new_id.get(
                     old_code
                 )
+                if new_code is None:
+                    raw_handle = old_code.replace(r"\_", "_")
+                    new_code = handle_to_id.get(raw_handle)
                 if new_code is None:
                     return match.group(0)
                 return rf"\LH{{{new_code}}}"
@@ -3791,11 +3888,200 @@ end {module_root}
         )
         return self._normalize_plaintext_block(converted)
 
+    def _convert_fake_subscripts_to_unicode(self, text: str) -> str:
+        """Convert pandoc-style fake subscripts like X_(sub) to Unicode Xₛᵤᵦ.
+
+        Only converts when ALL characters in the subscript/superscript have
+        Unicode equivalents, to avoid ugly partial conversions like Edₑcᵢₛᵢₒₙ.
+        """
+        def _try_convert_sub(content: str) -> Optional[str]:
+            """Return Unicode subscript if all chars convertible, else None."""
+            result = []
+            for c in content:
+                if c in UNICODE_SUBSCRIPTS:
+                    result.append(UNICODE_SUBSCRIPTS[c])
+                elif c == ' ':
+                    result.append(' ')
+                else:
+                    return None  # Can't fully convert
+            return ''.join(result)
+
+        def _try_convert_sup(content: str) -> Optional[str]:
+            """Return Unicode superscript if all chars convertible, else None."""
+            result = []
+            for c in content:
+                if c in UNICODE_SUPERSCRIPTS:
+                    result.append(UNICODE_SUPERSCRIPTS[c])
+                elif c == ' ':
+                    result.append(' ')
+                else:
+                    return None  # Can't fully convert
+            return ''.join(result)
+
+        def _convert_sub_paren(match: re.Match) -> str:
+            """Handle X_(content) patterns."""
+            base = match.group(1)
+            sub_content = match.group(2)
+            converted = _try_convert_sub(sub_content)
+            if converted is not None:
+                return base + converted
+            # Can't fully convert; keep parens only for expressions (has operators)
+            # Pure alphanumeric subscripts don't need parens in plain text
+            if re.search(r'[+\-−×÷*/=<> ]', sub_content):
+                return f"{base}_({sub_content})"
+            return f"{base}_{sub_content}"
+
+        def _convert_sub_single(match: re.Match) -> str:
+            """Handle X_c single-char patterns."""
+            base = match.group(1)
+            sub_content = match.group(2)
+            converted = _try_convert_sub(sub_content)
+            if converted is not None:
+                return base + converted
+            return f"{base}_{sub_content}"
+
+        def _convert_sup_paren(match: re.Match) -> str:
+            """Handle X^(content) patterns."""
+            base = match.group(1)
+            sup_content = match.group(2)
+            converted = _try_convert_sup(sup_content)
+            if converted is not None:
+                return base + converted
+            # Can't fully convert; keep parens only for expressions (has operators)
+            # Pure alphanumeric superscripts don't need parens in plain text
+            if re.search(r'[+\-−×÷*/=<> ]', sup_content):
+                return f"{base}^({sup_content})"
+            return f"{base}^{sup_content}"
+
+        def _convert_sup_single(match: re.Match) -> str:
+            """Handle X^c single-char patterns."""
+            base = match.group(1)
+            sup_content = match.group(2)
+            converted = _try_convert_sup(sup_content)
+            if converted is not None:
+                return base + converted
+            return f"{base}^{sup_content}"
+
+        # Pattern: X_(content) -> X + subscript content
+        # Handles both single char like X_a and parenthesized like X_(min)
+        result = re.sub(r'(\w)_\(([^)]+)\)', _convert_sub_paren, text)
+        result = re.sub(r'(\w)_([a-z0-9])\b', _convert_sub_single, result)
+
+        # Pattern: X^(content) -> X + superscript content
+        result = re.sub(r'(\w)\^\(([^)]+)\)', _convert_sup_paren, result)
+        result = re.sub(r'(\w)\^([a-z0-9A-Z])\b', _convert_sup_single, result)
+
+        return result
+
+    def _convert_display_math_to_unicode(self, text: str) -> str:
+        """Convert $$...$$ display math blocks to Unicode plain text.
+
+        Handles aligned environments and other display math that pandoc
+        can't convert, turning them into readable plain text.
+        """
+        def _convert_block(match: re.Match) -> str:
+            content = match.group(1)
+
+            # Strip aligned/align environment wrappers
+            content = re.sub(r'\\begin\{aligned?\}', '', content)
+            content = re.sub(r'\\end\{aligned?\}', '', content)
+
+            # Convert LaTeX commands to Unicode
+            replacements = [
+                (r'\\iff', '⟺'),
+                (r'\\Leftrightarrow', '⟺'),
+                (r'\\implies', '⟹'),
+                (r'\\Rightarrow', '⟹'),
+                (r'\\to', '→'),
+                (r'\\rightarrow', '→'),
+                (r'\\leftarrow', '←'),
+                (r'\\leftrightarrow', '↔'),
+                (r'\\neq', '≠'),
+                (r'\\leq', '≤'),
+                (r'\\geq', '≥'),
+                (r'\\times', '×'),
+                (r'\\cdot', '·'),
+                (r'\\infty', '∞'),
+                (r'\\in', '∈'),
+                (r'\\notin', '∉'),
+                (r'\\subset', '⊂'),
+                (r'\\subseteq', '⊆'),
+                (r'\\forall', '∀'),
+                (r'\\exists', '∃'),
+                (r'\\neg', '¬'),
+                (r'\\land', '∧'),
+                (r'\\lor', '∨'),
+                (r'\\Delta', 'Δ'),
+                (r'\\Sigma', 'Σ'),
+                (r'\\Pi', 'Π'),
+                (r'\\Omega', 'Ω'),
+                (r'\\alpha', 'α'),
+                (r'\\beta', 'β'),
+                (r'\\gamma', 'γ'),
+                (r'\\delta', 'δ'),
+                (r'\\epsilon', 'ε'),
+                (r'\\theta', 'θ'),
+                (r'\\lambda', 'λ'),
+                (r'\\mu', 'μ'),
+                (r'\\pi', 'π'),
+                (r'\\sigma', 'σ'),
+                (r'\\omega', 'ω'),
+                (r'\\ln', 'ln'),
+                (r'\\log', 'log'),
+                (r'\\min', 'min'),
+                (r'\\max', 'max'),
+            ]
+            for pattern, replacement in replacements:
+                content = re.sub(pattern, replacement, content)
+
+            # Remove \mathrm{} but keep content
+            content = re.sub(r'\\mathrm\{([^}]+)\}', r'\1', content)
+            # Remove \text{} but keep content
+            content = re.sub(r'\\text\{([^}]+)\}', r'\1', content)
+            # Remove \; \, \! \  spacing commands
+            content = re.sub(r'\\[;,! ]', ' ', content)
+            # Remove & alignment markers
+            content = content.replace('&', '')
+            # Convert \\ to space (line breaks in aligned become spaces)
+            content = re.sub(r'\\\\', ' ', content)
+            # Clean up multiple spaces
+            content = re.sub(r'\s+', ' ', content)
+            # Remove | that were for absolute value markers in \mathrm
+            # but keep them if they look like |Cap|
+
+            return content.strip()
+
+        # Match $$...$$ blocks (including multiline)
+        result = re.sub(r'\$\$([\s\S]*?)\$\$', _convert_block, text)
+        return result
+
     def _latex_snippet_to_unicode_zenodo(self, latex_input: str, paper_id: str) -> str:
-        """Convert LaTeX to Unicode plain text suitable for Zenodo (no markdown markers)."""
+        """Convert LaTeX to Unicode plain text suitable for Zenodo (no markdown markers).
+
+        Uses pylatexenc if available for better Greek letter handling, then applies
+        Unicode subscript/superscript conversion for proper math rendering.
+        """
+        # First expand macros and get plain text via pandoc
         plain = self._latex_snippet_to_plain(latex_input, paper_id)
+
+        # Convert display math blocks ($$...$$) that pandoc couldn't handle
+        plain = self._convert_display_math_to_unicode(plain)
+
+        # Convert fake subscripts/superscripts to real Unicode
+        plain = self._convert_fake_subscripts_to_unicode(plain)
+
         # Use explicit Unicode bullets instead of markdown-style `- ` markers.
         plain = re.sub(r"(?m)^-\s+", "• ", plain)
+
+        # Common symbol replacements that pandoc may miss
+        plain = plain.replace('>=', '≥')
+        plain = plain.replace('<=', '≤')
+        plain = plain.replace('!=', '≠')
+        plain = plain.replace('->', '→')
+        plain = plain.replace('<->', '↔')
+        plain = plain.replace('<=>', '⇔')
+        plain = plain.replace('...', '…')
+
         return self._normalize_plaintext_block(plain)
 
     def _default_arxiv_comments(self, paper_id: str) -> str:
