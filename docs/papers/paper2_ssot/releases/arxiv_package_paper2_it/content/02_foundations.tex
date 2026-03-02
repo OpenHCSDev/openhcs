@@ -43,6 +43,7 @@ An encoding system is \emph{incoherent} iff some locations disagree:
 \begin{theorem}[Oracle Arbitrariness]\label{thm:oracle-arbitrary}
 For any incoherent encoding system $S$ and any oracle $O$ that resolves $S$ to a value $v \in S$, there exists a value $v' \in S$ such that $v' \neq v$.
 \end{theorem}
+\leanmeta{\LH{ORA1}, \LH{ADV1}, \LH{TRI1}}
 
 \begin{proof}
 By incoherence, $\exists v_1, v_2 \in S: v_1 \neq v_2$. Either $O$ picks $v_1$ (then $v_2$ disagrees) or $O$ doesn't pick $v_1$ (then $v_1$ disagrees).
@@ -57,6 +58,7 @@ The \emph{degrees of freedom} (DOF) of an encoding system is the number of locat
 \begin{theorem}[DOF = 1 Guarantees Coherence]\label{thm:dof-one-coherence}
 If DOF = 1, then the encoding system is coherent in all reachable states.
 \end{theorem}
+\leanmeta{\LH{COH1}, \LH{TRI1}, \LH{UNQ1}}
 
 \begin{proof}
 With DOF = 1, exactly one location is independent. All other locations are derived (automatically updated when the source changes). Derived locations cannot diverge from their source. Therefore, all locations hold the value determined by the single independent source. Disagreement is impossible.
@@ -65,6 +67,7 @@ With DOF = 1, exactly one location is independent. All other locations are deriv
 \begin{theorem}[DOF $>$ 1 Permits Incoherence]\label{thm:dof-gt-one-incoherence}
 If DOF $> 1$, then incoherent states are reachable.
 \end{theorem}
+\leanmeta{\LH{COH2}, \LH{TRI1}, \LH{ADV2}}
 
 \begin{proof}
 With DOF $> 1$, at least two locations are independent. Independent locations can be modified separately. A sequence of edits can set $L_1 = v_1$ and $L_2 = v_2$ where $v_1 \neq v_2$. This is an incoherent state.
@@ -73,6 +76,7 @@ With DOF $> 1$, at least two locations are independent. Independent locations ca
 \begin{corollary}[Coherence Forces DOF = 1]\label{cor:coherence-forces-ssot}
 If coherence must be guaranteed (no incoherent states reachable), then DOF = 1 is necessary and sufficient.
 \end{corollary}
+\leanmeta{\LH{COH3}, \LH{TRI1}, \LH{UNQ1}, \LH{MDL5}}
 
 This is the information-theoretic foundation of optimal encoding under coherence constraints (\LH{COH1}, \LH{COH2}, \LH{COH3}).
 
@@ -233,6 +237,7 @@ Modification complexity is the central metric of this paper. It measures the \em
 \begin{theorem}[Correctness Forcing]\label{thm:correctness-forcing}
 $M(C, \delta_F)$ is the \textbf{minimum} number of edits required for correctness. Fewer edits imply an incorrect program.
 \end{theorem}
+\leanmeta{\LH{BAS1}}
 
 \begin{proof}
 Suppose $M(C, \delta_F) = k$, meaning $k$ locations encode $F$. By Definition~\ref{def:encodes}, each encoding location must be updated when $F$ changes. If only $j < k$ locations are updated, then $k - j$ locations still reflect the old value of $F$. These locations create inconsistencies:
@@ -300,6 +305,7 @@ DOF is the key metric. Modification complexity $M$ counts all encoding locations
 \begin{theorem}[DOF = Incoherence Potential]\label{thm:dof-inconsistency}
 $\text{DOF}(C, F) = k$ implies $k$ different values for $F$ can coexist in $C$ simultaneously. With $k > 1$, incoherent states are reachable.
 \end{theorem}
+\leanmeta{\LH{BAS2}}
 
 \begin{proof}
 Each independent location can hold a different value. By Definition~\ref{def:independent}, no constraint forces agreement between independent locations. Therefore, $k$ independent locations can hold $k$ distinct values. This is an instance of Theorem~\ref{thm:dof-gt-one-incoherence} applied to software.
@@ -308,6 +314,7 @@ Each independent location can hold a different value. By Definition~\ref{def:ind
 \begin{corollary}[DOF $>$ 1 Implies Incoherence Risk]\label{cor:dof-risk}
 $\text{DOF}(C, F) > 1$ implies incoherent states are reachable. The codebase can enter a state where different locations encode different values for the same fact.
 \end{corollary}
+\leanmeta{\LH{BAS3}}
 
 \subsection{The DOF Lattice}\label{sec:dof-lattice}
 
@@ -333,8 +340,9 @@ For any fact $F$ that must be encoded, $\text{DOF}(C, F) = 1$ is the unique valu
 \item DOF = 1: Coherence guaranteed (by Theorem~\ref{thm:dof-one-coherence})
 \item DOF $>$ 1: Incoherence reachable (by Theorem~\ref{thm:dof-gt-one-incoherence})
 \end{enumerate}
-This is formalized as the Zero-Incoherence Capacity theorem (Theorem~\ref{thm:coherence-capacity}) in Section~\ref{sec:capacity}.
+This uniqueness is forced by trichotomy (\LH{TRI1}): the three cases are exhaustive, and only DOF = 1 achieves coherence (\LH{UNQ1}). This is formalized as the Zero-Incoherence Capacity theorem (Theorem~\ref{thm:coherence-capacity}) in Section~\ref{sec:capacity}.
 \end{theorem}
+\leanmeta{\LH{INS1}}
 
 %==============================================================================
 \subsection{Encoding-Theoretic CAP and FLP}\label{sec:cap-flp}
@@ -356,6 +364,7 @@ This is the minimal formal notion of ``replication'' in our model; without it, p
 \begin{theorem}[CAP in the Encoding Model]\label{thm:cap-encoding}
 No encoding system can simultaneously guarantee coherence (Definition~\ref{def:coherence}), local availability (Definition~\ref{def:local-availability}), and partition tolerance (Definition~\ref{def:partition-tolerance}) for the same fact $F$.
 \end{theorem}
+\leanmeta{\LH{CAP1}}
 
 \begin{proof}
 Partition tolerance gives at least two encoding locations. Local availability allows each to be updated without updating any other encoding location, so by Definition~\ref{def:independent} there exist two independent locations and thus $\text{DOF}(C, F) > 1$. By Theorem~\ref{thm:dof-gt-one-incoherence}, incoherent states are reachable, contradicting coherence.
@@ -368,6 +377,7 @@ A \emph{resolution procedure} is a deterministic function $R$ that maps an encod
 \begin{theorem}[Static FLP in the Encoding Model]\label{thm:static-flp}
 For any incoherent encoding system state and any resolution procedure $R$, the returned value is arbitrary relative to the other values present; no deterministic $R$ can be justified by internal information alone.
 \end{theorem}
+\leanmeta{\LH{FLP1}}
 
 \begin{proof}
 Immediate from Theorem~\ref{thm:oracle-arbitrary}: in an incoherent state, at least two distinct values are present, and any choice leaves another value disagreeing.
@@ -406,6 +416,7 @@ Encoding redundancy $\rho > 0$ is necessary and sufficient for incoherence reach
 \rho(C, F) > 0 \Longleftrightarrow \text{incoherent states reachable}
 \]
 \end{theorem}
+\leanmeta{\LH{RED1}}
 
 \begin{proof}
 $(\Rightarrow)$ If $\rho > 0$, then DOF $> 1$. By Theorem~\ref{thm:dof-gt-one-incoherence}, incoherent states are reachable.
@@ -442,12 +453,14 @@ The zero-incoherence capacity of any encoding system under independent modificat
 C_0 = 1
 \]
 \end{theorem}
+\leanmeta{\LH{COH3}}
 
 We prove this via the standard achievability/converse structure. (These formalize Theorems~\ref{thm:dof-one-coherence} and~\ref{thm:dof-gt-one-incoherence} in IT capacity-proof style.)
 
 \begin{theorem}[Achievability]\label{thm:capacity-achievability}
 Encoding rate DOF $= 1$ achieves zero incoherence. Therefore $C_0 \geq 1$.
 \end{theorem}
+\leanmeta{\LH{CAP2}}
 
 \begin{proof}
 Let DOF$(C, F) = 1$. By Definition~\ref{def:dof}, exactly one location $L_s$ is independent; all other locations $\{L_i\}$ are derived from $L_s$.
@@ -462,6 +475,7 @@ where $f_i$ is the derivation function. All values are determined by $L_s$. Disa
 \begin{theorem}[Converse]\label{thm:capacity-converse}
 Encoding rate DOF $> 1$ does not achieve zero incoherence. Therefore $C_0 < R$ for all $R > 1$.
 \end{theorem}
+\leanmeta{\LH{CAP3}}
 
 \begin{proof}
 Let DOF$(C, F) = k > 1$. By Definition~\ref{def:independent}, there exist locations $L_1, L_2$ that can be modified independently.
@@ -514,10 +528,12 @@ The key difference: Shannon capacity allows vanishing error; zero-incoherence ca
 \begin{corollary}[Capacity-Achieving Rate is Unique]\label{cor:capacity-unique}
 DOF $= 1$ is the unique capacity-achieving encoding rate. No alternative achieves zero incoherence at higher rate.
 \end{corollary}
+\leanmeta{\LH{INS3}}
 
 \begin{corollary}[Redundancy Above Capacity]\label{cor:redundancy-above}
 Any encoding with $\rho > 0$ (redundancy) operates above capacity and cannot guarantee coherence.
 \end{corollary}
+\leanmeta{\LH{RED1}}
 
 \subsubsection{Rate-Incoherence Function}
 
@@ -556,6 +572,7 @@ The capacity theorem yields a prescriptive result for system design:
 \begin{theorem}[Design Necessity]\label{thm:design-necessity}
 If an encoding system requires zero incoherence for correctness, then the encoding rate must satisfy DOF $\leq 1$. This is a necessary condition; no design choice can circumvent it.
 \end{theorem}
+\leanmeta{\LH{DES1}}
 
 \begin{proof}
 Suppose a system requires $P(\text{incoherence}) = 0$ and has DOF $> 1$. By Theorem~\ref{thm:capacity-converse}, incoherent states are reachable. This contradicts the requirement. Therefore DOF $\leq 1$ is necessary.
@@ -572,6 +589,7 @@ For any fact $F$ requiring coherence guarantees, system architecture must either
 \end{enumerate}
 There is no third option.
 \end{corollary}
+\leanmeta{\LH{INS4}}
 
 \subsubsection{Coding Interpretation of Derivation}
 
@@ -607,6 +625,7 @@ For encoding system $C$ and fact $F$, the incoherence graph $G = (V, E)$ has:
 \begin{theorem}[Incoherence Graph Characterization]\label{thm:incoherence-graph}
 Zero incoherence is achievable iff the incoherence graph has at most one vertex: $|V| \leq 1$.
 \end{theorem}
+\leanmeta{\LH{RAT1}}
 
 \begin{proof}
 If $|V| = 0$, no locations encode $F$. If $|V| = 1$, DOF $= 1$ and zero incoherence is achieved by Theorem~\ref{thm:capacity-achievability}. If $|V| \geq 2$, DOF $\geq 2$ and incoherence is reachable by Theorem~\ref{thm:capacity-converse}.
@@ -640,6 +659,7 @@ In Slepian-Wolf coding, correlated sources $(X, Y)$ can be encoded at rates $(R_
 \begin{theorem}[Side Information Requirement]\label{thm:side-info}
 Given an incoherent encoding system with $k$ independent locations holding distinct values $\{v_1, \ldots, v_k\}$, resolving to the correct value requires at least $\log_2 k$ bits of side information.
 \end{theorem}
+\leanmeta{\LH{CIA2}}
 
 \begin{proof}
 The $k$ independent locations partition the value space into $k$ equally plausible alternatives. By Theorem~\ref{thm:oracle-arbitrary}, no internal information distinguishes them--each is an equally valid ``source.''
@@ -742,6 +762,7 @@ The set of derivation relations on a fixed set of locations $L$, ordered by incl
 \item \textbf{Join ($\lor$):} $D_1 \lor D_2 = $ transitive closure of $D_1 \cup D_2$ (if acyclic)
 \end{enumerate}
 \end{theorem}
+\leanmeta{\LH{DER1}}
 
 \begin{proof}
 \textbf{Bottom:} $\emptyset$ is trivially a derivation relation with all locations independent.
@@ -762,6 +783,7 @@ D_1 \subseteq D_2 \Rightarrow \text{DOF}(D_1) \geq \text{DOF}(D_2)
 \]
 More derivations imply fewer independent locations.
 \end{theorem}
+\leanmeta{\LH{AXM1}}
 
 \begin{proof}
 Adding a derivation edge $(L_s, L_d)$ to $D$ can only decrease DOF: if $L_d$ was previously a source (no incoming edges), it now has an incoming edge and is no longer a source. Sources can only decrease or stay constant as derivations are added.
@@ -784,6 +806,7 @@ Given an encoding system with explicit derivation relation $D$:
 \item Finding a minimal DOF-1 extension of $D$ is $O(|L|^2)$ in the worst case
 \end{enumerate}
 \end{theorem}
+\leanmeta{\LH{CPL1}}
 
 \begin{proof}
 \textbf{(1) DOF computation:} Count locations with in-degree 0 in the DAG. Single pass over edges: $O(|D|)$ to compute in-degrees, $O(|L|)$ to count zeros.

@@ -9,6 +9,8 @@
 import Ssot.Basic
 import Ssot.Derivation
 
+namespace Ssot
+
 -- Language feature predicates
 structure LanguageFeatures where
   -- DEF: Definition-time hooks (code executes when class/type is defined)
@@ -110,3 +112,4 @@ theorem both_requirements_independent' :
   intro L ⟨h_no_hooks, _⟩
   simp [can_derive_at, h_no_hooks]
 
+end Ssot

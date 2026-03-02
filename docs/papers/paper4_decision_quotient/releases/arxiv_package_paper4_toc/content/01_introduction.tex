@@ -99,7 +99,7 @@ $\emptyset$-sufficiency fails iff $\exists s, s'$ with $\Opt(s) \neq \Opt(s')$. 
 \subsubsection{6. Bayes from Counting}
 
 \begin{theorem}[Probability Axioms from Counting]\label{thm:bayes-from-counting}
-The foundational chain from counting to Decision Quotient:
+The chain from counting to Decision Quotient:
 \begin{enumerate}
 \item $P(A) = |A|/|\Omega|$ satisfies Kolmogorov axioms: nonnegativity, normalization, and additivity for disjoint sets.
 \item $P(H|E) = P(E|H) \cdot P(H) / P(E)$ follows from the definition of conditional probability.
@@ -219,7 +219,7 @@ For a decision problem viewed as a source:
 Standard Shannon theory establishes (1)--(3). When $\phi(s) = \phi(s')$ implies $\Opt(s) = \Opt(s')$, states within equivalence classes merge without affecting optimal actions (4). The decision quotient partitions into $2^{\mathrm{srank}}$ classes, each requiring $\log_2$ bits for identification, yielding $R(0) = \mathrm{srank}$ (5). Fewer bits cannot distinguish all classes (6).
 \end{proof}
 
-\noindent\textbf{Consequence.} Rate-distortion theory independently recovers structural rank as the fundamental description length for decision-making. Pure Shannon theory.
+\noindent\textbf{Consequence.} Rate-distortion theory independently recovers structural rank as the minimal description length for decision-making. Pure Shannon theory.
 
 \subsubsection{12. Nontriviality from Counting}
 

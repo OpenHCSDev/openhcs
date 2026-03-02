@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Decision Quotient (ToC).
 
-- **Lines:** 28863
-- **Theorems:** 1252
+- **Lines:** 31871
+- **Theorems:** 1323
 - **`sorry` placeholders:** 0
 
 
@@ -31,6 +31,7 @@ lake build
 | `BayesFromDQ.lean` | BayesFromDQ |
 | `BayesOptimalityProof.lean` | BayesOptimalityProof |
 | `BayesianBridge.lean` | BayesianBridge |
+| `Bridges.lean` | Bridges |
 | `CheckAxioms.lean` | CheckAxioms |
 | `ClaimClosure.lean` | ClaimClosure |
 | `Complexity.lean` | Complexity |
@@ -89,6 +90,7 @@ lake build
 | `PhysicalHardness.lean` | PhysicalHardness |
 | `PhysicalIncompleteness.lean` | PhysicalIncompleteness |
 | `TUR.lean` | TUR |
+| `TemporalCountingGap.lean` | TemporalCountingGap |
 | `TransportCost.lean` | TransportCost |
 | `Uncertainty.lean` | Uncertainty |
 | `WassersteinIntegrity.lean` | WassersteinIntegrity |
@@ -137,6 +139,9 @@ lake build
 | `UniverseObjective.lean` | UniverseObjective |
 | `WitnessCheckingDuality.lean` | WitnessCheckingDuality |
 | `DecisionQuotient.lean` | DecisionQuotient |
+| `DeclInfoExport.lean` | DeclInfoExport |
+| `DependencyGraph.lean` | DependencyGraph |
+| `GraphExport.lean` | GraphExport |
 | `lakefile.lean` | lakefile |
 
 ## Verification

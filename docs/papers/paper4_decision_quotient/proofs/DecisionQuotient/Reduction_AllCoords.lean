@@ -85,9 +85,9 @@ theorem opt_reference_many (φ : Formula n) :
     cases a' with
     | accept => simp [reductionProblemMany, reductionUtilityMany, reductionUtility]
     | reject =>
-      simp [reductionProblemMany, reductionUtilityMany, reductionUtility, cond]
+      simp [reductionProblemMany, reductionUtilityMany, reductionUtility]
 
-theorem opt_falsifying_many (φ : Formula n) (k : Fin n) (a_assn : Assignment n)
+theorem opt_falsifying_many (φ : Formula n) (k : Fin n) (a_assn : BoolAssignment n)
     (hfalse : Formula.eval a_assn φ = false) :
     (reductionProblemMany φ).Opt
       (Function.update (fun _ => ReductionState.reference) k (ReductionState.assignment a_assn))

@@ -114,11 +114,8 @@ A typing discipline $D$ is an architecture where:
 \item Can answer: ``Which type provided method $m$?'' (provenance), ``Is this exactly type $T$?'' (identity), ``List all subtypes of $T$'' (enumeration), ``Which method wins in diamond?'' (conflict)
 \end{itemize}
 
-\begin{observation}[Similar DOF]
-Nominal and duck typing have similar implementation complexity (both are typing disciplines with similar runtime overhead).
-\end{observation}
-
 \begin{theorem}[Nominal Leverage Dominance]\label{thm:nominal-leverage}
+Assuming $\mathrm{DOF}(\mathrm{Nominal}) = \mathrm{DOF}(\mathrm{Duck}) = d$ (equal implementation cost hypothesis):
 \[
 L(\text{Nominal}) > L(\text{Duck})
 \]
@@ -128,22 +125,18 @@ L(\text{Nominal}) > L(\text{Duck})
 \LH{L_dbf653bd}}
 
 \begin{proof}
-Let $c_{\text{duck}}  = |\text{Cap}(\text{Duck})|$ and $c_{\text{nominal}} = |\text{Cap}(\text{Nominal})|$.
+Let $c_{\text{duck}} = |\text{Cap}(\text{Duck})|$ and $c_{\text{nominal}} = |\text{Cap}(\text{Nominal})|$.
 
-By Theorem 3.19 (published):
-\[
-c_{\text{nominal}} = c_{\text{duck}} + 4
-\]
+By Theorem 3.19 (published): $c_{\text{nominal}} = c_{\text{duck}} + 4$.
 
-By Observation (similar DOF):
-\[
-\text{DOF}(\text{Nominal}) \approx \text{DOF}(\text{Duck}) = d
-\]
+By hypothesis: $\text{DOF}(\text{Nominal}) = \text{DOF}(\text{Duck}) = d$.
 
 Therefore:
 \[
 L(\text{Nominal}) = \frac{c_{\text{duck}} + 4}{d} > \frac{c_{\text{duck}}}{d} = L(\text{Duck})
 \]
+
+\textbf{Status of hypothesis.} The equal-DOF assumption is formalized as an explicit premise in the Lean mechanization (\LH{L_4372537d}). Whether it holds in practice depends on the implementation. Abstractly: the typing discipline is one component; DOF is the number of independent change points in that component. The hypothesis says adding name-based dispatch (N + B axes) does not introduce more independent change points than shape-based dispatch (S axis alone).
 \end{proof}
 
 \textbf{Connection to Prior Work:} Our published Theorem 3.5 (Strict Dominance) showed nominal typing provides strictly more capabilities for same DOF cost. Theorem \ref{thm:nominal-leverage} provides the leverage formulation.

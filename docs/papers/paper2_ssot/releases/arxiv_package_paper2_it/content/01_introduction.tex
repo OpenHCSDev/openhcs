@@ -1,8 +1,18 @@
 \section{Introduction}\label{introduction}
 
+\subsection{Single-Source Coherence Theorem}\label{sec:first-principles}
+
+We begin with a proof from first principles. Consider any system that encodes a fact at $n$ independent locations. We prove that exactly one value of $n$ guarantees coherence: $n = 1$.
+
+\textbf{Theorem (Single-Source Coherence).} Among all possible degrees of freedom (DOF = number of independent encoding locations), exactly one value (DOF = 1) guarantees coherence. DOF = 0 fails (no fact encoded). DOF $\geq$ 2 fails (permits explicit construction of inconsistency).
+
+\textbf{Proof Sketch.} Case analysis on $\mathbb{N}$: For DOF = 1, any two queries return the single location's value; transitivity of equality forces agreement. For DOF $\geq$ 2, construct two locations with values $v$ and $v' \neq v$; queries return different answers. By trichotomy of naturals, DOF = 1 is the unique solution (\LH{TRI1}). (Formalized in Lean 4, 0 \texttt{sorry}.)
+
+This theorem is the foundation. It establishes that single-source-of-truth (SSOT) is not merely preferable but \emph{mathematically forced} for systems requiring coherence (\LH{UNQ1}). The rest of this paper derives the information-theoretic consequences.
+
 \subsection{Zero-Incoherence Capacity}\label{sec:encoding-problem}
 
-We address this information-theoretic question: what encoding rate guarantees exactly zero probability of disagreement among replicated encodings in an interactive setting? An \emph{encoding system} stores a fact $F$ (value in $\mathcal{V}_F$) at locations $\{L_1,\dots,L_n\}$. The system is \emph{coherent} when all locations agree; otherwise it is \emph{incoherent}. The central quantity is the \textbf{zero-incoherence capacity} $C_0$, the supremal encoding rate that forces incoherence probability to be exactly zero. Our main theorem is compact:
+Building on the Single-Source Coherence Theorem, we ask: what encoding rate guarantees exactly zero probability of disagreement among replicated encodings? An \emph{encoding system} stores a fact $F$ at locations $\{L_1,\dots,L_n\}$. The system is \emph{coherent} when all locations agree. The central quantity is the \textbf{zero-incoherence capacity} $C_0$, the supremal rate achieving exactly zero incoherence probability. Our capacity theorem follows directly:
 
 \begin{center}
 \fbox{$C_0 = 1$}
@@ -136,7 +146,7 @@ We establish five \emph{core} theorems:
   \emph{Proof:} At capacity, one source update suffices. Above capacity, $n$ independent locations require $n$ updates.
 \end{enumerate}
 
-\textbf{Uniqueness.} $C_0 = 1$ is the \textbf{unique} capacity: DOF $= 0$ fails to encode; DOF $> 1$ exceeds capacity. Given zero-incoherence as a constraint, the rate is mathematically forced.
+\textbf{Uniqueness.} $C_0 = 1$ is the \textbf{unique} capacity: DOF $= 0$ fails to encode; DOF $> 1$ exceeds capacity. Given zero-incoherence as a constraint, the rate is mathematically forced (\LH{UNQ1}, \LH{MDL5}).
 
 \subsection{Scope}\label{sec:scope}
 

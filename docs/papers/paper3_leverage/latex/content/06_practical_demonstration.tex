@@ -28,7 +28,7 @@ provides a publicly verifiable demonstration of DOF collapse:
 
 \textbf{Before (duck typing):} The \texttt{ParameterFormManager} class
 used scattered \texttt{hasattr()} checks throughout the codebase.
-Each dispatch point was an independent DOF---a location that could
+Each dispatch point was an independent DOF: a location that could
 drift, contain typos, or miss updates when widget interfaces changed.
 
 \textbf{After (nominal ABC):} A single \texttt{AbstractFormWidget} ABC

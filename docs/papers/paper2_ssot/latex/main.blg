@@ -7,16 +7,16 @@ Warning--entry type for "openhcs2025" isn't style-file defined
 --line 351 of file references.bib
 You've used 36 entries,
             2118 wiz_defined-function locations,
-            707 strings with 9380 characters,
-and the built_in function-call counts, 10480 in all, are:
-= -- 1049
+            707 strings with 9330 characters,
+and the built_in function-call counts, 10489 in all, are:
+= -- 1052
 > -- 385
 < -- 6
-+ -- 171
++ -- 170
 - -- 120
 * -- 585
-:= -- 1727
-add.period$ -- 123
+:= -- 1730
+add.period$ -- 124
 call.type$ -- 36
 change.case$ -- 158
 chr.to.int$ -- 0
@@ -24,19 +24,19 @@ cite$ -- 36
 duplicate$ -- 427
 empty$ -- 931
 format.name$ -- 120
-if$ -- 2243
+if$ -- 2246
 int.to.chr$ -- 0
 int.to.str$ -- 36
 missing$ -- 38
-newline$ -- 194
+newline$ -- 195
 num.names$ -- 72
-pop$ -- 236
+pop$ -- 235
 preamble$ -- 1
 purify$ -- 132
 quote$ -- 0
-skip$ -- 289
+skip$ -- 288
 stack$ -- 0
-substring$ -- 603
+substring$ -- 602
 swap$ -- 81
 text.length$ -- 6
 text.prefix$ -- 0
@@ -45,5 +45,5 @@ type$ -- 122
 warning$ -- 0
 while$ -- 109
 width$ -- 38
-write$ -- 406
+write$ -- 408
 (There was 1 warning)

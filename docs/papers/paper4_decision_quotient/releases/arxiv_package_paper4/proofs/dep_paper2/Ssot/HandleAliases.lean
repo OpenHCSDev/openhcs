@@ -11,6 +11,8 @@ import Ssot.LangPython
 import Ssot.Requirements
 import axis_framework
 
+open Ssot
+
 /-- Stable, semantic Lean-handle IDs for Paper 2 (IT).
 
     The build system parses `abbrev CODE := target` and uses these IDs in
@@ -31,9 +33,9 @@ abbrev COH1 := dof_one_implies_coherent
 abbrev COH2 := dof_gt_one_incoherence_possible
 abbrev COH3 := determinate_truth_forces_ssot
 
-abbrev BAS1 := correctness_forcing
-abbrev BAS2 := dof_inconsistency_potential
-abbrev BAS3 := dof_gt_one_inconsistent
+abbrev BAS1 := Ssot.correctness_forcing
+abbrev BAS2 := Ssot.dof_inconsistency_potential
+abbrev BAS3 := Ssot.dof_gt_one_inconsistent
 
 abbrev INS1 := Inconsistency.ssot_is_unique_optimum
 abbrev INS2 := Inconsistency.ssot_required
@@ -79,3 +81,42 @@ abbrev REG4 := ClaimClosure.amortized_complexity_core
 
 abbrev PYH1 := Python.python_has_hooks
 abbrev PYI1 := Python.python_has_introspection
+
+/-! ## FIRST PRINCIPLES FORCING CHAIN
+    These theorems establish that SSOT is FORCED by first principles.
+    The chain: Derivation → Causality → Trichotomy → Only source_hooks works → SSOT unique
+
+    If you accept "derivation" as a coherent concept, you MUST accept trichotomy.
+    If you accept trichotomy, only source_hooks achieves SSOT.
+    Therefore, SSOT is forced by first principles - cannot be honestly rejected.
+-/
+
+-- Trichotomy theorems (TRI*): Timing trichotomy and its necessity
+abbrev TRI1 := timing_trichotomy_exhaustive      -- Trichotomy is exhaustive
+abbrev TRI2 := trichotomy_necessary_for_causality -- Causality requires trichotomy
+abbrev TRI3 := trichotomy_necessary_for_mechanism -- Mechanisms require trichotomy
+abbrev TRI4 := no_mechanism_outside_trichotomy   -- No mechanism outside trichotomy
+
+-- Model completeness theorems (MDL*): Mechanism enumeration and capability
+abbrev MDL1 := mechanisms_cover_all_timings      -- Mechanisms cover all timing categories
+abbrev MDL2 := mechanism_exhaustiveness          -- Every mechanism has valid timing
+abbrev MDL3 := only_at_definition_works          -- Only at_definition timing works
+abbrev MDL4 := mechanism_structural_capability   -- Source_hooks is uniquely capable
+abbrev MDL5 := model_completeness                -- achieves_ssot ↔ source_hooks
+
+-- Uniqueness theorems (UNQ*): SSOT mechanism is unique
+abbrev UNQ1 := uniqueness                        -- Combined existence + uniqueness
+abbrev UNQ2 := uniqueness_exists                 -- ∃ mechanism achieving SSOT
+abbrev UNQ3 := uniqueness_unique                 -- All SSOT mechanisms are source_hooks
+
+-- Adversary/impossibility theorems (ADV*): Why alternatives fail
+abbrev ADV1 := adversary_construction            -- m ≠ source_hooks → fails
+abbrev ADV2 := derivation_impossibility          -- No alternative works
+abbrev ADV3 := compile_macros_insufficient       -- Compile macros fail
+abbrev ADV4 := build_codegen_insufficient        -- Build codegen fails
+abbrev ADV5 := runtime_reflection_too_late       -- Runtime reflection fails
+
+-- Independence theorems (IND*): External tools don't count
+abbrev IND3 := external_tools_not_derivation     -- External tools can be bypassed
+abbrev IND4 := language_semantics_is_derivation  -- Language semantics is derivation
+abbrev IND5 := ide_refactoring_not_derivation    -- IDE refactoring not derivation

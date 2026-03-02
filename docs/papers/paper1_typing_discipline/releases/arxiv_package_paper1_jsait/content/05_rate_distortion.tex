@@ -36,10 +36,10 @@ In information-barrier domains, attribute-only observers (the $L=0$ face) satisf
 \item \textbf{Witness cost}: $W = \Omega(d)$ queries (must query at least one minimal distinguishing set of size $d$, see Definition~\ref{def:distinguishing-dimension})
 \item \textbf{Distortion}: $D > 0$ (probability of misclassification is strictly positive due to collisions)
 \end{itemize}
-\textit{(Lean: \LH{LWDC_a51c40b9},
-\LH{LWDC_62964e1b},
-\LH{LWDC_f643a602}.)}
+\LH{LWDC3},
+\LH{LWDC2}.)}
 \end{theorem}
+\leanmeta{ \LH{LWDC1},
 
 \begin{proof}
 Converse item (1) is Theorem~\ref{thm:converse}. For item (2), maximal barrier means all classes are observationally colliding, so any $D=0$ scheme must carry full class identity in tag bits (Corollary~\ref{cor:max-barrier-converse}), while nominal tags realize this lower bound with one tag read. Pareto uniqueness follows because any competing $D=0$ point cannot reduce $L$ below $\log_2 k$ nor reduce $W$ below constant-time tag access under the admissibility rules of Section~\ref{sec:framework}.

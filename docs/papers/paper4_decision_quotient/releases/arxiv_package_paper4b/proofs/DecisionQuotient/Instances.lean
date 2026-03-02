@@ -85,7 +85,7 @@ example : (functionProductSpace Bool 3).replace
   funext i
   simp only [functionProductSpace]
   split_ifs with h
-  · simp [h]
+  · simp
   · rfl
 
 /-- Key property: replacing then projecting gives the replacement value -/

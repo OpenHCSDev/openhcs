@@ -33,6 +33,15 @@ To reject this theorem, one must deny:
 
 Each denial contradicts established physics. The ``integrity trap'' (\LH{LP45}) is that rejecting the mathematical claim requires rejecting physical law.
 
+\paragraph{Explicit Regime Specification.}
+The theorem holds under the following physical regime. The spacetime region $R$ must satisfy four empirically verified conditions. First, bounded energy capacity $E < \infty$ at temperature $T > 0$ (thermodynamic regime, \LH{EP2}). Second, nonzero energy cost per bit query $\varepsilon \geq kT\ln 2$ (Landauer's principle, \LH{EP1}). Third, finite signal speed $c < \infty$ (special relativity regime, \LH{EP3}). Fourth, state space with $|S| > 1$ configurations (nontrivial physics regime, \LH{EP4}).
+
+\paragraph{Step-by-Step Deduction.}
+The proof proceeds by necessary implication through seven steps. Step 1: Finite energy $E$ and nonzero query cost $\varepsilon$ imply $E < |S| \cdot \varepsilon$ for sufficiently large $|S|$ (\LH{LP32}). Step 2: Energy constraint implies incomplete observation of the state space (\LH{LP33}). Step 3: Incomplete observation forces locality; bounded regions cannot have complete knowledge of the universe (\LH{LP34}). Step 4: Locality implies independent regions can exist; spacelike separated regions maintain configurations that need not agree (\LH{LP35}). Step 5: Independent regions can disagree; when such regions interact their configurations may contradict (\LH{LP36}). Step 6: If $\P = \NP$, bounded energy observers could resolve global consistency in polynomial time, eliminating the locality requirement (\LH{LP39}). Step 7: Eliminating locality contradicts the finite energy constraint. Therefore P $\neq$ NP is necessary for physical locality as observed (\LH{LP38}).
+
+\paragraph{The Integrity Trap Structure.}
+To reject this theorem, one must deny at least one of four empirically justified axioms. Denying Landauer's principle (\LH{LP41}) contradicts experiments by Berut et al. (2012) that verified the $kT\ln 2$ energy cost. Denying nontrivial state space (\LH{LP42}) contradicts direct observation of multiple physical configurations. Denying finite signal speed (\LH{LP43}) contradicts special relativity. Denying finite universe energy (\LH{LP44}) contradicts thermodynamics. The trap is complete; the mathematical claim is shielded by empirical axioms.
+
 \subsection{On Tractability Despite Hardness}
 
 \textbf{Question:} ``coNP-complete problems have good heuristics or approximations in practice. Does the hardness result preclude practical solutions?''

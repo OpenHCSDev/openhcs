@@ -11,7 +11,7 @@ import Ssot.Derivation
   the SSOT claims meaningful.
 -/
 
-open Classical
+open Classical Ssot
 
 namespace Dof
 

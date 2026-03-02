@@ -28,6 +28,7 @@ M_{\text{effective}}(C, \delta_F) = O(1)
 \]
 Effective modification complexity is constant regardless of system size.
 \end{theorem}
+\leanmeta{\LH{BND1}}
 
 \begin{proof}
 Let $\text{DOF}(C, F) = 1$. By Definition~\ref{def:ssot}, $C$ has exactly one independent encoding location. Let $L_s$ be this single independent location.
@@ -53,6 +54,7 @@ For an encoding system with DOF $>$ 1 for fact $F$, if $F$ is encoded at $n$ ind
 M_{\text{effective}}(C, \delta_F) = \Omega(n)
 \]
 \end{theorem}
+\leanmeta{\LH{BND2}}
 
 \begin{proof}
 Let $\text{DOF}(C, F) = n$ where $n > 1$.
@@ -150,6 +152,7 @@ The ratio of modification complexity between DOF-1-incomplete and DOF-1-complete
 \lim_{n \to \infty} \frac{M_{\text{DOF}>1}(n)}{M_{\text{DOF}=1}} = \lim_{n \to \infty} \frac{n}{1} = \infty
 \]
 \end{theorem}
+\leanmeta{\LH{BND3}}
 
 \begin{proof}
 By Theorem~\ref{thm:upper-bound}, $M_{\text{DOF}=1} = O(1)$. Specifically, $M_{\text{DOF}=1} = 1$ for any system size.
@@ -167,6 +170,7 @@ As $n \to \infty$, the ratio $\to \infty$. The gap is unbounded.
 \begin{corollary}[Arbitrary Reduction Factor]\label{cor:arbitrary-reduction}
 For any constant $k$, there exists a system size $n$ such that DOF = 1 provides at least $k\times$ reduction in modification complexity.
 \end{corollary}
+\leanmeta{\LH{BND4}}
 
 \begin{proof}
 Choose $n = k$. Then $M_{\text{DOF}>1}(n) = n = k$ and $M_{\text{DOF}=1} = 1$. The reduction factor is $k/1 = k$.
@@ -201,6 +205,7 @@ $R > 1$ & $C = \Omega(R)$ & $P = 0$ & Above capacity \\
 \end{tabularx}
 \end{center}
 \end{theorem}
+\leanmeta{\LH{REG1}}
 
 \begin{proof}
 \textbf{$R = 0$:} No encoding exists. Complexity is zero (nothing to modify), but coherence is undefined (nothing to be coherent about).

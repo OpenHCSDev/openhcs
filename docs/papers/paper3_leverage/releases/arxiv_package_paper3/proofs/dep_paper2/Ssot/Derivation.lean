@@ -16,6 +16,8 @@
   definitions connecting Paper 1's axis derivation to Paper 2's encoding model.
 -/
 
+namespace Ssot
+
 -- Definition 2.3: Derivation (encoding-level formulation)
 -- L_derived is derived from L_source iff updating L_source automatically updates L_derived
 -- This mirrors Paper 1's `derivable` at the encoding-location level
@@ -64,3 +66,4 @@ def all_derived_from_source {Location : Type} (D : DerivationSystem Location)
 -- 4. Paper 2: DOF = size of independent set
 -- 5. Paper 2: DOF = 1 → coherence guaranteed (dof_one_implies_coherent)
 
+end Ssot

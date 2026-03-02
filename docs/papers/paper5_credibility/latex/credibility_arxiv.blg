@@ -14,15 +14,15 @@ Warning--I didn't find a database entry for "festinger1957theory"
 Warning--I didn't find a database entry for "kahneman2011thinking"
 You've used 27 entries,
             2118 wiz_defined-function locations,
-            656 strings with 7466 characters,
-and the built_in function-call counts, 8354 in all, are:
-= -- 847
+            656 strings with 7577 characters,
+and the built_in function-call counts, 8362 in all, are:
+= -- 851
 > -- 292
 < -- 5
 + -- 123
 - -- 90
 * -- 536
-:= -- 1362
+:= -- 1366
 add.period$ -- 84
 call.type$ -- 27
 change.case$ -- 121
@@ -31,13 +31,13 @@ cite$ -- 27
 duplicate$ -- 333
 empty$ -- 737
 format.name$ -- 90
-if$ -- 1770
+if$ -- 1774
 int.to.chr$ -- 0
 int.to.str$ -- 27
 missing$ -- 26
 newline$ -- 138
 num.names$ -- 56
-pop$ -- 142
+pop$ -- 138
 preamble$ -- 1
 purify$ -- 97
 quote$ -- 0

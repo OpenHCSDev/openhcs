@@ -2,13 +2,13 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper1 - Impossibility Theorems for Fixed-Axis Classification Systems: With Application to Type Theory
-Package Date: 2026-03-01T01:14:27.794452
+Package Date: 2026-03-02T00:31:45.362467
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 21
-Lines of Code: 6862
+Lean Files: 25
+Lines of Code: 7129
 Theorems: 306
 Sorry Placeholders: 0
 
@@ -19,9 +19,13 @@ Proof Files:
   - Bridge.lean
   - Core.lean
   - Extended.lean
+  - GraphBridges.lean
   - Typing.lean
   - AbstractClassSystem.lean
   - CrossPaperDependencies.lean
+  - DependencyGraph.lean
+  - GraphExport.lean
+  - HandleAliases.lean
   - Paper1.lean
   - PrintAxioms.lean
   - abstract_class_system.lean
@@ -37,7 +41,51 @@ Proof Files:
   - rust_instantiation.lean
   - typescript_instantiation.lean
 
-Note: Run 'python3 scripts/build_papers.py release' to include compilation output.
+================================================================================
+COMPILATION OUTPUT (lake build)
+================================================================================
+
+ℹ [3065/3097] Replayed AbstractClassSystem.Typing
+info: AbstractClassSystem/Typing.lean:110:0: []
+info: AbstractClassSystem/Typing.lean:111:0: [AbstractClassSystem.UnifiedCapability.interfaceCheck]
+info: AbstractClassSystem/Typing.lean:112:0: [AbstractClassSystem.UnifiedCapability.identity,
+ AbstractClassSystem.UnifiedCapability.provenance,
+ AbstractClassSystem.UnifiedCapability.enumeration,
+ AbstractClassSystem.UnifiedCapability.conflictResolution,
+ AbstractClassSystem.UnifiedCapability.interfaceCheck]
+⚠ [3089/3097] Replayed lwd_converse
+warning: lwd_converse.lean:36:48: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+ℹ [3091/3097] Replayed PrintAxioms
+info: PrintAxioms.lean:15:0: 'fixed_axis_incompleteness' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: PrintAxioms.lean:16:0: 'parameterized_axis_immunity' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:17:0: 'fixed_vs_parameterized_asymmetry' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: PrintAxioms.lean:18:0: 'domain_agnostic' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:19:0: 'semantically_minimal_implies_orthogonal' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: PrintAxioms.lean:20:0: 'minimal_complete_unique_orthogonal' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: PrintAxioms.lean:21:0: 'axisB_ne_axisS' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: PrintAxioms.lean:22:0: 'axisB_ne_axisH' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: PrintAxioms.lean:23:0: 'axisS_ne_axisH' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: PrintAxioms.lean:26:0: 'AbstractClassSystem.ProvenanceWitness.prov_query_not_shape_respecting' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:27:0: 'AbstractClassSystem.ProtocolAlias.protocol_alias' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:28:0: 'AbstractClassSystem.ProtocolAlias.distinguishable_implies_namespace_diff' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:29:0: 'AbstractClassSystem.ShapeFactorization.shapeRespecting_iff_factors' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:30:0: 'AbstractClassSystem.Scope.observer_factors' does not depend on any axioms
+info: PrintAxioms.lean:31:0: 'AbstractClassSystem.semantic_non_embeddability' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: PrintAxioms.lean:32:0: 'AbstractClassSystem.exact_implies_nominal' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:33:0: 'AbstractClassSystem.nominal_not_implies_exact' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:34:0: 'PythonInstantiation.pyHasattr_shape_respecting' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:35:0: 'PythonInstantiation.pyIsinstance_bases_sensitive' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:36:0: 'TypeScriptInstantiation.observables_factor_through_axes' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:37:0: 'JavaInstantiation.observables_factor_through_axes' depends on axioms: [propext, Quot.sound]
+info: PrintAxioms.lean:38:0: 'RustInstantiation.observables_factor_through_axes' depends on axioms: [propext, Quot.sound]
+Build completed successfully (3097 jobs).
+
+
+================================================================================
+END COMPILATION OUTPUT
+================================================================================
 
 Build Instructions:
 -------------------

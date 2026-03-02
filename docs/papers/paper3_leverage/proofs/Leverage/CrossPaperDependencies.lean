@@ -53,7 +53,7 @@ import DecisionQuotient.ThermodynamicLift
 
 namespace Leverage
 
-open Classical DecisionQuotient
+open Classical DecisionQuotient Ssot
 
 /-! ## Paper 3 REQUIRES Paper 1: Axis Theory (RIGOROUS) -/
 

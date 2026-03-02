@@ -21,8 +21,8 @@ This definition is intentionally broad: schemes may be adaptive, randomized, or 
 
 \begin{theorem}[Information barrier]\label{thm:info-barrier}
 For all classification schemes with access only to $\Phi$ (no nominal tag), the output is constant on $\sim_\Phi$-equivalence classes. Therefore, no such scheme can compute any property that varies within a $\sim_\Phi$-class.
-\textit{(Lean: \LH{L_35fe55aa}.)}
 \end{theorem}
+\leanmeta{ \LH{ACS8}, \LH{IMP1}, \LH{COH1}}
 
 \begin{proof}
 Let $v \sim_\Phi w$, meaning $q_I(v) = q_I(w)$ for all $I \in \mathcal{I}$. Any scheme's execution trace depends only on query responses. Since all queries return identical values for $v$ and $w$, the scheme cannot distinguish them. Any output must therefore be identical.
@@ -30,8 +30,8 @@ Let $v \sim_\Phi w$, meaning $q_I(v) = q_I(w)$ for all $I \in \mathcal{I}$. Any 
 
 \begin{proposition}[Model capture]\label{prop:model-capture}
 Any real-world classification protocol whose evidence consists solely of attribute-membership queries is representable as a scheme in the above model. Conversely, any additional capability corresponds to adding new observations to $\Phi$.
-\textit{(Lean: \LH{L_03e8b7ad}.)}
 \end{proposition}
+\leanmeta{ \LH{L_03e8b7ad}, \LH{COMPL1}, \LH{FORC2}}
 
 This proposition forces any objection into a precise form: to claim the theorem does not apply, one must name the additional observation capability not in $\Phi$. ``Different universe'' is not a coherent objection; it must reduce to ``I have access to oracle $X \notin \Phi$.''
 
@@ -61,8 +61,8 @@ Let a fixed-axis domain be specified by an axis map $\alpha: \mathcal{V} \to \ma
 \[
 P(v) = \tilde{P}(\alpha(v)) \quad \text{for all } v \in \mathcal{V}.
 \]
-\textit{(Lean: \LH{L_9a9b84cd}.)}
 \end{theorem}
+\leanmeta{ \LH{ACS5}, \LH{COMPL1}, \LH{MDL1}}
 
 In the PL instantiation, $\alpha(v) = (B(v), S(v))$, so in-scope semantic properties are functions of $(B,S)$.
 
@@ -72,8 +72,8 @@ An admissible $\Phi$-only strategy observes $v$ solely through responses to prim
 
 \begin{corollary}[Fixed-Axis Incompleteness]\label{cor:fixed-axis-incompleteness}
 Any fixed-axis classification system is complete only for properties measurable on the fixed axis map $\alpha$, and incomplete for any property that varies within an $\alpha$-fiber. Equivalently, if $\alpha(v)=\alpha(w)$ but $P(v)\neq P(w)$, then no admissible $\Phi$-only strategy can compute $P$ with zero error.
-\textit{(Lean: \LH{L_9fe85b02}.)}
 \end{corollary}
+\leanmeta{ \LH{L2}}
 
 \subsection{Attribute Equivalence and Observational Limits}
 
@@ -85,8 +85,8 @@ Values $v, w \in \mathcal{V}$ are attribute-equivalent, written $v \sim w$, iff 
 
 \begin{proposition}[Equivalence class structure]\label{prop:equivalence-class-structure}
 The relation $\sim$ partitions $\mathcal{V}$ into equivalence classes. Let $\mathcal{V}/{\sim}$ denote the quotient space. An attribute-only observer effectively operates on $\mathcal{V}/{\sim}$, not $\mathcal{V}$.
-\textit{(Lean: \LH{L_03e8b7ad}.)}
 \end{proposition}
+\leanmeta{ \LH{L_03e8b7ad}, \LH{COMPL1}, \LH{FORC2}}
 
 \begin{corollary}[Information loss quantification]\label{cor:information-loss-quantification}
 The information lost by attribute-only observation is:
@@ -94,8 +94,8 @@ The information lost by attribute-only observation is:
 H(\mathcal{V}) - H(\mathcal{V}/{\sim}) = H(\mathcal{V} | \pi)
 \]
 where $H$ denotes entropy. This quantity is positive whenever multiple classes share the same attribute profile.
-\textit{(Lean: \LH{L_35fe55aa}.)}
 \end{corollary}
+\leanmeta{ \LH{ACS8}}
 
 \subsection{Identification Capacity}\label{sec:identification-capacity}
 
@@ -114,8 +114,8 @@ C_{\text{id}} = \begin{cases}
 \end{cases}
 \]
 That is, zero-error identification of all $k$ classes is achievable if and only if every class has a distinct attribute profile. When $\pi$ is not class-injective, no rate of identification is achievable with zero error.
-\textit{(Lean: \LH{L_35fe55aa}.)}
 \end{theorem}
+\leanmeta{ \LH{ACS8}}
 
 \begin{proof}
 \emph{Achievability}: If $\pi$ is injective on classes, then observing $\pi(v)$ determines $C(v)$ uniquely. The decoder simply inverts the class-to-profile mapping.
@@ -139,8 +139,8 @@ The key insight is that tagging provides a \emph{side channel} that restores ide
 
 \begin{theorem}[Tag-Restored Zero Error (Sufficiency)]\label{thm:tag-restored}
 A class-injective nominal tag of length $L \geq \lceil \log_2 k \rceil$ bits suffices for zero-error identification, regardless of whether $\pi$ is class-injective.
-\textit{(Lean: \LH{L_7fb66f42}.)}
 \end{theorem}
+\leanmeta{ \LH{ACS7}}
 
 \begin{proof}
 A nominal tag $\tau: \mathcal{V} \to \{1, \ldots, k\}$ assigns a unique identifier to each class. Reading $\tau(v)$ determines $C(v)$ in $O(1)$ queries, independent of the attribute channel.
@@ -176,10 +176,10 @@ For any property $P$:
 \item If $P$ varies within some $\sim$-class: $W(P) = \infty$ for attribute-only observers
 \item With nominal-tag access: $W(\text{class-identity}) = O(1)$
 \end{enumerate}
-\textit{(Lean: \LH{L_35fe55aa},
-\LH{L_7fb66f42},
-\LH{L_67f09d33}.)}
+\LH{ACS7},
+\LH{ACS1}.)}
 \end{lemma}
+\leanmeta{ \LH{ACS8},
 
 \subsection{The $(L, W, D)$ Tradeoff}
 
@@ -284,8 +284,8 @@ For any classification domain, any scheme achieving $D=0$ requires
 L \ge \log_2 A_\pi,
 \]
 where $A_\pi$ is the collision multiplicity from Definition~\ref{def:collision-multiplicity}.
-\textit{(Lean: \LH{LWDC_a51c40b9}.)}
 \end{theorem}
+\leanmeta{ \LH{LWDC1}}
 
 \begin{proof}
 Fix a collision block $G \subseteq \mathcal{C}$ with $|G|=A_\pi$ and identical observable profile. For classes in $G$, query transcripts are identical, so zero-error decoding must separate those classes using tag outcomes. With $L$ tag bits there are at most $2^L$ outcomes, hence $2^L \ge |G| = A_\pi$.
@@ -294,8 +294,8 @@ Fix a collision block $G \subseteq \mathcal{C}$ with $|G|=A_\pi$ and identical o
 \begin{corollary}[Maximal-Barrier Converse]
 \label{cor:max-barrier-converse}
 If the domain is maximal-barrier ($A_\pi = k$), any zero-error scheme satisfies $L \ge \log_2 k$.
-\textit{(Lean: \LH{LWDC_62964e1b}.)}
 \end{corollary}
+\leanmeta{ \LH{LWDC3}}
 
 \subsection{Lossy Regime: Deterministic vs Noisy Models}
 

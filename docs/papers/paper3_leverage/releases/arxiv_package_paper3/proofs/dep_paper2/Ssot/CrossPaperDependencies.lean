@@ -23,6 +23,8 @@ import Ssot.Coherence
 
 namespace Paper2.CrossPaperDeps
 
+open Ssot
+
 /-! ## Paper 2 REQUIRES Paper 1: Axis Theory (RIGOROUS) -/
 
 /-- Paper 2 uses Paper 1's independent axes.

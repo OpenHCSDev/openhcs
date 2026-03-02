@@ -19,7 +19,7 @@ structure CaseStudy where
   deriving Repr
 
 -- Verify a case study achieves SSOT
-def achieves_ssot (cs : CaseStudy) : Bool :=
+def case_study_achieves_ssot (cs : CaseStudy) : Bool :=
   cs.post_dof = 1
 
 -- The 13 case studies from OpenHCS
@@ -134,7 +134,7 @@ def all_case_studies : List CaseStudy :=
    case_study_11, case_study_12, case_study_13]
 
 -- Theorem 7.1: All case studies achieve SSOT (DOF = 1)
-theorem all_achieve_ssot : all_case_studies.all achieves_ssot = true := by
+theorem all_achieve_ssot : all_case_studies.all case_study_achieves_ssot = true := by
   native_decide
 
 -- Aggregate statistics

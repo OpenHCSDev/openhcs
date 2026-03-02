@@ -2,7 +2,7 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper6 - Formality as Universality: A Type Theory of Argument Epistemology
-Package Date: 2026-03-01T01:15:59.616239
+Package Date: 2026-03-02T00:34:40.527596
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
@@ -16,7 +16,16 @@ Sorry Placeholders: 0
 Proof Files:
 ------------
 
-Note: Run 'python3 scripts/build_papers.py release' to include compilation output.
+================================================================================
+COMPILATION OUTPUT (lake build)
+================================================================================
+
+Build completed successfully (0 jobs).
+
+
+================================================================================
+END COMPILATION OUTPUT
+================================================================================
 
 Build Instructions:
 -------------------

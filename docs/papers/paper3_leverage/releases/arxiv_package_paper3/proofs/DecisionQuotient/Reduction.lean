@@ -42,11 +42,11 @@ inductive Formula (n : ℕ) where
   | or : Formula n → Formula n → Formula n
   deriving DecidableEq
 
-/-- A Boolean assignment over n variables -/
-abbrev Assignment (n : ℕ) := Fin n → Bool
+/-- A Boolean assignment over n variables (local to this reduction) -/
+abbrev BoolAssignment (n : ℕ) := Fin n → Bool
 
 /-- Evaluate a formula under an assignment -/
-def Formula.eval (a : Assignment n) : Formula n → Bool
+def Formula.eval (a : BoolAssignment n) : Formula n → Bool
   | var i => a i
   | not f => !(eval a f)
   | and f1 f2 => (eval a f1) && (eval a f2)
@@ -54,13 +54,13 @@ def Formula.eval (a : Assignment n) : Formula n → Bool
 
 /-- A formula is a tautology if true under all assignments -/
 def Formula.isTautology (φ : Formula n) : Prop :=
-  ∀ a : Assignment n, φ.eval a = true
+  ∀ a : BoolAssignment n, φ.eval a = true
 
 /-! ## The Reduction -/
 
 /-- States for the reduction: assignments plus a reference state -/
 inductive ReductionState (n : ℕ) where
-  | assignment : Assignment n → ReductionState n
+  | assignment : BoolAssignment n → ReductionState n
   | reference : ReductionState n
   deriving DecidableEq
 
@@ -108,7 +108,7 @@ theorem opt_reference (φ : Formula n) :
 
 open ReductionAction ReductionState in
 /-- At a satisfying assignment, only accept is optimal -/
-theorem opt_satisfying (φ : Formula n) (a : Assignment n) (hsat : φ.eval a = true) :
+theorem opt_satisfying (φ : Formula n) (a : BoolAssignment n) (hsat : φ.eval a = true) :
     (reductionProblem φ).Opt (assignment a) = {accept} := by
   ext x
   simp only [DecisionProblem.Opt, DecisionProblem.isOptimal, Set.mem_setOf_eq,
@@ -130,13 +130,13 @@ theorem opt_satisfying (φ : Formula n) (a : Assignment n) (hsat : φ.eval a = t
 
 open ReductionAction ReductionState in
 /-- At a falsifying assignment, both actions are optimal -/
-theorem opt_falsifying (φ : Formula n) (a : Assignment n) (hfalse : φ.eval a = false) :
+theorem opt_falsifying (φ : Formula n) (a : BoolAssignment n) (hfalse : φ.eval a = false) :
     (reductionProblem φ).Opt (assignment a) = {accept, reject} := by
   ext x
   simp only [DecisionProblem.Opt, DecisionProblem.isOptimal, Set.mem_setOf_eq,
              Set.mem_insert_iff, Set.mem_singleton_iff]
   constructor
-  · intro _; cases x <;> simp
+  · cases x <;> simp
   · intro _
     intro a'
     cases a' <;> cases x <;> simp [reductionProblem, reductionUtility, hfalse]

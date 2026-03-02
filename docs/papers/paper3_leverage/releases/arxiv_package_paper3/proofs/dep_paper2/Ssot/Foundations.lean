@@ -12,6 +12,8 @@
 
 import Ssot.Requirements
 
+namespace Ssot
+
 /-!
 ## Attack Surface 1: The Axiom is Definitional
 
@@ -361,4 +363,4 @@ theorem uniqueness : (∃ m : DerivationMechanism, achieves_ssot m = true) ∧
     (∀ m : DerivationMechanism, achieves_ssot m = true → m = .source_hooks) :=
   ⟨uniqueness_exists, fun m h => (model_completeness m).mp h⟩
 
-
+end Ssot

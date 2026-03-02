@@ -17,7 +17,6 @@
 #   claim_mapping_file: "content/11_lean_proofs.tex"   # coverage appendix file
 #   arxiv_comments: "Submitted to ... (X pages)."       # overrides auto-generated arXiv comments line
 #   scaffold_from: "paper4_toc"               # derive scaffold content from another paper id
-
 # arXiv Packaging Configuration
 arxiv:
   include_build_log: true          # BUILD_LOG.txt with actual lake output
@@ -29,6 +28,26 @@ arxiv:
     - "*.olean"                     # Compiled Lean objects
     - "*.ilean"                     # Intermediate Lean files
 
+build:
+  generated_content_files:
+    - "lean_stats.tex"
+    - "assumption_ledger_auto.tex"
+    - "claim_mapping_auto.tex"
+    - "lean_handle_ids_auto.tex"
+    - "proof_hardness_index_auto.tex"
+  shared_preamble_files:
+    - "paper-preamble.sty"
+    - "pentalogy-preamble.sty"
+  latex_source_extensions:
+    - ".tex"
+    - ".bib"
+    - ".bbl"
+    - ".cls"
+    - ".sty"
+  lean_exclude_dirs:
+    - ".lake"
+    - "build"
+
 papers:
   paper1:
     name: "Typing Discipline"
@@ -37,6 +56,7 @@ papers:
     latex_dir: "latex"
     latex_file: "main.tex"
     venue: "TOPLAS"
+    forcing_prefixes: ["COMPL", "IMP", "AXI", "EMB", "EXT", "ALT", "UNIQ", "FORC"]
 
   paper1_jsait:
     name: "Classification Theory (JSAIT)"
@@ -46,7 +66,7 @@ papers:
     latex_file: "type_compression_jsait.tex"
     venue: "JSAIT"
     claim_mapping_file: "content/claim_mapping_auto.tex"
-    # Review submission format: pdflatex flag triggers single-column double-spaced
+    forcing_prefixes: ["COMPL", "IMP", "AXI", "EMB", "EXT", "ALT", "UNIQ", "FORC"]
     submission_format:
       latex_flag: "\\JSAITREVIEW"
       description: "JSAIT review: single column, double spaced, 12pt, 1in margins"
@@ -58,6 +78,7 @@ papers:
     latex_dir: "latex"
     latex_file: "main.tex"
     venue: "Draft"
+    forcing_prefixes: ["ENT", "COH", "BAS", "INS", "CAP", "AXM"]
 
   paper2_it:
     name: "Coherence Theory (IT)"
@@ -71,6 +92,7 @@ papers:
     assumption_ledger_sources:
       - "Ssot/ClaimClosure.lean"
     claim_mapping_file: "content/11_lean_proofs.tex"
+    forcing_prefixes: ["ENT", "COH", "BAS", "INS", "CAP", "AXM"]
 
   paper3:
     name: "Leverage Framework"

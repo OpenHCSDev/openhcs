@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Proof Dependency Graph — Stochastic and Sequential Regimes</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { margin: 0; font-family: monospace; background: #0f0f0f; color: #ccc; }
+    #header { padding: 12px 16px; background: #1a1a1a; border-bottom: 1px solid #333;
+               display: flex; align-items: center; gap: 16px; }
+    #header h1 { margin: 0; font-size: 14px; color: #eee; }
+    select { background: #222; color: #ccc; border: 1px solid #444; padding: 4px 8px;
+              font-family: monospace; font-size: 13px; }
+    #stats { font-size: 12px; color: #888; }
+    svg { width: 100vw; height: calc(100vh - 48px); display: block; }
+    .node circle { stroke-width: 1.5px; cursor: pointer; }
+    .node text { font-size: 10px; fill: #aaa; pointer-events: none; }
+    .link { stroke: #444; stroke-opacity: 0.6; }
+    .node.theorem circle { fill: #3b82f6; stroke: #60a5fa; }
+    .node.definition circle { fill: #8b5cf6; stroke: #a78bfa; }
+    .node.axiom circle { fill: #ef4444; stroke: #f87171; }
+    .node.other circle { fill: #555; stroke: #777; }
+    .tooltip { position: absolute; background: #222; border: 1px solid #444;
+                padding: 6px 10px; font-size: 11px; pointer-events: none;
+                max-width: 400px; word-break: break-all; color: #eee; }
+  </style>
+</head>
+<body>
+<div id="header">
+  <h1>Proof Dependency Graph — Stochastic and Sequential Regimes</h1>
+  <select id="picker" onchange="loadGraph(this.value)">
+        <option value="paper1.json">paper1</option>
+        <option value="paper2.json">paper2</option>
+        <option value="paper4.json">paper4</option>
+  </select>
+  <span id="stats"></span>
+  <button id="btn-claims" onclick="setViewMode('claims')" style="background:#3b82f6;color:#fff;border:1px solid #444;padding:4px 12px;font-family:monospace;font-size:12px;cursor:pointer;border-radius:3px;">CLAIMS ONLY</button>
+  <button id="btn-full" onclick="setViewMode('full')" style="background:#222;color:#888;border:1px solid #444;padding:4px 12px;font-family:monospace;font-size:12px;cursor:pointer;border-radius:3px;">FULL GRAPH</button>
+  <span style="color:#555;font-size:11px">
+    ● theorem &nbsp; ■ definition &nbsp; ◆ axiom &nbsp;
+    | open dependency-graph.jsx for interactive version
+  </span>
+</div>
+<div id="mode-banner" style="padding:6px 16px;background:#1a2a3a;border-bottom:1px solid #334;font-size:11px;color:#8ab4f8;">
+  <strong>Claims Only view:</strong> Showing theorems and definitions cited in the paper. <em>Switch to FULL GRAPH to see all Lean artifacts including auxiliary lemmas and compiler-generated instances.</em>
+</div>
+<svg id="svg"></svg>
+<div class="tooltip" id="tip" style="display:none"></div>
+<script>
+// Artifact detection patterns (compiler-generated items to filter in Claims Only mode)
+const ARTIFACT_PATTERNS = [
+  /inst\w+/, /inst_/, /_inst_/,  // Type class instances
+  /rec\w+/, /_rec$/, /Rec$/,     // Recursors
+  /brecOn/, /binductionOn/,      // Induction principles
+  /casesOn/, /noConfusion/,      // Case analysis helpers
+  /_sunfold/, /_cvec/,           // Definition unfolding
+  /_eq_n$/, /_eq_\d+$/,          // Equality proofs
+  /_proof\d*/, /_match/, /match/, // Match expressions
+  /_aux_/, /_auxInit_/,          // Auxiliary definitions
+  /sizeof/, /inj/,               // Sizeof, injectivity
+  /elabAsEliminator/,            // Elaborator hints
+];
+
+function isArtifact(id) {
+  return ARTIFACT_PATTERNS.some(re => re.test(id));
+}
+
+function filterClaimsOnly(data) {
+  // Start from core axioms/theorems (paper = -1 indicates foundational)
+  const coreNodes = data.nodes.filter(n => n.paper === -1 || n.paper === "-1");
+  const reachable = new Set(coreNodes.map(n => n.id));
+  
+  // BFS to find all nodes reachable from core
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const edge of data.edges) {
+      if (reachable.has(edge.source) && !reachable.has(edge.target)) {
+        reachable.add(edge.target);
+        changed = true;
+      }
+    }
+  }
+  
+  // Filter out artifacts and orphaned nodes
+  const filteredNodes = data.nodes.filter(n => {
+    if (isArtifact(n.id)) return false;
+    return reachable.has(n.id);
+  });
+  
+  const nodeIds = new Set(filteredNodes.map(n => n.id));
+  const filteredEdges = data.edges.filter(e =>
+    nodeIds.has(e.source) && nodeIds.has(e.target)
+  );
+  
+  return { nodes: filteredNodes, edges: filteredEdges };
+}
+
+const color = { theorem: "#3b82f6", definition: "#8b5cf6", axiom: "#ef4444" };
+let currentData = null;
+let viewMode = 'claims'; // 'claims' or 'full'
+
+function loadGraph(file) {
+  fetch(file)
+    .then(r => r.json())
+    .then(data => { currentData = data; renderFiltered(); })
+    .catch(() => document.getElementById("stats").textContent = "⚠ " + file + " not found");
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  const claimsBtn = document.getElementById("btn-claims");
+  const fullBtn = document.getElementById("btn-full");
+  const banner = document.getElementById("mode-banner");
+  
+  if (mode === 'claims') {
+    claimsBtn.style.background = '#3b82f6';
+    claimsBtn.style.color = '#fff';
+    fullBtn.style.background = '#222';
+    fullBtn.style.color = '#888';
+    banner.style.display = 'block';
+  } else {
+    fullBtn.style.background = '#3b82f6';
+    fullBtn.style.color = '#fff';
+    claimsBtn.style.background = '#222';
+    claimsBtn.style.color = '#888';
+    banner.style.display = 'none';
+  }
+  
+  renderFiltered();
+}
+
+function renderFiltered() {
+  if (!currentData) return;
+  const data = viewMode === 'claims' ? filterClaimsOnly(currentData) : currentData;
+  render(data);
+}
+
+function render(data) {
+  const nodes = data.nodes.map(d => ({ ...d }));
+  const links = data.edges.map(d => ({ source: d.source, target: d.target }));
+
+  const stats = document.getElementById("stats");
+  const th = nodes.filter(n => n.kind === "theorem").length;
+  const df = nodes.filter(n => n.kind === "definition").length;
+  const ax = nodes.filter(n => n.kind === "axiom").length;
+  const modeLabel = viewMode === 'claims' ? ' (filtered)' : ' (all)';
+  stats.textContent = `${nodes.length} nodes (${th} thm, ${df} def, ${ax} axiom)  ${links.length} edges${modeLabel}`;
+
+  const svg = d3.select("#svg");
+  svg.selectAll("*").remove();
+  const w = svg.node().clientWidth, h = svg.node().clientHeight;
+  const g = svg.append("g");
+  svg.call(d3.zoom().on("zoom", e => g.attr("transform", e.transform)));
+
+  const sim = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d => d.id).distance(60))
+    .force("charge", d3.forceManyBody().strength(-80))
+    .force("center", d3.forceCenter(w / 2, h / 2));
+
+  const link = g.append("g").selectAll("line").data(links).join("line")
+    .attr("class", "link").attr("stroke-width", 0.8);
+
+  const tip = document.getElementById("tip");
+  const node = g.append("g").selectAll("g").data(nodes).join("g")
+    .attr("class", d => "node " + (d.kind || "other"))
+    .call(d3.drag()
+      .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }))
+    .on("mouseover", (e, d) => {
+      tip.style.display = "block";
+      tip.style.left = (e.pageX + 12) + "px";
+      tip.style.top = (e.pageY - 8) + "px";
+      tip.textContent = d.id + " [" + (d.kind || "?") + "]";
+    })
+    .on("mouseout", () => tip.style.display = "none");
+
+  node.append("circle").attr("r", d => d.kind === "axiom" ? 7 : 4);
+  node.append("text").attr("x", 6).attr("y", 3)
+    .text(d => d.id.split(".").slice(-1)[0]);
+
+  sim.on("tick", () => {
+    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+}
+
+loadGraph("paper4b.json");
+</script>
+</body>
+</html>

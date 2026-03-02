@@ -50,6 +50,7 @@ The key property: structural facts have a \emph{definition moment} after which t
 \begin{theorem}[Timing Constraint for Structural Derivation]\label{thm:timing-forces}
 For structural facts, derivation must occur at or before the moment the structure is fixed.
 \end{theorem}
+\leanmeta{\LH{REQ1}}
 
 \begin{proof}
 Let $F$ be a structural fact. Let $t_{\text{fix}}$ be the moment $F$'s encoding is fixed. Any derivation $D$ that depends on $F$ must execute at some time $t_D$.
@@ -90,6 +91,7 @@ Without causal propagation, there exists a temporal window between source modifi
 \begin{theorem}[Causal Propagation is Necessary for DOF = 1]\label{thm:causal-necessary}
 Achieving DOF = 1 for structural facts requires causal update propagation.
 \end{theorem}
+\leanmeta{\LH{REQ2}}
 
 \begin{proof}
 By Theorem~\ref{thm:timing-forces}, structural derivation must occur at definition time. Without causal propagation, derived locations are not updated when the source is defined. This means:
@@ -152,6 +154,7 @@ Without provenance observability, the encoding system is a ``black box''--you ca
 \begin{theorem}[Provenance Observability is Necessary for Verifiable DOF = 1]\label{thm:provenance-necessary}
 Verifying that DOF = 1 holds requires provenance observability.
 \end{theorem}
+\leanmeta{\LH{REQ3}}
 
 \begin{proof}
 Verification of DOF = 1 requires confirming:
@@ -208,6 +211,7 @@ The two requirements--causal propagation and provenance observability--are indep
 \item An encoding system can have provenance observability without causal propagation
 \end{enumerate}
 \end{theorem}
+\leanmeta{\LH{IND1}}
 
 \begin{proof}
 \textbf{(1) Causal without provenance:} Rust proc macros execute at compile time (causal propagation: definition triggers code generation). But the generated code is opaque at runtime--the program cannot query what was generated (no provenance observability).
@@ -229,6 +233,7 @@ An encoding system $S$ can achieve verifiable DOF = 1 for structural facts if an
 \item $S$ provides provenance observability
 \end{enumerate}
 \end{theorem}
+\leanmeta{\LH{SOT1}}
 
 \begin{proof}
 $(\Rightarrow)$ \textbf{Necessity:} Suppose $S$ achieves verifiable DOF = 1 for structural facts.
@@ -360,6 +365,7 @@ public class HandlerRegistry {
 \begin{theorem}[Generated Files Are Independent Sources]\label{thm:generated-second}
 A generated source file constitutes an independent encoding, not a derivation. Code generation does not achieve DOF = 1.
 \end{theorem}
+\leanmeta{\LH{GEN1}}
 
 \begin{proof}
 Let $E_1$ be the annotation on \texttt{PNGHandler.java}. Let $E_2$ be the generated \texttt{HandlerRegistry.java}.

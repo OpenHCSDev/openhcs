@@ -91,7 +91,7 @@ theorem DecisionProblem.emptySet_sufficient_iff_constant (dp : DecisionProblem A
   · intro h s s'
     apply h
     intro i hi
-    exact (by simpa using hi)
+    exact (by simp at hi)
   · intro h s s' _
     exact h s s'
 
@@ -127,7 +127,7 @@ theorem DecisionProblem.emptySet_not_sufficient_iff_exists_opt_difference
   · intro hDiff
     rcases hDiff with ⟨s, s', hNeq⟩
     exact (DecisionProblem.not_sufficient_iff_exists_counterexample
-      (dp := dp) (I := (∅ : Finset (Fin n)))).2 ⟨s, s', (by intro i hi; simpa using hi), hNeq⟩
+      (dp := dp) (I := (∅ : Finset (Fin n)))).2 ⟨s, s', (by intro i hi; simp at hi), hNeq⟩
 
 /-! ## Minimal Sufficient Sets -/
 
@@ -206,7 +206,7 @@ theorem DecisionProblem.erase_of_not_mem [DecidableEq (Fin n)]
     (hI : dp.isSufficient I) (hi : i ∉ I) :
     dp.isSufficient (I.erase i) := by
   have heq : I.erase i = I := by
-    simpa [hi]
+    simp [hi]
   rw [heq]
   exact hI
 

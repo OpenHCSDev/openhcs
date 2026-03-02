@@ -1,6 +1,6 @@
 # Paper: Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency
 
-**Status**: Draft-ready | **Lean**: 3288 lines, 124 theorems
+**Status**: Draft-ready | **Lean**: 3446 lines, 124 theorems
 
 ---
 
@@ -22,7 +22,7 @@ We extend the static decision quotient framework of Paper 4 to stochastic and se
 
 -   **Temporal integrity**: Evidence-monotone retractions preserve integrity across sequences.
 
-The reduction constructions are machine-checked in Lean 4 (3288 lines, 124 theorems).
+The reduction constructions are machine-checked in Lean 4 (3446 lines, 124 theorems).
 
 **Keywords:** computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
 
@@ -642,7 +642,7 @@ This work extends Paper 4's framework to dynamic settings while preserving the c
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization extends the Paper 4 artifact. The mechanization consists of 3288 lines across 29 files, with 124 theorem/lemma statements.
+The complete Lean 4 formalization extends the Paper 4 artifact. The mechanization consists of 3446 lines across 31 files, with 124 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata cites compact IDs (for example, `CC4`, `HD2`, `IC3`) instead of full theorem constants.
 
@@ -2076,57 +2076,57 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH10`]{#lh:PH10}`PhysicalComplexity.sufficiency_physically_impossible`                                                         |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH11`]{#lh:PH11}`DecisionQuotient.PhysicalComplexity.PhysicalCollapseAtRequirement`                                            |
+| [`PH11`]{#lh:PH11}`DecisionQuotient.PH.PhysicalCollapseAtRequirement`                                                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH12`]{#lh:PH12}`DecisionQuotient.PhysicalComplexity.no_physical_collapse_at_requirement`                                      |
+| [`PH12`]{#lh:PH12}`DecisionQuotient.PH.no_physical_collapse_at_requirement`                                                      |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH13`]{#lh:PH13}`DecisionQuotient.PhysicalComplexity.canonical_physical_collapse_impossible`                                   |
+| [`PH13`]{#lh:PH13}`DecisionQuotient.PH.canonical_physical_collapse_impossible`                                                   |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH14`]{#lh:PH14}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_of_collapse_map`                            |
+| [`PH14`]{#lh:PH14}`DecisionQuotient.PH.p_eq_np_physically_impossible_of_collapse_map`                                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH15`]{#lh:PH15}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_canonical`                                  |
+| [`PH15`]{#lh:PH15}`DecisionQuotient.PH.p_eq_np_physically_impossible_canonical`                                                  |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH16`]{#lh:PH16}`DecisionQuotient.PhysicalComplexity.P_eq_NP_via_SAT`                                                          |
+| [`PH16`]{#lh:PH16}`DecisionQuotient.PH.P_eq_NP_via_SAT`                                                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH17`]{#lh:PH17}`DecisionQuotient.PhysicalComplexity.SAT3ReductionBridge`                                                      |
+| [`PH17`]{#lh:PH17}`DecisionQuotient.PH.SAT3ReductionBridge`                                                                      |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH18`]{#lh:PH18}`DecisionQuotient.PhysicalComplexity.sat_reduction_transfers_energy_lower_bound`                               |
+| [`PH18`]{#lh:PH18}`DecisionQuotient.PH.sat_reduction_transfers_energy_lower_bound`                                               |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH19`]{#lh:PH19}`DecisionQuotient.PhysicalComplexity.physical_collapse_of_polytime_sat_realization`                            |
+| [`PH19`]{#lh:PH19}`DecisionQuotient.PH.physical_collapse_of_polytime_sat_realization`                                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH20`]{#lh:PH20}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_via_sat_bridge`                             |
+| [`PH20`]{#lh:PH20}`DecisionQuotient.PH.p_eq_np_physically_impossible_via_sat_bridge`                                             |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH21`]{#lh:PH21}`DecisionQuotient.PhysicalComplexity.SAT3HardFamily`                                                           |
+| [`PH21`]{#lh:PH21}`DecisionQuotient.PH.SAT3HardFamily`                                                                           |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH22`]{#lh:PH22}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_via_sat_hard_family`                        |
+| [`PH22`]{#lh:PH22}`DecisionQuotient.PH.p_eq_np_physically_impossible_via_sat_hard_family`                                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH23`]{#lh:PH23}`DecisionQuotient.PhysicalComplexity.collapse_possible_without_positive_bit_cost`                              |
+| [`PH23`]{#lh:PH23}`DecisionQuotient.PH.collapse_possible_without_positive_bit_cost`                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH24`]{#lh:PH24}`DecisionQuotient.PhysicalComplexity.collapse_possible_without_exponential_lower_bound`                        |
+| [`PH24`]{#lh:PH24}`DecisionQuotient.PH.collapse_possible_without_exponential_lower_bound`                                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH25`]{#lh:PH25}`DecisionQuotient.PhysicalComplexity.no_go_transfer_requires_collapse_map`                                     |
+| [`PH25`]{#lh:PH25}`DecisionQuotient.PH.no_go_transfer_requires_collapse_map`                                                     |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH26`]{#lh:PH26}`DecisionQuotient.PhysicalComplexity.no_collapse_of_bounded_budget_pos_cost_exp_lb`                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH27`]{#lh:PH27}`DecisionQuotient.PhysicalComplexity.collapse_implies_assumption_failure_disjunction`                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH28`]{#lh:PH28}`DecisionQuotient.PhysicalComplexity.deterministic_no_physical_collapse`                                       |
+| [`PH28`]{#lh:PH28}`DecisionQuotient.PH.deterministic_no_physical_collapse`                                                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH29`]{#lh:PH29}`DecisionQuotient.PhysicalComplexity.probabilistic_no_physical_collapse`                                       |
+| [`PH29`]{#lh:PH29}`DecisionQuotient.PH.probabilistic_no_physical_collapse`                                                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH30`]{#lh:PH30}`DecisionQuotient.PhysicalComplexity.sequential_no_physical_collapse`                                          |
+| [`PH30`]{#lh:PH30}`DecisionQuotient.PH.sequential_no_physical_collapse`                                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH31`]{#lh:PH31}`DecisionQuotient.PhysicalComplexity.collapse_possible_with_unbounded_budget_profile`                          |
+| [`PH31`]{#lh:PH31}`DecisionQuotient.PH.collapse_possible_with_unbounded_budget_profile`                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH32`]{#lh:PH32}`DecisionQuotient.PhysicalComplexity.exp_budget_profile_unbounded`                                             |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH33`]{#lh:PH33}`DecisionQuotient.PhysicalComplexity.finite_budget_assumption_is_necessary`                                    |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH34`]{#lh:PH34}`DecisionQuotient.PhysicalComplexity.CoherentDQRejectionAtRequirement`                                         |
+| [`PH34`]{#lh:PH34}`DecisionQuotient.PH.CoherentDQRejectionAtRequirement`                                                         |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH35`]{#lh:PH35}`DecisionQuotient.PhysicalComplexity.coherent_dq_rejection_impossible_at_requirement`                          |
+| [`PH35`]{#lh:PH35}`DecisionQuotient.PH.coherent_dq_rejection_impossible_at_requirement`                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH36`]{#lh:PH36}`DecisionQuotient.PhysicalComplexity.coherent_dq_rejection_impossible_canonical`                               |
+| [`PH36`]{#lh:PH36}`DecisionQuotient.PH.coherent_dq_rejection_impossible_canonical`                                               |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PI1`]{#lh:PI1}`DecisionQuotient.Physics.PhysicalIncompleteness.UniverseModel`                                                  |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -2590,6 +2590,6 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs_4b/`
-- Lines: 3288
+- Lines: 3446
 - Theorems: 124
 - `sorry` placeholders: 8

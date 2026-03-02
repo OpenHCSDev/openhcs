@@ -31,11 +31,7 @@ An \emph{architecture} is a tuple $A = (C, S, T, R)$ where:
 \subsection{Degrees of Freedom}
 
 \begin{definition}[Degrees of Freedom]\label{def:dof}
-The \emph{degrees of freedom} of architecture $A = (C, S, T, R)$ is:
-\[
-\text{DOF}(A) = \dim(S)
-\]
-the dimension of the state space.
+The \emph{degrees of freedom} of architecture $A = (C, S, T, R)$ is a natural number $\text{DOF}(A) \in \mathbb{N}$ counting the independent axes of variation in the state space. Formally, it is the cardinality of a minimal complete orthogonal axis set for $S$ (as established in \texttt{AbstractClassSystem}). In the Lean formalization, \texttt{Architecture.dof} is a field of type $\mathbb{N}$.
 \end{definition}
 
 \textbf{Operational meaning:} DOF counts independent modification points. If $\text{DOF}(A) = n$, then $n$ independent changes can be made to the architecture.
@@ -54,7 +50,7 @@ where $A_1 \oplus A_2 = (C_1 \cup C_2, S_1 \times S_2, T_1 \times T_2, R_1 \cup 
 \LH{L_1bc009bb}}
 
 \begin{proof}
-$\dim(S_1 \times S_2) = \dim(S_1) + \dim(S_2)$ by standard linear algebra.
+Components are disjoint ($C_1 \cap C_2 = \emptyset$), so the axis sets of $A_1$ and $A_2$ are disjoint. The axis set of $A_1 \oplus A_2$ is their disjoint union, giving $\text{DOF}(A_1 \oplus A_2) = |\text{axes}(A_1)| + |\text{axes}(A_2)| = \text{DOF}(A_1) + \text{DOF}(A_2)$.
 \end{proof}
 
 \begin{example}[DOF Calculations]
@@ -101,15 +97,15 @@ L(A) = \frac{|\text{Cap}(A)|}{\text{DOF}(A)}
 
 \textbf{Special cases:}
 \begin{enumerate}
-\item \textbf{Infinite Leverage ($L = \infty$):} Unlimited capabilities from single source (metaprogramming)
+\item \textbf{Unbounded Leverage:} As $|\text{Cap}(A)|$ grows for fixed $\text{DOF}(A) = 1$, leverage grows without bound. This is the metaprogramming regime: a single source with an unbounded number of derived capabilities. In any fixed finite model, $L$ is a positive rational; ``$L = \infty$'' is a shorthand for this limit.
 \item \textbf{Unit Leverage ($L = 1$):} Linear relationship (n capabilities from n DOF)
 \item \textbf{Sublinear Leverage ($L < 1$):} Antipattern (more DOF than capabilities)
 \end{enumerate}
 
 \begin{example}[Leverage Calculations]
 \begin{itemize}
-\item \textbf{SSOT:} DOF $= 1$, Cap $= \{F, \text{uses of } F\}$ where $|$uses$| \to \infty$ \\
-  $\Rightarrow L = \infty$
+\item \textbf{SSOT:} DOF $= 1$, Cap $= \{F, \text{uses of } F\}$ where each new use adds a capability \\
+  $\Rightarrow L$ grows without bound as derivations accumulate
 
 \item \textbf{Scattered Code (n copies):} DOF $= n$, Cap $= \{F\}$ \\
   $\Rightarrow L = 1/n$ (antipattern!)
@@ -151,7 +147,7 @@ with equality when $\delta R$ affects all components.
 \leanmeta{\LH{L_54abf361}}
 
 \begin{proof}
-Each change modifies at most one DOF. Since there are $\text{DOF}(A)$ independent modification points, the maximum number of changes is $\text{DOF}(A)$.
+By Definition~\ref{def:dof}, DOF counts independent axes. A requirement change $\delta R$ decomposes into sub-changes along individual axes; sub-changes along distinct axes are independent. Therefore the number of independent changes is at most the number of axes, which is $\text{DOF}(A)$. Equality holds when $\delta R$ has a non-trivial projection onto every axis.
 \end{proof}
 
 \begin{example}[SSOT vs Scattered]

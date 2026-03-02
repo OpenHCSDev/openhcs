@@ -4,7 +4,7 @@
 
 This directory contains the complete Lean 4 formalization for Stochastic and Sequential Regimes.
 
-- **Lines:** 3288
+- **Lines:** 3446
 - **Theorems:** 124
 - **`sorry` placeholders:** 8
 
@@ -25,6 +25,8 @@ lake build
 
 | File | Module |
 |------|--------|
+| `DependencyGraph.lean` | DependencyGraph |
+| `GraphExport.lean` | GraphExport |
 | `AlgorithmComplexity.lean` | AlgorithmComplexity |
 | `Basic.lean` | Basic |
 | `ClaimClosure.lean` | ClaimClosure |

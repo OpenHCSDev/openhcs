@@ -117,24 +117,15 @@ The physical layer uses two explicit premises for no-go style infeasibility clai
 \subsection{Metaprogramming Dominance}
 
 \begin{theorem}[Metaprogramming Dominance]\label{thm:metaprog}
-Metaprogramming (single source with unbounded derivations) achieves unbounded leverage.
+For any $N \in \mathbb{N}$, there exists a metaprogramming architecture $M$ with $\text{DOF}(M) = 1$ and $L(M) \geq N$.
 \end{theorem}
 \leanmeta{\LH{L_c022ff39},
 \LH{L_5250a1d9}}
 
 \begin{proof}
-Let $M$ be metaprogramming architecture with:
-\begin{itemize}
-\item Source $S$: single definition (DOF $= 1$)
-\item Derivations: unlimited capabilities can be derived from $S$
-\end{itemize}
+Let $M$ be a metaprogramming architecture with a single source definition ($\text{DOF}(M) = 1$) and at least $N$ derived capabilities. Then $L(M) = |\text{Cap}(M)|/1 \geq N$.
 
-As capabilities grow: $|\text{Cap}(M)| \to \infty$
-
-Therefore:
-\[
-L(M) = \frac{|\text{Cap}(M)|}{\text{DOF}(M)} = \frac{|\text{Cap}(M)|}{1} \to \infty
-\]
+\textbf{Modeling note.} In any fixed finite model, $L(M)$ is a positive rational. The colloquial claim ``leverage $= \infty$'' means: for any bound $N$, the architecture can be extended to achieve $L \geq N$ while keeping $\text{DOF} = 1$. The Lean formalization proves the for-all-$N$ version (\LH{L_c022ff39}).
 \end{proof}
 
 \subsection{Architectural Decision Criterion}
@@ -214,12 +205,12 @@ Main optimization theorems are formalized in \texttt{Leverage/Theorems.lean}; ph
 \item \texttt{Leverage/Physical.lean}: physical edit-energy floor theorems
 \end{itemize}
 
-\subsection{Cross-Paper Integration}
+\subsection{Integration with Dependencies}
 
-The leverage framework provides the unifying theory for results proven in Papers 1 and 2:
+The leverage framework provides the unifying theory for results proved in \texttt{AbstractClassSystem} and \texttt{Ssot}:
 
-\begin{theorem}[Paper 1 as Leverage Instance]\label{thm:paper1-integration}
-Nominal typing dominance from Paper 1 is an instance of leverage maximization:
+\begin{theorem}[\texttt{AbstractClassSystem} as Leverage Instance]\label{thm:paper1-integration}
+Nominal typing dominance from \texttt{AbstractClassSystem}~\cite{paper1_typing_discipline} is an instance of leverage maximization:
 \begin{itemize}
 \item Nominal typing adds 4 B-dependent capabilities over duck typing
 \item DOF remains fixed in the mechanized typing instance
@@ -229,8 +220,8 @@ Nominal typing dominance from Paper 1 is an instance of leverage maximization:
 \leanmeta{\LH{L_9f6625e0},
 \LH{L_4372537d}}
 
-\begin{theorem}[Paper 2 as Leverage Instance]\label{thm:paper2-integration}
-SSOT dominance from Paper 2 is an instance of leverage maximization:
+\begin{theorem}[\texttt{Ssot} as Leverage Instance]\label{thm:paper2-integration}
+SSOT dominance from \texttt{Ssot}~\cite{paper2_ssot} is an instance of leverage maximization:
 \begin{itemize}
 \item SSOT fixes DOF at 1 for a structural fact
 \item Non-SSOT replication yields DOF $= n$ for the same fact

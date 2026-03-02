@@ -46,6 +46,11 @@ import DecisionQuotient.WitnessCheckingDuality
 import DecisionQuotient.Summary
 import DecisionQuotient.Dichotomy
 import DecisionQuotient.Tractability.StructuralRank
+import DecisionQuotient.Tractability.BoundedActions
+import DecisionQuotient.Tractability.SeparableUtility
+import DecisionQuotient.Tractability.TreeStructure
+import DecisionQuotient.Tractability.Dimensional
+import DecisionQuotient.Tractability.Tightness
 import DecisionQuotient.Information
 import DecisionQuotient.Information.RateDistortion
 import DecisionQuotient.Information.RDSrank

@@ -2,13 +2,13 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper1_jsait - Identification Capacity and Rate-Query Tradeoffs in Classification Systems
-Package Date: 2026-03-01T01:14:35.370066
+Package Date: 2026-03-02T13:38:21.302800
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 21
-Lines of Code: 6862
+Lean Files: 26
+Lines of Code: 7215
 Theorems: 306
 Sorry Placeholders: 0
 
@@ -19,9 +19,14 @@ Proof Files:
   - Bridge.lean
   - Core.lean
   - Extended.lean
+  - GraphBridges.lean
   - Typing.lean
   - AbstractClassSystem.lean
   - CrossPaperDependencies.lean
+  - DeclInfoExport.lean
+  - DependencyGraph.lean
+  - GraphExport.lean
+  - HandleAliases.lean
   - Paper1.lean
   - PrintAxioms.lean
   - abstract_class_system.lean

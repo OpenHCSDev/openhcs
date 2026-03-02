@@ -7,13 +7,13 @@ We adopt $\Phi$ as the complete observation universe for this paper: to claim ap
 
 \begin{proposition}[Observational Quotient]\label{prop:observational-quotient}
 For any admissible strategy using only $\Phi$, the entire interaction transcript (and hence the output) depends only on $\alpha(v)$. Equivalently, any in-scope semantic property $P$ factors through $\alpha$: there exists $\tilde{P}$ with $P(v) = \tilde{P}(\alpha(v))$ for all $v$.
-\textit{(Lean: \LH{L_03e8b7ad}.)}
 \end{proposition}
+\leanmeta{ \LH{L_03e8b7ad}, \LH{COMPL1}, \LH{FORC2}}
 
 \begin{corollary}[Why ``ad hoc'' = adding an axis/tag]\label{cor:ad-hoc-add-axis}
 If two values $v, w$ satisfy $\alpha(v) = \alpha(w)$, then no admissible $\Phi$-only strategy can distinguish them with zero error. Any mechanism that does distinguish such pairs must introduce additional information not present in $\alpha$ (equivalently, refine the axis map by adding a new axis/tag).
-\textit{(Lean: \LH{L_35fe55aa}.)}
 \end{corollary}
+\leanmeta{ \LH{ACS8}, \LH{IMP1}, \LH{COH1}}
 
 \subsection{Query Families and Distinguishing Sets}
 
@@ -54,9 +54,9 @@ Let $E = \Phi\;(=\mathcal{Q})$ be the ground set of primitive queries (attribute
 
 \begin{lemma}[Basis exchange]\label{lem:basis-exchange}
 For any $B_1, B_2 \in \mathcal{B}$ and any $q \in B_1 \setminus B_2$, there exists $q' \in B_2 \setminus B_1$ such that $(B_1 \setminus \{q\}) \cup \{q'\} \in \mathcal{B}$.
-\textit{(Lean: \LH{L_1915208b},
-\LH{L_165f5010}.)}
+\LH{L5}.)}
 \end{lemma}
+\leanmeta{ \LH{L4},
 
 \begin{proof}
 Define the closure operator $\text{cl}(X) = \{q : X\text{-equivalence implies }q\text{-equivalence}\}$. We verify the matroid axioms:
@@ -72,9 +72,9 @@ Minimal distinguishing sets are exactly the bases of the matroid defined by this
 
 \begin{theorem}[Matroid bases]\label{thm:matroid-bases}
 $\mathcal{B}$ is the set of bases of a matroid on ground set $E$.
-\textit{(Lean: \LH{L_5e84d979},
-\LH{L_165f5010}.)}
+\LH{L5}.)}
 \end{theorem}
+\leanmeta{ \LH{L3},
 
 \begin{proof}
 By the basis-exchange lemma and the standard characterization of matroid bases \cite{Welsh1976}.
@@ -90,16 +90,16 @@ Let $n := |\mathcal{I}|$ be the ambient number of available attributes. Clearly 
 
 \begin{corollary}[Well-defined distinguishing dimension]\label{cor:well-defined-distinguishing-dimension}
 All minimal distinguishing sets have equal cardinality. Thus the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}) is well-defined.
-\textit{(Lean: \LH{L_5e84d979},
-\nolinkurl{closureInducedBasisEquicardinality}.)}
+\LH{L1}.)}
 \end{corollary}
+\leanmeta{ \LH{L3},
 
 \subsection{Implications for Witness Cost}
 
 \begin{corollary}[Lower bound on attribute-only witness cost]\label{cor:attribute-only-witness-lb}
 For any attribute-only observer, $W(\text{class-identity}) \geq d$ where $d$ is the distinguishing dimension.
-\textit{(Lean: \LH{L_67f09d33}.)}
 \end{corollary}
+\leanmeta{ \LH{ACS1}}
 
 \begin{proof}
 If a procedure queried fewer than $d$ attributes on every execution path, each such queried set would be non-distinguishing by definition of $d$. For that path, there would exist two different classes with identical answers on all queried attributes, yielding identical transcripts and forcing the same output on both values. This contradicts zero-error class identification. Hence some path requires at least $d$ queries.

@@ -6,27 +6,6 @@ George~A Akerlof.
   mechanism.
 \newblock {\em The Quarterly Journal of Economics}, 84(3):488--500, 1970.
 
-\bibitem{paper1_typing}
-Anonymous.
-\newblock Paper 1: Nominal typing dominates structural typing, 2025.
-\newblock Technical report.
-
-\bibitem{paper2_ssot}
-Anonymous.
-\newblock Paper 2: Single source of truth minimizes modification complexity,
-  2025.
-\newblock Technical report.
-
-\bibitem{paper3_leverage}
-Anonymous.
-\newblock Paper 3: Leverage maximization in software systems, 2025.
-\newblock Technical report.
-
-\bibitem{paper4_decisionquotient}
-Anonymous.
-\newblock Paper 4: The complexity of decision-relevant uncertainty, 2025.
-\newblock Technical report.
-
 \bibitem{aumann1976agreeing}
 Robert~J Aumann.
 \newblock Agreeing to disagree.
@@ -123,6 +102,29 @@ Roger~B. Myerson.
 Claude~E Shannon.
 \newblock A mathematical theory of communication.
 \newblock {\em Bell System Technical Journal}, 27(3):379--423, 1948.
+
+\bibitem{paper4_decisionquotient}
+Tristan Simas.
+\newblock Computational complexity of physical counting.
+\newblock Zenodo, 2025.
+
+\bibitem{paper1_typing}
+Tristan Simas.
+\newblock Identification capacity and rate-query tradeoffs in classification
+  systems.
+\newblock Zenodo, 2025.
+
+\bibitem{paper3_leverage}
+Tristan Simas.
+\newblock Leverage-driven software architecture: Five independent frameworks
+  select the same architectural ground state.
+\newblock Zenodo, 2025.
+
+\bibitem{paper2_ssot}
+Tristan Simas.
+\newblock Zero-incoherence capacity of interactive encoding systems:
+  Achievability, converse, and side information bounds.
+\newblock Zenodo, 2025.
 
 \bibitem{sobel1985theory}
 Joel Sobel.

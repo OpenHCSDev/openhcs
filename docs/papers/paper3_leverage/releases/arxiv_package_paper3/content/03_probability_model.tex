@@ -1,34 +1,24 @@
 \section{Probability Model}\label{probability-model}
 
-We derive the relationship between DOF and error probability from Paper 1's axis independence theorem.
+We derive the relationship between DOF and error probability from \texttt{AbstractClassSystem}'s axis independence theorem.
 
 \subsection{Error Independence from Axis Orthogonality}
 
-The independence of errors is not an axiom---it is a consequence of axis orthogonality proven in Paper 1~\cite{paper1_typing_discipline}.
+The independence of errors is not an axiom---it is a consequence of axis orthogonality proved in \texttt{AbstractClassSystem}~\cite{paper1_typing_discipline}.
 
 \begin{theorem}[Error Independence]\label{thm:error-independence}
-If axes $\{A_1, \ldots, A_n\}$ are orthogonal (Paper 1, Theorem \texttt{minimal\_complete\_unique\_orthogonal}), then errors along each axis are statistically independent.
+If axes $\{A_1, \ldots, A_n\}$ are orthogonal (\texttt{AbstractClassSystem}, Theorem \texttt{minimal\_complete\_unique\_orthogonal}), then errors along each axis are statistically independent.
 \end{theorem}
 \leanmeta{\LH{L_94799bf0}}
 
 \begin{proof}
-By Paper 1's orthogonality theorem, orthogonal axes satisfy:
+By Definition~\ref{def:architecture}, the state space is the product $S = \prod_{c \in C} S_c$. \texttt{AbstractClassSystem}'s orthogonality theorem (\texttt{minimal\_complete\_unique\_orthogonal}) establishes that a minimal complete axis set partitions the state space into independent dimensions: axis $A_i$ is a projection onto a factor of the product, and $A_i \perp A_j$ means the projection onto factor $i$ carries no information about factor $j$.
+
+An \emph{error along axis $A_i$} is the event $E_i$ that the value on factor $i$ deviates from specification. Since the factors are independent dimensions of the product space, the probability measure factorizes:
 \[
-\forall i \neq j: A_i \perp A_j \quad (\text{no axis constrains another})
+P(E_i \mid \text{state of factors } \neq i) = P(E_i).
 \]
-
-An \emph{error along axis $A_i$} is a deviation from specification in the dimension $A_i$ controls. By orthogonality:
-\begin{itemize}
-\item Deviation along $A_i$ does not affect the value along $A_j$
-\item The probability of error in $A_i$ is independent of the state of $A_j$
-\end{itemize}
-
-Therefore:
-\[
-P(\text{error in } A_i \land \text{error in } A_j) = P(\text{error in } A_i) \cdot P(\text{error in } A_j)
-\]
-
-This is the definition of statistical independence.
+This is the standard characterization of independence for product probability spaces: the marginal on factor $i$ is independent of the marginal on any other factor. Therefore $P(E_i \cap E_j) = P(E_i) \cdot P(E_j)$ for all $i \neq j$, and by induction the $n$ events $E_1, \ldots, E_n$ are mutually independent.
 \end{proof}
 
 \begin{corollary}[DOF = Independent Error Sources]\label{cor:dof-errors}
@@ -38,7 +28,7 @@ DOF$(A) = n$ implies $n$ independent sources of error, each with probability $p$
 \LH{L_94799bf0}}
 
 \begin{proof}
-DOF counts independent axes (Paper 2, Definition~\ref{def:dof}). By Theorem~\ref{thm:error-independence}, independent axes have independent errors.
+DOF counts independent axes (Section~\ref{foundations}, Definition~\ref{def:dof}). By Theorem~\ref{thm:error-independence}, independent axes have independent errors.
 \end{proof}
 
 \begin{theorem}[Error Compounding]\label{thm:error-compound}
@@ -48,7 +38,7 @@ For a system to be correct, all $n$ independent axes must be error-free. Errors 
 \LH{L_09703163}}
 
 \begin{proof}
-By Paper 2's coherence theorem (\texttt{oracle\_arbitrary}), incoherence in any axis violates system correctness. An error in axis $A_i$ introduces incoherence along $A_i$. Therefore, correctness requires $\bigwedge_{i=1}^{n} \neg\text{error}(A_i)$. By Theorem~\ref{thm:error-independence}, this probability is $(1-p)^n$.
+By \texttt{Ssot}'s coherence theorem (\texttt{oracle\_arbitrary}), incoherence in any axis violates system correctness. An error in axis $A_i$ introduces incoherence along $A_i$. Therefore, correctness requires $\bigwedge_{i=1}^{n} \neg\text{error}(A_i)$. By Theorem~\ref{thm:error-independence}, this probability is $(1-p)^n$.
 \end{proof}
 
 \subsection{Error Probability Formula}
@@ -63,7 +53,7 @@ P_{\text{error}}(n) = 1 - (1-p)^n
 \LH{L_1aedfdca}}
 
 \begin{proof}
-By Theorem~\ref{thm:error-independence} (derived from Paper 1's orthogonality), each DOF has independent error probability $p$, so each is correct with probability $(1-p)$. By Theorem~\ref{thm:error-compound}, all $n$ DOF must be correct:
+By Theorem~\ref{thm:error-independence} (derived from \texttt{AbstractClassSystem}'s orthogonality), each DOF has independent error probability $p$, so each is correct with probability $(1-p)$. By Theorem~\ref{thm:error-compound}, all $n$ DOF must be correct:
 \[
 P_{\text{correct}}(n) = (1-p)^n
 \]
@@ -165,16 +155,16 @@ This is theorem \texttt{ordering\_equivalence\_exact} in \texttt{Leverage/Probab
 
 \subsection{Epistemic Grounding}
 
-The probability model is not axiomatic---it is derived from the epistemic foundations established in Papers 1 and 2:
+The probability model is not axiomatic---it is derived from the epistemic foundations in \texttt{AbstractClassSystem} and \texttt{Ssot}:
 
 \begin{enumerate}
-\item \textbf{Paper 1} proves axis orthogonality (\texttt{minimal\_complete\_unique\_orthogonal})
+\item \texttt{AbstractClassSystem} proves axis orthogonality (\texttt{minimal\_complete\_unique\_orthogonal})
 \item \textbf{Theorem~\ref{thm:error-independence}} derives error independence from orthogonality
-\item \textbf{Paper 2} establishes that DOF = 1 guarantees coherence (Theorem~\texttt{oracle\_arbitrary})
+\item \texttt{Ssot} establishes that DOF = 1 guarantees coherence (\texttt{oracle\_arbitrary})
 \item \textbf{Theorem~\ref{thm:error-compound}} connects errors to incoherence
 \end{enumerate}
 
-This derivation chain ensures the probability model rests on proven foundations, not assumed axioms.
+This derivation chain ensures the probability model rests on proved foundations, not assumed axioms.
 
 \subsection{Leverage Gap: Quantitative Predictions}
 

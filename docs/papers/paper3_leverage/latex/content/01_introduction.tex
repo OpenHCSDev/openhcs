@@ -1,15 +1,37 @@
 \section{Introduction}\label{introduction}
 
-\subsection{The Central Discovery}
+This paper proves thermodynamic bounds on information-processing systems from first principles. The central result is the Five-Way Equivalence (Theorem~\ref{thm:five-way}): five independent scientific frameworks (engineering, epistemics, information theory, computational complexity, and statistical physics) all characterize the same structural property, $\mathrm{DOF} = 1$. Software architecture serves as the application domain; the underlying physics is general. All claims are verified in Lean~4 with zero \texttt{sorry} placeholders.
 
-Five independent scientific frameworks each characterize the same architectural property.
+\subsection{Formalization Statistics}
+
+\begin{center}
+\begin{tabular}{lr}
+\hline
+\textbf{Metric} & \textbf{Value} \\
+\hline
+Lines of Lean 4 (this paper) & \LeanTotalLines{} \\
+Theorems/lemmas & \LeanTotalTheorems{} \\
+\texttt{sorry} placeholders & \LeanTotalSorry{} \\
+Proof files & \LeanTotalFiles{} \\
+\hline
+\textbf{Dependencies (live imports)} & \\
+\texttt{AbstractClassSystem} & \LeanDepLinesAbstractClassSystem{} lines, \LeanDepTheoremsAbstractClassSystem{} theorems \\
+\texttt{Ssot} & \LeanDepLinesSsot{} lines, \LeanDepTheoremsSsot{} theorems \\
+\texttt{DecisionQuotient} & \LeanDepLinesDecisionQuotient{} lines, \LeanDepTheoremsDecisionQuotient{} theorems \\
+\hline
+\end{tabular}
+\end{center}
+
+All proofs build with \texttt{lake build}. Axiom dependencies verified via \texttt{\#print axioms}: \texttt{propext}, \texttt{Quot.sound}, \texttt{Classical.choice}.
+
+\subsection{Central Result}
 
 \begin{theorem}[Five-Way Equivalence]\label{thm:five-way}
 For any architecture $A$ with $\mathrm{Cap}(A) > 0$, the following are equivalent:
 \[
 \underbrace{\mathrm{DOF}(A) = 1}_{\text{single source}}
 \;\iff\;
-\underbrace{L(A) \text{ is maximal}}_{\text{engineering}}
+\underbrace{L(A) \text{ maximal}}_{\text{engineering}}
 \;\iff\;
 \underbrace{\mathrm{SSOT}(A)}_{\text{epistemics}}
 \;\iff\;
@@ -17,57 +39,43 @@ For any architecture $A$ with $\mathrm{Cap}(A) > 0$, the following are equivalen
 \;\iff\;
 \underbrace{\text{tractable sufficiency}}_{\text{complexity}}
 \;\iff\;
-\underbrace{\text{zero thermodynamic cost}}_{\text{physics}}
+\underbrace{\text{min thermo cost}}_{\text{physics}}
 \]
 \end{theorem}
 
-This is proved in Section~\ref{five-way-equivalence} and machine-checked in Lean~4 via live cross-paper imports (Paper~3 $\to$ Paper~4 $\to$ Mathlib).
+Proved in Section~\ref{five-way-equivalence}. Machine-checked via \texttt{Leverage} $\to$ \texttt{DecisionQuotient} $\to$ \texttt{Ssot} $\to$ Mathlib.
 
-\textbf{Why this is surprising.} Each framework was developed independently for a different purpose: leverage for architectural optimization, SSOT for epistemic coherence, structural rank for decision theory, tractability for computational complexity, thermodynamic cost for statistical physics. They are logically independent---knowing one gives no \emph{a priori} reason to expect the others. Their convergence on a single condition is the central result of the paper.
-
-\subsection{Engineering Consequences}
-
-The following results are corollaries of the five-way equivalence, not independent contributions.
-
-\textbf{Definition (Leverage):} $L(A) = |\mathrm{Capabilities}(A)| / \mathrm{DOF}(A)$.
+\subsection{Contributions}
 
 \begin{enumerate}
-\item \textbf{DOF--Reliability Isomorphism (Theorem~\ref{thm:dof-reliability}):} Architecture with $n$ DOF is isomorphic to series system with $n$ components. Each DOF is a failure point.
-\item \textbf{Leverage--Error Tradeoff (Theorem~\ref{thm:leverage-error}):} Among architectures with equal capabilities, $L(A_1) > L(A_2) \implies P_{\mathrm{error}}(A_1) < P_{\mathrm{error}}(A_2)$.
-\item \textbf{Modification Complexity Gap (Theorem~\ref{thm:leverage-gap}):} At fixed capabilities, expected modification cost is proportional to DOF.
-\item \textbf{Physical Edit-Energy Floor (Theorem~\ref{thm:physical-energy-floor}):} Under Landauer calibration with explicit constant $j_\mathcal{M} > 0$, minimum edit-energy equals $j_\mathcal{M} \cdot \mathrm{DOF}(A)$.
+\item \textbf{DOF-Reliability Isomorphism (Theorem~\ref{thm:dof-reliability}):} Architecture with $n$ DOF is isomorphic to a series reliability system with $n$ components.
+
+\item \textbf{Leverage-Error Tradeoff (Theorem~\ref{thm:leverage-error}):} $L(A_1) > L(A_2) \implies P_{\mathrm{error}}(A_1) < P_{\mathrm{error}}(A_2)$ at equal capabilities.
+
+\item \textbf{Modification Complexity Gap (Theorem~\ref{thm:leverage-gap}):} Expected modification cost is proportional to DOF at fixed capabilities.
+
+\item \textbf{Physical Edit-Energy Floor (Theorem~\ref{thm:physical-energy-floor}):} Minimum edit-energy $= j_\mathcal{M} \cdot \mathrm{DOF}(A)$ under Landauer calibration. No P~$\neq$~coNP assumption. \leanmeta{\LH{thermodynamic\_selection\_unconditional}, \LH{srank\_energy\_lower\_bound}}
+
+\item \textbf{England Replication Inequality (Theorem~\ref{thm:england}):} $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$. Proof: a $k$-variable system has $2^k$ states (counting); entropy gap follows from $k \leq 2^{k-1}$ (induction). \leanmeta{\LH{england\_replication\_inequality}}
+
 \item \textbf{Optimal Architecture (Theorem~\ref{thm:optimal}):} $f(R) = \arg\max_{A:\,\mathrm{Cap}(A) \supseteq R} L(A)$ minimizes expected error and is computable.
 \end{enumerate}
 
-These constitute a formal proof that architectural optimization is decidable, with a provably optimal selection procedure. But their deeper content is that they all reduce to the DOF count---which the five-way equivalence explains from five independent first principles.
-
-\subsection{Open Conjectures}
-
-Two open problems remain within reach of the existing formalization machinery.
-
-\textbf{Conjecture 1 (Unconditional Thermodynamic Selection).} Theorem~\ref{thm:thermodynamic-selection} assumes P~$\neq$~coNP to derive mandatory energy cost for DOF~$>1$ architectures. We conjecture the result holds unconditionally: thermodynamic cost scales directly with $\mathrm{srank}$, bypassing complexity theory. This would reduce the five-way equivalence to a chain of physical necessities with no complexity-theoretic hypothesis.
-
-\textbf{Conjecture 2 (England Replication Bound).} Single-source architectures (DOF~$=1$) that generate derived instances are analogous to self-replicating systems in non-equilibrium thermodynamics. England's inequality~\cite{england2013statistical} bounds entropy production of such systems. We conjecture a formal analog: the entropy cost of maintaining consistency across $n$ replicated DOF strictly exceeds the entropy cost of a single DOF by a factor of at least $n$, with the bound tight at DOF~$=1$.
-
-\textbf{Conjecture 3 (Wolpert Bound).} Wolpert and Kolchinsky's general thermodynamic bounds~\cite{wolpert2019stochastic} suggest cost scales with the number of relevant decision coordinates---i.e., with $\mathrm{srank}$---with an explicit constant derivable from Landauer calibration. We conjecture this gives a quantitative thermodynamic cost formula $\Omega(\mathrm{srank} \cdot k_B T \ln 2)$ per decision cycle, removing the existential witness and giving a closed-form bound.
+\paragraph{What is new.} \texttt{AbstractClassSystem} and \texttt{Ssot} establish two of the five equivalences. This paper adds leverage maximization and proves it equivalent to the remaining three. The England inequality is new: the only physics input is the Landauer constant $k_B$; the bound reduces to $k \leq 2^{k-1}$.
 
 \subsection{Dependency Chain}
 
-This paper does not subsume Papers~1 and~2---it builds on them.
-
 \begin{enumerate}
-\item \textbf{Paper~1} proves axis orthogonality $\to$ enables error independence (Theorem~\ref{thm:error-independence})
-\item \textbf{Paper~2} proves DOF~$= 1$ guarantees SSOT coherence $\to$ establishes the second equivalence
-\item \textbf{Paper~4} proves tractability boundary and thermodynamic lift $\to$ establishes the fourth and fifth equivalences
-\item \textbf{This paper} closes the chain: leverage maximization (Framework~1) is equivalent to all of the above
+\item \texttt{AbstractClassSystem}: axis orthogonality $\to$ error independence (Theorem~\ref{thm:error-independence})
+\item \texttt{Ssot}: DOF~$= 1$ $\iff$ coherence $\to$ second equivalence
+\item \texttt{DecisionQuotient}: tractability boundary and thermodynamic lift $\to$ fourth and fifth equivalences
+\item \texttt{Leverage} (this paper): leverage maximization $\iff$ all of the above
 \end{enumerate}
-
-Paper~2 supplies the coherence constraint (DOF~$= 1$ per structural fact); this paper supplies the optimization rule inside the feasible set (maximize leverage) and proves that rule is selected by four additional independent frameworks.
-
-\subsection{Organization}
-
-Section~\ref{foundations} defines Architecture, DOF, Capabilities, and Leverage. Section~\ref{probability-model} derives the error model. Section~\ref{main-theorems} proves decidability and optimality. Section~\ref{instances} demonstrates SSOT, nominal typing, microservices, APIs, and databases as leverage instances. Section~\ref{five-way-equivalence} proves the central five-way equivalence and states the open conjectures. Section~\ref{appendix-lean} describes the Lean mechanization.
 
 \subsection{Scope}
 
-Leverage characterizes the capability-to-DOF ratio. Performance, security, and other dimensions remain orthogonal concerns. Error independence is \emph{derived} from Paper~1's axis orthogonality theorem, not assumed. Physical edit-energy claims use a single explicit calibration constant ($j_\mathcal{M} > 0$) and no additional architectural axioms beyond the DOF--Reliability Isomorphism.
+Leverage measures capability-to-DOF ratio. Performance, security, and other dimensions are orthogonal. Error independence is derived from axis orthogonality in \texttt{AbstractClassSystem}, not assumed. Physical claims use one explicit constant ($j_\mathcal{M} > 0$) and no additional axioms beyond the Landauer calibration.
+
+\subsection{Organization}
+
+Section~\ref{foundations} defines Architecture, DOF, Capabilities, and Leverage. Section~\ref{probability-model} derives the error model. Section~\ref{main-theorems} proves decidability and optimality. Section~\ref{instances} gives leverage instances. Section~\ref{five-way-equivalence} proves the five-way equivalence and the England inequality. Section~\ref{appendix-lean} describes the Lean mechanization.

@@ -189,8 +189,7 @@ theorem ComputableDecisionProblem.checkSufficiency_iff_abstract
     (I : Finset (Fin n)) :
     cdp.checkSufficiency I ↔ cdp.toAbstract.isSufficient I := by
   unfold checkSufficiency insufficiencyWitnesses DecisionProblem.isSufficient
-  simp only [Finset.filter_eq_empty_iff, Finset.mem_product, Finset.mem_univ,
-             true_and, Bool.and_eq_true, decide_eq_true_eq, not_and, not_not]
+  simp only [Finset.filter_eq_empty_iff, Bool.and_eq_true, decide_eq_true_eq, not_and, not_not]
   constructor
   · intro h s s' hagree
     have hmem : (s, s') ∈ (Finset.univ.product Finset.univ : Finset (S × S)) := by simp

@@ -1,6 +1,6 @@
 # Paper: Verified Polynomial-Time Reductions in Lean 4: Formalizing the Complexity of Decision-Relevant Information
 
-**Status**: Draft-ready | **Lean**: 28863 lines, 1252 theorems
+**Status**: Draft-ready | **Lean**: 29737 lines, 1273 theorems
 
 ---
 
@@ -24,7 +24,7 @@ We present a Lean 4 formalization of polynomial-time reductions and computationa
 
 All complexity claims use the input encodings fixed in Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}.
 
-The formalization comprises 28863 lines of Lean 4 with 1252 machine-verified theorems/lemmas across 113 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
+The formalization comprises 29737 lines of Lean 4 with 1273 machine-verified theorems/lemmas across 116 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
 
 **Practical corollaries.** The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/$\Sigma_2^P$ completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle *determining what you need to know is harder than knowing everything*. This implies that over-modeling is rational under the model and that "simpler" incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
 
@@ -78,9 +78,9 @@ The primary contribution is theoretical: a formalized reduction framework and a 
 ::: center
   **Metric**                                                 **Value**
   ----------------------- --------------------------------------------
-  Lines of Lean 4                                                28863
-  Theorems/lemmas                                                 1252
-  Proof files                                                      113
+  Lines of Lean 4                                                29737
+  Theorems/lemmas                                                 1273
+  Proof files                                                      116
   Reduction proofs          5 (SAT, TAUTOLOGY, SET-COVER, ETH, W\[2\])
   External dependencies           Mathlib (computability, data.finset)
   `sorry` count                                                      0
@@ -229,7 +229,7 @@ Each theorem includes verification metadata:
     #print axioms sufficiency_coNP_complete  -- axiom dependencies
     #eval Nat.repr (countSorry `sufficiency_coNP_complete)  -- 0
 
-The build log (included in the artifact) records successful compilation of all 1252 theorem/lemma statements with 0 `sorry` placeholders.
+The build log (included in the artifact) records successful compilation of all 1273 theorem/lemma statements with 0 `sorry` placeholders.
 
 
 # Formal Foundations {#sec:foundations}
@@ -1255,6 +1255,16 @@ This terminology is grounded in Papers 1--2: "axes" correspond to Paper 1's axis
 
 This is analogous to conservation laws in physics: energy is conserved, only transformed. Complexity is conserved, only distributed.
 
+#### Conservation as Structural Necessity.
+
+The Simplicity Tax Conservation theorem mechanizes a conservation law with the same logical structure as physical conservation laws. In physics, conservation laws arise from symmetries via Noether's theorem. Energy is conserved because the laws of physics are time invariant. Momentum is conserved because the laws are space invariant. The Simplicity Tax Conservation arises from the set partition structure of required axes. The required axes $R(P)$ are partitioned into covered axes $R(P) \cap A(T)$ and gap axes $R(P) \setminus A(T)$. The partition is disjoint and exhaustive. Therefore the cardinality equation $|\text{Gap}(T,P)| + |R(P) \cap A(T)| = |R(P)|$ holds necessarily. This is not an empirical regularity subject to revision. It is a logical consequence of the set theoretic structure. The Lean mechanization verifies this explicitly.
+
+#### Regime Specification.
+
+This conservation law applies to any finite coordinate system with tool problem matching. The regime is: problem $P$ with finite required axes $R(P)$ and tool $T$ with finite native axes $A(T)$. No additional assumptions are required. The theorem holds for all such regimes by logical necessity.
+
+**Lean Mechanization.** The theorem `simplicityTax_conservation` is verified in `DecisionQuotient/HardnessDistribution.lean`. The proof uses finset partition lemmas from Mathlib. Zero `sorry` placeholders remain.
+
 ::: theorem
 []{#thm:complete-no-tax label="thm:complete-no-tax"} If $T$ is complete for $P$, then $\text{SimplicityTax}(T, P) = 0$.
 :::
@@ -1434,7 +1444,7 @@ Mathlib's computability library [@mathlib2020] provides primitive recursive fun
 
 #### The verification gap.
 
-Published complexity proofs occasionally contain errors [@lipton2009np]. Machine verification eliminates this uncertainty. Our contribution demonstrates that complexity reductions are amenable to formalization with reasonable effort (28863 lines for the full reduction suite).
+Published complexity proofs occasionally contain errors [@lipton2009np]. Machine verification eliminates this uncertainty. Our contribution demonstrates that complexity reductions are amenable to formalization with reasonable effort (29737 lines for the full reduction suite).
 
 ## Computational Decision Theory
 
@@ -1631,11 +1641,11 @@ Keep the mathematical content ("sufficiency is the same as tautology under this 
 
 ## Formalization Size
 
--   Total Lean lines: 28863
+-   Total Lean lines: 29737
 
--   Theorem/lemma statements: 1252
+-   Theorem/lemma statements: 1273
 
--   Proof files: 113
+-   Proof files: 116
 
 -   `sorry` placeholders: 0
 
@@ -1797,7 +1807,7 @@ The Lean proofs are straightforward applications of definitions and standard com
 
 3.  **Complexity dichotomy.** Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} separates logarithmic and linear regimes: polynomial behavior when the minimal sufficient set has size $O(\log |S|)$, and exponential lower bounds under ETH when it has size $\Omega(n)$. Intermediate regimes are not ruled out by the lower-bound statement.
 
-**What machine-checking guarantees.** The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic combinatorics and complexity definitions). 0 `sorry` placeholders means 0 unproven claims. The 28863 lines establish a verified chain from basic definitions (decision problems, coordinate spaces, polynomial reductions) to the final theorems (hardness results, dichotomy, tractable cases). Reviewers need not trust our informal explanations; they run `lake build` and verify the proofs themselves.
+**What machine-checking guarantees.** The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic combinatorics and complexity definitions). 0 `sorry` placeholders means 0 unproven claims. The 29737 lines establish a verified chain from basic definitions (decision problems, coordinate spaces, polynomial reductions) to the final theorems (hardness results, dichotomy, tractable cases). Reviewers need not trust our informal explanations; they run `lake build` and verify the proofs themselves.
 
 **Comparison to informal complexity arguments.** Prior work on model selection complexity (Chickering et al. [@chickering2004large], Teyssier & Koller [@teyssier2012ordering]) presents compelling informal arguments but lacks machine-checked proofs. Our contribution is not new *wisdom*; the insight that model selection is hard is old. Our contribution is *formalization*: making "coordinate sufficiency" precise enough to mechanize, constructing verified reductions, and proving the complexity results hold for the formalized definitions.
 
@@ -1805,7 +1815,7 @@ This follows the tradition of verified complexity theory: just as Nipkow & Klein
 
 ## Module Structure
 
-The formalization consists of 113 files organized as follows:
+The formalization consists of 116 files organized as follows:
 
 -   `Basic.lean` -- Core definitions (DecisionProblem, CoordinateSet, Projection)
 
@@ -1856,11 +1866,11 @@ The formalization consists of 113 files organized as follows:
 
 ## Verification Status
 
--   Total lines: 28863
+-   Total lines: 29737
 
--   Theorems/lemmas: 1252
+-   Theorems/lemmas: 1273
 
--   Files: 113
+-   Files: 116
 
 -   Status: All proofs compile with 0 `sorry`
 
@@ -1904,6 +1914,18 @@ To reject this theorem, one must deny:
 -   finite universe energy (thermodynamics)
 
 Each denial contradicts established physics. The "integrity trap" (LP45) is that rejecting the mathematical claim requires rejecting physical law.
+
+#### Explicit Regime Specification.
+
+The theorem holds under the following physical regime. The spacetime region $R$ must satisfy four empirically verified conditions. First, bounded energy capacity $E < \infty$ at temperature $T > 0$ (thermodynamic regime, EP2). Second, nonzero energy cost per bit query $\varepsilon \geq kT\ln 2$ (Landauer's principle, EP1). Third, finite signal speed $c < \infty$ (special relativity regime, EP3). Fourth, state space with $|S| > 1$ configurations (nontrivial physics regime, EP4).
+
+#### Step-by-Step Deduction.
+
+The proof proceeds by necessary implication through seven steps. Step 1: Finite energy $E$ and nonzero query cost $\varepsilon$ imply $E < |S| \cdot \varepsilon$ for sufficiently large $|S|$ (LP32). Step 2: Energy constraint implies incomplete observation of the state space (LP33). Step 3: Incomplete observation forces locality; bounded regions cannot have complete knowledge of the universe (LP34). Step 4: Locality implies independent regions can exist; spacelike separated regions maintain configurations that need not agree (LP35). Step 5: Independent regions can disagree; when such regions interact their configurations may contradict (LP36). Step 6: If $\P = NP$, bounded energy observers could resolve global consistency in polynomial time, eliminating the locality requirement (LP39). Step 7: Eliminating locality contradicts the finite energy constraint. Therefore P $\neq$ NP is necessary for physical locality as observed (LP38).
+
+#### The Integrity Trap Structure.
+
+To reject this theorem, one must deny at least one of four empirically justified axioms. Denying Landauer's principle (LP41) contradicts experiments by Berut et al. (2012) that verified the $kT\ln 2$ energy cost. Denying nontrivial state space (LP42) contradicts direct observation of multiple physical configurations. Denying finite signal speed (LP43) contradicts special relativity. Denying finite universe energy (LP44) contradicts thermodynamics. The trap is complete; the mathematical claim is shielded by empirical axioms.
 
 ## On Tractability Despite Hardness
 
@@ -2038,6 +2060,6 @@ The "cover important axes" heuristic only works if you *correctly identify* whic
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 28863
-- Theorems: 1252
+- Lines: 29737
+- Theorems: 1273
 - `sorry` placeholders: 0

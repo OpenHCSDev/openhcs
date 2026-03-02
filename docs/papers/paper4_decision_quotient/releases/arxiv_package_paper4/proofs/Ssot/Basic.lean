@@ -7,6 +7,8 @@
   whose properties we prove abstractly.
 -/
 
+namespace Ssot
+
 -- Core abstraction: Degrees of Freedom as a natural number
 -- DOF(C, F) = number of independent locations encoding fact F
 -- We prove properties about DOF values directly
@@ -45,3 +47,4 @@ theorem dof_gt_one_inconsistent (dof : Nat) (h : dof > 1) :
     dof ≠ 1 := by
   omega
 
+end Ssot

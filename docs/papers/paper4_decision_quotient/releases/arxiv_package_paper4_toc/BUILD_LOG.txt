@@ -2,14 +2,14 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper4_toc - Computational Complexity of Physical Counting
-Package Date: 2026-03-01T01:24:21.264409
+Package Date: 2026-03-02T13:38:21.826981
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 113
-Lines of Code: 28863
-Theorems: 1252
+Lean Files: 118
+Lines of Code: 31871
+Theorems: 1323
 Sorry Placeholders: 0
 
 
@@ -21,6 +21,7 @@ Proof Files:
   - BayesFromDQ.lean
   - BayesOptimalityProof.lean
   - BayesianBridge.lean
+  - Bridges.lean
   - CheckAxioms.lean
   - ClaimClosure.lean
   - Complexity.lean
@@ -79,6 +80,7 @@ Proof Files:
   - PhysicalHardness.lean
   - PhysicalIncompleteness.lean
   - TUR.lean
+  - TemporalCountingGap.lean
   - TransportCost.lean
   - Uncertainty.lean
   - WassersteinIntegrity.lean
@@ -127,6 +129,9 @@ Proof Files:
   - UniverseObjective.lean
   - WitnessCheckingDuality.lean
   - DecisionQuotient.lean
+  - DeclInfoExport.lean
+  - DependencyGraph.lean
+  - GraphExport.lean
   - lakefile.lean
 
 Note: Run 'python3 scripts/build_papers.py release' to include compilation output.

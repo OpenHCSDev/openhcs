@@ -13,6 +13,8 @@
 
 import Ssot.SSOT
 
+namespace Ssot
+
 /-!
 ## Part 1: Coherence Definitions
 
@@ -262,3 +264,4 @@ theorem epistemic_asymmetry :
     (∀ n : Nat, n > 1 → ∃ s : EncodingSystem, s.dof = n ∧ s.is_incoherent) :=
   ⟨dof_one_implies_coherent, dof_gt_one_incoherence_possible⟩
 
+end Ssot

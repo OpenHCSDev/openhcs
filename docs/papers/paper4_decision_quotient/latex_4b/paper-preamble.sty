@@ -60,10 +60,20 @@
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 \newtheorem{observation}[theorem]{Observation}
+\newtheorem{conjecture}[theorem]{Conjecture}
 
 % Common two-argument claim wrapper used by paper4 variants:
 % \begin{claim}{Title}{label-id} ... \end{claim}
 \newenvironment{claim}[2]{\begin{claimthm}[#1]\label{#2}}{\end{claimthm}}
+
+% Formal/informal display environments (used in five-way equivalence sections)
+% formal: boxed mathematical statement; informal: indented italic intuition
+\newenvironment{formal}{%
+  \begin{quote}\small}{%
+  \end{quote}}
+\newenvironment{informal}{%
+  \begin{quote}\small\itshape}{%
+  \end{quote}}
 
 % Hyperref setup
 \hypersetup{

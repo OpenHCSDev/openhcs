@@ -103,3 +103,15 @@ lean_lib «CrossPaperDependencies» where
   moreLeanArgs := moreLeanArgs
   weakLeanArgs := weakLeanArgs
   -- Cross-paper dependency bridge
+
+@[default_target]
+lean_lib «HandleAliases» where
+  moreLeanArgs := moreLeanArgs
+  weakLeanArgs := weakLeanArgs
+  -- Semantic handle aliases for LaTeX citations
+
+@[default_target]
+lean_lib «DependencyGraph» where
+  moreLeanArgs := moreLeanArgs
+  weakLeanArgs := weakLeanArgs
+  -- Build-time graph export commands shared by graph bridge declarations

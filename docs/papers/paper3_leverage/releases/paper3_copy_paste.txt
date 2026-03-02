@@ -1,47 +1,44 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-03-01T01:15:02.364093
+Generated: 2026-03-02T04:33:14.218954
 
 === HUMAN COPY/PASTE ===
 
 Title: Leverage-Driven Software Architecture: Five Independent Frameworks Select the Same Architectural Ground State
 
 Abstract (Unicode, for Zenodo):
-Five independent scientific frameworks—engineering optimization, epistemic coherence, information geometry, computational complexity, and statistical physics—each characterize the same architectural property: having exactly one degree of freedom.
+We define leverage L(A) = |Capabilities(A)|/DOF(A) for software architectures and prove that maximizing leverage, satisfying the Single Source of Truth condition, minimizing structural rank, admitting tractable sufficiency checking, and incurring minimum thermodynamic cost per decision cycle are all equivalent to DOF(A) = 1.
 
-Central Result (Five-Way Equivalence, Theorem ). For any architecture A with Cap(A) > 0:
-DOF(A) = 1 ⇔ max leverage ⇔ SSOT ⇔ srank = 1 ⇔ tractable sufficiency ⇔ zero thermodynamic cost.
-This convergence is not a coincidence. The five frameworks are logically independent—each was developed for a distinct purpose—yet all select the single-source condition as their ground state. All equivalences are machine-checked in Lean 4 via live cross-paper imports (Paper 3 → Paper 4 → Mathlib).
+Main Result (Theorem ). For any architecture A with Cap(A) > 0:
+DOF(A) = 1 ⇔ max leverage ⇔ SSOT ⇔ srank = 1 ⇔ tractable sufficiency ⇔ minimum thermodynamic cost.
 
-Building on axis orthogonality (Paper 1) and Single Source of Truth (Paper 2), the engineering consequences follow: define leverage
-$$L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.$$
-Maximizing L subject to feasibility minimizes expected error probability (DOF–Reliability Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical edit-energy under Landauer calibration with explicit per-edit constant j_(ℳ) > 0. These are corollaries of the convergence theorem, not independent contributions.
+Engineering corollaries: DOF = n is isomorphic to a series reliability system with n failure points; expected modification cost is proportional to DOF; minimum edit-energy under Landauer calibration equals j_(ℳ) ⋅ DOF(A) for explicit j_(ℳ) > 0. These follow from the equivalence and are not independent contributions.
 
-Open Conjectures. The thermodynamic selection theorem currently assumes P ≠ coNP. We conjecture that thermodynamic cost scales directly with structural rank unconditionally—removing the complexity-theoretic hypothesis would reduce the five-way equivalence to a purely physical statement. A second open problem connects DOF = 1 architectures to England’s replication inequality: single-source architectures that generate derived instances may satisfy a formal entropy-production bound that multi-DOF architectures cannot match.
+The thermodynamic direction was initially proved conditional on P ≠ coNP. DecisionQuotient removes this assumption: E_(decision) ≥ srank ⋅ k_(B)Tln 2 is proved directly from Landauer calibration (BA7), and P ≠ NP follows from physical law (LP38: Landauer, finite energy, finite signal speed, nontrivial state space), so the tractability equivalence holds unconditionally under these axioms. The England Replication Inequality is proved (england_replication_inequality): the gap in minimal entropy production between a k-copy architecture and a single-source architecture is ≥ k_(B)ln k. No open conjectures remain.
 
-All core theorems are machine-checked in Lean 4. An assumption ledger and proof listing accompany the paper.
+All core theorems are machine-checked in Lean 4 with no sorry placeholders, via live imports from AbstractClassSystem, Ssot, and DecisionQuotient. An assumption ledger records all conditional dependencies.
 
-Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer principle, structural rank, formal methods
+Keywords: software architecture, degrees of freedom, leverage, Single Source of Truth, structural rank, formal verification
 
 Abstract (MathJax, for arXiv):
-Five independent scientific frameworks---engineering optimization, epistemic coherence, information geometry, computational complexity, and statistical physics---each characterize the same architectural property: having exactly one degree of freedom.
+We define leverage $L(A) = |\mathrm{Capabilities}(A)| / \mathrm{DOF}(A)$ for software architectures and prove that maximizing leverage, satisfying the Single Source of Truth condition, minimizing structural rank, admitting tractable sufficiency checking, and incurring minimum thermodynamic cost per decision cycle are all equivalent to $\mathrm{DOF}(A) = 1$.
 
-Central Result (Five-Way Equivalence, Theorem ). For any architecture $A$ with $\mathrm{Cap}(A) > 0$: $$\mathrm{DOF}(A) = 1
+Main Result (Theorem ). For any architecture $A$ with $\mathrm{Cap}(A) > 0$: $$\mathrm{DOF}(A) = 1
 \;\iff\; \text{max leverage}
 \;\iff\; \text{SSOT}
 \;\iff\; \mathrm{srank} = 1
 \;\iff\; \text{tractable sufficiency}
-\;\iff\; \text{zero thermodynamic cost}.$$ This convergence is not a coincidence. The five frameworks are logically independent---each was developed for a distinct purpose---yet all select the single-source condition as their ground state. All equivalences are machine-checked in Lean 4 via live cross-paper imports (Paper 3 $\to$ Paper 4 $\to$ Mathlib).
+\;\iff\; \text{minimum thermodynamic cost}.$$
 
-Building on axis orthogonality (Paper 1) and Single Source of Truth (Paper 2), the engineering consequences follow: define leverage $$L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.$$ Maximizing $L$ subject to feasibility minimizes expected error probability (DOF--Reliability Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical edit-energy under Landauer calibration with explicit per-edit constant $j_{\mathcal{M}} > 0$. These are corollaries of the convergence theorem, not independent contributions.
+Engineering corollaries: $\mathrm{DOF} = n$ is isomorphic to a series reliability system with $n$ failure points; expected modification cost is proportional to $\mathrm{DOF}$; minimum edit-energy under Landauer calibration equals $j_{\mathcal{M}} \cdot \mathrm{DOF}(A)$ for explicit $j_{\mathcal{M}} > 0$. These follow from the equivalence and are not independent contributions.
 
-Open Conjectures. The thermodynamic selection theorem currently assumes P $\neq$ coNP. We conjecture that thermodynamic cost scales directly with structural rank unconditionally---removing the complexity-theoretic hypothesis would reduce the five-way equivalence to a purely physical statement. A second open problem connects DOF $=1$ architectures to England's replication inequality: single-source architectures that generate derived instances may satisfy a formal entropy-production bound that multi-DOF architectures cannot match.
+The thermodynamic direction was initially proved conditional on P $\neq$ coNP. `DecisionQuotient` removes this assumption: $E_{\mathrm{decision}} \geq \mathrm{srank} \cdot k_B T \ln 2$ is proved directly from Landauer calibration (BA7), and P $\neq$ NP follows from physical law (LP38: Landauer, finite energy, finite signal speed, nontrivial state space), so the tractability equivalence holds unconditionally under these axioms. The England Replication Inequality is proved (england_replication_inequality): the gap in minimal entropy production between a $k$-copy architecture and a single-source architecture is $\geq k_B \ln k$. No open conjectures remain.
 
-All core theorems are machine-checked in Lean 4. An assumption ledger and proof listing accompany the paper.
+All core theorems are machine-checked in Lean 4 with no `sorry` placeholders, via live imports from `AbstractClassSystem`, `Ssot`, and `DecisionQuotient`. An assumption ledger records all conditional dependencies.
 
-Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer principle, structural rank, formal methods
+Keywords: software architecture, degrees of freedom, leverage, Single Source of Truth, structural rank, formal verification
 
 arXiv Comments:
-Draft submission. Lean 4 artifact: 3691 lines, 201 theorems/lemmas across 14 files (0 sorry placeholders).
+Draft submission. Lean 4 artifact: 4120 lines, 210 theorems/lemmas across 17 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper3
@@ -50,59 +47,53 @@ title: 'Leverage-Driven Software Architecture: Five Independent Frameworks Selec
 zenodo:
   title: 'Leverage-Driven Software Architecture: Five Independent Frameworks Select
     the Same Architectural Ground State'
-  abstract: 'Five independent scientific frameworks—engineering optimization, epistemic
-    coherence, information geometry, computational complexity, and statistical physics—each
-    characterize the same architectural property: having exactly one degree of freedom.
+  abstract: 'We define leverage L(A) = |Capabilities(A)|/DOF(A) for software architectures
+    and prove that maximizing leverage, satisfying the Single Source of Truth condition,
+    minimizing structural rank, admitting tractable sufficiency checking, and incurring
+    minimum thermodynamic cost per decision cycle are all equivalent to DOF(A) = 1.
 
 
-    Central Result (Five-Way Equivalence, Theorem ). For any architecture A with Cap(A)
-    > 0:
+    Main Result (Theorem ). For any architecture A with Cap(A) > 0:
 
-    DOF(A) = 1 ⇔ max leverage ⇔ SSOT ⇔ srank = 1 ⇔ tractable sufficiency ⇔ zero thermodynamic
-    cost.
-
-    This convergence is not a coincidence. The five frameworks are logically independent—each
-    was developed for a distinct purpose—yet all select the single-source condition
-    as their ground state. All equivalences are machine-checked in Lean 4 via live
-    cross-paper imports (Paper 3 → Paper 4 → Mathlib).
+    DOF(A) = 1 ⇔ max leverage ⇔ SSOT ⇔ srank = 1 ⇔ tractable sufficiency ⇔ minimum
+    thermodynamic cost.
 
 
-    Building on axis orthogonality (Paper 1) and Single Source of Truth (Paper 2),
-    the engineering consequences follow: define leverage
-
-    $$L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.$$
-
-    Maximizing L subject to feasibility minimizes expected error probability (DOF–Reliability
-    Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical
-    edit-energy under Landauer calibration with explicit per-edit constant j_(ℳ) >
-    0. These are corollaries of the convergence theorem, not independent contributions.
+    Engineering corollaries: DOF = n is isomorphic to a series reliability system
+    with n failure points; expected modification cost is proportional to DOF; minimum
+    edit-energy under Landauer calibration equals j_(ℳ) ⋅ DOF(A) for explicit j_(ℳ)
+    > 0. These follow from the equivalence and are not independent contributions.
 
 
-    Open Conjectures. The thermodynamic selection theorem currently assumes P ≠ coNP.
-    We conjecture that thermodynamic cost scales directly with structural rank unconditionally—removing
-    the complexity-theoretic hypothesis would reduce the five-way equivalence to a
-    purely physical statement. A second open problem connects DOF = 1 architectures
-    to England’s replication inequality: single-source architectures that generate
-    derived instances may satisfy a formal entropy-production bound that multi-DOF
-    architectures cannot match.
+    The thermodynamic direction was initially proved conditional on P ≠ coNP. DecisionQuotient
+    removes this assumption: E_(decision) ≥ srank ⋅ k_(B)Tln 2 is proved directly
+    from Landauer calibration (BA7), and P ≠ NP follows from physical law (LP38: Landauer,
+    finite energy, finite signal speed, nontrivial state space), so the tractability
+    equivalence holds unconditionally under these axioms. The England Replication
+    Inequality is proved (england_replication_inequality): the gap in minimal entropy
+    production between a k-copy architecture and a single-source architecture is ≥
+    k_(B)ln k. No open conjectures remain.
 
 
-    All core theorems are machine-checked in Lean 4. An assumption ledger and proof
-    listing accompany the paper.
+    All core theorems are machine-checked in Lean 4 with no sorry placeholders, via
+    live imports from AbstractClassSystem, Ssot, and DecisionQuotient. An assumption
+    ledger records all conditional dependencies.
 
 
-    Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer
-    principle, structural rank, formal methods'
+    Keywords: software architecture, degrees of freedom, leverage, Single Source of
+    Truth, structural rank, formal verification'
 arxiv:
   title: 'Leverage-Driven Software Architecture: Five Independent Frameworks Select
     the Same Architectural Ground State'
-  abstract: 'Five independent scientific frameworks---engineering optimization, epistemic
-    coherence, information geometry, computational complexity, and statistical physics---each
-    characterize the same architectural property: having exactly one degree of freedom.
+  abstract: 'We define leverage $L(A) = |\mathrm{Capabilities}(A)| / \mathrm{DOF}(A)$
+    for software architectures and prove that maximizing leverage, satisfying the
+    Single Source of Truth condition, minimizing structural rank, admitting tractable
+    sufficiency checking, and incurring minimum thermodynamic cost per decision cycle
+    are all equivalent to $\mathrm{DOF}(A) = 1$.
 
 
-    Central Result (Five-Way Equivalence, Theorem ). For any architecture $A$ with
-    $\mathrm{Cap}(A) > 0$: $$\mathrm{DOF}(A) = 1
+    Main Result (Theorem ). For any architecture $A$ with $\mathrm{Cap}(A) > 0$: $$\mathrm{DOF}(A)
+    = 1
 
     \;\iff\; \text{max leverage}
 
@@ -112,89 +103,80 @@ arxiv:
 
     \;\iff\; \text{tractable sufficiency}
 
-    \;\iff\; \text{zero thermodynamic cost}.$$ This convergence is not a coincidence.
-    The five frameworks are logically independent---each was developed for a distinct
-    purpose---yet all select the single-source condition as their ground state. All
-    equivalences are machine-checked in Lean 4 via live cross-paper imports (Paper
-    3 $\to$ Paper 4 $\to$ Mathlib).
+    \;\iff\; \text{minimum thermodynamic cost}.$$
 
 
-    Building on axis orthogonality (Paper 1) and Single Source of Truth (Paper 2),
-    the engineering consequences follow: define leverage $$L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.$$
-    Maximizing $L$ subject to feasibility minimizes expected error probability (DOF--Reliability
-    Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical
-    edit-energy under Landauer calibration with explicit per-edit constant $j_{\mathcal{M}}
-    > 0$. These are corollaries of the convergence theorem, not independent contributions.
+    Engineering corollaries: $\mathrm{DOF} = n$ is isomorphic to a series reliability
+    system with $n$ failure points; expected modification cost is proportional to
+    $\mathrm{DOF}$; minimum edit-energy under Landauer calibration equals $j_{\mathcal{M}}
+    \cdot \mathrm{DOF}(A)$ for explicit $j_{\mathcal{M}} > 0$. These follow from the
+    equivalence and are not independent contributions.
 
 
-    Open Conjectures. The thermodynamic selection theorem currently assumes P $\neq$
-    coNP. We conjecture that thermodynamic cost scales directly with structural rank
-    unconditionally---removing the complexity-theoretic hypothesis would reduce the
-    five-way equivalence to a purely physical statement. A second open problem connects
-    DOF $=1$ architectures to England''s replication inequality: single-source architectures
-    that generate derived instances may satisfy a formal entropy-production bound
-    that multi-DOF architectures cannot match.
+    The thermodynamic direction was initially proved conditional on P $\neq$ coNP.
+    `DecisionQuotient` removes this assumption: $E_{\mathrm{decision}} \geq \mathrm{srank}
+    \cdot k_B T \ln 2$ is proved directly from Landauer calibration (BA7), and P $\neq$
+    NP follows from physical law (LP38: Landauer, finite energy, finite signal speed,
+    nontrivial state space), so the tractability equivalence holds unconditionally
+    under these axioms. The England Replication Inequality is proved (england_replication_inequality):
+    the gap in minimal entropy production between a $k$-copy architecture and a single-source
+    architecture is $\geq k_B \ln k$. No open conjectures remain.
 
 
-    All core theorems are machine-checked in Lean 4. An assumption ledger and proof
-    listing accompany the paper.
+    All core theorems are machine-checked in Lean 4 with no `sorry` placeholders,
+    via live imports from `AbstractClassSystem`, `Ssot`, and `DecisionQuotient`. An
+    assumption ledger records all conditional dependencies.
 
 
-    Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer
-    principle, structural rank, formal methods'
-  comments: 'Draft submission. Lean 4 artifact: 3691 lines, 201 theorems/lemmas across
-    14 files (0 sorry placeholders).'
+    Keywords: software architecture, degrees of freedom, leverage, Single Source of
+    Truth, structural rank, formal verification'
+  comments: 'Draft submission. Lean 4 artifact: 4120 lines, 210 theorems/lemmas across
+    17 files (0 sorry placeholders).'
 abstract_variants:
-  unicode: 'Five independent scientific frameworks—engineering optimization, epistemic
-    coherence, information geometry, computational complexity, and statistical physics—each
-    characterize the same architectural property: having exactly one degree of freedom.
+  unicode: 'We define leverage L(A) = |Capabilities(A)|/DOF(A) for software architectures
+    and prove that maximizing leverage, satisfying the Single Source of Truth condition,
+    minimizing structural rank, admitting tractable sufficiency checking, and incurring
+    minimum thermodynamic cost per decision cycle are all equivalent to DOF(A) = 1.
 
 
-    Central Result (Five-Way Equivalence, Theorem ). For any architecture A with Cap(A)
-    > 0:
+    Main Result (Theorem ). For any architecture A with Cap(A) > 0:
 
-    DOF(A) = 1 ⇔ max leverage ⇔ SSOT ⇔ srank = 1 ⇔ tractable sufficiency ⇔ zero thermodynamic
-    cost.
-
-    This convergence is not a coincidence. The five frameworks are logically independent—each
-    was developed for a distinct purpose—yet all select the single-source condition
-    as their ground state. All equivalences are machine-checked in Lean 4 via live
-    cross-paper imports (Paper 3 → Paper 4 → Mathlib).
+    DOF(A) = 1 ⇔ max leverage ⇔ SSOT ⇔ srank = 1 ⇔ tractable sufficiency ⇔ minimum
+    thermodynamic cost.
 
 
-    Building on axis orthogonality (Paper 1) and Single Source of Truth (Paper 2),
-    the engineering consequences follow: define leverage
-
-    $$L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.$$
-
-    Maximizing L subject to feasibility minimizes expected error probability (DOF–Reliability
-    Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical
-    edit-energy under Landauer calibration with explicit per-edit constant j_(ℳ) >
-    0. These are corollaries of the convergence theorem, not independent contributions.
+    Engineering corollaries: DOF = n is isomorphic to a series reliability system
+    with n failure points; expected modification cost is proportional to DOF; minimum
+    edit-energy under Landauer calibration equals j_(ℳ) ⋅ DOF(A) for explicit j_(ℳ)
+    > 0. These follow from the equivalence and are not independent contributions.
 
 
-    Open Conjectures. The thermodynamic selection theorem currently assumes P ≠ coNP.
-    We conjecture that thermodynamic cost scales directly with structural rank unconditionally—removing
-    the complexity-theoretic hypothesis would reduce the five-way equivalence to a
-    purely physical statement. A second open problem connects DOF = 1 architectures
-    to England’s replication inequality: single-source architectures that generate
-    derived instances may satisfy a formal entropy-production bound that multi-DOF
-    architectures cannot match.
+    The thermodynamic direction was initially proved conditional on P ≠ coNP. DecisionQuotient
+    removes this assumption: E_(decision) ≥ srank ⋅ k_(B)Tln 2 is proved directly
+    from Landauer calibration (BA7), and P ≠ NP follows from physical law (LP38: Landauer,
+    finite energy, finite signal speed, nontrivial state space), so the tractability
+    equivalence holds unconditionally under these axioms. The England Replication
+    Inequality is proved (england_replication_inequality): the gap in minimal entropy
+    production between a k-copy architecture and a single-source architecture is ≥
+    k_(B)ln k. No open conjectures remain.
 
 
-    All core theorems are machine-checked in Lean 4. An assumption ledger and proof
-    listing accompany the paper.
+    All core theorems are machine-checked in Lean 4 with no sorry placeholders, via
+    live imports from AbstractClassSystem, Ssot, and DecisionQuotient. An assumption
+    ledger records all conditional dependencies.
 
 
-    Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer
-    principle, structural rank, formal methods'
-  mathjax: 'Five independent scientific frameworks---engineering optimization, epistemic
-    coherence, information geometry, computational complexity, and statistical physics---each
-    characterize the same architectural property: having exactly one degree of freedom.
+    Keywords: software architecture, degrees of freedom, leverage, Single Source of
+    Truth, structural rank, formal verification'
+  mathjax: 'We define leverage $L(A) = |\mathrm{Capabilities}(A)| / \mathrm{DOF}(A)$
+    for software architectures and prove that maximizing leverage, satisfying the
+    Single Source of Truth condition, minimizing structural rank, admitting tractable
+    sufficiency checking, and incurring minimum thermodynamic cost per decision cycle
+    are all equivalent to $\mathrm{DOF}(A) = 1$.
 
 
-    Central Result (Five-Way Equivalence, Theorem ). For any architecture $A$ with
-    $\mathrm{Cap}(A) > 0$: $$\mathrm{DOF}(A) = 1
+    Main Result (Theorem ). For any architecture $A$ with $\mathrm{Cap}(A) > 0$: $$\mathrm{DOF}(A)
+    = 1
 
     \;\iff\; \text{max leverage}
 
@@ -204,33 +186,30 @@ abstract_variants:
 
     \;\iff\; \text{tractable sufficiency}
 
-    \;\iff\; \text{zero thermodynamic cost}.$$ This convergence is not a coincidence.
-    The five frameworks are logically independent---each was developed for a distinct
-    purpose---yet all select the single-source condition as their ground state. All
-    equivalences are machine-checked in Lean 4 via live cross-paper imports (Paper
-    3 $\to$ Paper 4 $\to$ Mathlib).
+    \;\iff\; \text{minimum thermodynamic cost}.$$
 
 
-    Building on axis orthogonality (Paper 1) and Single Source of Truth (Paper 2),
-    the engineering consequences follow: define leverage $$L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.$$
-    Maximizing $L$ subject to feasibility minimizes expected error probability (DOF--Reliability
-    Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical
-    edit-energy under Landauer calibration with explicit per-edit constant $j_{\mathcal{M}}
-    > 0$. These are corollaries of the convergence theorem, not independent contributions.
+    Engineering corollaries: $\mathrm{DOF} = n$ is isomorphic to a series reliability
+    system with $n$ failure points; expected modification cost is proportional to
+    $\mathrm{DOF}$; minimum edit-energy under Landauer calibration equals $j_{\mathcal{M}}
+    \cdot \mathrm{DOF}(A)$ for explicit $j_{\mathcal{M}} > 0$. These follow from the
+    equivalence and are not independent contributions.
 
 
-    Open Conjectures. The thermodynamic selection theorem currently assumes P $\neq$
-    coNP. We conjecture that thermodynamic cost scales directly with structural rank
-    unconditionally---removing the complexity-theoretic hypothesis would reduce the
-    five-way equivalence to a purely physical statement. A second open problem connects
-    DOF $=1$ architectures to England''s replication inequality: single-source architectures
-    that generate derived instances may satisfy a formal entropy-production bound
-    that multi-DOF architectures cannot match.
+    The thermodynamic direction was initially proved conditional on P $\neq$ coNP.
+    `DecisionQuotient` removes this assumption: $E_{\mathrm{decision}} \geq \mathrm{srank}
+    \cdot k_B T \ln 2$ is proved directly from Landauer calibration (BA7), and P $\neq$
+    NP follows from physical law (LP38: Landauer, finite energy, finite signal speed,
+    nontrivial state space), so the tractability equivalence holds unconditionally
+    under these axioms. The England Replication Inequality is proved (england_replication_inequality):
+    the gap in minimal entropy production between a $k$-copy architecture and a single-source
+    architecture is $\geq k_B \ln k$. No open conjectures remain.
 
 
-    All core theorems are machine-checked in Lean 4. An assumption ledger and proof
-    listing accompany the paper.
+    All core theorems are machine-checked in Lean 4 with no `sorry` placeholders,
+    via live imports from `AbstractClassSystem`, `Ssot`, and `DecisionQuotient`. An
+    assumption ledger records all conditional dependencies.
 
 
-    Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer
-    principle, structural rank, formal methods'
+    Keywords: software architecture, degrees of freedom, leverage, Single Source of
+    Truth, structural rank, formal verification'

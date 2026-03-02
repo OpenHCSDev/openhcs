@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Leverage Framework.
 
-- **Lines:** 3691
-- **Theorems:** 201
+- **Lines:** 4120
+- **Theorems:** 210
 - **`sorry` placeholders:** 0
 
 
@@ -25,6 +25,9 @@ lake build
 
 | File | Module |
 |------|--------|
+| `DeclInfoExport.lean` | DeclInfoExport |
+| `DependencyGraph.lean` | DependencyGraph |
+| `GraphExport.lean` | GraphExport |
 | `LambdaDR.lean` | LambdaDR |
 | `BridgeToDQ.lean` | BridgeToDQ |
 | `CrossPaperDependencies.lean` | CrossPaperDependencies |

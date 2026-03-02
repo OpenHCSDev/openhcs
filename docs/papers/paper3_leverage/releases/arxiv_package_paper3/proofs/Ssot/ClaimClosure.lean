@@ -15,7 +15,7 @@ import Ssot.DependencyBridge
 
 namespace ClaimClosure
 
-open Inconsistency
+open Inconsistency Ssot
 
 /-- Zero-incoherence at rate `n`: all systems at that rate avoid incoherence. -/
 def zeroIncoherenceAtRate (n : Nat) : Prop :=

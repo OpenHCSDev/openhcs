@@ -34,6 +34,14 @@ Set partition: $R(P) = (R(P) \cap A(T)) \cup (R(P) \setminus A(T))$. The sets ar
 
 This is analogous to conservation laws in physics: energy is conserved, only transformed. Complexity is conserved, only distributed.
 
+\paragraph{Conservation as Structural Necessity.}
+The Simplicity Tax Conservation theorem mechanizes a conservation law with the same logical structure as physical conservation laws. In physics, conservation laws arise from symmetries via Noether's theorem. Energy is conserved because the laws of physics are time invariant. Momentum is conserved because the laws are space invariant. The Simplicity Tax Conservation arises from the set partition structure of required axes. The required axes $R(P)$ are partitioned into covered axes $R(P) \cap A(T)$ and gap axes $R(P) \setminus A(T)$. The partition is disjoint and exhaustive. Therefore the cardinality equation $|\text{Gap}(T,P)| + |R(P) \cap A(T)| = |R(P)|$ holds necessarily. This is not an empirical regularity subject to revision. It is a logical consequence of the set theoretic structure. The Lean mechanization verifies this explicitly.
+
+\paragraph{Regime Specification.}
+This conservation law applies to any finite coordinate system with tool problem matching. The regime is: problem $P$ with finite required axes $R(P)$ and tool $T$ with finite native axes $A(T)$. No additional assumptions are required. The theorem holds for all such regimes by logical necessity.
+
+\textbf{Lean Mechanization.} The theorem \texttt{simplicityTax\_conservation} is verified in \texttt{DecisionQuotient/HardnessDistribution.lean}. The proof uses finset partition lemmas from Mathlib. Zero \texttt{sorry} placeholders remain.
+
 \begin{theorem}[Complete Tools Pay No Tax]\label{thm:complete-no-tax}
 If $T$ is complete for $P$, then $\text{SimplicityTax}(T, P) = 0$.
 \end{theorem}

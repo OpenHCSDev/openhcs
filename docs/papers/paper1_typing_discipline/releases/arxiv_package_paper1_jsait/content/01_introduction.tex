@@ -73,8 +73,8 @@ Let $P: \mathcal{V} \to Y$ be any function. If $P$ is attribute-computable, then
 v \sim w \implies P(v) = P(w)
 \]
 Equivalently: no attribute-only observer can compute any property that varies within an equivalence class.
-\textit{(Lean: \LH{L_35fe55aa}.)}
 \end{theorem}
+\leanmeta{ \LH{ACS8}, \LH{IMP1}, \LH{COH1}}
 
 \begin{proof}
 Suppose $P$ is attribute-computable via $f$, i.e., $P(v) = f(\pi(v))$ for all $v$. Let $v \sim w$, so $\pi(v) = \pi(w)$. Then:
@@ -93,8 +93,8 @@ Theorem~\ref{thm:information-barrier} is the foundational invariance statement. 
 
 \begin{corollary}[Class identity is not attribute-computable]\label{cor:provenance-barrier}
 Let $C: \mathcal{V} \to \{1,\ldots,k\}$ be the class assignment function. If there exist values $v, w$ with $\pi(v) = \pi(w)$ but $C(v) \neq C(w)$, then class identity is not attribute-computable.
-\textit{(Lean: \LH{L_3ec45995}.)}
 \end{corollary}
+\leanmeta{ \LH{ACS9}}
 
 \begin{proof}
 Direct application of Theorem~\ref{thm:information-barrier} to $P = C$.
@@ -127,8 +127,8 @@ Under nominal-tag access, class identity checking has constant witness cost:
 W(\text{class-identity}) = O(1)
 \]
 Specifically, the witness procedure is: return $\tau(v_1) = \tau(v_2)$.
-\textit{(Lean: \LH{L_7fb66f42}.)}
 \end{theorem}
+\leanmeta{ \LH{ACS7}, \LH{FORC2}, \LH{DOM1}}
 
 \begin{proof}
 The procedure makes exactly 2 primitive queries (one $\tau$ access per value) and one comparison. This is $O(1)$ regardless of the number of available attributes $|\mathcal{I}|$.
@@ -140,8 +140,8 @@ For attribute-only observers, class identity checking requires:
 W(\text{class-identity}) = \Omega(d)
 \]
 in the worst case, where $d$ is the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}).
-\textit{(Lean: \LH{L_67f09d33}.)}
 \end{theorem}
+\leanmeta{ \LH{ACS1}}
 
 \begin{proof}
 Assume a zero-error attribute-only procedure halts after fewer than $d$ queries on every execution path. Fix any execution path and let $Q \subseteq \mathcal{I}$ be the set of queried attributes on that path, so $|Q|<d$. Since $d$ is the cardinality of every minimal distinguishing set, no set of size $<d$ is distinguishing; hence there exist values $v,w$ from different classes with identical answers on all attributes in $Q$.

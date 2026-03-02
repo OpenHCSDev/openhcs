@@ -6,6 +6,8 @@
 import Ssot.SSOT
 import Ssot.Completeness
 
+namespace Ssot
+
 -- Theorem 6.1: SSOT Upper Bound
 -- If SSOT holds (DOF = 1), modification complexity = 1 = O(1)
 theorem ssot_upper_bound (dof : Nat) (h : satisfies_SSOT dof) :
@@ -78,3 +80,4 @@ theorem non_ssot_linear_growth (dof1 dof2 : Nat) (h : dof2 > dof1) :
 -- Key insight: This is not about "slightly better"
 -- It's about constant vs linear complexity - fundamentally different scaling
 
+end Ssot

@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Decision Quotient.
 
-- **Lines:** 28863
-- **Theorems:** 1252
+- **Lines:** 29863
+- **Theorems:** 1273
 - **`sorry` placeholders:** 0
 
 
@@ -89,6 +89,7 @@ lake build
 | `PhysicalHardness.lean` | PhysicalHardness |
 | `PhysicalIncompleteness.lean` | PhysicalIncompleteness |
 | `TUR.lean` | TUR |
+| `TemporalCountingGap.lean` | TemporalCountingGap |
 | `TransportCost.lean` | TransportCost |
 | `Uncertainty.lean` | Uncertainty |
 | `WassersteinIntegrity.lean` | WassersteinIntegrity |
@@ -137,6 +138,9 @@ lake build
 | `UniverseObjective.lean` | UniverseObjective |
 | `WitnessCheckingDuality.lean` | WitnessCheckingDuality |
 | `DecisionQuotient.lean` | DecisionQuotient |
+| `DeclInfoExport.lean` | DeclInfoExport |
+| `DependencyGraph.lean` | DependencyGraph |
+| `GraphExport.lean` | GraphExport |
 | `lakefile.lean` | lakefile |
 
 ## Verification

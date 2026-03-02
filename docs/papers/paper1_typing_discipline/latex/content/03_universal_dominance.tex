@@ -275,7 +275,9 @@ function} is:
 \(\text{prov}(T, a)\) returns the type in \(T\)'s MRO that provides
 attribute \(a\).
 
-\textbf{Theorem 3.13 (Provenance Impossibility, Universal).}\label{thm:provenance-impossibility} Let
+\textbf{Theorem 3.13 (Provenance Impossibility, Universal).}\label{thm:provenance-impossibility}
+\leanmeta{\LH{IMP1}}
+Let
 \(\mathcal{D}\) be ANY $\{S\}$-only discipline (typing discipline over
 \(\{S\}\), even with the leaf of \(B\)). Then \(\mathcal{D}\) cannot compute \(\text{prov}\).
 
@@ -349,7 +351,9 @@ present in its input. \qed
 provenance.'' It is ``NO model over \((S)\) can have provenance.''
 The impossibility is mathematical, not implementational.
 
-\textbf{Theorem 3.13a (Semantic Non-Embeddability).}\label{thm:non-embeddability} Nominal typing cannot be embedded into structural typing. Formally: there exists no function \(f : \mathcal{D}_{\{B,S\}} \to \mathcal{D}_{\{S\}}\) that preserves type query answers.
+\textbf{Theorem 3.13a (Semantic Non-Embeddability).}\label{thm:non-embeddability}
+\leanmeta{\LH{EMB1}}
+Nominal typing cannot be embedded into structural typing. Formally: there exists no function \(f : \mathcal{D}_{\{B,S\}} \to \mathcal{D}_{\{S\}}\) that preserves type query answers.
 
 \emph{Proof.} By Theorem 3.13, provenance is answerable in \(\mathcal{D}_{\{B,S\}}\) but not in \(\mathcal{D}_{\{S\}}\). Any embedding must preserve query answers. Since no function in \(\mathcal{D}_{\{S\}}\) computes provenance, no such embedding exists. \qed
 
@@ -732,7 +736,9 @@ of the model's coverage.
 
 \paragraph{3.11.1 Model Completeness}\label{model-completeness}
 
-\textbf{Theorem 3.32 (Model Completeness).}\label{thm:model-completeness} The \((B, S)\) model
+\textbf{Theorem 3.32 (Model Completeness).}\label{thm:model-completeness}
+\leanmeta{\LH{MDL1}}
+The \((B, S)\) model
 captures all information constitutive of a type. Any computable function
 over types is expressible as a function of \((B, S)\).
 
@@ -833,7 +839,9 @@ identity.
 
 \paragraph{3.11.3 Axiom Justification}\label{axiom-justification}
 
-\textbf{Lemma 3.37 (Axis-Exclusion is Definitional).}\label{lem:shape-axiom-definitional} The axiom
+\textbf{Lemma 3.37 (Axis-Exclusion is Definitional).}\label{lem:shape-axiom-definitional}
+\leanmeta{\LH{AXI1}}
+The axiom
 ``$\{S\}$-only typing treats same-namespace types identically'' is not an
 assumption; it is the \textbf{definition} of $\{S\}$-only typing.
 
@@ -859,7 +867,9 @@ $\{S\}$-only.
 \paragraph{3.11.4 Extension
 Impossibility}\label{extension-impossibility}
 
-\textbf{Theorem 3.39 (Extension Impossibility).}\label{thm:extension-impossibility} Let \(\mathcal{D}\) be
+\textbf{Theorem 3.39 (Extension Impossibility).}\label{thm:extension-impossibility}
+\leanmeta{\LH{EXT1}}
+Let \(\mathcal{D}\) be
 any $\{S\}$-only typing system. Let \(\mathcal{D}'\) be \(\mathcal{D}\) extended
 with any computable function \(f : \text{Namespace} \to \alpha\). Then
 \(\mathcal{D}'\) still cannot compute provenance.
@@ -993,7 +1003,9 @@ overhead. This is mathematically incoherent.
 \paragraph{3.11.6b Methodological
 Independence}\label{b-methodological-independence}
 
-\textbf{Theorem 3.43g (Methodological Independence).}\label{thm:methodological-independence} The dominance
+\textbf{Theorem 3.43g (Methodological Independence).}\label{thm:methodological-independence}
+\leanmeta{\LH{IMP1}, \LH{DOM1}, \LH{ALT1}}
+The dominance
 theorems are derived from the structure of \((B, S)\), not from any
 implementation. OpenHCS is an existential witness, not a premise.
 
@@ -1331,7 +1343,9 @@ attributeCheck\} 3. Shape $\subset$ Nominal (strict subset) 4. Declaration cost:
 both require one class definition per interface 5. Therefore nominal
 Pareto dominates shape. \qed
 
-\textbf{Theorem 3.55 (Dominance Does Not Imply Migration).}\label{thm:dominance-not-migration} Pareto
+\textbf{Theorem 3.55 (Dominance Does Not Imply Migration).}\label{thm:dominance-not-migration}
+\leanmeta{\LH{CMP1}}
+Pareto
 dominance of discipline \(A\) over \(B\) does NOT imply that migrating
 from \(B\) to \(A\) is beneficial for all codebases.
 

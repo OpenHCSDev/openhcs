@@ -30,8 +30,11 @@ BUILD PIPELINE  (release order)
 
   build_lean()
     ├─ _sync_local_lean_dependency_dirs   symlink dep_<id>/ for lake path deps
-    ├─ lake build                         compile all targets
-    └─ _collect_graph_json                parse .lean sources → graph_infra/graphs/<id>.json
+    ├─ _sync_graph_infra_lean             copy DependencyGraph.lean from graph_infra/
+    ├─ _write_graph_export_lean           generate GraphExport.lean (root imports + #export_graph_json)
+    ├─ lake build                         compile all targets → .olean cache
+    └─ _collect_graph_json                lake env lean GraphExport.lean → graph_infra/graphs/<id>.json
+                                          (proof-term edges via foldConsts, auditable)
 
   build_latex()
     ├─ _sync_shared_preambles             keep paper-preamble.sty in sync from shared/
@@ -41,6 +44,7 @@ BUILD PIPELINE  (release order)
     ├─ _normalize_and_fill_claimstamps    standardise \claimstamp{} metadata
     ├─ _write_claim_mapping_auto          claim_mapping_auto.tex  (claim→Lean matrix)
     ├─ _write_proof_hardness_index_auto   proof_hardness_index_auto.tex
+    ├─ _mark_claim_nodes_in_graph         mark cited theorems in graph JSON (paper=-1)
     ├─ _rewrite_content_lean_handles_to_ids  \nolinkurl{handle} → \LH{code}
     └─ pdflatex → bibtex → pdflatex → pdflatex
 
@@ -86,13 +90,14 @@ import sys
 import subprocess
 import shutil
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Set
+from typing import List, Dict, Tuple, Optional, Set, Any
 from dataclasses import dataclass
 import yaml
 import argparse
 from datetime import datetime
 import re
 import hashlib
+import json
 
 
 @dataclass(frozen=True)
@@ -111,6 +116,37 @@ class ArxivConfig:
             include_lean_source=d.get("include_lean_source", True),
             include_build_config=d.get("include_build_config", True),
             exclude_patterns=tuple(d.get("exclude_patterns", [])),
+        )
+
+
+@dataclass(frozen=True)
+class BuildConfig:
+    """Immutable build-system data loaded from papers.yaml."""
+
+    generated_content_files: Tuple[str, ...]
+    shared_preamble_files: Tuple[str, ...]
+    latex_source_extensions: Tuple[str, ...]
+    lean_exclude_dirs: Tuple[str, ...]
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "BuildConfig":
+        required = [
+            "generated_content_files",
+            "shared_preamble_files",
+            "latex_source_extensions",
+            "lean_exclude_dirs",
+        ]
+        missing = [key for key in required if key not in d]
+        if missing:
+            raise ValueError(
+                "Missing required build config keys in papers.yaml: "
+                + ", ".join(missing)
+            )
+        return cls(
+            generated_content_files=tuple(d["generated_content_files"]),
+            shared_preamble_files=tuple(d["shared_preamble_files"]),
+            latex_source_extensions=tuple(d["latex_source_extensions"]),
+            lean_exclude_dirs=tuple(d["lean_exclude_dirs"]),
         )
 
 
@@ -202,6 +238,7 @@ class PaperBuilder:
         # Load configuration
         self._raw_metadata = self._load_raw_metadata()
         self.arxiv_config = ArxivConfig.from_dict(self._raw_metadata.get("arxiv", {}))
+        self.build_config = BuildConfig.from_dict(self._raw_metadata.get("build", {}))
         self.papers: Dict[str, PaperMeta] = self._load_papers()
         self._lean_stats_cache: Dict[Path, LeanStats] = {}
         self._lean_file_stats_cache: Dict[Path, Dict[str, LeanFileStats]] = {}
@@ -284,11 +321,51 @@ class PaperBuilder:
         meta = self._get_paper_meta(paper_id)
         return self.papers_dir / meta.dir_name / meta.latex_dir / "content"
 
+    def _get_latex_dir(self, paper_id: str) -> Path:
+        """Get LaTeX directory for a paper."""
+        meta = self._get_paper_meta(paper_id)
+        return self._get_paper_dir(paper_id) / meta.latex_dir
+
     def _get_releases_dir(self, paper_id: str) -> Path:
         """Get releases directory, creating if needed (INVARIANT 3)."""
         releases_dir = self._get_paper_dir(paper_id) / "releases"
         releases_dir.mkdir(parents=True, exist_ok=True)
         return releases_dir
+
+    def _get_markdown_dir(self, paper_id: str) -> Path:
+        """Get Markdown directory for a paper."""
+        return self._get_paper_dir(paper_id) / "markdown"
+
+    def _get_markdown_file(self, paper_id: str) -> Path:
+        """Get canonical Markdown output path for a paper."""
+        return self._get_markdown_dir(paper_id) / f"{paper_id}.md"
+
+    def _generated_content_files(self) -> Set[str]:
+        """Return configured auto-generated content file names."""
+        return set(self.build_config.generated_content_files)
+
+    def _iter_manual_content_tex(self, paper_id: str) -> List[Path]:
+        """Return non-generated content .tex files for a paper."""
+        content_dir = self._get_content_dir(paper_id)
+        if not content_dir.exists():
+            return []
+        generated_files = self._generated_content_files()
+        return sorted(
+            tex_file
+            for tex_file in content_dir.glob("*.tex")
+            if tex_file.name not in generated_files
+        )
+
+    def _refresh_derived_content(self, paper_id: str) -> None:
+        """Regenerate all auto-derived LaTeX content artifacts for a paper."""
+        self._sync_shared_preambles(paper_id)
+        self._write_latex_lean_stats(paper_id)
+        self._write_assumption_ledger_auto(paper_id)
+        self._write_lean_handle_ids_auto(paper_id)
+        self._rewrite_content_lean_handles_to_ids(paper_id)
+        self._normalize_and_fill_claimstamps(paper_id)
+        self._write_claim_mapping_auto(paper_id)
+        self._write_proof_hardness_index_auto(paper_id)
 
     def _write_text_file(
         self,
@@ -534,12 +611,7 @@ This directory was scaffolded by `scripts/build_papers.py scaffold {meta.paper_i
         ]
 
         # Skip generated files; they are rebuilt automatically by the pipeline.
-        generated_content = {
-            "lean_stats.tex",
-            "claim_mapping_auto.tex",
-            "assumption_ledger_auto.tex",
-            "proof_hardness_index_auto.tex",
-        }
+        generated_content = self._generated_content_files()
         source_content_dir = source_latex_dir / "content"
         copied_content = False
         if source_content_dir.exists():
@@ -968,70 +1040,494 @@ end {module_root}
                     src,
                     alias,
                     dirs_exist_ok=True,
-                    ignore=shutil.ignore_patterns(".lake", "build", "*.olean", "*.ilean"),
+                    ignore=shutil.ignore_patterns(
+                        ".lake", "build", "*.olean", "*.ilean"
+                    ),
                 )
 
-    def _extract_graph_from_source(self, paper_id: str) -> dict:
-        """Extract proof dependency graph by parsing .lean source files.
-
-        Nodes: every theorem/lemma/def/abbrev/class/structure/instance declaration.
-        Edges: every import statement between modules.
-
-        No Lean metaprogramming. Runs on plain source text after lake build.
-        """
-        import json
-
-        decl_re = re.compile(
-            r"^\s*(?:private\s+|protected\s+)?(?:noncomputable\s+)?"
-            r"(theorem|lemma|def|abbrev|class|structure|instance)\s+"
-            r"([A-Za-z_][A-Za-z0-9_'.]*)"
+    def _sync_graph_infra_lean(self, paper_id: str) -> None:
+        """Copy DependencyGraph.lean from graph_infra into the paper's proofs dir."""
+        src = (
+            self.repo_root / "docs" / "papers" / "graph_infra" / "DependencyGraph.lean"
         )
-        import_re = re.compile(r"^import\s+([A-Za-z][A-Za-z0-9_.]*)")
+        if not src.exists():
+            return
+        proofs_dir = self._get_paper_proofs_dir(paper_id)
+        if not proofs_dir.exists():
+            return
+        dst = proofs_dir / "DependencyGraph.lean"
+        if not dst.exists() or dst.read_bytes() != src.read_bytes():
+            shutil.copy2(src, dst)
 
-        nodes: List[dict] = []
-        edges: List[dict] = []
-        seen_ids: Set[str] = set()
+    def _write_graph_export_lean(self, paper_id: str) -> None:
+        """Generate graph and declaration-info export drivers from compiled modules."""
+        proofs_dir = self._get_paper_proofs_dir(paper_id)
+        if not proofs_dir.exists():
+            return
 
-        for src_paper_id, proofs_dir in self._iter_lean_roots_for_paper(paper_id):
-            for lean_file in self._iter_paper_lean_files(proofs_dir):
-                module = str(
-                    lean_file.relative_to(proofs_dir).with_suffix("")
-                ).replace("/", ".")
-                content = lean_file.read_text(encoding="utf-8", errors="replace")
-                stripped = self._strip_lean_comments(content)
+        # ── Collect submodule dirs from lakefile globs ──────────────────────────
+        submodule_dirs = self._derive_module_roots_from_lakefile(proofs_dir)
+        if not submodule_dirs:
+            return
 
-                for line in stripped.splitlines():
-                    m = import_re.match(line)
-                    if m:
-                        edges.append({"source": module, "target": m.group(1)})
-                        continue
-                    m = decl_re.match(line)
-                    if m:
-                        kind, name = m.group(1), m.group(2)
-                        node_id = f"{module}.{name}"
-                        if node_id not in seen_ids:
-                            seen_ids.add(node_id)
-                            nodes.append({
-                                "id": node_id,
-                                "kind": kind,
-                                "group": src_paper_id,
-                            })
+        # ── Enumerate submodule .lean files → individual module names ───────────
+        skip_stems = {"DependencyGraph", "GraphExport"}
+        module_names: list[str] = []
+        for subdir_name in submodule_dirs:
+            subdir = proofs_dir / subdir_name
+            if not subdir.is_dir():
+                continue
+            for lean_file in sorted(subdir.rglob("*.lean")):
+                rel = lean_file.relative_to(proofs_dir)
+                parts = list(rel.parts)
+                parts[-1] = parts[-1][:-5]  # strip .lean
+                mod = ".".join(parts)
+                if parts[-1] not in skip_stems and mod not in module_names:
+                    module_names.append(mod)
 
-        return {"nodes": nodes, "edges": edges}
+        if not module_names:
+            return
+
+        submodule_imports = "\n".join(f"import {m}" for m in module_names)
+        graph_content = (
+            f"-- Auto-generated by build_papers.py -- do not edit\n"
+            f"import DependencyGraph\n"
+            f"{submodule_imports}\n"
+            f"\n"
+            f'#export_graph_json "graph.json"\n'
+        )
+        decl_content = (
+            f"-- Auto-generated by build_papers.py -- do not edit\n"
+            f"import DependencyGraph\n"
+            f"{submodule_imports}\n"
+            f"\n"
+            f'#export_decl_info_json "decls.json"\n'
+        )
+        graph_dst = proofs_dir / "GraphExport.lean"
+        if (
+            not graph_dst.exists()
+            or graph_dst.read_text(encoding="utf-8") != graph_content
+        ):
+            graph_dst.write_text(graph_content, encoding="utf-8")
+        decl_dst = proofs_dir / "DeclInfoExport.lean"
+        if (
+            not decl_dst.exists()
+            or decl_dst.read_text(encoding="utf-8") != decl_content
+        ):
+            decl_dst.write_text(decl_content, encoding="utf-8")
 
     def _collect_graph_json(self, paper_id: str) -> None:
-        """Parse .lean sources → graph_infra/graphs/<paper_id>.json."""
-        import json
+        """Run `lake env lean GraphExport.lean` to extract proof-term dependency graph.
+
+        lake env sets LEAN_PATH from the built .olean cache — lean loads compiled
+        bytecode for all imports, no re-elaboration, no collision. #export_graph_json
+        runs with the full type-checked environment and writes graph.json.
+        """
+        proofs_dir = self._get_paper_proofs_dir(paper_id)
+        graph_export = proofs_dir / "GraphExport.lean"
+        decl_export = proofs_dir / "DeclInfoExport.lean"
+        dep_graph = proofs_dir / "DependencyGraph.lean"
+        if not graph_export.exists():
+            print(f"[graph] No GraphExport.lean for {paper_id}, skipping")
+            return
+        if not decl_export.exists():
+            print(f"[graph] No DeclInfoExport.lean for {paper_id}, skipping")
+            return
+        if not dep_graph.exists():
+            print(f"[graph] No DependencyGraph.lean for {paper_id}, skipping")
+            return
+
+        dep_graph_olean = (
+            proofs_dir / ".lake" / "build" / "lib" / "lean" / "DependencyGraph.olean"
+        )
+        dep_graph_ilean = (
+            proofs_dir / ".lake" / "build" / "lib" / "lean" / "DependencyGraph.ilean"
+        )
+        dep_graph_olean.parent.mkdir(parents=True, exist_ok=True)
+
+        dep_result = subprocess.run(
+            [
+                "lake",
+                "env",
+                "lean",
+                "DependencyGraph.lean",
+                "-o",
+                str(dep_graph_olean),
+                "-i",
+                str(dep_graph_ilean),
+            ],
+            cwd=proofs_dir,
+            capture_output=True,
+            text=True,
+        )
+        if dep_result.returncode != 0:
+            print(f"[graph] Warning: DependencyGraph compile failed for {paper_id}")
+            print(dep_result.stderr[-2000:] if dep_result.stderr else "")
+            return
+
+        result = subprocess.run(
+            ["lake", "env", "lean", "GraphExport.lean"],
+            cwd=proofs_dir,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            print(f"[graph] Warning: graph extraction failed for {paper_id}")
+            print(result.stderr[-2000:] if result.stderr else "")
+            return
+
+        src = proofs_dir / "graph.json"
+        if not src.exists():
+            print(f"[graph] Warning: graph.json not written for {paper_id}")
+            return
+        decl_src = proofs_dir / "decls.json"
+        decl_result = subprocess.run(
+            ["lake", "env", "lean", "DeclInfoExport.lean"],
+            cwd=proofs_dir,
+            capture_output=True,
+            text=True,
+        )
+        if decl_result.returncode != 0:
+            print(
+                f"[graph] Warning: declaration metadata extraction failed for {paper_id}"
+            )
+            print(decl_result.stderr[-2000:] if decl_result.stderr else "")
+            return
+        if not decl_src.exists():
+            print(f"[graph] Warning: decls.json not written for {paper_id}")
+            return
 
         graphs_dir = self.repo_root / "docs" / "papers" / "graph_infra" / "graphs"
         graphs_dir.mkdir(exist_ok=True)
-        data = self._extract_graph_from_source(paper_id)
         dst = graphs_dir / f"{paper_id}.json"
-        dst.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        decl_dst = graphs_dir / f"{paper_id}.decls.json"
+        shutil.move(str(src), dst)
+        shutil.move(str(decl_src), decl_dst)
+        self._sync_graph_viewer_assets(graphs_dir)
+        self._write_graph_manifest(graphs_dir, f"{paper_id}.json")
+
+        # Fix PH handle edges that the graph extractor misses
+        self._fix_ph_handle_edges(paper_id, dst)
+
+        import json
+
+        data = json.loads(dst.read_text())
+        decl_data = json.loads(decl_dst.read_text())
         print(
             f"[graph] ✓ {paper_id} → {dst.relative_to(self.repo_root)} "
-            f"({len(data['nodes'])} nodes, {len(data['edges'])} edges)"
+            f"({len(data['nodes'])} nodes, {len(data['edges'])} edges; {len(decl_data)} decl entries)"
         )
+
+    def _fix_ph_handle_edges(self, paper_id: str, graph_path: Path) -> None:
+        """Fix PH handle edges in the dependency graph by running fix_ph_handles.py.
+
+        PH handles (PH11-PH36) are abbreviations that reference PhysicalComplexity
+        theorems using @ notation for explicit universe polymorphism. The graph
+        extractor misses these edges because @PhysicalComplexity.* doesn't match
+        the declared PhysicalComplexity.* names in the graph.
+
+        This method runs the fixer script to add the missing edges automatically.
+        """
+        fixer_script = (
+            self.repo_root / "docs" / "papers" / "graph_infra" / "fix_ph_handles.py"
+        )
+        if not fixer_script.exists():
+            print(f"[graph]   PH handle fixer not found, skipping")
+            return
+
+        try:
+            result = subprocess.run(
+                [sys.executable, str(fixer_script), "--paper", paper_id],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if result.returncode == 0:
+                # Extract summary from output
+                for line in result.stdout.splitlines():
+                    if line.startswith("Fixed"):
+                        print(f"[graph]   {line}")
+                        break
+                else:
+                    print(f"[graph]   PH handles verified")
+            else:
+                print(f"[graph]   PH fix warning: {result.stderr[:200]}")
+        except subprocess.TimeoutExpired:
+            print(f"[graph]   PH fix timeout, skipping")
+        except Exception as e:
+            print(f"[graph]   PH fix error: {e}")
+
+    def _mark_claim_nodes_in_graph(self, paper_id: str) -> None:
+        """Mark nodes in the dependency graph that correspond to paper claims.
+
+        Extracts which Lean theorem handles are cited in the paper's claims,
+        then adds a `paper: -1` attribute to those nodes in the graph JSON.
+        This enables the "Claims Only" view in the dependency graph visualizer
+        to show only theorems that are directly cited in the paper.
+
+        This method should be called after both:
+        1. The graph JSON has been generated (by build_lean)
+        2. The claim extraction has been done (during build_latex)
+        """
+        # Get the graph file path
+        graphs_dir = self.repo_root / "docs" / "papers" / "graph_infra" / "graphs"
+        graph_path = graphs_dir / f"{paper_id}.json"
+
+        if not graph_path.exists():
+            # Graph hasn't been generated yet, skip silently
+            return
+
+        # Extract claim-to-handles mapping directly (gets full, non-compacted handles)
+        # This is better than reading from claim_mapping_auto.tex which has compacted handles
+        claim_to_handles = self._extract_claim_label_to_lean_handles(
+            paper_id, include_dependencies=True
+        )
+
+        # Collect all unique Lean handles that are cited in claims
+        cited_handles: Set[str] = set()
+        for handles_list in claim_to_handles.values():
+            cited_handles.update(handles_list)
+
+        if not cited_handles:
+            # No handles to mark
+            return
+
+        # Load the graph JSON
+        import json
+
+        try:
+            data = json.loads(graph_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, FileNotFoundError) as e:
+            print(f"[graph]   Warning: Could not load graph JSON: {e}")
+            return
+
+        # Mark nodes that correspond to cited claims with paper: -1
+        # Also check for namespace-qualified versions: a handle "foo" should match
+        # "Ssot.foo", "ClaimClosure.foo", etc. in the graph
+        marked_count = 0
+
+        # Build a mapping from unqualified names to their possible qualified forms
+        # For each handle "bar", we should match both "bar" and "Namespace.bar"
+        unqualified_handles: Set[str] = set()
+        for h in cited_handles:
+            # If it's already qualified (contains "."), use as-is and also extract suffix
+            if "." in h:
+                parts = h.rsplit(".", 1)
+                unqualified_handles.add(parts[1])  # Add unqualified suffix
+            else:
+                unqualified_handles.add(h)
+
+        for node in data.get("nodes", []):
+            node_id = node.get("id", "")
+            # Direct match
+            if node_id in cited_handles:
+                node["paper"] = -1
+                marked_count += 1
+            # Check if node is a qualified version of an unqualified handle
+            elif "." in node_id:
+                suffix = node_id.rsplit(".", 1)[1]
+                if suffix in unqualified_handles:
+                    node["paper"] = -1
+                    marked_count += 1
+
+        # Write back the modified graph
+        graph_path.write_text(
+            json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+
+        if marked_count > 0:
+            print(
+                f"[graph]   Marked {marked_count} claim nodes (paper=-1) for Claims Only view"
+            )
+
+    def _validate_true_paths(self, paper_id: str) -> Dict[str, Any]:
+        """Validate true path invariant: all claims must have paths to axioms.
+
+        Based on Paper 4 GraphNontriviality.lean concepts:
+        - isCycle: valid path, length ≥ 2, same start/end
+        - triviality: |State| ≤ 1 → no information
+        - nontrivialityScore: surprisal + noveltyDistance
+
+        Returns validation results dict with:
+        - valid: bool
+        - claimCount, pathCount
+        - missingPaths: list of claim IDs without paths
+        - cycles: detected cycles
+        - invariants: identified invariant nodes
+        """
+        import json
+        from collections import deque
+
+        graphs_dir = self.repo_root / "docs" / "papers" / "graph_infra" / "graphs"
+        graph_path = graphs_dir / f"{paper_id}.json"
+
+        results: Dict[str, Any] = {
+            "valid": True,
+            "claimCount": 0,
+            "pathCount": 0,
+            "missingPaths": [],
+            "cycles": [],
+            "trivialCycles": [],
+            "nontrivialCycles": [],
+            "invariants": [],
+        }
+
+        if not graph_path.exists():
+            print(f"[true-path] No graph found for {paper_id}")
+            return results
+
+        try:
+            data = json.loads(graph_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, FileNotFoundError) as e:
+            print(f"[true-path] Could not load graph: {e}")
+            return results
+
+        nodes = data.get("nodes", [])
+        edges = data.get("edges", [])
+
+        # Build adjacency list
+        adj: Dict[str, List[str]] = {}
+        for node in nodes:
+            adj[node["id"]] = []
+        for edge in edges:
+            src = edge.get("source", "")
+            tgt = edge.get("target", "")
+            if isinstance(src, dict):
+                src = src.get("id", "")
+            if isinstance(tgt, dict):
+                tgt = tgt.get("id", "")
+            if src in adj:
+                adj[src].append(tgt)
+
+        # Identify claims (paper=-1)
+        claims = [n for n in nodes if n.get("paper") == -1]
+        results["claimCount"] = len(claims)
+
+        # Find leaf nodes (no outgoing edges) - these are foundational definitions
+        # In proof graphs, edges go from theorems to their dependencies
+        # So leaf nodes are the foundational types/definitions everything depends on
+        leaf_nodes = {n["id"] for n in nodes if len(adj.get(n["id"], [])) == 0}
+
+        # Axioms are explicit axioms OR leaf nodes (foundational definitions)
+        axioms = {n["id"] for n in nodes if n.get("kind") == "axiom"}
+        foundations = axioms | leaf_nodes  # Union of axioms and leaf nodes
+
+        # Identify invariants (axioms + physical constants + foundational defs)
+        invariant_patterns = [
+            "lightSpeed",
+            "planckConstant",
+            "boltzmannConstant",
+            "kB_T",
+            "joulesPerBit",
+            "thermodynamic",
+            "Landauer",
+        ]
+        invariants = []
+        for n in nodes:
+            if n.get("kind") == "axiom":
+                invariants.append({"id": n["id"], "kind": "foundational_axiom"})
+            elif n["id"] in leaf_nodes and n.get("kind") == "definition":
+                invariants.append({"id": n["id"], "kind": "foundational_definition"})
+            else:
+                for pat in invariant_patterns:
+                    if pat.lower() in n["id"].lower():
+                        invariants.append({"id": n["id"], "kind": "physical_constant"})
+                        break
+        results["invariants"] = invariants
+
+        # BFS to find paths from claims to axioms
+        def bfs_path(start: str, targets: Set[str]) -> Optional[List[str]]:
+            if start in targets:
+                return [start]
+            visited = {start}
+            parent: Dict[str, Optional[str]] = {start: None}
+            queue = deque([start])
+            while queue:
+                current = queue.popleft()
+                for neighbor in adj.get(current, []):
+                    if neighbor in visited:
+                        continue
+                    visited.add(neighbor)
+                    parent[neighbor] = current
+                    if neighbor in targets:
+                        path = []
+                        n: Optional[str] = neighbor
+                        while n is not None:
+                            path.append(n)
+                            n = parent.get(n)
+                        return path[::-1]
+                    queue.append(neighbor)
+            return None
+
+        # Check each claim has a path to some foundation (axiom or leaf node)
+        for claim in claims:
+            path = bfs_path(claim["id"], foundations)
+            if path:
+                results["pathCount"] += 1
+            else:
+                results["valid"] = False
+                results["missingPaths"].append(claim["id"])
+
+        # Cycle detection via Tarjan's SCC algorithm
+        index_counter = [0]
+        stack: List[str] = []
+        lowlinks: Dict[str, int] = {}
+        indices: Dict[str, int] = {}
+        on_stack: Dict[str, bool] = {}
+        sccs: List[List[str]] = []
+
+        def strongconnect(v: str) -> None:
+            indices[v] = index_counter[0]
+            lowlinks[v] = index_counter[0]
+            index_counter[0] += 1
+            stack.append(v)
+            on_stack[v] = True
+
+            for w in adj.get(v, []):
+                if w not in indices:
+                    strongconnect(w)
+                    lowlinks[v] = min(lowlinks[v], lowlinks[w])
+                elif on_stack.get(w, False):
+                    lowlinks[v] = min(lowlinks[v], indices[w])
+
+            if lowlinks[v] == indices[v]:
+                scc = []
+                while True:
+                    w = stack.pop()
+                    on_stack[w] = False
+                    scc.append(w)
+                    if w == v:
+                        break
+                if len(scc) > 1:
+                    sccs.append(scc)
+
+        for node in nodes:
+            if node["id"] not in indices:
+                strongconnect(node["id"])
+
+        # Classify cycles
+        for scc in sccs:
+            cycle = {"nodes": scc, "witnessBits": len(scc)}
+            cycle["isNontrivial"] = len(scc) > 1  # |State| > 1
+            results["cycles"].append(cycle)
+            if cycle["isNontrivial"]:
+                results["nontrivialCycles"].append(cycle)
+            else:
+                results["trivialCycles"].append(cycle)
+
+        # Print summary
+        status = "✅ VALID" if results["valid"] else "❌ INVALID"
+        print(f"[true-path] {paper_id}: {status}")
+        print(
+            f"[true-path]   Claims: {results['claimCount']}, Paths: {results['pathCount']}"
+        )
+        print(
+            f"[true-path]   Invariants: {len(invariants)}, Cycles: {len(results['cycles'])}"
+        )
+        if results["missingPaths"]:
+            print(f"[true-path]   ⚠️  Missing paths: {results['missingPaths'][:5]}")
+
+        return results
 
     def _iter_lean_roots_for_paper(self, paper_id: str) -> List[Tuple[str, Path]]:
         """Return `(source_paper_id, proofs_dir)` for paper + transitive dependencies."""
@@ -1042,16 +1538,37 @@ end {module_root}
         return roots
 
     def _derive_module_roots_from_lakefile(self, proofs_dir: Path) -> List[str]:
-        """Derive module roots from `lean_lib` globs in a paper's lakefile."""
+        """Derive module roots from `lean_lib` declarations in a paper's lakefile.
+
+        Supports both patterns:
+        1. Modern: lean_lib «Name» where globs := #[.submodules `Name]
+        2. Legacy: lean_lib «Name» (individual lib declarations)
+        """
         lakefile = proofs_dir / "lakefile.lean"
         if not lakefile.exists():
             return []
         text = lakefile.read_text(encoding="utf-8", errors="replace")
         roots: List[str] = []
-        for m in re.findall(r"globs\s*:=\s*#\[\s*\.submodules\s+`([A-Za-z0-9_'.]+)\s*\]", text):
+
+        # Pattern 1: Modern globs pattern
+        for m in re.findall(
+            r"globs\s*:=\s*#\[\s*\.submodules\s+`([A-Za-z0-9_'.]+)\s*\]", text
+        ):
             root = m.strip()
             if root and root not in roots:
                 roots.append(root)
+
+        # Pattern 2: Legacy individual lean_lib declarations
+        if not roots:
+            for m in re.findall(r"lean_lib\s+«([A-Za-z0-9_'.]+)»", text):
+                root = m.strip()
+                if (
+                    root
+                    and root not in {"PrintAxioms", "check_axioms"}
+                    and root not in roots
+                ):
+                    roots.append(root)
+
         return roots
 
     def _derive_module_roots(self, paper_id: str) -> List[str]:
@@ -1220,8 +1737,7 @@ end {module_root}
             return
 
         shared_dir = self.papers_dir / "shared"
-        shared_files = ["paper-preamble.sty", "pentalogy-preamble.sty"]
-        for name in shared_files:
+        for name in self.build_config.shared_preamble_files:
             src = shared_dir / name
             if not src.exists():
                 continue
@@ -1325,13 +1841,15 @@ end {module_root}
             dep_module = dep_roots[0] if dep_roots else dep_paper_id
             dep_suffix = self._lean_macro_suffix(dep_module)
             dep_full_name = self.papers[dep_paper_id].full_name
-            lines.extend([
-                f"% Lean dependency: {dep_module} ({dep_full_name})",
-                f"\\providecommand{{\\LeanDepLines{dep_suffix}}}{{{dep_stats.line_count}}}",
-                f"\\providecommand{{\\LeanDepTheorems{dep_suffix}}}{{{dep_stats.theorem_count}}}",
-                f"\\providecommand{{\\LeanDepSorry{dep_suffix}}}{{{dep_stats.sorry_count}}}",
-                f"\\providecommand{{\\LeanDepFiles{dep_suffix}}}{{{dep_stats.file_count}}}",
-            ])
+            lines.extend(
+                [
+                    f"% Lean dependency: {dep_module} ({dep_full_name})",
+                    f"\\providecommand{{\\LeanDepLines{dep_suffix}}}{{{dep_stats.line_count}}}",
+                    f"\\providecommand{{\\LeanDepTheorems{dep_suffix}}}{{{dep_stats.theorem_count}}}",
+                    f"\\providecommand{{\\LeanDepSorry{dep_suffix}}}{{{dep_stats.sorry_count}}}",
+                    f"\\providecommand{{\\LeanDepFiles{dep_suffix}}}{{{dep_stats.file_count}}}",
+                ]
+            )
 
         (content_dir / "lean_stats.tex").write_text(
             "\n".join(lines) + "\n", encoding="utf-8"
@@ -1545,7 +2063,9 @@ end {module_root}
         )
         if all_conditional_handles:
             for handle in sorted(all_conditional_handles):
-                lines.append(rf"\item \nolinkurl{{{self._compact_lean_handle(handle)}}}")
+                lines.append(
+                    rf"\item \nolinkurl{{{self._compact_lean_handle(handle)}}}"
+                )
         else:
             lines.append(r"\item (No conditional theorem handles parsed.)")
         lines.append(r"\end{itemize}")
@@ -1558,7 +2078,9 @@ end {module_root}
         )
         if bayes_theorem_handles:
             for handle in sorted(bayes_theorem_handles):
-                lines.append(rf"\item \nolinkurl{{{self._compact_lean_handle(handle)}}}")
+                lines.append(
+                    rf"\item \nolinkurl{{{self._compact_lean_handle(handle)}}}"
+                )
         else:
             lines.append(r"\item (No Bayes-derivation theorem handles found.)")
         lines.append(r"\end{itemize}")
@@ -1591,9 +2113,7 @@ end {module_root}
 
         out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    def _read_existing_lean_handle_rows(
-        self, paper_id: str
-    ) -> List[Tuple[str, str]]:
+    def _read_existing_lean_handle_rows(self, paper_id: str) -> List[Tuple[str, str]]:
         """Read existing `(ID, handle)` rows from `lean_handle_ids_auto.tex`."""
         content_dir = self._get_content_dir(paper_id)
         map_file = content_dir / "lean_handle_ids_auto.tex"
@@ -1603,7 +2123,9 @@ end {module_root}
         text = map_file.read_text(encoding="utf-8", errors="replace")
         hyper_code_pattern = re.compile(r"\\hypertarget\{lh:([^}]+)\}")
         code_pattern = re.compile(r"\\text(?:tt|sf)\{([^}]+)\}")
-        code_url_pattern = re.compile(r"\\hypertarget\{lh:[^}]+\}\{\\nolinkurl\{([^}]+)\}\}")
+        code_url_pattern = re.compile(
+            r"\\hypertarget\{lh:[^}]+\}\{\\nolinkurl\{([^}]+)\}\}"
+        )
         handle_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
         rows: List[Tuple[str, str]] = []
         for raw_line in text.splitlines():
@@ -1698,19 +2220,10 @@ end {module_root}
         if not content_dir.exists():
             return set()
 
-        generated_files = {
-            "lean_stats.tex",
-            "assumption_ledger_auto.tex",
-            "claim_mapping_auto.tex",
-            "lean_handle_ids_auto.tex",
-            "proof_hardness_index_auto.tex",
-        }
         paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
         handles: Set[str] = set()
 
-        for tex_file in sorted(content_dir.glob("*.tex")):
-            if tex_file.name in generated_files:
-                continue
+        for tex_file in self._iter_manual_content_tex(paper_id):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             for raw in re.findall(r"\\nolinkurl\{([^}]+)\}", text):
                 handle = raw.strip().replace(r"\_", "_")
@@ -1887,6 +2400,7 @@ end {module_root}
         """
         handle_to_code: Dict[str, str] = {}
         used_codes: Set[str] = set()
+        prefix_counters: Dict[str, int] = {}
 
         # First, apply explicit assignments from provided existing rows
         for code, handle in existing_rows:
@@ -1896,30 +2410,31 @@ end {module_root}
                 continue
             handle_to_code[handle] = code
             used_codes.add(code)
+            match = re.match(r"^([A-Za-z]+)(\d+)$", code)
+            if match:
+                prefix = match.group(1)
+                number = int(match.group(2))
+                prefix_counters[prefix] = max(prefix_counters.get(prefix, 0), number)
 
-        # Auto-assign stable, insertion-safe IDs for remaining handles.
-        # Use a prefix derived from the first namespace component plus a
-        # short sha1 digest of the full handle to ensure determinism and
-        # that adding other handles won't shift existing codes.
+        # Auto-assign stable compact IDs for remaining handles.
+        # IDs are deterministic per prefix because:
+        # 1. handles are visited in sorted order
+        # 2. prior compact numeric IDs are preserved
+        # 3. counters advance monotonically within each prefix
         for handle in sorted(handles):
             if handle in handle_to_code:
                 continue
 
             group = handle.split(".", 1)[0] if "." in handle else "L"
             prefix = self._compact_lean_prefix(group) or "H"
-
-            # Short stable digest
-            digest = hashlib.sha1(handle.encode("utf-8")).hexdigest()[:8]
-            code = f"{prefix}_{digest}"
-
-            # If collision (very unlikely), extend digest until unique
-            ext = 8
+            next_idx = prefix_counters.get(prefix, 0) + 1
+            code = f"{prefix}{next_idx}"
             while code in used_codes:
-                ext += 4
-                digest = hashlib.sha1((handle + str(ext)).encode("utf-8")).hexdigest()[:ext]
-                code = f"{prefix}_{digest}"
+                next_idx += 1
+                code = f"{prefix}{next_idx}"
 
             used_codes.add(code)
+            prefix_counters[prefix] = next_idx
             handle_to_code[handle] = code
 
         return handle_to_code
@@ -1931,14 +2446,27 @@ end {module_root}
             return
 
         out_file = content_dir / "lean_handle_ids_auto.tex"
+        previous_rows = self._read_existing_lean_handle_rows(paper_id)
+        previous_id_to_handle = {code: handle for code, handle in previous_rows}
+        if not hasattr(self, "_previous_lean_handle_id_maps"):
+            self._previous_lean_handle_id_maps: Dict[str, Dict[str, str]] = {}
+        self._previous_lean_handle_id_maps[paper_id] = previous_id_to_handle
+
         # Prefer explicit mappings declared in HandleAliases.lean as the
         # single source of truth for explicit ID assignments.
         alias_by_code = self._extract_alias_code_map_from_handle_aliases(
             paper_id, include_dependencies=True
         )
-        existing_rows = sorted(alias_by_code.items())
-        referenced_handles = self._extract_referenced_lean_handles_from_content(paper_id)
+        alias_rows = sorted(alias_by_code.items())
+        referenced_handles = self._extract_referenced_lean_handles_from_content(
+            paper_id
+        )
         referenced_ids = self._extract_lh_ids_from_content(paper_id)
+        referenced_id_handles = {
+            previous_id_to_handle[code]
+            for code in referenced_ids
+            if code in previous_id_to_handle
+        }
         # DOF=1 policy for handle maps:
         # derive IDs from support actually used by paper content/claims, not from
         # every declaration in the transitive Lean dependency graph.
@@ -1949,7 +2477,9 @@ end {module_root}
         for handles in claim_to_handles.values():
             support_handles.update(handles)
 
-        candidate_handles = set(referenced_handles) | set(support_handles)
+        candidate_handles = (
+            set(referenced_handles) | set(support_handles) | set(referenced_id_handles)
+        )
         # Recovery fallback:
         # if content already uses only \LH{ID} references and the current map file
         # is empty/stale, parsing can become circular (no IDs -> no handles -> empty map).
@@ -1961,12 +2491,19 @@ end {module_root}
 
         # Preserve explicit alias assignments from HandleAliases.lean and
         # include those handles in the universe to ensure they remain stable.
-        preserved_rows = existing_rows
+        preserved_existing_rows = [
+            (code, handle)
+            for code, handle in previous_rows
+            if re.match(r"^[A-Za-z]+\d+$", code)
+        ]
+        preserved_rows = alias_rows + preserved_existing_rows
         preserved_handles = {handle for _, handle in preserved_rows}
 
         # Single derived universe: local references + derived theorem support
         # plus any explicitly-declared alias handles.
-        all_handles = set(candidate_handles) | preserved_handles | set(alias_by_code.values())
+        all_handles = (
+            set(candidate_handles) | preserved_handles | set(alias_by_code.values())
+        )
 
         handle_to_code = self._assign_compact_handle_ids(all_handles, preserved_rows)
         code_to_handle = {code: handle for handle, code in handle_to_code.items()}
@@ -2022,22 +2559,37 @@ end {module_root}
         if not id_to_handle:
             return
         handle_to_id = {handle: code for code, handle in id_to_handle.items()}
-
-        generated_files = {
-            "lean_stats.tex",
-            "assumption_ledger_auto.tex",
-            "claim_mapping_auto.tex",
-            "lean_handle_ids_auto.tex",
-            "proof_hardness_index_auto.tex",
+        previous_id_to_handle = (
+            getattr(self, "_previous_lean_handle_id_maps", {}).get(paper_id, {})
+        )
+        legacy_hash_to_new_id: Dict[str, str] = {}
+        for handle, new_code in handle_to_id.items():
+            group = handle.split(".", 1)[0] if "." in handle else "L"
+            prefix = self._compact_lean_prefix(group) or "H"
+            legacy_code = f"{prefix}_{hashlib.sha1(handle.encode('utf-8')).hexdigest()[:8]}"
+            legacy_hash_to_new_id.setdefault(legacy_code, new_code)
+        old_id_to_new_id = {
+            old_code: handle_to_id[handle]
+            for old_code, handle in previous_id_to_handle.items()
+            if handle in handle_to_id and handle_to_id[handle] != old_code
         }
+
         nolink_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
+        lh_pattern = re.compile(r"\\LH\{([^}]+)\}")
         leanmeta_prefix_pattern = re.compile(r"(\\leanmeta\{)\s*Lean handles:\s*")
 
-        for tex_file in sorted(content_dir.glob("*.tex")):
-            if tex_file.name in generated_files:
-                continue
+        for tex_file in self._iter_manual_content_tex(paper_id):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             normalized = leanmeta_prefix_pattern.sub(r"\1", text)
+
+            def rewrite_existing_ids(match: re.Match[str]) -> str:
+                old_code = match.group(1).strip()
+                new_code = old_id_to_new_id.get(old_code) or legacy_hash_to_new_id.get(
+                    old_code
+                )
+                if new_code is None:
+                    return match.group(0)
+                return rf"\LH{{{new_code}}}"
 
             def repl(match: re.Match[str]) -> str:
                 raw = match.group(1).strip()
@@ -2047,7 +2599,8 @@ end {module_root}
                     return match.group(0)
                 return rf"\LH{{{code}}}"
 
-            rewritten = nolink_pattern.sub(repl, normalized)
+            migrated = lh_pattern.sub(rewrite_existing_ids, normalized)
+            rewritten = nolink_pattern.sub(repl, migrated)
             if rewritten != text:
                 tex_file.write_text(rewritten, encoding="utf-8")
 
@@ -2191,13 +2744,6 @@ end {module_root}
         if not content_dir.exists():
             return {}
 
-        generated_files = {
-            "lean_stats.tex",
-            "assumption_ledger_auto.tex",
-            "claim_mapping_auto.tex",
-            "lean_handle_ids_auto.tex",
-            "proof_hardness_index_auto.tex",
-        }
         claimstamp_pattern = re.compile(
             r"\\claimstamp\{((?:[^{}]|\\ref\{[^}]+\})*)\}\{([^}]*)\}",
             re.DOTALL,
@@ -2207,9 +2753,7 @@ end {module_root}
 
         label_to_tags: Dict[str, Set[str]] = {}
         fallback_multi: Dict[str, Set[str]] = {}
-        for tex_file in sorted(content_dir.glob("*.tex")):
-            if tex_file.name in generated_files:
-                continue
+        for tex_file in self._iter_manual_content_tex(paper_id):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             for first_arg, second_arg in claimstamp_pattern.findall(text):
                 labels = [lab.strip() for lab in ref_pattern.findall(first_arg)]
@@ -2354,13 +2898,6 @@ end {module_root}
         if source_id and source_id in self.papers:
             source_regimes = self._extract_label_to_regime_from_claimstamps(source_id)
 
-        generated_files = {
-            "lean_stats.tex",
-            "assumption_ledger_auto.tex",
-            "claim_mapping_auto.tex",
-            "lean_handle_ids_auto.tex",
-            "proof_hardness_index_auto.tex",
-        }
         claimstamp_pattern = re.compile(
             r"\\claimstamp\{((?:[^{}]|\\ref\{[^}]+\})*)\}\{([^}]*)\}",
             re.DOTALL,
@@ -2373,9 +2910,7 @@ end {module_root}
             r"^\s*(?:Thm\.?|Theorem|Prop\.?|Proposition|Cor\.?|Corollary|Def\.?|Definition|Lemma|Lem\.?|Axiom|Ax\.?|Conjecture|Conj\.?)\s*\.?\s*$"
         )
 
-        for tex_file in sorted(content_dir.glob("*.tex")):
-            if tex_file.name in generated_files:
-                continue
+        for tex_file in self._iter_manual_content_tex(paper_id):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
 
             # Pass 1: normalize existing stamps.
@@ -2388,7 +2923,12 @@ end {module_root}
 
             # Pass 2: fill empty/generic claim-block stamps using local label.
             def fill_block(match: re.Match[str]) -> str:
-                begin, label, body, end = match.group(1), match.group(2), match.group(3), match.group(4)
+                begin, label, body, end = (
+                    match.group(1),
+                    match.group(2),
+                    match.group(3),
+                    match.group(4),
+                )
                 normalized_label = label.strip()
 
                 def fill_first_stamp(stamp_match: re.Match[str]) -> str:
@@ -2404,7 +2944,9 @@ end {module_root}
 
                     return rf"\claimstamp{{{first}}}{{{second}}}"
 
-                filled_body, _ = claimstamp_pattern.subn(fill_first_stamp, body, count=1)
+                filled_body, _ = claimstamp_pattern.subn(
+                    fill_first_stamp, body, count=1
+                )
                 return begin + filled_body + end
 
             rewritten = claim_block_pattern.sub(fill_block, rewritten)
@@ -2417,118 +2959,75 @@ end {module_root}
     ) -> Dict[str, List[str]]:
         """Extract mapping from theorem-style labels to inline Lean handles.
 
-        Source heuristic:
-        - scan theorem/proposition/corollary/lemma blocks in content/*.tex
-        - collect `\\label{thm:...|prop:...|cor:...|lem:...}` inside each block
-        - collect non-paper-handle `\\nolinkurl{...}` entries and `\\LH{...}` IDs
-          inside each block as Lean support
-        - additionally support claim-style blocks:
-          `\\begin{claim}{Title}{prop:...} ... \\end{claim}`
-        - attach immediately-following `\\leanmeta{...}` blocks to the claim/theorem
-          that precedes them
+        Local rows are claim-local: only \\LH{code} occurrences inside the
+        corresponding labeled theorem/claim block count for that label.
         """
         content_dir = self._get_content_dir(paper_id)
         if not content_dir.exists():
             return {}
 
         id_to_handle = self._read_lean_handle_id_map(paper_id)
-
-        block_pattern = re.compile(
-            r"\\begin\{(theorem|proposition|corollary|lemma)\}(.*?)\\end\{\1\}",
-            re.DOTALL,
-        )
-        claim_pattern = re.compile(
-            r"\\begin\{claim\}\{[^{}]*\}\{((?:thm|cor|lem|prop):[^{}]+)\}(.*?)\\end\{claim\}",
-            re.DOTALL,
-        )
-        label_pattern = re.compile(r"\\label\{((?:thm|cor|lem|prop):[^}]+)\}")
-        nolink_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
         lh_pattern = re.compile(r"\\LH\{([^}]+)\}")
-        paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
-
-        def extract_handles_from_text(fragment: str) -> List[str]:
-            handles: List[str] = []
-            for h in nolink_pattern.findall(fragment):
-                h = h.replace(r"\_", "_")
-                if paper_handle_pattern.match(h):
-                    continue
-                # Keep declaration-like handles, drop bare module/file mentions.
-                if h.endswith(".lean"):
-                    continue
-                if "." not in h and "_" not in h:
-                    continue
-                handles.append(h)
-            for handle_id in lh_pattern.findall(fragment):
-                resolved = id_to_handle.get(handle_id.strip())
-                if resolved:
-                    handles.append(resolved)
-            return handles
-
-        def extract_following_leanmeta_handles(text: str, start_idx: int) -> List[str]:
-            """Extract handles from consecutive `\\leanmeta{...}` blocks after a claim."""
-            handles: List[str] = []
-            i = start_idx
-            n = len(text)
-            prefix = r"\leanmeta{"
-            while i < n:
-                while i < n and text[i].isspace():
-                    i += 1
-                if not text.startswith(prefix, i):
-                    break
-                j = i + len(prefix)
-                depth = 1
-                while j < n and depth > 0:
-                    ch = text[j]
-                    if ch == "{":
-                        depth += 1
-                    elif ch == "}":
-                        depth -= 1
-                    j += 1
-                if depth != 0:
-                    break
-                handles.extend(extract_handles_from_text(text[i:j]))
-                i = j
-            return handles
-
-        local_mapping: Dict[str, Set[str]] = {}
-        for tex_file in sorted(content_dir.glob("*.tex")):
-            text = tex_file.read_text(encoding="utf-8", errors="replace")
-            for match in block_pattern.finditer(text):
-                block_text = match.group(0)
-                labels = label_pattern.findall(block_text)
-                if not labels:
-                    continue
-                handles = extract_handles_from_text(
-                    block_text
-                ) + extract_following_leanmeta_handles(text, match.end())
-                for label in labels:
-                    local_mapping.setdefault(label, set()).update(handles)
-            for match in claim_pattern.finditer(text):
-                label = match.group(1)
-                block_text = match.group(0)
-                handles = extract_handles_from_text(
-                    block_text
-                ) + extract_following_leanmeta_handles(text, match.end())
-                local_mapping.setdefault(label, set()).update(handles)
-
-        if not include_dependencies:
-            return {k: sorted(v) for k, v in local_mapping.items()}
-
         claim_labels = self._extract_paper_claim_labels(paper_id)
-        merged: Dict[str, Set[str]] = {
-            label: set(local_mapping.get(label, set())) for label in claim_labels
-        }
-        for label, handles in local_mapping.items():
-            merged.setdefault(label, set()).update(handles)
+        merged: Dict[str, Set[str]] = {label: set() for label in claim_labels}
+        label_pattern = re.compile(r"\\label\{([^}]+)\}")
+
+        claim_block_pattern = re.compile(
+            r"\\begin\{claim\}\{[^{}]*\}\{([^{}]+)\}(.*?)\\end\{claim\}",
+            re.DOTALL,
+        )
+        theorem_block_pattern = re.compile(
+            r"\\begin\{(theorem|corollary|lemma|proposition|definition|remark)\}"
+            r"(?:\[[^\]]*\])?(.*?)\\end\{\1\}",
+            re.DOTALL,
+        )
+
+        for tex_file in self._iter_manual_content_tex(paper_id):
+            text = tex_file.read_text(encoding="utf-8", errors="replace")
+            for match in claim_block_pattern.finditer(text):
+                label = match.group(1).strip()
+                if label not in merged:
+                    continue
+                body = match.group(2)
+                for code in lh_pattern.findall(body):
+                    resolved = id_to_handle.get(code.strip())
+                    if resolved:
+                        merged[label].add(resolved)
+
+            for match in theorem_block_pattern.finditer(text):
+                body = match.group(2)
+                labels = [lbl.strip() for lbl in label_pattern.findall(body)]
+                matched_labels = [lbl for lbl in labels if lbl in merged]
+                if not matched_labels:
+                    continue
+
+                handles: Set[str] = set()
+                for code in lh_pattern.findall(body):
+                    resolved = id_to_handle.get(code.strip())
+                    if resolved:
+                        handles.add(resolved)
+
+                # Paper 2 style: theorem block is followed by a dedicated \leanmeta{...}
+                # line, so inspect the next few lines after the environment closes.
+                trailing_lines = text[match.end() :].splitlines()[:3]
+                trailing_text = "\n".join(trailing_lines)
+                for code in lh_pattern.findall(trailing_text):
+                    resolved = id_to_handle.get(code.strip())
+                    if resolved:
+                        handles.add(resolved)
+
+                for label in matched_labels:
+                    merged[label].update(handles)
 
         source_ids: List[str] = []
-        meta = self._get_paper_meta(paper_id)
-        source_id = meta.scaffold_from.strip()
-        if source_id and source_id in self.papers:
-            source_ids.append(source_id)
-        for dep in self._collect_lean_dependency_closure(paper_id):
-            if dep not in source_ids:
-                source_ids.append(dep)
+        if include_dependencies:
+            meta = self._get_paper_meta(paper_id)
+            source_id = meta.scaffold_from.strip()
+            if source_id and source_id in self.papers:
+                source_ids.append(source_id)
+            for dep in self._collect_lean_dependency_closure(paper_id):
+                if dep not in source_ids:
+                    source_ids.append(dep)
 
         for source in source_ids:
             # Prefer a pre-generated matrix (already derived and normalized).
@@ -2563,7 +3062,9 @@ end {module_root}
         # - optional \hypertarget prefixes may appear before the ID cell
         hyper_code_pattern = re.compile(r"\\hypertarget\{lh:([^}]+)\}")
         code_pattern = re.compile(r"\\text(?:tt|sf)\{([^}]+)\}")
-        code_url_pattern = re.compile(r"\\hypertarget\{lh:[^}]+\}\{\\nolinkurl\{([^}]+)\}\}")
+        code_url_pattern = re.compile(
+            r"\\hypertarget\{lh:[^}]+\}\{\\nolinkurl\{([^}]+)\}\}"
+        )
         handle_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
         for raw_line in text.splitlines():
             if r"\nolinkurl{" not in raw_line:
@@ -2609,7 +3110,9 @@ end {module_root}
             label = nolinks[0]
             if not paper_handle_pattern.match(label):
                 continue
-            supports = [h for h in nolinks[1:] if h and not paper_handle_pattern.match(h)]
+            supports = [
+                h for h in nolinks[1:] if h and not paper_handle_pattern.match(h)
+            ]
             if supports:
                 mapping.setdefault(label, set()).update(supports)
 
@@ -2746,7 +3249,12 @@ end {module_root}
             return ""
 
         # Ensure local dependency aliases (dep_<paper>) are present for path deps.
+        dep_ids = self._collect_lean_dependency_closure(paper_id)
         self._sync_local_lean_dependency_dirs(paper_id)
+        for dep_id in dep_ids:
+            self._sync_graph_infra_lean(dep_id)
+        self._sync_graph_infra_lean(paper_id)
+        self._write_graph_export_lean(paper_id)
 
         print(f"[build] Building {paper_id} Lean...")
         print(f"[build]   Directory: {proofs_dir.relative_to(self.repo_root)}")
@@ -2801,6 +3309,7 @@ end {module_root}
         print(f"[build] ✓ {paper_id} Lean complete")
 
         self._collect_graph_json(paper_id)
+        self._mark_claim_nodes_in_graph(paper_id)
         return output_text
 
     def build_latex(self, paper_id: str, verbose: bool = False):
@@ -2812,21 +3321,15 @@ end {module_root}
         For variants (e.g., paper1_jsait), uses variant-specific naming.
         """
         meta = self._get_paper_meta(paper_id)
-        paper_dir = self._get_paper_dir(paper_id)
-        latex_dir = paper_dir / meta.latex_dir
+        latex_dir = self._get_latex_dir(paper_id)
         latex_file = latex_dir / meta.latex_file
 
         if not latex_file.exists():
             raise FileNotFoundError(f"LaTeX file not found: {latex_file}")
 
-        self._sync_shared_preambles(paper_id)
-        self._write_latex_lean_stats(paper_id)
-        self._write_assumption_ledger_auto(paper_id)
-        self._write_lean_handle_ids_auto(paper_id)
-        self._rewrite_content_lean_handles_to_ids(paper_id)
-        self._normalize_and_fill_claimstamps(paper_id)
-        self._write_claim_mapping_auto(paper_id)
-        self._write_proof_hardness_index_auto(paper_id)
+        self._refresh_derived_content(paper_id)
+        self._mark_claim_nodes_in_graph(paper_id)
+        self._validate_true_paths(paper_id)
         self._update_paper_date(latex_file)
 
         print(f"[build] Building {paper_id} LaTeX...")
@@ -2992,19 +3495,12 @@ end {module_root}
         For variants (e.g., paper1_jsait), uses variant-specific naming.
         """
         meta = self._get_paper_meta(paper_id)
-        out_dir = self._get_paper_dir(paper_id) / "markdown"
-        # Use paper_id for variant-specific naming
-        out_file = out_dir / f"{paper_id}.md"
+        out_dir = self._get_markdown_dir(paper_id)
+        out_file = self._get_markdown_file(paper_id)
 
         out_dir.mkdir(parents=True, exist_ok=True)
         print(f"[build-md] Building {paper_id}: {meta.name}...")
-        self._write_latex_lean_stats(paper_id)
-        self._write_assumption_ledger_auto(paper_id)
-        self._write_lean_handle_ids_auto(paper_id)
-        self._rewrite_content_lean_handles_to_ids(paper_id)
-        self._normalize_and_fill_claimstamps(paper_id)
-        self._write_claim_mapping_auto(paper_id)
-        self._write_proof_hardness_index_auto(paper_id)
+        self._refresh_derived_content(paper_id)
 
         # Discover files from main LaTeX include order
         content_files = self._discover_content_files(paper_id)
@@ -3731,6 +4227,9 @@ end {module_root}
                 f"Claim mapping incomplete for {paper_id}: {len(missing_labels)} labels unmapped"
             )
 
+        # Forcing coverage analysis
+        forcing_result = self._check_forcing_coverage(paper_id)
+
         return {
             "paper_id": paper_id,
             "mapping_file": str(mapping_file.relative_to(self.repo_root)),
@@ -3738,7 +4237,49 @@ end {module_root}
             "mapped_labels": sorted(mapped_labels),
             "missing_labels": missing_labels,
             "extra_labels": extra_labels,
+            "forcing": forcing_result,
         }
+
+    def _check_forcing_coverage(self, paper_id: str) -> Optional[Dict[str, object]]:
+        """Check forcing coverage using analyze_forcing_coverage.py."""
+        import importlib.util
+
+        analyzer_path = self.repo_root / "scripts" / "analyze_forcing_coverage.py"
+        if not analyzer_path.exists():
+            print("[claim-check]   Warning: analyze_forcing_coverage.py not found")
+            return None
+
+        try:
+            spec = importlib.util.spec_from_file_location(
+                "analyze_forcing_coverage", analyzer_path
+            )
+            if spec is None or spec.loader is None:
+                print("[claim-check]   Warning: Could not load analyzer module")
+                return None
+            analyzer = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(analyzer)
+
+            result = analyzer.analyze(paper_id, self.repo_root)
+
+            print(
+                f"[claim-check]   Forcing: {result['reaching_forcing']}/{result['total_claims']} "
+                f"({result['coverage_fraction']:.1%})"
+            )
+
+            if result["non_reaching"]:
+                print(f"[claim-check]   Non-reaching: {len(result['non_reaching'])}")
+                for item in result["non_reaching"][:5]:
+                    print(f"[claim-check]     - {item['label']}")
+                    print(f"[claim-check]       Furthest: {item['furthest_reachable']}")
+
+            return result
+
+        except FileNotFoundError as e:
+            print(f"[claim-check]   Warning: Forcing analysis skipped: {e}")
+            return None
+        except Exception as e:
+            print(f"[claim-check]   Warning: Forcing analysis failed: {e}")
+            return None
 
     def _update_paper_date(self, tex_file: Path):
         """Update publication date in LaTeX file using regex for correct replacement."""
@@ -3777,14 +4318,7 @@ end {module_root}
 
         For variants (e.g., paper1_jsait), uses variant-specific staging directory.
         """
-        self._sync_shared_preambles(paper_id)
-        self._write_latex_lean_stats(paper_id)
-        self._write_assumption_ledger_auto(paper_id)
-        self._write_lean_handle_ids_auto(paper_id)
-        self._rewrite_content_lean_handles_to_ids(paper_id)
-        self._normalize_and_fill_claimstamps(paper_id)
-        self._write_claim_mapping_auto(paper_id)
-        self._write_proof_hardness_index_auto(paper_id)
+        self._refresh_derived_content(paper_id)
         metadata_file = self.build_copy_paste_metadata(paper_id)
 
         # Phase 1: Validate all required files exist (fail-loud)
@@ -3824,8 +4358,7 @@ end {module_root}
     def _validate_and_get_pdf(self, paper_id: str) -> Path:
         """Validate PDF exists and return path. Fail-loud if missing."""
         meta = self._get_paper_meta(paper_id)
-        paper_dir = self._get_paper_dir(paper_id)
-        latex_dir = paper_dir / meta.latex_dir
+        latex_dir = self._get_latex_dir(paper_id)
         pdfs = list(latex_dir.glob("*.pdf"))
 
         if not pdfs:
@@ -3839,11 +4372,10 @@ end {module_root}
     def _validate_and_get_markdown(self, paper_id: str) -> Path:
         """Validate Markdown exists and return path. Fail-loud if missing."""
         meta = self._get_paper_meta(paper_id)
-        paper_dir = self._get_paper_dir(paper_id)
         # Must match build_markdown(), which writes <paper_id>.md.
         # This is critical for variants (e.g., paper4_toc) that share dir_name
         # with a base paper but have different LaTeX sources/content.
-        md_file = paper_dir / "markdown" / f"{paper_id}.md"
+        md_file = self._get_markdown_file(paper_id)
 
         if not md_file.exists():
             raise FileNotFoundError(
@@ -3878,19 +4410,17 @@ end {module_root}
         Also copies content/ subdirectory if present.
         """
         meta = self._get_paper_meta(paper_id)
-        paper_dir = self._get_paper_dir(paper_id)
-        latex_dir = paper_dir / meta.latex_dir
+        latex_dir = self._get_latex_dir(paper_id)
 
         if not latex_dir.exists():
             print(f"[arxiv]   No LaTeX directory for {paper_id}, skipping...")
             return
 
         # Extensions to copy
-        extensions = [".tex", ".bib", ".bbl", ".cls", ".sty"]
         copied_count = 0
 
         # Copy top-level LaTeX files
-        for ext in extensions:
+        for ext in self.build_config.latex_source_extensions:
             for src_file in latex_dir.glob(f"*{ext}"):
                 shutil.copy2(src_file, package_dir / src_file.name)
                 copied_count += 1
@@ -3952,9 +4482,7 @@ end {module_root}
                     if self._files_identical(src_file, root_dest):
                         identical_skips += 1
                     else:
-                        fallback_dest = (
-                            lean_dest / f"dep_{source_paper_id}" / rel_path
-                        )
+                        fallback_dest = lean_dest / f"dep_{source_paper_id}" / rel_path
                         fallback_dest.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(src_file, fallback_dest)
                         conflict_fallbacks += 1
@@ -4094,26 +4622,74 @@ end {module_root}
         if copied_count > 0:
             print(f"[arxiv]   Experiments: {copied_count} files")
 
+    def _sync_graph_viewer_assets(self, dest_dir: Path) -> None:
+        """Copy portable graph viewer assets into a graph bundle directory."""
+        infra_dir = self.repo_root / "docs" / "papers" / "graph_infra"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        for asset in [
+            "dependency-graph.jsx",
+            "rejection-trace.jsx",
+            "graph_utils.js",
+            "true_path.js",
+            "latex_renderer.js",
+            "viewer.html",
+        ]:
+            src = infra_dir / asset
+            if src.exists():
+                shutil.copy2(src, dest_dir / asset)
+        stale_index = dest_dir / "index.html"
+        if stale_index.exists():
+            stale_index.unlink()
+
+    def _write_graph_manifest(
+        self, graphs_dir: Path, default_file: Optional[str] = None
+    ) -> None:
+        """Write a portable local manifest for colocated graph viewers."""
+        graphs_dir.mkdir(parents=True, exist_ok=True)
+        graph_files = sorted(
+            p.name
+            for p in graphs_dir.glob("*.json")
+            if not p.name.endswith(".decls.json") and p.name != "manifest.json"
+        )
+        if default_file not in graph_files:
+            default_file = graph_files[0] if graph_files else None
+        payload = {
+            "default": default_file,
+            "graphs": [
+                {"file": name, "label": name.removesuffix(".json")}
+                for name in graph_files
+            ],
+        }
+        (graphs_dir / "manifest.json").write_text(
+            json.dumps(payload, indent=2) + "\n", encoding="utf-8"
+        )
+
     def _copy_graph_visualizer(self, paper_id: str, package_dir: Path) -> None:
-        """Copy dependency graph JSON(s) and viewer into the release package.
+        """Copy the paper's dependency graph and viewer into the release package.
 
         Every package includes:
           graphs/<paper_id>.json          — this paper's proof dependency graph
-          graphs/<dep_id>.json            — one per transitive lean_dependency
           graphs/dependency-graph.jsx     — interactive force-directed visualizer
           graphs/rejection-trace.jsx      — rejection cascade trace visualizer
-          graphs/index.html               — standalone viewer (D3 via CDN)
+          graphs/graph_utils.js           — shared graph utilities
+          graphs/true_path.js             — true path validation module
+          graphs/latex_renderer.js        — LaTeX/foundation bucket utilities
+          graphs/index.html               — portable React viewer entrypoint
 
         This is unconditional — every packaged paper ships its graph.
         """
         graphs_dir_src = self.repo_root / "docs" / "papers" / "graph_infra" / "graphs"
-        infra_dir = self.repo_root / "docs" / "papers" / "graph_infra"
         graphs_dest = package_dir / "graphs"
         graphs_dest.mkdir(exist_ok=True)
 
-        # Collect paper ids whose graphs we want: this paper + all lean deps
-        dep_ids = self._collect_lean_dependency_closure(paper_id)
-        all_ids = [paper_id] + list(dep_ids)
+        # Package exactly one graph JSON per paper bundle. Cross-paper proof
+        # dependencies are already present inside the current paper graph.
+        all_ids = [paper_id]
+
+        # Re-mark claim nodes immediately before packaging so the shipped JSON
+        # cannot drift stale relative to the current claim extraction state.
+        for pid in all_ids:
+            self._mark_claim_nodes_in_graph(pid)
 
         copied_jsons: List[str] = []
         for pid in all_ids:
@@ -4121,15 +4697,13 @@ end {module_root}
             if src.exists():
                 shutil.copy2(src, graphs_dest / f"{pid}.json")
                 copied_jsons.append(f"{pid}.json")
+            decl_src = graphs_dir_src / f"{pid}.decls.json"
+            if decl_src.exists():
+                shutil.copy2(decl_src, graphs_dest / f"{pid}.decls.json")
 
-        # Copy JSX visualizer sources
-        for jsx in ["dependency-graph.jsx", "rejection-trace.jsx"]:
-            src = infra_dir / jsx
-            if src.exists():
-                shutil.copy2(src, graphs_dest / jsx)
-
-        # Generate standalone index.html — D3 via CDN, loads paper JSON by default
-        self._write_graph_index_html(paper_id, all_ids, copied_jsons, graphs_dest)
+        # Copy graph viewer sources/modules
+        self._sync_graph_viewer_assets(graphs_dest)
+        self._write_graph_manifest(graphs_dest, f"{paper_id}.json")
 
         print(f"[arxiv]   Graphs: {len(copied_jsons)} JSON(s) + viewer → graphs/")
 
@@ -4139,6 +4713,7 @@ end {module_root}
         all_ids: List[str],
         available_jsons: List[str],
         graphs_dest: Path,
+        claim_to_handles: Dict[str, List[str]] | None = None,
     ) -> None:
         """Write a standalone D3 force-graph viewer as graphs/index.html."""
         meta = self._get_paper_meta(paper_id)
@@ -4150,6 +4725,16 @@ end {module_root}
             if f"{pid}.json" in available_jsons
         )
 
+        # Build claim-to-handles mapping for JS
+        claim_mapping_js = "{}"
+        if claim_to_handles:
+            # Convert Python dict to JS object: {{"thm:foo": ["Ns.thm1", "Ns.thm2"], ...}}
+            mapping_entries = []
+            for claim, handles in sorted(claim_to_handles.items()):
+                handles_json = ", ".join(f'"{h}"' for h in handles)
+                mapping_entries.append(f'"{claim}": [{handles_json}]')
+            claim_mapping_js = "{ " + ", ".join(mapping_entries) + " }"
+
         html = f"""\
 <!DOCTYPE html>
 <html lang="en">
@@ -4158,102 +4743,697 @@ end {module_root}
   <title>Proof Dependency Graph — {meta.name}</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    body {{ margin: 0; font-family: monospace; background: #0f0f0f; color: #ccc; }}
-    #header {{ padding: 12px 16px; background: #1a1a1a; border-bottom: 1px solid #333;
-               display: flex; align-items: center; gap: 16px; }}
-    #header h1 {{ margin: 0; font-size: 14px; color: #eee; }}
-    select {{ background: #222; color: #ccc; border: 1px solid #444; padding: 4px 8px;
-              font-family: monospace; font-size: 13px; }}
-    #stats {{ font-size: 12px; color: #888; }}
-    svg {{ width: 100vw; height: calc(100vh - 48px); display: block; }}
+    :root {{
+      --bg: #0a0a0a;
+      --panel: #121212;
+      --panel-2: #171717;
+      --line: #262626;
+      --muted: #8a8a8a;
+      --text: #e6e6e6;
+      --thm: #3b82f6;
+      --def: #8b5cf6;
+      --ax: #ef4444;
+      --foundation: #f59e0b;
+      --bridge: #10b981;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{ margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg); color: var(--text); }}
+    .topbar {{
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }}
+    .title-row {{ display: flex; align-items: baseline; gap: 12px; }}
+    .title-row h1 {{ margin: 0; font-size: 14px; font-weight: 700; }}
+    .title-row .subtitle {{ font-size: 11px; color: var(--muted); }}
+    .controls {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }}
+    .control {{ display: flex; flex-direction: column; gap: 4px; }}
+    .control.inline {{ flex-direction: row; align-items: center; gap: 8px; }}
+    .control label {{ font-size: 10px; letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase; }}
+    .control select,
+    .control input,
+    .control button {{
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid #303030;
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 12px;
+      border-radius: 4px;
+    }}
+    .control button {{ cursor: pointer; }}
+    .legend {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-size: 11px;
+      color: var(--muted);
+      padding-top: 2px;
+    }}
+    .legend-item {{ display: flex; align-items: center; gap: 8px; }}
+    .swatch {{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(255,255,255,0.25);
+    }}
+    .swatch.square {{ border-radius: 2px; }}
+    .swatch.diamond {{ border-radius: 0; transform: rotate(45deg); }}
+    .swatch.theorem {{ background: var(--thm); }}
+    .swatch.definition {{ background: var(--def); }}
+    .swatch.axiom {{ background: var(--ax); }}
+    .swatch.foundation {{ background: var(--foundation); }}
+    .swatch.bridge {{ background: var(--bridge); }}
+    .mode-help {{
+      background: #111827;
+      border-top: 1px solid #1f2937;
+      border-bottom: 1px solid #1f2937;
+      color: #93c5fd;
+      padding: 9px 18px;
+      font-size: 11px;
+    }}
+    .layout {{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      min-height: calc(100vh - 182px);
+    }}
+    #canvas-wrap {{ position: relative; border-right: 1px solid var(--line); }}
+    #svg {{ width: 100%; height: 100%; display: block; }}
+    .side {{
+      background: var(--panel);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }}
+    .side h2 {{
+      margin: 0;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }}
+    .metric {{
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 10px;
+      font-size: 12px;
+      align-items: baseline;
+    }}
+    .metric .key {{ color: var(--muted); }}
+    .metric .val {{ color: var(--text); word-break: break-word; }}
     .node circle {{ stroke-width: 1.5px; cursor: pointer; }}
-    .node text {{ font-size: 10px; fill: #aaa; pointer-events: none; }}
-    .link {{ stroke: #444; stroke-opacity: 0.6; }}
-    .node.theorem circle {{ fill: #3b82f6; stroke: #60a5fa; }}
-    .node.definition circle {{ fill: #8b5cf6; stroke: #a78bfa; }}
-    .node.axiom circle {{ fill: #ef4444; stroke: #f87171; }}
-    .node.other circle {{ fill: #555; stroke: #777; }}
-    .tooltip {{ position: absolute; background: #222; border: 1px solid #444;
-                padding: 6px 10px; font-size: 11px; pointer-events: none;
-                max-width: 400px; word-break: break-all; color: #eee; }}
+    .node text {{ font-size: 9px; fill: #a3a3a3; pointer-events: none; }}
+    .link {{ stroke: #3f3f46; stroke-opacity: 0.55; }}
+    .tooltip {{
+      position: absolute;
+      background: rgba(12, 12, 12, 0.95);
+      border: 1px solid #333;
+      padding: 6px 8px;
+      font-size: 11px;
+      pointer-events: none;
+      color: #eee;
+      max-width: 480px;
+      word-break: break-word;
+      border-radius: 4px;
+      display: none;
+    }}
+    .hint {{ font-size: 11px; color: var(--muted); line-height: 1.5; }}
+    @media (max-width: 1100px) {{
+      .layout {{ grid-template-columns: 1fr; }}
+      #canvas-wrap {{ border-right: none; border-bottom: 1px solid var(--line); min-height: 60vh; }}
+    }}
   </style>
 </head>
 <body>
-<div id="header">
-  <h1>Proof Dependency Graph — {meta.name}</h1>
-  <select id="picker" onchange="loadGraph(this.value)">
+  <div class="topbar">
+    <div class="title-row">
+      <h1>Proof Dependency Graph — {meta.name}</h1>
+      <span class="subtitle">interactive packaged viewer</span>
+    </div>
+    <div class="controls">
+      <div class="control">
+        <label for="picker">Graph</label>
+        <select id="picker">
 {options_html}
-  </select>
-  <span id="stats"></span>
-  <span style="color:#555;font-size:11px">
-    ● theorem &nbsp; ■ definition &nbsp; ◆ axiom &nbsp;
-    | open dependency-graph.jsx for interactive version
-  </span>
-</div>
-<svg id="svg"></svg>
-<div class="tooltip" id="tip" style="display:none"></div>
-<script>
-const color = {{ theorem: "#3b82f6", definition: "#8b5cf6", axiom: "#ef4444" }};
+        </select>
+      </div>
+      <div class="control">
+        <label for="mode">View</label>
+        <select id="mode">
+          <option value="forcing">Forcing chain</option>
+          <option value="claims" selected>Claims only</option>
+          <option value="full">Full graph</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="paper-filter">Paper scope</label>
+        <select id="paper-filter">
+          <option value="">All papers</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="depth-limit">Depth limit</label>
+        <input id="depth-limit" type="number" min="0" placeholder="none" />
+      </div>
+      <div class="control inline" style="align-self:end;">
+        <input id="hide-artifacts" type="checkbox" checked />
+        <label for="hide-artifacts" style="margin:0;font-size:12px;letter-spacing:0;color:var(--text);text-transform:none;">Hide artifacts in full view</label>
+      </div>
+      <div class="control">
+        <label>&nbsp;</label>
+        <button id="reset">Reset filters</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch theorem"></span> theorem</span>
+      <span class="legend-item"><span class="swatch square definition"></span> definition</span>
+      <span class="legend-item"><span class="swatch diamond axiom"></span> axiom</span>
+      <span class="legend-item"><span class="swatch foundation"></span> foundation bucket</span>
+      <span class="legend-item"><span class="swatch bridge"></span> derived/bridge paper</span>
+      <span class="legend-item"><span id="stats">loading…</span></span>
+    </div>
+  </div>
+  <div id="mode-help" class="mode-help"></div>
+  <div class="layout">
+    <div id="canvas-wrap">
+      <svg id="svg"></svg>
+      <div class="tooltip" id="tip"></div>
+    </div>
+    <div class="side">
+      <div>
+        <h2>Selection</h2>
+        <div id="selection" class="hint">Click a node to inspect it.</div>
+      </div>
+      <div>
+        <h2>Node Details</h2>
+        <div id="details" class="metric">
+          <div class="key">status</div><div class="val">No node selected</div>
+        </div>
+      </div>
+      <div>
+        <h2>Lean Signature</h2>
+        <div class="hint">
+          Clicking a project node shows the exported Lean declaration signature and any attached docstring.
+          This is readable proof metadata, not a full Lean-to-LaTeX theorem renderer.
+          If you need display math later, the next step is rendering the exported signature string with a math layer.
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const d3 = window.d3;
+    const picker = document.getElementById("picker");
+    const mode = document.getElementById("mode");
+    const paperFilter = document.getElementById("paper-filter");
+    const depthLimit = document.getElementById("depth-limit");
+    const hideArtifacts = document.getElementById("hide-artifacts");
+    const resetBtn = document.getElementById("reset");
+    const statsEl = document.getElementById("stats");
+    const modeHelp = document.getElementById("mode-help");
+    const detailsEl = document.getElementById("details");
+    const selectionEl = document.getElementById("selection");
+    const tip = document.getElementById("tip");
+    const claimToHandles = {claim_mapping_js};
 
-function loadGraph(file) {{
-  fetch(file)
-    .then(r => r.json())
-    .then(data => render(data))
-    .catch(() => document.getElementById("stats").textContent = "⚠ " + file + " not found");
-}}
+    const ARTIFACT_PATTERNS = [
+      /\\._simp_/, /\\.proxyType/, /_aux_/, /___macroRules_/, /___unexpand_/, /\\.\\./,
+      /\\.instRepr/, /\\.instBEq/, /\\.instHashable/, /\\.instOrd/, /\\.instToString/,
+      /\\.instInhabited/, /\\.instDecidable/, /\\.instSubsingleton/, /\\.instNonempty/,
+      /\\.rec$/, /\\.recOn$/, /\\.casesOn$/, /\\.noConfusion/, /\\.noConfusionType/,
+      /\\.eliminator$/, /\\.brecOn$/, /\\.binductionOn$/,
+      /\\.mk\\.inj/, /\\.mk\\.sizeOf_spec/, /\\.inj/, /\\.injEq/, /\\.ind/,
+      /\\.sizeOf_spec/, /\\.sizeOf/, /\\.ctorIdx/, /\\.ctorElim/,
+      /\\.match_/, /_match/, /\\._main/, /\\._cstage/,
+      /_auxLemma/, /_eqn/, /_proof/, /_fun/, /_fix/,
+      /_sunfold/, /_tactic/,
+    ];
 
-function render(data) {{
-  const nodes = data.nodes.map(d => ({{ ...d }}));
-  const links = data.edges.map(d => ({{ source: d.source, target: d.target }}));
+    function isArtifact(id) {{
+      return ARTIFACT_PATTERNS.some((re) => re.test(id));
+    }}
 
-  const stats = document.getElementById("stats");
-  const th = nodes.filter(n => n.kind === "theorem").length;
-  const df = nodes.filter(n => n.kind === "definition").length;
-  const ax = nodes.filter(n => n.kind === "axiom").length;
-  stats.textContent = `${{nodes.length}} nodes (${{th}} thm, ${{df}} def, ${{ax}} axiom)  ${{links.length}} edges`;
+    function buildAdj(nodes, edges) {{
+      const out = {{}};
+      for (const n of nodes) out[n.id] = [];
+      for (const e of edges) {{
+        const s = typeof e.source === "object" ? e.source.id : e.source;
+        const t = typeof e.target === "object" ? e.target.id : e.target;
+        if (out[s]) out[s].push(t);
+      }}
+      return out;
+    }}
 
-  const svg = d3.select("#svg");
-  svg.selectAll("*").remove();
-  const w = svg.node().clientWidth, h = svg.node().clientHeight;
-  const g = svg.append("g");
-  svg.call(d3.zoom().on("zoom", e => g.attr("transform", e.transform)));
+    function computeStats(data) {{
+      const theorems = data.nodes.filter((n) => n.kind === "theorem").length;
+      const definitions = data.nodes.filter((n) => n.kind === "definition").length;
+      const axioms = data.nodes.filter((n) => n.kind === "axiom").length;
+      const undirected = {{}};
+      for (const n of data.nodes) undirected[n.id] = [];
+      for (const e of data.edges) {{
+        const s = typeof e.source === "object" ? e.source.id : e.source;
+        const t = typeof e.target === "object" ? e.target.id : e.target;
+        if (undirected[s]) undirected[s].push(t);
+        if (undirected[t]) undirected[t].push(s);
+      }}
+      const visited = new Set();
+      let components = 0;
+      for (const n of data.nodes) {{
+        if (visited.has(n.id)) continue;
+        components += 1;
+        const q = [n.id];
+        while (q.length) {{
+          const cur = q.shift();
+          if (visited.has(cur)) continue;
+          visited.add(cur);
+          for (const nxt of undirected[cur] || []) {{
+            if (!visited.has(nxt)) q.push(nxt);
+          }}
+        }}
+      }}
+      return {{
+        totalNodes: data.nodes.length,
+        totalEdges: data.edges.length,
+        theorems,
+        definitions,
+        axioms,
+        components,
+      }};
+    }}
 
-  const sim = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id).distance(60))
-    .force("charge", d3.forceManyBody().strength(-80))
-    .force("center", d3.forceCenter(w / 2, h / 2));
+    const FILTERS = {{
+      hideArtifacts: (data) => {{
+        const keep = new Set(data.nodes.filter((n) => !isArtifact(n.id)).map((n) => n.id));
+        return {{
+          nodes: data.nodes.filter((n) => keep.has(n.id)),
+          edges: data.edges.filter((e) => {{
+            const s = typeof e.source === "object" ? e.source.id : e.source;
+            const t = typeof e.target === "object" ? e.target.id : e.target;
+            return keep.has(s) && keep.has(t);
+          }}),
+        }};
+      }},
+      restrictToPaper: (data, params) => {{
+        if (!params || params.paper == null) return data;
+        const keep = new Set(data.nodes.filter((n) => n.paper === params.paper).map((n) => n.id));
+        return {{
+          nodes: data.nodes.filter((n) => keep.has(n.id)),
+          edges: data.edges.filter((e) => {{
+            const s = typeof e.source === "object" ? e.source.id : e.source;
+            const t = typeof e.target === "object" ? e.target.id : e.target;
+            return keep.has(s) && keep.has(t);
+          }}),
+        }};
+      }},
+      depthLimit: (data, params) => {{
+        if (!params || params.depth == null) return data;
+        const adj = buildAdj(data.nodes, data.edges);
+        const roots = data.nodes.filter((n) => n.paper === -1).map((n) => n.id);
+        const dist = {{}};
+        const q = [];
+        for (const r of roots) {{
+          dist[r] = 0;
+          q.push(r);
+        }}
+        while (q.length) {{
+          const cur = q.shift();
+          for (const nxt of adj[cur] || []) {{
+            if (dist[nxt] === undefined) {{
+              dist[nxt] = dist[cur] + 1;
+              q.push(nxt);
+            }}
+          }}
+        }}
+        const keep = new Set(data.nodes.filter((n) => dist[n.id] !== undefined && dist[n.id] <= params.depth).map((n) => n.id));
+        return {{
+          nodes: data.nodes.filter((n) => keep.has(n.id)),
+          edges: data.edges.filter((e) => {{
+            const s = typeof e.source === "object" ? e.source.id : e.source;
+            const t = typeof e.target === "object" ? e.target.id : e.target;
+            return keep.has(s) && keep.has(t);
+          }}),
+        }};
+      }},
+      claimsOnly: (data) => {{
+        const noArtifacts = FILTERS.hideArtifacts(data);
+        const keep = new Set(noArtifacts.nodes.filter((n) => n.paper === -1).map((n) => n.id));
+        const adj = buildAdj(noArtifacts.nodes, noArtifacts.edges);
+        const rev = {{}};
+        for (const n of noArtifacts.nodes) rev[n.id] = [];
+        for (const e of noArtifacts.edges) {{
+          const s = typeof e.source === "object" ? e.source.id : e.source;
+          const t = typeof e.target === "object" ? e.target.id : e.target;
+          if (rev[t]) rev[t].push(s);
+        }}
+        const q1 = [...keep];
+        while (q1.length) {{
+          const cur = q1.shift();
+          for (const nxt of rev[cur] || []) {{
+            if (!keep.has(nxt)) {{
+              keep.add(nxt);
+              q1.push(nxt);
+            }}
+          }}
+        }}
+        const q2 = [...keep];
+        while (q2.length) {{
+          const cur = q2.shift();
+          for (const nxt of adj[cur] || []) {{
+            if (!keep.has(nxt)) {{
+              keep.add(nxt);
+              q2.push(nxt);
+            }}
+          }}
+        }}
+        return {{
+          nodes: noArtifacts.nodes.filter((n) => keep.has(n.id)),
+          edges: noArtifacts.edges.filter((e) => {{
+            const s = typeof e.source === "object" ? e.source.id : e.source;
+            const t = typeof e.target === "object" ? e.target.id : e.target;
+            return keep.has(s) && keep.has(t);
+          }}),
+        }};
+      }},
+      forcingChain: (data) => {{
+        const isFoundation = (id) => String(id).startsWith("FOUNDATION.");
+        const isForcingTheorem = (id) => /^[A-Z]+\\d+[a-z']*$/.test(String(id).split(".").slice(-1)[0]);
+        const claimIds = new Set(data.nodes
+          .filter((n) => n.paper === -1 && (n.kind === "theorem" || n.kind === "definition"))
+          .map((n) => n.id));
+        const targetIds = new Set(data.nodes
+          .filter((n) => isFoundation(n.id) || isForcingTheorem(n.id))
+          .map((n) => n.id));
+        if (claimIds.size === 0 || targetIds.size === 0) return data;
+        const adj = buildAdj(data.nodes, data.edges);
+        const rev = {{}};
+        for (const n of data.nodes) rev[n.id] = [];
+        for (const e of data.edges) {{
+          const s = typeof e.source === "object" ? e.source.id : e.source;
+          const t = typeof e.target === "object" ? e.target.id : e.target;
+          if (rev[t]) rev[t].push(s);
+        }}
+        const fromClaims = new Set(claimIds);
+        const q1 = [...claimIds];
+        while (q1.length) {{
+          const cur = q1.shift();
+          for (const nxt of adj[cur] || []) {{
+            if (!fromClaims.has(nxt)) {{
+              fromClaims.add(nxt);
+              q1.push(nxt);
+            }}
+          }}
+        }}
+        const toTargets = new Set(targetIds);
+        const q2 = [...targetIds];
+        while (q2.length) {{
+          const cur = q2.shift();
+          for (const nxt of rev[cur] || []) {{
+            if (!toTargets.has(nxt)) {{
+              toTargets.add(nxt);
+              q2.push(nxt);
+            }}
+          }}
+        }}
+        const keep = new Set();
+        for (const id of fromClaims) if (toTargets.has(id)) keep.add(id);
+        for (const id of claimIds) keep.add(id);
+        for (const id of targetIds) keep.add(id);
+        return {{
+          nodes: data.nodes.filter((n) => keep.has(n.id)),
+          edges: data.edges.filter((e) => {{
+            const s = typeof e.source === "object" ? e.source.id : e.source;
+            const t = typeof e.target === "object" ? e.target.id : e.target;
+            return keep.has(s) && keep.has(t);
+          }}),
+        }};
+      }},
+    }};
 
-  const link = g.append("g").selectAll("line").data(links).join("line")
-    .attr("class", "link").attr("stroke-width", 0.8);
+    function applyFilters(data, filters) {{
+      let out = data;
+      for (const filter of filters) {{
+        const fn = FILTERS[filter.name];
+        if (!fn) continue;
+        out = fn(out, filter.params || {{}});
+      }}
+      return out;
+    }}
 
-  const tip = document.getElementById("tip");
-  const node = g.append("g").selectAll("g").data(nodes).join("g")
-    .attr("class", d => "node " + (d.kind || "other"))
-    .call(d3.drag()
-      .on("start", (e, d) => {{ if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }})
-      .on("drag", (e, d) => {{ d.fx = e.x; d.fy = e.y; }})
-      .on("end", (e, d) => {{ if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }}))
-    .on("mouseover", (e, d) => {{
-      tip.style.display = "block";
-      tip.style.left = (e.pageX + 12) + "px";
-      tip.style.top = (e.pageY - 8) + "px";
-      tip.textContent = d.id + " [" + (d.kind || "?") + "]";
-    }})
-    .on("mouseout", () => tip.style.display = "none");
+    const PAPER_LABELS = {{
+      "-1": "Claim / foundation frontier",
+      "0": "Bridge / derived layer",
+      "1": "Paper 1",
+      "2": "Paper 2",
+      "3": "Paper 3",
+      "4": "Paper 4",
+    }};
 
-  node.append("circle").attr("r", d => d.kind === "axiom" ? 7 : 4);
-  node.append("text").attr("x", 6).attr("y", 3)
-    .text(d => d.id.split(".").slice(-1)[0]);
+    let currentData = null;
+    let currentDecls = {{}};
+    let selectedNodeId = null;
 
-  sim.on("tick", () => {{
-    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-    node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
-  }});
-}}
+    function paperLabel(value) {{
+      return PAPER_LABELS[String(value)] || `Paper ${{value}}`;
+    }}
 
-loadGraph("{paper_id}.json");
-</script>
+    function viewDescription(view) {{
+      if (view === "forcing") {{
+        return "<strong>Forcing chain:</strong> keeps the path from claim-marked nodes through named forcing results down to collapsed first-principle buckets such as counting and measure theory.";
+      }}
+      if (view === "claims") {{
+        return "<strong>Claims only:</strong> hides compiler artifacts and keeps the cited proof spine anchored at the claim/foundation frontier.";
+      }}
+      return "<strong>Full graph:</strong> shows the full packaged proof graph. Use the artifact toggle, paper scope, and depth limit to cut noise.";
+    }}
+
+    function rebuildPaperScopeOptions(data) {{
+      const seen = new Set((data.nodes || []).map((n) => String(n.paper)));
+      const current = paperFilter.value;
+      const options = ['<option value=\"\">All papers</option>'];
+      for (const paper of [...seen].sort((a, b) => Number(a) - Number(b))) {{
+        options.push(`<option value="${{paper}}">${{paperLabel(paper)}}</option>`);
+      }}
+      paperFilter.innerHTML = options.join("");
+      if ([...paperFilter.options].some((o) => o.value === current)) {{
+        paperFilter.value = current;
+      }}
+    }}
+
+    function activeFilterSpec() {{
+      const filters = [];
+      if (mode.value === "forcing") {{
+        filters.push({{ name: "forcingChain" }});
+      }} else if (mode.value === "claims") {{
+        filters.push({{ name: "claimsOnly" }});
+      }} else if (hideArtifacts.checked) {{
+        filters.push({{ name: "hideArtifacts" }});
+      }}
+
+      if (paperFilter.value !== "") {{
+        filters.push({{ name: "restrictToPaper", params: {{ paper: Number(paperFilter.value) }} }});
+      }}
+      if (depthLimit.value !== "") {{
+        filters.push({{ name: "depthLimit", params: {{ depth: Number(depthLimit.value) }} }});
+      }}
+      return filters;
+    }}
+
+    function setDetails(node, data) {{
+      if (!node) {{
+        selectionEl.textContent = "Click a node to inspect it.";
+        detailsEl.innerHTML = '<div class="key">status</div><div class="val">No node selected</div>';
+        return;
+      }}
+
+      const outgoing = data.edges.filter((e) => (typeof e.source === "object" ? e.source.id : e.source) === node.id).length;
+      const incoming = data.edges.filter((e) => (typeof e.target === "object" ? e.target.id : e.target) === node.id).length;
+      const handles = claimToHandles[node.id] || [];
+      const decl = currentDecls[node.id] || null;
+      selectionEl.textContent = node.id;
+
+      const rows = [
+        ["id", node.id],
+        ["kind", node.kind || "other"],
+        ["paper", paperLabel(node.paper)],
+        ["outgoing", String(outgoing)],
+        ["incoming", String(incoming)],
+      ];
+      if (decl?.signature) {{
+        rows.push(["signature", decl.signature]);
+      }}
+      if (decl?.doc) {{
+        rows.push(["doc", decl.doc]);
+      }}
+      if (node.id.startsWith("FOUNDATION.")) {{
+        rows.push(["note", "Collapsed first-principle witness node"]);
+      }}
+      if (handles.length) {{
+        rows.push(["claim handles", handles.join(", ")]);
+      }}
+
+      detailsEl.innerHTML = rows.map(([k, v]) =>
+        `<div class="key">${{k}}</div><div class="val">${{v}}</div>`
+      ).join("");
+    }}
+
+    function render(filtered) {{
+      const nodes = filtered.nodes.map((n) => ({{ ...n }}));
+      const links = filtered.edges.map((e) => ({{ source: e.source, target: e.target }}));
+      const stat = computeStats(filtered);
+      statsEl.textContent =
+        `${{stat.totalNodes}} nodes · ${{stat.totalEdges}} edges · ` +
+        `${{stat.theorems}} thm · ${{stat.definitions}} def · ${{stat.axioms}} axiom`;
+      modeHelp.innerHTML = viewDescription(mode.value);
+
+      const svg = d3.select("#svg");
+      svg.selectAll("*").remove();
+
+      const width = svg.node().clientWidth;
+      const height = svg.node().clientHeight;
+      const g = svg.append("g");
+      svg.call(d3.zoom().scaleExtent([0.08, 8]).on("zoom", (event) => {{
+        g.attr("transform", event.transform);
+      }}));
+
+      const sim = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id((d) => d.id).distance(46).strength(0.45))
+        .force("charge", d3.forceManyBody().strength(-90).distanceMax(260))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide(10));
+
+      const link = g.append("g")
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("class", "link")
+        .attr("stroke-width", 0.9);
+
+      const node = g.append("g")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .attr("class", "node")
+        .call(
+          d3.drag()
+            .on("start", (event, d) => {{
+              if (!event.active) sim.alphaTarget(0.3).restart();
+              d.fx = d.x;
+              d.fy = d.y;
+            }})
+            .on("drag", (event, d) => {{
+              d.fx = event.x;
+              d.fy = event.y;
+            }})
+            .on("end", (event, d) => {{
+              if (!event.active) sim.alphaTarget(0);
+              d.fx = null;
+              d.fy = null;
+            }})
+        )
+        .on("mouseover", (event, d) => {{
+          tip.style.display = "block";
+          tip.style.left = `${{event.pageX + 12}}px`;
+          tip.style.top = `${{event.pageY - 8}}px`;
+          tip.textContent = `${{d.id}} [${{d.kind || "other"}}]`;
+        }})
+        .on("mouseout", () => {{
+          tip.style.display = "none";
+        }})
+        .on("click", (_event, d) => {{
+          selectedNodeId = d.id;
+          setDetails(d, filtered);
+          node.selectAll("circle").attr("stroke", (n) => n.id === selectedNodeId ? "#ffffff" : "rgba(255,255,255,0.2)");
+        }});
+
+      node.append("circle")
+        .attr("r", (d) => d.kind === "axiom" ? 7 : d.kind === "definition" ? 5 : 4)
+        .attr("fill", (d) => {{
+          if (String(d.id).startsWith("FOUNDATION.")) return "var(--foundation)";
+          if (d.paper === 0) return "var(--bridge)";
+          if (d.kind === "axiom") return "var(--ax)";
+          if (d.kind === "definition") return "var(--def)";
+          if (d.kind === "theorem") return "var(--thm)";
+          return "#71717a";
+        }})
+        .attr("stroke", (d) => d.id === selectedNodeId ? "#ffffff" : "rgba(255,255,255,0.2)");
+
+      node.append("text")
+        .attr("x", 7)
+        .attr("y", 3)
+        .text((d) => {{
+          const parts = d.id.split(".");
+          return parts[parts.length - 1];
+        }});
+
+      sim.on("tick", () => {{
+        link
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y);
+        node.attr("transform", (d) => `translate(${{d.x}},${{d.y}})`);
+      }});
+    }}
+
+    function renderFiltered() {{
+      if (!currentData) return;
+      const filtered = applyFilters(currentData, activeFilterSpec());
+      const selectedNode = filtered.nodes.find((n) => n.id === selectedNodeId) || null;
+      render(filtered);
+      setDetails(selectedNode, filtered);
+    }}
+
+    async function loadGraph(file) {{
+      try {{
+        const [graphResponse, declResponse] = await Promise.all([
+          fetch(file),
+          fetch(file.replace(/\\.json$/, ".decls.json")).catch(() => null),
+        ]);
+        const data = await graphResponse.json();
+        let decls = {{}};
+        if (declResponse && declResponse.ok) {{
+          try {{
+            decls = await declResponse.json();
+          }} catch (_err) {{
+            decls = {{}};
+          }}
+        }}
+        currentData = data;
+        currentDecls = decls;
+        rebuildPaperScopeOptions(data);
+        renderFiltered();
+      }} catch (err) {{
+        statsEl.textContent = `failed to load ${{file}}`;
+        selectionEl.textContent = "Graph load failed";
+        detailsEl.innerHTML = `<div class="key">error</div><div class="val">${{err.message}}</div>`;
+      }}
+    }}
+
+    picker.addEventListener("change", () => loadGraph(picker.value));
+    mode.addEventListener("change", renderFiltered);
+    paperFilter.addEventListener("change", renderFiltered);
+    depthLimit.addEventListener("input", renderFiltered);
+    hideArtifacts.addEventListener("change", renderFiltered);
+    resetBtn.addEventListener("click", () => {{
+      mode.value = "claims";
+      paperFilter.value = "";
+      depthLimit.value = "";
+      hideArtifacts.checked = true;
+      selectedNodeId = null;
+      renderFiltered();
+    }});
+
+    loadGraph("{paper_id}.json");
+  </script>
 </body>
 </html>
 """
@@ -4520,7 +5700,7 @@ Repository: https://github.com/trissim/openhcs
 
         # Step 1: Find all theorem/lemma declarations in .lean files
         theorems = []
-        exclude_patterns = {".lake", "build"}
+        exclude_patterns = set(self.build_config.lean_exclude_dirs)
         for lean_file in sorted(proofs_dir.rglob("*.lean")):
             if any(part in exclude_patterns for part in lean_file.parts):
                 continue

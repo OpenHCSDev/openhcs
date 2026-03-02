@@ -21,7 +21,7 @@ import Ssot.SSOT
 
 namespace SSOTGrounded
 
-open AbstractClassSystem
+open AbstractClassSystem Ssot
 
 /-
   PART 1: Connecting DOF to Observable Consistency

@@ -1,22 +1,19 @@
-Five independent scientific frameworks---engineering optimization, epistemic coherence, information geometry, computational complexity, and statistical physics---each characterize the same architectural property: having exactly one degree of freedom.
+We define leverage $L(A) = |\mathrm{Capabilities}(A)| / \mathrm{DOF}(A)$ for software architectures and prove that maximizing leverage, satisfying the Single Source of Truth condition, minimizing structural rank, admitting tractable sufficiency checking, and incurring minimum thermodynamic cost per decision cycle are all equivalent to $\mathrm{DOF}(A) = 1$.
 
-\textbf{Central Result (Five-Way Equivalence, Theorem~\ref{thm:five-way}).} For any architecture $A$ with $\mathrm{Cap}(A) > 0$:
+\textbf{Main Result (Theorem~\ref{thm:five-way}).} For any architecture $A$ with $\mathrm{Cap}(A) > 0$:
 \[
 \mathrm{DOF}(A) = 1
 \;\iff\; \text{max leverage}
 \;\iff\; \text{SSOT}
 \;\iff\; \mathrm{srank} = 1
 \;\iff\; \text{tractable sufficiency}
-\;\iff\; \text{zero thermodynamic cost}.
+\;\iff\; \text{minimum thermodynamic cost}.
 \]
-This convergence is not a coincidence. The five frameworks are logically independent---each was developed for a distinct purpose---yet all select the single-source condition as their ground state. All equivalences are machine-checked in Lean 4 via live cross-paper imports (Paper~3 $\to$ Paper~4 $\to$ Mathlib).
 
-Building on axis orthogonality (Paper~1) and Single Source of Truth (Paper~2), the engineering consequences follow: define leverage
-\[L(A) = \frac{|\mathrm{Capabilities}(A)|}{\mathrm{DOF}(A)}.\]
-Maximizing $L$ subject to feasibility minimizes expected error probability (DOF--Reliability Isomorphism), minimizes modification cost (Leverage Gap), and minimizes physical edit-energy under Landauer calibration with explicit per-edit constant $j_{\mathcal{M}} > 0$. These are \emph{corollaries} of the convergence theorem, not independent contributions.
+Engineering corollaries: $\mathrm{DOF} = n$ is isomorphic to a series reliability system with $n$ failure points; expected modification cost is proportional to $\mathrm{DOF}$; minimum edit-energy under Landauer calibration equals $j_{\mathcal{M}} \cdot \mathrm{DOF}(A)$ for explicit $j_{\mathcal{M}} > 0$. These follow from the equivalence and are not independent contributions.
 
-\textbf{Open Conjectures.} The thermodynamic selection theorem currently assumes P~$\neq$~coNP. We conjecture that thermodynamic cost scales directly with structural rank \emph{unconditionally}---removing the complexity-theoretic hypothesis would reduce the five-way equivalence to a purely physical statement. A second open problem connects DOF~$=1$ architectures to England's replication inequality: single-source architectures that generate derived instances may satisfy a formal entropy-production bound that multi-DOF architectures cannot match.
+The thermodynamic direction was initially proved conditional on P~$\neq$~coNP. \texttt{DecisionQuotient} removes this assumption: $E_{\mathrm{decision}} \geq \mathrm{srank} \cdot k_B T \ln 2$ is proved directly from Landauer calibration (\LH{BA7}), and P~$\neq$~NP follows from physical law (\LH{LP38}: Landauer, finite energy, finite signal speed, nontrivial state space), so the tractability equivalence holds unconditionally under these axioms. The England Replication Inequality is proved (\LH{england\_replication\_inequality}): the gap in minimal entropy production between a $k$-copy architecture and a single-source architecture is $\geq k_B \ln k$. No open conjectures remain.
 
-All core theorems are machine-checked in Lean~4. An assumption ledger and proof listing accompany the paper.
+All core theorems are machine-checked in Lean~4 with no \texttt{sorry} placeholders, via live imports from \texttt{AbstractClassSystem}, \texttt{Ssot}, and \texttt{DecisionQuotient}. An assumption ledger records all conditional dependencies.
 
-Keywords: software architecture, degrees of freedom, five-way equivalence, Landauer principle, structural rank, formal methods
+Keywords: software architecture, degrees of freedom, leverage, Single Source of Truth, structural rank, formal verification

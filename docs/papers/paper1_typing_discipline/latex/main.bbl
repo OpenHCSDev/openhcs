@@ -16,13 +16,6 @@ Walid~Taha Abdelgawad.
 \newblock Why nominal-typing matters in oop.
 \newblock arXiv preprint arXiv:1602.01047, 2016.
 
-\bibitem{paper2_ssot}
-Anonymous.
-\newblock Formal foundations for the single source of truth principle.
-\newblock Zenodo, 2025.
-\newblock Paper 2 of this series. Proves coherence impossibility theorems for
-  programming languages.
-
 \bibitem{barrett1996monotonic}
 Kim Barrett, Bob Cassels, Paul Haahr, David~A Moon, Keith Playford, and
   P~Tucker Withington.
@@ -214,6 +207,14 @@ Tristan Simas.
 \newblock GitHub pull request, 2025.
 \newblock Merged November 29, 2025. Available at:
   \url{https://github.com/trissim/openhcs/pull/44}.
+
+\bibitem{paper2_ssot}
+Tristan Simas.
+\newblock Zero-incoherence capacity of interactive encoding systems:
+  Achievability, converse, and side information bounds.
+\newblock Zenodo, 2025.
+\newblock Paper 2 of this series. Proves coherence impossibility theorems for
+  programming languages.
 
 \bibitem{goSpec}
 {The Go Authors}.

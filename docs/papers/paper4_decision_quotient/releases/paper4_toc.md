@@ -1,6 +1,6 @@
 # Paper: Computational Complexity of Physical Counting
 
-**Status**: Theory of Computing-ready | **Lean**: 28863 lines, 1252 theorems
+**Status**: Theory of Computing-ready | **Lean**: 30097 lines, 1279 theorems
 
 ---
 
@@ -8,17 +8,13 @@
 
 **Abstract**
 
-We characterize which coordinates of a factored state space determine optimal actions. For decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$.
+We characterize which coordinates of a factored state space determine optimal actions. For $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The decision quotient $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the minimal abstraction: any abstraction preserving optimal actions factors uniquely through $Q$.
 
-We prove fourteen first-principles theorems: thirteen from pure mathematics and logic, one from empirical assumption (temperature). The decision quotient $Q=S/{\sim}$ (where $s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the minimal abstraction: any other abstraction preserving optimal actions factors uniquely through $Q$. Verification has a lower bound: any sound checker for the empty-set sufficiency core requires $\geq 2^{n-1}$ witness pairs. The foundational chain from counting measure to probability to Bayes' theorem to the Decision Quotient follows from finite set cardinality. Fisher information, entropy bounds, optimal transport, rate-distortion, and thermodynamics each independently recover $\mathrm{srank}$ as the fundamental decision complexity measure.
+We prove fourteen first-principles theorems (thirteen from pure mathematics, one empirical). The chain from counting measure to probability to Bayes' theorem to $Q$ follows from finite set cardinality. Fisher information, entropy, optimal transport, rate-distortion, and thermodynamics each independently recover $\mathrm{srank}$ as decision complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
 
-Complexity classifications: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants are PP- and PSPACE-complete respectively, with strict static $\subset$ stochastic $\subset$ sequential separation. Six structural subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds.
+Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds. Verification requires $\geq 2^{n-1}$ witness pairs.
 
-Bayesian updating is optimal: from $\log x\leq x-1$ alone we prove it uniquely minimizes expected log loss.
-
-Two results carry empirical conditions. Conditional on Landauer's principle ($k_BT\ln 2$ per irreversible bit erasure, experimentally supported since 1961), composed with the bit-operation lower bounds above, the inequality $dU\geq\lambda\,dC$ follows by multiplication; rejecting it requires rejecting Landauer. Conditional on stochastic thermodynamics (Barato--Seifert 2015), the thermodynamic uncertainty relation $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$.
-
-All results are machine-checked in Lean 4 with no `sorry` placeholders. Complexity results carry their hypotheses as explicit Lean theorem parameters. A machine-generated assumption ledger records all conditional dependencies. There are no hidden axioms.
+Two results carry empirical conditions. Conditional on Landauer's principle ($k_BT\ln 2$ per bit erasure; experimentally confirmed 2012), $dU\geq\lambda\,dC$ follows by composition with bit-operation bounds; rejecting it requires rejecting Landauer. Conditional on stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, minimal $\sigma$ scaling with $\mathrm{srank}$.
 
 
 # Introduction {#sec:introduction}
@@ -102,7 +98,7 @@ MN1MN2MN10MN11
 ### 6. Bayes from Counting
 
 ::: theorem
-[]{#thm:bayes-from-counting label="thm:bayes-from-counting"} The foundational chain from counting to Decision Quotient:
+[]{#thm:bayes-from-counting label="thm:bayes-from-counting"} The chain from counting to Decision Quotient:
 
 1.  $P(A) = |A|/|\Omega|$ satisfies Kolmogorov axioms: nonnegativity, normalization, and additivity for disjoint sets.
 
@@ -209,7 +205,7 @@ RD1RD2RD3RS1RS2RS3RS4RS5
 *Proof.* Standard Shannon theory establishes (1)--(3). When $\phi(s) = \phi(s')$ implies $\operatorname{Opt}(s) = \operatorname{Opt}(s')$, states within equivalence classes merge without affecting optimal actions (4). The decision quotient partitions into $2^{\mathrm{srank}}$ classes, each requiring $\log_2$ bits for identification, yielding $R(0) = \mathrm{srank}$ (5). Fewer bits cannot distinguish all classes (6). ◻
 :::
 
-**Consequence.** Rate-distortion theory independently recovers structural rank as the fundamental description length for decision-making. Pure Shannon theory.
+**Consequence.** Rate-distortion theory independently recovers structural rank as the minimal description length for decision-making. Pure Shannon theory.
 
 ### 12. Nontriviality from Counting
 
@@ -1400,7 +1396,7 @@ Informally: honesty limits what you can claim, capability limits what you can so
 
 # Computational Complexity of Decision-Relevant Uncertainty {#sec:hardness}
 
-This section establishes the computational complexity of information sufficiency, formalized as coordinate sufficiency, for an arbitrary decision problem $\mathcal{D}$ with factored state space. Because the problems below are parameterized by $\mathcal{D}$, and the $(A, S, U)$ tuple captures any problem with choices under structured information (Remark [\[rem:universality\]](#rem:universality){reference-type="ref" reference="rem:universality"}), the hardness results are universal: they apply to every problem with coordinate structure, not to a specific problem domain. We prove three main results:
+This section establishes the computational complexity of information sufficiency, formalized as coordinate sufficiency, for an arbitrary decision problem $\mathcal{D}$ with factored state space. Because the problems below are parameterized by $\mathcal{D}$, and the $(A, S, U)$ tuple captures any problem with choices under structured information (Definition [\[def:decision-problem\]](#def:decision-problem){reference-type="ref" reference="def:decision-problem"}), the hardness results are universal: they apply to every problem with coordinate structure, not to a specific problem domain. We prove three main results:
 
 1.  **SUFFICIENCY-CHECK** is coNP-complete
 
@@ -2822,7 +2818,7 @@ Every computational cycle generates heat (Theorem [\[thm:cycle-cost\]](#thm:cyc
 :::
 
 ::: remark
-The self-erosion theorems apply to all physical substrates: silicon, neurons, molecules, any medium that instantiates state transitions. The bound is thermodynamic, not technological. Improved engineering can increase heat capacity or reduce heat per operation, but the fundamental tradeoff persists.
+The self-erosion theorems apply to all physical substrates: silicon, neurons, molecules, any medium that instantiates state transitions. The bound is thermodynamic, not technological. Improved engineering can increase heat capacity or reduce heat per operation, but the tradeoff persists.
 :::
 
 ### Regime as Channel: Competence as Capacity {#sec:regime-channel}
@@ -3839,7 +3835,7 @@ Informally: if exact support is not certified, do not make exact claims; when co
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 28863 lines across 113 files, with 1252 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 30097 lines across 118 files, with 1279 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -5723,7 +5719,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:abstain-guess-self-signal`                Full         `DQ.IntegrityCompetence.signal_no_evidence_forces_zero_certified`
 
-  `prop:abstention-frontier`                      Full         `DQ.ClaimClosure.no_auto_minimize_of_p_neq_conp`
+  `prop:abstention-frontier`                      Unmapped     *(no derived Lean handle found)*
 
   `prop:adq-ordering`                             Full         `DQ.ClaimClosure.adq_ordering`
 
@@ -5787,7 +5783,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:heuristic-reusability`                    Full         `DQ.ClaimClosure.anchor_query_relation_true_iff`, `DQ.ClaimClosure.posed_anchor_checked_true_implies_truth`, `DQ.ClaimClosure.posed_anchor_exact_claim_requires_evidence`, `DQ.ClaimClosure.sufficiency_iff_dq_ratio`
 
-  `prop:identifiability-convergence`              Full         `DQ.ClaimClosure.epsilon_admissible_iff_raw_lt_certified_total_core`
+  `prop:identifiability-convergence`              Unmapped     *(no derived Lean handle found)*
 
   `prop:insufficiency-counterexample`             Full         `DQ.ClaimClosure.DP7`, `DQ.ClaimClosure.DP8`
 
@@ -5811,7 +5807,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:lorentz-discrete`                         Full         `DQ.ClaimClosure.DS3`, `DQ.ClaimClosure.DS4`
 
-  `prop:mdp-tractable`                            Full         `DQ.ClaimClosure.process_bridge_failure_witness`
+  `prop:mdp-tractable`                            Unmapped     *(no derived Lean handle found)*
 
   `prop:minimal-relevant-equiv`                   Full         `DQ.DecisionProblem.relevantSet_is_minimal`, `DQ.DecisionProblem.sufficient_implies_selectorSufficient`
 
@@ -5863,11 +5859,11 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:reaction-competence`                      Full         `DQ.ClaimClosure.MI3`, `DQ.ClaimClosure.MI4`
 
-  `prop:refinement-strengthens`                   Full         `DQ.ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`
+  `prop:refinement-strengthens`                   Unmapped     *(no derived Lean handle found)*
 
-  `prop:retraction-evidence-integrity`            Full         `DQ.ClaimClosure.subproblem_hardness_lifts_to_full`
+  `prop:retraction-evidence-integrity`            Unmapped     *(no derived Lean handle found)*
 
-  `prop:retraction-no-evidence-violates`          Full         `DQ.ClaimClosure.subproblem_transfer_as_regime_simulation`
+  `prop:retraction-no-evidence-violates`          Unmapped     *(no derived Lean handle found)*
 
   `prop:rlff-maximizer-admissible`                Full         `DQ.IntegrityCompetence.exact_raw_only_of_no_exact_admissible`, `DQ.IntegrityCompetence.integrity_forces_abstention`
 
@@ -5877,39 +5873,39 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:self-confidence-not-certification`        Full         `DQ.IntegrityCompetence.signal_exact_no_competence_forces_zero_certified`
 
-  `prop:sequential-anchor-refinement`             Full         `DQ.StochasticSequential.sequential_anchor_sufficient_of_sequential_sufficient`
+  `prop:sequential-anchor-refinement`             Unmapped     *(no derived Lean handle found)*
 
-  `prop:sequential-anchor-tqbf-reduction`         Full         `DQ.StochasticSequential.SequentialAnchorCheckInstance`, `DQ.StochasticSequential.reduceTQBF_correct_anchor`, `DQ.StochasticSequential.reduceTQBF_to_sequential_anchor_reduction`
+  `prop:sequential-anchor-tqbf-reduction`         Unmapped     *(no derived Lean handle found)*
 
-  `prop:sequential-bounded-horizon`               Full         `DQ.ClaimClosure.physical_crossover_policy_core`
+  `prop:sequential-bounded-horizon`               Unmapped     *(no derived Lean handle found)*
 
-  `prop:sequential-static-relation`               Full         `DQ.ClaimClosure.physical_crossover_above_cap_core`
+  `prop:sequential-static-relation`               Unmapped     *(no derived Lean handle found)*
 
   `prop:set-to-selector`                          Full         `DQ.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`
 
   `prop:snapshot-process-typing`                  Full         `DQ.ClaimClosure.physical_crossover_hardness_core`, `DQ.ClaimClosure.posed_anchor_no_competence_no_exact_claim`, `DQ.ClaimClosure.system_transfer_licensed_iff_snapshot`
 
-  `prop:static-stochastic-strict`                 Full         `DQ.StochasticSequential.static_stochastic_strict_separation`
+  `prop:static-stochastic-strict`                 Unmapped     *(no derived Lean handle found)*
 
-  `prop:static-stochastic-transfer`               Full         `DQ.ClaimClosure.pose_returns_anchor_query_object`
+  `prop:static-stochastic-transfer`               Unmapped     *(no derived Lean handle found)*
 
   `prop:steps-run-scalar`                         Full         `DQ.IntegrityCompetence.rlff_maximizer_is_admissible`, `DQ.IntegrityCompetence.self_reflected_confidence_not_certification`
 
-  `prop:stochastic-anchor-refinement`             Full         `DQ.StochasticSequential.stochastic_anchor_sufficient_of_stochastic_sufficient`
+  `prop:stochastic-anchor-refinement`             Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-anchor-strict-reduction`       Full         `DQ.StochasticSequential.StochasticAnchorCheckInstance`, `DQ.StochasticSequential.reduceMAJSAT_correct_anchor_strict`, `DQ.StochasticSequential.reduceMAJSAT_to_stochastic_anchor_reduction`
+  `prop:stochastic-anchor-strict-reduction`       Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-bounded-support`               Full         `DQ.ClaimClosure.posed_anchor_signal_positive_certified_implies_admissible`
+  `prop:stochastic-bounded-support`               Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-landauer-floor`                Full         `DQ.StochasticSequential.landauerEnergyFloor_mono_bits`, `DQ.StochasticSequential.landauerEnergyFloor_nonneg`, `DQ.StochasticSequential.thermodynamicCost_eq_landauerEnergyFloorRoom_states`
+  `prop:stochastic-landauer-floor`                Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-potential-duality`             Full         `DQ.StochasticSequential.stochasticExpectedUtility_eq_neg_expectedActionPotential`, `DQ.StochasticSequential.stochasticExpectedUtility_le_iff_expectedActionPotential_ge`, `DQ.StochasticSequential.utilityFromPotentialDrop_le_iff_nextPotential_ge`
+  `prop:stochastic-potential-duality`             Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-product-tractable`             Full         `DQ.ClaimClosure.query_obstruction_boolean_corollary`
+  `prop:stochastic-product-tractable`             Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-sequential-bridge-fail`        Full         `DQ.ClaimClosure.posed_anchor_no_competence_no_exact_claim`
+  `prop:stochastic-sequential-bridge-fail`        Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-sequential-strict`             Full         `DQ.StochasticSequential.stochastic_sequential_strict_separation`
+  `prop:stochastic-sequential-strict`             Unmapped     *(no derived Lean handle found)*
 
   `prop:structural-asymmetry`                     Full         `DQ.ClaimClosure.SR1`, `DQ.ClaimClosure.SR2`, `DQ.ClaimClosure.SR3`
 
@@ -5947,7 +5943,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:bayes-from-counting`                       Full         `DQ.Foundations.bayes_from_conditional`, `DQ.Foundations.counting_additive`, `DQ.Foundations.counting_nonneg`, `DQ.Foundations.counting_total`, `DQ.Foundations.entropy_contraction`
 
-  `thm:bayes-from-dq`                             Full         `DQ.BayesOptimalityProof.bayes_is_optimal`, `DQ.bayesian_dq_matches_physics_dq`, `DQ.dq_derived_from_bayes`, `DQ.dq_is_bayesian_certainty_fraction`
+  `thm:bayes-from-dq`                             Full         `DQ.BayesOptimalityProof.bayes_is_optimal`, `DQ.bayes_update_exists_of_nondegenerateBelief`, `DQ.bayesian_dq_matches_physics_dq`, `DQ.dq_derived_from_bayes`, `DQ.dq_is_bayesian_certainty_fraction`, `DQ.forced_action_under_uncertainty`, `DQ.nondegenerateBelief_of_uncertaintyForced`
 
   `thm:bayes-optimal`                             Full         `DQ.BayesOptimalityProof.KL_nonneg`, `DQ.BayesOptimalityProof.bayes_is_optimal`, `DQ.BayesOptimalityProof.crossEntropy_eq_entropy_add_KL`
 
@@ -6070,7 +6066,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 *Notes:* *(1) Full rows come from theorem-local inline anchors in this paper.* *(2) Derived rows are filled by dependency/scaffold claim-handle derivation (same paper-handle label across proof dependencies).* *(3) Unmapped means no local anchor and no derivable dependency support were found.*
 
-*Auto summary: mapped 220/222 (full=220, derived=0, unmapped=2).*
+*Auto summary: mapped 200/222 (full=200, derived=0, unmapped=22).*
 
 
   -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -6130,7 +6126,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:run-time-accounting`                      `cost-growth`            AR,E,H=cost-growth,Qb,Qf,RG,S,S+ETH             DT18, DT19, DT16, DT15
 
-  `prop:stochastic-landauer-floor`                `cost-growth`            AR,H=cost-growth                                DC36, DC35, DC37
+  `prop:stochastic-landauer-floor`                `cost-growth`            AR,H=cost-growth                                *(no derived Lean handle found)*
 
   `prop:structural-asymmetry`                     `cost-growth`            AR,H=cost-growth                                SR1, SR2, SR3
 
@@ -6148,7 +6144,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:amortization`                              `cost-growth`            AR,E,H=cost-growth,LC,Qb,Qf,RG,S,S+ETH          HD4
 
-  `thm:bayes-from-dq`                             `cost-growth`            AR,H=cost-growth                                FN14, BB4, BB5, BB3
+  `thm:bayes-from-dq`                             `cost-growth`            AR,H=cost-growth                                FN14, BF4, BB4, BB5, BB3, BF3, BF2
 
   `thm:bridge-boundary-represented`               `cost-growth`            AR,E,H=cost-growth,LC,Qb,Qf,RG,S,S+ETH          CC8, CC9, CC10
 
@@ -6302,7 +6298,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:abstain-guess-self-signal`                `unspecified`            AR                                              IC46
 
-  `prop:abstention-frontier`                      `unspecified`            RG                                              CC39
+  `prop:abstention-frontier`                      `unspecified`            RG                                              *(no derived Lean handle found)*
 
   `prop:adq-ordering`                             `unspecified`            \-                                              CC2
 
@@ -6342,7 +6338,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:heisenberg-strong-nontrivial-opt`         `unspecified`            AR                                              HS3, HS6, HS5
 
-  `prop:identifiability-convergence`              `unspecified`            ID                                              CC19
+  `prop:identifiability-convergence`              `unspecified`            ID                                              *(no derived Lean handle found)*
 
   `prop:insufficiency-counterexample`             `unspecified`            DM                                              DP7, DP8
 
@@ -6362,7 +6358,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:lorentz-discrete`                         `unspecified`            AR                                              DS3, DS4
 
-  `prop:mdp-tractable`                            `unspecified`            FO                                              CC50
+  `prop:mdp-tractable`                            `unspecified`            FO                                              *(no derived Lean handle found)*
 
   `prop:minimal-relevant-equiv`                   `unspecified`            \-                                              DP2, DP3
 
@@ -6382,11 +6378,11 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:posed-anchor-typed-exact`                 `unspecified`            \-                                              AQ4, AQ5, AQ6, AQ7
 
-  `prop:refinement-strengthens`                   `unspecified`            RG                                              CC69
+  `prop:refinement-strengthens`                   `unspecified`            RG                                              *(no derived Lean handle found)*
 
-  `prop:retraction-evidence-integrity`            `unspecified`            RG                                              CC70
+  `prop:retraction-evidence-integrity`            `unspecified`            RG                                              *(no derived Lean handle found)*
 
-  `prop:retraction-no-evidence-violates`          `unspecified`            RG                                              CC71
+  `prop:retraction-no-evidence-violates`          `unspecified`            RG                                              *(no derived Lean handle found)*
 
   `prop:rlff-maximizer-admissible`                `unspecified`            AR                                              IC31, IC32
 
@@ -6394,37 +6390,37 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:self-confidence-not-certification`        `unspecified`            AR                                              IC47
 
-  `prop:sequential-anchor-refinement`             `unspecified`            PSPACE                                          DC23
+  `prop:sequential-anchor-refinement`             `unspecified`            PSPACE                                          *(no derived Lean handle found)*
 
-  `prop:sequential-anchor-tqbf-reduction`         `unspecified`            PSPACE                                          DC27, DC28, DC29
+  `prop:sequential-anchor-tqbf-reduction`         `unspecified`            PSPACE                                          *(no derived Lean handle found)*
 
-  `prop:sequential-bounded-horizon`               `unspecified`            BH                                              CC49
+  `prop:sequential-bounded-horizon`               `unspecified`            BH                                              *(no derived Lean handle found)*
 
-  `prop:sequential-static-relation`               `unspecified`            DET,T=1                                         CC46
+  `prop:sequential-static-relation`               `unspecified`            DET,T=1                                         *(no derived Lean handle found)*
 
   `prop:set-to-selector`                          `unspecified`            \-                                              DP5
 
   `prop:snapshot-process-typing`                  `unspecified`            RA                                              CC48, CC56, CC3
 
-  `prop:static-stochastic-strict`                 `unspecified`            P $\neq$ coNP                                   DC1
+  `prop:static-stochastic-strict`                 `unspecified`            P $\neq$ coNP                                   *(no derived Lean handle found)*
 
-  `prop:static-stochastic-transfer`               `unspecified`            PD                                              CC52
+  `prop:static-stochastic-transfer`               `unspecified`            PD                                              *(no derived Lean handle found)*
 
   `prop:steps-run-scalar`                         `unspecified`            AR                                              IC42, IC43
 
-  `prop:stochastic-anchor-refinement`             `unspecified`            PP                                              DC19
+  `prop:stochastic-anchor-refinement`             `unspecified`            PP                                              *(no derived Lean handle found)*
 
-  `prop:stochastic-anchor-strict-reduction`       `unspecified`            PP                                              DC24, DC25, DC26
+  `prop:stochastic-anchor-strict-reduction`       `unspecified`            PP                                              *(no derived Lean handle found)*
 
-  `prop:stochastic-bounded-support`               `unspecified`            BS                                              CC59
+  `prop:stochastic-bounded-support`               `unspecified`            BS                                              *(no derived Lean handle found)*
 
-  `prop:stochastic-potential-duality`             `unspecified`            PP                                              DC33, DC34, DC31
+  `prop:stochastic-potential-duality`             `unspecified`            PP                                              *(no derived Lean handle found)*
 
-  `prop:stochastic-product-tractable`             `unspecified`            PD                                              CC60
+  `prop:stochastic-product-tractable`             `unspecified`            PD                                              *(no derived Lean handle found)*
 
-  `prop:stochastic-sequential-bridge-fail`        `unspecified`            CE                                              CC56
+  `prop:stochastic-sequential-bridge-fail`        `unspecified`            CE                                              *(no derived Lean handle found)*
 
-  `prop:stochastic-sequential-strict`             `unspecified`            P $\neq$ PP                                     DC2
+  `prop:stochastic-sequential-strict`             `unspecified`            P $\neq$ PP                                     *(no derived Lean handle found)*
 
   `prop:temporal-equilibrium`                     `unspecified`            AR                                              IE10, IE11
 
@@ -6532,6 +6528,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 28863
-- Theorems: 1252
+- Lines: 30097
+- Theorems: 1279
 - `sorry` placeholders: 0

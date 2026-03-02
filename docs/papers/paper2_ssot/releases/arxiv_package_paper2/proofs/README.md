@@ -4,7 +4,7 @@
 
 This directory contains the complete Lean 4 formalization for SSOT Foundations.
 
-- **Lines:** 3469
+- **Lines:** 3758
 - **Theorems:** 185
 - **`sorry` placeholders:** 0
 
@@ -25,6 +25,8 @@ lake build
 
 | File | Module |
 |------|--------|
+| `DependencyGraph.lean` | DependencyGraph |
+| `GraphExport.lean` | GraphExport |
 | `Basic.lean` | Basic |
 | `Bounds.lean` | Bounds |
 | `CaseStudies.lean` | CaseStudies |
@@ -38,6 +40,7 @@ lake build
 | `EditDynamics.lean` | EditDynamics |
 | `Entropy.lean` | Entropy |
 | `Foundations.lean` | Foundations |
+| `GraphBridges.lean` | GraphBridges |
 | `HandleAliases.lean` | HandleAliases |
 | `Inconsistency.lean` | Inconsistency |
 | `LangEvaluation.lean` | LangEvaluation |
