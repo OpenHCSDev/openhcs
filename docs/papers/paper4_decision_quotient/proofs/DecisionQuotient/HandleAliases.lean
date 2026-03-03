@@ -36,6 +36,7 @@ import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.Physics.Uncertainty
 import DecisionQuotient.Physics.HeisenbergStrong
 import DecisionQuotient.Physics.BoundedAcquisition
+import DecisionQuotient.Physics.WolpertMismatch
 import DecisionQuotient.Physics.WolpertConstraints
 import DecisionQuotient.Physics.WolpertDecomposition
 import DecisionQuotient.Physics.TUR
@@ -1030,6 +1031,14 @@ abbrev AB1 := @DecisionProblem.not_preservesOpt_iff_erasesDecisionRelevantDistin
 abbrev AB2 := @DecisionProblem.surjective_abstraction_factors_or_erases
 abbrev AB3 := @DecisionProblem.collapseBeyondQuotient_physically_impossible
 abbrev AB4 := @DecisionProblem.surjective_abstraction_with_feasible_collapse_map_factors
+
+-- WM: Wolpert Mismatch (Physics/WolpertMismatch.lean)
+abbrev WM1 := @Physics.WolpertMismatch.mismatchKL_nonneg
+abbrev WM2 := @Physics.WolpertMismatch.mismatchKL_eq_zero_iff_eq
+abbrev WM3 := @Physics.WolpertMismatch.mismatchKL_pos_of_exists_ne
+abbrev WM4 := @Physics.WolpertMismatch.mismatchNatLowerBound_pos_of_exists_ne
+abbrev WM5 := @Physics.WolpertDecomposition.periodic_modular_mismatch_of_distribution_mismatch
+abbrev WM6 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_distribution_mismatch
 
 -- WP: Wolpert Physics (Physics/WolpertDecomposition.lean)
 abbrev WP1 := @Physics.WolpertDecomposition.DecomposedProcessModel.totalOverheadPerBit_eq_sum

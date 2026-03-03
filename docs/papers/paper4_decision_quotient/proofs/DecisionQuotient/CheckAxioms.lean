@@ -6,6 +6,7 @@ import DecisionQuotient.Quotient
 import DecisionQuotient.AbstractionCollapse
 import DecisionQuotient.Information
 import DecisionQuotient.ThermodynamicLift
+import DecisionQuotient.Physics.WolpertMismatch
 import DecisionQuotient.Physics.WolpertConstraints
 import DecisionQuotient.Physics.WolpertDecomposition
 import DecisionQuotient.PhysicalBudgetCrossover
@@ -52,6 +53,10 @@ import DecisionQuotient.Physics.PhysicalHardness
 #print axioms DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_floor
 -- Exact-calibration specialization of the floor theorem
 #print axioms DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration
+-- Derived KL mismatch branch: strict mismatch positivity is theorem-level
+#print axioms DecisionQuotient.Physics.WolpertMismatch.mismatchKL_pos_of_exists_ne
+-- Derived KL mismatch branch lifted into the Wolpert decomposition interface
+#print axioms DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_distribution_mismatch
 -- Wolpert-style constrained-process interface: floor plus explicit overhead
 #print axioms DecisionQuotient.Physics.WolpertConstraints.physical_grounding_bundle_with_wolpert_overhead
 -- Wolpert decomposition interface: mismatch + residual refinement

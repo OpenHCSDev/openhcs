@@ -72,6 +72,7 @@ import DecisionQuotient.Physics.Uncertainty
 import DecisionQuotient.Physics.WassersteinIntegrity
 import DecisionQuotient.Physics.WolpertConstraints
 import DecisionQuotient.Physics.WolpertDecomposition
+import DecisionQuotient.Physics.WolpertMismatch
 import DecisionQuotient.PolynomialReduction
 import DecisionQuotient.QueryComplexity
 import DecisionQuotient.Quotient

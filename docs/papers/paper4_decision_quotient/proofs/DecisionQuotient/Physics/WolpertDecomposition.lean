@@ -8,10 +8,13 @@
   - Landauer remains the universal floor for irreversible bit erasure.
   - Extra constrained-process dissipation is split explicitly into a mismatch
     term and a residual term.
+  - The mismatch branch is now promoted as far as the existing machinery
+    supports: it is derived from the finite-distribution KL layer in
+    `WolpertMismatch.lean`.
   - We do not claim to rederive the full stochastic-thermodynamics proofs of
-    Wolpert et al., Manzano et al., or Yadav et al. here. Instead, we package
-    the relevant cited premises as named imported hypotheses and prove the exact
-    downstream consequences inside the decision-theoretic framework.
+    Wolpert et al., Manzano et al., or Yadav et al. here. The residual branch
+    remains an imported cited premise, while the exact downstream consequences
+    are proved inside the decision-theoretic framework.
 
   This gives the paper a theorem-level representation of the specific parts of
   the cited work that it uses:
@@ -22,6 +25,7 @@
 -/
 
 import DecisionQuotient.Physics.WolpertConstraints
+import DecisionQuotient.Physics.WolpertMismatch
 
 namespace DecisionQuotient
 namespace Physics
@@ -29,6 +33,7 @@ namespace WolpertDecomposition
 
 open ThermodynamicLift
 open WolpertConstraints
+open WolpertMismatch
 open BoundedAcquisition
 
 /-- A more explicit constrained-process model in which the extra dissipation
@@ -86,10 +91,10 @@ theorem effective_model_dominates_landauer_floor_decomposition
     landauerJoulesPerBit kB T ≤ ((W.effectiveModel).joulesPerBit : ℝ) := by
   exact effective_model_dominates_landauer_floor W.asConstrainedProcessModel hFloor
 
-/-- Imported empirical interface for the periodic / modular mismatch regime
-discussed by Wolpert et al. (PNAS 2024) and Yadav et al. (2026). We record only
-the theorem-level consequence needed by this artifact: the mismatch component is
-strictly positive under the declared constrained-process regime. -/
+/-- Compatibility wrapper preserving the downstream interface of the
+periodic / modular mismatch branch. Unlike the residual branch, this positivity
+can now be constructed from a theorem-level KL mismatch witness
+(`WolpertMismatch.lean`). -/
 structure PeriodicModularMismatchHypothesis (W : DecomposedProcessModel) : Prop where
   mismatchPos : 0 < W.mismatchCostPerBit
 
@@ -107,6 +112,21 @@ artifact. -/
 structure CircuitStructuralScalingHypothesis
     (W : DecomposedProcessModel) (structuralResource : ℕ) : Prop where
   resourceDominated : structuralResource ≤ W.mismatchCostPerBit
+
+/-- The KL-derived mismatch lower bound can be injected into the existing
+periodic/modular mismatch interface by declaring the artifact's nat-valued
+mismatch term to be the rounded-up KL witness. This keeps the downstream API
+stable while promoting the mismatch branch from cited premise to theorem. -/
+theorem periodic_modular_mismatch_of_distribution_mismatch
+    (W : DecomposedProcessModel)
+    {α : Type*} [Fintype α]
+    (actual designed : StrictFiniteDistribution α)
+    (hUnits : W.mismatchCostPerBit = mismatchNatLowerBound actual designed)
+    (hNe : ∃ a, actual.pmf a ≠ designed.pmf a) :
+    PeriodicModularMismatchHypothesis W := by
+  refine ⟨?_⟩
+  rw [hUnits]
+  exact mismatchNatLowerBound_pos_of_exists_ne actual designed hNe
 
 /-- Positive mismatch implies positive total overhead. -/
 theorem total_overhead_pos_of_positive_mismatch
@@ -126,6 +146,19 @@ theorem total_overhead_pos_of_positive_residual
     simp [DecomposedProcessModel.totalOverheadPerBit]
   exact lt_of_lt_of_le h.residualPos hrle
 
+/-- The theorem-level KL mismatch witness already forces positive total
+overhead, without any additional imported premise on the mismatch branch. -/
+theorem total_overhead_pos_of_distribution_mismatch
+    (W : DecomposedProcessModel)
+    {α : Type*} [Fintype α]
+    (actual designed : StrictFiniteDistribution α)
+    (hUnits : W.mismatchCostPerBit = mismatchNatLowerBound actual designed)
+    (hNe : ∃ a, actual.pmf a ≠ designed.pmf a) :
+    0 < W.totalOverheadPerBit := by
+  have hMismatch : PeriodicModularMismatchHypothesis W :=
+    periodic_modular_mismatch_of_distribution_mismatch W actual designed hUnits hNe
+  exact total_overhead_pos_of_positive_mismatch W hMismatch
+
 /-- Under the periodic / modular mismatch hypothesis, the effective per-bit
 lower bound is strictly above the Landauer floor. -/
 theorem effective_model_strictly_exceeds_landauer_of_periodic_modular_mismatch
@@ -137,6 +170,22 @@ theorem effective_model_strictly_exceeds_landauer_of_periodic_modular_mismatch
     total_overhead_pos_of_positive_mismatch W h
   exact effective_model_strictly_exceeds_landauer_of_strict_overhead
     W.asConstrainedProcessModel hFloor hOver
+
+/-- The mismatch branch can now be discharged directly from the existing
+finite-distribution KL layer: if the actual and designed distributions differ,
+the effective per-bit lower bound is already strictly above the Landauer
+floor. -/
+theorem effective_model_strictly_exceeds_landauer_of_distribution_mismatch
+    (W : DecomposedProcessModel) {kB T : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))
+    {α : Type*} [Fintype α]
+    (actual designed : StrictFiniteDistribution α)
+    (hUnits : W.mismatchCostPerBit = mismatchNatLowerBound actual designed)
+    (hNe : ∃ a, actual.pmf a ≠ designed.pmf a) :
+    landauerJoulesPerBit kB T < ((W.effectiveModel).joulesPerBit : ℝ) := by
+  have hMismatch : PeriodicModularMismatchHypothesis W :=
+    periodic_modular_mismatch_of_distribution_mismatch W actual designed hUnits hNe
+  exact effective_model_strictly_exceeds_landauer_of_periodic_modular_mismatch W hFloor hMismatch
 
 /-- Under the stopping-time / absolute-irreversibility residual hypothesis, the
 effective per-bit lower bound is strictly above the Landauer floor. -/
@@ -150,8 +199,8 @@ theorem effective_model_strictly_exceeds_landauer_of_stopping_time_residual
   exact effective_model_strictly_exceeds_landauer_of_strict_overhead
     W.asConstrainedProcessModel hFloor hOver
 
-/-- Either cited strictness hypothesis is already sufficient to force strict
-separation above the Landauer floor. -/
+/-- Either the derived mismatch branch or the cited residual branch is already
+sufficient to force strict separation above the Landauer floor. -/
 theorem effective_model_strictly_exceeds_landauer_of_either_cited_component
     (W : DecomposedProcessModel) {kB T : ℝ}
     (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))

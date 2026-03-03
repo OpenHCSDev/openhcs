@@ -33,6 +33,7 @@ import DecisionQuotient.ThermodynamicLift
 import DecisionQuotient.FunctionalInformation
 import DecisionQuotient.Physics.AccessRegime
 import DecisionQuotient.Physics.PhysicalHardness
+import DecisionQuotient.Physics.WolpertMismatch
 import DecisionQuotient.Physics.WolpertConstraints
 import DecisionQuotient.Physics.WolpertDecomposition
 import DecisionQuotient.Physics.Instantiation
