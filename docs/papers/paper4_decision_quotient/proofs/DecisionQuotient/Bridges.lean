@@ -732,14 +732,14 @@ For actual Karp reductions, polytime computability would need to be a separate h
     then A poly-reduces to C with a polynomial bound on the composition.
 
     COMPLEXITY READING:
-    - Both r1 and r2 have polynomial bounds: sizeOf(r.f(a)) ≤ c * sizeOf(a)^k + c
-    - The composition r2.f ∘ r1.f also has a polynomial bound
-    - This is the key to hardness transfer: poly reductions are transitive -/
-theorem poly_reduction_eth_hardness_transfer
+    - Both r1 and r2 have polynomial size bounds: sizeOf(r.f(a)) ≤ c * sizeOf(a)^k + c
+    - The composition r2.f ∘ r1.f also has a polynomial size bound
+    - This is the key to hardness transfer: size-bounded reductions are transitive -/
+theorem size_bounded_reduction_hardness_transfer
     {A B C : Type*} [SizeOf A] [SizeOf B] [SizeOf C]
-    (r1 : PolyReduction A B) (r2 : PolyReduction B C) :
+    (r1 : SizeBoundedReduction A B) (r2 : SizeBoundedReduction B C) :
     -- Part 1: Reductions compose (from PolynomialReduction.lean)
-    (∃ (r : PolyReduction A C), r.f = r2.f ∘ r1.f) ∧
+    (∃ (r : SizeBoundedReduction A C), r.f = r2.f ∘ r1.f) ∧
     -- Part 2: Both original reductions have polynomial bounds
     (∃ (c1 k1 : ℕ), ∀ a : A, sizeOf (r1.f a) ≤ c1 * (sizeOf a) ^ k1 + c1) ∧
     (∃ (c2 k2 : ℕ), ∀ b : B, sizeOf (r2.f b) ≤ c2 * (sizeOf b) ^ k2 + c2) := by

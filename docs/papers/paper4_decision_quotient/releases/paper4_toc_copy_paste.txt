@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-03-03T12:20:08.087786
+Generated: 2026-03-03T12:39:16.636134
 
 === HUMAN COPY/PASTE ===
 
@@ -28,7 +28,7 @@ Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCH
 Two results carry empirical premises. Composing bit-operation lower bounds with a declared per-bit lower bound in a floor-plus-overhead model, where Landauer's principle supplies the universal floor $k_BT\ln 2$ for irreversible bit erasure and explicit nonnegative mismatch and residual terms capture constrained-process dissipation above that floor, yields inequalities such as $dU\geq\lambda\,dC$; exact equality is treated only as an idealized specialization. Within that interface, the mismatch branch is now derived from finite-distribution KL divergence. For finite discrete processes, the residual branch is also derived by an exhaustive local edge split: either the reverse edge flow is positive, in which case asymmetric forward/reverse flows yield positive two-point KL divergence, or the reverse edge flow vanishes, in which case the process performs an irreversible one-way state transition with strictly positive Landauer-scaled cost. Broader stopping-time / absolute-irreversibility regimes remain imported. Under stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$. All results are machine-checked in Lean 4 with explicit theorem-level assumptions and a machine-generated assumption ledger.
 
 arXiv Comments:
-Theory of Computing submission. Lean 4 artifact: 33173 lines, 1375 theorems/lemmas across 123 files (0 sorry placeholders).
+Theory of Computing submission. Lean 4 artifact: 33338 lines, 1378 theorems/lemmas across 123 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper4_toc
@@ -126,7 +126,7 @@ arxiv:
     decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$.
     All results are machine-checked in Lean 4 with explicit theorem-level assumptions
     and a machine-generated assumption ledger.'
-  comments: 'Theory of Computing submission. Lean 4 artifact: 33173 lines, 1375 theorems/lemmas
+  comments: 'Theory of Computing submission. Lean 4 artifact: 33338 lines, 1378 theorems/lemmas
     across 123 files (0 sorry placeholders).'
 abstract_variants:
   unicode: 'Abstract

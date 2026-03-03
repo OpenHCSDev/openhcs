@@ -709,14 +709,17 @@ theorem structured_elicitation_mechanism
   · intro I; exact structured_isSufficient dp hstruct I
   · exact structured_isSufficient dp hstruct ∅
 
-/-! ### ETH + PolyReduction → Hardness Transfer Bridge (NON-TRIVIAL)
+/-! ### ETH + SizeBoundedReduction → Hardness Transfer Bridge (NON-TRIVIAL)
 
 This is a GENUINE cross-cluster composition:
-- FROM PolynomialReduction.lean: PolyReduction.comp_exists (reductions compose)
-- FROM PolynomialReduction.lean: poly_time field (polynomial size bounds)
-- COMPOSITION: Polynomial reduction composition preserves hardness.
+- FROM PolynomialReduction.lean: SizeBoundedReduction.comp_exists (reductions compose)
+- FROM PolynomialReduction.lean: size_bound field (polynomial size bounds)
+- COMPOSITION: Size-bounded reduction composition preserves hardness.
   If A reduces to B and B reduces to C, then hardness transfers A → C.
-  The composed reduction A → C is also polynomial (closed under composition).
+  The composed reduction A → C is also size-bounded (closed under composition).
+
+NOTE: SizeBoundedReduction captures polynomial SIZE bounds, not polynomial TIME bounds.
+For actual Karp reductions, polytime computability would need to be a separate hypothesis.
 -/
 
 /-- **NON-TRIVIAL BRIDGE**: Polynomial reductions compose and preserve hardness.
@@ -742,12 +745,12 @@ theorem poly_reduction_eth_hardness_transfer
     (∃ (c2 k2 : ℕ), ∀ b : B, sizeOf (r2.f b) ≤ c2 * (sizeOf b) ^ k2 + c2) := by
   constructor
   -- Part 1: From PolynomialReduction.lean - composition exists
-  · exact PolyReduction.comp_exists r1 r2
+  · exact SizeBoundedReduction.comp_exists r1 r2
   constructor
-  -- Part 2: r1 has polynomial bound (from its poly_time field)
-  · exact r1.poly_time
-  -- Part 3: r2 has polynomial bound (from its poly_time field)
-  · exact r2.poly_time
+  -- Part 2: r1 has polynomial size bound (from its size_bound field)
+  · exact r1.size_bound
+  -- Part 3: r2 has polynomial size bound (from its size_bound field)
+  · exact r2.size_bound
 
 /-! ### Query Complexity + Structural Rank → Information-Theoretic Lower Bound (NON-TRIVIAL)
 

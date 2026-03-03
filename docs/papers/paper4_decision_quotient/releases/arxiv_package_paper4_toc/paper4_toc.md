@@ -1,6 +1,6 @@
 # Paper: Computational Complexity of Physical Counting
 
-**Status**: Theory of Computing-ready | **Lean**: 33173 lines, 1375 theorems
+**Status**: Theory of Computing-ready | **Lean**: 33338 lines, 1378 theorems
 
 ---
 
@@ -3871,7 +3871,7 @@ Informally: if exact support is not certified, do not make exact claims; when co
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33173 lines across 123 files, with 1375 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33338 lines across 123 files, with 1378 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -6684,6 +6684,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 33173
-- Theorems: 1375
+- Lines: 33338
+- Theorems: 1378
 - `sorry` placeholders: 0
