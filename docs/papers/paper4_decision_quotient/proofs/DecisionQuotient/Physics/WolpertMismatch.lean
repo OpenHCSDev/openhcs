@@ -12,8 +12,11 @@
   - equality iff the two distributions coincide
 
   Wolpert's correction was precise enough that this part of the refinement can
-  be proved directly rather than merely imported. The residual branch remains a
-  separate cited physics premise in `WolpertDecomposition.lean`.
+  be proved directly rather than merely imported. In the current artifact, the
+  residual side is no longer purely cited either: finite discrete residual
+  witnesses are theorem-level in `WolpertResidual.lean`, while the broader
+  stopping-time / absolute-irreversibility regime remains imported in
+  `WolpertDecomposition.lean`.
 -/
 
 import DecisionQuotient.BayesOptimalityProof

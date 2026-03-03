@@ -12,9 +12,12 @@
     supports: it is derived from the finite-distribution KL layer in
     `WolpertMismatch.lean`.
   - We do not claim to rederive the full stochastic-thermodynamics proofs of
-    Wolpert et al., Manzano et al., or Yadav et al. here. The residual branch
-    remains an imported cited premise, while the exact downstream consequences
-    are proved inside the decision-theoretic framework.
+    Wolpert et al., Manzano et al., or Yadav et al. here. The broader
+    stopping-time / absolute-irreversibility residual regime remains an
+    imported cited premise, while a finite discrete residual branch can now be
+    constructed from theorem-level edge-flow asymmetry or irreversible one-way
+    state-transition witnesses and then composed inside the decision-theoretic
+    framework.
 
   This gives the paper a theorem-level representation of the specific parts of
   the cited work that it uses:
