@@ -1049,6 +1049,8 @@ abbrev WR5 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_lan
 abbrev WR6 := @Physics.WolpertResidual.discreteResidualNatLowerBound_pos_of_asymmetry_or_oneway
 abbrev WR7 := @Physics.WolpertDecomposition.stopping_time_residual_of_discrete_edge_split
 abbrev WR8 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_discrete_edge_split
+abbrev WR9 := @Physics.WolpertDecomposition.stopping_time_residual_of_finite_discrete_witness
+abbrev WR10 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_finite_discrete_witness
 
 -- WP: Wolpert Physics (Physics/WolpertDecomposition.lean)
 abbrev WP1 := @Physics.WolpertDecomposition.DecomposedProcessModel.totalOverheadPerBit_eq_sum

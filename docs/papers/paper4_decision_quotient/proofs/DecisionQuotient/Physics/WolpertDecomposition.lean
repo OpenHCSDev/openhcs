@@ -282,6 +282,43 @@ theorem effective_model_strictly_exceeds_landauer_of_discrete_edge_split
     stopping_time_residual_of_discrete_edge_split W hkT π s s' hForward hUnits hAsym
   exact effective_model_strictly_exceeds_landauer_of_stopping_time_residual W hFloor hResidual
 
+/-- The theorem-level finite discrete residual branch can be packaged as a
+single witness statement: if the process exposes at least one computational-
+state edge with positive forward flow and decision-relevant asymmetry, then the
+residual term is strictly positive. This is the cleanest process-level derived
+subclass currently supported by the artifact. -/
+theorem stopping_time_residual_of_finite_discrete_witness
+    (W : DecomposedProcessModel)
+    {kT_ln2 : ℝ} (hkT : 0 < kT_ln2)
+    [Fintype ComputationalState]
+    {mc : DiscreteMarkovChain ComputationalState}
+    (π : StationaryDist mc)
+    (h : FiniteDiscreteResidualWitness π)
+    (hUnits :
+      W.residualDissipationPerBit =
+        discreteResidualNatLowerBound kT_ln2 π h.s h.s' h.hForward) :
+    StoppingTimeResidualHypothesis W := by
+  exact stopping_time_residual_of_discrete_edge_split
+    W hkT π h.s h.s' h.hForward hUnits h.hAsym
+
+/-- The process-level finite discrete residual witness is already sufficient to
+force strict separation above the Landauer floor. -/
+theorem effective_model_strictly_exceeds_landauer_of_finite_discrete_witness
+    (W : DecomposedProcessModel) {kB T kT_ln2 : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))
+    (hkT : 0 < kT_ln2)
+    [Fintype ComputationalState]
+    {mc : DiscreteMarkovChain ComputationalState}
+    (π : StationaryDist mc)
+    (h : FiniteDiscreteResidualWitness π)
+    (hUnits :
+      W.residualDissipationPerBit =
+        discreteResidualNatLowerBound kT_ln2 π h.s h.s' h.hForward) :
+    landauerJoulesPerBit kB T < ((W.effectiveModel).joulesPerBit : ℝ) := by
+  have hResidual : StoppingTimeResidualHypothesis W :=
+    stopping_time_residual_of_finite_discrete_witness W hkT π h hUnits
+  exact effective_model_strictly_exceeds_landauer_of_stopping_time_residual W hFloor hResidual
+
 /-- Either the derived mismatch branch or the cited residual branch is already
 sufficient to force strict separation above the Landauer floor. -/
 theorem effective_model_strictly_exceeds_landauer_of_either_cited_component

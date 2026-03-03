@@ -232,7 +232,11 @@ vanishes, the process performs an irreversible one-way state transition and the
 existing Landauer-scaled transition-cost theorem applies. Theorems \LH{WR7} and
 \LH{WR8} then inject that unified finite residual witness into the Wolpert
 decomposition, yielding direct strict separation above the Landauer floor for
-that finite discrete subclass. The broader stopping-time / absolute-
+that finite discrete subclass. Theorems \LH{WR9} and \LH{WR10} package the
+same branch at the process level: any finite computational-state process with
+at least one such asymmetric forward edge already carries a theorem-level
+residual witness and therefore strictly exceeds the Landauer floor. The broader
+stopping-time / absolute-
 irreversibility residual regime imported from \cite{manzano2024absolute}
 remains represented by the separate cited premise \LH{WP5}; and \LH{WP6} shows
 that any one of the derived mismatch branch, the derived finite residual
@@ -248,12 +252,13 @@ Exact equality is retained only as an optional idealized specialization.
 not rederived in full inside this artifact. The finite-distribution mismatch
 branch is now proved as far as the existing KL machinery reaches, and a finite
 residual asymmetry branch is also proved from the same machinery applied to
-forward/reverse edge-flow distributions. The stronger stopping-time /
+forward/reverse edge-flow distributions, then repackaged as a single
+process-level witness theorem for finite computational-state systems. The stronger stopping-time /
 absolute-irreversibility residual regime remains a separate cited premise. Lean
 then verifies the exact downstream consequences of composing that mixed
 theorem-plus-premise interface with the decision-theoretic lower bounds already
 proved in the core system.
-\LH{BA9}\LH{WM1}\LH{WM2}\LH{WM3}\LH{WM4}\LH{WM5}\LH{WM6}\LH{WR1}\LH{WR2}\LH{WR3}\LH{WR4}\LH{WR5}\LH{WP5}\LH{WP6}
+\LH{BA9}\LH{WM1}\LH{WM2}\LH{WM3}\LH{WM4}\LH{WM5}\LH{WM6}\LH{WR1}\LH{WR2}\LH{WR3}\LH{WR4}\LH{WR5}\LH{WR6}\LH{WR7}\LH{WR8}\LH{WR9}\LH{WR10}\LH{WP5}\LH{WP6}
 \end{theorem}
 \leanmeta{\LH{BA9}}
 \claimstamp{T\ref{thm:physical-bridge-bundle}}{AR}

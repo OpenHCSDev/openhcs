@@ -268,6 +268,32 @@ theorem discreteResidualNatLowerBound_pos_of_asymmetry_or_oneway
     simpa [hReverse, hReverseZero] using
       irreversibleTransitionNatLowerBound_pos hkT s s' hNe
 
+/-- A finite discrete residual witness consists of a computational-state edge
+with positive forward flow and decision-relevant asymmetry. This is the exact
+theorem-level finite subclass of the broader stopping-time / absolute-
+irreversibility story that the current artifact can discharge without adding
+new physics axioms. -/
+structure FiniteDiscreteResidualWitness
+    [Fintype ComputationalState]
+    {mc : DiscreteMarkovChain ComputationalState}
+    (π : StationaryDist mc) where
+  s : ComputationalState
+  s' : ComputationalState
+  hForward : 0 < edgeFlow mc π s s'
+  hAsym : edgeFlow mc π s s' ≠ edgeFlow mc π s' s
+
+/-- Any finite discrete residual witness yields a strictly positive residual
+lower-bound term. -/
+theorem discreteResidualNatLowerBound_pos_of_witness
+    [Fintype ComputationalState]
+    {kT_ln2 : ℝ} (hkT : 0 < kT_ln2)
+    {mc : DiscreteMarkovChain ComputationalState}
+    (π : StationaryDist mc)
+    (h : FiniteDiscreteResidualWitness π) :
+    0 < discreteResidualNatLowerBound kT_ln2 π h.s h.s' h.hForward := by
+  exact discreteResidualNatLowerBound_pos_of_asymmetry_or_oneway
+    hkT π h.s h.s' h.hForward h.hAsym
+
 end WolpertResidual
 end Physics
 end DecisionQuotient
