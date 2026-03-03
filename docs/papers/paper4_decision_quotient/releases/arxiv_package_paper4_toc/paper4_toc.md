@@ -578,7 +578,7 @@ Thus, in **Set**, the optimizer quotient object is the familiar coimage of $\ope
  ◻
 :::
 
-Informally: this proposition is only a familiarity anchor. The object is not exotic in **Set**; the later novelty is that this familiar coimage/image factorization governs the complexity and physical-collapse arguments.
+Informally: this proposition is only a familiarity anchor. The object is not exotic in **Set**; the later novelty is that this quotient governs the complexity and physical-collapse arguments.
 
 The same quotient object has an equally familiar information-theoretic reading: its entropy is just the logarithm of the number of distinct optimizer values actually attained.
 
@@ -596,7 +596,7 @@ Informally: this is the familiar reading of the entropy term used later in the b
 
 The next theorem concerns the quotient object rather than the scalar score above. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The optimizer quotient object is the coarsest such collapse that still preserves the optimal-action boundary.
 
-Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the optimizer quotient object, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. In **Set**, the quotient object here is the familiar coimage of $\operatorname{Opt}$, canonically equivalent to its image/range [@maclane1998categories]. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.
+Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the optimizer quotient object, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. In **Set**, the quotient object here is the coimage of $\operatorname{Opt}$, canonically equivalent to its image/range [@maclane1998categories]. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.
 
 ::: theorem
 []{#thm:abstraction-boundary label="thm:abstraction-boundary"} Let $\phi : S \to T$ be a surjective abstraction of the state space.
@@ -616,7 +616,7 @@ Informally: start with any surjective summary map $\phi : S \to T$. There are on
  ◻
 :::
 
-Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the optimizer quotient object is the maximal lossless collapse. In **Set**, that means the familiar coimage/image factorization of $\operatorname{Opt}$. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
+Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the optimizer quotient object is the maximal lossless collapse. In **Set**, that means the coimage/image factorization of $\operatorname{Opt}$. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
 
 ## Mechanized Physical-Lift and Claim Metadata {#sec:foundations-mechanized-metadata}
 
