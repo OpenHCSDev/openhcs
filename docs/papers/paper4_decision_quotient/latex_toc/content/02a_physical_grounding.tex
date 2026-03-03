@@ -57,19 +57,19 @@ Theorem~\ref{thm:counting-gap} proves that a finite bound exists. It does not su
 
 \item[\textbf{TD.}] \textbf{Thermodynamics (Landauer).}
   Each event costs positive energy.
-  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. The Wolpert-style interface used in this artifact adds explicit nonnegative mismatch and residual dissipation terms above that floor; the mismatch term can now be justified inside the artifact from finite-distribution KL divergence when the actual and designed distributions differ, and a finite residual-asymmetry branch can also be justified when two opposite stationary edge flows are both positive and unequal. The stronger stopping-time / absolute-irreversibility residual regime remains a separate imported premise. When any one of these contributions is positive, the per-bit lower bound is strictly larger than $k_B T \ln 2$.
+  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. The Wolpert-style interface used in this artifact adds explicit nonnegative mismatch and residual dissipation terms above that floor; the mismatch term can now be justified inside the artifact from finite-distribution KL divergence when the actual and designed distributions differ, and the finite discrete residual branch can also be justified inside the artifact by an exhaustive reverse-edge split. If the reverse edge flow is positive, asymmetric forward/reverse flows yield a positive two-point KL witness; if the reverse edge flow is zero, the process performs an irreversible one-way state transition, and the existing Landauer-scaled transition-cost theorem yields a positive lower-bound witness. The broader stopping-time / absolute-irreversibility residual regime remains a separate imported premise. When any one of these contributions is positive, the per-bit lower bound is strictly larger than $k_B T \ln 2$.
   \cite{landauer1961irreversibility,bennett1982thermodynamics,berut2012experimental,wolpert2024stochastic,manzano2024absolute,yadav2026minimal}
 \end{enumerate}
-\leanmeta{\LH{WC1},\LH{WC2},\LH{WC3},\LH{WM1},\LH{WM3},\LH{WM4},\LH{WR1},\LH{WR2},\LH{WR3}.}
+\leanmeta{\LH{WC1},\LH{WC2},\LH{WC3},\LH{WM1},\LH{WM3},\LH{WM4},\LH{WR1},\LH{WR2},\LH{WR3},\LH{WR6}.}
 
 \noindent The Counting Gap Theorem proves the structure. SR, QM, TD supply the numbers.
 
 \subsection{Why Positive Cost is Derived, Not Assumed}\label{sec:positive-cost-derived}
 
-The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$. In the explicit constrained-process interface, any extra dissipation above that floor is represented by separate nonnegative mismatch and residual terms rather than folded into the floor itself. The mismatch branch is now pinned to the existing KL layer: explicit finite-distribution mismatch yields a strictly positive real KL term, which is then conservatively rounded upward into the nat-valued lower-bound units used by the thermodynamic accounting. A second finite residual branch is also theorem-level: explicit asymmetry between two positive opposite stationary edge flows yields strictly positive two-point KL divergence and therefore a positive nat-valued residual lower-bound term.
+The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$. In the explicit constrained-process interface, any extra dissipation above that floor is represented by separate nonnegative mismatch and residual terms rather than folded into the floor itself. The mismatch branch is now pinned to the existing KL layer: explicit finite-distribution mismatch yields a strictly positive real KL term, which is then conservatively rounded upward into the nat-valued lower-bound units used by the thermodynamic accounting. The finite discrete residual branch is now also theorem-level by an exhaustive local split on the reverse edge of a computational-state process: either the reverse edge is positive and asymmetry yields strictly positive two-point KL divergence, or the reverse edge is zero and the process pays strictly positive Landauer-scaled cost for the resulting irreversible one-way state transition.
 
 If $\varepsilon = 0$, a bounded system could perform infinitely many checks, resolving any decision in zero time and zero energy. This contradicts energy conservation. Therefore $\varepsilon > 0$ is derived from thermodynamics.
-\leanmeta{\LH{BA10},\LH{WC2},\LH{WC3},\LH{WM1},\LH{WM3},\LH{WM4},\LH{WR2},\LH{WR3}}
+\leanmeta{\LH{BA10},\LH{WC2},\LH{WC3},\LH{WM1},\LH{WM3},\LH{WM4},\LH{WR2},\LH{WR3},\LH{WR6}}
 
 \begin{remark}[Scope]
 No claim is made about whether the universe is continuous or discrete at scales
@@ -225,15 +225,19 @@ mismatch branch. A second residual branch is now also theorem-level within the
 current finite machinery: \LH{WR1} proves nonnegativity of the two-point
 forward/reverse residual divergence, \LH{WR2} proves strict positivity under an
 explicit asymmetric positive edge-flow witness, and \LH{WR3} lifts that witness
-into the discrete lower-bound units of the decomposition. Theorems \LH{WR4} and
-\LH{WR5} then inject that finite residual witness into the Wolpert
+into the discrete lower-bound units of the decomposition. The new theorem
+\LH{WR6} packages the exhaustive finite-state edge split directly: if the
+reverse edge is positive, the pairwise KL branch applies; if the reverse edge
+vanishes, the process performs an irreversible one-way state transition and the
+existing Landauer-scaled transition-cost theorem applies. Theorems \LH{WR7} and
+\LH{WR8} then inject that unified finite residual witness into the Wolpert
 decomposition, yielding direct strict separation above the Landauer floor for
-that subclass. The stronger stopping-time / absolute-irreversibility residual
-regime imported from \cite{manzano2024absolute} remains represented by the
-separate cited premise \LH{WP5}; and \LH{WP6} shows that any one of the derived
-mismatch branch, the derived finite residual branch, or the cited stopping-time
-branch is already sufficient to force strict separation above the Landauer
-floor. For the circuit cost interface of
+that finite discrete subclass. The broader stopping-time / absolute-
+irreversibility residual regime imported from \cite{manzano2024absolute}
+remains represented by the separate cited premise \LH{WP5}; and \LH{WP6} shows
+that any one of the derived mismatch branch, the derived finite residual
+branch, or the cited broader stopping-time branch is already sufficient to
+force strict separation above the Landauer floor. For the circuit cost interface of
 \cite{yadav2026minimal}, \LH{WP7} and \LH{WP8} prove that a declared structural
 resource lower-bounded by mismatch further tightens the per-bit and total energy
 lower bounds. Finally, \LH{WP9} proves that the existing physical grounding

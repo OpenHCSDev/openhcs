@@ -37,6 +37,7 @@ open WolpertConstraints
 open WolpertMismatch
 open WolpertResidual
 open BoundedAcquisition
+open DecisionCircuit
 
 /-- A more explicit constrained-process model in which the extra dissipation
 above the Landauer floor is decomposed into two named components:
@@ -235,6 +236,50 @@ theorem effective_model_strictly_exceeds_landauer_of_pairwise_flow_asymmetry
     landauerJoulesPerBit kB T < ((W.effectiveModel).joulesPerBit : ℝ) := by
   have hResidual : StoppingTimeResidualHypothesis W :=
     stopping_time_residual_of_pairwise_flow_asymmetry W mc π s s' hForward hReverse hUnits hAsym
+  exact effective_model_strictly_exceeds_landauer_of_stopping_time_residual W hFloor hResidual
+
+/-- The finite discrete stopping-time residual branch can be discharged by an
+exhaustive local edge split on computational states. If the reverse edge flow
+is positive, the theorem-level pairwise KL branch applies. If the reverse edge
+flow vanishes, the process performs an irreversible one-way state transition,
+and the existing Landauer-scaled transition-cost theorem yields a positive
+residual lower-bound term. -/
+theorem stopping_time_residual_of_discrete_edge_split
+    (W : DecomposedProcessModel)
+    {kT_ln2 : ℝ} (hkT : 0 < kT_ln2)
+    [Fintype ComputationalState]
+    {mc : DiscreteMarkovChain ComputationalState}
+    (π : StationaryDist mc) (s s' : ComputationalState)
+    (hForward : 0 < edgeFlow mc π s s')
+    (hUnits :
+      W.residualDissipationPerBit =
+        discreteResidualNatLowerBound kT_ln2 π s s' hForward)
+    (hAsym : edgeFlow mc π s s' ≠ edgeFlow mc π s' s) :
+    StoppingTimeResidualHypothesis W := by
+  refine ⟨?_⟩
+  rw [hUnits]
+  exact discreteResidualNatLowerBound_pos_of_asymmetry_or_oneway hkT π s s' hForward hAsym
+
+/-- The finite discrete stopping-time residual branch now has a single
+theorem-level constructor: any asymmetric computational-state edge with
+positive forward flow yields strict separation above the Landauer floor, by the
+exhaustive reverse-edge split packaged in
+`stopping_time_residual_of_discrete_edge_split`. -/
+theorem effective_model_strictly_exceeds_landauer_of_discrete_edge_split
+    (W : DecomposedProcessModel) {kB T kT_ln2 : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))
+    (hkT : 0 < kT_ln2)
+    [Fintype ComputationalState]
+    {mc : DiscreteMarkovChain ComputationalState}
+    (π : StationaryDist mc) (s s' : ComputationalState)
+    (hForward : 0 < edgeFlow mc π s s')
+    (hUnits :
+      W.residualDissipationPerBit =
+        discreteResidualNatLowerBound kT_ln2 π s s' hForward)
+    (hAsym : edgeFlow mc π s s' ≠ edgeFlow mc π s' s) :
+    landauerJoulesPerBit kB T < ((W.effectiveModel).joulesPerBit : ℝ) := by
+  have hResidual : StoppingTimeResidualHypothesis W :=
+    stopping_time_residual_of_discrete_edge_split W hkT π s s' hForward hUnits hAsym
   exact effective_model_strictly_exceeds_landauer_of_stopping_time_residual W hFloor hResidual
 
 /-- Either the derived mismatch branch or the cited residual branch is already

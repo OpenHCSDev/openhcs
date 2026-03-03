@@ -1046,6 +1046,9 @@ abbrev WR2 := @Physics.WolpertResidual.pairwiseResidualKL_pos_of_asymmetry
 abbrev WR3 := @Physics.WolpertResidual.residualNatLowerBound_pos_of_asymmetry
 abbrev WR4 := @Physics.WolpertDecomposition.stopping_time_residual_of_pairwise_flow_asymmetry
 abbrev WR5 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_pairwise_flow_asymmetry
+abbrev WR6 := @Physics.WolpertResidual.discreteResidualNatLowerBound_pos_of_asymmetry_or_oneway
+abbrev WR7 := @Physics.WolpertDecomposition.stopping_time_residual_of_discrete_edge_split
+abbrev WR8 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_discrete_edge_split
 
 -- WP: Wolpert Physics (Physics/WolpertDecomposition.lean)
 abbrev WP1 := @Physics.WolpertDecomposition.DecomposedProcessModel.totalOverheadPerBit_eq_sum
