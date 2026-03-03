@@ -4,4 +4,4 @@ import AbstractClassSystem.Typing
 import AbstractClassSystem.Extended
 import AbstractClassSystem.Bridge
 import AbstractClassSystem.AxisClosure
-
+import AbstractClassSystem.GraphBridges

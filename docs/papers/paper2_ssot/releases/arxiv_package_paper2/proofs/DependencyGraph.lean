@@ -111,6 +111,33 @@ elab_rules : command
 def jsonEscape (s : String) : String :=
   s.replace "\\" "\\\\" |>.replace "\"" "\\\"" |>.replace "\n" "\\n"
 
+def foundationSummary (bucket : String) : String :=
+  match bucket with
+  | "FOUNDATION.Counting" =>
+      "Collapsed witness for natural-number, integer, and finite-index counting structure."
+  | "FOUNDATION.Collections" =>
+      "Collapsed witness for lists, arrays, and finite-set collection structure."
+  | "FOUNDATION.Boolean" =>
+      "Collapsed witness for Boolean branching structure."
+  | "FOUNDATION.Logic" =>
+      "Collapsed witness for propositional, existential, and product/sum logical structure."
+  | "FOUNDATION.Equality" =>
+      "Collapsed witness for equality, decidability, and classical reasoning structure."
+  | "FOUNDATION.SetTheory" =>
+      "Collapsed witness for sets, membership, quotient, and extensional set structure."
+  | "FOUNDATION.OrderAlgebra" =>
+      "Collapsed witness for order, comparison, and algebraic operator structure."
+  | "FOUNDATION.MeasureTheory" =>
+      "Collapsed witness for measure-theoretic and probabilistic structure."
+  | "FOUNDATION.Analysis" =>
+      "Collapsed witness for real/complex analytic structure."
+  | _ =>
+      "Collapsed first-principle witness node."
+
+def jsonStringOrNull : Option String → String
+  | some s => s!"\"{jsonEscape s}\""
+  | none => "null"
+
 /-! ### JSON export for visualization pipeline -/
 
 elab "#export_graph_json" path:str : command => do
@@ -165,3 +192,52 @@ elab "#export_graph_json" path:str : command => do
 
   IO.FS.writeFile ⟨filePath⟩ json
   Lean.logInfo m!"Graph exported to {filePath}: {nodes.size} nodes, {edges.size} edges"
+
+elab "#export_decl_info_json" path:str : command => do
+  let env ← getEnv
+  let filePath := path.getString
+
+  let mut entries : Array String := #[]
+  let mut seenFoundation : Array String := #[]
+
+  let constants := (Lean.Environment.constants env).fold
+    (init := #[]) fun acc name info => acc.push (name, info)
+
+  for (name, info) in constants do
+    if isProjectName name then
+      let kind := match info with
+        | ConstantInfo.thmInfo _    => "theorem"
+        | ConstantInfo.defnInfo _   => "definition"
+        | ConstantInfo.axiomInfo _  => "axiom"
+        | ConstantInfo.opaqueInfo _ => "opaque"
+        | _                         => "other"
+      let signature ← liftTermElabM do
+        let fmt ← Lean.Meta.ppExpr info.type
+        pure (toString fmt)
+      let doc? ← liftIO <| findDocString? env name (includeBuiltin := false)
+      entries := entries.push
+        ("\"" ++ jsonEscape name.toString ++ "\":{" ++
+          "\"kind\":\"" ++ kind ++ "\"," ++
+          "\"origin\":\"project\"," ++
+          "\"signature\":\"" ++ jsonEscape signature ++ "\"," ++
+          "\"doc\":" ++ jsonStringOrNull doc? ++
+        "}")
+
+      let deps := collectDeps info
+      for d in deps do
+        match foundationBucket d with
+        | some bucket =>
+            if !seenFoundation.contains bucket then
+              seenFoundation := seenFoundation.push bucket
+              entries := entries.push
+                ("\"" ++ jsonEscape bucket ++ "\":{" ++
+                  "\"kind\":\"axiom\"," ++
+                  "\"origin\":\"foundation\"," ++
+                  "\"signature\":\"" ++ jsonEscape (foundationSummary bucket) ++ "\"," ++
+                  "\"doc\":null" ++
+                "}")
+        | none => pure ()
+
+  let json := "{" ++ ",".intercalate entries.toList ++ "}"
+  IO.FS.writeFile ⟨filePath⟩ json
+  Lean.logInfo m!"Declaration metadata exported to {filePath}: {entries.size} entries"

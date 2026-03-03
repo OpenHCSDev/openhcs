@@ -5,6 +5,8 @@
 
 import Ssot.Completeness
 
+namespace Ssot
+
 -- Concrete language feature evaluations
 -- Based on objective language specification analysis
 
@@ -106,3 +108,4 @@ theorem smalltalk_ssot_complete : ssot_complete Smalltalk := by
 -- Exactly three languages in common use satisfy complete SSOT requirements:
 -- Python, Common Lisp (CLOS), and Smalltalk
 
+end Ssot

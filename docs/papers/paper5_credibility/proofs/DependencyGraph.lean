@@ -216,7 +216,12 @@ elab "#export_decl_info_json" path:str : command => do
         pure (toString fmt)
       let doc? ← liftIO <| findDocString? env name (includeBuiltin := false)
       entries := entries.push
-        s!"\"{jsonEscape name.toString}\":\{{\"kind\":\"{kind}\",\"origin\":\"project\",\"signature\":\"{jsonEscape signature}\",\"doc\":{jsonStringOrNull doc?}\}}"
+        ("\"" ++ jsonEscape name.toString ++ "\":{" ++
+          "\"kind\":\"" ++ kind ++ "\"," ++
+          "\"origin\":\"project\"," ++
+          "\"signature\":\"" ++ jsonEscape signature ++ "\"," ++
+          "\"doc\":" ++ jsonStringOrNull doc? ++
+        "}")
 
       let deps := collectDeps info
       for d in deps do
@@ -225,9 +230,14 @@ elab "#export_decl_info_json" path:str : command => do
             if !seenFoundation.contains bucket then
               seenFoundation := seenFoundation.push bucket
               entries := entries.push
-                s!"\"{jsonEscape bucket}\":\{{\"kind\":\"axiom\",\"origin\":\"foundation\",\"signature\":\"{jsonEscape (foundationSummary bucket)}\",\"doc\":null\}}"
+                ("\"" ++ jsonEscape bucket ++ "\":{" ++
+                  "\"kind\":\"axiom\"," ++
+                  "\"origin\":\"foundation\"," ++
+                  "\"signature\":\"" ++ jsonEscape (foundationSummary bucket) ++ "\"," ++
+                  "\"doc\":null" ++
+                "}")
         | none => pure ()
 
-  let json := s!"\{{{",".intercalate entries.toList}}}"
+  let json := "{" ++ ",".intercalate entries.toList ++ "}"
   IO.FS.writeFile ⟨filePath⟩ json
   Lean.logInfo m!"Declaration metadata exported to {filePath}: {entries.size} entries"

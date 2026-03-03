@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Decision Quotient.
 
-- **Lines:** 29863
-- **Theorems:** 1273
+- **Lines:** 31898
+- **Theorems:** 1323
 - **`sorry` placeholders:** 0
 
 
@@ -31,6 +31,7 @@ lake build
 | `BayesFromDQ.lean` | BayesFromDQ |
 | `BayesOptimalityProof.lean` | BayesOptimalityProof |
 | `BayesianBridge.lean` | BayesianBridge |
+| `Bridges.lean` | Bridges |
 | `CheckAxioms.lean` | CheckAxioms |
 | `ClaimClosure.lean` | ClaimClosure |
 | `Complexity.lean` | Complexity |

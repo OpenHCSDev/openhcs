@@ -1,8 +1,8 @@
 OpenHCS Paper Build Log
 ========================
 
-Paper: paper3 - Leverage-Driven Software Architecture: Five Independent Frameworks Select the Same Architectural Ground State
-Package Date: 2026-03-02T04:33:14.838211
+Paper: paper3 - Leverage, Structural Rank, and Thermodynamic Selection in Information-Processing Systems
+Package Date: 2026-03-02T14:54:20.080135
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
@@ -37,7 +37,7 @@ Proof Files:
 COMPILATION OUTPUT (lake build)
 ================================================================================
 
-⚠ [3071/3101] Replayed Ssot.Coherence
+⚠ [3072/3151] Replayed Ssot.Coherence
 warning: Ssot/Coherence.lean:64:8: This simp argument is unused:
   List.mem_singleton
 
@@ -48,12 +48,12 @@ Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
 warning: Ssot/Coherence.lean:146:53: unused variable `new_val`
 
 Note: This linter can be disabled with `set_option linter.unusedVariables false`
-⚠ [3076/3101] Replayed DecisionQuotient.Reduction
+⚠ [3077/3151] Replayed DecisionQuotient.Reduction
 warning: DecisionQuotient/Reduction.lean:140:4: Try this: intro _ a'
 warning: DecisionQuotient/Reduction.lean:184:14: Try `simp at hi` instead of `simpa using hi`
 
 Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
-⚠ [3079/3101] Replayed DecisionQuotient.AlgorithmComplexity
+⚠ [3080/3151] Replayed DecisionQuotient.AlgorithmComplexity
 warning: DecisionQuotient/AlgorithmComplexity.lean:100:17: This simp argument is unused:
   Prod.fst
 
@@ -68,7 +68,7 @@ Hint: Omit it from the simp argument list.
   simp only [Counted.pure, Counted.steps,̵ ̵P̵r̵o̵d̵.̵f̵s̵t̵]
 
 Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
-⚠ [3087/3101] Replayed DecisionQuotient.Tractability.StructuralRank
+⚠ [3088/3151] Replayed DecisionQuotient.Tractability.StructuralRank
 warning: DecisionQuotient/Tractability/StructuralRank.lean:161:40: unused variable `hn`
 
 Note: This linter can be disabled with `set_option linter.unusedVariables false`
@@ -82,7 +82,7 @@ Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
 warning: DecisionQuotient/Tractability/StructuralRank.lean:223:49: unused variable `hn`
 
 Note: This linter can be disabled with `set_option linter.unusedVariables false`
-⚠ [3088/3101] Replayed DecisionQuotient.IntegrityCompetence
+⚠ [3089/3151] Replayed DecisionQuotient.IntegrityCompetence
 warning: DecisionQuotient/IntegrityCompetence.lean:326:4: Try `simp at hPos` instead of `simpa using hPos`
 
 Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
@@ -101,7 +101,7 @@ Note: This linter can be disabled with `set_option linter.unnecessarySimpa false
 warning: DecisionQuotient/IntegrityCompetence.lean:844:2: try 'simp' instead of 'simpa'
 
 Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
-⚠ [3094/3101] Replayed DecisionQuotient.Physics.BoundedAcquisition
+⚠ [3095/3151] Replayed DecisionQuotient.Physics.BoundedAcquisition
 warning: DecisionQuotient/Physics/BoundedAcquisition.lean:245:20: unused variable `R`
 
 Note: This linter can be disabled with `set_option linter.unusedVariables false`
@@ -120,7 +120,7 @@ Note: This linter can be disabled with `set_option linter.unusedVariables false`
 warning: DecisionQuotient/Physics/BoundedAcquisition.lean:401:5: unused variable `hI`
 
 Note: This linter can be disabled with `set_option linter.unusedVariables false`
-⚠ [3095/3101] Replayed Leverage.BridgeToDQ
+⚠ [3096/3151] Replayed Leverage.BridgeToDQ
 warning: Leverage/BridgeToDQ.lean:211:34: This simp argument is unused:
   Fintype.card_unit
 
@@ -149,7 +149,7 @@ Hint: Omit it from the simp argument list.
   simp only [Real.log_pow, Nat.cast_one,̵ ̵p̵o̵w̵_̵o̵n̵e̵]
 
 Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
-⚠ [3097/3101] Replayed Leverage.FiveWayEquivalence
+⚠ [3098/3151] Replayed Leverage.FiveWayEquivalence
 warning: Leverage/FiveWayEquivalence.lean:85:5: unused variable `h_caps`
 
 Note: This linter can be disabled with `set_option linter.unusedVariables false`

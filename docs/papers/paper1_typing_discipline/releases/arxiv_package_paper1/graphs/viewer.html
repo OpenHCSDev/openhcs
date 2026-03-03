@@ -144,6 +144,7 @@ ${body}
     bfs,
     FILTERS,
     applyFilters,
+    shortestPath,
     identifyInvariants,
     validateTruePaths,
     detectCycles,
@@ -168,8 +169,6 @@ ${body}
     renderLatexInline,
     formatLeanSignature,
     FOUNDATION_BUCKETS,
-    classifyFoundationBucket,
-    computeFoundationBuckets,
   };
 })();`;
     }
@@ -180,11 +179,11 @@ ${body}
         .replace(/^\s*import\s+\*\s+as\s+d3\s+from\s+["']d3["'];\s*$/m, '')
         .replace(
           /^\s*import\s+\{[^}]*\}\s+from\s+["']\.\/graph_utils["'];\s*$/m,
-          'const { computeStats, isArtifact, buildAdj, findRoots, bfs, FILTERS, applyFilters, shortestPath, validateTruePaths, distancesFromRoots, findAllPaths, generateValidationReport } = window.__graphViewer.graphUtils;'
+          'const { computeStats, isArtifact, buildAdj, findRoots, bfs, FILTERS, applyFilters, validateTruePaths, distancesFromRoots, findAllPaths, generateValidationReport } = window.__graphViewer.graphUtils; const { shortestPath } = window.__graphViewer.truePath;'
         )
         .replace(
           /^\s*import\s+\{[^}]*\}\s+from\s+["']\.\/latex_renderer["'];\s*$/m,
-          'const { FOUNDATION_BUCKETS, extractLatex, renderLatex, formatLeanSignature } = window.__graphViewer.latex;'
+          'const { FOUNDATION_BUCKETS, extractLatex, renderLatexInline } = window.__graphViewer.latex;'
         );
 
       return flattenModuleSource(withoutReactImport);

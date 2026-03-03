@@ -3,6 +3,8 @@
   Paper 2: Formal Foundations for the Single Source of Truth Principle
 -/
 
+namespace Ssot
+
 -- SSOT depends on Basic for documentation context only
 -- The actual proofs use simple Nat-based formulations
 
@@ -35,3 +37,4 @@ theorem non_ssot_inconsistency (dof : Nat) (h : ¬satisfies_SSOT dof) :
 -- DOF = 1: SSOT (optimal)
 -- DOF > 1: inconsistency potential (suboptimal)
 
+end Ssot

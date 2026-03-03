@@ -1,6 +1,6 @@
 \section{Introduction}\label{introduction}
 
-This paper gives a machine-checked account of software architectural quality in terms of degrees of freedom (DOF). All claims are verified in Lean~4 with zero \texttt{sorry} placeholders.
+This paper proves thermodynamic bounds on information-processing systems from first principles. The central result is the Five-Way Equivalence (Theorem~\ref{thm:five-way}): five independent scientific frameworks (engineering, epistemics, information theory, computational complexity, and statistical physics) all characterize the same structural property, $\mathrm{DOF} = 1$. Software architecture serves as the application domain; the underlying physics is general. All claims are verified in Lean~4 with zero \texttt{sorry} placeholders.
 
 \subsection{Formalization Statistics}
 
@@ -29,17 +29,19 @@ All proofs build with \texttt{lake build}. Axiom dependencies verified via \text
 \begin{theorem}[Five-Way Equivalence]\label{thm:five-way}
 For any architecture $A$ with $\mathrm{Cap}(A) > 0$, the following are equivalent:
 \[
-\underbrace{\mathrm{DOF}(A) = 1}_{\text{single source}}
+\begin{aligned}
+&\underbrace{\mathrm{DOF}(A) = 1}_{\text{single source}}
 \;\iff\;
 \underbrace{L(A) \text{ maximal}}_{\text{engineering}}
 \;\iff\;
-\underbrace{\mathrm{SSOT}(A)}_{\text{epistemics}}
-\;\iff\;
+\underbrace{\mathrm{SSOT}(A)}_{\text{epistemics}} \\
+&\iff\;
 \underbrace{\mathrm{srank}(A) = 1}_{\text{information}}
 \;\iff\;
 \underbrace{\text{tractable sufficiency}}_{\text{complexity}}
 \;\iff\;
 \underbrace{\text{min thermo cost}}_{\text{physics}}
+\end{aligned}
 \]
 \end{theorem}
 
@@ -48,15 +50,15 @@ Proved in Section~\ref{five-way-equivalence}. Machine-checked via \texttt{Levera
 \subsection{Contributions}
 
 \begin{enumerate}
-\item \textbf{DOF--Reliability Isomorphism (Theorem~\ref{thm:dof-reliability}):} Architecture with $n$ DOF is isomorphic to a series reliability system with $n$ components.
+\item \textbf{DOF-Reliability Isomorphism (Theorem~\ref{thm:dof-reliability}):} Architecture with $n$ DOF is isomorphic to a series reliability system with $n$ components.
 
-\item \textbf{Leverage--Error Tradeoff (Theorem~\ref{thm:leverage-error}):} $L(A_1) > L(A_2) \implies P_{\mathrm{error}}(A_1) < P_{\mathrm{error}}(A_2)$ at equal capabilities.
+\item \textbf{Leverage-Error Tradeoff (Theorem~\ref{thm:leverage-error}):} $L(A_1) > L(A_2) \implies P_{\mathrm{error}}(A_1) < P_{\mathrm{error}}(A_2)$ at equal capabilities.
 
 \item \textbf{Modification Complexity Gap (Theorem~\ref{thm:leverage-gap}):} Expected modification cost is proportional to DOF at fixed capabilities.
 
-\item \textbf{Physical Edit-Energy Floor (Theorem~\ref{thm:physical-energy-floor}):} Minimum edit-energy $= j_\mathcal{M} \cdot \mathrm{DOF}(A)$ under Landauer calibration. No P~$\neq$~coNP assumption. \leanmeta{\LH{thermodynamic\_selection\_unconditional}, \LH{srank\_energy\_lower\_bound}}
+\item \textbf{Physical Edit-Energy Floor (Theorem~\ref{thm:physical-energy-floor}):} Minimum edit-energy $= j_\mathcal{M} \cdot \mathrm{DOF}(A)$ under Landauer calibration. No P~$\neq$~coNP assumption. \leanmeta{\LH{L55}, \LH{L49}}
 
-\item \textbf{England Replication Inequality (Theorem~\ref{thm:england}):} $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$. Proof: a $k$-variable system has $2^k$ states (counting); entropy gap follows from $k \leq 2^{k-1}$ (induction). \leanmeta{\LH{england\_replication\_inequality}}
+\item \textbf{England Replication Inequality (Theorem~\ref{thm:england}):} $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$. Proof: a $k$-variable system has $2^k$ states (counting); entropy gap follows from $k \leq 2^{k-1}$ (induction). \leanmeta{\LH{L45}}
 
 \item \textbf{Optimal Architecture (Theorem~\ref{thm:optimal}):} $f(R) = \arg\max_{A:\,\mathrm{Cap}(A) \supseteq R} L(A)$ minimizes expected error and is computable.
 \end{enumerate}

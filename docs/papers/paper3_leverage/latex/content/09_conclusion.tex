@@ -35,18 +35,18 @@ The engineering consequences (Theorems 1 to 6 from the prior conclusion) are cor
 \textbf{What is new in \nolinkurl{Leverage} relative to \nolinkurl{AbstractClassSystem} and \nolinkurl{Ssot}:}
 \begin{itemize}
 \item The convergence theorem itself: \nolinkurl{AbstractClassSystem} and \nolinkurl{Ssot} contain two of the five equivalences; this paper closes the chain.
-\item The thermodynamic selection theorem (\LH{thermodynamic\_selection\_unconditional} in \nolinkurl{BridgeToDQ.lean}): mandatory energy under Landauer calibration for DOF~$> 1$, proved unconditionally.
+\item The thermodynamic selection theorem (\LH{L55} in \nolinkurl{BridgeToDQ.lean}): mandatory energy under Landauer calibration for DOF~$> 1$, proved unconditionally.
 \item The identification of structural rank as the information coordinate for DOF.
-\item The England Replication Inequality (\LH{england\_replication\_inequality}): $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$, giving the thermodynamic advantage of SSOT a quantitative non-equilibrium interpretation. No open conjectures remain.
+\item The England Replication Inequality (\LH{L45}): $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$, giving the thermodynamic advantage of SSOT a quantitative non-equilibrium interpretation. No open conjectures remain.
 \end{itemize}
 
 \subsection{No Open Conjectures}
 
 All conjectures from the original submission are now proved in \nolinkurl{Leverage/BridgeToDQ.lean}:
 \begin{itemize}
-\item \LH{thermodynamic\_selection\_unconditional}: unconditional energy bound, no P~$\neq$~coNP hypothesis.
-\item \LH{srank\_energy\_lower\_bound}: quantitative Landauer-linear energy bound.
-\item \LH{england\_replication\_inequality}: $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$ (Theorem~\ref{thm:england}).
+\item \LH{L55}: unconditional energy bound, no P~$\neq$~coNP hypothesis.
+\item \LH{L49}: quantitative Landauer-linear energy bound.
+\item \LH{L45}: $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$ (Theorem~\ref{thm:england}).
 \end{itemize}
 
 \subsection{Decision Procedure}
@@ -69,7 +69,7 @@ Given requirements $R$, choose optimal architecture via:
 
 \textbf{2. Constant Error Rate:} Assumes $p$ is uniform across components. Some components are more error-prone than others; a weighted version is future work.
 
-\textbf{3. P~$\neq$~coNP Hypothesis (resolved):} The thermodynamic energy bound in Theorem~5.7, point~3 is now proved unconditionally (\LH{thermodynamic\_selection\_unconditional}). Point~2 (complexity hardness) holds under P~$\neq$~coNP, which follows from the physical axioms of \cite{paper4_decision_quotient} (\LH{LP38}).
+\textbf{3. P~$\neq$~coNP Hypothesis (resolved):} The thermodynamic energy bound in Theorem~5.7, point~3 is now proved unconditionally (\LH{L55}). Point~2 (complexity hardness) holds under P~$\neq$~coNP, which follows from the physical axioms of \cite{paper4_decision_quotient} (\LH{LP38}).
 
 \textbf{4. Capability Quantification:} We count capabilities qualitatively. Some capabilities are more valuable; a weighted leverage extension $L = \sum w_i c_i / \mathrm{DOF}$ is natural but unformalized.
 

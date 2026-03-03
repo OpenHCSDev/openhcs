@@ -9,6 +9,8 @@
 import Ssot.SSOT
 import Ssot.Bounds
 
+namespace Ssot
+
 -- Case study result structure
 structure CaseStudy where
   name : String
@@ -146,3 +148,4 @@ def mean_reduction : Nat := total_pre_dof / 13
 theorem significant_reduction : total_pre_dof > 100 := by native_decide
 theorem all_post_ssot : total_post_dof = 13 := by native_decide
 
+end Ssot

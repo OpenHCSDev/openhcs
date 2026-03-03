@@ -69,6 +69,7 @@ import DecisionQuotient.BayesFoundations
 import DecisionQuotient.BayesOptimalityProof
 import DecisionQuotient.FunctionalInformation
 import DecisionQuotient.Quotient
+import DecisionQuotient.Bridges
 
 namespace DecisionQuotient
 
@@ -1315,5 +1316,31 @@ abbrev LP60 := @Physics.LocalityPhysics.gap_equivalence
 abbrev LP60' := @Physics.LocalityPhysics.gap_equivalence_simple
 -- LP61: Light cone is the time gap in spacetime
 abbrev LP61 := @Physics.LocalityPhysics.light_cone_is_time_gap
+
+/-! ## Bridge Composition Theorems (BR) handles
+    Bridges.lean: Non-trivial cross-cluster compositions that connect
+    isolated proof clusters to the main claim graph.
+-/
+
+-- BR1: ETH + structural rank = exponential hardness
+abbrev BR1 := @Bridges.eth_structural_rank_exponential_hardness
+-- BR2: Fisher rank bounds minimal sufficient set size
+abbrev BR2 := @Bridges.fisher_rank_lower_bounds_sufficient_set
+-- BR3: FPT + srank = parameterized dichotomy
+abbrev BR3 := @Bridges.fpt_srank_parameterized_dichotomy
+-- BR4: TUR + srank = thermodynamic cost of decision precision
+abbrev BR4 := @Bridges.tur_srank_thermodynamic_cost
+-- BR5: Dichotomy + ETH = complete complexity classification
+abbrev BR5 := @Bridges.dichotomy_eth_complete_classification
+-- BR6: Reduction + ETH = coNP-completeness + exponential hardness
+abbrev BR6 := @Bridges.reduction_eth_conp_exponential
+-- BR7: Geometry + covering = certificate complexity
+abbrev BR7 := @Bridges.geometry_covering_certificate_complexity
+-- BR8: Rate-distortion + Fisher information bridge
+abbrev BR8 := @Bridges.rate_distortion_fisher_information_bridge
+-- BR9: Counting complexity + #P-hardness
+abbrev BR9 := @Bridges.counting_complexity_sharp_p_hardness
+-- BR10: Approximation + counting hardness bridge
+abbrev BR10 := @Bridges.approximation_counting_hardness_bridge
 
 end DecisionQuotient

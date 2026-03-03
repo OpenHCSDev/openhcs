@@ -9,10 +9,15 @@ This paper proves thermodynamic bounds on information-processing systems from fi
 \hline
 \textbf{Metric} & \textbf{Value} \\
 \hline
-Lines of Lean 4 (this paper) & \LeanTotalLines{} \\
-Theorems/lemmas & \LeanTotalTheorems{} \\
-\texttt{sorry} placeholders & \LeanTotalSorry{} \\
-Proof files & \LeanTotalFiles{} \\
+Lines of Lean 4 (local layer) & \LeanLocalLines{} \\
+Theorems/lemmas (local layer) & \LeanLocalTheorems{} \\
+\texttt{sorry} placeholders (local layer) & \LeanLocalSorry{} \\
+Proof files (local layer) & \LeanLocalFiles{} \\
+\hline
+Total imported Lean lines & \LeanTotalLines{} \\
+Total theorem/lemma statements & \LeanTotalTheorems{} \\
+Total imported \texttt{sorry} placeholders & \LeanTotalSorry{} \\
+Total proof files in import closure & \LeanTotalFiles{} \\
 \hline
 \textbf{Dependencies (live imports)} & \\
 \texttt{AbstractClassSystem} & \LeanDepLinesAbstractClassSystem{} lines, \LeanDepTheoremsAbstractClassSystem{} theorems \\
@@ -29,17 +34,19 @@ All proofs build with \texttt{lake build}. Axiom dependencies verified via \text
 \begin{theorem}[Five-Way Equivalence]\label{thm:five-way}
 For any architecture $A$ with $\mathrm{Cap}(A) > 0$, the following are equivalent:
 \[
-\underbrace{\mathrm{DOF}(A) = 1}_{\text{single source}}
+\begin{aligned}
+&\underbrace{\mathrm{DOF}(A) = 1}_{\text{single source}}
 \;\iff\;
 \underbrace{L(A) \text{ maximal}}_{\text{engineering}}
 \;\iff\;
-\underbrace{\mathrm{SSOT}(A)}_{\text{epistemics}}
-\;\iff\;
+\underbrace{\mathrm{SSOT}(A)}_{\text{epistemics}} \\
+&\iff\;
 \underbrace{\mathrm{srank}(A) = 1}_{\text{information}}
 \;\iff\;
 \underbrace{\text{tractable sufficiency}}_{\text{complexity}}
 \;\iff\;
 \underbrace{\text{min thermo cost}}_{\text{physics}}
+\end{aligned}
 \]
 \end{theorem}
 
@@ -54,9 +61,9 @@ Proved in Section~\ref{five-way-equivalence}. Machine-checked via \texttt{Levera
 
 \item \textbf{Modification Complexity Gap (Theorem~\ref{thm:leverage-gap}):} Expected modification cost is proportional to DOF at fixed capabilities.
 
-\item \textbf{Physical Edit-Energy Floor (Theorem~\ref{thm:physical-energy-floor}):} Minimum edit-energy $= j_\mathcal{M} \cdot \mathrm{DOF}(A)$ under Landauer calibration. No P~$\neq$~coNP assumption. \leanmeta{\LH{thermodynamic\_selection\_unconditional}, \LH{srank\_energy\_lower\_bound}}
+\item \textbf{Physical Edit-Energy Floor (Theorem~\ref{thm:physical-energy-floor}):} Minimum edit-energy $= j_\mathcal{M} \cdot \mathrm{DOF}(A)$ under Landauer calibration. No P~$\neq$~coNP assumption. \leanmeta{\LH{L55}, \LH{L49}}
 
-\item \textbf{England Replication Inequality (Theorem~\ref{thm:england}):} $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$. Proof: a $k$-variable system has $2^k$ states (counting); entropy gap follows from $k \leq 2^{k-1}$ (induction). \leanmeta{\LH{england\_replication\_inequality}}
+\item \textbf{England Replication Inequality (Theorem~\ref{thm:england}):} $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$. Proof: a $k$-variable system has $2^k$ states (counting); entropy gap follows from $k \leq 2^{k-1}$ (induction). \leanmeta{\LH{L45}}
 
 \item \textbf{Optimal Architecture (Theorem~\ref{thm:optimal}):} $f(R) = \arg\max_{A:\,\mathrm{Cap}(A) \supseteq R} L(A)$ minimizes expected error and is computable.
 \end{enumerate}

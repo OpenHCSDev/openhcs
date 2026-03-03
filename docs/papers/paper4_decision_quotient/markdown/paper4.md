@@ -1,6 +1,6 @@
 # Paper: Verified Polynomial-Time Reductions in Lean 4: Formalizing the Complexity of Decision-Relevant Information
 
-**Status**: Draft-ready | **Lean**: 29737 lines, 1273 theorems
+**Status**: Draft-ready | **Lean**: 31898 lines, 1323 theorems
 
 ---
 
@@ -24,7 +24,7 @@ We present a Lean 4 formalization of polynomial-time reductions and computationa
 
 All complexity claims use the input encodings fixed in Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}.
 
-The formalization comprises 29737 lines of Lean 4 with 1273 machine-verified theorems/lemmas across 116 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
+The formalization comprises 31898 lines of Lean 4 with 1323 machine-verified theorems/lemmas across 118 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
 
 **Practical corollaries.** The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/$\Sigma_2^P$ completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle *determining what you need to know is harder than knowing everything*. This implies that over-modeling is rational under the model and that "simpler" incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
 
@@ -78,9 +78,9 @@ The primary contribution is theoretical: a formalized reduction framework and a 
 ::: center
   **Metric**                                                 **Value**
   ----------------------- --------------------------------------------
-  Lines of Lean 4                                                29737
-  Theorems/lemmas                                                 1273
-  Proof files                                                      116
+  Lines of Lean 4                                                31898
+  Theorems/lemmas                                                 1323
+  Proof files                                                      118
   Reduction proofs          5 (SAT, TAUTOLOGY, SET-COVER, ETH, W\[2\])
   External dependencies           Mathlib (computability, data.finset)
   `sorry` count                                                      0
@@ -229,7 +229,7 @@ Each theorem includes verification metadata:
     #print axioms sufficiency_coNP_complete  -- axiom dependencies
     #eval Nat.repr (countSorry `sufficiency_coNP_complete)  -- 0
 
-The build log (included in the artifact) records successful compilation of all 1273 theorem/lemma statements with 0 `sorry` placeholders.
+The build log (included in the artifact) records successful compilation of all 1323 theorem/lemma statements with 0 `sorry` placeholders.
 
 
 # Formal Foundations {#sec:foundations}
@@ -612,6 +612,10 @@ Under ETH, the lower bound is asymptotically tight in the succinct encoding. The
 :::
 
 This dichotomy explains why some domains admit tractable model selection (few relevant variables) while others require heuristics (many relevant variables). In the succinct regime, the reduction chain gives a class-level coNP statement together with a worst-case $2^{\Omega(n)}$ lower bound under the declared ETH assumption.
+
+#### Bridge theorems.
+
+The ETH chain composes with structural rank characterizations to yield the complete complexity picture. Specifically: BR1 combines ETH hardness with structural rank to show that problems with maximal srank (all coordinates relevant) inherit the exponential lower bound; BR5 composes the dichotomy theorem with ETH to give the full classification; BR6 combines the TAUTOLOGY reduction with ETH to establish coNP-completeness plus exponential hardness. These bridge theorems connect the complexity cluster (ETH, reductions) to the geometric cluster (srank, sufficiency) in the proof graph.
 
 ::: remark
 The ETH lower bound is stated in the succinct circuit encoding of Section [\[sec:encoding\]](#sec:encoding){reference-type="ref" reference="sec:encoding"}, where the utility function $U: A \times S \to \mathbb{R}$ is represented by a Boolean circuit computing $\mathbf{1}[U(a,s) > \theta]$ for threshold comparisons. In this model:
@@ -1444,7 +1448,7 @@ Mathlib's computability library [@mathlib2020] provides primitive recursive fun
 
 #### The verification gap.
 
-Published complexity proofs occasionally contain errors [@lipton2009np]. Machine verification eliminates this uncertainty. Our contribution demonstrates that complexity reductions are amenable to formalization with reasonable effort (29737 lines for the full reduction suite).
+Published complexity proofs occasionally contain errors [@lipton2009np]. Machine verification eliminates this uncertainty. Our contribution demonstrates that complexity reductions are amenable to formalization with reasonable effort (31898 lines for the full reduction suite).
 
 ## Computational Decision Theory
 
@@ -1641,11 +1645,11 @@ Keep the mathematical content ("sufficiency is the same as tautology under this 
 
 ## Formalization Size
 
--   Total Lean lines: 29737
+-   Total Lean lines: 31898
 
--   Theorem/lemma statements: 1273
+-   Theorem/lemma statements: 1323
 
--   Proof files: 116
+-   Proof files: 118
 
 -   `sorry` placeholders: 0
 
@@ -1667,6 +1671,8 @@ The primary contributions are methodological:
 3.  **Integration patterns.** We show how to connect custom complexity definitions with Mathlib's computability and polynomial libraries.
 
 4.  **Artifact quality.** Zero `sorry` placeholders, documented axiom dependencies, and reproducible builds via `lake build`.
+
+5.  **Bridge theorems.** The proof graph contains non-trivial compositions connecting isolated clusters: BR1 (ETH + structural rank yields exponential hardness); BR2 (Fisher rank bounds minimal sufficient sets); BR3 (FPT kernel + srank yields parameterized dichotomy); BR4 (TUR + srank yields thermodynamic cost bounds); BR7 (geometry + covering yields certificate complexity); BR8 (rate-distortion + Fisher information connects compression to decision geometry); BR9 and BR10 (counting complexity and approximation barriers). These bridges make the proof graph sufficiently interconnected that rejecting any single cluster requires rejecting its compositional connections to other established results.
 
 ## Verified Complexity Results {#verified-complexity-results .unnumbered}
 
@@ -1807,7 +1813,7 @@ The Lean proofs are straightforward applications of definitions and standard com
 
 3.  **Complexity dichotomy.** Theorem [\[thm:dichotomy\]](#thm:dichotomy){reference-type="ref" reference="thm:dichotomy"} separates logarithmic and linear regimes: polynomial behavior when the minimal sufficient set has size $O(\log |S|)$, and exponential lower bounds under ETH when it has size $\Omega(n)$. Intermediate regimes are not ruled out by the lower-bound statement.
 
-**What machine-checking guarantees.** The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic combinatorics and complexity definitions). 0 `sorry` placeholders means 0 unproven claims. The 29737 lines establish a verified chain from basic definitions (decision problems, coordinate spaces, polynomial reductions) to the final theorems (hardness results, dichotomy, tractable cases). Reviewers need not trust our informal explanations; they run `lake build` and verify the proofs themselves.
+**What machine-checking guarantees.** The Lean compiler verifies that every proof step is valid, every definition is consistent, and no axioms are added beyond Lean's foundations (extended with Mathlib for basic combinatorics and complexity definitions). 0 `sorry` placeholders means 0 unproven claims. The 31898 lines establish a verified chain from basic definitions (decision problems, coordinate spaces, polynomial reductions) to the final theorems (hardness results, dichotomy, tractable cases). Reviewers need not trust our informal explanations; they run `lake build` and verify the proofs themselves.
 
 **Comparison to informal complexity arguments.** Prior work on model selection complexity (Chickering et al. [@chickering2004large], Teyssier & Koller [@teyssier2012ordering]) presents compelling informal arguments but lacks machine-checked proofs. Our contribution is not new *wisdom*; the insight that model selection is hard is old. Our contribution is *formalization*: making "coordinate sufficiency" precise enough to mechanize, constructing verified reductions, and proving the complexity results hold for the formalized definitions.
 
@@ -1815,7 +1821,7 @@ This follows the tradition of verified complexity theory: just as Nipkow & Klein
 
 ## Module Structure
 
-The formalization consists of 116 files organized as follows:
+The formalization consists of 118 files organized as follows:
 
 -   `Basic.lean` -- Core definitions (DecisionProblem, CoordinateSet, Projection)
 
@@ -1866,11 +1872,11 @@ The formalization consists of 116 files organized as follows:
 
 ## Verification Status
 
--   Total lines: 29737
+-   Total lines: 31898
 
--   Theorems/lemmas: 1273
+-   Theorems/lemmas: 1323
 
--   Files: 116
+-   Files: 118
 
 -   Status: All proofs compile with 0 `sorry`
 
@@ -2060,6 +2066,6 @@ The "cover important axes" heuristic only works if you *correctly identify* whic
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 29737
-- Theorems: 1273
+- Lines: 31898
+- Theorems: 1323
 - `sorry` placeholders: 0

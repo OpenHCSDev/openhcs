@@ -46,6 +46,11 @@ import DecisionQuotient.WitnessCheckingDuality
 import DecisionQuotient.Summary
 import DecisionQuotient.Dichotomy
 import DecisionQuotient.Tractability.StructuralRank
+import DecisionQuotient.Tractability.BoundedActions
+import DecisionQuotient.Tractability.SeparableUtility
+import DecisionQuotient.Tractability.TreeStructure
+import DecisionQuotient.Tractability.Dimensional
+import DecisionQuotient.Tractability.Tightness
 import DecisionQuotient.Information
 import DecisionQuotient.Information.RateDistortion
 import DecisionQuotient.Information.RDSrank
@@ -64,6 +69,7 @@ import DecisionQuotient.BayesFoundations
 import DecisionQuotient.BayesOptimalityProof
 import DecisionQuotient.FunctionalInformation
 import DecisionQuotient.Quotient
+import DecisionQuotient.Bridges
 
 namespace DecisionQuotient
 
@@ -512,25 +518,6 @@ export PhysicalComplexity (
   CoherentDQRejectionAtRequirement
   coherent_dq_rejection_impossible_at_requirement
   coherent_dq_rejection_impossible_canonical
-  -- PH11-PH36 additional exports
-  P_eq_NP_via_SAT
-  SAT3ReductionBridge
-  sat_reduction_transfers_energy_lower_bound
-  physical_collapse_of_polytime_sat_realization
-  p_eq_np_physically_impossible_via_sat_bridge
-  SAT3HardFamily
-  p_eq_np_physically_impossible_via_sat_hard_family
-  collapse_possible_without_positive_bit_cost
-  collapse_possible_without_exponential_lower_bound
-  no_go_transfer_requires_collapse_map
-  no_collapse_of_bounded_budget_pos_cost_exp_lb
-  collapse_implies_assumption_failure_disjunction
-  deterministic_no_physical_collapse
-  probabilistic_no_physical_collapse
-  sequential_no_physical_collapse
-  collapse_possible_with_unbounded_budget_profile
-  exp_budget_profile_unbounded
-  finite_budget_assumption_is_necessary
 )
 end PH
 
@@ -801,35 +788,32 @@ abbrev BB4 := bayesian_dq_matches_physics_dq
 abbrev BB5 := dq_derived_from_bayes
 
 -- Physical no-go extension (PH) handles - P=NP transfer schema
--- Note: Using PH.* references instead of @PhysicalComplexity.* to maintain
--- proper dependency graph connectivity through DecisionQuotient namespace
-abbrev PH11 := PH.PhysicalCollapseAtRequirement
-abbrev PH12 := PH.no_physical_collapse_at_requirement
-abbrev PH13 := PH.canonical_physical_collapse_impossible
-abbrev PH14 := PH.p_eq_np_physically_impossible_of_collapse_map
-abbrev PH15 := PH.p_eq_np_physically_impossible_canonical
-abbrev PH16 := PH.P_eq_NP_via_SAT
-abbrev PH17 := PH.SAT3ReductionBridge
-abbrev PH18 := PH.sat_reduction_transfers_energy_lower_bound
-abbrev PH19 := PH.physical_collapse_of_polytime_sat_realization
-abbrev PH20 := PH.p_eq_np_physically_impossible_via_sat_bridge
-abbrev PH21 := PH.SAT3HardFamily
-abbrev PH22 := PH.p_eq_np_physically_impossible_via_sat_hard_family
-abbrev PH23 := PH.collapse_possible_without_positive_bit_cost
-abbrev PH24 := PH.collapse_possible_without_exponential_lower_bound
-abbrev PH25 := PH.no_go_transfer_requires_collapse_map
--- Note: PH26, PH27, PH32, PH33 require @ notation for explicit arguments
+abbrev PH11 := @PhysicalComplexity.PhysicalCollapseAtRequirement
+abbrev PH12 := @PhysicalComplexity.no_physical_collapse_at_requirement
+abbrev PH13 := @PhysicalComplexity.canonical_physical_collapse_impossible
+abbrev PH14 := @PhysicalComplexity.p_eq_np_physically_impossible_of_collapse_map
+abbrev PH15 := @PhysicalComplexity.p_eq_np_physically_impossible_canonical
+abbrev PH16 := @PhysicalComplexity.P_eq_NP_via_SAT
+abbrev PH17 := @PhysicalComplexity.SAT3ReductionBridge
+abbrev PH18 := @PhysicalComplexity.sat_reduction_transfers_energy_lower_bound
+abbrev PH19 := @PhysicalComplexity.physical_collapse_of_polytime_sat_realization
+abbrev PH20 := @PhysicalComplexity.p_eq_np_physically_impossible_via_sat_bridge
+abbrev PH21 := @PhysicalComplexity.SAT3HardFamily
+abbrev PH22 := @PhysicalComplexity.p_eq_np_physically_impossible_via_sat_hard_family
+abbrev PH23 := @PhysicalComplexity.collapse_possible_without_positive_bit_cost
+abbrev PH24 := @PhysicalComplexity.collapse_possible_without_exponential_lower_bound
+abbrev PH25 := @PhysicalComplexity.no_go_transfer_requires_collapse_map
 abbrev PH26 := @PhysicalComplexity.no_collapse_of_bounded_budget_pos_cost_exp_lb
 abbrev PH27 := @PhysicalComplexity.collapse_implies_assumption_failure_disjunction
-abbrev PH28 := PH.deterministic_no_physical_collapse
-abbrev PH29 := PH.probabilistic_no_physical_collapse
-abbrev PH30 := PH.sequential_no_physical_collapse
-abbrev PH31 := PH.collapse_possible_with_unbounded_budget_profile
+abbrev PH28 := @PhysicalComplexity.deterministic_no_physical_collapse
+abbrev PH29 := @PhysicalComplexity.probabilistic_no_physical_collapse
+abbrev PH30 := @PhysicalComplexity.sequential_no_physical_collapse
+abbrev PH31 := @PhysicalComplexity.collapse_possible_with_unbounded_budget_profile
 abbrev PH32 := @PhysicalComplexity.exp_budget_profile_unbounded
 abbrev PH33 := @PhysicalComplexity.finite_budget_assumption_is_necessary
-abbrev PH34 := PH.CoherentDQRejectionAtRequirement
-abbrev PH35 := PH.coherent_dq_rejection_impossible_at_requirement
-abbrev PH36 := PH.coherent_dq_rejection_impossible_canonical
+abbrev PH34 := @PhysicalComplexity.CoherentDQRejectionAtRequirement
+abbrev PH35 := @PhysicalComplexity.coherent_dq_rejection_impossible_at_requirement
+abbrev PH36 := @PhysicalComplexity.coherent_dq_rejection_impossible_canonical
 
 -- Bayes-from-DQ (BF) handles - nondegenerate-prior forcing before Bayes uniqueness
 abbrev BF1 := @certainty_of_not_nondegenerateBelief
@@ -1332,5 +1316,31 @@ abbrev LP60 := @Physics.LocalityPhysics.gap_equivalence
 abbrev LP60' := @Physics.LocalityPhysics.gap_equivalence_simple
 -- LP61: Light cone is the time gap in spacetime
 abbrev LP61 := @Physics.LocalityPhysics.light_cone_is_time_gap
+
+/-! ## Bridge Composition Theorems (BR) handles
+    Bridges.lean: Non-trivial cross-cluster compositions that connect
+    isolated proof clusters to the main claim graph.
+-/
+
+-- BR1: ETH + structural rank = exponential hardness
+abbrev BR1 := @Bridges.eth_structural_rank_exponential_hardness
+-- BR2: Fisher rank bounds minimal sufficient set size
+abbrev BR2 := @Bridges.fisher_rank_lower_bounds_sufficient_set
+-- BR3: FPT + srank = parameterized dichotomy
+abbrev BR3 := @Bridges.fpt_srank_parameterized_dichotomy
+-- BR4: TUR + srank = thermodynamic cost of decision precision
+abbrev BR4 := @Bridges.tur_srank_thermodynamic_cost
+-- BR5: Dichotomy + ETH = complete complexity classification
+abbrev BR5 := @Bridges.dichotomy_eth_complete_classification
+-- BR6: Reduction + ETH = coNP-completeness + exponential hardness
+abbrev BR6 := @Bridges.reduction_eth_conp_exponential
+-- BR7: Geometry + covering = certificate complexity
+abbrev BR7 := @Bridges.geometry_covering_certificate_complexity
+-- BR8: Rate-distortion + Fisher information bridge
+abbrev BR8 := @Bridges.rate_distortion_fisher_information_bridge
+-- BR9: Counting complexity + #P-hardness
+abbrev BR9 := @Bridges.counting_complexity_sharp_p_hardness
+-- BR10: Approximation + counting hardness bridge
+abbrev BR10 := @Bridges.approximation_counting_hardness_bridge
 
 end DecisionQuotient

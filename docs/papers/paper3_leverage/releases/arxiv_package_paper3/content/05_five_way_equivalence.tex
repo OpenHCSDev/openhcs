@@ -20,7 +20,7 @@ An architecture has the highest possible capability-to-DOF ratio exactly when it
 \item (Backward) If $A$ has maximum leverage but $\text{DOF}(A) > 1$, construct $A'$ with $\text{DOF}(A') = 1$ and same capabilities. Then $L(A') = |\text{Cap}(A)| > |\text{Cap}(A)|/\text{DOF}(A) = L(A)$, contradiction.
 \end{itemize}
 
-\leanmeta{\LH{L_ad7ca324}, \LH{L_0c281f80}, \LH{max\_leverage\_forces\_dof\_one}}
+\leanmeta{\LH{L31}, \LH{L28}, \LH{L48}}
 
 \subsection{Framework 2: Architectural Epistemic Coherence (Ssot)}
 
@@ -34,7 +34,7 @@ Formally: $\text{SSOT}(A) \iff \text{DOF}(A) = 1$.
 Epistemic coherence (one source of truth per structural fact) is equivalent to having a single degree of freedom.
 \end{informal}
 
-\leanmeta{Proved in \nolinkurl{Ssot} (\LH{oracle\_arbitrary})}
+\leanmeta{Proved in \nolinkurl{Ssot} (\LH{ORA1})}
 
 This is the DOF = 1 characterization from the Ssot coherence theorem.
 
@@ -58,7 +58,7 @@ The canonical encoding is:
 \item Utility: $u(\text{inl } i, s) = 2$ if $s(i) = \text{true}$, else $0$; $u(\text{inr}\ (), s) = 1$
 \end{itemize}
 
-\leanmeta{\LH{dof\_eq\_srank}, \LH{ssot\_srank\_one}, \LH{incoherent\_srank\_gt\_one}}
+\leanmeta{\LH{L43}, \LH{L51}, \LH{L46}}
 
 \begin{formal}
 \textbf{Corollary 5.4.} DOF $= 1$ if and only if srank $= 1$.
@@ -86,7 +86,7 @@ An architecture has a single degree of freedom exactly when its canonical decisi
 When the structural rank is 1, determining whether current information suffices for an optimal decision is computationally tractable. When the structural rank exceeds 1, the same problem is computationally intractable (coNP-hard).
 \end{informal}
 
-\leanmeta{Proved in \LH{DecisionQuotient} (\LH{tractable\_bounded\_core}, \LH{sufficiency\_conp\_hard}), imported via \LH{BridgeToDQ.lean}}
+\leanmeta{Proved in \texttt{DecisionQuotient} (\LH{L56}, \LH{L53}), imported via \nolinkurl{Leverage/BridgeToDQ.lean}}
 
 This connects the architectural property (DOF = 1) to computational feasibility of decision-making.
 
@@ -98,7 +98,7 @@ This connects the architectural property (DOF = 1) to computational feasibility 
 Among architectures, only those with a single degree of freedom admit tractable sufficiency checking.
 \end{informal}
 
-\leanmeta{Combine Corollary 5.4 with Theorem 5.5; \LH{max\_coherence\_forces\_tractability}}
+\leanmeta{Combine Corollary 5.4 with Theorem 5.5; \LH{L47}}
 
 \subsection{Framework 5: Thermodynamic Selection (Statistical Physics)}
 
@@ -113,18 +113,18 @@ For DOF $= 1$, the energy lower bound is $j_{\mathcal{M}}$ (the Landauer minimum
 \end{formal}
 
 \begin{informal}
-Architectures with more than one degree of freedom necessarily incur thermodynamic costs per decision cycle. Point~3 holds unconditionally: the energy bound follows from Landauer and the DOF~$=$~srank identity (\LH{dof\_eq\_srank}). Point~2 holds under the physical axioms of \cite{paper4_decision_quotient} (\LH{LP38}), which prove P~$\neq$~NP, hence P~$\neq$~coNP.
+Architectures with more than one degree of freedom necessarily incur thermodynamic costs per decision cycle. Point~3 holds unconditionally: the energy bound follows from Landauer and the DOF~$=$~srank identity (\LH{L43}). Point~2 holds under the physical axioms of \cite{paper4_decision_quotient} (\LH{LP38}), which prove P~$\neq$~NP, hence P~$\neq$~coNP.
 \end{informal}
 
 Physical assumptions (point~3 only):
 \begin{itemize}
-\item Positive Landauer constant ($j_{\mathcal{M}} > 0$) — cf. Theorem \ref{cor:leverage-energy} (\LH{L_9c6279a3}, \LH{L_ebcd21af})
+\item Positive Landauer constant ($j_{\mathcal{M}} > 0$) — cf. Theorem \ref{cor:leverage-energy} (\LH{L3}, \LH{L6})
 \item Landauer calibration ($k_B T \ln 2$ joules per bit)
 \end{itemize}
 
-\leanmeta{\LH{thermodynamic\_selection}, \LH{thermodynamic\_selection\_unconditional}, \LH{srank\_energy\_lower\_bound}}
+\leanmeta{\LH{L54}, \LH{L55}, \LH{L49}}
 
-Physical edit-energy floor from Section 4.3 is a special case: DOF controls minimum edit-energy, and higher leverage implies lower energy in a fixed capability class (Theorem \ref{thm:physical-energy-floor}, \LH{L_515d1d9d}, \LH{L_5b347895}, \LH{L_05a51b10}).
+Physical edit-energy floor from Section 4.3 is a special case: DOF controls minimum edit-energy, and higher leverage implies lower energy in a fixed capability class (Theorem \ref{thm:physical-energy-floor}, \LH{L1}, \LH{L5}).
 
 \subsection{The Five-Way Equivalence}
 
@@ -155,7 +155,7 @@ Statistical Physics & Minimum thermodynamic cost per cycle \\
 
 \textbf{Proof.} The equivalence follows from Theorems 5.1-5.7:
 \begin{enumerate}
-\item $\text{DOF} = 1 \iff \text{max leverage}$: Theorem 5.1 (\LH{L_ad7ca324}, \LH{L_0c281f80})
+\item $\text{DOF} = 1 \iff \text{max leverage}$: Theorem 5.1 (\LH{L31}, \LH{L28})
 \item $\text{DOF} = 1 \iff \text{SSOT}$: Theorem 5.2 \cite{paper2_ssot}
 \item $\text{DOF} = \text{srank}$: Theorem 5.3, so $\text{DOF} = 1 \iff \text{srank} = 1$
 \item $\text{srank} = 1 \iff \text{tractable sufficiency}$: Theorem 5.5 \cite{paper4_decision_quotient}. Forward direction (srank~$=1 \to$ polynomial) is unconditional. Backward direction (tractable $\to$ srank~$=1$) holds under P~$\neq$~coNP, which follows from the physical axioms of \cite{paper4_decision_quotient} (\LH{LP38}).
@@ -164,7 +164,7 @@ Statistical Physics & Minimum thermodynamic cost per cycle \\
 
 The transitivity of logical equivalence gives the five-way equivalence.
 
-\leanmeta{\LH{dof\_one\_iff\_max\_leverage}, \LH{oracle\_arbitrary}, \LH{dof\_eq\_srank}, \LH{max\_coherence\_forces\_tractability}, \LH{thermodynamic\_selection\_unconditional}}
+\leanmeta{\LH{L44}, \LH{ORA1}, \LH{L43}, \LH{L47}, \LH{L55}}
 
 \begin{formal}
 \textbf{Corollary 5.9 (Convergence).} Within the \nolinkurl{DecisionQuotient} canonical decision problem framework, the boolean-coordinate encoding (states as $n$ boolean coordinates, actions as coordinate queries or fallback, utilities rewarding correct identification) is the unique decision structure with $n = 1$ that simultaneously satisfies all five characterizations.
@@ -185,37 +185,37 @@ The following Lean 4 proofs establish the connections:
 \begin{itemize}
 \item \nolinkurl{Leverage/Foundations.lean}:
   \begin{itemize}
-  \item \LH{L_ad7ca324}, \LH{L_0c281f80} (\LH{ssot\_max\_leverage}): DOF $= 1 \to$ max leverage
-  \item \LH{max\_leverage\_forces\_dof\_one}: max leverage $\to$ DOF $= 1$
-  \item \LH{dof\_one\_iff\_max\_leverage}: biconditional
+  \item \LH{L31}, \LH{L28} (\LH{L50}): DOF $= 1 \to$ max leverage
+  \item \LH{L48}: max leverage $\to$ DOF $= 1$
+  \item \LH{L44}: biconditional
   \end{itemize}
 \item \nolinkurl{Leverage/BridgeToDQ.lean}:
   \begin{itemize}
-  \item \LH{dof\_eq\_srank}: DOF $=$ srank
-  \item \LH{ssot\_srank\_one}: DOF $= 1 \to$ srank $= 1$
-  \item \LH{incoherent\_srank\_gt\_one}: DOF $> 1 \to$ srank $> 1$
-  \item \LH{thermodynamic\_selection}: DOF $> 1 \to$ mandatory energy
-  \item \LH{max\_coherence\_forces\_tractability}: max leverage $\to$ tractable
+  \item \LH{L43}: DOF $=$ srank
+  \item \LH{L51}: DOF $= 1 \to$ srank $= 1$
+  \item \LH{L46}: DOF $> 1 \to$ srank $> 1$
+  \item \LH{L54}: DOF $> 1 \to$ mandatory energy
+  \item \LH{L47}: max leverage $\to$ tractable
   \end{itemize}
-\item \nolinkurl{DecisionQuotient/Tractability/StructuralRank.lean}: srank $= 1 \to$ P (\LH{tractable\_bounded\_core}), srank $> 1 \to$ coNP-hard (\LH{sufficiency\_conp\_hard})
-\item \nolinkurl{DecisionQuotient/ThermodynamicLift.lean}: energy lower bounds under Landauer calibration (\LH{srank\_energy\_lower\_bound})
+\item \nolinkurl{DecisionQuotient/Tractability/StructuralRank.lean}: srank $= 1 \to$ P (\LH{L56}), srank $> 1 \to$ coNP-hard (\LH{L53})
+\item \nolinkurl{DecisionQuotient/ThermodynamicLift.lean}: energy lower bounds under Landauer calibration (\LH{L49})
 \end{itemize}
 
-The cross-module dependency chain is live: \LH{Leverage} $\to$ \LH{DecisionQuotient} $\to$ Mathlib.
+The cross-module dependency chain is live: \texttt{Leverage} $\to$ \texttt{DecisionQuotient} $\to$ Mathlib.
 
 \subsection{Relation to Prior Sections}
 
 This section subsumes and extends Section 4's results:
 \begin{itemize}
-\item Theorem 4.1 (Leverage-Error Tradeoff, \LH{L_5af424e9}) is a consequence of the equivalence between leverage and DOF
-\item Theorem 4.2 (Modification Complexity Gap, \LH{L_45cc4f88}) follows from DOF $= 1$ minimizing modification cost
-\item Theorem 4.3 (Optimal Architecture, \LH{L_a42f986c}, \LH{L_28e01ed8}) is strengthened: the optimal architecture is now characterized by five independent properties
-\item Theorem 4.4 (Metaprogramming Dominance, \LH{L_c022ff39}, \LH{L_5250a1d9}) is a special case: unbounded derivations from a single source achieve DOF $= 1$
+\item Theorem 4.1 (Leverage-Error Tradeoff, \LH{L29}) is a consequence of the equivalence between leverage and DOF
+\item Theorem 4.2 (Modification Complexity Gap, \LH{L30}) follows from DOF $= 1$ minimizing modification cost
+\item Theorem 4.3 (Optimal Architecture, \LH{L38}, \LH{L34}) is strengthened: the optimal architecture is now characterized by five independent properties
+\item Theorem 4.4 (Metaprogramming Dominance, \LH{L36}, \LH{L35}) is a special case: unbounded derivations from a single source achieve DOF $= 1$
 \end{itemize}
 
 \subsection{England Replication Inequality (Proved)}
 
-All previously open conjectures are now proved. The England Replication Inequality is mechanized in \nolinkurl{Leverage/BridgeToDQ.lean} (\LH{england\_replication\_inequality}).
+All previously open conjectures are now proved. The England Replication Inequality is mechanized in \nolinkurl{Leverage/BridgeToDQ.lean} (\LH{L45}).
 
 \begin{theorem}[England Replication Inequality]\label{thm:england}
 Let $\Delta S_{\min}(\text{srank}) = \text{srank} \cdot k_B \ln 2$ be the minimal entropy production under Landauer calibration. For a single-source architecture ($\text{srank} = 1$) and a $k$-copy replication architecture ($\text{srank} = k$):
@@ -225,10 +225,10 @@ Let $\Delta S_{\min}(\text{srank}) = \text{srank} \cdot k_B \ln 2$ be the minima
 equivalently, $\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k$.
 \end{theorem}
 
-\leanmeta{\LH{england\_replication\_inequality}}
+\leanmeta{\LH{L45}}
 
 \begin{proof}
-The gap is $(k-1) \cdot k_B \ln 2$. Since $k \leq 2^{k-1}$ (\LH{succ\_le\_two\_pow}), taking logs gives $\ln k \leq (k-1) \ln 2$, so the gap is $\geq k_B \ln k$.
+The gap is $(k-1) \cdot k_B \ln 2$. Since $k \leq 2^{k-1}$ (\LH{L52}), taking logs gives $\ln k \leq (k-1) \ln 2$, so the gap is $\geq k_B \ln k$.
 \end{proof}
 
-\textbf{Modeling note.} $\Delta S_{\min}$ is a definition within the model---the exact Landauer entropy cost per cycle---not a lower bound on arbitrary implementations. The ``min'' refers to physical optimality outside the formalism.
+\textbf{Modeling note.} $\Delta S_{\min}$ is a definition within the model: the exact Landauer entropy cost per cycle, not a lower bound on arbitrary implementations. The ``min'' refers to physical optimality outside the formalism.

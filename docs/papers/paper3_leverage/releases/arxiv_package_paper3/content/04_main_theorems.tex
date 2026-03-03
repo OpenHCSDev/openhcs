@@ -31,10 +31,10 @@ For any architectural decision with alternatives $A_1, \ldots, A_n$ meeting capa
 A^* = \arg\max_{A_i} L(A_i) = \arg\max_{A_i} \frac{|\text{Capabilities}(A_i)|}{\text{DOF}(A_i)}
 \]
 \end{theorem}
-\leanmeta{\LH{L_ad7ca324},
-\LH{L_0c281f80}}
+\leanmeta{\LH{L31},
+\LH{L28}}
 
-\textbf{Note:} This is \emph{not} the central theorem---it is a consequence of the DOF-Reliability Isomorphism. The isomorphism is the deep result; ``maximize leverage'' is the actionable heuristic derived from it.
+\textbf{Note:} This is \emph{not} the central theorem; it is a consequence of the DOF-Reliability Isomorphism. The isomorphism is the deep result; ``maximize leverage'' is the actionable heuristic derived from it.
 
 \subsection{Leverage-Error Tradeoff}
 
@@ -44,7 +44,7 @@ For architectures $A_1, A_2$ with equal capabilities:
 \text{Cap}(A_1) = \text{Cap}(A_2) \wedge L(A_1) > L(A_2) \implies P_{\text{error}}(A_1) < P_{\text{error}}(A_2)
 \]
 \end{theorem}
-\leanmeta{\LH{L_5af424e9}}
+\leanmeta{\LH{L29}}
 
 \begin{proof}
 Given: $\text{Cap}(A_1) = \text{Cap}(A_2)$ and $L(A_1) > L(A_2)$.
@@ -77,9 +77,8 @@ E_{\min}(A;\mathcal{M}) = j_{\mathcal{M}}\cdot \mathrm{DOF}(A).
 Hence $\mathrm{DOF}(A_1) < \mathrm{DOF}(A_2)$ implies
 $E_{\min}(A_1;\mathcal{M}) < E_{\min}(A_2;\mathcal{M})$.
 \end{theorem}
-\leanmeta{\LH{L_515d1d9d},
-\LH{L_5b347895},
-\LH{L_05a51b10}}
+\leanmeta{\LH{L1},
+\LH{L5}}
 
 \begin{proof}
 In the mechanized model, modification complexity is definitionally $\mathrm{DOF}$. Multiplying by a positive per-edit conversion constant gives the lower bound and strict monotonicity in DOF.
@@ -92,8 +91,8 @@ E_{\min}(A_1;\mathcal{M}) < E_{\min}(A_2;\mathcal{M}),
 \]
 and the induced energy gap is strictly positive.
 \end{corollary}
-\leanmeta{\LH{L_9c6279a3},
-\LH{L_ebcd21af}}
+\leanmeta{\LH{L3},
+\LH{L6}}
 
 \begin{theorem}[Budget Feasibility Boundary]\label{thm:physical-budget-boundary}
 For physical model $\mathcal{M}$ and budget $B$, implementation feasibility is equivalent to clearing the floor:
@@ -102,30 +101,27 @@ E_{\min}(A;\mathcal{M}) \le B \iff \text{feasible}(A,B,\mathcal{M}).
 \]
 Hence $B < E_{\min}(A;\mathcal{M})$ implies infeasibility. Also, for fixed $B$ and equal capabilities, if $L(A_1)>L(A_2)$ and $A_2$ is feasible under $B$, then $A_1$ is feasible under $B$.
 \end{theorem}
-\leanmeta{\LH{L_1af867ce},
-\LH{L_c4bbc516},
-\LH{L_3432eddd}}
+\leanmeta{\LH{L2},
+\LH{L4}}
 
 \begin{corollary}[Physical Assumption Necessity Witnesses]\label{cor:physical-assumption-necessity}
 The physical layer uses two explicit premises for no-go style infeasibility claims: positive per-edit conversion and an external budget bound. Dropping positivity admits a zero-floor countermodel. Dropping the external budget-bound premise blocks infeasibility conclusions because a feasible budget witness always exists.
 \end{corollary}
-\leanmeta{\LH{L_a2e95cfd},
-\LH{L_f3216891},
-\LH{L_e0961ce8},
-\LH{L_1fb0826b}}
+\leanmeta{\LH{L8},
+\LH{L7}}
 
 \subsection{Metaprogramming Dominance}
 
 \begin{theorem}[Metaprogramming Dominance]\label{thm:metaprog}
 For any $N \in \mathbb{N}$, there exists a metaprogramming architecture $M$ with $\text{DOF}(M) = 1$ and $L(M) \geq N$.
 \end{theorem}
-\leanmeta{\LH{L_c022ff39},
-\LH{L_5250a1d9}}
+\leanmeta{\LH{L36},
+\LH{L35}}
 
 \begin{proof}
 Let $M$ be a metaprogramming architecture with a single source definition ($\text{DOF}(M) = 1$) and at least $N$ derived capabilities. Then $L(M) = |\text{Cap}(M)|/1 \geq N$.
 
-\textbf{Modeling note.} In any fixed finite model, $L(M)$ is a positive rational. The colloquial claim ``leverage $= \infty$'' means: for any bound $N$, the architecture can be extended to achieve $L \geq N$ while keeping $\text{DOF} = 1$. The Lean formalization proves the for-all-$N$ version (\LH{L_c022ff39}).
+\textbf{Modeling note.} In any fixed finite model, $L(M)$ is a positive rational. The colloquial claim ``leverage $= \infty$'' means: for any bound $N$, the architecture can be extended to achieve $L \geq N$ while keeping $\text{DOF} = 1$. The Lean formalization proves the for-all-$N$ version (\LH{L36}).
 \end{proof}
 
 \subsection{Architectural Decision Criterion}
@@ -137,8 +133,8 @@ Given requirements $R$, architecture $A^*$ is optimal in its capability class if
 \item $\forall A'$ with $\text{Cap}(A') = \text{Cap}(A^*)$ and $\text{Cap}(A') \supseteq R$: $L(A^*) \geq L(A')$ (maximality in fixed capability class)
 \end{enumerate}
 \end{theorem}
-\leanmeta{\LH{L_a42f986c},
-\LH{L_28e01ed8}}
+\leanmeta{\LH{L38},
+\LH{L34}}
 
 \begin{proof}
 ($\Leftarrow$) Suppose $A^*$ satisfies (1) and (2). Then $A^*$ is feasible and has maximum leverage among feasible architectures in the same capability class. By Theorem \ref{thm:leverage-error}, this minimizes error probability in that class.
@@ -162,9 +158,8 @@ For modular architecture $A = A_1 \oplus A_2$ with disjoint components:
 \item if $L(A_1)\ge 1$ and $L(A_2)\ge 1$, then $L(A)\ge 1$
 \end{enumerate}
 \end{theorem}
-\leanmeta{\LH{L_1bc009bb},
-\LH{L_509b7c92},
-\LH{L_b8e54251}}
+\leanmeta{\LH{L19},
+\LH{L18}}
 
 \begin{proof}
 (1) By Proposition \ref{prop:dof-additive}.
@@ -186,22 +181,14 @@ Theorem~\ref{thm:composition} preserves leverage \emph{floors}, but composing tw
 
 Main optimization theorems are formalized in \texttt{Leverage/Theorems.lean}; physical edit-energy theorems are formalized in \texttt{Leverage/Physical.lean}:
 \begin{itemize}
-\item \LH{L_22638fcd}: Theorem \ref{thm:leverage-error}
-\item \LH{L_9dc717da} and
-  \LH{L_bc94b2f8}:
-  Theorem \ref{thm:physical-energy-floor}, Corollary \ref{cor:leverage-energy}
-\item \LH{L_53bac39c},
-  \LH{L_dd0fab2d}, and
-  \LH{L_e5602ce9}:
-  Theorem \ref{thm:physical-budget-boundary},
-  Corollary \ref{cor:physical-assumption-necessity}
-\item \LH{L_b85b0db1}: Theorem \ref{thm:metaprog}
-\item \LH{L_bb990fcf} and \LH{L_7254810e}:
-  Theorem \ref{thm:optimal}
-\item \LH{L_a4e66dad},
-  \LH{L_f7a7de2d}, and
-  \LH{L_0869dd64}:
-  Theorem \ref{thm:composition}
+\item \LH{L29}: Theorem \ref{thm:leverage-error}
+\item \LH{L1} and \LH{L5}: Theorem \ref{thm:physical-energy-floor}
+\item \LH{L3} and \LH{L6}: Corollary \ref{cor:leverage-energy}
+\item \LH{L2} and \LH{L4}: Theorem \ref{thm:physical-budget-boundary}
+\item \LH{L7} and \LH{L8}: Corollary \ref{cor:physical-assumption-necessity}
+\item \LH{L35} and \LH{L36}: Theorem \ref{thm:metaprog}
+\item \LH{L34} and \LH{L38}: Theorem \ref{thm:optimal}
+\item \LH{L18} and \LH{L19}: Theorem \ref{thm:composition}
 \item \texttt{Leverage/Physical.lean}: physical edit-energy floor theorems
 \end{itemize}
 
@@ -217,8 +204,8 @@ Nominal typing dominance from \texttt{AbstractClassSystem}~\cite{paper1_typing_d
 \item Therefore nominal typing has strictly higher leverage
 \end{itemize}
 \end{theorem}
-\leanmeta{\LH{L_9f6625e0},
-\LH{L_4372537d}}
+\leanmeta{\LH{L14},
+\LH{L13}}
 
 \begin{theorem}[\texttt{Ssot} as Leverage Instance]\label{thm:paper2-integration}
 SSOT dominance from \texttt{Ssot}~\cite{paper2_ssot} is an instance of leverage maximization:
@@ -228,8 +215,8 @@ SSOT dominance from \texttt{Ssot}~\cite{paper2_ssot} is an instance of leverage 
 \item Therefore leverage improves by factor $n$
 \end{itemize}
 \end{theorem}
-\leanmeta{\LH{L_3c6b4088},
-\LH{L_48108f64}}
+\leanmeta{\LH{L10},
+\LH{L11}}
 
 These integration theorems are formalized in:
 \begin{itemize}

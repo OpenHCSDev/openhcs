@@ -21,7 +21,7 @@ Results:
 
 - Temporal integrity: Evidence-monotone retractions preserve integrity across sequences.
 
-The reduction constructions are machine-checked in Lean 4 (3552 lines, 124 theorems).
+The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 Keywords: computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
 ```
@@ -45,7 +45,7 @@ Results:
 
 • Temporal integrity: Evidence-monotone retractions preserve integrity across sequences.
 
-The reduction constructions are machine-checked in Lean 4 (3552 lines, 124 theorems).
+The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 Keywords: computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
 ```

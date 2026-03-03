@@ -13,7 +13,7 @@ We prove fourteen first-principles theorems (thirteen from pure mathematics, one
 
 Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds. Verification requires $\geq 2^{n-1}$ witness pairs.
 
-Two results carry empirical conditions. Conditional on Landauer's principle ($k_BT\ln 2$ per bit erasure; experimentally confirmed 2012), $dU\geq\lambda\,dC$ follows by composition with bit-operation bounds; rejecting it requires rejecting Landauer. Conditional on stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, minimal $\sigma$ scaling with $\mathrm{srank}$.
+Two results carry empirical premises. Composing bit-operation lower bounds with Landauer's principle ($k_BT\ln 2$ per irreversible bit erasure) yields $dU\geq\lambda\,dC$. Under stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$. All results are machine-checked in Lean 4 with explicit theorem-level assumptions and a machine-generated assumption ledger.
 ```
 
 ## Abstract (Unicode, Zenodo-ready)
@@ -21,11 +21,11 @@ Two results carry empirical conditions. Conditional on Landauer's principle ($k_
 ```text
 Abstract
 
-We characterize which coordinates of a factored state space determine optimal actions. For 𝒟 = (A, S, U) with S = X₁ × ⋯ × X_(n), coordinate set I is sufficient if s_(I) = s′_(I) ⇒ Opt (s) = Opt (s′). The decision quotient Q = S/∼ (s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the minimal abstraction: any abstraction preserving optimal actions factors uniquely through Q.
+We characterize which coordinates of a factored state space determine optimal actions. For 𝒟 = (A, S, U) with S = X₁ × ⋯ × Xₙ, coordinate set I is sufficient if s_I = s′_(I) ⇒ Opt (s) = Opt (s′). The decision quotient Q = S/∼ (s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the minimal abstraction: any abstraction preserving optimal actions factors uniquely through Q.
 
 We prove fourteen first-principles theorems (thirteen from pure mathematics, one empirical). The chain from counting measure to probability to Bayes’ theorem to Q follows from finite set cardinality. Fisher information, entropy, optimal transport, rate-distortion, and thermodynamics each independently recover srank as decision complexity measure. From log x ≤ x − 1 alone, Bayesian updating uniquely minimizes expected log loss.
 
-Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is Σ₂^(P)-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry 2^(Ω(n)) lower bounds. Verification requires ≥ 2^(n − 1) witness pairs.
+Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is Σ₂ᴾ-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry 2^Ω(n) lower bounds. Verification requires ≥ 2^(n − 1) witness pairs.
 
-Two results carry empirical conditions. Conditional on Landauer’s principle (k_(B)Tln 2 per bit erasure; experimentally confirmed 2012), dU ≥ λ dC follows by composition with bit-operation bounds; rejecting it requires rejecting Landauer. Conditional on stochastic thermodynamics (Barato–Seifert 2015), Var(J)/⟨J⟩² ≥ 2/σ bounds decision precision by entropy production, minimal σ scaling with srank.
+Two results carry empirical premises. Composing bit-operation lower bounds with Landauer’s principle (k_BTln 2 per irreversible bit erasure) yields dU ≥ λ dC. Under stochastic thermodynamics (Barato–Seifert 2015), Var(J)/⟨J⟩² ≥ 2/σ bounds decision precision by entropy production, with minimal σ scaling with srank. All results are machine-checked in Lean 4 with explicit theorem-level assumptions and a machine-generated assumption ledger.
 ```

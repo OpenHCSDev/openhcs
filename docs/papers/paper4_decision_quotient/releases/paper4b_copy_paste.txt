@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-03-02T00:34:32.783805
+Generated: 2026-03-02T13:54:53.991064
 
 === HUMAN COPY/PASTE ===
 
@@ -22,7 +22,7 @@ Results:
 
 • Temporal integrity: Evidence-monotone retractions preserve integrity across sequences.
 
-The reduction constructions are machine-checked in Lean 4 (3552 lines, 124 theorems).
+The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 Keywords: computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
 
@@ -43,12 +43,12 @@ Results:
 
 - Temporal integrity: Evidence-monotone retractions preserve integrity across sequences.
 
-The reduction constructions are machine-checked in Lean 4 (3552 lines, 124 theorems).
+The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 Keywords: computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
 
 arXiv Comments:
-Draft submission. Lean 4 artifact: 3552 lines, 124 theorems/lemmas across 31 files (8 sorry placeholders).
+Draft submission. Lean 4 artifact: 3593 lines, 124 theorems/lemmas across 32 files (8 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper4b
@@ -89,7 +89,7 @@ zenodo:
     sequences.
 
 
-    The reduction constructions are machine-checked in Lean 4 (3552 lines, 124 theorems).
+    The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 
     Keywords: computational complexity, decision theory, stochastic decision problems,
@@ -131,13 +131,13 @@ arxiv:
     sequences.
 
 
-    The reduction constructions are machine-checked in Lean 4 (3552 lines, 124 theorems).
+    The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 
     Keywords: computational complexity, decision theory, stochastic decision problems,
     POMDPs, polynomial hierarchy, PSPACE'
-  comments: 'Draft submission. Lean 4 artifact: 3552 lines, 124 theorems/lemmas across
-    31 files (8 sorry placeholders).'
+  comments: 'Draft submission. Lean 4 artifact: 3593 lines, 124 theorems/lemmas across
+    32 files (8 sorry placeholders).'
 abstract_variants:
   unicode: 'We extend the static decision quotient framework of Paper 4 to stochastic
     and sequential regimes. Given a decision problem with actions A, factored state
@@ -171,7 +171,7 @@ abstract_variants:
     sequences.
 
 
-    The reduction constructions are machine-checked in Lean 4 (3552 lines, 124 theorems).
+    The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 
     Keywords: computational complexity, decision theory, stochastic decision problems,
@@ -210,7 +210,7 @@ abstract_variants:
     sequences.
 
 
-    The reduction constructions are machine-checked in Lean 4 (3552 lines, 124 theorems).
+    The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 
     Keywords: computational complexity, decision theory, stochastic decision problems,

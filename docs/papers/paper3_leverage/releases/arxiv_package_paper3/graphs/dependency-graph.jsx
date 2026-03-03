@@ -1,29 +1,110 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import * as d3 from "d3";
 import { computeStats, isArtifact, buildAdj, findRoots, bfs, FILTERS, applyFilters, shortestPath, validateTruePaths, distancesFromRoots, findAllPaths, generateValidationReport } from "./graph_utils";
-import { FOUNDATION_BUCKETS, extractLatex, renderLatex, formatLeanSignature } from "./latex_renderer";
+import { FOUNDATION_BUCKETS, extractLatex, renderLatexInline } from "./latex_renderer";
 
 const EMPTY_DATA = { nodes: [], edges: [] };
 
-function clusterKeyForNode(node) {
+const CLUSTER_PAIR_THRESHOLD = 40;
+const MAX_UNGROUPED_LABELS = 28;
+const MAX_SAFE_UNGROUPED_NODES = 900;
+const MAX_SAFE_ALL_VISIBLE_LABELS = 240;
+const LABEL_MODES = [
+  ["none", "None"],
+  ["clusters", "Clusters"],
+  ["important", "Important"],
+  ["claims", "Claims"],
+  ["all", "All visible"],
+];
+
+function clusterKeyForNode(node, pairCounts = null, mode = "subsystem") {
   if (!node) return "unknown";
   if (isFoundationNode(node)) return "FOUNDATION";
   const parts = String(node.id || "").split(".");
-  if (parts.length >= 2) return `${parts[0]}.${parts[1]}`;
-  return parts[0] || "unknown";
+  const root = parts[0] || "unknown";
+  if (mode === "scope") return root;
+  if (parts.length < 2) return root;
+  const pair = `${parts[0]}.${parts[1]}`;
+  if (mode === "subsystem") return pair;
+  if (pairCounts && (pairCounts.get(pair) || 0) >= CLUSTER_PAIR_THRESHOLD) {
+    return pair;
+  }
+  return root;
 }
 
 function clusterLabelForKey(key) {
   if (key === "FOUNDATION") return "Foundation";
+  if (key.includes(".")) {
+    const parts = key.split(".");
+    if (parts.length >= 2) return `${parts[0]} / ${parts[1]}`;
+  }
   return key;
 }
 
-function buildNamespaceClusters(data) {
+function shortNodeLabel(node) {
+  if (!node) return "unknown";
+  if (node.cluster) return `${node.clusterLabel} (${node.memberCount})`;
+  if (isFoundationNode(node)) {
+    return FOUNDATION_BUCKETS[node.id]?.name || node.id.replace(/^FOUNDATION\./, "");
+  }
+  const parts = String(node.id || "").split(".");
+  const tail = parts[parts.length - 1] || String(node.id || "");
+  return tail.length > 34 ? `${tail.slice(0, 31)}...` : tail;
+}
+
+function stableJitter(seed) {
+  const s = String(seed || "");
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return ((h % 1000) / 1000) - 0.5;
+}
+
+function buildClusterTargets(nodes, width, height) {
+  const targets = {};
+  const count = Math.max(1, nodes.length);
+  const cols = Math.ceil(Math.sqrt(count));
+  const rows = Math.ceil(count / cols);
+  const xStep = width / (cols + 1);
+  const yStep = height / (rows + 1);
+  nodes
+    .slice()
+    .sort((a, b) => (a.clusterLabel || a.id).localeCompare(b.clusterLabel || b.id))
+    .forEach((node, index) => {
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      targets[node.id] = {
+        x: xStep * (col + 1),
+        y: yStep * (row + 1),
+      };
+    });
+  return targets;
+}
+
+function buildNodeTargets(nodes, width, height) {
+  const scopeKeys = Array.from(new Set(nodes.map((node) => scopeKeyForNode(node)))).sort(sortScopeKeys);
+  const scopeIndex = new Map(scopeKeys.map((key, index) => [key, index]));
+  const rootClaims = nodes.filter((node) => node.paper === -1).map((node) => node.id);
+  const edges = [];
+  const nodeSet = new Set(nodes.map((node) => node.id));
+  const targets = {};
+  return { scopeIndex, scopeCount: Math.max(1, scopeKeys.length), targets, rootClaims, nodeSet, edges };
+}
+
+function buildNamespaceClusters(data, mode = "subsystem") {
   if (!data?.nodes?.length) return EMPTY_DATA;
+
+  const pairCounts = new Map();
+  for (const node of data.nodes) {
+    if (isFoundationNode(node)) continue;
+    const parts = String(node.id || "").split(".");
+    const root = parts[0] || "unknown";
+    const pair = parts.length >= 2 ? `${parts[0]}.${parts[1]}` : root;
+    pairCounts.set(pair, (pairCounts.get(pair) || 0) + 1);
+  }
 
   const groups = new Map();
   for (const node of data.nodes) {
-    const key = clusterKeyForNode(node);
+    const key = clusterKeyForNode(node, pairCounts, mode);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(node);
   }
@@ -44,16 +125,24 @@ function buildNamespaceClusters(data) {
     nodes.push({
       id: `CLUSTER:${key}`,
       kind,
+      paper: members.some((node) => node.paper === -1) ? -1 : null,
       cluster: true,
+      clusterType: "namespace",
       clusterKey: key,
       clusterLabel: clusterLabelForKey(key),
       memberCount: members.length,
+      memberIds: members.map((node) => node.id),
+      memberKinds: {
+        theorem: semanticKinds.filter((kind) => kind === "theorem").length,
+        definition: semanticKinds.filter((kind) => kind === "definition").length,
+        axiom: semanticKinds.filter((kind) => kind === "foundationAxiom" || kind === "localAxiom").length,
+      },
     });
   }
 
   const nodeToCluster = new Map();
   for (const node of data.nodes) {
-    nodeToCluster.set(node.id, `CLUSTER:${clusterKeyForNode(node)}`);
+    nodeToCluster.set(node.id, `CLUSTER:${clusterKeyForNode(node, pairCounts, mode)}`);
   }
 
   for (const edge of data.edges || []) {
@@ -71,6 +160,229 @@ function buildNamespaceClusters(data) {
   return { nodes, edges };
 }
 
+function buildDepthClusters(data) {
+  if (!data?.nodes?.length) return EMPTY_DATA;
+  const dist = distancesFromRoots(data);
+  const groups = new Map();
+  for (const node of data.nodes) {
+    const rawDepth = dist[node.id];
+    const depthKey = Number.isFinite(rawDepth) ? `DEPTH:${rawDepth}` : "DEPTH:UNREACHABLE";
+    if (!groups.has(depthKey)) groups.set(depthKey, []);
+    groups.get(depthKey).push(node);
+  }
+
+  const nodes = [];
+  const edgeKeys = new Set();
+  const edges = [];
+
+  for (const [key, members] of groups.entries()) {
+    const semanticKinds = members.map((node) => nodeSemanticKind(node));
+    const kind = semanticKinds.includes("foundationAxiom") || semanticKinds.includes("localAxiom")
+      ? "axiom"
+      : semanticKinds.includes("theorem")
+        ? "theorem"
+        : semanticKinds.includes("definition")
+          ? "definition"
+          : "other";
+    const depthLabel = key === "DEPTH:UNREACHABLE" ? "Unreachable" : `Depth ${key.split(":")[1]}`;
+    nodes.push({
+      id: `CLUSTER:${key}`,
+      kind,
+      paper: members.some((node) => node.paper === -1) ? -1 : null,
+      cluster: true,
+      clusterType: "depth",
+      clusterKey: key,
+      clusterLabel: depthLabel,
+      memberCount: members.length,
+      memberIds: members.map((node) => node.id),
+      memberKinds: {
+        theorem: semanticKinds.filter((entry) => entry === "theorem").length,
+        definition: semanticKinds.filter((entry) => entry === "definition").length,
+        axiom: semanticKinds.filter((entry) => entry === "foundationAxiom" || entry === "localAxiom").length,
+      },
+    });
+  }
+
+  const nodeToCluster = new Map();
+  for (const node of data.nodes) {
+    const rawDepth = dist[node.id];
+    const depthKey = Number.isFinite(rawDepth) ? `DEPTH:${rawDepth}` : "DEPTH:UNREACHABLE";
+    nodeToCluster.set(node.id, `CLUSTER:${depthKey}`);
+  }
+
+  for (const edge of data.edges || []) {
+    const source = typeof edge.source === "object" ? edge.source.id : edge.source;
+    const target = typeof edge.target === "object" ? edge.target.id : edge.target;
+    const clusterSource = nodeToCluster.get(source);
+    const clusterTarget = nodeToCluster.get(target);
+    if (!clusterSource || !clusterTarget || clusterSource === clusterTarget) continue;
+    const key = `${clusterSource}->${clusterTarget}`;
+    if (edgeKeys.has(key)) continue;
+    edgeKeys.add(key);
+    edges.push({ source: clusterSource, target: clusterTarget });
+  }
+
+  return { nodes, edges };
+}
+
+function connectedComponents(data) {
+  const undirected = {};
+  for (const node of data.nodes || []) undirected[node.id] = [];
+  for (const edge of data.edges || []) {
+    const source = typeof edge.source === "object" ? edge.source.id : edge.source;
+    const target = typeof edge.target === "object" ? edge.target.id : edge.target;
+    if (!undirected[source] || !undirected[target]) continue;
+    undirected[source].push(target);
+    undirected[target].push(source);
+  }
+  const visited = new Set();
+  const components = [];
+  for (const node of data.nodes || []) {
+    if (visited.has(node.id)) continue;
+    const queue = [node.id];
+    const component = [];
+    while (queue.length) {
+      const current = queue.shift();
+      if (visited.has(current)) continue;
+      visited.add(current);
+      component.push(current);
+      for (const neighbor of undirected[current] || []) {
+        if (!visited.has(neighbor)) queue.push(neighbor);
+      }
+    }
+    components.push(component);
+  }
+  return components;
+}
+
+function collapseTinyComponents(data, maxSize = 6) {
+  if (!data?.nodes?.length) return EMPTY_DATA;
+  const nodeMap = new Map(data.nodes.map((node) => [node.id, node]));
+  const components = connectedComponents(data);
+  const replacement = new Map();
+  const nodes = [];
+  let satelliteIndex = 0;
+
+  for (const component of components) {
+    const members = component.map((id) => nodeMap.get(id)).filter(Boolean);
+    const containsClaim = members.some((node) => node.paper === -1);
+    if (members.length <= maxSize && !containsClaim) {
+      satelliteIndex += 1;
+      const semanticKinds = members.map((node) => nodeSemanticKind(node));
+      const kind = semanticKinds.includes("foundationAxiom") || semanticKinds.includes("localAxiom")
+        ? "axiom"
+        : semanticKinds.includes("theorem")
+          ? "theorem"
+          : semanticKinds.includes("definition")
+            ? "definition"
+            : "other";
+      const clusterId = `SATELLITE:${satelliteIndex}`;
+      const clusterNode = {
+        id: clusterId,
+        kind,
+        paper: null,
+        cluster: true,
+        clusterType: "satellite",
+        clusterKey: "SATELLITE",
+        clusterLabel: `Satellite ${satelliteIndex}`,
+        memberCount: members.length,
+        memberIds: members.map((node) => node.id),
+        memberKinds: {
+          theorem: semanticKinds.filter((entry) => entry === "theorem").length,
+          definition: semanticKinds.filter((entry) => entry === "definition").length,
+          axiom: semanticKinds.filter((entry) => entry === "foundationAxiom" || entry === "localAxiom").length,
+        },
+      };
+      nodes.push(clusterNode);
+      for (const member of members) replacement.set(member.id, clusterId);
+      continue;
+    }
+    for (const member of members) {
+      nodes.push(member);
+      replacement.set(member.id, member.id);
+    }
+  }
+
+  const edgeKeys = new Set();
+  const edges = [];
+  for (const edge of data.edges || []) {
+    const source = typeof edge.source === "object" ? edge.source.id : edge.source;
+    const target = typeof edge.target === "object" ? edge.target.id : edge.target;
+    const mappedSource = replacement.get(source);
+    const mappedTarget = replacement.get(target);
+    if (!mappedSource || !mappedTarget || mappedSource === mappedTarget) continue;
+    const key = `${mappedSource}->${mappedTarget}`;
+    if (edgeKeys.has(key)) continue;
+    edgeKeys.add(key);
+    edges.push({ source: mappedSource, target: mappedTarget });
+  }
+  return { nodes, edges };
+}
+
+function inducedSubgraph(data, allowedIds) {
+  const allowed = new Set(allowedIds || []);
+  return {
+    nodes: (data?.nodes || []).filter((node) => allowed.has(node.id)),
+    edges: (data?.edges || []).filter((edge) => {
+      const source = typeof edge.source === "object" ? edge.source.id : edge.source;
+      const target = typeof edge.target === "object" ? edge.target.id : edge.target;
+      return allowed.has(source) && allowed.has(target);
+    }),
+  };
+}
+
+function buildLayeredTargets(nodes, edges, width, height) {
+  const dist = distancesFromRoots({ nodes, edges });
+  const finiteDistances = Object.values(dist).filter((value) => Number.isFinite(value));
+  const maxDistance = finiteDistances.length ? Math.max(...finiteDistances) : 0;
+  const layerMap = new Map();
+  for (const node of nodes) {
+    const depth = Number.isFinite(dist[node.id]) ? dist[node.id] : maxDistance + 1;
+    if (!layerMap.has(depth)) layerMap.set(depth, []);
+    layerMap.get(depth).push(node);
+  }
+  const layers = Array.from(layerMap.keys()).sort((a, b) => a - b);
+  const xStep = width / (layers.length + 1);
+  const targets = {};
+  layers.forEach((depth, layerIndex) => {
+    const members = layerMap.get(depth).slice();
+    const laneMap = new Map();
+    for (const node of members) {
+      const laneKey = node.cluster
+        ? (node.clusterKey || scopeKeyForNode(node))
+        : (isFoundationNode(node)
+          ? "FOUNDATION"
+          : (() => {
+              const parts = String(node.id || "").split(".");
+              return parts.length >= 2 ? `${parts[0]}.${parts[1]}` : (parts[0] || "unknown");
+            })());
+      if (!laneMap.has(laneKey)) laneMap.set(laneKey, []);
+      laneMap.get(laneKey).push(node);
+    }
+    const laneKeys = Array.from(laneMap.keys()).sort((a, b) => {
+      if (a === "FOUNDATION") return -1;
+      if (b === "FOUNDATION") return 1;
+      return a.localeCompare(b);
+    });
+    const laneGap = 14;
+    const totalSlots = laneKeys.reduce((sum, key) => sum + laneMap.get(key).length, 0) + Math.max(0, laneKeys.length - 1) * laneGap;
+    const yStep = height / (Math.max(1, totalSlots) + 1);
+    let cursor = 1;
+    for (const laneKey of laneKeys) {
+      const laneMembers = laneMap.get(laneKey).slice().sort((a, b) => a.id.localeCompare(b.id));
+      for (const node of laneMembers) {
+        targets[node.id] = {
+          x: xStep * (layerIndex + 1),
+          y: yStep * cursor,
+        };
+        cursor += 1;
+      }
+      cursor += laneGap;
+    }
+  });
+  return { targets, distances: dist, maxDistance };
+}
+
 function LatexBlock({ latex, fallback }) {
   const ref = useRef(null);
 
@@ -81,13 +393,19 @@ function LatexBlock({ latex, fallback }) {
       return;
     }
     if (typeof window !== "undefined" && window.katex) {
-      renderLatex(latex, ref.current);
-      return;
+      const inlineRenderer =
+        (typeof renderLatexInline === "function" ? renderLatexInline : null) ||
+        window.__graphViewer?.latex?.renderLatexInline ||
+        null;
+      if (inlineRenderer) {
+        inlineRenderer(latex, ref.current);
+        return;
+      }
     }
     ref.current.textContent = fallback || latex;
   }, [latex, fallback]);
 
-  return <div ref={ref} />;
+  return <div ref={ref} style={{ whiteSpace: "normal", overflowWrap: "anywhere", wordBreak: "break-word" }} />;
 }
 
 function normalizeManifest(manifest) {
@@ -174,6 +492,12 @@ function nodeRadius(node) {
 
 function scopeKeyForNode(node) {
   if (!node) return "unknown";
+  if (node?.clusterType === "satellite") return "SATELLITE";
+  if (node?.cluster) {
+    if (node.clusterKey === "FOUNDATION") return "FOUNDATION";
+    const [clusterRoot] = String(node.clusterKey || "").split(".");
+    return clusterRoot || "unknown";
+  }
   if (isFoundationNode(node)) return "FOUNDATION";
   const id = String(node.id || "");
   const [root] = id.split(".");
@@ -182,12 +506,28 @@ function scopeKeyForNode(node) {
 
 function scopeLabelForKey(key) {
   if (key === "FOUNDATION") return "Foundation";
+  if (key === "SATELLITE") return "Satellites";
   return key;
+}
+
+function subsystemKeyForNode(node) {
+  if (!node) return "unknown";
+  if (node?.clusterType === "satellite") return "SATELLITE";
+  if (node?.cluster) {
+    if (node.clusterKey === "FOUNDATION") return "FOUNDATION";
+    return node.clusterKey || scopeKeyForNode(node);
+  }
+  if (isFoundationNode(node)) return "FOUNDATION";
+  const parts = String(node.id || "").split(".");
+  if (parts.length >= 2) return `${parts[0]}.${parts[1]}`;
+  return parts[0] || "unknown";
 }
 
 function sortScopeKeys(a, b) {
   if (a === "FOUNDATION") return -1;
   if (b === "FOUNDATION") return 1;
+  if (a === "SATELLITE") return 1;
+  if (b === "SATELLITE") return -1;
   return a.localeCompare(b);
 }
 
@@ -200,7 +540,25 @@ const KIND_SHAPES = {
 
 // computeStats provided by graph_utils.js (imported above)
 
-function ForceGraph({ data, width, height, highlightScope, scopeColors, selectedNode, onSelectNode, highlightedPath }) {
+function ForceGraph({
+  data,
+  width,
+  height,
+  highlightScope,
+  scopeColors,
+  selectedNode,
+  onSelectNode,
+  onOpenCluster,
+  highlightedPath,
+  labelMode = "clusters",
+  labelDensity = 1,
+  suppressLabelCollisions = true,
+  hoverLabels = true,
+  layoutMode = "force",
+  bundleEdges = true,
+  fadeNonPathEdges = true,
+  forceTuning,
+}) {
   const svgRef = useRef(null);
   const simRef = useRef(null);
   const nodePositionsRef = useRef({});
@@ -225,8 +583,58 @@ function ForceGraph({ data, width, height, highlightScope, scopeColors, selected
 
     const nodes = data.nodes.map((d) => ({ ...d }));
     const edges = data.edges.map((d) => ({ ...d }));
+    const tuning = forceTuning || {};
+    const linkDistanceFactor = Number.isFinite(tuning.linkDistanceFactor) ? tuning.linkDistanceFactor : 1;
+    const linkStrengthFactor = Number.isFinite(tuning.linkStrengthFactor) ? tuning.linkStrengthFactor : 1;
+    const chargeFactor = Number.isFinite(tuning.chargeFactor) ? tuning.chargeFactor : 1;
+    const collisionFactor = Number.isFinite(tuning.collisionFactor) ? tuning.collisionFactor : 1;
+    const groupPullFactor = Number.isFinite(tuning.groupPullFactor) ? tuning.groupPullFactor : 1;
+    const centerPullFactor = Number.isFinite(tuning.centerPullFactor) ? tuning.centerPullFactor : 1;
 
     const anyClusters = nodes.some((d) => d.cluster);
+    const safeNodeCount = nodes.length;
+    const layerLayout = buildLayeredTargets(nodes, edges, width, height);
+    const clusterTargets = anyClusters ? buildClusterTargets(nodes, width, height) : null;
+    const nodeLayout = !anyClusters ? buildNodeTargets(nodes, width, height) : null;
+
+    if (!anyClusters && nodeLayout) {
+      const scopeBand = width / (nodeLayout.scopeCount + 1);
+      const depthBand = height / (Math.max(1, layerLayout.maxDistance) + 2);
+      for (const node of nodes) {
+        const scope = scopeKeyForNode(node);
+        const scopePos = (nodeLayout.scopeIndex.get(scope) ?? 0) + 1;
+        const depth = Number.isFinite(layerLayout.distances[node.id]) ? layerLayout.distances[node.id] : layerLayout.maxDistance + 1;
+        nodeLayout.targets[node.id] = {
+          x: scopeBand * scopePos,
+          y: depthBand * (depth + 1),
+        };
+      }
+    }
+
+    for (const node of nodes) {
+      const target = layoutMode === "layers"
+        ? layerLayout.targets[node.id]
+        : (anyClusters ? clusterTargets?.[node.id] : nodeLayout?.targets[node.id]);
+      if (!target) continue;
+      const jitterX = stableJitter(`${node.id}:x`) * (anyClusters ? 18 : 10);
+      const jitterY = stableJitter(`${node.id}:y`) * (anyClusters ? 18 : 10);
+      node.x = target.x + jitterX;
+      node.y = target.y + jitterY;
+      node.vx = 0;
+      node.vy = 0;
+      if (layoutMode === "layers") {
+        node.fx = node.x;
+        node.fy = node.y;
+      }
+    }
+
+    const baseLinkDistance = layoutMode === "layers" ? 36 : (anyClusters ? 90 : 28);
+    const baseLinkStrength = layoutMode === "layers" ? 0.06 : (anyClusters ? 0.18 : 0.16);
+    const baseCharge = layoutMode === "layers" ? -10 : (anyClusters ? -120 : -18);
+    const baseCenter = layoutMode === "layers" ? 0.005 : (anyClusters ? 0.02 : 0.01);
+    const baseGroupX = layoutMode === "layers" ? 0.7 : (anyClusters ? 0.45 : 0.14);
+    const baseGroupY = layoutMode === "layers" ? 0.7 : (anyClusters ? 0.45 : 0.12);
+    const baseCollisionRadius = (d) => (d.cluster ? Math.max(24, 12 + Math.log2((d.memberCount || 1) + 1) * 6) : 7);
 
     const sim = d3
       .forceSimulation(nodes)
@@ -235,25 +643,40 @@ function ForceGraph({ data, width, height, highlightScope, scopeColors, selected
         d3
           .forceLink(edges)
           .id((d) => d.id)
-          .distance(anyClusters ? 70 : 15)
-          .strength(anyClusters ? 0.18 : 0.3)
+          .distance(Math.max(8, baseLinkDistance * linkDistanceFactor))
+          .strength(Math.max(0.005, baseLinkStrength * linkStrengthFactor))
       )
-      .force("charge", d3.forceManyBody().strength(anyClusters ? -70 : -8).distanceMax(anyClusters ? 260 : 150))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius((d) => (d.cluster ? Math.max(18, 8 + Math.log2((d.memberCount || 1) + 1) * 4) : 4)))
-      .force(
-        "cluster",
-        d3.forceX(width / 2).strength(anyClusters ? 0.03 : 0.01)
-      )
-      .force("clusterY", d3.forceY(height / 2).strength(anyClusters ? 0.03 : 0.01));
+      .force("charge", d3.forceManyBody().strength(baseCharge * chargeFactor).distanceMax(anyClusters ? 320 : 220))
+      .force("center", d3.forceCenter(width / 2, height / 2).strength(baseCenter * centerPullFactor))
+      .force("collision", d3.forceCollide().radius((d) => baseCollisionRadius(d) * collisionFactor))
+      .force("groupX", d3.forceX((d) => {
+        if (layoutMode === "layers") return layerLayout.targets[d.id]?.x ?? width / 2;
+        if (anyClusters) return clusterTargets[d.id]?.x ?? width / 2;
+        return nodeLayout?.targets[d.id]?.x ?? width / 2;
+      }).strength(baseGroupX * groupPullFactor))
+      .force("groupY", d3.forceY((d) => {
+        if (layoutMode === "layers") return layerLayout.targets[d.id]?.y ?? height / 2;
+        if (anyClusters) return clusterTargets[d.id]?.y ?? height / 2;
+        return nodeLayout?.targets[d.id]?.y ?? height / 2;
+      }).strength(baseGroupY * groupPullFactor));
+
+    if (!anyClusters && layoutMode !== "layers") {
+      sim.force("radialScope", d3.forceRadial((d) => {
+        const scope = scopeKeyForNode(d);
+        return scope === "FOUNDATION" ? Math.min(width, height) * 0.14 : Math.min(width, height) * 0.28;
+      }, width / 2, height / 2).strength(0.01 * groupPullFactor));
+    }
+
+    sim.alpha(0.9).alphaDecay(layoutMode === "layers" ? 0.09 : (anyClusters ? 0.05 : 0.08)).velocityDecay(layoutMode === "layers" ? 0.58 : (anyClusters ? 0.35 : 0.42));
 
     simRef.current = sim;
 
     const link = g
       .append("g")
-      .selectAll("line")
+      .selectAll("path")
       .data(edges)
-      .join("line")
+      .join("path")
+      .attr("fill", "none")
       .attr("stroke", "#ffffff08")
       .attr("stroke-width", 0.5);
 
@@ -266,8 +689,10 @@ function ForceGraph({ data, width, height, highlightScope, scopeColors, selected
       .attr("fill", (d) => nodeFillColor(d))
       .attr("stroke", (d) => baseStroke(d))
       .attr("stroke-width", 1.4)
-      .attr("opacity", 0.85)
-      .call(
+      .attr("opacity", 0.85);
+
+    if (layoutMode !== "layers") {
+      node.call(
         d3
           .drag()
           .on("start", (event, d) => {
@@ -285,31 +710,154 @@ function ForceGraph({ data, width, height, highlightScope, scopeColors, selected
             d.fy = null;
           })
       );
+    }
 
     node.append("title").text((d) => `${d.cluster ? `${d.clusterLabel} (${d.memberCount})` : d.id} (${d.kind})`);
+
+    const degreeMap = {};
+    for (const n of nodes) degreeMap[n.id] = 0;
+    for (const e of edges) {
+      const s = typeof e.source === "object" ? e.source.id : e.source;
+      const t = typeof e.target === "object" ? e.target.id : e.target;
+      if (degreeMap[s] !== undefined) degreeMap[s] += 1;
+      if (degreeMap[t] !== undefined) degreeMap[t] += 1;
+    }
+
+    const highlightSet = new Set(highlightedPath || []);
+    const labeledNodeIds = new Set();
+    let labelNodes = [];
+    const effectiveLabelDensity = Math.max(0.5, Math.min(3, Number(labelDensity) || 1));
+    const importantBudget = Math.max(8, Math.round(MAX_UNGROUPED_LABELS * effectiveLabelDensity));
+    const labelPriority = (d) => {
+      if (d.id === selectedNode) return 1000;
+      if (highlightSet.has(d.id)) return 900;
+      if (d.cluster) return 800;
+      const semantic = nodeSemanticKind(d);
+      if (semantic === "foundationAxiom" || semantic === "localAxiom") return 700;
+      if (d.paper === -1) return 600;
+      return degreeMap[d.id] || 0;
+    };
+
+    const effectiveLabelMode = labelMode === "all" && safeNodeCount > MAX_SAFE_ALL_VISIBLE_LABELS
+      ? "important"
+      : labelMode;
+
+    if (effectiveLabelMode === "none") {
+      labelNodes = [];
+    } else if (effectiveLabelMode === "all") {
+      labelNodes = nodes.slice();
+    } else if (effectiveLabelMode === "clusters") {
+      labelNodes = nodes.filter((d) => d.cluster);
+    } else if (effectiveLabelMode === "claims") {
+      labelNodes = nodes.filter((d) => d.cluster || d.paper === -1 || d.id === selectedNode || highlightSet.has(d.id));
+    } else if (effectiveLabelMode === "important") {
+      const importantNodes = nodes
+        .filter((d) =>
+          d.cluster ||
+          d.id === selectedNode ||
+          highlightSet.has(d.id) ||
+          nodeSemanticKind(d) === "foundationAxiom" ||
+          nodeSemanticKind(d) === "localAxiom"
+        )
+        .sort((a, b) => (degreeMap[b.id] || 0) - (degreeMap[a.id] || 0));
+
+      for (const nodeItem of importantNodes) labeledNodeIds.add(nodeItem.id);
+
+      const claimCandidates = nodes
+        .filter((d) => d.paper === -1 && !labeledNodeIds.has(d.id))
+        .sort((a, b) => (degreeMap[b.id] || 0) - (degreeMap[a.id] || 0))
+        .slice(0, Math.max(0, importantBudget - labeledNodeIds.size));
+
+      for (const nodeItem of claimCandidates) labeledNodeIds.add(nodeItem.id);
+
+      labelNodes = nodes.filter((d) => labeledNodeIds.has(d.id));
+    } else {
+      labelNodes = nodes.filter((d) => d.cluster || d.id === selectedNode || highlightSet.has(d.id));
+    }
+    labelNodes = labelNodes
+      .slice()
+      .sort((a, b) => labelPriority(b) - labelPriority(a));
 
     const labels = g
       .append("g")
       .selectAll("text")
-      .data(nodes.filter((d) => d.cluster))
+      .data(labelNodes)
       .join("text")
-      .attr("fill", "#cbd5e1")
-      .attr("font-size", 10)
-      .attr("text-anchor", "middle")
+      .attr("fill", (d) => d.cluster ? "#cbd5e1" : "#e2e8f0")
+      .attr("font-size", (d) => d.cluster ? 10 : 9)
+      .attr("font-weight", (d) => d.cluster ? 600 : 500)
+      .attr("text-anchor", (d) => d.cluster ? "middle" : "start")
       .attr("pointer-events", "none")
-      .text((d) => `${d.clusterLabel} (${d.memberCount})`);
+      .attr("paint-order", "stroke")
+      .attr("stroke", "#0a0a0a")
+      .attr("stroke-width", 3)
+      .text((d) => shortNodeLabel(d));
+
+    const hoverLabel = g
+      .append("text")
+      .attr("fill", "#f8fafc")
+      .attr("font-size", 10)
+      .attr("font-weight", 600)
+      .attr("pointer-events", "none")
+      .attr("paint-order", "stroke")
+      .attr("stroke", "#0a0a0a")
+      .attr("stroke-width", 3)
+      .style("display", "none");
+
+    let hoveredNode = null;
 
     node.on("click", (event, d) => {
       event.stopPropagation();
       if (onSelectNode) onSelectNode(d);
     });
+    node.on("mouseenter", (event, d) => {
+      if (!hoverLabels) return;
+      hoveredNode = d;
+      hoverLabel
+        .text(shortNodeLabel(d))
+        .style("display", null);
+    });
+    node.on("mouseleave", () => {
+      hoveredNode = null;
+      hoverLabel.style("display", "none");
+    });
+    node.on("dblclick", (event, d) => {
+      event.stopPropagation();
+      if (d.cluster && onOpenCluster) onOpenCluster(d);
+    });
+
+    const bundleEnabled = Boolean(bundleEdges);
+    const layeredLayout = layoutMode === "layers";
+
+    const edgePathKey = (edgeDatum) => {
+      const source = typeof edgeDatum.source === "object" ? edgeDatum.source.id : edgeDatum.source;
+      const target = typeof edgeDatum.target === "object" ? edgeDatum.target.id : edgeDatum.target;
+      return `${source}->${target}`;
+    };
+
+    const edgePath = (edgeDatum) => {
+      const sourceNode = typeof edgeDatum.source === "object" ? edgeDatum.source : nodes.find((node) => node.id === edgeDatum.source);
+      const targetNode = typeof edgeDatum.target === "object" ? edgeDatum.target : nodes.find((node) => node.id === edgeDatum.target);
+      if (!sourceNode || !targetNode) return "";
+      const sx = sourceNode.x || 0;
+      const sy = sourceNode.y || 0;
+      const tx = targetNode.x || 0;
+      const ty = targetNode.y || 0;
+      if (!bundleEnabled) {
+        return `M${sx},${sy} L${tx},${ty}`;
+      }
+      const key = edgePathKey(edgeDatum);
+      const controlX = (sx + tx) / 2 + stableJitter(`${key}:cx`) * (layeredLayout ? 6 : 18);
+      const bend = layeredLayout
+        ? (Math.abs(ty - sy) * 0.08 + 8) * (stableJitter(`${key}:cy`) >= 0 ? 1 : -1)
+        : -Math.min(42, Math.abs(tx - sx) * 0.12);
+      const controlY = ((sy + ty) / 2) + bend;
+      return `M${sx},${sy} Q${controlX},${controlY} ${tx},${ty}`;
+    };
 
     sim.on("tick", () => {
       link
-        .attr("x1", (d) => d.source.x)
-        .attr("y1", (d) => d.source.y)
-        .attr("x2", (d) => d.target.x)
-        .attr("y2", (d) => d.target.y);
+        .attr("d", (d) => edgePath(d));
       node
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y)
@@ -317,8 +865,47 @@ function ForceGraph({ data, width, height, highlightScope, scopeColors, selected
           nodePositionsRef.current[d.id] = { x: d.x, y: d.y };
         });
       labels
-        .attr("x", (d) => d.x)
-        .attr("y", (d) => (d.y || 0) - Math.max(12, nodeRadius(d) + 6));
+        .attr("x", (d) => d.cluster ? d.x : (d.x || 0) + nodeRadius(d) + 6)
+        .attr("y", (d) => d.cluster ? (d.y || 0) - Math.max(12, nodeRadius(d) + 6) : (d.y || 0) + 3);
+      if (suppressLabelCollisions && labelNodes.length <= 600) {
+        const placed = [];
+        const pad = Math.max(1, 8 / effectiveLabelDensity);
+        labels.each(function(d) {
+          const label = d3.select(this);
+          const text = shortNodeLabel(d);
+          const fontSize = d.cluster ? 10 : 9;
+          const widthEstimate = Math.max(14, text.length * fontSize * 0.56);
+          const heightEstimate = fontSize + 4;
+          const x = d.cluster ? (d.x || 0) - widthEstimate / 2 : (d.x || 0) + nodeRadius(d) + 6;
+          const y = d.cluster ? (d.y || 0) - Math.max(12, nodeRadius(d) + 6) - heightEstimate : (d.y || 0) - heightEstimate / 2;
+          const box = {
+            left: x - pad,
+            right: x + widthEstimate + pad,
+            top: y - pad,
+            bottom: y + heightEstimate + pad,
+          };
+          const overlaps = placed.some((entry) =>
+            box.left < entry.right &&
+            box.right > entry.left &&
+            box.top < entry.bottom &&
+            box.bottom > entry.top
+          );
+          if (overlaps) {
+            label.style("display", "none");
+          } else {
+            label.style("display", null);
+            placed.push(box);
+          }
+        });
+      } else {
+        labels.style("display", null);
+      }
+      if (hoveredNode && hoverLabels) {
+        hoverLabel
+          .attr("x", (hoveredNode.x || 0) + nodeRadius(hoveredNode) + 8)
+          .attr("y", (hoveredNode.y || 0) - Math.max(8, nodeRadius(hoveredNode) + 4))
+          .style("display", null);
+      }
     });
 
     // Highlight paper on hover
@@ -335,23 +922,23 @@ function ForceGraph({ data, width, height, highlightScope, scopeColors, selected
         const t = typeof d.target === "object" ? d.target : nodes.find((n) => n.id === d.target);
         return scopeKeyForNode(s) === highlightScope || scopeKeyForNode(t) === highlightScope
           ? (scopeColors[highlightScope] || "#94a3b8") + "66"
-          : "#ffffff03";
+          : (fadeNonPathEdges ? "#ffffff02" : "#ffffff06");
       });
     } else {
       node
         .attr("opacity", 0.85)
         .attr("r", (d) => nodeRadius(d));
-      link.attr("stroke", "#ffffff08");
+      link.attr("stroke", fadeNonPathEdges ? "#ffffff03" : "#ffffff08");
     }
 
     return () => sim.stop();
-  }, [data, width, height, highlightScope, baseStroke, scopeColors]);
+  }, [data, width, height, highlightScope, baseStroke, scopeColors, selectedNode, onSelectNode, onOpenCluster, highlightedPath, labelMode, labelDensity, suppressLabelCollisions, hoverLabels, layoutMode, bundleEdges, fadeNonPathEdges, forceTuning]);
 
   useEffect(() => {
     if (!svgRef.current) return;
     const svg = d3.select(svgRef.current);
     const node = svg.selectAll("circle");
-    const link = svg.selectAll("line");
+    const link = svg.selectAll("path");
     
     if (!highlightedPath || highlightedPath.length < 2) {
       return;
@@ -374,14 +961,14 @@ function ForceGraph({ data, width, height, highlightScope, scopeColors, selected
     link.attr("stroke", (d) => {
       const s = typeof d.source === "object" ? d.source.id : d.source;
       const t = typeof d.target === "object" ? d.target.id : d.target;
-      return edgeSet.has(`${s}->${t}`) ? "#3b82f6" : "#ffffff05";
+      return edgeSet.has(`${s}->${t}`) ? "#3b82f6" : (fadeNonPathEdges ? "#ffffff02" : "#ffffff08");
     })
     .attr("stroke-width", (d) => {
       const s = typeof d.source === "object" ? d.source.id : d.source;
       const t = typeof d.target === "object" ? d.target.id : d.target;
-      return edgeSet.has(`${s}->${t}`) ? 2 : 0.5;
+      return edgeSet.has(`${s}->${t}`) ? 2 : (fadeNonPathEdges ? 0.35 : 0.6);
     });
-  }, [highlightedPath, baseStroke, selectedNode]);
+  }, [highlightedPath, baseStroke, selectedNode, fadeNonPathEdges]);
 
   useEffect(() => {
     if (!svgRef.current || !selectedNode) return;
@@ -428,7 +1015,24 @@ export default function DependencyGraphViewer() {
   const rawData = customData || data;
   const [hideArtifacts, setHideArtifacts] = useState(true);
   const [viewMode, setViewMode] = useState('forcing'); // 'forcing' | 'claims' | 'full' | 'audit'
-  const [collapseNamespaces, setCollapseNamespaces] = useState(true);
+  const [groupMode, setGroupMode] = useState('none'); // 'none' | 'scope' | 'subsystem'
+  const [layoutMode, setLayoutMode] = useState('force'); // 'force' | 'layers'
+  const [collapseSatellitesEnabled, setCollapseSatellitesEnabled] = useState(true);
+  const [satelliteThreshold, setSatelliteThreshold] = useState(6);
+  const [bundleEdges, setBundleEdges] = useState(true);
+  const [fadeNonPathEdges, setFadeNonPathEdges] = useState(true);
+  const [labelMode, setLabelMode] = useState('clusters');
+  const [labelDensity, setLabelDensity] = useState(1);
+  const [suppressLabelCollisions, setSuppressLabelCollisions] = useState(true);
+  const [hoverLabels, setHoverLabels] = useState(true);
+  const [forceTuning, setForceTuning] = useState({
+    linkDistanceFactor: 1,
+    linkStrengthFactor: 1,
+    chargeFactor: 1,
+    collisionFactor: 1,
+    groupPullFactor: 1,
+    centerPullFactor: 1,
+  });
   const [traceNode, setTraceNode] = useState("");
   const [tracePath, setTracePath] = useState(null);
   const [additionalJson, setAdditionalJson] = useState("");
@@ -436,6 +1040,11 @@ export default function DependencyGraphViewer() {
   const [depthLimit, setDepthLimit] = useState(null);
   const [activeFilters, setActiveFilters] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedCluster, setSelectedCluster] = useState(null);
+  const [progressiveDisclosure, setProgressiveDisclosure] = useState(false);
+  const [selectedScopeKey, setSelectedScopeKey] = useState(null);
+  const [selectedSubsystemKey, setSelectedSubsystemKey] = useState(null);
+  const [allowUnsafeUngrouped, setAllowUnsafeUngrouped] = useState(false);
   const [showAuditPanel, setShowAuditPanel] = useState(false);
   // Node Search state
   const [nodeSearchQuery, setNodeSearchQuery] = useState("");
@@ -449,11 +1058,14 @@ export default function DependencyGraphViewer() {
     () => applyFilters(rawData, activeFilters),
     [rawData, activeFilters]
   );
-  const activeData = useMemo(() => {
-    if (!restrictScope) return filteredData;
+  const effectiveScopeRestriction = progressiveDisclosure
+    ? (selectedScopeKey || restrictScope)
+    : restrictScope;
+  const scopeConstrainedData = useMemo(() => {
+    if (!effectiveScopeRestriction) return filteredData;
     const allowed = new Set(
       filteredData.nodes
-        .filter((node) => scopeKeyForNode(node) === restrictScope)
+        .filter((node) => scopeKeyForNode(node) === effectiveScopeRestriction)
         .map((node) => node.id)
     );
     return {
@@ -464,7 +1076,30 @@ export default function DependencyGraphViewer() {
         return allowed.has(source) && allowed.has(target);
       }),
     };
-  }, [filteredData, restrictScope]);
+  }, [filteredData, effectiveScopeRestriction]);
+  const activeData = useMemo(() => {
+    if (!(progressiveDisclosure && selectedSubsystemKey)) return scopeConstrainedData;
+    const allowed = new Set(
+      scopeConstrainedData.nodes
+        .filter((node) => subsystemKeyForNode(node) === selectedSubsystemKey)
+        .map((node) => node.id)
+    );
+    return {
+      nodes: scopeConstrainedData.nodes.filter((node) => allowed.has(node.id)),
+      edges: scopeConstrainedData.edges.filter((edge) => {
+        const source = typeof edge.source === "object" ? edge.source.id : edge.source;
+        const target = typeof edge.target === "object" ? edge.target.id : edge.target;
+        return allowed.has(source) && allowed.has(target);
+      }),
+    };
+  }, [scopeConstrainedData, progressiveDisclosure, selectedSubsystemKey]);
+  const effectiveGroupMode = useMemo(() => {
+    if (!progressiveDisclosure) return groupMode;
+    if (!selectedScopeKey) return "scope";
+    if (selectedScopeKey === "FOUNDATION") return "none";
+    if (!selectedSubsystemKey) return "subsystem";
+    return "none";
+  }, [progressiveDisclosure, groupMode, selectedScopeKey, selectedSubsystemKey]);
   const stats = useMemo(
     () => computeStats(activeData),
     [activeData]
@@ -508,6 +1143,35 @@ export default function DependencyGraphViewer() {
     () => Object.fromEntries(scopeMeta.entries.map((entry) => [entry.key, entry.label])),
     [scopeMeta]
   );
+  const disclosureScopeEntries = useMemo(() => {
+    const counts = new Map();
+    for (const node of filteredData.nodes || []) {
+      const key = scopeKeyForNode(node);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return scopeMeta.entries
+      .filter((entry) => (counts.get(entry.key) || 0) > 0)
+      .map((entry) => ({
+        ...entry,
+        count: counts.get(entry.key) || 0,
+      }));
+  }, [filteredData, scopeMeta]);
+  const disclosureSubsystemEntries = useMemo(() => {
+    if (!selectedScopeKey || selectedScopeKey === "FOUNDATION") return [];
+    const counts = new Map();
+    for (const node of scopeConstrainedData.nodes || []) {
+      const key = subsystemKeyForNode(node);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .filter(([key]) => key !== "SATELLITE")
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, count]) => ({
+        key,
+        label: clusterLabelForKey(key),
+        count,
+      }));
+  }, [selectedScopeKey, scopeConstrainedData]);
 
   useEffect(() => {
     let cancelled = false;
@@ -549,6 +1213,27 @@ export default function DependencyGraphViewer() {
   }, [selectedGraphFile]);
 
   useEffect(() => {
+    if (effectiveGroupMode === 'none') {
+      setSelectedCluster(null);
+    }
+  }, [effectiveGroupMode]);
+
+  useEffect(() => {
+    if (!progressiveDisclosure) {
+      setSelectedScopeKey(null);
+      setSelectedSubsystemKey(null);
+      return;
+    }
+    setRestrictScope(null);
+  }, [progressiveDisclosure]);
+
+  useEffect(() => {
+    if (!selectedScopeKey) {
+      setSelectedSubsystemKey(null);
+    }
+  }, [selectedScopeKey]);
+
+  useEffect(() => {
     if (!selectedGraphFile) return;
     let cancelled = false;
     const loadGraph = async () => {
@@ -572,8 +1257,11 @@ export default function DependencyGraphViewer() {
         setDeclInfo(declParsed);
         setCustomData(null);
         setSelectedNode(null);
+        setSelectedCluster(null);
         setHighlightScope(null);
         setRestrictScope(null);
+        setSelectedScopeKey(null);
+        setSelectedSubsystemKey(null);
         setSearchScopeFilter(null);
         setGraphLoadError("");
       } catch (err) {
@@ -581,6 +1269,9 @@ export default function DependencyGraphViewer() {
         setData(EMPTY_DATA);
         setDeclInfo({});
         setCustomData(null);
+        setSelectedCluster(null);
+        setSelectedScopeKey(null);
+        setSelectedSubsystemKey(null);
         setGraphLoadError(err.message);
       }
     };
@@ -619,10 +1310,74 @@ export default function DependencyGraphViewer() {
     return nodes;
   }, [activeData.nodes, nodeSearchQuery, searchKindFilter, searchScopeFilter, searchSort, nodeDistances, nodeDepCounts]);
 
+  const groupedData = useMemo(() => {
+    if (effectiveGroupMode === 'none') return activeData;
+    if (effectiveGroupMode === 'topology') return buildDepthClusters(activeData);
+    return buildNamespaceClusters(activeData, effectiveGroupMode);
+  }, [activeData, effectiveGroupMode]);
+
   const renderedData = useMemo(() => {
-    if (!collapseNamespaces) return activeData;
-    return buildNamespaceClusters(activeData);
-  }, [activeData, collapseNamespaces]);
+    if (!collapseSatellitesEnabled) return groupedData;
+    return collapseTinyComponents(groupedData, Math.max(2, Number(satelliteThreshold) || 6));
+  }, [groupedData, collapseSatellitesEnabled, satelliteThreshold]);
+
+  const [copiedNodeId, setCopiedNodeId] = useState(false);
+  const [pathStartNode, setPathStartNode] = useState(null);
+  const [pathEndNode, setPathEndNode] = useState(null);
+  const [allPaths, setAllPaths] = useState([]);
+  const [selectedPathIndex, setSelectedPathIndex] = useState(0);
+
+  const highlightedPath = useMemo(() => {
+    if (allPaths.length === 0 || selectedPathIndex >= allPaths.length) return null;
+    return allPaths[selectedPathIndex];
+  }, [allPaths, selectedPathIndex]);
+
+  const safeRenderedData = useMemo(() => {
+    if (effectiveGroupMode !== 'none') return renderedData;
+    if (allowUnsafeUngrouped) return renderedData;
+    if ((renderedData.nodes || []).length <= MAX_SAFE_UNGROUPED_NODES) return renderedData;
+
+    const adj = buildAdj(renderedData.nodes, renderedData.edges);
+    const keep = new Set();
+
+    const addLocalNeighborhood = (seedId, radius = 2) => {
+      if (!seedId || !adj[seedId]) return;
+      const queue = [{ id: seedId, depth: 0 }];
+      const visited = new Set();
+      while (queue.length) {
+        const { id, depth } = queue.shift();
+        if (visited.has(id)) continue;
+        visited.add(id);
+        keep.add(id);
+        if (depth >= radius) continue;
+        for (const next of adj[id] || []) {
+          queue.push({ id: next, depth: depth + 1 });
+        }
+      }
+    };
+
+    for (const node of renderedData.nodes || []) {
+      const semantic = nodeSemanticKind(node);
+      if (node.paper === -1 || semantic === 'foundationAxiom' || semantic === 'localAxiom') {
+        keep.add(node.id);
+      }
+    }
+
+    if (selectedNode) addLocalNeighborhood(selectedNode, 3);
+    for (const id of highlightedPath || []) addLocalNeighborhood(id, 1);
+
+    const prioritized = (renderedData.nodes || [])
+      .filter((node) => !keep.has(node.id))
+      .sort((a, b) => {
+        const ad = nodeDepCounts[a.id] || 0;
+        const bd = nodeDepCounts[b.id] || 0;
+        return bd - ad;
+      })
+      .slice(0, 120);
+    for (const node of prioritized) keep.add(node.id);
+
+    return inducedSubgraph(renderedData, keep);
+  }, [renderedData, effectiveGroupMode, allowUnsafeUngrouped, selectedNode, highlightedPath, nodeDepCounts]);
 
   const handleSearchKeyNav = useCallback((e) => {
     if (e.key === 'ArrowDown') {
@@ -637,17 +1392,6 @@ export default function DependencyGraphViewer() {
   }, [filteredNodes, focusedSearchIndex]);
 
   useEffect(() => { setFocusedSearchIndex(0); }, [nodeSearchQuery, searchKindFilter, searchScopeFilter]);
-
-  const [copiedNodeId, setCopiedNodeId] = useState(false);
-  const [pathStartNode, setPathStartNode] = useState(null);
-  const [pathEndNode, setPathEndNode] = useState(null);
-  const [allPaths, setAllPaths] = useState([]);
-  const [selectedPathIndex, setSelectedPathIndex] = useState(0);
-
-  const highlightedPath = useMemo(() => {
-    if (allPaths.length === 0 || selectedPathIndex >= allPaths.length) return null;
-    return allPaths[selectedPathIndex];
-  }, [allPaths, selectedPathIndex]);
 
   const handlePathTrace = useCallback(() => {
     if (!pathStartNode || !pathEndNode) return;
@@ -763,8 +1507,8 @@ export default function DependencyGraphViewer() {
       witnessAxiom,
       witnessFoundationAxioms,
       reachableFoundationAxioms,
-      signatureText: formatLeanSignature(mergedNode.signature, 800),
-      signatureLatex: extractLatex(mergedNode),
+      signatureText: mergedNode.signature || null,
+      signatureLatex: mergedNode.signature && mergedNode.signature.length <= 260 ? extractLatex(mergedNode) : null,
       docText: decl?.doc || null,
     };
   }, [selectedNode, rawData, nodeDistances, declInfo]);
@@ -845,20 +1589,135 @@ export default function DependencyGraphViewer() {
 
   const selectConcreteNode = useCallback((nodeId) => {
     if (!nodeId) return;
-    if (collapseNamespaces) setCollapseNamespaces(false);
+    setSelectedCluster(null);
     setSelectedNode(nodeId);
-  }, [collapseNamespaces]);
+  }, []);
+
+  const handleGroupModeChange = useCallback((mode) => {
+    setGroupMode(mode);
+    setSelectedCluster(null);
+    if (mode !== 'none') {
+      setRestrictScope(null);
+      setSelectedNode(null);
+    }
+  }, []);
+
+  const handleForceTuningChange = useCallback((key, value) => {
+    const numeric = Number(value);
+    setForceTuning((prev) => ({
+      ...prev,
+      [key]: Number.isFinite(numeric) ? numeric : prev[key],
+    }));
+  }, []);
+
+  const resetForceTuning = useCallback(() => {
+    setForceTuning({
+      linkDistanceFactor: 1,
+      linkStrengthFactor: 1,
+      chargeFactor: 1,
+      collisionFactor: 1,
+      groupPullFactor: 1,
+      centerPullFactor: 1,
+    });
+  }, []);
 
   const handleGraphNodeSelect = useCallback((node) => {
     if (!node) return;
     if (node.cluster) {
-      setCollapseNamespaces(false);
-      setHighlightScope(node.clusterKey === "FOUNDATION" ? "FOUNDATION" : (node.clusterKey.split(".")[0] || null));
+      const clusterScope = node.clusterKey === "FOUNDATION" ? "FOUNDATION" : (node.clusterKey.split(".")[0] || null);
+      setSelectedCluster(node);
+      setHighlightScope(clusterScope);
       setSelectedNode(null);
       return;
     }
     selectConcreteNode(node.id);
   }, [selectConcreteNode]);
+
+  const handleSelectDisclosureScope = useCallback((scopeKey) => {
+    setSelectedScopeKey(scopeKey);
+    setSelectedSubsystemKey(null);
+    setSelectedCluster(null);
+    setSelectedNode(null);
+    setHighlightScope(scopeKey);
+  }, []);
+
+  const handleSelectDisclosureSubsystem = useCallback((subsystemKey) => {
+    setSelectedSubsystemKey(subsystemKey);
+    setSelectedCluster(null);
+    setSelectedNode(null);
+  }, []);
+
+  const handleDisclosureBack = useCallback(() => {
+    if (selectedSubsystemKey) {
+      setSelectedSubsystemKey(null);
+      setSelectedNode(null);
+      setSelectedCluster(null);
+      return;
+    }
+    if (selectedScopeKey) {
+      setSelectedScopeKey(null);
+      setSelectedSubsystemKey(null);
+      setSelectedNode(null);
+      setSelectedCluster(null);
+      setHighlightScope(null);
+    }
+  }, [selectedScopeKey, selectedSubsystemKey]);
+
+  const handleOpenCluster = useCallback((clusterNode) => {
+    if (!clusterNode?.cluster) return;
+    const representative = Array.isArray(clusterNode.memberIds)
+      ? clusterNode.memberIds.find((id) => typeof id === "string" && !id.startsWith("FOUNDATION.")) || clusterNode.memberIds[0]
+      : null;
+    if (clusterNode.clusterType === 'satellite') {
+      setCollapseSatellitesEnabled(false);
+      setSelectedCluster(null);
+      if (representative) setSelectedNode(representative);
+      return;
+    }
+    if (clusterNode.clusterType === 'depth') {
+      setSelectedCluster(null);
+      setGroupMode('none');
+      if (representative) setSelectedNode(representative);
+      return;
+    }
+    const clusterScope = clusterNode.clusterKey === "FOUNDATION" ? "FOUNDATION" : (clusterNode.clusterKey.split(".")[0] || null);
+    setHighlightScope(clusterScope);
+    if (progressiveDisclosure) {
+      if (!selectedScopeKey) {
+        setSelectedScopeKey(clusterScope === 'FOUNDATION' ? 'FOUNDATION' : clusterScope);
+        setSelectedSubsystemKey(null);
+        setSelectedCluster(null);
+        setSelectedNode(null);
+        return;
+      }
+      if (selectedScopeKey && !selectedSubsystemKey && selectedScopeKey !== 'FOUNDATION') {
+        const subsystemKey = clusterNode.clusterKey || clusterScope;
+        setSelectedSubsystemKey(subsystemKey);
+        setSelectedCluster(null);
+        setSelectedNode(null);
+        return;
+      }
+      setSelectedCluster(null);
+      if (representative) setSelectedNode(representative);
+      return;
+    }
+    if (groupMode === 'scope' && clusterScope && clusterScope !== 'FOUNDATION') {
+      setRestrictScope(clusterScope);
+      setGroupMode('subsystem');
+      setSelectedCluster(null);
+      setSelectedNode(null);
+      return;
+    }
+    setRestrictScope(clusterScope === 'FOUNDATION' ? 'FOUNDATION' : clusterScope);
+    setGroupMode('none');
+    setSelectedCluster(null);
+    if (representative) setSelectedNode(representative);
+  }, [groupMode, progressiveDisclosure, selectedScopeKey, selectedSubsystemKey]);
+
+  const expandSelectedCluster = useCallback(() => {
+    if (!selectedCluster) return;
+    handleOpenCluster(selectedCluster);
+  }, [selectedCluster, handleOpenCluster]);
 
   return (
     <div
@@ -982,8 +1841,172 @@ export default function DependencyGraphViewer() {
           </label>
         )}
         <label style={{ fontSize: 12, color: '#ccc' }}>
-          <input type="checkbox" checked={collapseNamespaces} onChange={(e) => setCollapseNamespaces(e.target.checked)} /> Collapse namespaces
+          <input
+            type="checkbox"
+            checked={progressiveDisclosure}
+            onChange={(e) => setProgressiveDisclosure(e.target.checked)}
+          /> Progressive disclosure
         </label>
+        {progressiveDisclosure && (
+          <span style={{ fontSize: 11, color: '#60a5fa' }}>
+            {selectedScopeKey == null
+              ? 'Stage: scopes'
+              : selectedSubsystemKey == null && selectedScopeKey !== 'FOUNDATION'
+                ? `Stage: subsystems in ${scopeLabelMap[selectedScopeKey] || selectedScopeKey}`
+                : 'Stage: declarations'}
+          </span>
+        )}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginLeft: 4 }}>
+          <span style={{ fontSize: 11, color: '#888', letterSpacing: '0.03em' }}>Grouping</span>
+          {[
+            ['none', 'None'],
+            ['scope', 'Scope'],
+            ['subsystem', 'Subsystem'],
+            ['topology', 'Topology'],
+          ].map(([mode, label]) => (
+            <button
+              key={mode}
+              onClick={() => !progressiveDisclosure && handleGroupModeChange(mode)}
+              style={{
+                padding: '6px 10px',
+                background: effectiveGroupMode === mode ? '#3b82f6' : 'transparent',
+                color: effectiveGroupMode === mode ? '#fff' : '#888',
+                border: '1px solid #1f2937',
+                borderRadius: 3,
+                fontSize: 11,
+                cursor: progressiveDisclosure ? 'default' : 'pointer',
+                opacity: progressiveDisclosure ? 0.55 : 1,
+              }}
+              title={progressiveDisclosure ? 'Grouping is driven by the disclosure stage' : ''}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginLeft: 4 }}>
+          <span style={{ fontSize: 11, color: '#888', letterSpacing: '0.03em' }}>Layout</span>
+          {[
+            ['force', 'Force'],
+            ['layers', 'Layers'],
+          ].map(([mode, label]) => (
+            <button
+              key={mode}
+              onClick={() => setLayoutMode(mode)}
+              style={{
+                padding: '6px 10px',
+                background: layoutMode === mode ? '#10b981' : 'transparent',
+                color: layoutMode === mode ? '#04130f' : '#888',
+                border: '1px solid #1f2937',
+                borderRadius: 3,
+                fontSize: 11,
+                cursor: 'pointer',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <label style={{ fontSize: 12, color: '#ccc' }}>
+          <input type="checkbox" checked={collapseSatellitesEnabled} onChange={(e) => setCollapseSatellitesEnabled(e.target.checked)} /> Collapse satellites
+        </label>
+        <label style={{ fontSize: 12, color: effectiveGroupMode === 'none' ? '#ccc' : '#666' }}>
+          <input
+            type="checkbox"
+            checked={allowUnsafeUngrouped}
+            disabled={effectiveGroupMode !== 'none'}
+            onChange={(e) => setAllowUnsafeUngrouped(e.target.checked)}
+          /> Unsafe full ungrouped
+        </label>
+        {collapseSatellitesEnabled && (
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: '#777' }}>≤</span>
+            <input
+              type="number"
+              min="2"
+              max="20"
+              value={satelliteThreshold}
+              onChange={(e) => setSatelliteThreshold(e.target.value)}
+              style={{ width: 52, background:'#0d0d0d', border:'1px solid #222', color:'#ddd', padding:'6px 8px' }}
+            />
+          </div>
+        )}
+        <label style={{ fontSize: 12, color: '#ccc' }}>
+          <input type="checkbox" checked={bundleEdges} onChange={(e) => setBundleEdges(e.target.checked)} /> Bundle edges
+        </label>
+        <label style={{ fontSize: 12, color: '#ccc' }}>
+          <input type="checkbox" checked={fadeNonPathEdges} onChange={(e) => setFadeNonPathEdges(e.target.checked)} /> Fade non-path edges
+        </label>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontSize: 11, color: '#888', letterSpacing: '0.03em' }}>Labels</span>
+          <select
+            value={labelMode}
+            onChange={(e) => setLabelMode(e.target.value)}
+            style={{ background: '#0d0d0d', border: '1px solid #222', color: '#ddd', padding: '6px 8px', borderRadius: 4, fontSize: 11 }}
+          >
+            {LABEL_MODES.map(([mode, label]) => (
+              <option key={mode} value={mode}>{label}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontSize: 11, color: '#888', letterSpacing: '0.03em' }}>Label density</span>
+          <input
+            type="range"
+            min="0.5"
+            max="3"
+            step="0.1"
+            value={labelDensity}
+            onChange={(e) => setLabelDensity(Number(e.target.value))}
+            style={{ width: 90 }}
+          />
+          <span style={{ width: 28, textAlign: 'right', color: '#64748b', fontSize: 10 }}>
+            {labelDensity.toFixed(1)}
+          </span>
+        </div>
+        <label style={{ fontSize: 12, color: '#ccc' }}>
+          <input
+            type="checkbox"
+            checked={suppressLabelCollisions}
+            onChange={(e) => setSuppressLabelCollisions(e.target.checked)}
+          /> Suppress label collisions
+        </label>
+        <label style={{ fontSize: 12, color: '#ccc' }}>
+          <input
+            type="checkbox"
+            checked={hoverLabels}
+            onChange={(e) => setHoverLabels(e.target.checked)}
+          /> Hover labels
+        </label>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginLeft: 8, padding: '4px 8px', background: '#0d0d0d', border: '1px solid #222', borderRadius: 4 }}>
+          <span style={{ fontSize: 11, color: '#888' }}>Force</span>
+          {[
+            ['linkDistanceFactor', 'spacing', 0.5, 2.5, 0.1],
+            ['linkStrengthFactor', 'hold', 0.4, 2.4, 0.1],
+            ['chargeFactor', 'repel', 0.2, 3.5, 0.1],
+            ['collisionFactor', 'collision', 0.5, 2.5, 0.1],
+            ['groupPullFactor', 'group', 0.2, 2.5, 0.1],
+            ['centerPullFactor', 'center', 0.2, 2.5, 0.1],
+          ].map(([key, label, min, max, step]) => (
+            <label key={key} style={{ display: 'flex', gap: 4, alignItems: 'center', fontSize: 10, color: '#94a3b8' }}>
+              <span>{label}</span>
+              <input
+                type="range"
+                min={min}
+                max={max}
+                step={step}
+                value={forceTuning[key]}
+                onChange={(e) => handleForceTuningChange(key, e.target.value)}
+                style={{ width: 62 }}
+              />
+              <span style={{ width: 28, textAlign: 'right', color: '#64748b' }}>
+                {forceTuning[key].toFixed(1)}
+              </span>
+            </label>
+          ))}
+          <button onClick={resetForceTuning} style={{ padding: '4px 8px', fontSize: 10 }}>
+            Reset force
+          </button>
+        </div>
         {/* Restrict-to-paper and depth controls */}
         <button
           onClick={() => setRestrictScope(restrictScope === highlightScope ? null : highlightScope)}
@@ -1028,6 +2051,16 @@ export default function DependencyGraphViewer() {
 
         <div style={{ marginLeft: 'auto', fontSize: 12, color: graphLoadError ? '#94a3b8' : '#888' }}>
           {graphLoadError || (stats ? `${stats.totalNodes} nodes · ${stats.totalEdges} edges` : '')}
+          {!graphLoadError && effectiveGroupMode === 'none' && (renderedData.nodes || []).length > MAX_SAFE_UNGROUPED_NODES && !allowUnsafeUngrouped && (
+            <span style={{ marginLeft: 8, color: '#f59e0b' }}>
+              showing focused subset in ungrouped mode
+            </span>
+          )}
+          {!graphLoadError && effectiveGroupMode === 'none' && (renderedData.nodes || []).length > MAX_SAFE_UNGROUPED_NODES && allowUnsafeUngrouped && (
+            <span style={{ marginLeft: 8, color: '#94a3b8' }}>
+              unsafe full ungrouped active
+            </span>
+          )}
         </div>
       </div>
 
@@ -1292,6 +2325,111 @@ export default function DependencyGraphViewer() {
       <div style={{ display: 'flex', padding: "0 28px", gap: 16 }}>
         {/* Node Search Panel */}
         <div style={{ width: 260, borderRight: '1px solid #1a1a1a', paddingRight: 16 }}>
+          <div style={{ marginBottom: 14, padding: 10, background: '#0d0d0d', border: '1px solid #1f2937', borderRadius: 4 }}>
+            <div style={{ fontSize: 10, color: '#64748b', letterSpacing: '0.08em', marginBottom: 8 }}>PROGRESSIVE DISCLOSURE</div>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+              <button
+                onClick={handleDisclosureBack}
+                disabled={!progressiveDisclosure || (!selectedScopeKey && !selectedSubsystemKey)}
+                style={{
+                  padding: '6px 8px',
+                  fontSize: 10,
+                  background: '#111827',
+                  border: '1px solid #334155',
+                  borderRadius: 4,
+                  color: (!progressiveDisclosure || (!selectedScopeKey && !selectedSubsystemKey)) ? '#475569' : '#cbd5e1',
+                  cursor: (!progressiveDisclosure || (!selectedScopeKey && !selectedSubsystemKey)) ? 'default' : 'pointer',
+                }}
+              >
+                Back
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedScopeKey(null);
+                  setSelectedSubsystemKey(null);
+                  setSelectedCluster(null);
+                  setSelectedNode(null);
+                  setHighlightScope(null);
+                }}
+                disabled={!progressiveDisclosure || (!selectedScopeKey && !selectedSubsystemKey)}
+                style={{
+                  padding: '6px 8px',
+                  fontSize: 10,
+                  background: '#111827',
+                  border: '1px solid #334155',
+                  borderRadius: 4,
+                  color: (!progressiveDisclosure || (!selectedScopeKey && !selectedSubsystemKey)) ? '#475569' : '#cbd5e1',
+                  cursor: (!progressiveDisclosure || (!selectedScopeKey && !selectedSubsystemKey)) ? 'default' : 'pointer',
+                }}
+              >
+                Reset
+              </button>
+            </div>
+            <div style={{ fontSize: 9, color: '#94a3b8', marginBottom: 6 }}>
+              {selectedScopeKey == null
+                ? 'Choose a scope to narrow the graph.'
+                : selectedSubsystemKey == null && selectedScopeKey !== 'FOUNDATION'
+                  ? 'Choose a subsystem to open declarations.'
+                  : 'Inspect concrete declarations.'}
+            </div>
+            <div style={{ maxHeight: 110, overflow: 'auto', marginBottom: selectedScopeKey && disclosureSubsystemEntries.length > 0 ? 8 : 0 }}>
+              {disclosureScopeEntries.map((entry) => (
+                <button
+                  key={entry.key}
+                  onClick={() => handleSelectDisclosureScope(entry.key)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 4,
+                    padding: '5px 6px',
+                    background: selectedScopeKey === entry.key ? `${entry.color}22` : 'transparent',
+                    border: `1px solid ${selectedScopeKey === entry.key ? entry.color : '#1f2937'}`,
+                    borderRadius: 4,
+                    color: selectedScopeKey === entry.key ? '#e2e8f0' : '#94a3b8',
+                    fontSize: 10,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <span>{entry.label}</span>
+                  <span style={{ color: '#64748b' }}>{entry.count}</span>
+                </button>
+              ))}
+            </div>
+            {progressiveDisclosure && selectedScopeKey && selectedScopeKey !== 'FOUNDATION' && disclosureSubsystemEntries.length > 0 && (
+              <div>
+                <div style={{ fontSize: 9, color: '#64748b', marginBottom: 4 }}>SUBSYSTEMS</div>
+                <div style={{ maxHeight: 110, overflow: 'auto' }}>
+                  {disclosureSubsystemEntries.map((entry) => (
+                    <button
+                      key={entry.key}
+                      onClick={() => handleSelectDisclosureSubsystem(entry.key)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 4,
+                        padding: '5px 6px',
+                        background: selectedSubsystemKey === entry.key ? '#3b82f622' : 'transparent',
+                        border: `1px solid ${selectedSubsystemKey === entry.key ? '#3b82f6' : '#1f2937'}`,
+                        borderRadius: 4,
+                        color: selectedSubsystemKey === entry.key ? '#e2e8f0' : '#94a3b8',
+                        fontSize: 10,
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <span>{entry.label}</span>
+                      <span style={{ color: '#64748b' }}>{entry.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <div style={{ fontSize: 10, color: '#666', letterSpacing: '0.1em', marginBottom: 8 }}>
             NODES
           </div>
@@ -1385,19 +2523,64 @@ export default function DependencyGraphViewer() {
 
         <div style={{ flex: 1 }}>
           <ForceGraph
-            data={renderedData}
+            data={safeRenderedData}
             width={700}
             height={500}
             highlightScope={highlightScope}
             scopeColors={scopeMeta.colors}
             selectedNode={selectedNode}
             onSelectNode={handleGraphNodeSelect}
+            onOpenCluster={handleOpenCluster}
             highlightedPath={highlightedPath}
+            labelMode={labelMode}
+            labelDensity={labelDensity}
+            suppressLabelCollisions={suppressLabelCollisions}
+            hoverLabels={hoverLabels}
+            layoutMode={layoutMode}
+            bundleEdges={bundleEdges}
+            fadeNonPathEdges={fadeNonPathEdges}
+            forceTuning={forceTuning}
           />
         </div>
         
         {/* Node Details Panel / Rejection Cost Sidebar */}
-        <div style={{ width: 240, paddingLeft: 16, borderLeft: '1px solid #1a1a1a', overflowY: 'auto', maxHeight: 500 }}>
+        <div style={{ width: 320, paddingLeft: 16, borderLeft: '1px solid #1a1a1a', overflowY: 'auto', maxHeight: 500 }}>
+          {selectedCluster && (
+            <div style={{ marginBottom: 14, padding: 10, background: '#0d0d0d', border: '1px solid #1f2937', borderRadius: 4 }}>
+              <div style={{ fontSize: 10, color: '#64748b', letterSpacing: '0.08em', marginBottom: 6 }}>GROUP</div>
+              <div style={{ fontSize: 12, color: '#e2e8f0', fontWeight: 700, marginBottom: 4 }}>
+                {selectedCluster.clusterLabel}
+              </div>
+              <div style={{ fontSize: 10, color: '#94a3b8', lineHeight: 1.5, marginBottom: 8 }}>
+                {selectedCluster.memberCount} declarations
+                {selectedCluster.memberKinds && (
+                  <> • {selectedCluster.memberKinds.theorem} thm • {selectedCluster.memberKinds.definition} def • {selectedCluster.memberKinds.axiom} ax</>
+                )}
+              </div>
+              <button
+                onClick={expandSelectedCluster}
+                style={{
+                  padding: '6px 8px',
+                  fontSize: 10,
+                  background: '#111827',
+                  border: '1px solid #334155',
+                  borderRadius: 4,
+                  color: '#cbd5e1',
+                  cursor: 'pointer',
+                }}
+                >
+                {selectedCluster.clusterType === 'satellite'
+                  ? 'Expand satellite'
+                  : effectiveGroupMode === 'scope'
+                    ? 'Drill into subsystem'
+                    : effectiveGroupMode === 'topology'
+                      ? 'Open declarations'
+                    : effectiveGroupMode === 'subsystem'
+                      ? 'Open declarations'
+                      : 'Open members'}
+              </button>
+            </div>
+          )}
           {nodeDetails ? (
             <>
               <div style={{ fontSize: 10, color: '#666', letterSpacing: '0.1em', marginBottom: 8 }}>
@@ -1470,10 +2653,10 @@ export default function DependencyGraphViewer() {
               {nodeDetails.signatureText && (
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 9, color: '#555', marginBottom: 4 }}>SIGNATURE</div>
-                  <div style={{ fontSize: 11, color: '#ddd', lineHeight: 1.5, background: '#0d0d0d', border: '1px solid #222', borderRadius: 4, padding: 8 }}>
+                  <div style={{ fontSize: 11, color: '#ddd', lineHeight: 1.6, background: '#0d0d0d', border: '1px solid #222', borderRadius: 4, padding: 8, overflowX: 'auto', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                     <LatexBlock latex={nodeDetails.signatureLatex} fallback={nodeDetails.signatureText} />
                   </div>
-                  <pre style={{ marginTop: 6, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 9, color: '#94a3b8', background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 4, padding: 8 }}>
+                  <pre style={{ marginTop: 6, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', wordBreak: 'break-word', fontSize: 9, color: '#94a3b8', background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 4, padding: 8 }}>
                     {nodeDetails.signatureText}
                   </pre>
                 </div>

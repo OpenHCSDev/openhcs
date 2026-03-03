@@ -6,6 +6,7 @@ import DecisionQuotient.BayesFoundations
 import DecisionQuotient.BayesFromDQ
 import DecisionQuotient.BayesOptimalityProof
 import DecisionQuotient.BayesianBridge
+import DecisionQuotient.Bridges
 import DecisionQuotient.CheckAxioms
 import DecisionQuotient.ClaimClosure
 import DecisionQuotient.Complexity

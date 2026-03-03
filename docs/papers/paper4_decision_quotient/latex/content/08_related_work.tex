@@ -35,6 +35,8 @@ In machine learning, feature selection asks which input features are relevant fo
 
 Our results extend this line: the decision-theoretic analog (SUFFICIENCY-CHECK) is \coNP-complete, and MINIMUM-SUFFICIENT-SET inherits this hardness. The key insight is that sufficiency checking is ``dual'' to feature selection; rather than asking which features predict a label, we ask which coordinates determine optimal action. The \coNP{} (rather than NP) classification reflects this duality: insufficiency has short certificates (counterexample state pairs), while sufficiency requires universal verification.
 
+\paragraph{Backdoors to tractable classes.} Bessiere et al.~\cite{bessiere2013detecting} show how to exploit CSP instances that are ``almost'' tractable by computing backdoors: the smallest set of variables whose instantiation yields a tractable subproblem. Computing minimal backdoors is fixed-parameter tractable (FPT) when the tractable subset of relations is known, and W[2]-complete otherwise. This complements our dichotomy: when a decision problem has high DOF (many relevant coordinates), their backdoor method identifies the minimal intractable core. The two results together characterize the tractability boundary from different angles.
+
 \subsection{Sufficient Statistics}
 
 Fisher~\cite{fisher1922mathematical} introduced sufficient statistics: a statistic $T(X)$ is \emph{sufficient} for parameter $\theta$ if the conditional distribution of $X$ given $T(X)$ does not depend on $\theta$. Lehmann and Scheffé~\cite{lehmann1950completeness} characterized minimal sufficient statistics and their uniqueness properties.
@@ -55,11 +57,13 @@ Our sufficiency problem is analogous: which coordinates must be observed to dete
 
 The connection runs deeper: Shpitser and Pearl~\cite{shpitser2006identification} showed that identifying causal effects is NP-hard in general graphs. Our \coNP-completeness result for SUFFICIENCY-CHECK is the decision-theoretic counterpart.
 
+\paragraph{Probability of necessity and sufficiency.} Cai et al.~\cite{cai2025pns} formalize the Probability of Necessity and Sufficiency (PNS) for explaining Graph Neural Networks. They argue that a convincing explanation must be \emph{both} necessary and sufficient: necessary explanations alone may be incomplete, while sufficient explanations alone may be non-concise. They model GNNs as Structural Causal Models and optimize a lower bound of PNS. This provides independent confirmation from the neural network explainability literature that necessity and sufficiency must be jointly considered---exactly the perspective underlying our sufficiency-checking framework.
+
 \subsection{Minimum Description Length and Kolmogorov Complexity}
 
 The Minimum Description Length (MDL) principle~\cite{rissanen1978modeling, grunwald2007minimum} formalizes model selection as compression: the best model minimizes description length of data plus model. Kolmogorov complexity~\cite{li2008introduction} provides the theoretical foundation (the shortest program that generates the data).
 
-Our decision quotient connects to this perspective: a coordinate set $I$ is sufficient if it compresses the decision problem without loss---knowing $s_I$ is as good as knowing $s$ for decision purposes. The minimal sufficient set is the MDL-optimal compression of the decision problem.
+Our decision quotient connects to this perspective: a coordinate set $I$ is sufficient if it compresses the decision problem without loss. Knowing $s_I$ is as good as knowing $s$ for decision purposes. The minimal sufficient set is the MDL-optimal compression of the decision problem.
 
 The complexity results explain why MDL-based model selection uses heuristics: finding the true minimum description length is uncomputable (Kolmogorov complexity) or intractable (MDL approximations). Our results show the decision-theoretic analog is \coNP-complete---intractable but decidable.
 

@@ -1,6 +1,6 @@
 # Paper: Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency
 
-**Status**: Draft-ready | **Lean**: 3446 lines, 124 theorems
+**Status**: Draft-ready | **Lean**: 3593 lines, 124 theorems
 
 ---
 
@@ -22,7 +22,7 @@ We extend the static decision quotient framework of Paper 4 to stochastic and se
 
 -   **Temporal integrity**: Evidence-monotone retractions preserve integrity across sequences.
 
-The reduction constructions are machine-checked in Lean 4 (3446 lines, 124 theorems).
+The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
 
 **Keywords:** computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
 
@@ -642,7 +642,7 @@ This work extends Paper 4's framework to dynamic settings while preserving the c
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization extends the Paper 4 artifact. The mechanization consists of 3446 lines across 31 files, with 124 theorem/lemma statements.
+The complete Lean 4 formalization extends the Paper 4 artifact. The mechanization consists of 3593 lines across 32 files, with 124 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata cites compact IDs (for example, `CC4`, `HD2`, `IC3`) instead of full theorem constants.
 
@@ -695,6 +695,20 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 | [`AC9`]{#lh:AC9}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC9`                                                         |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`AC11`]{#lh:AC11}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC11`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`ADV1`]{#lh:ADV1}`adversary_forces_n_minus_1_queries`                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`ADV2`]{#lh:ADV2}`derivation_impossibility`                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`ADV3`]{#lh:ADV3}`compile_macros_insufficient`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`ADV4`]{#lh:ADV4}`build_codegen_insufficient`                                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`ADV5`]{#lh:ADV5}`runtime_reflection_too_late`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`ALT1`]{#lh:ALT1}`protocol_is_concession`                                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`ALT2`]{#lh:ALT2}`protocol_not_alternative`                                                                                     |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`AN1`]{#lh:AN1}`DecisionQuotient.Physics.AssumptionNecessity.no_assumption_free_proof_of_refutable_claim`                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -762,6 +776,8 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`ARG20`]{#lh:ARG20}`PhysicalComplexity.AccessRegime.FiveWayMeet`                                                                |
 +----------------------------------------------------------------------------------------------------------------------------------+
+| [`AXI1`]{#lh:AXI1}`shape_cannot_distinguish`                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
 | [`AXM1`]{#lh:AXM1}`complete_mono`                                                                                                |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`AXM2`]{#lh:AXM2}`completeD_mono`                                                                                               |
@@ -790,11 +806,11 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`BA10`]{#lh:BA10}`DecisionQuotient.Physics.BoundedAcquisition.counting_gap_theorem`                                             |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`BAS1`]{#lh:BAS1}`correctness_forcing`                                                                                          |
+| [`BAS1`]{#lh:BAS1}`Ssot.correctness_forcing`                                                                                     |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`BAS2`]{#lh:BAS2}`dof_inconsistency_potential`                                                                                  |
+| [`BAS2`]{#lh:BAS2}`Ssot.dof_inconsistency_potential`                                                                             |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`BAS3`]{#lh:BAS3}`dof_gt_one_inconsistent`                                                                                      |
+| [`BAS3`]{#lh:BAS3}`Ssot.dof_gt_one_inconsistent`                                                                                 |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`BB1`]{#lh:BB1}`DecisionQuotient.BayesianDQ`                                                                                    |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -831,6 +847,32 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 | [`BND3`]{#lh:BND3}`ssot_advantage_unbounded`                                                                                     |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`BND4`]{#lh:BND4}`ClaimClosure.arbitrary_reduction_factor`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR1`]{#lh:BR1}`DecisionQuotient.Bridges.eth_structural_rank_exponential_hardness`                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR2`]{#lh:BR2}`DecisionQuotient.Bridges.fisher_rank_lower_bounds_sufficient_set`                                               |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR3`]{#lh:BR3}`DecisionQuotient.Bridges.fpt_srank_parameterized_dichotomy`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR4`]{#lh:BR4}`DecisionQuotient.Bridges.tur_srank_thermodynamic_cost`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR5`]{#lh:BR5}`DecisionQuotient.Bridges.dichotomy_eth_complete_classification`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR6`]{#lh:BR6}`DecisionQuotient.Bridges.reduction_eth_conp_exponential`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR7`]{#lh:BR7}`DecisionQuotient.Bridges.geometry_covering_certificate_complexity`                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR8`]{#lh:BR8}`DecisionQuotient.Bridges.rate_distortion_fisher_information_bridge`                                             |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR9`]{#lh:BR9}`DecisionQuotient.Bridges.counting_complexity_sharp_p_hardness`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR10`]{#lh:BR10}`DecisionQuotient.Bridges.approximation_counting_hardness_bridge`                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BRG1`]{#lh:BRG1}`analysis_has_positive_ev`                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BRG2`]{#lh:BRG2}`ignorant_choice_has_cost`                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BRG3`]{#lh:BRG3}`retrofit_cost_dominates`                                                                                      |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`CAP1`]{#lh:CAP1}`ClaimClosure.cap_encoding_conditional`                                                                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -1060,9 +1102,11 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`CIA1`]{#lh:CIA1}`ClaimClosure.ClassicalInfoAssumptions`                                                                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`COH1`]{#lh:COH1}`dof_one_implies_coherent`                                                                                     |
+| [`CMP1`]{#lh:CMP1}`complexity_gap_unbounded`                                                                                     |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`COH2`]{#lh:COH2}`dof_gt_one_incoherence_possible`                                                                              |
+| [`COH1`]{#lh:COH1}`preference_incoherent`                                                                                        |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`COH2`]{#lh:COH2}`AbstractClassSystem.hedging_incoherent`                                                                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`COH3`]{#lh:COH3}`determinate_truth_forces_ssot`                                                                                |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -1262,6 +1306,8 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`DG18`]{#lh:DG18}`DecisionQuotient.DecisionProblem.edgeOnComplement_iff_not_sufficient`                                         |
 +----------------------------------------------------------------------------------------------------------------------------------+
+| [`DOM1`]{#lh:DOM1}`strict_dominance`                                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------+
 | [`DP1`]{#lh:DP1}`DecisionQuotient.DecisionProblem.minimalSufficient_iff_relevant`                                                |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`DP2`]{#lh:DP2}`DecisionQuotient.DecisionProblem.relevantSet_is_minimal`                                                        |
@@ -1294,31 +1340,31 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`DQ8`]{#lh:DQ8}`DecisionQuotient.ClaimClosure.DQ8`                                                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_16442f86`]{#lh:DQ_16442f86}`DQ.Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`          |
+| [`DQ9`]{#lh:DQ9}`DQ.ClaimClosure.hard_family_all_coords_core`                                                                    |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_5daf095c`]{#lh:DQ_5daf095c}`DQ.ClaimClosure.tractable_bounded_core`                                                         |
+| [`DQ10`]{#lh:DQ10}`DQ.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`                                                 |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_6925a675`]{#lh:DQ_6925a675}`DQ.ClaimClosure.tractable_tree_core`                                                            |
+| [`DQ11`]{#lh:DQ11}`DQ.ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`                                                |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_815ae965`]{#lh:DQ_815ae965}`DQ.ClaimClosure.process_bridge_failure_witness`                                                 |
+| [`DQ12`]{#lh:DQ12}`DQ.ClaimClosure.information_barrier_opt_oracle_core`                                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_8b434839`]{#lh:DQ_8b434839}`DQ.ClaimClosure.information_barrier_opt_oracle_core`                                            |
+| [`DQ13`]{#lh:DQ13}`DQ.ClaimClosure.process_bridge_failure_witness`                                                               |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_8e70c0eb`]{#lh:DQ_8e70c0eb}`DQ.ClaimClosure.hard_family_all_coords_core`                                                    |
+| [`DQ14`]{#lh:DQ14}`DQ.ClaimClosure.tractable_bounded_core`                                                                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_8ed12c6b`]{#lh:DQ_8ed12c6b}`DQ.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`                                   |
+| [`DQ15`]{#lh:DQ15}`DQ.ClaimClosure.tractable_separable_core`                                                                     |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_926a3bda`]{#lh:DQ_926a3bda}`DQ.Sigma2PHardness.representationGap_eq_zero_iff`                                               |
+| [`DQ16`]{#lh:DQ16}`DQ.ClaimClosure.tractable_tree_core`                                                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_9460340e`]{#lh:DQ_9460340e}`DQ.StochasticSequential.stochastic_sequential_strict_separation`                                |
+| [`DQ17`]{#lh:DQ17}`DQ.Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_951c2d27`]{#lh:DQ_951c2d27}`DQ.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`                                |
+| [`DQ18`]{#lh:DQ18}`DQ.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_ab238b52`]{#lh:DQ_ab238b52}`DQ.StochasticSequential.static_stochastic_strict_separation`                                    |
+| [`DQ19`]{#lh:DQ19}`DQ.Sigma2PHardness.representationGap_eq_zero_iff`                                                             |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_bc3e53ee`]{#lh:DQ_bc3e53ee}`DQ.ClaimClosure.tractable_separable_core`                                                       |
+| [`DQ20`]{#lh:DQ20}`DQ.StochasticSequential.static_stochastic_strict_separation`                                                  |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ_e2dde061`]{#lh:DQ_e2dde061}`DQ.ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`                                  |
+| [`DQ21`]{#lh:DQ21}`DQ.StochasticSequential.stochastic_sequential_strict_separation`                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`DS1`]{#lh:DS1}`DecisionQuotient.ClaimClosure.DS1`                                                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -1380,6 +1426,8 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`DT24`]{#lh:DT24}`DecisionQuotient.Physics.DecisionTime.time_unit_law_substrate_invariant`                                      |
 +----------------------------------------------------------------------------------------------------------------------------------+
+| [`DUC1`]{#lh:DUC1}`duck_localization_linear`                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
 | [`EI1`]{#lh:EI1}`DecisionQuotient.ThermodynamicLift.energy_ge_kbt_nat_entropy`                                                   |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`EI2`]{#lh:EI2}`DecisionQuotient.ThermodynamicLift.energy_ground_state_tracks_entropy`                                          |
@@ -1387,6 +1435,10 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 | [`EI4`]{#lh:EI4}`DecisionQuotient.ThermodynamicLift.landauerJoulesPerBit_pos`                                                    |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`EI5`]{#lh:EI5}`DecisionQuotient.ThermodynamicLift.neukart_vinokur_duality`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`EMB1`]{#lh:EMB1}`semantic_non_embeddability`                                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`ENC1`]{#lh:ENC1}`encoding_location_gap`                                                                                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`ENT1`]{#lh:ENT1}`Entropy.ClassicalEntropyAssumptions`                                                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -1397,6 +1449,8 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 | [`EP3`]{#lh:EP3}`DecisionQuotient.Physics.LocalityPhysics.finite_signal_speed`                                                   |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`EP4`]{#lh:EP4}`DecisionQuotient.Physics.LocalityPhysics.nontrivial_physics`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`EXT1`]{#lh:EXT1}`extension_impossibility`                                                                                      |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`FI3`]{#lh:FI3}`DecisionQuotient.FunctionalInformation.functional_information_from_counting`                                    |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -1417,6 +1471,10 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 | [`FN15`]{#lh:FN15}`DecisionQuotient.BayesOptimalityProof.KL_eq_sum_klFun`                                                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`FN16`]{#lh:FN16}`DecisionQuotient.BayesOptimalityProof.KL_eq_zero_iff_eq`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`FORC2`]{#lh:FORC2}`typing_choice_unavoidable`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`FORC3`]{#lh:FORC3}`capability_foreclosure_irreversible`                                                                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`FP1`]{#lh:FP1}`DecisionQuotient.Physics.LocalityPhysics.trivial_states_all_equal`                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -1752,6 +1810,10 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`IE17`]{#lh:IE17}`DecisionQuotient.ClaimClosure.IE17`                                                                           |
 +----------------------------------------------------------------------------------------------------------------------------------+
+| [`IMP1`]{#lh:IMP1}`shape_provenance_impossible`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`IMP2`]{#lh:IMP2}`java_forced_to_composition`                                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------+
 | [`IN1`]{#lh:IN1}`DecisionQuotient.Physics.Instantiation.Geometry`                                                                |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`IN2`]{#lh:IN2}`DecisionQuotient.Physics.Instantiation.Dynamics`                                                                |
@@ -1805,6 +1867,12 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 | [`IND1`]{#lh:IND1}`both_requirements_independent`                                                                                |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`IND2`]{#lh:IND2}`both_requirements_independent'`                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`IND3`]{#lh:IND3}`external_tools_not_derivation`                                                                                |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`IND4`]{#lh:IND4}`language_semantics_is_derivation`                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`IND5`]{#lh:IND5}`ide_refactoring_not_derivation`                                                                               |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`INS1`]{#lh:INS1}`Inconsistency.ssot_is_unique_optimum`                                                                         |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -1962,6 +2030,14 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`LP61`]{#lh:LP61}`DecisionQuotient.Physics.LocalityPhysics.light_cone_is_time_gap`                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
+| [`MDL1`]{#lh:MDL1}`model_completeness`                                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`MDL2`]{#lh:MDL2}`mechanism_exhaustiveness`                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`MDL3`]{#lh:MDL3}`only_at_definition_works`                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`MDL4`]{#lh:MDL4}`mechanism_structural_capability`                                                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
 | [`MI1`]{#lh:MI1}`DecisionQuotient.ClaimClosure.MI1`                                                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`MI2`]{#lh:MI2}`DecisionQuotient.ClaimClosure.MI2`                                                                              |
@@ -1993,6 +2069,10 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 | [`MN10`]{#lh:MN10}`DecisionQuotient.Physics.MeasureNecessity.quantitative_measure_is_logical_prerequisite`                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`MN11`]{#lh:MN11}`DecisionQuotient.Physics.MeasureNecessity.stochastic_probability_is_logical_prerequisite`                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`NOM1`]{#lh:NOM1}`nominal_centralized`                                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`NOM2`]{#lh:NOM2}`nominal_localization_constant_semantic`                                                                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`OR1`]{#lh:OR1}`DecisionQuotient.Physics.ObserverRelativeState.ObserverClass`                                                   |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -2076,57 +2156,57 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH10`]{#lh:PH10}`PhysicalComplexity.sufficiency_physically_impossible`                                                         |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH11`]{#lh:PH11}`DecisionQuotient.PH.PhysicalCollapseAtRequirement`                                                            |
+| [`PH11`]{#lh:PH11}`DecisionQuotient.PhysicalComplexity.PhysicalCollapseAtRequirement`                                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH12`]{#lh:PH12}`DecisionQuotient.PH.no_physical_collapse_at_requirement`                                                      |
+| [`PH12`]{#lh:PH12}`DecisionQuotient.PhysicalComplexity.no_physical_collapse_at_requirement`                                      |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH13`]{#lh:PH13}`DecisionQuotient.PH.canonical_physical_collapse_impossible`                                                   |
+| [`PH13`]{#lh:PH13}`DecisionQuotient.PhysicalComplexity.canonical_physical_collapse_impossible`                                   |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH14`]{#lh:PH14}`DecisionQuotient.PH.p_eq_np_physically_impossible_of_collapse_map`                                            |
+| [`PH14`]{#lh:PH14}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_of_collapse_map`                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH15`]{#lh:PH15}`DecisionQuotient.PH.p_eq_np_physically_impossible_canonical`                                                  |
+| [`PH15`]{#lh:PH15}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_canonical`                                  |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH16`]{#lh:PH16}`DecisionQuotient.PH.P_eq_NP_via_SAT`                                                                          |
+| [`PH16`]{#lh:PH16}`DecisionQuotient.PhysicalComplexity.P_eq_NP_via_SAT`                                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH17`]{#lh:PH17}`DecisionQuotient.PH.SAT3ReductionBridge`                                                                      |
+| [`PH17`]{#lh:PH17}`DecisionQuotient.PhysicalComplexity.SAT3ReductionBridge`                                                      |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH18`]{#lh:PH18}`DecisionQuotient.PH.sat_reduction_transfers_energy_lower_bound`                                               |
+| [`PH18`]{#lh:PH18}`DecisionQuotient.PhysicalComplexity.sat_reduction_transfers_energy_lower_bound`                               |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH19`]{#lh:PH19}`DecisionQuotient.PH.physical_collapse_of_polytime_sat_realization`                                            |
+| [`PH19`]{#lh:PH19}`DecisionQuotient.PhysicalComplexity.physical_collapse_of_polytime_sat_realization`                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH20`]{#lh:PH20}`DecisionQuotient.PH.p_eq_np_physically_impossible_via_sat_bridge`                                             |
+| [`PH20`]{#lh:PH20}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_via_sat_bridge`                             |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH21`]{#lh:PH21}`DecisionQuotient.PH.SAT3HardFamily`                                                                           |
+| [`PH21`]{#lh:PH21}`DecisionQuotient.PhysicalComplexity.SAT3HardFamily`                                                           |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH22`]{#lh:PH22}`DecisionQuotient.PH.p_eq_np_physically_impossible_via_sat_hard_family`                                        |
+| [`PH22`]{#lh:PH22}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_via_sat_hard_family`                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH23`]{#lh:PH23}`DecisionQuotient.PH.collapse_possible_without_positive_bit_cost`                                              |
+| [`PH23`]{#lh:PH23}`DecisionQuotient.PhysicalComplexity.collapse_possible_without_positive_bit_cost`                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH24`]{#lh:PH24}`DecisionQuotient.PH.collapse_possible_without_exponential_lower_bound`                                        |
+| [`PH24`]{#lh:PH24}`DecisionQuotient.PhysicalComplexity.collapse_possible_without_exponential_lower_bound`                        |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH25`]{#lh:PH25}`DecisionQuotient.PH.no_go_transfer_requires_collapse_map`                                                     |
+| [`PH25`]{#lh:PH25}`DecisionQuotient.PhysicalComplexity.no_go_transfer_requires_collapse_map`                                     |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH26`]{#lh:PH26}`DecisionQuotient.PhysicalComplexity.no_collapse_of_bounded_budget_pos_cost_exp_lb`                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH27`]{#lh:PH27}`DecisionQuotient.PhysicalComplexity.collapse_implies_assumption_failure_disjunction`                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH28`]{#lh:PH28}`DecisionQuotient.PH.deterministic_no_physical_collapse`                                                       |
+| [`PH28`]{#lh:PH28}`DecisionQuotient.PhysicalComplexity.deterministic_no_physical_collapse`                                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH29`]{#lh:PH29}`DecisionQuotient.PH.probabilistic_no_physical_collapse`                                                       |
+| [`PH29`]{#lh:PH29}`DecisionQuotient.PhysicalComplexity.probabilistic_no_physical_collapse`                                       |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH30`]{#lh:PH30}`DecisionQuotient.PH.sequential_no_physical_collapse`                                                          |
+| [`PH30`]{#lh:PH30}`DecisionQuotient.PhysicalComplexity.sequential_no_physical_collapse`                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH31`]{#lh:PH31}`DecisionQuotient.PH.collapse_possible_with_unbounded_budget_profile`                                          |
+| [`PH31`]{#lh:PH31}`DecisionQuotient.PhysicalComplexity.collapse_possible_with_unbounded_budget_profile`                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH32`]{#lh:PH32}`DecisionQuotient.PhysicalComplexity.exp_budget_profile_unbounded`                                             |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PH33`]{#lh:PH33}`DecisionQuotient.PhysicalComplexity.finite_budget_assumption_is_necessary`                                    |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH34`]{#lh:PH34}`DecisionQuotient.PH.CoherentDQRejectionAtRequirement`                                                         |
+| [`PH34`]{#lh:PH34}`DecisionQuotient.PhysicalComplexity.CoherentDQRejectionAtRequirement`                                         |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH35`]{#lh:PH35}`DecisionQuotient.PH.coherent_dq_rejection_impossible_at_requirement`                                          |
+| [`PH35`]{#lh:PH35}`DecisionQuotient.PhysicalComplexity.coherent_dq_rejection_impossible_at_requirement`                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH36`]{#lh:PH36}`DecisionQuotient.PH.coherent_dq_rejection_impossible_canonical`                                               |
+| [`PH36`]{#lh:PH36}`DecisionQuotient.PhysicalComplexity.coherent_dq_rejection_impossible_canonical`                               |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`PI1`]{#lh:PI1}`DecisionQuotient.Physics.PhysicalIncompleteness.UniverseModel`                                                  |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -2270,6 +2350,14 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`TL4`]{#lh:TL4}`DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration`                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
+| [`TRI1`]{#lh:TRI1}`timing_trichotomy_exhaustive`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`TRI2`]{#lh:TRI2}`trichotomy_necessary_for_causality`                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`TRI3`]{#lh:TRI3}`trichotomy_necessary_for_mechanism`                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`TRI4`]{#lh:TRI4}`no_mechanism_outside_trichotomy`                                                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
 | [`TUR1`]{#lh:TUR1}`DecisionQuotient.Physics.transitionProb_nonneg`                                                               |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`TUR2`]{#lh:TUR2}`DecisionQuotient.Physics.transitionProb_sum_one`                                                              |
@@ -2277,6 +2365,14 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 | [`TUR5`]{#lh:TUR5}`DecisionQuotient.Physics.tur_bridge`                                                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`TUR6`]{#lh:TUR6}`DecisionQuotient.Physics.multiple_futures_entropy_production`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`UNIQ1`]{#lh:UNIQ1}`unique_tree_encoding`                                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`UNQ1`]{#lh:UNQ1}`uniqueness`                                                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`UNQ2`]{#lh:UNQ2}`uniqueness_exists`                                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`UNQ3`]{#lh:UNQ3}`uniqueness_unique`                                                                                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`UO1`]{#lh:UO1}`DecisionQuotient.UniverseDynamics`                                                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -2414,7 +2510,7 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 
   `cor:type-system-threshold`                   Full         `DQ.HardnessDistribution.native_dominates_manual`
 
-  `prop:abstention-frontier`                    Full         `DQ.ClaimClosure.no_auto_minimize_of_p_neq_conp`
+  `prop:abstention-frontier`                    Unmapped     *(no derived Lean handle found)*
 
   `prop:adq-ordering`                           Full         `DQ.ClaimClosure.adq_ordering`
 
@@ -2456,7 +2552,7 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 
   `prop:heuristic-reusability`                  Full         `DQ.ClaimClosure.anchor_query_relation_false_iff`, `DQ.ClaimClosure.no_uncertified_exact_claim_core`, `DQ.ClaimClosure.oracle_lattice_transfer_as_regime_simulation`, `DQ.ClaimClosure.tractable_subcases_conditional`
 
-  `prop:identifiability-convergence`            Full         `DQ.ClaimClosure.epsilon_admissible_iff_raw_lt_certified_total_core`
+  `prop:identifiability-convergence`            Unmapped     *(no derived Lean handle found)*
 
   `prop:insufficiency-counterexample`           Full         `DQ.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`, `DQ.DecisionProblem.minimalSufficient_iff_relevant`
 
@@ -2464,7 +2560,7 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 
   `prop:integrity-resource-bound`               Full         `DQ.ClaimClosure.exact_raw_only_of_no_exact_admissible_core`, `DQ.IntegrityCompetence.abstain_signal_exists_with_guess_self`, `DQ.IntegrityCompetence.admissible_irrational_strictly_more_than_rational`
 
-  `prop:mdp-tractable`                          Full         `DQ.ClaimClosure.process_bridge_failure_witness`
+  `prop:mdp-tractable`                          Unmapped     *(no derived Lean handle found)*
 
   `prop:minimal-relevant-equiv`                 Full         `DQ.ClaimClosure.DP6`, `DQ.ClaimClosure.DecisionProblem.epsOpt_zero_eq_opt`
 
@@ -2498,33 +2594,33 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 
   `prop:query-weighted-transfer`                Derived      `DQ.ClaimClosure.process_bridge_failure_witness`
 
-  `prop:refinement-strengthens`                 Full         `DQ.ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`
+  `prop:refinement-strengthens`                 Unmapped     *(no derived Lean handle found)*
 
-  `prop:retraction-evidence-integrity`          Full         `DQ.ClaimClosure.subproblem_hardness_lifts_to_full`
+  `prop:retraction-evidence-integrity`          Unmapped     *(no derived Lean handle found)*
 
-  `prop:retraction-no-evidence-violates`        Full         `DQ.ClaimClosure.subproblem_transfer_as_regime_simulation`
+  `prop:retraction-no-evidence-violates`        Unmapped     *(no derived Lean handle found)*
 
   `prop:selector-separation`                    Full         `DQ.ClaimClosure.one_step_bridge`
 
-  `prop:sequential-bounded-horizon`             Full         `DQ.ClaimClosure.physical_crossover_policy_core`
+  `prop:sequential-bounded-horizon`             Unmapped     *(no derived Lean handle found)*
 
-  `prop:sequential-static-relation`             Full         `DQ.ClaimClosure.physical_crossover_above_cap_core`
+  `prop:sequential-static-relation`             Unmapped     *(no derived Lean handle found)*
 
   `prop:set-to-selector`                        Full         `DQ.ClaimClosure.DP8`
 
   `prop:snapshot-process-typing`                Full         `DQ.ClaimClosure.minsuff_collapse_core`, `DQ.ClaimClosure.poseAnchorQuery`, `DQ.ClaimClosure.system_transfer_licensed_iff_snapshot`
 
-  `prop:static-stochastic-strict`               Derived      `DQ.StochasticSequential.static_stochastic_strict_separation`
+  `prop:static-stochastic-strict`               Unmapped     *(no derived Lean handle found)*
 
-  `prop:static-stochastic-transfer`             Full         `DQ.ClaimClosure.pose_returns_anchor_query_object`
+  `prop:static-stochastic-transfer`             Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-bounded-support`             Full         `DQ.ClaimClosure.posed_anchor_signal_positive_certified_implies_admissible`
+  `prop:stochastic-bounded-support`             Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-product-tractable`           Full         `DQ.ClaimClosure.query_obstruction_boolean_corollary`
+  `prop:stochastic-product-tractable`           Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-sequential-bridge-fail`      Full         `DQ.ClaimClosure.posed_anchor_no_competence_no_exact_claim`
+  `prop:stochastic-sequential-bridge-fail`      Unmapped     *(no derived Lean handle found)*
 
-  `prop:stochastic-sequential-strict`           Derived      `DQ.StochasticSequential.stochastic_sequential_strict_separation`
+  `prop:stochastic-sequential-strict`           Unmapped     *(no derived Lean handle found)*
 
   `prop:sufficiency-char`                       Full         `DQ.ClaimClosure.separable_detectable`, `DQ.ClaimClosure.snapshot_vs_process_typed_boundary`
 
@@ -2579,7 +2675,7 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 
 *Notes:* *(1) Full rows come from theorem-local inline anchors in this paper.* *(2) Derived rows are filled by dependency/scaffold claim-handle derivation (same paper-handle label across proof dependencies).* *(3) Unmapped means no local anchor and no derivable dependency support were found.*
 
-*Auto summary: mapped 102/102 (full=84, derived=18, unmapped=0).*
+*Auto summary: mapped 88/102 (full=72, derived=16, unmapped=14).*
 
 
 
@@ -2590,6 +2686,6 @@ The proofs compile with Lean 4. Run `lake build` in the proof directory to verif
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs_4b/`
-- Lines: 3446
+- Lines: 3593
 - Theorems: 124
 - `sorry` placeholders: 8

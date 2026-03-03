@@ -5,6 +5,8 @@
 
 import Ssot.Requirements
 
+namespace Ssot
+
 -- Definition: SSOT-Complete Language
 -- A language that can achieve verifiable SSOT for all structural facts
 -- Requires THREE capabilities: DEF ∧ INTRO ∧ STRUCT
@@ -165,3 +167,4 @@ theorem opaque_expansion_prevents_verification (L : LanguageFeatures)
   rw [h_opaque] at h_contra
   exact Bool.false_ne_true h_contra
 
+end Ssot

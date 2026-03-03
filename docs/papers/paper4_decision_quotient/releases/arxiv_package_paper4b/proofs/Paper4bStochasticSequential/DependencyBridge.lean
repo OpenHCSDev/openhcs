@@ -12,7 +12,9 @@ import axis_framework
 import AbstractClassSystem
 import lwd_converse
 import CrossPaperDependencies
+import HandleAliases
 import DependencyGraph
+import DeclInfoExport
 import GraphExport
 import Paper1
 import Ssot

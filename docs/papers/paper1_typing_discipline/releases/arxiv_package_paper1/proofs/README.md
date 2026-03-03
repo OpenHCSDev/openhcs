@@ -4,7 +4,7 @@
 
 This directory contains the complete Lean 4 formalization for Typing Discipline.
 
-- **Lines:** 7129
+- **Lines:** 7215
 - **Theorems:** 306
 - **`sorry` placeholders:** 0
 
@@ -33,6 +33,7 @@ lake build
 | `Typing.lean` | Typing |
 | `AbstractClassSystem.lean` | AbstractClassSystem |
 | `CrossPaperDependencies.lean` | CrossPaperDependencies |
+| `DeclInfoExport.lean` | DeclInfoExport |
 | `DependencyGraph.lean` | DependencyGraph |
 | `GraphExport.lean` | GraphExport |
 | `HandleAliases.lean` | HandleAliases |

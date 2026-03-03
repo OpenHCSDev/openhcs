@@ -1,19 +1,23 @@
-We define leverage $L(A) = |\mathrm{Capabilities}(A)| / \mathrm{DOF}(A)$ for software architectures and prove that maximizing leverage, satisfying the Single Source of Truth condition, minimizing structural rank, admitting tractable sufficiency checking, and incurring minimum thermodynamic cost per decision cycle are all equivalent to $\mathrm{DOF}(A) = 1$.
-
-\textbf{Main Result (Theorem~\ref{thm:five-way}).} For any architecture $A$ with $\mathrm{Cap}(A) > 0$:
+We study leverage as a structural invariant of information-processing systems. For any system $A$ with capabilities $\mathrm{Cap}(A) > 0$, we prove a Five-Way Equivalence:
 \[
+\begin{aligned}
 \mathrm{DOF}(A) = 1
-\;\iff\; \text{max leverage}
-\;\iff\; \text{SSOT}
-\;\iff\; \mathrm{srank} = 1
-\;\iff\; \text{tractable sufficiency}
-\;\iff\; \text{minimum thermodynamic cost}.
+&\;\iff\; \text{max leverage } L = |\mathrm{Cap}|/\mathrm{DOF}
+\;\iff\; \text{single source of truth} \\
+&\;\iff\; \mathrm{srank} = 1
+\;\iff\; \text{tractable sufficiency} \\
+&\;\iff\; \text{minimum thermodynamic cost}.
+\end{aligned}
 \]
 
-Engineering corollaries: $\mathrm{DOF} = n$ is isomorphic to a series reliability system with $n$ failure points; expected modification cost is proportional to $\mathrm{DOF}$; minimum edit-energy under Landauer calibration equals $j_{\mathcal{M}} \cdot \mathrm{DOF}(A)$ for explicit $j_{\mathcal{M}} > 0$. These follow from the equivalence and are not independent contributions.
+We also prove that the England replication inequality,
+\[
+\Delta S_{\min}(k) - \Delta S_{\min}(1) \geq k_B \ln k,
+\]
+reduces to counting: a $k$-variable system has $2^k$ states, and the finite inequality $k \leq 2^{k-1}$ yields the entropy gap under Landauer calibration. The thermodynamic bound $E_{\mathrm{decision}} \geq \mathrm{srank} \cdot k_B T \ln 2$ then follows from the same calibration (\LH{BA7}).
 
-The thermodynamic direction was initially proved conditional on P~$\neq$~coNP. \texttt{DecisionQuotient} removes this assumption: $E_{\mathrm{decision}} \geq \mathrm{srank} \cdot k_B T \ln 2$ is proved directly from Landauer calibration (\LH{BA7}), and P~$\neq$~NP follows from physical law (\LH{LP38}: Landauer, finite energy, finite signal speed, nontrivial state space), so the tractability equivalence holds unconditionally under these axioms. The England Replication Inequality is proved (\LH{england\_replication\_inequality}): the gap in minimal entropy production between a $k$-copy architecture and a single-source architecture is $\geq k_B \ln k$. No open conjectures remain.
+Within the explicit thermodynamic model used in the paper (Landauer calibration, finite energy, finite signal speed, and nontrivial state space), we derive a physical no-go theorem for polynomial collapse (\LH{LP38}). Engineering corollaries follow directly: $\mathrm{DOF} = n$ is isomorphic to a series reliability system with $n$ failure points; expected modification cost is proportional to $\mathrm{DOF}$; and minimum edit-energy equals $k_B T \ln 2 \cdot \mathrm{DOF}(A)$.
 
-All core theorems are machine-checked in Lean~4 with no \texttt{sorry} placeholders, via live imports from \texttt{AbstractClassSystem}, \texttt{Ssot}, and \texttt{DecisionQuotient}. An assumption ledger records all conditional dependencies.
+All theorems are machine-checked in Lean~4 with no \texttt{sorry} placeholders. The only explicit physics premises are Landauer calibration, the Second Law (non-negative entropy production), and the Thermodynamic Uncertainty Relation (Barato-Seifert 2015). An assumption ledger records the dependency structure of each physically grounded result.
 
-Keywords: software architecture, degrees of freedom, leverage, Single Source of Truth, structural rank, formal verification
+Keywords: thermodynamics, Landauer principle, entropy production, information theory, structural rank, formal verification, degrees of freedom

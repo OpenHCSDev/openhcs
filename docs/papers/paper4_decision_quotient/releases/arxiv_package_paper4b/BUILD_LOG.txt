@@ -2,19 +2,20 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper4b - Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency
-Package Date: 2026-03-01T18:01:54.715727
+Package Date: 2026-03-02T13:54:56.944761
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 31
-Lines of Code: 3446
+Lean Files: 32
+Lines of Code: 3593
 Theorems: 124
 Sorry Placeholders: 8
 
 
 Proof Files:
 ------------
+  - DeclInfoExport.lean
   - DependencyGraph.lean
   - GraphExport.lean
   - AlgorithmComplexity.lean

@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-03-02T00:39:47.948139
+Generated: 2026-03-02T13:53:45.857615
 
 === HUMAN COPY/PASTE ===
 
@@ -24,7 +24,7 @@ Verified complexity results. As a case study, we formalize the complexity of the
 
 All complexity claims use the input encodings fixed in Section.
 
-The formalization comprises 29863 lines of Lean 4 with 1273 machine-verified theorems/lemmas across 117 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
+The formalization comprises 31898 lines of Lean 4 with 1323 machine-verified theorems/lemmas across 118 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
 
 Practical corollaries. The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/Σ₂^(P) completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle determining what you need to know is harder than knowing everything. This implies that over-modeling is rational under the model and that “simpler” incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
 
@@ -49,14 +49,14 @@ Verified complexity results. As a case study, we formalize the complexity of the
 
 All complexity claims use the input encodings fixed in Section.
 
-The formalization comprises 29863 lines of Lean 4 with 1273 machine-verified theorems/lemmas across 117 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
+The formalization comprises 31898 lines of Lean 4 with 1323 machine-verified theorems/lemmas across 118 files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
 
 Practical corollaries. The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/$\Sigma_2^P$ completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle determining what you need to know is harder than knowing everything. This implies that over-modeling is rational under the model and that "simpler" incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
 
 Keywords: Lean 4, formal verification, polynomial-time reductions, coNP-completeness, computational complexity, Mathlib, interactive theorem proving
 
 arXiv Comments:
-Draft submission. Lean 4 artifact: 29863 lines, 1273 theorems/lemmas across 117 files (0 sorry placeholders).
+Draft submission. Lean 4 artifact: 31898 lines, 1323 theorems/lemmas across 118 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper4
@@ -101,8 +101,8 @@ zenodo:
     All complexity claims use the input encodings fixed in Section.
 
 
-    The formalization comprises 29863 lines of Lean 4 with 1273 machine-verified theorems/lemmas
-    across 117 files. All reductions include explicit polynomial bounds. We identify
+    The formalization comprises 31898 lines of Lean 4 with 1323 machine-verified theorems/lemmas
+    across 118 files. All reductions include explicit polynomial bounds. We identify
     proof engineering patterns for complexity theory in dependent type systems and
     discuss challenges of formalizing computational hardness constructively.
 
@@ -158,8 +158,8 @@ arxiv:
     All complexity claims use the input encodings fixed in Section.
 
 
-    The formalization comprises 29863 lines of Lean 4 with 1273 machine-verified theorems/lemmas
-    across 117 files. All reductions include explicit polynomial bounds. We identify
+    The formalization comprises 31898 lines of Lean 4 with 1323 machine-verified theorems/lemmas
+    across 118 files. All reductions include explicit polynomial bounds. We identify
     proof engineering patterns for complexity theory in dependent type systems and
     discuss challenges of formalizing computational hardness constructively.
 
@@ -175,8 +175,8 @@ arxiv:
 
     Keywords: Lean 4, formal verification, polynomial-time reductions, coNP-completeness,
     computational complexity, Mathlib, interactive theorem proving'
-  comments: 'Draft submission. Lean 4 artifact: 29863 lines, 1273 theorems/lemmas
-    across 117 files (0 sorry placeholders).'
+  comments: 'Draft submission. Lean 4 artifact: 31898 lines, 1323 theorems/lemmas
+    across 118 files (0 sorry placeholders).'
 abstract_variants:
   unicode: 'We present a Lean 4 formalization of polynomial-time reductions and computational
     complexity proofs, demonstrated through a comprehensive analysis of decision-relevant
@@ -214,8 +214,8 @@ abstract_variants:
     All complexity claims use the input encodings fixed in Section.
 
 
-    The formalization comprises 29863 lines of Lean 4 with 1273 machine-verified theorems/lemmas
-    across 117 files. All reductions include explicit polynomial bounds. We identify
+    The formalization comprises 31898 lines of Lean 4 with 1323 machine-verified theorems/lemmas
+    across 118 files. All reductions include explicit polynomial bounds. We identify
     proof engineering patterns for complexity theory in dependent type systems and
     discuss challenges of formalizing computational hardness constructively.
 
@@ -268,8 +268,8 @@ abstract_variants:
     All complexity claims use the input encodings fixed in Section.
 
 
-    The formalization comprises 29863 lines of Lean 4 with 1273 machine-verified theorems/lemmas
-    across 117 files. All reductions include explicit polynomial bounds. We identify
+    The formalization comprises 31898 lines of Lean 4 with 1323 machine-verified theorems/lemmas
+    across 118 files. All reductions include explicit polynomial bounds. We identify
     proof engineering patterns for complexity theory in dependent type systems and
     discuss challenges of formalizing computational hardness constructively.
 

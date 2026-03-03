@@ -2,26 +2,34 @@
 
 \subsection{First-Principles Derivations}\label{sec:intro-first-principles}
 
-This section presents seventeen theorems. Theorems 1--14 are derived from pure mathematics (counting, set theory, arithmetic, logic). Theorems 15--17 use empirical assumptions. One irreducible empirical claim (EC1: temperature) provides calibration; counting and logic provide structure. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
+This paper studies a simple question with a hard combinatorial core: when a system exposes many state coordinates, which of those coordinates are actually needed to preserve the optimal decision? The aim is not to list all observable state variables, but to isolate the smallest part of the state that still determines what the best action is.
+
+We model this with a decision problem: $A$ is the finite set of possible actions, $S$ is the state space, $U(a,s)$ is the utility of taking action $a$ in state $s$, and $\Opt(s)$ is the set of actions that maximize utility at state $s$. A coordinate set $I$ is sufficient when any two states that agree on $I$ also agree on $\Opt$. The decision quotient then collapses exactly those states with the same optimal-action set, yielding the canonical abstraction through which every decision-preserving abstraction factors.
+
+The results in this section are organized as one derivation chain rather than a theorem ledger. The opening results establish the structural core from counting, set theory, arithmetic, and logic; later results then place the same core in complexity-theoretic and physical terms. Theorems 1--14 are derived from pure mathematics, while Theorems 15--17 add explicit empirical calibration. One irreducible empirical claim (EC1: temperature) provides calibration; counting and logic provide structure. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
 
 \subsubsection{1. Counting Gap Theorem}
 
+We begin with the discrete counting fact that every later information and complexity bound depends on: bounded total capacity and positive integer cost imply a finite observation budget.
+
 \begin{theorem}[Counting Gap]\label{thm:counting-gap-intro}
-Let a system have finite positive capacity $C > 0$. Let each information-acquisition event cost $\varepsilon > 0$. Then:
+Let $\varepsilon, C \in \mathbb{N}$ with $\varepsilon > 0$ and $C > 0$. If each information-acquisition event consumes $\varepsilon$ cost units and the total available capacity is $C$, then for every $N \in \mathbb{N}$:
 \[
   \varepsilon \cdot N \leq C \;\Rightarrow\; N \leq C.
 \]
-No bounded system with positive event cost can perform infinitely many events.
+Equivalently, $c_{\max}=C$ is a finite upper bound on the number of possible events. No bounded system with positive integer event cost can perform infinitely many events.
 \LH{BA10}
 \end{theorem}
 
 \begin{proof}
-In $\mathbb{N}$: every positive integer is $\geq 1$. Therefore $N \leq \varepsilon \cdot N \leq C$.
+This is a discrete theorem: $\varepsilon > 0$ in $\mathbb{N}$ implies $1 \leq \varepsilon$, so each event costs at least one unit. Therefore $N = 1\cdot N \leq \varepsilon \cdot N \leq C$.
 \end{proof}
 
 \noindent\textbf{Consequence.} Continuous abstractions require arbitrarily fine state discrimination. Bounded computational systems cannot do this. Discrete models are forced by the mathematics.
 
 \subsubsection{2. Bayesian Optimality}
+
+Once observations are finite, the next question is how to update beliefs optimally from those observations.
 
 \begin{theorem}[Bayes Minimizes Expected Log Loss]\label{thm:bayes-optimal}
 For distributions $p, q$ over hypothesis space $H$, cross-entropy satisfies:
@@ -41,7 +49,9 @@ Gibbs' inequality: $\log x \leq x - 1$ implies $\sum p \log(p/q) \geq 0$. Equali
 
 \subsubsection{3. Measure Theory Typing}
 
-\begin{theorem}[Measure Is Logical Prerequisite]\label{thm:measure-prerequisite}
+To state those updates correctly, we next distinguish the type of a quantitative claim from the stronger normalization required for a probabilistic claim.
+
+\begin{theorem}[Measure-Theoretic Typing]\label{thm:measure-prerequisite}
 \begin{enumerate}
 \item Every quantitative claim carries an explicit measure: $(\mu, f)$ where $f$ is measurable.
 \item Every stochastic claim additionally requires $\mu$ to be a probability measure ($\mu(\Omega) = 1$).
@@ -59,6 +69,8 @@ Gibbs' inequality: $\log x \leq x - 1$ implies $\sum p \log(p/q) \geq 0$. Equali
 \noindent\textbf{Consequence.} Quantitative and stochastic claims are typed differently. Probability normalization is not automatic from measure structure.
 
 \subsubsection{4. Universal Property of Decision Quotient}
+
+With the measurement layer typed, we can identify the canonical abstraction that preserves the decision boundary itself.
 
 \begin{theorem}[Universal Property of Decision Quotient]\label{thm:quotient-universal}
 Let $Q = S/{\sim}$ be the decision quotient where $s \sim s' \iff \Opt(s) = \Opt(s')$. For any surjective abstraction $\phi: S \to T$ that preserves the optimal action ($\phi(s) = \phi(s') \Rightarrow \Opt(s) = \Opt(s')$), there exists a unique factorization $\psi: T \to Q$ such that $\pi = \psi \circ \phi$ where $\pi: S \to Q$ is the quotient map.
@@ -81,6 +93,8 @@ Since $\phi$ preserves $\Opt$, we have $\phi(s) = \phi(s') \Rightarrow \Opt(s) =
 
 \subsubsection{5. Witness-Checking Duality}
 
+Once the canonical abstraction is fixed, we can ask how many state comparisons any sound verifier must inspect to certify that no counterexample exists.
+
 \begin{theorem}[Checking-Witnessing Duality]\label{thm:checking-duality}
 For boolean decision problems with $n$ coordinates, let $W(n) = 2^{n-1}$ be the witness budget and $T(n)$ be the checking budget. Any sound checker satisfies:
 \[
@@ -97,6 +111,8 @@ $\emptyset$-sufficiency fails iff $\exists s, s'$ with $\Opt(s) \neq \Opt(s')$. 
 \noindent\textbf{Consequence.} Verification has a lower bound. A checker must examine exponentially many witness pairs to be sound. This is a counting lower bound on the information required for verification.
 
 \subsubsection{6. Bayes from Counting}
+
+That verification bound rests on a simpler structural fact: probability, Bayes, and the normalized decision quotient already emerge from counting on finite sets.
 
 \begin{theorem}[Probability Axioms from Counting]\label{thm:bayes-from-counting}
 The chain from counting to Decision Quotient:
@@ -120,6 +136,8 @@ The chain from counting to Decision Quotient:
 
 \subsubsection{7. Fisher Rank = Structural Rank}
 
+With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant.
+
 \begin{theorem}[Fisher Information = Structural Rank]\label{thm:fisher-rank-srank}
 Define the Fisher information score of coordinate $i$ as:
 \[
@@ -142,6 +160,8 @@ For the diagonal matrix: $\mathrm{rank} = |\{i \mid \mathrm{score}(i) \neq 0\}| 
 
 \subsubsection{8. Entropy-Rank Inequality}
 
+The first bridge is information-theoretic: quotient entropy cannot exceed the number of coordinates that actually matter.
+
 \begin{theorem}[Entropy Bounded by Structural Rank]\label{thm:entropy-rank}
 For a decision problem $\mathcal{D}$ with boolean coordinate spaces ($X_i = \{0,1\}$):
 \[
@@ -157,131 +177,75 @@ The relevant coordinate set $R$ is sufficient (Theorem~\ref{thm:resolution-suffi
 
 \noindent\textbf{Consequence.} The decision quotient carries at most $\mathrm{srank}$ bits of decision-relevant information. Coordinates outside the relevant set are information-theoretically inert.
 
-\subsubsection{9. Functional Information}
+\subsubsection{9--14. Later Bridge Theorems}
+
+The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the decision quotient is fixed.
 
 \begin{theorem}[Thermodynamic Cost from Counting]\label{thm:fi-coincide}
-For functional set $F \subseteq \Omega$, the derivation proceeds in three steps:
-\begin{enumerate}
-\item $\mathrm{FI}_{\text{counting}}(F) = -\log_2(|F|/|\Omega|)$ bits. Uses only finite measure.
-\item Plug in Landauer's value $\varepsilon = k_B T \ln 2$ joules per bit.
-\item $E_{\text{min}} = \varepsilon \cdot \mathrm{FI}_{\text{counting}}(F)$.
-\end{enumerate}
-The thermodynamic path is the counting path with an empirical calibration constant.
+For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and Landauer calibration converts that bit count into an energy lower bound. The thermodynamic statement is the counting statement plus an explicit empirical conversion constant.
 \LH{FI3}\LH{FI6}\LH{FI7}
 \end{theorem}
 
 \begin{proof}
-(1) By definition of surprisal: $\mathrm{FI}(F) = -\log_2 P(F) = -\log_2(|F|/|\Omega|)$ using counting measure. No physics.
-(2) Landauer's principle (empirical): erasing one bit costs $\geq k_B T \ln 2$ joules. This is a unit conversion constant.
-(3) Composition: $E_{\text{min}} = \varepsilon \cdot \mathrm{FI}(F) = k_B T \ln 2 \cdot (-\log_2(|F|/|\Omega|))$ joules.
-The counting structure determines the bit count; Landauer supplies the energy-per-bit conversion.
+The mathematical part is only the counting step: finite measure gives the bit count $-\log_2(|F|/|\Omega|)$. Landauer then supplies the energy-per-bit conversion. The bridge is therefore structural counting plus one declared empirical calibration.
 \end{proof}
 
-\noindent\textbf{Consequence.} Thermodynamics adds a unit conversion. Counting provides bits; Landauer provides joules per bit. Counting is primary, thermodynamics is derived.
-
-\subsubsection{10. Optimal Transport Bridge}
+\noindent\textbf{Consequence.} The thermodynamic lower bound is not a separate combinatorial structure; it is the counting bound expressed in physical units.
 
 \begin{theorem}[Wasserstein Distance = Structural Rank]\label{thm:wasserstein-bridge}
-For a decision problem with $k$ distinguishable futures ($k = |\mathrm{range}(\Opt)|$):
-\begin{enumerate}
-\item Single future ($k = 1$): transport cost vanishes.
-\item Multiple futures ($k > 1$): any coupling with off-diagonal mass incurs positive cost.
-\item The integrity state (centroid) minimizes expected transport cost.
-\end{enumerate}
-Transport cost grows with the number of distinguishable futures, matching $\mathrm{srank}$.
+Optimal-transport cost grows with the number of distinguishable futures and therefore tracks the same relevant-coordinate complexity measured by $\mathrm{srank}$.
 \LH{W1}\LH{W2}\LH{W3}\LH{W4}
 \end{theorem}
 
 \begin{proof}
-(1) When $k = 1$, all states map to a single action; the diagonal coupling achieves zero cost.
-(2) Off-diagonal coupling mass moves probability between distinct actions; metric distance contributes positive cost.
-(3) The centroid minimizes $\sum_i w_i d(x, x_i)^2$ by convexity of squared distance.
+When all states lead to one future, the diagonal coupling gives zero transport cost. Once multiple futures must be distinguished, off-diagonal mass incurs positive cost. The same branching structure counted by $\mathrm{srank}$ therefore reappears as transport cost.
 \end{proof}
 
-\noindent\textbf{Consequence.} Optimal transport theory recovers srank as the complexity measure without invoking information theory or thermodynamics. Pure measure theory.
-
-\subsubsection{11. Rate-Distortion Bridge}
+\noindent\textbf{Consequence.} Optimal transport recovers the same complexity signal as the coordinate-relevance analysis.
 
 \begin{theorem}[Rate-Distortion = Structural Rank]\label{thm:rate-distortion-bridge}
-For a decision problem viewed as a source:
-\begin{enumerate}
-\item Shannon entropy is non-negative: $H(X) \geq 0$.
-\item At zero distortion: $R(0) = H(X)$.
-\item Rate decreases monotonically as distortion tolerance increases.
-\item Decision-equivalence preserves optimal actions: compression within equivalence classes is lossless.
-\item Minimum lossless decision rate equals structural rank: $R(0) = \mathrm{srank}$.
-\item Compression below srank introduces decision errors.
-\end{enumerate}
+At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, and compression below $\mathrm{srank}$ necessarily introduces decision errors.
 \LH{RD1}\LH{RD2}\LH{RD3}\LH{RS1}\LH{RS2}\LH{RS3}\LH{RS4}\LH{RS5}
 \end{theorem}
 
 \begin{proof}
-Standard Shannon theory establishes (1)--(3). When $\phi(s) = \phi(s')$ implies $\Opt(s) = \Opt(s')$, states within equivalence classes merge without affecting optimal actions (4). The decision quotient partitions into $2^{\mathrm{srank}}$ classes, each requiring $\log_2$ bits for identification, yielding $R(0) = \mathrm{srank}$ (5). Fewer bits cannot distinguish all classes (6).
+Zero distortion means that decision-equivalent states may be merged, but decision-distinguishing states may not. The quotient therefore partitions the source into exactly the classes that must remain distinguishable. Their count determines the minimum lossless rate, which is the same structural quantity measured by $\mathrm{srank}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} Rate-distortion theory independently recovers structural rank as the minimal description length for decision-making. Pure Shannon theory.
-
-\subsubsection{12. Nontriviality from Counting}
+\noindent\textbf{Consequence.} Description length and relevant-coordinate complexity coincide at zero distortion.
 
 \begin{theorem}[Information Requires Nontriviality]\label{thm:nontriviality-counting}
-The following chain holds from pure counting:
-\begin{enumerate}
-\item $|S| \leq 1 \Rightarrow$ all states equal (cardinality).
-\item All states equal $\Rightarrow$ $\Opt$ is constant (logic).
-\item $\Opt$ constant $\Rightarrow$ singleton image (set theory).
-\item Singleton image $\Rightarrow$ entropy $= \log(1) = 0$ (arithmetic).
-\item Entropy $= 0 \Rightarrow$ no information (definition).
-\end{enumerate}
-Contrapositive: information exists $\Rightarrow |S| \geq 2$.
+If decision-relevant information exists, then the state space cannot be trivial: the existence of information forces at least two distinguishable states.
 \LH{FP1}\LH{FP2}\LH{FP3}\LH{FP4}\LH{FP5}\LH{FP6}\LH{FP7}
 \end{theorem}
 
 \begin{proof}
-Each step is elementary: (1) subsingleton property, (2) constant function on subsingleton, (3) image of constant is singleton, (4) $\log_2(1) = 0$, (5) zero entropy means no distinguishable states. The contrapositive follows by modus tollens.
+If the state space had at most one element, then every map out of it would be constant, including $\Opt$. A constant decision boundary has zero entropy and carries no distinguishable information. Taking the contrapositive gives the stated nontriviality requirement.
 \end{proof}
 
-\noindent\textbf{Consequence.} Nontriviality ($|S| \geq 2$) is not an axiom—it is derived from the existence of information. Pure counting.
-
-\subsubsection{13. Second Law from Counting}
+\noindent\textbf{Consequence.} Nontriviality is derived from the existence of information rather than postulated as an extra axiom.
 
 \begin{theorem}[Second Law Structure from Counting]\label{thm:second-law-counting}
-The following chain holds from pure counting and probability:
-\begin{enumerate}
-\item $|\text{target}| < |\text{total}| \Rightarrow |\text{non-target}| > 0$ (counting).
-\item Random selection from total probably misses target (probability).
-\item $n$ unverified steps with $k$ wrong turns each: $k^n$ wrong paths vs.\ 1 right path (exponentiation).
-\item Wrong paths dominate: $k^n \gg 1$ for $k > 1$, $n > 1$ (arithmetic).
-\item Maintaining order requires distinguishing right from wrong (verification).
-\item Verification is information (definition).
-\end{enumerate}
-Therefore: maintaining order requires continuous information input.
+Maintaining ordered behavior requires continuous distinction between correct and incorrect transitions; in this sense, the structural content of the Second Law follows from counting and verification, while physical calibration is added later.
 \LH{FP8}\LH{FP9}\LH{FP10}\LH{FP11}\LH{FP12}\LH{FP13}\LH{FP14}
 \end{theorem}
 
 \begin{proof}
-(1) Subtraction in $\mathbb{N}$. (2) $P(\text{miss}) = |\text{non-target}|/|\text{total}| > 0$. (3) Branching paths multiply. (4) Exponential growth. (5) Staying on target requires detecting drift. (6) Detection distinguishes states.
+If there are more non-target than target continuations, unguided evolution overwhelmingly drifts away from the target set. Staying ordered therefore requires repeated discrimination between correct and incorrect continuations. That discrimination is an information-acquisition burden, and the thermodynamic calibration enters only after that structural burden is fixed.
 \end{proof}
 
-\noindent\textbf{Consequence.} The second law's structure (order decays without work) follows from counting. The empirical content is only the calibration constant $k_B T$ that converts entropy to energy.
-
-\subsubsection{14. Landauer Structure from Counting}
+\noindent\textbf{Consequence.} The order-versus-verification tradeoff is established before any temperature-dependent conversion is introduced.
 
 \begin{theorem}[Erasure Increases Environment Entropy]\label{thm:landauer-structure}
-For any state reduction from $n$ states to $m < n$ states:
-\begin{enumerate}
-\item $n - m > 0$ states are ``erased'' (arithmetic).
-\item Erased states must go somewhere (conservation of distinguishability).
-\item That somewhere is the environment.
-\item Environment entropy increases by $\geq \log(n/m)$.
-\end{enumerate}
+Whenever a state reduction deletes distinctions, those distinctions must reappear in environmental degrees of freedom, so the structural content of Landauer's principle is a transfer statement and only the temperature calibration is empirical.
 \LH{FP15}
 \end{theorem}
 
 \begin{proof}
-(1) $m < n \Rightarrow n - m > 0$. (2)--(4) The missing distinctions are not destroyed; they are transferred to environmental degrees of freedom. This is the structure of Landauer's principle. The $k_B T$ calibration is empirical.
+Reducing $n$ distinguishable states to fewer than $n$ outputs removes distinctions from the local description. Those distinctions cannot vanish from the bookkeeping; they must be displaced into the environment. The structural theorem is therefore a conservation-of-distinguishability statement, with temperature only setting the energetic scale of that transfer.
 \end{proof}
 
-\noindent\textbf{Consequence.} Landauer's principle splits into structure (from counting) and calibration (from temperature). Only the calibration is empirical.
+\noindent\textbf{Consequence.} Landauer's principle separates cleanly into a mathematical transfer structure and an empirical energy calibration.
 
 \subsection{Irreducible Empirical Claims}\label{sec:irreducible-empirical}
 
@@ -450,7 +414,7 @@ Sections~\ref{sec:engineering-justification}--\ref{sec:simplicity-tax}: engineer
 Appendix: Lean listings.
 
 \paragraph{Claim-stamp notation.}
-Claims are stamped with theorem references $[T:n; P:m]$ and Lean handles (\LH{...}).
+Claims are stamped with theorem references $[T:n; P:m]$ and Lean handles (\LH{H1}).
 
 \begingroup
 \footnotesize

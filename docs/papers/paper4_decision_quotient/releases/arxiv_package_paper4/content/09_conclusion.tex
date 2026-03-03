@@ -14,6 +14,8 @@ The primary contributions are methodological:
 \item \textbf{Integration patterns.} We show how to connect custom complexity definitions with Mathlib's computability and polynomial libraries.
 
 \item \textbf{Artifact quality.} Zero \texttt{sorry} placeholders, documented axiom dependencies, and reproducible builds via \texttt{lake build}.
+
+\item \textbf{Bridge theorems.} The proof graph contains non-trivial compositions connecting isolated clusters: \LH{BR1} (ETH + structural rank yields exponential hardness); \LH{BR2} (Fisher rank bounds minimal sufficient sets); \LH{BR3} (FPT kernel + srank yields parameterized dichotomy); \LH{BR4} (TUR + srank yields thermodynamic cost bounds); \LH{BR7} (geometry + covering yields certificate complexity); \LH{BR8} (rate-distortion + Fisher information connects compression to decision geometry); \LH{BR9} and \LH{BR10} (counting complexity and approximation barriers). These bridges make the proof graph sufficiently interconnected that rejecting any single cluster requires rejecting its compositional connections to other established results.
 \end{enumerate}
 
 \subsection*{Verified Complexity Results}

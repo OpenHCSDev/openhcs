@@ -1,6 +1,6 @@
 # Paper: Computational Complexity of Physical Counting
 
-**Status**: Theory of Computing-ready | **Lean**: 30097 lines, 1279 theorems
+**Status**: Theory of Computing-ready | **Lean**: 31898 lines, 1323 theorems
 
 ---
 
@@ -14,7 +14,7 @@ We prove fourteen first-principles theorems (thirteen from pure mathematics, one
 
 Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds. Verification requires $\geq 2^{n-1}$ witness pairs.
 
-Two results carry empirical conditions. Conditional on Landauer's principle ($k_BT\ln 2$ per bit erasure; experimentally confirmed 2012), $dU\geq\lambda\,dC$ follows by composition with bit-operation bounds; rejecting it requires rejecting Landauer. Conditional on stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, minimal $\sigma$ scaling with $\mathrm{srank}$.
+Two results carry empirical premises. Composing bit-operation lower bounds with Landauer's principle ($k_BT\ln 2$ per irreversible bit erasure) yields $dU\geq\lambda\,dC$. Under stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$. All results are machine-checked in Lean 4 with explicit theorem-level assumptions and a machine-generated assumption ledger.
 
 
 # Introduction {#sec:introduction}
@@ -447,7 +447,7 @@ Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference=
 
 #### Claim-stamp notation.
 
-Claims are stamped with theorem references $[T:n; P:m]$ and Lean handles (\...).
+Claims are stamped with theorem references $[T:n; P:m]$ and Lean handles (H1).
 
   -----------------------------------------------------------------------------------------------
   **Regime**   **Question**                            **Placement**
@@ -3835,7 +3835,7 @@ Informally: if exact support is not certified, do not make exact claims; when co
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 30097 lines across 118 files, with 1279 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 31898 lines across 118 files, with 1323 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -4090,6 +4090,26 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 | [`BF3`]{#lh:BF3}`DecisionQuotient.forced_action_under_uncertainty`                                                               |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`BF4`]{#lh:BF4}`DecisionQuotient.bayes_update_exists_of_nondegenerateBelief`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR1`]{#lh:BR1}`DecisionQuotient.Bridges.eth_structural_rank_exponential_hardness`                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR2`]{#lh:BR2}`DecisionQuotient.Bridges.fisher_rank_lower_bounds_sufficient_set`                                               |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR3`]{#lh:BR3}`DecisionQuotient.Bridges.fpt_srank_parameterized_dichotomy`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR4`]{#lh:BR4}`DecisionQuotient.Bridges.tur_srank_thermodynamic_cost`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR5`]{#lh:BR5}`DecisionQuotient.Bridges.dichotomy_eth_complete_classification`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR6`]{#lh:BR6}`DecisionQuotient.Bridges.reduction_eth_conp_exponential`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR7`]{#lh:BR7}`DecisionQuotient.Bridges.geometry_covering_certificate_complexity`                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR8`]{#lh:BR8}`DecisionQuotient.Bridges.rate_distortion_fisher_information_bridge`                                             |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR9`]{#lh:BR9}`DecisionQuotient.Bridges.counting_complexity_sharp_p_hardness`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`BR10`]{#lh:BR10}`DecisionQuotient.Bridges.approximation_counting_hardness_bridge`                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`CC1`]{#lh:CC1}`DecisionQuotient.ClaimClosure.RegimeSimulation`                                                                 |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -4728,6 +4748,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 | [`GN12`]{#lh:GN12}`DecisionQuotient.LogicGraph.dna_erasure_implies_positive_landauer`                                            |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`GN13`]{#lh:GN13}`DecisionQuotient.LogicGraph.dna_room_temp_environmental_stability`                                            |
++----------------------------------------------------------------------------------------------------------------------------------+
+| [`H1`]{#lh:H1}`...`                                                                                                              |
 +----------------------------------------------------------------------------------------------------------------------------------+
 | [`HD1`]{#lh:HD1}`DecisionQuotient.HardnessDistribution.centralization_dominance_bundle`                                          |
 +----------------------------------------------------------------------------------------------------------------------------------+
@@ -6528,6 +6550,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 30097
-- Theorems: 1279
+- Lines: 31898
+- Theorems: 1323
 - `sorry` placeholders: 0

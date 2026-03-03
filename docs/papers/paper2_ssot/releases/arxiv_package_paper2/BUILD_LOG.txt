@@ -2,19 +2,20 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper2 - Formal Foundations for the Single Source of Truth Principle: A Language Design Specification Derived from Epistemic Coherence
-Package Date: 2026-03-02T00:32:22.751530
+Package Date: 2026-03-02T13:51:58.250355
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 28
-Lines of Code: 3758
+Lean Files: 29
+Lines of Code: 3863
 Theorems: 185
 Sorry Placeholders: 0
 
 
 Proof Files:
 ------------
+  - DeclInfoExport.lean
   - DependencyGraph.lean
   - GraphExport.lean
   - Basic.lean
@@ -48,7 +49,7 @@ Proof Files:
 COMPILATION OUTPUT (lake build)
 ================================================================================
 
-ℹ [587/795] Replayed AbstractClassSystem.Typing
+ℹ [587/741] Replayed AbstractClassSystem.Typing
 info: AbstractClassSystem/Typing.lean:110:0: []
 info: AbstractClassSystem/Typing.lean:111:0: [AbstractClassSystem.UnifiedCapability.interfaceCheck]
 info: AbstractClassSystem/Typing.lean:112:0: [AbstractClassSystem.UnifiedCapability.identity,
@@ -115,7 +116,7 @@ Hint: Omit it from the simp argument list.
   simp [̵L̵i̵s̵t̵.̵m̵e̵m̵_̵s̵i̵n̵g̵l̵e̵t̵o̵n̵]̵ ̵at hrm'
 
 Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
-ℹ [3096/3097] Replayed Ssot.LangEvaluation
+ℹ [3094/3097] Replayed Ssot.LangEvaluation
 info: Ssot/LangEvaluation.lean:83:0: init_subclass_in_class_definition : ∀ (rt : PyRuntime) (name : PyId) (bases : List PyId)
   (attrs methods : List (String × String)) (parent : PyId),
   parent ∈ bases →

@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-03-02T00:31:45.050984
+Generated: 2026-03-02T13:51:07.434047
 
 === HUMAN COPY/PASTE ===
 
@@ -96,7 +96,7 @@ All proofs in Lean 4 (6300+ lines, 190+ theorems, 0 `sorry`).
 Keywords: classification theory, impossibility theorems, matroid theory, type systems, formal verification, epistemology
 
 arXiv Comments:
-TOPLAS submission. Lean 4 artifact: 7129 lines, 306 theorems/lemmas across 25 files (0 sorry placeholders).
+TOPLAS submission. Lean 4 artifact: 7215 lines, 306 theorems/lemmas across 26 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper1
@@ -295,8 +295,8 @@ arxiv:
 
     Keywords: classification theory, impossibility theorems, matroid theory, type
     systems, formal verification, epistemology'
-  comments: 'TOPLAS submission. Lean 4 artifact: 7129 lines, 306 theorems/lemmas across
-    25 files (0 sorry placeholders).'
+  comments: 'TOPLAS submission. Lean 4 artifact: 7215 lines, 306 theorems/lemmas across
+    26 files (0 sorry placeholders).'
 abstract_variants:
   unicode: 'The Problem. Classification systems (type systems, ontologies, taxonomies,
     schemas) operate over fixed sets of classification axes. We prove this architectural
