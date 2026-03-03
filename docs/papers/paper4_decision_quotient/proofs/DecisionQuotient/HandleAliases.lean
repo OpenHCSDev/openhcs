@@ -36,6 +36,7 @@ import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.Physics.Uncertainty
 import DecisionQuotient.Physics.HeisenbergStrong
 import DecisionQuotient.Physics.BoundedAcquisition
+import DecisionQuotient.Physics.WolpertConstraints
 import DecisionQuotient.Physics.TUR
 import DecisionQuotient.Physics.WassersteinIntegrity
 import DecisionQuotient.Physics.TransportCost
@@ -923,6 +924,13 @@ abbrev TL3 := @ThermodynamicLift.joulesPerBit_pos_of_landauer_floor
 abbrev TL4 := @ThermodynamicLift.energy_lower_mandatory_of_landauer_floor
 abbrev TL5 := @ThermodynamicLift.joulesPerBit_pos_of_landauer_calibration
 abbrev TL6 := @ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration
+
+-- Wolpert-constraint (WC) handles - explicit floor-plus-overhead interface
+abbrev WC1 := @Physics.WolpertConstraints.landauer_floor_plus_overhead_lower_bound
+abbrev WC2 := @Physics.WolpertConstraints.effective_model_dominates_landauer_floor
+abbrev WC3 := @Physics.WolpertConstraints.effective_model_strictly_exceeds_landauer_of_strict_overhead
+abbrev WC4 := @Physics.WolpertConstraints.energy_lower_bound_mono_under_overhead
+abbrev WC5 := @Physics.WolpertConstraints.physical_grounding_bundle_with_wolpert_overhead
 
 -- Tool-collapse (TC) handles - model-relative leverage collapse
 abbrev TC1 := @ToolCollapse.WorkProfile

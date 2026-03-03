@@ -57,18 +57,19 @@ Theorem~\ref{thm:counting-gap} proves that a finite bound exists. It does not su
 
 \item[\textbf{TD.}] \textbf{Thermodynamics (Landauer).}
   Each event costs positive energy.
-  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. Constrained implementations can dissipate strictly more due to process constraints, mismatch cost, or finite-time driving.
+  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. The Wolpert-style interface used in this artifact adds an explicit nonnegative overhead term above that floor; when that overhead is positive, the per-bit lower bound is strictly larger than $k_B T \ln 2$.
   \cite{landauer1961irreversibility,bennett1982thermodynamics,berut2012experimental,wolpert2024stochastic,manzano2024absolute,yadav2026minimal}
 \end{enumerate}
+\leanmeta{\LH{WC1},\LH{WC2},\LH{WC3}.}
 
 \noindent The Counting Gap Theorem proves the structure. SR, QM, TD supply the numbers.
 
 \subsection{Why Positive Cost is Derived, Not Assumed}\label{sec:positive-cost-derived}
 
-The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$, and constrained implementations can only increase that cost.
+The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$. In the explicit constrained-process interface, any extra dissipation above that floor is represented by a separate nonnegative overhead term rather than folded into the floor itself.
 
 If $\varepsilon = 0$, a bounded system could perform infinitely many checks, resolving any decision in zero time and zero energy. This contradicts energy conservation. Therefore $\varepsilon > 0$ is derived from thermodynamics.
-\leanmeta{\LH{BA10}}
+\leanmeta{\LH{BA10},\LH{WC2},\LH{WC3}}
 
 \begin{remark}[Scope]
 No claim is made about whether the universe is continuous or discrete at scales
@@ -206,8 +207,12 @@ bit erasure, experimentally verified to $\pm 10\%$
 \cite{berut2012experimental}. It is not, in general, a tight expression for the
 actual energetic cost of constrained computation
 \cite{wolpert2024stochastic,manzano2024absolute,yadav2026minimal}. In the Lean
-model, \texttt{joulesPerBit} is a declared lower-bound parameter constrained to
-lie above the Landauer floor; exact equality is retained only as an optional
+model, that distinction is explicit: a constrained-process model starts from a
+base lower-bound conversion model and adds a separate nonnegative overhead term.
+Theorems \LH{WC1}--\LH{WC3} show the exact shape of the floor-plus-overhead
+interface, \LH{WC4} proves that the induced energy lower bound can only
+increase, and \LH{WC5} proves that the physical grounding bundle survives under
+the strengthened premise. Exact equality is retained only as an optional
 idealized specialization.
 \LH{BA9}
 \end{theorem}

@@ -6,6 +6,8 @@ This paper studies a simple question with a hard combinatorial core: when a syst
 
 We model this with a decision problem: $A$ is the finite set of possible actions, $S$ is the state space, $U(a,s)$ is the utility of taking action $a$ in state $s$, and $\Opt(s)$ is the set of actions that maximize utility at state $s$. A coordinate set $I$ is sufficient when any two states that agree on $I$ also agree on $\Opt$. The decision quotient then collapses exactly those states with the same optimal-action set, yielding the canonical abstraction through which every decision-preserving abstraction factors.
 
+Section~\ref{sec:foundations} makes that collapse boundary explicit: any surjective abstraction either factors through the decision quotient or erases a decision-relevant distinction, and any attempt to treat such extra erasure as physically feasible runs into the same no-collapse obstruction used later in the hardness chain. This is the structural bridge between abstraction at the state level and collapse claims at the complexity level.\LH{AB2}\LH{AB3}\LH{AB4}
+
 The results in this section are organized as one derivation chain rather than a theorem ledger. The opening results establish the structural core from counting, set theory, arithmetic, and logic; later results then place the same core in complexity-theoretic and physical terms. Theorems 1--14 are derived from pure mathematics, while Theorems 15--17 add explicit empirical lower-bound premises. One irreducible empirical claim (EC1) supplies the thermodynamic scale: irreversible bit operations carry a positive lower-bound cost, with Landauer furnishing a universal floor. Counting and logic provide the structural part of the chain. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
 
 \subsubsection{1. Counting Gap Theorem}
@@ -182,8 +184,8 @@ The relevant coordinate set $R$ is sufficient (Theorem~\ref{thm:resolution-suffi
 The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the decision quotient is fixed.
 
 \begin{theorem}[Thermodynamic Cost from Counting]\label{thm:fi-coincide}
-For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and a Landauer floor converts that bit count into a universal energy lower bound. The thermodynamic statement is therefore the counting statement plus an explicit empirical lower-bound constant; stronger empirical lower bounds only tighten it.
-\LH{FI3}\LH{FI6}\LH{FI7}
+For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and a Landauer floor converts that bit count into a universal energy lower bound. In the sharpened physical interface, an explicit nonnegative overhead term is added above that floor to represent constrained-process dissipation. The thermodynamic statement is therefore the counting statement plus a floor-plus-overhead empirical conversion law; stronger empirical lower bounds only tighten it.
+\LH{FI3}\LH{FI6}\LH{FI7}\LH{WC1}\LH{WC2}\LH{WC3}
 \end{theorem}
 
 \begin{proof}
@@ -252,7 +254,7 @@ Reducing $n$ distinguishable states to fewer than $n$ outputs removes distinctio
 One claim is irreducibly empirical. Two others (finite resources, finite speed) are derived from first principles.
 
 \begin{definition}[Irreducible Empirical Claim EC1]\label{def:empirical-claims}
-\textbf{EC1 (Temperature):} Entropy has energy cost. There exists $\varepsilon > 0$ such that each irreversible bit operation costs at least $\varepsilon$ joules, with $\varepsilon \geq k_B T \ln 2$. Landauer gives the universal floor; constrained implementations may require strictly larger per-bit dissipation.
+\textbf{EC1 (Temperature):} Entropy has energy cost. There exists $\varepsilon > 0$ such that each irreversible bit operation costs at least $\varepsilon$ joules, with $\varepsilon \geq k_B T \ln 2$. Landauer gives the universal floor. A separate floor-plus-overhead interface treats any strictly larger per-bit dissipation as an explicit additional premise rather than an informal interpretation.
 \end{definition}
 
 \begin{theorem}[EC2 Derived from Uncertainty]\label{thm:ec2-derived}
@@ -324,13 +326,13 @@ where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natu
 Three steps:
 \begin{enumerate}
 \item $\mathrm{srank}$ bits are required to resolve $\mathcal{D}$. Each bit requires one state transition.
-\item Each transition costs at least the Landauer floor $k_B T \ln 2$. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$ as a universal lower bound.
+\item Each transition costs at least the Landauer floor $k_B T \ln 2$. In the stronger constrained-process model, an explicit nonnegative overhead term may raise that per-bit lower bound further. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$ remains the universal floor, and any declared overhead tightens it monotonically.
 \item $H_{\mathrm{nats}} = \ln(\mathrm{numOptClasses}) \leq \mathrm{srank} \cdot \ln 2$ (Theorem~\ref{thm:entropy-rank}).
 \end{enumerate}
 Combining: $E \geq \mathrm{srank} \cdot k_B T \ln 2 \geq k_B T \cdot H_{\mathrm{nats}}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from the Landauer floor (Theorem 9) composed with the entropy-rank inequality (Theorem 8); any stricter empirical per-bit lower bound only strengthens the estimate.
+\noindent\textbf{Consequence.} Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from the Landauer floor (Theorem 9) composed with the entropy-rank inequality (Theorem 8); in the explicit floor-plus-overhead interface, any declared nonnegative overhead only strengthens the estimate.\LH{WC1}\LH{WC4}
 
 \subsubsection{17. Thermodynamic Uncertainty Relations}
 

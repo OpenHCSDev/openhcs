@@ -196,6 +196,8 @@ Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal acti
 
 The next theorem makes the collapse boundary explicit. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The decision quotient is the coarsest such collapse that still preserves the optimal-action boundary.
 
+Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the decision quotient, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.\leanmeta{\LH{AB1},\LH{AB2},\LH{AB3},\LH{AB4}.}
+
 \begin{theorem}[Decision-Preserving Collapse Boundary]\label{thm:abstraction-boundary}
 Let $\phi : S \to T$ be a surjective abstraction of the state space.
 
@@ -207,12 +209,14 @@ Let $\phi : S \to T$ be a surjective abstraction of the state space.
 \end{theorem}
 
 \begin{proof}
-Part (1) packages the quotient universal property into an explicit dichotomy. If $\phi$ preserves $\Opt$, the existing quotient theorem supplies a factorization through the decision quotient. If $\phi$ does not preserve $\Opt$, then by definition it must identify two states with different optimal-action sets, so it erases a decision-relevant distinction.
-
-Part (2) composes that dichotomy with the already formalized physical no-collapse layer. Once an extra erased distinction is interpreted as a physically feasible collapse, the canonical no-collapse theorem rules it out. The only surviving branch is factorization through the decision quotient.
+Proof sketch:
+\begin{enumerate}
+\item If $\phi$ preserves $\Opt$, then the quotient universal property already proved in the previous layer supplies the factorization $\pi = \psi \circ \phi$. If it does not preserve $\Opt$, then by definition there must exist $s,s'$ with $\phi(s)=\phi(s')$ but $\Opt(s)\neq\Opt(s')$. That witness is exactly the erased decision-relevant distinction.
+\item Suppose such an erased distinction is further interpreted as a physically feasible collapse at the canonical requirement profile. The existing physical no-collapse theorem then blocks that collapse map. Therefore the ``extra erasure'' branch is impossible, leaving only factorization through the decision quotient.
+\end{enumerate}
 \end{proof}
 
-Informally: this is the bridge between state-space abstraction and complexity-class collapse. At the state level, the decision quotient is the maximal lossless collapse. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction.
+Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the decision quotient is the maximal lossless collapse. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
 
 \subsection{Mechanized Physical-Lift and Claim Metadata}\label{sec:foundations-mechanized-metadata}
 
