@@ -47,6 +47,8 @@ def ManyOneReducesPoly {α β : Type} (ea : FinEncoding α) (eb : FinEncoding β
 
 This uses the standard definition: a reduction is polynomial-time computable via Turing machines and preserves membership.
 
+\textbf{Note on verification status.} The Lean formalization machine-verifies \emph{correctness} (the membership-preservation property, i.e., the second conjunct of \texttt{ManyOneReducesPoly}). Proving that a concrete function satisfies \texttt{PolyTime}---i.e., constructing an actual Turing machine witness with a polynomial time bound---remains an open problem in formal verification. No existing proof assistant project has achieved end-to-end TM-based polytime proofs for concrete reductions. In our formalization, polytime computability is stated as an explicit hypothesis in \texttt{valid\_karp\_reduction}, making the gap visible rather than hiding it.
+
 \subsection{The Main Reduction Theorem}
 
 \begin{theorem}[TAUTOLOGY Reduction Correctness, Lean]

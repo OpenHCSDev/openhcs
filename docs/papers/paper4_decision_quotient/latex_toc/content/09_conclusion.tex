@@ -11,13 +11,13 @@ Informally: this conclusion combines previously proved blocks under explicit tag
 
 \textbf{Role of LLMs in this work.} This paper was developed through human-AI collaboration. The author provided the core intuitions: the connection between decision-relevance and computational complexity, the conjecture that SUFFICIENCY-CHECK is \coNP-complete, and the insight that the $\SigmaP{2}$ structure collapses for MINIMUM-SUFFICIENT-SET. Large language models (Claude, GPT-4) served as implementation partners for proof drafting, Lean formalization, and \LaTeX{} generation.
 
-The Lean 4 proofs were iteratively refined: the author specified the target statements, the LLM proposed proof strategies, and the Lean compiler served as the arbiter of correctness. The complexity-theoretic reductions required careful human oversight to ensure the polynomial bounds were correctly established.
+The Lean 4 proofs were iteratively refined: the author specified the target statements, the LLM proposed proof strategies, and the Lean compiler served as the arbiter of correctness. For complexity-theoretic reductions, the Lean formalization machine-verifies \emph{correctness} (membership preservation); polynomial-time computability of the reduction functions is a standard claim stated as an explicit hypothesis, consistent with the state of formal verification where end-to-end Turing-machine polytime proofs for concrete reductions remain an open problem.
 
 \textbf{What the author contributed:} The informal problem formulations (SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, ANCHOR-SUFFICIENCY), the informal hardness conjectures, the informal tractability conditions, and the connection to over-modeling in engineering practice.
 
 \textbf{What LLMs contributed:} \LaTeX{} drafting, Lean tactic exploration, reduction construction assistance, and prose refinement.
 
-The proofs are machine-checked; their validity is independent of generation method. This methodology is disclosed for academic transparency.
+Reduction correctness is machine-checked; polynomial-time computability is a standard hypothesis. This methodology is disclosed for academic transparency.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -29,7 +29,7 @@ This work depends on results whose authors made possible the insights that could
 
 \textbf{Proof infrastructure.} The Lean 4 proof assistant \cite{demoura2021lean4} served as the arbiter of correctness. Leonardo de Moura, Sebastian Ullrich, and the Lean 4 team built a tool that transforms mathematical claims into mechanically verified theorems. The Mathlib library \cite{mathlib2020} provided the formal infrastructure: order theory, linear algebra, complexity-theoretic definitions, and the lemmas that made the formalization possible.
 
-\textbf{Methodological note.} The proofs in this paper are machine-checked; their validity is independent of generation method. The human author contributed the informal problem formulations, informal hardness conjectures, informal tractability conditions, and the connection to over-modeling in engineering practice. The machine contributors (Claude, GPT-4, Lean 4) served as proof assistants, tactic explorers, and drafting partners. The final arbiter was the Lean compiler: if it accepts the proof, the theorem holds.
+\textbf{Methodological note.} Reduction correctness is machine-checked; polynomial-time computability of reduction functions is a standard claim stated as an explicit hypothesis. The human author contributed the informal problem formulations, informal hardness conjectures, informal tractability conditions, and the connection to over-modeling in engineering practice. The machine contributors (Claude, GPT-4, Lean 4) served as proof assistants, tactic explorers, and drafting partners. The final arbiter was the Lean compiler: if it accepts the proof, the theorem holds.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 

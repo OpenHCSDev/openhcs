@@ -63,6 +63,9 @@ Classical coNP-completeness methodology follows standard NP/coNP reduction frame
 polynomial-time many-one reducibility \cite{papadimitriou1994complexity,arora2009computational}.
 We instantiate that framework for SUFFICIENCY-CHECK with a mechanized TAUTOLOGY reduction.
 
+\paragraph{Correctness vs.\ polynomial-time computability.}
+A Karp reduction requires two properties: (1) \emph{correctness}---the reduction preserves membership ($\forall x, x \in A \Leftrightarrow f(x) \in B$), and (2) \emph{efficiency}---the reduction is computable in polynomial time. The Lean formalization \textbf{machine-verifies} property (1): the theorem \texttt{tautology\_iff\_sufficient} proves that $\varphi$ is a tautology if and only if $I = \emptyset$ is sufficient in the constructed decision problem. Property (2)---polynomial-time TM computability of the reduction function---is a \textbf{standard claim} stated as an explicit hypothesis. This separation is standard in formalization: no existing proof assistant project has achieved end-to-end Turing-machine verification of polynomial-time bounds for concrete reductions.
+
 \begin{theorem}[coNP-completeness of SUFFICIENCY-CHECK]
 \label{thm:sufficiency-conp}
 SUFFICIENCY-CHECK is coNP-complete.
