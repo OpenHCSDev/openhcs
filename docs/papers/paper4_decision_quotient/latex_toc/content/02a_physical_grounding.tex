@@ -21,14 +21,14 @@ No. Limited abstract counting collapses computational complexity in the model, b
 We formalize this with a theorem of pure mathematics. No physical law is assumed.
 
 \begin{theorem}[Counting Gap Theorem]\label{thm:counting-gap}
-Let a system have finite positive capacity $C > 0$. Let each information-acquisition event cost $\varepsilon > 0$. Then there exists a finite maximum event count $N_{\max}$ such that:
+Let $\varepsilon, C \in \mathbb{N}$ with $\varepsilon > 0$ and $C > 0$. If each information-acquisition event consumes $\varepsilon$ discrete cost units, then for every $N \in \mathbb{N}$:
 \[
-  \varepsilon \cdot N \leq C \;\Rightarrow\; N \leq N_{\max}.
+  \varepsilon \cdot N \leq C \;\Rightarrow\; N \leq C.
 \]
-No bounded system with positive event cost can perform infinitely many events.
+Equivalently, $C$ itself is a finite upper bound on the number of possible events. No bounded system with positive integer event cost can perform infinitely many events.
 
 \begin{proof}
-In $\mathbb{N}$: every positive integer is $\geq 1$. Therefore $N \leq \varepsilon \cdot N \leq C$.
+This is a discrete theorem. In $\mathbb{N}$, every positive integer is $\geq 1$. Therefore $N = 1 \cdot N \leq \varepsilon \cdot N \leq C$.
 \end{proof}
 \end{theorem}
 \leanmeta{\LH{BA10}}
@@ -57,15 +57,15 @@ Theorem~\ref{thm:counting-gap} proves that a finite bound exists. It does not su
 
 \item[\textbf{TD.}] \textbf{Thermodynamics (Landauer).}
   Each event costs positive energy.
-  Landauer established: $\varepsilon \geq k_B T \ln 2$ joules per bit.
-  \cite{landauer1961irreversibility,bennett1982thermodynamics,berut2012experimental}
+  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. Constrained implementations can dissipate strictly more due to process constraints, mismatch cost, or finite-time driving.
+  \cite{landauer1961irreversibility,bennett1982thermodynamics,berut2012experimental,wolpert2024stochastic,manzano2024absolute,yadav2026minimal}
 \end{enumerate}
 
 \noindent The Counting Gap Theorem proves the structure. SR, QM, TD supply the numbers.
 
 \subsection{Why Positive Cost is Derived, Not Assumed}\label{sec:positive-cost-derived}
 
-The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition costs $\geq k_B T \ln 2$ joules.
+The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$, and constrained implementations can only increase that cost.
 
 If $\varepsilon = 0$, a bounded system could perform infinitely many checks, resolving any decision in zero time and zero energy. This contradicts energy conservation. Therefore $\varepsilon > 0$ is derived from thermodynamics.
 \leanmeta{\LH{BA10}}
@@ -175,8 +175,8 @@ For decision problem $\mathcal{D}$ with $\mathrm{srank}(\mathcal{D}) = k$:
   Minimum decision time $= k \cdot d/c$.
 
 \item \textbf{Energy (BA7 + TD):}
-  Each bit operation costs $\geq k_B T \ln 2$ by \textbf{TD}.
-  Minimum decision energy $= k \cdot k_B T \ln 2$.
+  Each bit operation carries at least the Landauer floor $k_B T \ln 2$ by \textbf{TD}.
+  Therefore every resolver obeys the universal lower bound $E \geq k \cdot k_B T \ln 2$; stronger empirical lower bounds only raise this floor.
 \end{enumerate}
 
 Structural rank $k$ is simultaneously an information cost, a time cost,
@@ -201,24 +201,29 @@ operation (Theorem~\ref{thm:boolean-primitive}). Bit operations $\geq |I| \geq \
 (Theorem~\ref{thm:srank-physical}). By \textbf{TD}, each bit operation costs
 $\geq k_B T \ln 2$. Summing: $E \geq \mathrm{srank} \cdot k_B T \ln 2$.
 \end{proof}
-The constant $k_B T \ln 2$ is not calibrated. It is the Landauer bound
-applied to bit erasure, experimentally verified to $\pm 10\%$
-\cite{berut2012experimental}. In the Lean model, \texttt{joulesPerBit} is
-derived from \texttt{landauerJoulesPerBit} (ThermodynamicLift.lean), not
-declared as a free parameter.
+The constant $k_B T \ln 2$ is the universal Landauer floor for irreversible
+bit erasure, experimentally verified to $\pm 10\%$
+\cite{berut2012experimental}. It is not, in general, a tight expression for the
+actual energetic cost of constrained computation
+\cite{wolpert2024stochastic,manzano2024absolute,yadav2026minimal}. In the Lean
+model, \texttt{joulesPerBit} is a declared lower-bound parameter constrained to
+lie above the Landauer floor; exact equality is retained only as an optional
+idealized specialization.
 \LH{BA9}
 \end{theorem}
 \leanmeta{\LH{BA9}}
 \claimstamp{T\ref{thm:physical-bridge-bundle}}{AR}
 
 \begin{corollary}[srank $= 1$ is the Energy Ground State]\label{cor:ground-state}
-Among all decision problems, those with $\mathrm{srank} = 1$ have minimum
-possible thermodynamic cost: $k_B T \ln 2$ per decision. This is the physical
-ground state.
+Among all decision problems, those with $\mathrm{srank} = 1$ have the smallest
+universal lower bound certified by the structural argument:
+$E_{\mathrm{decision}} \geq k_B T \ln 2$ per decision. In the exact-calibration
+idealization this is the corresponding ground-state cost.
 
-Problems with $\mathrm{srank} > 1$ are above the ground state by exactly
+Problems with $\mathrm{srank} > 1$ are above that universal floor by at least
 $(\mathrm{srank} - 1) \cdot k_B T \ln 2$ per decision cycle. This gap is
-physically mandatory, not a consequence of implementation choice.
+structurally mandatory at the level of lower bounds; stronger empirical
+per-bit costs only enlarge it.
 \LH{BA8}
 \end{corollary}
 \leanmeta{\LH{BA8}}
@@ -293,7 +298,8 @@ no ego exists, then lifted to observers as a corollary:
   agree on $\hbar\omega$. Discrete transitions force exact agreement.
 
 \item \textbf{Molecular level (IA9--IA12):} Two molecules in thermal equilibrium
-  at temperature $T$ agree on $k_B T$. The Landauer bound applies universally.
+  at temperature $T$ agree on $k_B T$. The Landauer floor then applies
+  universally to irreversible bit erasure.
 
 \item \textbf{Observer level (IA13--IA18):} Observers are made of atoms and
   molecules. They inherit invariant agreement from their constituents.
@@ -303,7 +309,7 @@ no ego exists, then lifted to observers as a corollary:
 
 \begin{corollary}[The Ego Trap]\label{cor:ego-trap}
 Objecting to observer-level invariant agreement requires rejecting atomic-level
-invariant agreement, which requires rejecting quantum mechanics. No one will do this.
+invariant agreement, which in turn requires rejecting the underlying quantum-level agreement structure.
 \LH{IA17}
 \end{corollary}
 \leanmeta{\LH{IA17}}

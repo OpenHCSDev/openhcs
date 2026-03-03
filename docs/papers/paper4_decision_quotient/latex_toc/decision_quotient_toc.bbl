@@ -282,6 +282,13 @@ L{\'a}szl{\'o} Lov{\'a}sz.
 \newblock On the shannon capacity of a graph.
 \newblock {\em IEEE Transactions on Information Theory}, 25(1):1--7, 1979.
 
+\bibitem{manzano2024absolute}
+Pau Manzano, U{\u{g}}ur Karde{\c{s}}, {\'E}dgar Rold{\'a}n, and David~H.
+  Wolpert.
+\newblock Absolute bounds on the intrinsic dissipation of classical and quantum
+  processes due to irreversibility and mismatch.
+\newblock {\em Physical Review X}, 14(2):021026, 2024.
+
 \bibitem{mcconnell2010certifying}
 Ross~M. McConnell, Kurt Mehlhorn, Stefan N{\"a}her, and Pascal Schweitzer.
 \newblock Certifying algorithms.
@@ -501,6 +508,12 @@ Jack~W. Szostak.
   on Certified Programs and Proofs (CPP 2020)}, pages 367--381. Association for
   Computing Machinery, 2020.
 
+\bibitem{vandenbroeck2015ensemble}
+Christian Van~den Broeck and Massimiliano Esposito.
+\newblock Ensemble and trajectory thermodynamics: A brief introduction.
+\newblock {\em Physica A: Statistical Mechanics and its Applications},
+  418:6--16, 2015.
+
 \bibitem{wales2003energy}
 David~J. Wales.
 \newblock {\em Energy Landscapes: Applications to Clusters, Biomolecules and
@@ -524,6 +537,13 @@ Gregory Wheeler.
 \newblock The Stanford Encyclopedia of Philosophy, 2024.
 \newblock First published 2018; substantive revision 13 Dec 2024.
 
+\bibitem{wolpert2024stochastic}
+David~H. Wolpert, Artemy Kolchinsky, Greg Owen, and Jordan~M. Horowitz.
+\newblock Is stochastic thermodynamics the key to understanding the energy
+  costs of computation?
+\newblock {\em Proceedings of the National Academy of Sciences},
+  121(11):e2307544121, 2024.
+
 \bibitem{wong2023roles}
 Michael Wong, Carol Cleland, Daniel~R. Arend, Stuart Bartlett, H.~James
   Cleaves, Heather Demarest, Aditi Prabhu, Jonathan~I. Lunine, and Robert~M.
@@ -531,6 +551,11 @@ Michael Wong, Carol Cleland, Daniel~R. Arend, Stuart Bartlett, H.~James
 \newblock On the roles of function and selection in evolving systems.
 \newblock {\em Proceedings of the National Academy of Sciences},
   120(44):e2310223120, 2023.
+
+\bibitem{yadav2026minimal}
+Krish Yadav, Haneen Yousef, and David~H. Wolpert.
+\newblock Minimal mismatch cost and the energy requirement of circuits.
+\newblock {\em arXiv preprint arXiv:2504.04031}, 2026.
 
 \bibitem{yuan2025fp32}
 Jiayi Yuan, Hao Li, Xinheng Ding, Wenya Xie, Yu-Jhe Li, Wentian Zhao, Kun Wan,

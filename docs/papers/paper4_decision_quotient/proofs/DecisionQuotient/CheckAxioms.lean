@@ -44,7 +44,9 @@ import DecisionQuotient.Physics.PhysicalHardness
 #print axioms DecisionQuotient.ThermodynamicLift.hardness_thermo_bundle_conditional
 -- Neukart-Vinokur duality: dU = λ·dC
 #print axioms DecisionQuotient.ThermodynamicLift.neukart_vinokur_bundle
--- Mandatory cost from Landauer calibration
+-- Mandatory cost from a Landauer floor hypothesis
+#print axioms DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_floor
+-- Exact-calibration specialization of the floor theorem
 #print axioms DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration
 
 -- ── PHYSICAL HARDNESS / P≠NP NO-GO ─────────────────────────────────────────

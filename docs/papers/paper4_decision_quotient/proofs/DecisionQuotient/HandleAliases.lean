@@ -913,11 +913,15 @@ noncomputable abbrev FI5 := @FunctionalInformation.functionalInformationBitsFrom
 abbrev FI6 := @FunctionalInformation.functional_information_from_thermodynamics
 abbrev FI7 := @FunctionalInformation.first_principles_thermo_coincide
 
--- Thermodynamic-lift (TL) handles - Landauer calibration -> positive per-bit conversion
+-- Thermodynamic-lift (TL) handles
+-- TL1-TL4 expose the main floor-based statements used by the artifact.
+-- TL5-TL6 retain the exact-calibration equalities as explicit idealized specializations.
 noncomputable abbrev TL1 := @ThermodynamicLift.landauerJoulesPerBit
 abbrev TL2 := @ThermodynamicLift.landauerJoulesPerBit_pos
-abbrev TL3 := @ThermodynamicLift.joulesPerBit_pos_of_landauer_calibration
-abbrev TL4 := @ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration
+abbrev TL3 := @ThermodynamicLift.joulesPerBit_pos_of_landauer_floor
+abbrev TL4 := @ThermodynamicLift.energy_lower_mandatory_of_landauer_floor
+abbrev TL5 := @ThermodynamicLift.joulesPerBit_pos_of_landauer_calibration
+abbrev TL6 := @ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration
 
 -- Tool-collapse (TC) handles - model-relative leverage collapse
 abbrev TC1 := @ToolCollapse.WorkProfile

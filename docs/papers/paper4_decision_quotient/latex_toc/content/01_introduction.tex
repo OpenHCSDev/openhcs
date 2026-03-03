@@ -6,7 +6,7 @@ This paper studies a simple question with a hard combinatorial core: when a syst
 
 We model this with a decision problem: $A$ is the finite set of possible actions, $S$ is the state space, $U(a,s)$ is the utility of taking action $a$ in state $s$, and $\Opt(s)$ is the set of actions that maximize utility at state $s$. A coordinate set $I$ is sufficient when any two states that agree on $I$ also agree on $\Opt$. The decision quotient then collapses exactly those states with the same optimal-action set, yielding the canonical abstraction through which every decision-preserving abstraction factors.
 
-The results in this section are organized as one derivation chain rather than a theorem ledger. The opening results establish the structural core from counting, set theory, arithmetic, and logic; later results then place the same core in complexity-theoretic and physical terms. Theorems 1--14 are derived from pure mathematics, while Theorems 15--17 add explicit empirical calibration. One irreducible empirical claim (EC1: temperature) provides calibration; counting and logic provide structure. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
+The results in this section are organized as one derivation chain rather than a theorem ledger. The opening results establish the structural core from counting, set theory, arithmetic, and logic; later results then place the same core in complexity-theoretic and physical terms. Theorems 1--14 are derived from pure mathematics, while Theorems 15--17 add explicit empirical lower-bound premises. One irreducible empirical claim (EC1) supplies the thermodynamic scale: irreversible bit operations carry a positive lower-bound cost, with Landauer furnishing a universal floor. Counting and logic provide the structural part of the chain. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
 
 \subsubsection{1. Counting Gap Theorem}
 
@@ -182,12 +182,12 @@ The relevant coordinate set $R$ is sufficient (Theorem~\ref{thm:resolution-suffi
 The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the decision quotient is fixed.
 
 \begin{theorem}[Thermodynamic Cost from Counting]\label{thm:fi-coincide}
-For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and Landauer calibration converts that bit count into an energy lower bound. The thermodynamic statement is the counting statement plus an explicit empirical conversion constant.
+For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and a Landauer floor converts that bit count into a universal energy lower bound. The thermodynamic statement is therefore the counting statement plus an explicit empirical lower-bound constant; stronger empirical lower bounds only tighten it.
 \LH{FI3}\LH{FI6}\LH{FI7}
 \end{theorem}
 
 \begin{proof}
-The mathematical part is only the counting step: finite measure gives the bit count $-\log_2(|F|/|\Omega|)$. Landauer then supplies the energy-per-bit conversion. The bridge is therefore structural counting plus one declared empirical calibration.
+The mathematical part is only the counting step: finite measure gives the bit count $-\log_2(|F|/|\Omega|)$. Landauer then supplies the universal floor for the energy-per-bit conversion. The bridge is therefore structural counting plus one declared empirical lower-bound premise.
 \end{proof}
 
 \noindent\textbf{Consequence.} The thermodynamic lower bound is not a separate combinatorial structure; it is the counting bound expressed in physical units.
@@ -226,18 +226,18 @@ If the state space had at most one element, then every map out of it would be co
 \noindent\textbf{Consequence.} Nontriviality is derived from the existence of information rather than postulated as an extra axiom.
 
 \begin{theorem}[Second Law Structure from Counting]\label{thm:second-law-counting}
-Maintaining ordered behavior requires continuous distinction between correct and incorrect transitions; in this sense, the structural content of the Second Law follows from counting and verification, while physical calibration is added later.
+Maintaining ordered behavior requires continuous distinction between correct and incorrect transitions; in this sense, the structural content of the Second Law follows from counting and verification, while the numerical thermodynamic scale is added later.
 \LH{FP8}\LH{FP9}\LH{FP10}\LH{FP11}\LH{FP12}\LH{FP13}\LH{FP14}
 \end{theorem}
 
 \begin{proof}
-If there are more non-target than target continuations, unguided evolution overwhelmingly drifts away from the target set. Staying ordered therefore requires repeated discrimination between correct and incorrect continuations. That discrimination is an information-acquisition burden, and the thermodynamic calibration enters only after that structural burden is fixed.
+If there are more non-target than target continuations, unguided evolution overwhelmingly drifts away from the target set. Staying ordered therefore requires repeated discrimination between correct and incorrect continuations. That discrimination is an information-acquisition burden, and the thermodynamic lower-bound premise enters only after that structural burden is fixed.
 \end{proof}
 
 \noindent\textbf{Consequence.} The order-versus-verification tradeoff is established before any temperature-dependent conversion is introduced.
 
 \begin{theorem}[Erasure Increases Environment Entropy]\label{thm:landauer-structure}
-Whenever a state reduction deletes distinctions, those distinctions must reappear in environmental degrees of freedom, so the structural content of Landauer's principle is a transfer statement and only the temperature calibration is empirical.
+Whenever a state reduction deletes distinctions, those distinctions must reappear in environmental degrees of freedom, so the structural content of Landauer's principle is a transfer statement and only the numerical thermodynamic scale is empirical.
 \LH{FP15}
 \end{theorem}
 
@@ -245,14 +245,14 @@ Whenever a state reduction deletes distinctions, those distinctions must reappea
 Reducing $n$ distinguishable states to fewer than $n$ outputs removes distinctions from the local description. Those distinctions cannot vanish from the bookkeeping; they must be displaced into the environment. The structural theorem is therefore a conservation-of-distinguishability statement, with temperature only setting the energetic scale of that transfer.
 \end{proof}
 
-\noindent\textbf{Consequence.} Landauer's principle separates cleanly into a mathematical transfer structure and an empirical energy calibration.
+\noindent\textbf{Consequence.} Landauer's principle separates cleanly into a mathematical transfer structure and an empirical lower-bound energy scale.
 
 \subsection{Irreducible Empirical Claims}\label{sec:irreducible-empirical}
 
 One claim is irreducibly empirical. Two others (finite resources, finite speed) are derived from first principles.
 
 \begin{definition}[Irreducible Empirical Claim EC1]\label{def:empirical-claims}
-\textbf{EC1 (Temperature):} Entropy has energy cost. There exists $\varepsilon > 0$ such that each bit costs $\varepsilon$ joules. Calibration: $\varepsilon = k_B T \ln 2$.
+\textbf{EC1 (Temperature):} Entropy has energy cost. There exists $\varepsilon > 0$ such that each irreversible bit operation costs at least $\varepsilon$ joules, with $\varepsilon \geq k_B T \ln 2$. Landauer gives the universal floor; constrained implementations may require strictly larger per-bit dissipation.
 \end{definition}
 
 \begin{theorem}[EC2 Derived from Uncertainty]\label{thm:ec2-derived}
@@ -288,7 +288,7 @@ Finite signal speed (EC3) follows from the law of non-contradiction:
 A step changes state from $A$ to $B$ where $A \neq B$. The timeline is a function $T \to S$. If $t_{\text{before}} = t_{\text{after}}$, then $\text{timeline}(t) = A$ and $\text{timeline}(t) = B$ for the same $t$. By function uniqueness, $A = B$. Contradiction. Therefore $t_{\text{before}} \neq t_{\text{after}}$. With ordering, $\Delta t > 0$ (FPT5). Information propagation requires steps; each takes positive time; total time is positive; speed is finite. QED from pure logic.
 \end{proof}
 
-\noindent\textbf{Consequence.} EC2 and EC3 are not axioms. EC2 follows from uncertainty existing. EC3 follows from non-contradiction. \textbf{One irreducible empirical claim remains: EC1 (temperature).} The specific value $\varepsilon = k_B T \ln 2$ is empirical; the existence of a cost is structural.
+\noindent\textbf{Consequence.} EC2 and EC3 are not axioms. EC2 follows from uncertainty existing. EC3 follows from non-contradiction. \textbf{One irreducible empirical claim remains: EC1 (temperature).} The empirical content is that irreversible bit operations have a positive lower-bound cost, with Landauer giving a universal floor and stronger constrained-process bounds allowed above it; the existence of a cost is structural.
 
 \subsubsection{15. Assumption Necessity}
 
@@ -324,13 +324,13 @@ where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natu
 Three steps:
 \begin{enumerate}
 \item $\mathrm{srank}$ bits are required to resolve $\mathcal{D}$. Each bit requires one state transition.
-\item Each transition costs $\geq k_B T \ln 2$. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$.
+\item Each transition costs at least the Landauer floor $k_B T \ln 2$. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$ as a universal lower bound.
 \item $H_{\mathrm{nats}} = \ln(\mathrm{numOptClasses}) \leq \mathrm{srank} \cdot \ln 2$ (Theorem~\ref{thm:entropy-rank}).
 \end{enumerate}
 Combining: $E \geq \mathrm{srank} \cdot k_B T \ln 2 \geq k_B T \cdot H_{\mathrm{nats}}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from Landauer (Theorem 9) composed with the entropy-rank inequality (Theorem 8).
+\noindent\textbf{Consequence.} Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from the Landauer floor (Theorem 9) composed with the entropy-rank inequality (Theorem 8); any stricter empirical per-bit lower bound only strengthens the estimate.
 
 \subsubsection{17. Thermodynamic Uncertainty Relations}
 
@@ -367,10 +367,10 @@ The Counting Gap Theorem is consistent with and illuminates why discrete models 
 \noindent The paper rests on one irreducible empirical claim (Definition~\ref{def:empirical-claims}):
 
 \begin{itemize}
-\item \textbf{EC1 (Temperature):} $\varepsilon = k_B T \ln 2 > 0$ (entropy has energy cost)
+\item \textbf{EC1 (Temperature):} $\varepsilon \geq k_B T \ln 2 > 0$ (entropy has a positive lower-bound energy cost)
 \end{itemize}
 
-\noindent EC2 (finite resources) is derived from the existence of uncertainty (Theorem~\ref{thm:ec2-derived}): if you don't know everything, your capacity is bounded. EC3 (finite speed) is derived from non-contradiction (Theorem~\ref{thm:ec3-derived}): a computational step must take positive time, or the state would be both $A$ and not-$A$ at the same instant. Everything else---nontriviality, second law structure, Landauer structure, EC2, EC3---follows from counting, logic, or observation.
+\noindent EC2 (finite resources) is derived from the existence of uncertainty (Theorem~\ref{thm:ec2-derived}): if you don't know everything, your capacity is bounded. EC3 (finite speed) is derived from non-contradiction (Theorem~\ref{thm:ec3-derived}): a computational step must take positive time, or the state would be both $A$ and not-$A$ at the same instant. Everything else---nontriviality, second law structure, Landauer structure, EC2, EC3---follows from counting, logic, or observation, with the numerical thermodynamic scale entering only through the declared lower-bound premise in EC1.
 
 \subsection{Our Formal Tools: Coordinate Sufficiency}\label{sec:intro-formal-tools}
 
@@ -401,7 +401,7 @@ All results are machine-checked in Lean 4:
 \item 0 hidden axioms
 \end{itemize}
 
-Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on Landauer. Complexity results: hypotheses as explicit theorem parameters. Machine-generated assumption ledger records all dependencies.
+Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on a Landauer floor or any stricter declared per-bit lower bound. Complexity results: hypotheses as explicit theorem parameters. Machine-generated assumption ledger records all dependencies.
 
 \subsection{Paper Structure}\label{sec:intro-structure}
 
