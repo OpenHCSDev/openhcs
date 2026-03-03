@@ -46,6 +46,7 @@ import DecisionQuotient.Physics.ClaimTransport
 import DecisionQuotient.Physics.PhysicalCore
 import DecisionQuotient.Physics.Uncertainty
 import DecisionQuotient.Physics.HeisenbergStrong
+import DecisionQuotient.AbstractionCollapse
 import DecisionQuotient.GraphNontriviality
 import DecisionQuotient.ClaimClosure
 import DecisionQuotient.InteriorVerification

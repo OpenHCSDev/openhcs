@@ -69,6 +69,7 @@ import DecisionQuotient.BayesFoundations
 import DecisionQuotient.BayesOptimalityProof
 import DecisionQuotient.FunctionalInformation
 import DecisionQuotient.Quotient
+import DecisionQuotient.AbstractionCollapse
 import DecisionQuotient.Bridges
 
 namespace DecisionQuotient
@@ -1003,6 +1004,7 @@ abbrev FS5 := @Statistics.fisherScore_irrelevant
 
 Additional novel first-principles theorems for the introduction:
 - QT: Quotient Theory (Universal Property / Theorem A)
+- AB: Abstraction Boundary (collapse beyond the quotient)
 - WD: Witness-Checking Duality (certificate lower bounds)
 - BC: Bayes from Counting (probability axioms from counting measure)
 -/
@@ -1013,6 +1015,12 @@ abbrev QT1 := @DecisionProblem.quotient_is_coarsest
 abbrev QT2 := @DecisionProblem.quotientMap_preservesOpt
 abbrev QT3 := @DecisionProblem.quotient_represents_opt_equiv
 abbrev QT4 := @DecisionProblem.factors_implies_respects
+
+-- AB: Abstraction Boundary (AbstractionCollapse.lean)
+abbrev AB1 := @DecisionProblem.not_preservesOpt_iff_erasesDecisionRelevantDistinction
+abbrev AB2 := @DecisionProblem.surjective_abstraction_factors_or_erases
+abbrev AB3 := @DecisionProblem.collapseBeyondQuotient_physically_impossible
+abbrev AB4 := @DecisionProblem.surjective_abstraction_with_feasible_collapse_map_factors
 
 -- WD: Witness-Checking Duality (WitnessCheckingDuality.lean)
 -- WD1 is the main duality: any sound checker needs ≥ 2^(n-1) witness pairs

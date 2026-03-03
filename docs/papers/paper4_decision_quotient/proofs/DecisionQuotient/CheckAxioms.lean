@@ -30,6 +30,7 @@ import DecisionQuotient.Physics.PhysicalHardness
 
 -- ── DECISION QUOTIENT UNIVERSAL PROPERTY ────────────────────────────────────
 #print axioms DecisionQuotient.DecisionProblem.opt_factors_through_quotient
+#print axioms DecisionQuotient.DecisionProblem.surjective_abstraction_with_feasible_collapse_map_factors
 
 -- ── INFORMATION / SUFFICIENCY ───────────────────────────────────────────────
 #print axioms DecisionQuotient.relevantSet_isSufficient

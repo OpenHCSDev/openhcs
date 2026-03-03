@@ -194,6 +194,26 @@ If $I$ is sufficient, then $s \sim_I s' \implies \Opt(s) = \Opt(s')$, so the set
 Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal actions form the same set (since $\text{DQ}_I(s) = \text{DQ}_I(s')$ and both equal the relative size of the common optimal set).
 \end{proof}
 
+The next theorem makes the collapse boundary explicit. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The decision quotient is the coarsest such collapse that still preserves the optimal-action boundary.
+
+\begin{theorem}[Decision-Preserving Collapse Boundary]\label{thm:abstraction-boundary}
+Let $\phi : S \to T$ be a surjective abstraction of the state space.
+
+\begin{enumerate}
+\item Either $\phi$ factors through the decision quotient, or it collapses a decision-relevant distinction, i.e., there exist states $s,s' \in S$ such that $\phi(s)=\phi(s')$ but $\Opt(s)\neq\Opt(s')$.
+\item If every such extra collapse is mapped to a physically feasible collapse at the canonical requirement profile, then no such extra collapse can occur. Therefore $\phi$ must factor through the decision quotient.
+\end{enumerate}
+\leanmeta{\LH{AB1},\LH{AB2},\LH{AB3},\LH{AB4}.}
+\end{theorem}
+
+\begin{proof}
+Part (1) packages the quotient universal property into an explicit dichotomy. If $\phi$ preserves $\Opt$, the existing quotient theorem supplies a factorization through the decision quotient. If $\phi$ does not preserve $\Opt$, then by definition it must identify two states with different optimal-action sets, so it erases a decision-relevant distinction.
+
+Part (2) composes that dichotomy with the already formalized physical no-collapse layer. Once an extra erased distinction is interpreted as a physically feasible collapse, the canonical no-collapse theorem rules it out. The only surviving branch is factorization through the decision quotient.
+\end{proof}
+
+Informally: this is the bridge between state-space abstraction and complexity-class collapse. At the state level, the decision quotient is the maximal lossless collapse. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction.
+
 \subsection{Mechanized Physical-Lift and Claim Metadata}\label{sec:foundations-mechanized-metadata}
 
 The formal system also records the physical-lift and claim-transport scaffolding used later in the paper. Physical interpretation is introduced through explicit encoding and assumption-transfer maps rather than built into the core tuple itself.\claimstamp{D\ref{def:physical-core-encoding};P\ref{prop:physical-claim-transport};T\ref{thm:physical-bridge-bundle}}{AR}
