@@ -57,6 +57,10 @@ import DecisionQuotient.Physics.PhysicalHardness
 #print axioms DecisionQuotient.Physics.WolpertMismatch.mismatchKL_pos_of_exists_ne
 -- Derived KL mismatch branch lifted into the Wolpert decomposition interface
 #print axioms DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_distribution_mismatch
+-- Derived finite residual-asymmetry branch from bidirectional edge-flow KL
+#print axioms DecisionQuotient.Physics.WolpertResidual.pairwiseResidualKL_pos_of_asymmetry
+-- Derived finite residual branch lifted into the Wolpert decomposition interface
+#print axioms DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_pairwise_flow_asymmetry
 -- Wolpert-style constrained-process interface: floor plus explicit overhead
 #print axioms DecisionQuotient.Physics.WolpertConstraints.physical_grounding_bundle_with_wolpert_overhead
 -- Wolpert decomposition interface: mismatch + residual refinement

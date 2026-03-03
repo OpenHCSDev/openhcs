@@ -57,19 +57,19 @@ Theorem~\ref{thm:counting-gap} proves that a finite bound exists. It does not su
 
 \item[\textbf{TD.}] \textbf{Thermodynamics (Landauer).}
   Each event costs positive energy.
-  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. The Wolpert-style interface used in this artifact adds explicit nonnegative mismatch and residual dissipation terms above that floor; the mismatch term can now be justified inside the artifact from finite-distribution KL divergence when the actual and designed distributions differ, while the residual term remains a separate imported premise. When either contribution is positive, the per-bit lower bound is strictly larger than $k_B T \ln 2$.
+  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. The Wolpert-style interface used in this artifact adds explicit nonnegative mismatch and residual dissipation terms above that floor; the mismatch term can now be justified inside the artifact from finite-distribution KL divergence when the actual and designed distributions differ, and a finite residual-asymmetry branch can also be justified when two opposite stationary edge flows are both positive and unequal. The stronger stopping-time / absolute-irreversibility residual regime remains a separate imported premise. When any one of these contributions is positive, the per-bit lower bound is strictly larger than $k_B T \ln 2$.
   \cite{landauer1961irreversibility,bennett1982thermodynamics,berut2012experimental,wolpert2024stochastic,manzano2024absolute,yadav2026minimal}
 \end{enumerate}
-\leanmeta{\LH{WC1},\LH{WC2},\LH{WC3},\LH{WM1},\LH{WM3},\LH{WM4}.}
+\leanmeta{\LH{WC1},\LH{WC2},\LH{WC3},\LH{WM1},\LH{WM3},\LH{WM4},\LH{WR1},\LH{WR2},\LH{WR3}.}
 
 \noindent The Counting Gap Theorem proves the structure. SR, QM, TD supply the numbers.
 
 \subsection{Why Positive Cost is Derived, Not Assumed}\label{sec:positive-cost-derived}
 
-The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$. In the explicit constrained-process interface, any extra dissipation above that floor is represented by separate nonnegative mismatch and residual terms rather than folded into the floor itself. The mismatch branch is now pinned to the existing KL layer: explicit finite-distribution mismatch yields a strictly positive real KL term, which is then conservatively rounded upward into the nat-valued lower-bound units used by the thermodynamic accounting.
+The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$. In the explicit constrained-process interface, any extra dissipation above that floor is represented by separate nonnegative mismatch and residual terms rather than folded into the floor itself. The mismatch branch is now pinned to the existing KL layer: explicit finite-distribution mismatch yields a strictly positive real KL term, which is then conservatively rounded upward into the nat-valued lower-bound units used by the thermodynamic accounting. A second finite residual branch is also theorem-level: explicit asymmetry between two positive opposite stationary edge flows yields strictly positive two-point KL divergence and therefore a positive nat-valued residual lower-bound term.
 
 If $\varepsilon = 0$, a bounded system could perform infinitely many checks, resolving any decision in zero time and zero energy. This contradicts energy conservation. Therefore $\varepsilon > 0$ is derived from thermodynamics.
-\leanmeta{\LH{BA10},\LH{WC2},\LH{WC3},\LH{WM1},\LH{WM3},\LH{WM4}}
+\leanmeta{\LH{BA10},\LH{WC2},\LH{WC3},\LH{WM1},\LH{WM3},\LH{WM4},\LH{WR2},\LH{WR3}}
 
 \begin{remark}[Scope]
 No claim is made about whether the universe is continuous or discrete at scales
@@ -221,11 +221,19 @@ witness, and \LH{WM4} carries that strict positivity into the discrete lower-bou
 units used by the thermodynamic model. Theorems \LH{WM5} and \LH{WM6} then
 inject that theorem-level mismatch witness into the Wolpert decomposition, so
 strict separation above the Landauer floor can now be derived directly for the
-mismatch branch. The stopping-time / absolute-irreversibility residual regime
-imported from \cite{manzano2024absolute} remains represented by the separate
-cited premise \LH{WP5}; and \LH{WP6} shows that either the derived mismatch
-branch or the cited residual branch is already sufficient to force strict
-separation above the Landauer floor. For the circuit cost interface of
+mismatch branch. A second residual branch is now also theorem-level within the
+current finite machinery: \LH{WR1} proves nonnegativity of the two-point
+forward/reverse residual divergence, \LH{WR2} proves strict positivity under an
+explicit asymmetric positive edge-flow witness, and \LH{WR3} lifts that witness
+into the discrete lower-bound units of the decomposition. Theorems \LH{WR4} and
+\LH{WR5} then inject that finite residual witness into the Wolpert
+decomposition, yielding direct strict separation above the Landauer floor for
+that subclass. The stronger stopping-time / absolute-irreversibility residual
+regime imported from \cite{manzano2024absolute} remains represented by the
+separate cited premise \LH{WP5}; and \LH{WP6} shows that any one of the derived
+mismatch branch, the derived finite residual branch, or the cited stopping-time
+branch is already sufficient to force strict separation above the Landauer
+floor. For the circuit cost interface of
 \cite{yadav2026minimal}, \LH{WP7} and \LH{WP8} prove that a declared structural
 resource lower-bounded by mismatch further tightens the per-bit and total energy
 lower bounds. Finally, \LH{WP9} proves that the existing physical grounding
@@ -234,12 +242,14 @@ Exact equality is retained only as an optional idealized specialization.
 
 \noindent\textbf{Informally:} the cited stochastic-thermodynamics papers are
 not rederived in full inside this artifact. The finite-distribution mismatch
-branch is now proved as far as the existing KL machinery reaches, while the
-residual stopping-time branch remains a separate cited premise. Lean then
-verifies the exact downstream consequences of composing that mixed
+branch is now proved as far as the existing KL machinery reaches, and a finite
+residual asymmetry branch is also proved from the same machinery applied to
+forward/reverse edge-flow distributions. The stronger stopping-time /
+absolute-irreversibility residual regime remains a separate cited premise. Lean
+then verifies the exact downstream consequences of composing that mixed
 theorem-plus-premise interface with the decision-theoretic lower bounds already
 proved in the core system.
-\LH{BA9}\LH{WM1}\LH{WM2}\LH{WM3}\LH{WM4}\LH{WM5}\LH{WM6}\LH{WP5}\LH{WP6}
+\LH{BA9}\LH{WM1}\LH{WM2}\LH{WM3}\LH{WM4}\LH{WM5}\LH{WM6}\LH{WR1}\LH{WR2}\LH{WR3}\LH{WR4}\LH{WR5}\LH{WP5}\LH{WP6}
 \end{theorem}
 \leanmeta{\LH{BA9}}
 \claimstamp{T\ref{thm:physical-bridge-bundle}}{AR}

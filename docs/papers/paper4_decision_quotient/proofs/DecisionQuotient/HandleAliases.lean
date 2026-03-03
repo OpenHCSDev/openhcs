@@ -1040,6 +1040,13 @@ abbrev WM4 := @Physics.WolpertMismatch.mismatchNatLowerBound_pos_of_exists_ne
 abbrev WM5 := @Physics.WolpertDecomposition.periodic_modular_mismatch_of_distribution_mismatch
 abbrev WM6 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_distribution_mismatch
 
+-- WR: Wolpert Residual (Physics/WolpertResidual.lean + decomposition lift)
+abbrev WR1 := @Physics.WolpertResidual.pairwiseResidualKL_nonneg
+abbrev WR2 := @Physics.WolpertResidual.pairwiseResidualKL_pos_of_asymmetry
+abbrev WR3 := @Physics.WolpertResidual.residualNatLowerBound_pos_of_asymmetry
+abbrev WR4 := @Physics.WolpertDecomposition.stopping_time_residual_of_pairwise_flow_asymmetry
+abbrev WR5 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_pairwise_flow_asymmetry
+
 -- WP: Wolpert Physics (Physics/WolpertDecomposition.lean)
 abbrev WP1 := @Physics.WolpertDecomposition.DecomposedProcessModel.totalOverheadPerBit_eq_sum
 abbrev WP2 := @Physics.WolpertDecomposition.landauer_floor_plus_decomposition_lower_bound

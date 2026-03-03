@@ -26,6 +26,7 @@
 
 import DecisionQuotient.Physics.WolpertConstraints
 import DecisionQuotient.Physics.WolpertMismatch
+import DecisionQuotient.Physics.WolpertResidual
 
 namespace DecisionQuotient
 namespace Physics
@@ -34,6 +35,7 @@ namespace WolpertDecomposition
 open ThermodynamicLift
 open WolpertConstraints
 open WolpertMismatch
+open WolpertResidual
 open BoundedAcquisition
 
 /-- A more explicit constrained-process model in which the extra dissipation
@@ -198,6 +200,42 @@ theorem effective_model_strictly_exceeds_landauer_of_stopping_time_residual
     total_overhead_pos_of_positive_residual W h
   exact effective_model_strictly_exceeds_landauer_of_strict_overhead
     W.asConstrainedProcessModel hFloor hOver
+
+/-- A theorem-level finite residual asymmetry witness can also discharge the
+residual branch: if a pair of stationary edge flows is positive in both
+directions and asymmetric, the resulting nat-valued residual lower-bound term
+is strictly positive. This is the strongest residual promotion currently proved
+inside the artifact without claiming the full stopping-time / absolute-
+irreversibility theorems of the cited papers. -/
+theorem stopping_time_residual_of_pairwise_flow_asymmetry
+    (W : DecomposedProcessModel)
+    {S : Type*} [Fintype S]
+    (mc : DiscreteMarkovChain S) (π : StationaryDist mc) (s s' : S)
+    (hForward : 0 < edgeFlow mc π s s')
+    (hReverse : 0 < edgeFlow mc π s' s)
+    (hUnits : W.residualDissipationPerBit = residualNatLowerBound mc π s s' hForward hReverse)
+    (hAsym : edgeFlow mc π s s' ≠ edgeFlow mc π s' s) :
+    StoppingTimeResidualHypothesis W := by
+  refine ⟨?_⟩
+  rw [hUnits]
+  exact residualNatLowerBound_pos_of_asymmetry mc π s s' hForward hReverse hAsym
+
+/-- Finite bidirectional flow asymmetry already forces strict separation above
+the Landauer floor through the theorem-level residual branch proved in
+`WolpertResidual.lean`. -/
+theorem effective_model_strictly_exceeds_landauer_of_pairwise_flow_asymmetry
+    (W : DecomposedProcessModel) {kB T : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))
+    {S : Type*} [Fintype S]
+    (mc : DiscreteMarkovChain S) (π : StationaryDist mc) (s s' : S)
+    (hForward : 0 < edgeFlow mc π s s')
+    (hReverse : 0 < edgeFlow mc π s' s)
+    (hUnits : W.residualDissipationPerBit = residualNatLowerBound mc π s s' hForward hReverse)
+    (hAsym : edgeFlow mc π s s' ≠ edgeFlow mc π s' s) :
+    landauerJoulesPerBit kB T < ((W.effectiveModel).joulesPerBit : ℝ) := by
+  have hResidual : StoppingTimeResidualHypothesis W :=
+    stopping_time_residual_of_pairwise_flow_asymmetry W mc π s s' hForward hReverse hUnits hAsym
+  exact effective_model_strictly_exceeds_landauer_of_stopping_time_residual W hFloor hResidual
 
 /-- Either the derived mismatch branch or the cited residual branch is already
 sufficient to force strict separation above the Landauer floor. -/
