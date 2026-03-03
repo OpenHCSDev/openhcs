@@ -1,6 +1,6 @@
 # Paper: Computational Complexity of Physical Counting
 
-**Status**: Theory of Computing-ready | **Lean**: 31898 lines, 1323 theorems
+**Status**: Theory of Computing-ready | **Lean**: 33161 lines, 1375 theorems
 
 ---
 
@@ -8,34 +8,44 @@
 
 **Abstract**
 
-We characterize which coordinates of a factored state space determine optimal actions. For $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The decision quotient $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the minimal abstraction: any abstraction preserving optimal actions factors uniquely through $Q$.
+Which parts of a system's state are actually needed to determine the optimal action? A decision problem consists of actions $A$, states $S$, a utility function $U$, and the optimizer $\operatorname{Opt}$ that returns the action set maximizing utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action set: $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The optimizer quotient object $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the coarsest abstraction that preserves optimal actions; in **Set**, it is the coimage of the optimizer map and is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.
 
-We prove fourteen first-principles theorems (thirteen from pure mathematics, one empirical). The chain from counting measure to probability to Bayes' theorem to $Q$ follows from finite set cardinality. Fisher information, entropy, optimal transport, rate-distortion, and thermodynamics each independently recover $\mathrm{srank}$ as decision complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
+From finite set cardinality, we derive a chain from counting measure to probability, Bayes' theorem, and the optimizer quotient object. Several independent information-theoretic and geometric formalisms then recover the same invariant, $\mathrm{srank}$, as the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
 
 Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds. Verification requires $\geq 2^{n-1}$ witness pairs.
 
-Two results carry empirical premises. Composing bit-operation lower bounds with Landauer's principle ($k_BT\ln 2$ per irreversible bit erasure) yields $dU\geq\lambda\,dC$. Under stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$. All results are machine-checked in Lean 4 with explicit theorem-level assumptions and a machine-generated assumption ledger.
+Two results carry empirical premises. Composing bit-operation lower bounds with a declared per-bit lower bound in a floor-plus-overhead model, where Landauer's principle supplies the universal floor $k_BT\ln 2$ for irreversible bit erasure and explicit nonnegative mismatch and residual terms capture constrained-process dissipation above that floor, yields inequalities such as $dU\geq\lambda\,dC$; exact equality is treated only as an idealized specialization. Within that interface, the mismatch branch is now derived from finite-distribution KL divergence. For finite discrete processes, the residual branch is also derived by an exhaustive local edge split: either the reverse edge flow is positive, in which case asymmetric forward/reverse flows yield positive two-point KL divergence, or the reverse edge flow vanishes, in which case the process performs an irreversible one-way state transition with strictly positive Landauer-scaled cost. Broader stopping-time / absolute-irreversibility regimes remain imported. Under stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$. All results are machine-checked in Lean 4 with explicit theorem-level assumptions and a machine-generated assumption ledger.
 
 
 # Introduction {#sec:introduction}
 
 ## First-Principles Derivations {#sec:intro-first-principles}
 
-This section presents seventeen theorems. Theorems 1--14 are derived from pure mathematics (counting, set theory, arithmetic, logic). Theorems 15--17 use empirical assumptions. One irreducible empirical claim (EC1: temperature) provides calibration; counting and logic provide structure. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
+This paper studies a simple question with a hard combinatorial core: when a system exposes many state coordinates, which of those coordinates are actually needed to preserve the optimal decision? The aim is not to list all observable state variables, but to isolate the smallest part of the state that still determines what the best action is.
+
+We model this with a decision problem: $A$ is the finite set of possible actions, $S$ is the state space, $U(a,s)$ is the utility of taking action $a$ in state $s$, and $\operatorname{Opt}(s)$ is the set of actions that maximize utility at state $s$. A coordinate set $I$ is sufficient when any two states that agree on $I$ also agree on $\operatorname{Opt}$. The optimizer quotient object then collapses exactly those states with the same optimal-action set, yielding the canonical abstraction through which every decision-preserving abstraction factors.
+
+Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference="sec:foundations"} makes that collapse boundary explicit: any surjective abstraction either factors through the optimizer quotient object or erases a decision-relevant distinction, and any attempt to treat such extra erasure as physically feasible runs into the same no-collapse obstruction used later in the hardness chain. In **Set**, this quotient object is the familiar coimage of $\operatorname{Opt}$, canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.QT5AB2AB3AB4
+
+The results in this section are organized as one derivation chain rather than a theorem ledger. The opening results establish the structural core from counting, set theory, arithmetic, and logic; later results then place the same core in complexity-theoretic and physical terms. Theorems 1--14 are derived from pure mathematics, while Theorems 15--17 add explicit empirical lower-bound premises. One irreducible empirical claim (EC1) supplies the thermodynamic scale: irreversible bit operations carry a positive lower-bound cost, with Landauer furnishing a universal floor. Counting and logic provide the structural part of the chain. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
 
 ### 1. Counting Gap Theorem
 
+We begin with the discrete counting fact that every later information and complexity bound depends on: bounded total capacity and positive integer cost imply a finite observation budget.
+
 ::: theorem
-[]{#thm:counting-gap-intro label="thm:counting-gap-intro"} Let a system have finite positive capacity $C > 0$. Let each information-acquisition event cost $\varepsilon > 0$. Then: $$\varepsilon \cdot N \leq C \;\Rightarrow\; N \leq C.$$ No bounded system with positive event cost can perform infinitely many events. BA10
+[]{#thm:counting-gap-intro label="thm:counting-gap-intro"} Let $\varepsilon, C \in \mathbb{N}$ with $\varepsilon > 0$ and $C > 0$. If each information-acquisition event consumes $\varepsilon$ cost units and the total available capacity is $C$, then for every $N \in \mathbb{N}$: $$\varepsilon \cdot N \leq C \;\Rightarrow\; N \leq C.$$ Equivalently, $c_{\max}=C$ is a finite upper bound on the number of possible events. No bounded system with positive integer event cost can perform infinitely many events. BA10
 :::
 
 ::: proof
-*Proof.* In $\mathbb{N}$: every positive integer is $\geq 1$. Therefore $N \leq \varepsilon \cdot N \leq C$. ◻
+*Proof.* This is a discrete theorem: $\varepsilon > 0$ in $\mathbb{N}$ implies $1 \leq \varepsilon$, so each event costs at least one unit. Therefore $N = 1\cdot N \leq \varepsilon \cdot N \leq C$. ◻
 :::
 
 **Consequence.** Continuous abstractions require arbitrarily fine state discrimination. Bounded computational systems cannot do this. Discrete models are forced by the mathematics.
 
 ### 2. Bayesian Optimality
+
+Once observations are finite, the next question is how to update beliefs optimally from those observations.
 
 ::: theorem
 []{#thm:bayes-optimal label="thm:bayes-optimal"} For distributions $p, q$ over hypothesis space $H$, cross-entropy satisfies: $$\mathrm{CE}(p, q) = H(p) + D_{\mathrm{KL}}(p \| q)$$ where $D_{\mathrm{KL}}(p \| q) \geq 0$ (Gibbs' inequality, from $\log x \leq x - 1$). Therefore $q = p$ uniquely minimizes $\mathrm{CE}(p, q)$. FN7FN12FN14
@@ -48,6 +58,8 @@ This section presents seventeen theorems. Theorems 1--14 are derived from pure m
 **Consequence.** Bayesian updating is optimal. The proof uses only $\log x \leq x - 1$ and Lean's type theory.
 
 ### 3. Measure Theory Typing
+
+To state those updates correctly, we next distinguish the type of a quantitative claim from the stronger normalization required for a probabilistic claim.
 
 ::: theorem
 []{#thm:measure-prerequisite label="thm:measure-prerequisite"}
@@ -67,23 +79,27 @@ MN1MN2MN10MN11
 
 **Consequence.** Quantitative and stochastic claims are typed differently. Probability normalization is not automatic from measure structure.
 
-### 4. Universal Property of Decision Quotient
+### 4. Universal Property of the Optimizer Quotient
+
+With the measurement layer typed, we can identify the canonical abstraction that preserves the decision boundary itself.
 
 ::: theorem
-[]{#thm:quotient-universal label="thm:quotient-universal"} Let $Q = S/{\sim}$ be the decision quotient where $s \sim s' \iff \operatorname{Opt}(s) = \operatorname{Opt}(s')$. For any surjective abstraction $\phi: S \to T$ that preserves the optimal action ($\phi(s) = \phi(s') \Rightarrow \operatorname{Opt}(s) = \operatorname{Opt}(s')$), there exists a unique factorization $\psi: T \to Q$ such that $\pi = \psi \circ \phi$ where $\pi: S \to Q$ is the quotient map. $$\begin{array}{ccc}
+[]{#thm:quotient-universal label="thm:quotient-universal"} Let $Q = S/{\sim}$ be the optimizer quotient object where $s \sim s' \iff \operatorname{Opt}(s) = \operatorname{Opt}(s')$. For any surjective abstraction $\phi: S \to T$ that preserves the optimal action ($\phi(s) = \phi(s') \Rightarrow \operatorname{Opt}(s) = \operatorname{Opt}(s')$), there exists a unique factorization $\psi: T \to Q$ such that $\pi = \psi \circ \phi$ where $\pi: S \to Q$ is the quotient map. $$\begin{array}{ccc}
     S & \xrightarrow{\pi} & Q \\
     \downarrow & & \uparrow \\
     T & \xrightarrow{\psi} & Q
-  \end{array}$$ The decision quotient is the coarsest abstraction through which $\operatorname{Opt}$ factors. QT1QT2QT3
+  \end{array}$$ The optimizer quotient object is the coarsest abstraction through which $\operatorname{Opt}$ factors. In **Set**, it is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$, i.e. the familiar coimage/image factorization of the optimizer map. QT1QT2QT3QT5QT7
 :::
 
 ::: proof
 *Proof.* Since $\phi$ preserves $\operatorname{Opt}$, we have $\phi(s) = \phi(s') \Rightarrow \operatorname{Opt}(s) = \operatorname{Opt}(s')$. By surjectivity, for each $t \in T$ pick some $s$ with $\phi(s) = t$ and define $\psi(t) = \pi(s)$. This is well-defined: if $\phi(s) = \phi(s') = t$, then $\operatorname{Opt}(s) = \operatorname{Opt}(s')$, so $\pi(s) = \pi(s')$. Uniqueness follows because $\pi = \psi \circ \phi$ forces $\psi(t) = \pi(s)$ for any $s$ with $\phi(s) = t$. ◻
 :::
 
-**Consequence.** The decision quotient is canonical. Any other state abstraction that preserves optimal actions must refine it.
+**Consequence.** The optimizer quotient object is canonical. In **Set**, the familiar construction is not exotic: it is the coimage of $\operatorname{Opt}$, canonically identified with the image/range of $\operatorname{Opt}$. Any other state abstraction that preserves optimal actions must refine it.
 
 ### 5. Witness-Checking Duality
+
+Once the canonical abstraction is fixed, we can ask how many state comparisons any sound verifier must inspect to certify that no counterexample exists.
 
 ::: theorem
 []{#thm:checking-duality label="thm:checking-duality"} For boolean decision problems with $n$ coordinates, let $W(n) = 2^{n-1}$ be the witness budget and $T(n)$ be the checking budget. Any sound checker satisfies: $$T(n) \geq W(n) = 2^{n-1}$$ No finite checker with fewer than $2^{n-1}$ witness pairs can be sound on all problem instances. WD1WD2WD3
@@ -97,8 +113,10 @@ MN1MN2MN10MN11
 
 ### 6. Bayes from Counting
 
+That verification bound rests on a simpler structural fact: probability, Bayes, and the normalized quotient score already emerge from counting on finite sets.
+
 ::: theorem
-[]{#thm:bayes-from-counting label="thm:bayes-from-counting"} The chain from counting to Decision Quotient:
+[]{#thm:bayes-from-counting label="thm:bayes-from-counting"} The chain from counting to Bayesian updating and the normalized quotient score:
 
 1.  $P(A) = |A|/|\Omega|$ satisfies Kolmogorov axioms: nonnegativity, normalization, and additivity for disjoint sets.
 
@@ -115,9 +133,11 @@ BC1BC2BC3BC4BC5
 *Proof.* (1) $|A| \geq 0$ (counting), $|\Omega|/|\Omega| = 1$ (normalization), $|A \cup B| = |A| + |B|$ for $A \cap B = \emptyset$ (additivity). (2) $P(H|E) := P(H \cap E)/P(E)$. Rearranging: $P(H|E) \cdot P(E) = P(H \cap E) = P(E|H) \cdot P(H)$. (3) $H(H|E) = H(H) - I(H;E)$ and $I(H;E) = D_{\mathrm{KL}}(P_{H,E} \| P_H \otimes P_E) \geq 0$ by Gibbs. (4) $I(H;E) \leq H(H)$ by (3), so $\DQ = I(H;E)/H(H) \in [0,1]$. ◻
 :::
 
-**Consequence.** Bayesian updating is derived from counting measure. Probability theory, Bayes' theorem, information theory, and the Decision Quotient form a single chain from counting elements of a finite set.
+**Consequence.** Bayesian updating is derived from counting measure. Probability theory, Bayes' theorem, information theory, and the normalized quotient score form a single chain from counting elements of a finite set.
 
 ### 7. Fisher Rank = Structural Rank
+
+With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant.
 
 ::: theorem
 []{#thm:fisher-rank-srank label="thm:fisher-rank-srank"} Define the Fisher information score of coordinate $i$ as: $$\mathrm{score}(i) = \begin{cases} 1 & \text{if } i \text{ is relevant} \\ 0 & \text{otherwise} \end{cases}$$ Then: $$\sum_{i=1}^{n} \mathrm{score}(i) = \mathrm{srank}(\mathcal{D})$$ The diagonal Fisher information matrix $I(\theta)_{ii} = \mathrm{score}(i)$ has rank $\mathrm{srank}(\mathcal{D})$. FS1FS2
@@ -131,160 +151,88 @@ BC1BC2BC3BC4BC5
 
 ### 8. Entropy-Rank Inequality
 
+The first bridge is information-theoretic: quotient entropy cannot exceed the number of coordinates that actually matter.
+
 ::: theorem
-[]{#thm:entropy-rank label="thm:entropy-rank"} For a decision problem $\mathcal{D}$ with boolean coordinate spaces ($X_i = \{0,1\}$): $$H(\mathcal{D}) \leq \mathrm{srank}(\mathcal{D})$$ where $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses})$ is the Shannon entropy of the decision quotient. IT3IT4
+[]{#thm:entropy-rank label="thm:entropy-rank"} For a decision problem $\mathcal{D}$ with boolean coordinate spaces ($X_i = \{0,1\}$): $$H(\mathcal{D}) \leq \mathrm{srank}(\mathcal{D})$$ where $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses})$ is the Shannon entropy of the optimizer quotient object. IT3IT4
 :::
 
 ::: proof
 *Proof.* The relevant coordinate set $R$ is sufficient (Theorem [\[thm:resolution-sufficient\]](#thm:resolution-sufficient){reference-type="ref" reference="thm:resolution-sufficient"}): $\mathrm{Opt}$ factors through $\pi_R : S \to \{0,1\}^{|R|}$. Therefore $\mathrm{numOptClasses} \leq |\{0,1\}^{|R|}| = 2^{\mathrm{srank}}$. Therefore $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses}) \leq \log_2(2^{\mathrm{srank}}) = \mathrm{srank}$. ◻
 :::
 
-**Consequence.** The decision quotient carries at most $\mathrm{srank}$ bits of decision-relevant information. Coordinates outside the relevant set are information-theoretically inert.
+**Consequence.** The optimizer quotient object carries at most $\mathrm{srank}$ bits of decision-relevant information. Coordinates outside the relevant set are information-theoretically inert.
 
-### 9. Functional Information
+### 9--14. Later Bridge Theorems
+
+The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the optimizer quotient object is fixed.
 
 ::: theorem
-[]{#thm:fi-coincide label="thm:fi-coincide"} For functional set $F \subseteq \Omega$, the derivation proceeds in three steps:
-
-1.  $\mathrm{FI}_{\text{counting}}(F) = -\log_2(|F|/|\Omega|)$ bits. Uses only finite measure.
-
-2.  Plug in Landauer's value $\varepsilon = k_B T \ln 2$ joules per bit.
-
-3.  $E_{\text{min}} = \varepsilon \cdot \mathrm{FI}_{\text{counting}}(F)$.
-
-The thermodynamic path is the counting path with an empirical calibration constant. FI3FI6FI7
+[]{#thm:fi-coincide label="thm:fi-coincide"} For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and a Landauer floor converts that bit count into a universal energy lower bound. In the sharpened physical interface, explicit nonnegative mismatch and residual terms are added above that floor to represent constrained-process dissipation. The mismatch branch is now justified as far as the existing mathematics allows: distinct strictly positive finite input distributions yield strictly positive KL mismatch, which is then rounded upward into the discrete lower-bound units used by the thermodynamic accounting and injected into the Wolpert decomposition. A second derived branch now captures the strongest residual theorem supported by the current finite machinery: for finite discrete computational-state processes, positive forward edge flow together with decision-relevant edge asymmetry yields strict residual positivity by an exhaustive local split on the reverse edge. If the reverse flow is positive, the pairwise KL branch applies. If the reverse flow vanishes, the process performs an irreversible one-way state transition, and the existing Landauer-scaled transition-cost theorem supplies a positive lower-bound witness. That local argument is now also packaged as a process-level theorem: any finite computational-state process with at least one such asymmetric forward edge already carries a theorem-level residual witness. The broader stopping-time / absolute-irreversibility residual regime remains a separate imported premise. The thermodynamic statement is therefore the counting statement plus a floor-plus-overhead empirical conversion law; a derived mismatch branch, a derived finite residual branch from this exhaustive edge split, or the cited broader stopping-time branch can each force strict separation above the Landauer floor, and any declared structural lower bound absorbed by mismatch only strengthens the resulting energy estimate. FI3FI6FI7WC1WC2WC3WM1WM3WM4WM5WM6WR1WR2WR3WR4WR5WR6WR7WR8WR9WR10WP1WP5WP6WP7WP8
 :::
 
 ::: proof
-*Proof.* (1) By definition of surprisal: $\mathrm{FI}(F) = -\log_2 P(F) = -\log_2(|F|/|\Omega|)$ using counting measure. No physics. (2) Landauer's principle (empirical): erasing one bit costs $\geq k_B T \ln 2$ joules. This is a unit conversion constant. (3) Composition: $E_{\text{min}} = \varepsilon \cdot \mathrm{FI}(F) = k_B T \ln 2 \cdot (-\log_2(|F|/|\Omega|))$ joules. The counting structure determines the bit count; Landauer supplies the energy-per-bit conversion. ◻
+*Proof.* The mathematical part is only the counting step: finite measure gives the bit count $-\log_2(|F|/|\Omega|)$. Landauer then supplies the universal floor for the energy-per-bit conversion. The bridge is therefore structural counting plus one declared empirical lower-bound premise. ◻
 :::
 
-**Consequence.** Thermodynamics adds a unit conversion. Counting provides bits; Landauer provides joules per bit. Counting is primary, thermodynamics is derived.
-
-### 10. Optimal Transport Bridge
+**Consequence.** The thermodynamic lower bound is not a separate combinatorial structure; it is the counting bound expressed in physical units.
 
 ::: theorem
-[]{#thm:wasserstein-bridge label="thm:wasserstein-bridge"} For a decision problem with $k$ distinguishable futures ($k = |\mathrm{range}(\operatorname{Opt})|$):
-
-1.  Single future ($k = 1$): transport cost vanishes.
-
-2.  Multiple futures ($k > 1$): any coupling with off-diagonal mass incurs positive cost.
-
-3.  The integrity state (centroid) minimizes expected transport cost.
-
-Transport cost grows with the number of distinguishable futures, matching $\mathrm{srank}$. W1W2W3W4
+[]{#thm:wasserstein-bridge label="thm:wasserstein-bridge"} Optimal-transport cost grows with the number of distinguishable futures and therefore tracks the same relevant-coordinate complexity measured by $\mathrm{srank}$. W1W2W3W4
 :::
 
 ::: proof
-*Proof.* (1) When $k = 1$, all states map to a single action; the diagonal coupling achieves zero cost. (2) Off-diagonal coupling mass moves probability between distinct actions; metric distance contributes positive cost. (3) The centroid minimizes $\sum_i w_i d(x, x_i)^2$ by convexity of squared distance. ◻
+*Proof.* When all states lead to one future, the diagonal coupling gives zero transport cost. Once multiple futures must be distinguished, off-diagonal mass incurs positive cost. The same branching structure counted by $\mathrm{srank}$ therefore reappears as transport cost. ◻
 :::
 
-**Consequence.** Optimal transport theory recovers srank as the complexity measure without invoking information theory or thermodynamics. Pure measure theory.
-
-### 11. Rate-Distortion Bridge
+**Consequence.** Optimal transport recovers the same complexity signal as the coordinate-relevance analysis.
 
 ::: theorem
-[]{#thm:rate-distortion-bridge label="thm:rate-distortion-bridge"} For a decision problem viewed as a source:
-
-1.  Shannon entropy is non-negative: $H(X) \geq 0$.
-
-2.  At zero distortion: $R(0) = H(X)$.
-
-3.  Rate decreases monotonically as distortion tolerance increases.
-
-4.  Decision-equivalence preserves optimal actions: compression within equivalence classes is lossless.
-
-5.  Minimum lossless decision rate equals structural rank: $R(0) = \mathrm{srank}$.
-
-6.  Compression below srank introduces decision errors.
-
-RD1RD2RD3RS1RS2RS3RS4RS5
+[]{#thm:rate-distortion-bridge label="thm:rate-distortion-bridge"} At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, and compression below $\mathrm{srank}$ necessarily introduces decision errors. RD1RD2RD3RS1RS2RS3RS4RS5
 :::
 
 ::: proof
-*Proof.* Standard Shannon theory establishes (1)--(3). When $\phi(s) = \phi(s')$ implies $\operatorname{Opt}(s) = \operatorname{Opt}(s')$, states within equivalence classes merge without affecting optimal actions (4). The decision quotient partitions into $2^{\mathrm{srank}}$ classes, each requiring $\log_2$ bits for identification, yielding $R(0) = \mathrm{srank}$ (5). Fewer bits cannot distinguish all classes (6). ◻
+*Proof.* Zero distortion means that decision-equivalent states may be merged, but decision-distinguishing states may not. The quotient therefore partitions the source into exactly the classes that must remain distinguishable. Their count determines the minimum lossless rate, which is the same structural quantity measured by $\mathrm{srank}$. ◻
 :::
 
-**Consequence.** Rate-distortion theory independently recovers structural rank as the minimal description length for decision-making. Pure Shannon theory.
-
-### 12. Nontriviality from Counting
+**Consequence.** Description length and relevant-coordinate complexity coincide at zero distortion.
 
 ::: theorem
-[]{#thm:nontriviality-counting label="thm:nontriviality-counting"} The following chain holds from pure counting:
-
-1.  $|S| \leq 1 \Rightarrow$ all states equal (cardinality).
-
-2.  All states equal $\Rightarrow$ $\operatorname{Opt}$ is constant (logic).
-
-3.  $\operatorname{Opt}$ constant $\Rightarrow$ singleton image (set theory).
-
-4.  Singleton image $\Rightarrow$ entropy $= \log(1) = 0$ (arithmetic).
-
-5.  Entropy $= 0 \Rightarrow$ no information (definition).
-
-Contrapositive: information exists $\Rightarrow |S| \geq 2$. FP1FP2FP3FP4FP5FP6FP7
+[]{#thm:nontriviality-counting label="thm:nontriviality-counting"} If decision-relevant information exists, then the state space cannot be trivial: the existence of information forces at least two distinguishable states. FP1FP2FP3FP4FP5FP6FP7
 :::
 
 ::: proof
-*Proof.* Each step is elementary: (1) subsingleton property, (2) constant function on subsingleton, (3) image of constant is singleton, (4) $\log_2(1) = 0$, (5) zero entropy means no distinguishable states. The contrapositive follows by modus tollens. ◻
+*Proof.* If the state space had at most one element, then every map out of it would be constant, including $\operatorname{Opt}$. A constant decision boundary has zero entropy and carries no distinguishable information. Taking the contrapositive gives the stated nontriviality requirement. ◻
 :::
 
-**Consequence.** Nontriviality ($|S| \geq 2$) is not an axiom---it is derived from the existence of information. Pure counting.
-
-### 13. Second Law from Counting
+**Consequence.** Nontriviality is derived from the existence of information rather than postulated as an extra axiom.
 
 ::: theorem
-[]{#thm:second-law-counting label="thm:second-law-counting"} The following chain holds from pure counting and probability:
-
-1.  $|\text{target}| < |\text{total}| \Rightarrow |\text{non-target}| > 0$ (counting).
-
-2.  Random selection from total probably misses target (probability).
-
-3.  $n$ unverified steps with $k$ wrong turns each: $k^n$ wrong paths vs. 1 right path (exponentiation).
-
-4.  Wrong paths dominate: $k^n \gg 1$ for $k > 1$, $n > 1$ (arithmetic).
-
-5.  Maintaining order requires distinguishing right from wrong (verification).
-
-6.  Verification is information (definition).
-
-Therefore: maintaining order requires continuous information input. FP8FP9FP10FP11FP12FP13FP14
+[]{#thm:second-law-counting label="thm:second-law-counting"} Maintaining ordered behavior requires continuous distinction between correct and incorrect transitions; in this sense, the structural content of the Second Law follows from counting and verification, while the numerical thermodynamic scale is added later. FP8FP9FP10FP11FP12FP13FP14
 :::
 
 ::: proof
-*Proof.* (1) Subtraction in $\mathbb{N}$. (2) $P(\text{miss}) = |\text{non-target}|/|\text{total}| > 0$. (3) Branching paths multiply. (4) Exponential growth. (5) Staying on target requires detecting drift. (6) Detection distinguishes states. ◻
+*Proof.* If there are more non-target than target continuations, unguided evolution overwhelmingly drifts away from the target set. Staying ordered therefore requires repeated discrimination between correct and incorrect continuations. That discrimination is an information-acquisition burden, and the thermodynamic lower-bound premise enters only after that structural burden is fixed. ◻
 :::
 
-**Consequence.** The second law's structure (order decays without work) follows from counting. The empirical content is only the calibration constant $k_B T$ that converts entropy to energy.
-
-### 14. Landauer Structure from Counting
+**Consequence.** The order-versus-verification tradeoff is established before any temperature-dependent conversion is introduced.
 
 ::: theorem
-[]{#thm:landauer-structure label="thm:landauer-structure"} For any state reduction from $n$ states to $m < n$ states:
-
-1.  $n - m > 0$ states are "erased" (arithmetic).
-
-2.  Erased states must go somewhere (conservation of distinguishability).
-
-3.  That somewhere is the environment.
-
-4.  Environment entropy increases by $\geq \log(n/m)$.
-
-FP15
+[]{#thm:landauer-structure label="thm:landauer-structure"} Whenever a state reduction deletes distinctions, those distinctions must reappear in environmental degrees of freedom, so the structural content of Landauer's principle is a transfer statement and only the numerical thermodynamic scale is empirical. FP15
 :::
 
 ::: proof
-*Proof.* (1) $m < n \Rightarrow n - m > 0$. (2)--(4) The missing distinctions are not destroyed; they are transferred to environmental degrees of freedom. This is the structure of Landauer's principle. The $k_B T$ calibration is empirical. ◻
+*Proof.* Reducing $n$ distinguishable states to fewer than $n$ outputs removes distinctions from the local description. Those distinctions cannot vanish from the bookkeeping; they must be displaced into the environment. The structural theorem is therefore a conservation-of-distinguishability statement, with temperature only setting the energetic scale of that transfer. ◻
 :::
 
-**Consequence.** Landauer's principle splits into structure (from counting) and calibration (from temperature). Only the calibration is empirical.
+**Consequence.** Landauer's principle separates cleanly into a mathematical transfer structure and an empirical lower-bound energy scale.
 
 ## Irreducible Empirical Claims {#sec:irreducible-empirical}
 
 One claim is irreducibly empirical. Two others (finite resources, finite speed) are derived from first principles.
 
 ::: definition
-[]{#def:empirical-claims label="def:empirical-claims"} **EC1 (Temperature):** Entropy has energy cost. There exists $\varepsilon > 0$ such that each bit costs $\varepsilon$ joules. Calibration: $\varepsilon = k_B T \ln 2$.
+[]{#def:empirical-claims label="def:empirical-claims"} **EC1 (Temperature):** Entropy has energy cost. There exists $\varepsilon > 0$ such that each irreversible bit operation costs at least $\varepsilon$ joules, with $\varepsilon \geq k_B T \ln 2$. Landauer gives the universal floor. A separate floor-plus-overhead interface treats any strictly larger per-bit dissipation as an explicit additional premise rather than an informal interpretation.
 :::
 
 ::: theorem
@@ -329,7 +277,7 @@ FPT4FPT5FPT6FPT8FPT10
 *Proof.* A step changes state from $A$ to $B$ where $A \neq B$. The timeline is a function $T \to S$. If $t_{\text{before}} = t_{\text{after}}$, then $\text{timeline}(t) = A$ and $\text{timeline}(t) = B$ for the same $t$. By function uniqueness, $A = B$. Contradiction. Therefore $t_{\text{before}} \neq t_{\text{after}}$. With ordering, $\Delta t > 0$ (FPT5). Information propagation requires steps; each takes positive time; total time is positive; speed is finite. QED from pure logic. ◻
 :::
 
-**Consequence.** EC2 and EC3 are not axioms. EC2 follows from uncertainty existing. EC3 follows from non-contradiction. **One irreducible empirical claim remains: EC1 (temperature).** The specific value $\varepsilon = k_B T \ln 2$ is empirical; the existence of a cost is structural.
+**Consequence.** EC2 and EC3 are not axioms. EC2 follows from uncertainty existing. EC3 follows from non-contradiction. **One irreducible empirical claim remains: EC1 (temperature).** The empirical content is that irreversible bit operations have a positive lower-bound cost, with Landauer giving a universal floor and stronger constrained-process bounds allowed above it; the existence of a cost is structural.
 
 ### 15. Assumption Necessity
 
@@ -354,7 +302,7 @@ Then $\Gamma$ contains at least one physical axiom that is empirically justified
 ### 16. Energy Bound
 
 ::: theorem
-[]{#thm:energy-information label="thm:energy-information"} For any physical system resolving decision problem $\mathcal{D}$ at temperature $T > 0$: $$E_{\mathrm{decision}} \geq k_B T \cdot H_{\mathrm{nats}}(\mathcal{D})$$ where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natural-log Shannon entropy of the decision quotient. EI1
+[]{#thm:energy-information label="thm:energy-information"} For any physical system resolving decision problem $\mathcal{D}$ at temperature $T > 0$: $$E_{\mathrm{decision}} \geq k_B T \cdot H_{\mathrm{nats}}(\mathcal{D})$$ where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natural-log Shannon entropy of the optimizer quotient object. EI1
 :::
 
 ::: proof
@@ -362,14 +310,14 @@ Then $\Gamma$ contains at least one physical axiom that is empirically justified
 
 1.  $\mathrm{srank}$ bits are required to resolve $\mathcal{D}$. Each bit requires one state transition.
 
-2.  Each transition costs $\geq k_B T \ln 2$. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$.
+2.  Each transition costs at least the Landauer floor $k_B T \ln 2$. In the stronger constrained-process model, explicit nonnegative mismatch and residual dissipation terms may raise that per-bit lower bound further. The mismatch branch is no longer merely postulated: if the actual and designed finite distributions differ, the existing KL machinery yields a strictly positive mismatch witness, which is then converted into the discrete lower-bound units of the thermodynamic model. A second finite residual branch is also now derived by an exhaustive edge split on finite computational-state processes: if the reverse edge flow is positive, asymmetric forward/reverse edge flows yield strictly positive two-point KL divergence; if the reverse edge flow is zero, the process performs an irreversible one-way state transition and the existing Landauer-scaled transition-cost theorem yields a positive discrete lower-bound term. The broader stopping-time branch remains an imported premise. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$ remains the universal floor, and any declared constrained-process contribution tightens it monotonically.
 
 3.  $H_{\mathrm{nats}} = \ln(\mathrm{numOptClasses}) \leq \mathrm{srank} \cdot \ln 2$ (Theorem [\[thm:entropy-rank\]](#thm:entropy-rank){reference-type="ref" reference="thm:entropy-rank"}).
 
 Combining: $E \geq \mathrm{srank} \cdot k_B T \ln 2 \geq k_B T \cdot H_{\mathrm{nats}}$. ◻
 :::
 
-**Consequence.** Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from Landauer (Theorem 9) composed with the entropy-rank inequality (Theorem 8).
+**Consequence.** Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from the Landauer floor (Theorem 9) composed with the entropy-rank inequality (Theorem 8); in the explicit decomposed constrained-process interface, a theorem-level KL mismatch witness, a theorem-level finite residual witness produced by the exhaustive reverse-edge split, its process-level witness packaging, or the cited broader stopping-time residual branch only strengthens the estimate.WC1WC4WM3WM4WM6WR6WR7WR8WR9WR10WP1WP5WP6
 
 ### 17. Thermodynamic Uncertainty Relations
 
@@ -407,9 +355,9 @@ The Counting Gap Theorem is consistent with and illuminates why discrete models 
 
 The paper rests on one irreducible empirical claim (Definition [\[def:empirical-claims\]](#def:empirical-claims){reference-type="ref" reference="def:empirical-claims"}):
 
--   **EC1 (Temperature):** $\varepsilon = k_B T \ln 2 > 0$ (entropy has energy cost)
+-   **EC1 (Temperature):** $\varepsilon \geq k_B T \ln 2 > 0$ (entropy has a positive lower-bound energy cost)
 
-EC2 (finite resources) is derived from the existence of uncertainty (Theorem [\[thm:ec2-derived\]](#thm:ec2-derived){reference-type="ref" reference="thm:ec2-derived"}): if you don't know everything, your capacity is bounded. EC3 (finite speed) is derived from non-contradiction (Theorem [\[thm:ec3-derived\]](#thm:ec3-derived){reference-type="ref" reference="thm:ec3-derived"}): a computational step must take positive time, or the state would be both $A$ and not-$A$ at the same instant. Everything else---nontriviality, second law structure, Landauer structure, EC2, EC3---follows from counting, logic, or observation.
+EC2 (finite resources) is derived from the existence of uncertainty (Theorem [\[thm:ec2-derived\]](#thm:ec2-derived){reference-type="ref" reference="thm:ec2-derived"}): if you don't know everything, your capacity is bounded. EC3 (finite speed) is derived from non-contradiction (Theorem [\[thm:ec3-derived\]](#thm:ec3-derived){reference-type="ref" reference="thm:ec3-derived"}): a computational step must take positive time, or the state would be both $A$ and not-$A$ at the same instant. Everything else---nontriviality, second law structure, Landauer structure, EC2, EC3---follows from counting, logic, or observation, with the numerical thermodynamic scale entering only through the declared lower-bound premise in EC1.
 
 ## Our Formal Tools: Coordinate Sufficiency {#sec:intro-formal-tools}
 
@@ -439,7 +387,7 @@ All results are machine-checked in Lean 4:
 
 -   0 hidden axioms
 
-Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on Landauer. Complexity results: hypotheses as explicit theorem parameters. Machine-generated assumption ledger records all dependencies.
+Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on a Landauer floor or any stricter declared per-bit lower bound. Complexity results: hypotheses as explicit theorem parameters. Machine-generated assumption ledger records all dependencies.
 
 ## Paper Structure {#sec:intro-structure}
 
@@ -462,7 +410,7 @@ Claims are stamped with theorem references $[T:n; P:m]$ and Lean handles (H1).
 
 # Formal Foundations {#sec:foundations}
 
-We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory [@savage1954foundations; @raiffa1961applied]. The core definitions in this section are substrate-neutral: they specify the decision relation independently of implementation medium. Physical interpretation is introduced later through explicit encoding and assumption-transfer maps (Section [1.7](#sec:physical-transport){reference-type="ref" reference="sec:physical-transport"}). \[D:Ddef:physical-core-encoding;Pprop:physical-claim-transport;Tthm:physical-bridge-bundle; R:AR\] Physical-state semantics are typed by a realizable state set: any state marked physical has an instance witness, and state-level claims transport over all physical states without substrate-specific axioms. Observer classes induce effective quotient state spaces on the same physical domain; witness pairs certify observer-relative collapses/separations. Two recurrent circuits coupled by a shared channel node are formalized with clamp-observed state, one-bit decision-event lower bounds, and typed YES/NO/ABSTAIN report projection into the claim-admissibility layer. Under separating physical parameterizations, logic/time scaffolds do not determine a unique timed law/objective; deadline forcing yields forced action with positive Landauer/NV lower bounds, and with uncertainty yields nondegenerate belief. Physical-collapse transfer is isolated as an assumption-indexed chain at requirement and canonical levels: declared collapse-map schema implies no physical collapse and yields the canonical $P{=}NP$ physical-impossibility specialization. The map is also derived from an explicit SAT witness plus reduction-energy transport, and collapse is bounded by the sharp disjunction (unbounded budget or zero bit-cost or failed exponential lower bound) under bounded-budget/positive-cost/exponential-lower-bound premises; deterministic/probabilistic/sequential variants preserve the same form. A layered graph module composes cycle witnesses, observer surprisal-plus-novelty nontriviality, entropy-normalized DQ, forced-belief/Bayes-update bridge, and thermodynamic/material lower-bound witnesses. It also fixes the exact-claim admissibility boundary: exact reports require a certified-bit gap over raw payload, hardness-blocked exact claims collapse to raw-only accounting, and integrity/competence cannot both hold universally under hardness-blocked resources. \[D:Tthm:exact-certified-gap-iff-admissible;Pprop:integrity-resource-bound;Ccor:hardness-raw-only-exact; R:AR\]
+We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the optimizer quotient object, drawing on classical decision theory [@savage1954foundations; @raiffa1961applied]. The core definitions in this section are substrate-neutral: they specify the decision relation independently of implementation medium. The mechanized physical-lift and claim-transport scaffolding is summarized later in Section [1.4](#sec:foundations-mechanized-metadata){reference-type="ref" reference="sec:foundations-mechanized-metadata"} so that the mathematical core appears first.
 
 ## Decision Problems with Coordinate Structure
 
@@ -576,14 +524,14 @@ The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordina
 
 Informally: all later results use this same sufficiency definition.
 
-## The Decision Quotient
+## Decision-Quotient Score and Optimizer Quotient Object
 
 ::: definition
 []{#def:decision-equiv label="def:decision-equiv"} For coordinate set $I$, states $s, s'$ are *$I$-equivalent* (written $s \sim_I s'$) if $s_I = s'_I$.
 :::
 
 ::: definition
-[]{#def:decision-quotient label="def:decision-quotient"} The *decision quotient* for state $s$ under coordinate set $I$ is: $$\text{DQ}_I(s) = \frac{|\{a \in A : a \in \operatorname{Opt}(s') \text{ for some } s' \sim_I s\}|}{|A|}$$ This measures the fraction of actions that are optimal for at least one state consistent with $I$.
+[]{#def:decision-quotient label="def:decision-quotient"} The *decision-quotient score* for state $s$ under coordinate set $I$ is: $$\text{DQ}_I(s) = \frac{|\{a \in A : a \in \operatorname{Opt}(s') \text{ for some } s' \sim_I s\}|}{|A|}$$ This is a normalized ambiguity score: it measures the fraction of actions that are optimal for at least one state consistent with $I$. It is not the quotient object $S/{\sim}$ used later for the optimizer map.
 :::
 
 ::: proposition
@@ -595,6 +543,62 @@ Informally: all later results use this same sufficiency definition.
 
 Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal actions form the same set (since $\text{DQ}_I(s) = \text{DQ}_I(s')$ and both equal the relative size of the common optimal set). ◻
 :::
+
+The quotient object behind the optimizer map has a familiar form in **Set**. It is useful to state that explicitly before the later abstraction-boundary theorem.
+
+::: proposition
+[]{#prop:optimizer-coimage label="prop:optimizer-coimage"} For the optimizer map $\operatorname{Opt}: S \to \mathcal{P}(A)$:
+
+1.  the optimizer quotient object is canonically equivalent to $\mathrm{range}(\operatorname{Opt})$;
+
+2.  any surjective abstraction $\phi : S \to T$ that preserves $\operatorname{Opt}$ factors uniquely through this quotient.
+
+Thus, in **Set**, the optimizer quotient object is the familiar coimage of $\operatorname{Opt}$, canonically identified with its image/range.[@maclane1998categories]
+:::
+
+::: proof
+*Proof.* Proof sketch:
+
+1.  The quotient identifies exactly those states with equal optimal-action sets, so its elements correspond bijectively to the values attained by $\operatorname{Opt}$. This gives the canonical equivalence with $\mathrm{range}(\operatorname{Opt})$.
+
+2.  If a surjective abstraction preserves $\operatorname{Opt}$, then the optimizer map already factors through that abstraction. The quotient universal property supplies the mediating map, and surjectivity makes that factorization unique.
+
+ ◻
+:::
+
+Informally: this proposition is only a familiarity anchor. The object is not exotic in **Set**; the later novelty is that this familiar coimage/image factorization governs the complexity and physical-collapse arguments.
+
+The next theorem concerns the quotient object rather than the scalar score above. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The optimizer quotient object is the coarsest such collapse that still preserves the optimal-action boundary.
+
+Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the optimizer quotient object, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. In **Set**, the quotient object here is the familiar coimage of $\operatorname{Opt}$, canonically equivalent to its image/range [@maclane1998categories]. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.
+
+::: theorem
+[]{#thm:abstraction-boundary label="thm:abstraction-boundary"} Let $\phi : S \to T$ be a surjective abstraction of the state space.
+
+1.  Either $\phi$ factors through the optimizer quotient object, or it collapses a decision-relevant distinction, i.e., there exist states $s,s' \in S$ such that $\phi(s)=\phi(s')$ but $\operatorname{Opt}(s)\neq\operatorname{Opt}(s')$.
+
+2.  If every such extra collapse is mapped to a physically feasible collapse at the canonical requirement profile, then no such extra collapse can occur. Therefore $\phi$ must factor through the optimizer quotient object.
+:::
+
+::: proof
+*Proof.* Proof sketch:
+
+1.  If $\phi$ preserves $\operatorname{Opt}$, then the quotient universal property already proved in the previous layer supplies the factorization $\pi = \psi \circ \phi$. In **Set**, this is exactly the coimage factorization of the optimizer map through its image/range. If $\phi$ does not preserve $\operatorname{Opt}$, then by definition there must exist $s,s'$ with $\phi(s)=\phi(s')$ but $\operatorname{Opt}(s)\neq\operatorname{Opt}(s')$. That witness is exactly the erased decision-relevant distinction.
+
+2.  Suppose such an erased distinction is further interpreted as a physically feasible collapse at the canonical requirement profile. The existing physical no-collapse theorem then blocks that collapse map. Therefore the "extra erasure" branch is impossible, leaving only factorization through the optimizer quotient object.
+
+ ◻
+:::
+
+Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the optimizer quotient object is the maximal lossless collapse. In **Set**, that means the familiar coimage/image factorization of $\operatorname{Opt}$. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
+
+## Mechanized Physical-Lift and Claim Metadata {#sec:foundations-mechanized-metadata}
+
+The formal system also records the physical-lift and claim-transport scaffolding used later in the paper. Physical interpretation is introduced through explicit encoding and assumption-transfer maps rather than built into the core tuple itself. \[D:Ddef:physical-core-encoding;Pprop:physical-claim-transport;Tthm:physical-bridge-bundle; R:AR\]
+
+Within that scaffolding, physical-state semantics are typed by realizable-state witnesses, observer classes induce quotient state spaces on a shared physical domain, coupled recurrent circuits support typed YES/NO/ABSTAIN report projection, and timing constraints yield forced-action and lower-bound statements under declared physical parameterizations.
+
+The same metadata layer also packages the assumption-indexed physical-collapse transfer chain, the layered graph witnesses, and the exact-claim admissibility boundary used later in the physics and claim-discipline sections. This material remains explicit, but it is secondary to the mathematical core definitions established above. \[D:Tthm:exact-certified-gap-iff-admissible;Pprop:integrity-resource-bound;Ccor:hardness-raw-only-exact; R:AR\]
 
 ## Computational Model and Input Encoding {#sec:encoding}
 
@@ -924,7 +928,7 @@ Formally: this subsection separates class placement from regime-indexed access c
 :::
 
 ::: definition
-[]{#def:representational-hardness label="def:representational-hardness"} For a fixed decision question and an encoding regime $E$ (Section [1.4](#sec:encoding){reference-type="ref" reference="sec:encoding"}), *representational hardness* is the worst-case computational cost incurred by solvers whose input access is restricted to $E$.
+[]{#def:representational-hardness label="def:representational-hardness"} For a fixed decision question and an encoding regime $E$ (Section [1.5](#sec:encoding){reference-type="ref" reference="sec:encoding"}), *representational hardness* is the worst-case computational cost incurred by solvers whose input access is restricted to $E$.
 :::
 
 In the mechanized architecture model, this is made explicit as a required-work observable and intrinsic lower bound: 'requiredWork' is total realized work, 'hardnessLowerBound' is the intrinsic floor, and 'hardness_is_irreducible_required_work' proves the lower-bound relation for all nonzero use-site counts; 'requiredWork_eq_affine_in_sites' and 'workGrowthDegree' make the site-count growth law explicit.
@@ -1687,10 +1691,10 @@ No. Limited abstract counting collapses computational complexity in the model, b
 We formalize this with a theorem of pure mathematics. No physical law is assumed.
 
 :::: theorem
-[]{#thm:counting-gap label="thm:counting-gap"} Let a system have finite positive capacity $C > 0$. Let each information-acquisition event cost $\varepsilon > 0$. Then there exists a finite maximum event count $N_{\max}$ such that: $$\varepsilon \cdot N \leq C \;\Rightarrow\; N \leq N_{\max}.$$ No bounded system with positive event cost can perform infinitely many events.
+[]{#thm:counting-gap label="thm:counting-gap"} Let $\varepsilon, C \in \mathbb{N}$ with $\varepsilon > 0$ and $C > 0$. If each information-acquisition event consumes $\varepsilon$ discrete cost units, then for every $N \in \mathbb{N}$: $$\varepsilon \cdot N \leq C \;\Rightarrow\; N \leq C.$$ Equivalently, $C$ itself is a finite upper bound on the number of possible events. No bounded system with positive integer event cost can perform infinitely many events.
 
 ::: proof
-*Proof.* In $\mathbb{N}$: every positive integer is $\geq 1$. Therefore $N \leq \varepsilon \cdot N \leq C$. ◻
+*Proof.* This is a discrete theorem. In $\mathbb{N}$, every positive integer is $\geq 1$. Therefore $N = 1 \cdot N \leq \varepsilon \cdot N \leq C$. ◻
 :::
 ::::
 
@@ -1708,13 +1712,13 @@ Theorem [\[thm:counting-gap\]](#thm:counting-gap){reference-type="ref" referenc
 
 2.  **Quantum Mechanics.** State transitions are discrete eigenstate jumps. Planck and Dirac established: $E = h\nu$. [@planck1901distribution; @dirac1930principles]
 
-3.  **Thermodynamics (Landauer).** Each event costs positive energy. Landauer established: $\varepsilon \geq k_B T \ln 2$ joules per bit. [@landauer1961irreversibility; @bennett1982thermodynamics; @berut2012experimental]
+3.  **Thermodynamics (Landauer).** Each event costs positive energy. Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. The Wolpert-style interface used in this artifact adds explicit nonnegative mismatch and residual dissipation terms above that floor; the mismatch term can now be justified inside the artifact from finite-distribution KL divergence when the actual and designed distributions differ, and the finite discrete residual branch can also be justified inside the artifact by an exhaustive reverse-edge split. If the reverse edge flow is positive, asymmetric forward/reverse flows yield a positive two-point KL witness; if the reverse edge flow is zero, the process performs an irreversible one-way state transition, and the existing Landauer-scaled transition-cost theorem yields a positive lower-bound witness. The broader stopping-time / absolute-irreversibility residual regime remains a separate imported premise. When any one of these contributions is positive, the per-bit lower bound is strictly larger than $k_B T \ln 2$. [@landauer1961irreversibility; @bennett1982thermodynamics; @berut2012experimental; @wolpert2024stochastic; @manzano2024absolute; @yadav2026minimal]
 
 The Counting Gap Theorem proves the structure. SR, QM, TD supply the numbers.
 
 ## Why Positive Cost is Derived, Not Assumed {#sec:positive-cost-derived}
 
-The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition costs $\geq k_B T \ln 2$ joules.
+The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$. In the explicit constrained-process interface, any extra dissipation above that floor is represented by separate nonnegative mismatch and residual terms rather than folded into the floor itself. The mismatch branch is now pinned to the existing KL layer: explicit finite-distribution mismatch yields a strictly positive real KL term, which is then conservatively rounded upward into the nat-valued lower-bound units used by the thermodynamic accounting. The finite discrete residual branch is now also theorem-level by an exhaustive local split on the reverse edge of a computational-state process: either the reverse edge is positive and asymmetry yields strictly positive two-point KL divergence, or the reverse edge is zero and the process pays strictly positive Landauer-scaled cost for the resulting irreversible one-way state transition.
 
 If $\varepsilon = 0$, a bounded system could perform infinitely many checks, resolving any decision in zero time and zero energy. This contradicts energy conservation. Therefore $\varepsilon > 0$ is derived from thermodynamics.
 
@@ -1775,7 +1779,7 @@ Each coordinate in $I$ requires one bit operation to read (one state transition:
 
 2.  **Time (BA6 + SR):** Each bit operation requires one tick of duration $\geq d/c$. Minimum decision time $= k \cdot d/c$.
 
-3.  **Energy (BA7 + TD):** Each bit operation costs $\geq k_B T \ln 2$ by **TD**. Minimum decision energy $= k \cdot k_B T \ln 2$.
+3.  **Energy (BA7 + TD):** Each bit operation carries at least the Landauer floor $k_B T \ln 2$ by **TD**. Therefore every resolver obeys the universal lower bound $E \geq k \cdot k_B T \ln 2$; stronger empirical lower bounds only raise this floor.
 
 Structural rank $k$ is simultaneously an information cost, a time cost, and an energy cost. These are not three separate quantities; they are the same count $k$ expressed in three physical units. BA6BA7
 :::
@@ -1791,15 +1795,17 @@ Structural rank $k$ is simultaneously an information cost, a time cost, and an e
 *Proof.* Resolving $\mathcal{D}$ requires reading a sufficient coordinate set $I$ (Theorem [\[thm:resolution-sufficient\]](#thm:resolution-sufficient){reference-type="ref" reference="thm:resolution-sufficient"}). Each coordinate read is one bit operation (Theorem [\[thm:boolean-primitive\]](#thm:boolean-primitive){reference-type="ref" reference="thm:boolean-primitive"}). Bit operations $\geq |I| \geq \mathrm{srank}$ (Theorem [\[thm:srank-physical\]](#thm:srank-physical){reference-type="ref" reference="thm:srank-physical"}). By **TD**, each bit operation costs $\geq k_B T \ln 2$. Summing: $E \geq \mathrm{srank} \cdot k_B T \ln 2$. ◻
 :::
 
-The constant $k_B T \ln 2$ is not calibrated. It is the Landauer bound applied to bit erasure, experimentally verified to $\pm 10\%$ [@berut2012experimental]. In the Lean model, `joulesPerBit` is derived from `landauerJoulesPerBit` (ThermodynamicLift.lean), not declared as a free parameter. BA9
+The constant $k_B T \ln 2$ is the universal Landauer floor for irreversible bit erasure, experimentally verified to $\pm 10\%$ [@berut2012experimental]. It is not, in general, a tight expression for the actual energetic cost of constrained computation [@wolpert2024stochastic; @manzano2024absolute; @yadav2026minimal]. In the Lean model, that distinction is explicit in two layers. First, a coarse floor-plus-overhead interface records that any constrained process may dissipate more than the Landauer floor (WC1--WC5). Second, a refined Wolpert decomposition splits that extra dissipation into a mismatch term and a residual term. Theorem WP1 states that the declared total overhead is exactly the sum of those two components, and WP2 proves that the effective per-bit lower bound dominates the Landauer floor plus both terms. The mismatch branch is now partially promoted from cited premise to theorem: WM1 shows the KL mismatch term is nonnegative, WM2 identifies the zero case exactly, WM3 gives strict positivity under an explicit finite-distribution mismatch witness, and WM4 carries that strict positivity into the discrete lower-bound units used by the thermodynamic model. Theorems WM5 and WM6 then inject that theorem-level mismatch witness into the Wolpert decomposition, so strict separation above the Landauer floor can now be derived directly for the mismatch branch. A second residual branch is now also theorem-level within the current finite machinery: WR1 proves nonnegativity of the two-point forward/reverse residual divergence, WR2 proves strict positivity under an explicit asymmetric positive edge-flow witness, and WR3 lifts that witness into the discrete lower-bound units of the decomposition. The new theorem WR6 packages the exhaustive finite-state edge split directly: if the reverse edge is positive, the pairwise KL branch applies; if the reverse edge vanishes, the process performs an irreversible one-way state transition and the existing Landauer-scaled transition-cost theorem applies. Theorems WR7 and WR8 then inject that unified finite residual witness into the Wolpert decomposition, yielding direct strict separation above the Landauer floor for that finite discrete subclass. Theorems WR9 and WR10 package the same branch at the process level: any finite computational-state process with at least one such asymmetric forward edge already carries a theorem-level residual witness and therefore strictly exceeds the Landauer floor. The broader stopping-time / absolute- irreversibility residual regime imported from [@manzano2024absolute] remains represented by the separate cited premise WP5; and WP6 shows that any one of the derived mismatch branch, the derived finite residual branch, or the cited broader stopping-time branch is already sufficient to force strict separation above the Landauer floor. For the circuit cost interface of [@yadav2026minimal], WP7 and WP8 prove that a declared structural resource lower-bounded by mismatch further tightens the per-bit and total energy lower bounds. Finally, WP9 proves that the existing physical grounding bundle survives under this refined decomposition. Exact equality is retained only as an optional idealized specialization.
+
+**Informally:** the cited stochastic-thermodynamics papers are not rederived in full inside this artifact. The finite-distribution mismatch branch is now proved as far as the existing KL machinery reaches, and a finite residual asymmetry branch is also proved from the same machinery applied to forward/reverse edge-flow distributions, then repackaged as a single process-level witness theorem for finite computational-state systems. The stronger stopping-time / absolute-irreversibility residual regime remains a separate cited premise. Lean then verifies the exact downstream consequences of composing that mixed theorem-plus-premise interface with the decision-theoretic lower bounds already proved in the core system. BA9WM1WM2WM3WM4WM5WM6WR1WR2WR3WR4WR5WR6WR7WR8WR9WR10WP5WP6
 ::::
 
 \[D:Tthm:physical-bridge-bundle; R:AR\]
 
 ::: corollary
-[]{#cor:ground-state label="cor:ground-state"} Among all decision problems, those with $\mathrm{srank} = 1$ have minimum possible thermodynamic cost: $k_B T \ln 2$ per decision. This is the physical ground state.
+[]{#cor:ground-state label="cor:ground-state"} Among all decision problems, those with $\mathrm{srank} = 1$ have the smallest universal lower bound certified by the structural argument: $E_{\mathrm{decision}} \geq k_B T \ln 2$ per decision. In the exact-calibration idealization this is the corresponding ground-state cost.
 
-Problems with $\mathrm{srank} > 1$ are above the ground state by exactly $(\mathrm{srank} - 1) \cdot k_B T \ln 2$ per decision cycle. This gap is physically mandatory, not a consequence of implementation choice. BA8
+Problems with $\mathrm{srank} > 1$ are above that universal floor by at least $(\mathrm{srank} - 1) \cdot k_B T \ln 2$ per decision cycle. This gap is structurally mandatory at the level of lower bounds; stronger empirical per-bit costs only enlarge it. BA8
 :::
 
 \[D:Ccor:ground-state; R:AR\]
@@ -1844,12 +1850,12 @@ This theorem is not about humans. It is grounded at the quantum level where no e
 
 2.  **Atomic level (IA5--IA8):** Two atoms absorbing the same photon agree on $\hbar\omega$. Discrete transitions force exact agreement.
 
-3.  **Molecular level (IA9--IA12):** Two molecules in thermal equilibrium at temperature $T$ agree on $k_B T$. The Landauer bound applies universally.
+3.  **Molecular level (IA9--IA12):** Two molecules in thermal equilibrium at temperature $T$ agree on $k_B T$. The Landauer floor then applies universally to irreversible bit erasure.
 
 4.  **Observer level (IA13--IA18):** Observers are made of atoms and molecules. They inherit invariant agreement from their constituents. By the time ego enters, agreement is already forced.
 
 ::: corollary
-[]{#cor:ego-trap label="cor:ego-trap"} Objecting to observer-level invariant agreement requires rejecting atomic-level invariant agreement, which requires rejecting quantum mechanics. No one will do this. IA17
+[]{#cor:ego-trap label="cor:ego-trap"} Objecting to observer-level invariant agreement requires rejecting atomic-level invariant agreement, which in turn requires rejecting the underlying quantum-level agreement structure. IA17
 :::
 
 Therefore: "all matter in this universe" is a technical term. It means: all matter that agrees with us on the invariant set $\{c, \hbar, k_B, \ldots\}$. This is not a rhetorical claim; it is the *definition* of shared universe membership.
@@ -2622,11 +2628,11 @@ The worry is integrity, not competence. Competence failure is resource shortage 
 :::
 
 ::: definition
-[]{#def:dq-from-gap label="def:dq-from-gap"} \[D:Ddef:dq-from-gap; R:AR,H=cost-growth\] The *decision quotient* measures how much current state predicts future state: $$\mathrm{DQ} = \frac{I(I_t; I_{t+1})}{H(I_{t+1})} = 1 - \frac{H(I_{t+1} \mid I_t)}{H(I_{t+1})} = 1 - \frac{\text{Gap}}{\text{Total}}$$ where $I(I_t; I_{t+1}) = H(I_{t+1}) - H(I_{t+1} \mid I_t)$ is the mutual information between current and future integrity.
+[]{#def:dq-from-gap label="def:dq-from-gap"} \[D:Ddef:dq-from-gap; R:AR,H=cost-growth\] The *decision-quotient ratio* measures how much current state predicts future state: $$\mathrm{DQ} = \frac{I(I_t; I_{t+1})}{H(I_{t+1})} = 1 - \frac{H(I_{t+1} \mid I_t)}{H(I_{t+1})} = 1 - \frac{\text{Gap}}{\text{Total}}$$ where $I(I_t; I_{t+1}) = H(I_{t+1}) - H(I_{t+1} \mid I_t)$ is the mutual information between current and future integrity. This normalized ratio is distinct from the optimizer quotient object $S/{\sim}$ used earlier for the optimizer map.
 :::
 
 ::: theorem
-[]{#thm:dq-physical label="thm:dq-physical"} \[D:Tthm:dq-physical; R:AR,H=cost-growth\] The decision quotient $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$ is a physical quantity with:
+[]{#thm:dq-physical label="thm:dq-physical"} \[D:Tthm:dq-physical; R:AR,H=cost-growth\] The decision-quotient ratio $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$ is a physical quantity with:
 
 1.  $\mathrm{DQ} \in [0, 1]$
 
@@ -2668,7 +2674,7 @@ The uniqueness corollary FN14 shows any two admissible rules must agree.
 :::
 
 ::: corollary
-[]{#cor:thermo-dq label="cor:thermo-dq"} \[D:Ccor:thermo-dq; R:AR,H=cost-growth\] In energy terms: $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$. The decision quotient has a thermodynamic interpretation: it is the fraction of total uncertainty energy that is decision-relevant.
+[]{#cor:thermo-dq label="cor:thermo-dq"} \[D:Ccor:thermo-dq; R:AR,H=cost-growth\] In energy terms: $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$. The decision-quotient ratio has a thermodynamic interpretation: it is the fraction of total uncertainty energy that is decision-relevant.
 :::
 
 ::: proposition
@@ -2689,7 +2695,7 @@ Informally: once operation lower bounds are fixed, energy and accounting lower b
 
 Formally: this block gives two mechanized Bayes derivations: counting/probability identities and admissibility constraints.
 
-The decision quotient framework provides two independent paths to Bayesian updating, each mechanically verified.
+The decision-quotient-ratio layer provides two independent paths to Bayesian updating, each mechanically verified.
 
 #### Path 1: Four Bridges from Counting to DQ.
 
@@ -3556,6 +3562,10 @@ Recent LLM-evaluation work also highlights inference nondeterminism from numeric
 
 The complexity of decision-making has been studied extensively. Foundational treatments of computational complexity and strategic decision settings establish the baseline used here [@papadimitriou1994complexity; @arora2009computational]. Our work extends this to the meta-question of identifying relevant information. Decision-theoretic and information-selection framing in this paper also sits in the tradition of statistical sufficiency and signaling/information economics [@fisher1922mathematical; @spence1973job; @myerson1979incentive; @milgrom1986price; @kamenica2011bayesian].
 
+#### Categorical framing of the quotient object.
+
+The universal property of the optimizer quotient object is not, by itself, a probabilistic construction. In the category **Set**, quotienting states by equality of $\operatorname{Opt}$ is the standard coimage construction for the optimizer map $\operatorname{Opt}: S \to \mathcal{P}(A)$, canonically equivalent to its image/range [@maclane1998categories]. The novelty in this paper is therefore not that coimages exist, but that this particular coimage organizes coordinate sufficiency, witness lower bounds, and physical collapse constraints in one mechanized chain. \[D:Tthm:quotient-universal; R:DM\]
+
 Large-sample Bayesian-network structure learning and causal identification are already known to be hard in adjacent formulations [@chickering2004large; @shpitser2006identification; @koller2009probabilistic]. Our object differs: we classify coordinate sufficiency for optimal-action invariance across static/stochastic/sequential regimes, with theorem-level placements and mechanized reductions.
 
 #### Relation to prior hardness results.
@@ -3602,7 +3612,7 @@ Regime-side interface machinery is also formalized as typed access objects with 
 
 ## Thermodynamic Costs and Landauer's Principle
 
-The thermodynamic lift in Section [\[sec:dichotomy\]](#sec:dichotomy){reference-type="ref" reference="sec:dichotomy"} converts bit-operation lower bounds into energy/carbon lower bounds via linear conversion constants. In this artifact, those conversion consequences are mechanized with explicit premises through Propositions [\[prop:thermo-lift\]](#prop:thermo-lift){reference-type="ref" reference="prop:thermo-lift"}, [\[prop:thermo-hardness-bundle\]](#prop:thermo-hardness-bundle){reference-type="ref" reference="prop:thermo-hardness-bundle"}, [\[prop:thermo-mandatory-cost\]](#prop:thermo-mandatory-cost){reference-type="ref" reference="prop:thermo-mandatory-cost"}, and [\[prop:thermo-conservation-additive\]](#prop:thermo-conservation-additive){reference-type="ref" reference="prop:thermo-conservation-additive"}. Landauer's principle and reversible-computation context [@landauer1961irreversibility; @bennett2003notes] define the physical assumption set; the constants are premises, not Lean-derived constants. \[D:Pprop:thermo-lift, prop:thermo-hardness-bundle, prop:thermo-mandatory-cost, prop:thermo-conservation-additive; R:AR\]
+The thermodynamic lift in Section [\[sec:dichotomy\]](#sec:dichotomy){reference-type="ref" reference="sec:dichotomy"} converts bit-operation lower bounds into energy/carbon lower bounds via linear conversion constants. In this artifact, those conversion consequences are mechanized with explicit premises through Propositions [\[prop:thermo-lift\]](#prop:thermo-lift){reference-type="ref" reference="prop:thermo-lift"}, [\[prop:thermo-hardness-bundle\]](#prop:thermo-hardness-bundle){reference-type="ref" reference="prop:thermo-hardness-bundle"}, [\[prop:thermo-mandatory-cost\]](#prop:thermo-mandatory-cost){reference-type="ref" reference="prop:thermo-mandatory-cost"}, and [\[prop:thermo-conservation-additive\]](#prop:thermo-conservation-additive){reference-type="ref" reference="prop:thermo-conservation-additive"}. Landauer's principle and reversible-computation context [@landauer1961irreversibility; @bennett2003notes] define a minimum floor for irreversible bit erasure, not a generally tight expression for the actual energetic cost of constrained computation. The core stochastic-thermodynamics review literature [@vandenbroeck2015ensemble] supplies the ensemble- and trajectory-level entropy-production framework used to state such refinements. Wolpert et al. [@wolpert2024stochastic] identify the relevant constrained-computation regimes: periodic driving, modular organization, finite-time operation, and input mismatch. Manzano et al. [@manzano2024absolute] make stopping-time and absolute-irreversibility effects explicit and derive universal dissipation bounds in that setting. Yadav, Yousef, and Wolpert [@yadav2026minimal] connect mismatch cost to repeated circuit operation and structural resource lower bounds. Our formal model now represents those inputs at three levels. The coarse interface WC1--WC5 records the Landauer floor plus a generic nonnegative overhead. The refined decomposition WP1--WP9 separates that overhead into mismatch and residual terms. Within that refined layer, the mismatch branch is no longer only imported: WM1--WM4 derive nonnegativity, exact vanishing, strict positivity under explicit finite-distribution mismatch, and the conservative nat-valued lower-bound bridge from the existing KL machinery, while WM5--WM6 inject that derived branch into the Wolpert decomposition and prove strict separation above the Landauer floor. The finite discrete residual branch is now also theorem-level and exhaustive at the local edge level: WR1--WR3 give the bidirectional asymmetry witness, WR6 performs the reverse-edge case split, WR7--WR8 inject the resulting unified finite residual witness into the Wolpert decomposition, and WR9--WR10 repackage the same argument as a single process-level witness theorem for finite computational-state systems. Broader stopping-time / absolute-irreversibility residual regimes remain represented by the separate cited premise WP5. This keeps the causal structure of the cited work explicit while limiting the mechanization claim to what this artifact actually proves: the mismatch branch is derived, a finite discrete residual branch is derived by an exhaustive edge split and repackaged at process level, broader stopping-time residual regimes remain imported, and the composition layer is fully machine-checked. \[D:Pprop:thermo-lift, prop:thermo-hardness-bundle, prop:thermo-mandatory-cost, prop:thermo-conservation-additive; R:AR\]
 
 #### Physics assumptions decompose into regime tags.
 
@@ -3701,7 +3711,7 @@ The proofs are machine-checked; their validity is independent of generation meth
 
 This work depends on results whose authors made possible the insights that could then be machine-verified.
 
-**Fundamental physics.** Albert Einstein established special relativity and the light-speed bound [@einstein1905electrodynamics]; Hermann Minkowski gave it the spacetime formulation [@minkowski1908space]. Max Planck established energy quantization and the constant $k_B$ [@planck1901distribution]. Rolf Landauer proved that erasure costs thermodynamic work [@landauer1961irreversibility]; Charles Bennett showed that reversible computation circumvents this bound [@bennett1982thermodynamics]. Bérut et al. experimentally verified Landauer's principle [@berut2012experimental]. The counting gap theorem (BA10) proves that some finite $c$ must exist from pure mathematics; Einstein told us which one.
+**Fundamental physics.** Albert Einstein established special relativity and the light-speed bound [@einstein1905electrodynamics]; Hermann Minkowski gave it the spacetime formulation [@minkowski1908space]. Max Planck established energy quantization and the constant $k_B$ [@planck1901distribution]. Rolf Landauer proved that erasure costs thermodynamic work [@landauer1961irreversibility]; Charles Bennett showed that reversible computation circumvents this bound [@bennett1982thermodynamics]. Bérut et al. experimentally verified Landauer's principle [@berut2012experimental]. The counting gap theorem (BA10) proves that bounded systems must obey finite acquisition budgets from pure mathematics; relativity then supplies the numerical propagation scale $c$ in our universe. The Wolpert-facing constrained-process interface now makes a sharper point explicit in the formal system: Landauer gives a universal floor, mismatch and residual dissipation are represented as separate theorem-level terms above that floor, the mismatch branch is derived from finite-distribution KL divergence as far as the present mathematics supports, and the finite discrete residual branch is derived by an exhaustive reverse-edge split: either asymmetric bidirectional edge flow yields positive two-point KL divergence, or vanishing reverse flow yields an irreversible one-way state transition with strictly positive Landauer-scaled cost. Any structural resource that is absorbed by mismatch further tightens the induced energy lower bound. Broader stopping-time / absolute-irreversibility residual regimes remain separate cited premises. The machine-checked part is the composition from that mixed theorem-plus-premise interface to the paper's decision-theoretic lower bounds.WC1WC2WC3WC4WC5WM1WM2WM3WM4WM5WM6WR1WR2WR3WR4WR5WR6WR7WR8WP1WP2WP5WP7WP8WP9
 
 **Proof infrastructure.** The Lean 4 proof assistant [@demoura2021lean4] served as the arbiter of correctness. Leonardo de Moura, Sebastian Ullrich, and the Lean 4 team built a tool that transforms mathematical claims into mechanically verified theorems. The Mathlib library [@mathlib2020] provided the formal infrastructure: order theory, linear algebra, complexity-theoretic definitions, and the lemmas that made the formalization possible.
 
@@ -3835,7 +3845,7 @@ Informally: if exact support is not certified, do not make exact claims; when co
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 31898 lines across 118 files, with 1323 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33161 lines across 123 files, with 1375 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -3952,1581 +3962,1657 @@ The hardness distribution theorems (Section [\[sec:simplicity-tax\]](#sec:simpl
 The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake build` in the proof directory to verify.
 
 
-+----------------------------------------------------------------------------------------------------------------------------------+
-| Lean handle entry                                                                                                                |
-+:=================================================================================================================================+
-| Lean handle entry (continued)                                                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| ::: {#lh:AC1}                                                                                                                    |
-| `AC1`                                                                                                                            |
-| :::                                                                                                                              |
-|                                                                                                                                  |
-| `DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC1`                                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AC3`]{#lh:AC3}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC3`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AC4`]{#lh:AC4}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC4`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AC5`]{#lh:AC5}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC5`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AC6`]{#lh:AC6}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC6`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AC8`]{#lh:AC8}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC8`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AC9`]{#lh:AC9}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC9`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AC11`]{#lh:AC11}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC11`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AN1`]{#lh:AN1}`DecisionQuotient.Physics.AssumptionNecessity.no_assumption_free_proof_of_refutable_claim`                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AN2`]{#lh:AN2}`DecisionQuotient.Physics.AssumptionNecessity.countermodel_violates_some_assumption`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AN3`]{#lh:AN3}`DecisionQuotient.Physics.AssumptionNecessity.physical_claim_requires_physical_assumption`                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AN4`]{#lh:AN4}`DecisionQuotient.Physics.AssumptionNecessity.physical_claim_requires_empirically_justified_physical_assumption` |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AN5`]{#lh:AN5}`DecisionQuotient.Physics.AssumptionNecessity.strong_physical_no_go_meta`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AQ1`]{#lh:AQ1}`DecisionQuotient.ClaimClosure.AQ1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AQ2`]{#lh:AQ2}`DecisionQuotient.ClaimClosure.AQ2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AQ3`]{#lh:AQ3}`DecisionQuotient.ClaimClosure.AQ3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AQ4`]{#lh:AQ4}`DecisionQuotient.ClaimClosure.AQ4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AQ5`]{#lh:AQ5}`DecisionQuotient.ClaimClosure.AQ5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AQ6`]{#lh:AQ6}`DecisionQuotient.ClaimClosure.AQ6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AQ7`]{#lh:AQ7}`DecisionQuotient.ClaimClosure.AQ7`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`AQ8`]{#lh:AQ8}`DecisionQuotient.ClaimClosure.AQ8`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG1`]{#lh:ARG1}`PhysicalComplexity.AccessRegime.PhysicalDevice`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG2`]{#lh:ARG2}`PhysicalComplexity.AccessRegime.AccessRegime`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG3`]{#lh:ARG3}`PhysicalComplexity.AccessRegime.RegimeEval`                                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG4`]{#lh:ARG4}`PhysicalComplexity.AccessRegime.RegimeSample`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG5`]{#lh:ARG5}`PhysicalComplexity.AccessRegime.RegimeProof`                                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG6`]{#lh:ARG6}`PhysicalComplexity.AccessRegime.RegimeWithCertificate`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG7`]{#lh:ARG7}`PhysicalComplexity.AccessRegime.RegimeEvalOn`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG8`]{#lh:ARG8}`PhysicalComplexity.AccessRegime.RegimeSampleOn`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG9`]{#lh:ARG9}`PhysicalComplexity.AccessRegime.RegimeProofOn`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG10`]{#lh:ARG10}`PhysicalComplexity.AccessRegime.RegimeWithCertificateOn`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG11`]{#lh:ARG11}`PhysicalComplexity.AccessRegime.HardUnderEval`                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG12`]{#lh:ARG12}`PhysicalComplexity.AccessRegime.AuditableWithCertificate`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG13`]{#lh:ARG13}`PhysicalComplexity.AccessRegime.certificate_upgrades_regime`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG14`]{#lh:ARG14}`PhysicalComplexity.AccessRegime.certificate_upgrades_regime_on`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG15`]{#lh:ARG15}`PhysicalComplexity.AccessRegime.physical_succinct_certification_hard`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG16`]{#lh:ARG16}`PhysicalComplexity.AccessRegime.certificate_amortizes_hardness`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG17`]{#lh:ARG17}`PhysicalComplexity.AccessRegime.regime_upgrade_with_certificate`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG18`]{#lh:ARG18}`PhysicalComplexity.AccessRegime.regime_upgrade_with_certificate_on`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG19`]{#lh:ARG19}`PhysicalComplexity.AccessRegime.AccessChannelLaw`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`ARG20`]{#lh:ARG20}`PhysicalComplexity.AccessRegime.FiveWayMeet`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA1`]{#lh:BA1}`DecisionQuotient.Physics.BoundedAcquisition.BoundedRegion`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA2`]{#lh:BA2}`DecisionQuotient.Physics.BoundedAcquisition.acquisition_rate_bound`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA3`]{#lh:BA3}`DecisionQuotient.Physics.BoundedAcquisition.acquisitions_are_transitions`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA4`]{#lh:BA4}`DecisionQuotient.Physics.BoundedAcquisition.one_bit_per_transition`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA5`]{#lh:BA5}`DecisionQuotient.Physics.BoundedAcquisition.resolution_reads_sufficient`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA6`]{#lh:BA6}`DecisionQuotient.Physics.BoundedAcquisition.srank_le_resolution_bits`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA7`]{#lh:BA7}`DecisionQuotient.Physics.BoundedAcquisition.energy_ge_srank_cost`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA8`]{#lh:BA8}`DecisionQuotient.Physics.BoundedAcquisition.srank_one_energy_minimum`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA9`]{#lh:BA9}`DecisionQuotient.Physics.BoundedAcquisition.physical_grounding_bundle`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BA10`]{#lh:BA10}`DecisionQuotient.Physics.BoundedAcquisition.counting_gap_theorem`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BB1`]{#lh:BB1}`DecisionQuotient.BayesianDQ`                                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BB2`]{#lh:BB2}`DecisionQuotient.BayesianDQ.certaintyGain`                                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BB3`]{#lh:BB3}`DecisionQuotient.dq_is_bayesian_certainty_fraction`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BB4`]{#lh:BB4}`DecisionQuotient.bayesian_dq_matches_physics_dq`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BB5`]{#lh:BB5}`DecisionQuotient.dq_derived_from_bayes`                                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BC1`]{#lh:BC1}`DecisionQuotient.Foundations.counting_nonneg`                                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BC2`]{#lh:BC2}`DecisionQuotient.Foundations.counting_total`                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BC3`]{#lh:BC3}`DecisionQuotient.Foundations.counting_additive`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BC4`]{#lh:BC4}`DecisionQuotient.Foundations.bayes_from_conditional`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BC5`]{#lh:BC5}`DecisionQuotient.Foundations.entropy_contraction`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BF1`]{#lh:BF1}`DecisionQuotient.certainty_of_not_nondegenerateBelief`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BF2`]{#lh:BF2}`DecisionQuotient.nondegenerateBelief_of_uncertaintyForced`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BF3`]{#lh:BF3}`DecisionQuotient.forced_action_under_uncertainty`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BF4`]{#lh:BF4}`DecisionQuotient.bayes_update_exists_of_nondegenerateBelief`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR1`]{#lh:BR1}`DecisionQuotient.Bridges.eth_structural_rank_exponential_hardness`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR2`]{#lh:BR2}`DecisionQuotient.Bridges.fisher_rank_lower_bounds_sufficient_set`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR3`]{#lh:BR3}`DecisionQuotient.Bridges.fpt_srank_parameterized_dichotomy`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR4`]{#lh:BR4}`DecisionQuotient.Bridges.tur_srank_thermodynamic_cost`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR5`]{#lh:BR5}`DecisionQuotient.Bridges.dichotomy_eth_complete_classification`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR6`]{#lh:BR6}`DecisionQuotient.Bridges.reduction_eth_conp_exponential`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR7`]{#lh:BR7}`DecisionQuotient.Bridges.geometry_covering_certificate_complexity`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR8`]{#lh:BR8}`DecisionQuotient.Bridges.rate_distortion_fisher_information_bridge`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR9`]{#lh:BR9}`DecisionQuotient.Bridges.counting_complexity_sharp_p_hardness`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`BR10`]{#lh:BR10}`DecisionQuotient.Bridges.approximation_counting_hardness_bridge`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC1`]{#lh:CC1}`DecisionQuotient.ClaimClosure.RegimeSimulation`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC2`]{#lh:CC2}`DecisionQuotient.ClaimClosure.adq_ordering`                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC3`]{#lh:CC3}`DecisionQuotient.ClaimClosure.system_transfer_licensed_iff_snapshot`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC4`]{#lh:CC4}`DecisionQuotient.ClaimClosure.anchor_sigma2p_complete_conditional`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC5`]{#lh:CC5}`DecisionQuotient.ClaimClosure.anchor_sigma2p_reduction_core`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC6`]{#lh:CC6}`DecisionQuotient.ClaimClosure.anchor_query_relation_false_iff`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC7`]{#lh:CC7}`DecisionQuotient.ClaimClosure.anchor_query_relation_true_iff`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC8`]{#lh:CC8}`DecisionQuotient.ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC9`]{#lh:CC9}`DecisionQuotient.ClaimClosure.bounded_actions_detectable`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC10`]{#lh:CC10}`DecisionQuotient.ClaimClosure.bridge_boundary_represented_family`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC11`]{#lh:CC11}`DecisionQuotient.ClaimClosure.bridge_failure_witness_non_one_step`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC12`]{#lh:CC12}`DecisionQuotient.ClaimClosure.bridge_transfer_iff_one_step_class`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC13`]{#lh:CC13}`DecisionQuotient.ClaimClosure.certified_total_bits_split_core`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC14`]{#lh:CC14}`DecisionQuotient.ClaimClosure.cost_asymmetry_eth_conditional`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC15`]{#lh:CC15}`DecisionQuotient.ClaimClosure.declaredBudgetSlice`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC16`]{#lh:CC16}`DecisionQuotient.ClaimClosure.declaredRegimeFamily_complete`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC17`]{#lh:CC17}`DecisionQuotient.ClaimClosure.declared_physics_no_universal_exact_certifier_core`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC18`]{#lh:CC18}`DecisionQuotient.ClaimClosure.dichotomy_conditional`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC19`]{#lh:CC19}`DecisionQuotient.ClaimClosure.epsilon_admissible_iff_raw_lt_certified_total_core`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC20`]{#lh:CC20}`DecisionQuotient.ClaimClosure.exact_admissible_iff_raw_lt_certified_total_core`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC21`]{#lh:CC21}`DecisionQuotient.ClaimClosure.exact_certainty_inflation_under_hardness_core`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC22`]{#lh:CC22}`DecisionQuotient.ClaimClosure.exact_raw_eq_certified_iff_certainty_inflation_core`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC23`]{#lh:CC23}`DecisionQuotient.ClaimClosure.exact_raw_only_of_no_exact_admissible_core`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC24`]{#lh:CC24}`DecisionQuotient.ClaimClosure.explicit_assumptions_required_of_not_excused_core`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC25`]{#lh:CC25}`DecisionQuotient.ClaimClosure.explicit_state_upper_core`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC26`]{#lh:CC26}`DecisionQuotient.ClaimClosure.hard_family_all_coords_core`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC27`]{#lh:CC27}`DecisionQuotient.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC28`]{#lh:CC28}`DecisionQuotient.ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC29`]{#lh:CC29}`DecisionQuotient.ClaimClosure.information_barrier_opt_oracle_core`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC30`]{#lh:CC30}`DecisionQuotient.ClaimClosure.information_barrier_state_batch_core`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC31`]{#lh:CC31}`DecisionQuotient.ClaimClosure.information_barrier_value_entry_core`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC32`]{#lh:CC32}`DecisionQuotient.ClaimClosure.integrity_resource_bound_for_sufficiency`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC33`]{#lh:CC33}`DecisionQuotient.ClaimClosure.integrity_universal_applicability_core`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC34`]{#lh:CC34}`DecisionQuotient.ClaimClosure.meta_coordinate_irrelevant_of_invariance_on_declared_slice`                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC35`]{#lh:CC35}`DecisionQuotient.ClaimClosure.meta_coordinate_not_relevant_on_declared_slice`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC36`]{#lh:CC36}`DecisionQuotient.ClaimClosure.minsuff_collapse_core`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC37`]{#lh:CC37}`DecisionQuotient.ClaimClosure.minsuff_collapse_to_conp_conditional`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC38`]{#lh:CC38}`DecisionQuotient.ClaimClosure.minsuff_conp_complete_conditional`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC39`]{#lh:CC39}`DecisionQuotient.ClaimClosure.no_auto_minimize_of_p_neq_conp`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC40`]{#lh:CC40}`DecisionQuotient.ClaimClosure.no_exact_claim_admissible_under_hardness_core`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC41`]{#lh:CC41}`DecisionQuotient.ClaimClosure.no_exact_claim_under_declared_assumptions_unless_excused_core`                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC42`]{#lh:CC42}`DecisionQuotient.ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC43`]{#lh:CC43}`DecisionQuotient.ClaimClosure.no_uncertified_exact_claim_core`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC44`]{#lh:CC44}`DecisionQuotient.ClaimClosure.one_step_bridge`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC45`]{#lh:CC45}`DecisionQuotient.ClaimClosure.oracle_lattice_transfer_as_regime_simulation`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC46`]{#lh:CC46}`DecisionQuotient.ClaimClosure.physical_crossover_above_cap_core`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC47`]{#lh:CC47}`DecisionQuotient.ClaimClosure.physical_crossover_core`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC48`]{#lh:CC48}`DecisionQuotient.ClaimClosure.physical_crossover_hardness_core`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC49`]{#lh:CC49}`DecisionQuotient.ClaimClosure.physical_crossover_policy_core`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC50`]{#lh:CC50}`DecisionQuotient.ClaimClosure.process_bridge_failure_witness`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC51`]{#lh:CC51}`DecisionQuotient.ClaimClosure.poseAnchorQuery`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC52`]{#lh:CC52}`DecisionQuotient.ClaimClosure.pose_returns_anchor_query_object`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC53`]{#lh:CC53}`DecisionQuotient.ClaimClosure.posed_anchor_checked_true_implies_truth`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC54`]{#lh:CC54}`DecisionQuotient.ClaimClosure.posed_anchor_exact_claim_admissible_iff_competent`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC55`]{#lh:CC55}`DecisionQuotient.ClaimClosure.posed_anchor_exact_claim_requires_evidence`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC56`]{#lh:CC56}`DecisionQuotient.ClaimClosure.posed_anchor_no_competence_no_exact_claim`                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC57`]{#lh:CC57}`DecisionQuotient.ClaimClosure.posed_anchor_query_truth_iff_exists_anchor`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC58`]{#lh:CC58}`DecisionQuotient.ClaimClosure.posed_anchor_query_truth_iff_exists_forall`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC59`]{#lh:CC59}`DecisionQuotient.ClaimClosure.posed_anchor_signal_positive_certified_implies_admissible`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC60`]{#lh:CC60}`DecisionQuotient.ClaimClosure.query_obstruction_boolean_corollary`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC61`]{#lh:CC61}`DecisionQuotient.ClaimClosure.query_obstruction_finite_state_core`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC62`]{#lh:CC62}`DecisionQuotient.ClaimClosure.regime_core_claim_proved`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC63`]{#lh:CC63}`DecisionQuotient.ClaimClosure.regime_simulation_transfers_hardness`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC64`]{#lh:CC64}`DecisionQuotient.ClaimClosure.reusable_heuristic_of_detectable`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC65`]{#lh:CC65}`DecisionQuotient.ClaimClosure.selectorSufficient_not_implies_setSufficient`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC66`]{#lh:CC66}`DecisionQuotient.ClaimClosure.separable_detectable`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC67`]{#lh:CC67}`DecisionQuotient.ClaimClosure.snapshot_vs_process_typed_boundary`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC68`]{#lh:CC68}`DecisionQuotient.ClaimClosure.standard_assumption_ledger_unpack`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC69`]{#lh:CC69}`DecisionQuotient.ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC70`]{#lh:CC70}`DecisionQuotient.ClaimClosure.subproblem_hardness_lifts_to_full`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC71`]{#lh:CC71}`DecisionQuotient.ClaimClosure.subproblem_transfer_as_regime_simulation`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC72`]{#lh:CC72}`DecisionQuotient.ClaimClosure.sufficiency_conp_complete_conditional`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC73`]{#lh:CC73}`DecisionQuotient.ClaimClosure.sufficiency_conp_reduction_core`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC74`]{#lh:CC74}`DecisionQuotient.ClaimClosure.sufficiency_iff_dq_ratio`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC75`]{#lh:CC75}`DecisionQuotient.ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC76`]{#lh:CC76}`DecisionQuotient.ClaimClosure.thermo_conservation_additive_core`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC77`]{#lh:CC77}`DecisionQuotient.ClaimClosure.thermo_energy_carbon_lift_core`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC78`]{#lh:CC78}`DecisionQuotient.ClaimClosure.thermo_eventual_lift_core`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC79`]{#lh:CC79}`DecisionQuotient.ClaimClosure.thermo_hardness_bundle_core`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC80`]{#lh:CC80}`DecisionQuotient.ClaimClosure.thermo_mandatory_cost_core`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC81`]{#lh:CC81}`DecisionQuotient.ClaimClosure.tractable_bounded_core`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC82`]{#lh:CC82}`DecisionQuotient.ClaimClosure.tractable_separable_core`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC83`]{#lh:CC83}`DecisionQuotient.ClaimClosure.tractable_subcases_conditional`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC84`]{#lh:CC84}`DecisionQuotient.ClaimClosure.tractable_tree_core`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC85`]{#lh:CC85}`DecisionQuotient.ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC86`]{#lh:CC86}`DecisionQuotient.ClaimClosure.tree_structure_detectable`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC87`]{#lh:CC87}`DecisionQuotient.ClaimClosure.typed_claim_admissibility_core`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC88`]{#lh:CC88}`DecisionQuotient.ClaimClosure.typed_static_class_completeness`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CC89`]{#lh:CC89}`DecisionQuotient.ClaimClosure.universal_solver_framing_core`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CCC1`]{#lh:CCC1}`DecisionQuotient.CC.anchor_sigma2p_complete_conditional`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CCC2`]{#lh:CCC2}`DecisionQuotient.CC.cost_asymmetry_eth_conditional`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CCC3`]{#lh:CCC3}`DecisionQuotient.CC.dichotomy_conditional`                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CCC4`]{#lh:CCC4}`DecisionQuotient.CC.minsuff_collapse_to_conp_conditional`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CCC5`]{#lh:CCC5}`DecisionQuotient.CC.minsuff_conp_complete_conditional`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CCC6`]{#lh:CCC6}`DecisionQuotient.CC.sufficiency_conp_complete_conditional`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CCC7`]{#lh:CCC7}`DecisionQuotient.CC.tractable_subcases_conditional`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF1`]{#lh:CF1}`DecisionQuotient.Physics.ConstraintForcing.laws_not_determined_of_parameter_separation`                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF2`]{#lh:CF2}`DecisionQuotient.Physics.ConstraintForcing.logic_time_not_sufficient_for_unique_law`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF3`]{#lh:CF3}`DecisionQuotient.Physics.ConstraintForcing.laws_determined_implies_objective_determined`                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF4`]{#lh:CF4}`DecisionQuotient.Physics.ConstraintForcing.objective_not_determined_of_parameter_separation`                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF5`]{#lh:CF5}`DecisionQuotient.Physics.ConstraintForcing.forcedDecisionBits_pos_of_deadline`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF6`]{#lh:CF6}`DecisionQuotient.Physics.ConstraintForcing.actionForced_of_deadline`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF7`]{#lh:CF7}`DecisionQuotient.Physics.ConstraintForcing.nondegenerateBelief_of_deadline_and_uncertainty`                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF8`]{#lh:CF8}`DecisionQuotient.Physics.ConstraintForcing.forced_decision_implies_positive_landauer_cost`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CF9`]{#lh:CF9}`DecisionQuotient.Physics.ConstraintForcing.forced_decision_implies_positive_nv_work`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CH1`]{#lh:CH1}`DecisionQuotient.ClaimClosure.CH1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CH2`]{#lh:CH2}`DecisionQuotient.ClaimClosure.CH2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CH3`]{#lh:CH3}`DecisionQuotient.ClaimClosure.CH3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CH5`]{#lh:CH5}`DecisionQuotient.ClaimClosure.CH5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CH6`]{#lh:CH6}`DecisionQuotient.ClaimClosure.CH6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CR1`]{#lh:CR1}`DecisionQuotient.ConfigReduction.config_sufficiency_iff_behavior_preserving`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT1`]{#lh:CT1}`DecisionQuotient.Physics.ClaimTransport.PhysicalEncoding`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT2`]{#lh:CT2}`DecisionQuotient.Physics.ClaimTransport.physical_claim_lifts_from_core`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT3`]{#lh:CT3}`DecisionQuotient.Physics.ClaimTransport.physical_claim_lifts_from_core_conditional`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT4`]{#lh:CT4}`DecisionQuotient.Physics.ClaimTransport.physical_counterexample_yields_core_counterexample`                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT5`]{#lh:CT5}`DecisionQuotient.Physics.ClaimTransport.physical_counterexample_invalidates_core_rule`                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT6`]{#lh:CT6}`DecisionQuotient.Physics.ClaimTransport.no_physical_counterexample_of_core_theorem`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT7`]{#lh:CT7}`DecisionQuotient.Physics.ClaimTransport.LawGapInstance`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT8`]{#lh:CT8}`DecisionQuotient.Physics.ClaimTransport.lawGapEncoding`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT9`]{#lh:CT9}`DecisionQuotient.Physics.ClaimTransport.lawGapPhysicalClaim`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT10`]{#lh:CT10}`DecisionQuotient.Physics.ClaimTransport.law_gap_physical_claim_holds`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT11`]{#lh:CT11}`DecisionQuotient.Physics.ClaimTransport.no_law_gap_counterexample`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CT12`]{#lh:CT12}`DecisionQuotient.Physics.ClaimTransport.physical_bridge_bundle`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV1`]{#lh:CV1}`DecisionQuotient.Physics.Conversation.RecurrentCircuit`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV2`]{#lh:CV2}`DecisionQuotient.Physics.Conversation.CoupledConversation`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV3`]{#lh:CV3}`DecisionQuotient.Physics.Conversation.JointState`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV4`]{#lh:CV4}`DecisionQuotient.Physics.Conversation.tick_uses_shared_node`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV5`]{#lh:CV5}`DecisionQuotient.Physics.Conversation.tick_shared_is_merged_emissions`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV6`]{#lh:CV6}`DecisionQuotient.Physics.Conversation.channel_projection_eq_iff_quantized_eq`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV7`]{#lh:CV7}`DecisionQuotient.Physics.Conversation.clamp_projection_eq_iff_same_clamped_bit`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV10`]{#lh:CV10}`DecisionQuotient.Physics.Conversation.explanationGap_add_explanationBits`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV11`]{#lh:CV11}`DecisionQuotient.Physics.Conversation.toClaimReport`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV12`]{#lh:CV12}`DecisionQuotient.Physics.Conversation.abstain_iff_no_answer`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV13`]{#lh:CV13}`DecisionQuotient.Physics.Conversation.yes_no_iff_exact_claim`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV14`]{#lh:CV14}`DecisionQuotient.Physics.Conversation.toReportSignal_completion_defined_of_budget`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV15`]{#lh:CV15}`DecisionQuotient.Physics.Conversation.toReportSignal_signal_consistent_zero_certified`                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV16`]{#lh:CV16}`DecisionQuotient.Physics.Conversation.abstain_report_can_carry_explanation`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV17`]{#lh:CV17}`DecisionQuotient.Physics.Conversation.clampDecisionEvent_iff_bitOps_pos`                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV18`]{#lh:CV18}`DecisionQuotient.Physics.Conversation.clamp_event_implies_positive_energy`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV19`]{#lh:CV19}`DecisionQuotient.Physics.Conversation.BinaryAnswer`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV20`]{#lh:CV20}`DecisionQuotient.Physics.Conversation.ConversationReport`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV21`]{#lh:CV21}`DecisionQuotient.Physics.Conversation.explanationGap`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV26`]{#lh:CV26}`DecisionQuotient.Physics.Conversation.toClaimReport_ne_epsilon`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV27`]{#lh:CV27}`DecisionQuotient.Physics.Conversation.toReportSignal`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`CV28`]{#lh:CV28}`DecisionQuotient.Physics.Conversation.toReportSignal_declares_bound`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC1`]{#lh:DC1}`DecisionQuotient.StochasticSequential.static_stochastic_strict_separation`                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC2`]{#lh:DC2}`DecisionQuotient.StochasticSequential.stochastic_sequential_strict_separation`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC3`]{#lh:DC3}`DecisionQuotient.StochasticSequential.complexity_dichotomy_hierarchy`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC4`]{#lh:DC4}`DecisionQuotient.StochasticSequential.regime_hierarchy`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC5`]{#lh:DC5}`DecisionQuotient.StochasticSequential.coNP_subset_PP`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC6`]{#lh:DC6}`DecisionQuotient.StochasticSequential.PP_subset_PSPACE`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC7`]{#lh:DC7}`DecisionQuotient.StochasticSequential.coNP_subset_PSPACE`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC8`]{#lh:DC8}`DecisionQuotient.StochasticSequential.static_to_coNP`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC9`]{#lh:DC9}`DecisionQuotient.StochasticSequential.stochastic_to_PP`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC10`]{#lh:DC10}`DecisionQuotient.StochasticSequential.sequential_to_PSPACE`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC11`]{#lh:DC11}`DecisionQuotient.StochasticSequential.ClaimClosure.claim_six_subcases`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC12`]{#lh:DC12}`DecisionQuotient.StochasticSequential.ClaimClosure.claim_hierarchy`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC13`]{#lh:DC13}`DecisionQuotient.StochasticSequential.ClaimClosure.claim_tractable_subcases_to_P`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC14`]{#lh:DC14}`DecisionQuotient.StochasticSequential.stochastic_dichotomy`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC15`]{#lh:DC15}`DecisionQuotient.StochasticSequential.above_threshold_hard`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC16`]{#lh:DC16}`DecisionQuotient.StochasticSequential.StochasticAnchorSufficient`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC17`]{#lh:DC17}`DecisionQuotient.StochasticSequential.StochasticAnchorSufficiencyCheck`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC18`]{#lh:DC18}`DecisionQuotient.StochasticSequential.stochastic_anchor_check_iff`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC19`]{#lh:DC19}`DecisionQuotient.StochasticSequential.stochastic_anchor_sufficient_of_stochastic_sufficient`                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC20`]{#lh:DC20}`DecisionQuotient.StochasticSequential.SequentialAnchorSufficient`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC21`]{#lh:DC21}`DecisionQuotient.StochasticSequential.SequentialAnchorSufficiencyCheck`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC22`]{#lh:DC22}`DecisionQuotient.StochasticSequential.sequential_anchor_check_iff`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC23`]{#lh:DC23}`DecisionQuotient.StochasticSequential.sequential_anchor_sufficient_of_sequential_sufficient`                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC24`]{#lh:DC24}`DecisionQuotient.StochasticSequential.StochasticAnchorCheckInstance`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC25`]{#lh:DC25}`DecisionQuotient.StochasticSequential.reduceMAJSAT_correct_anchor_strict`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC26`]{#lh:DC26}`DecisionQuotient.StochasticSequential.reduceMAJSAT_to_stochastic_anchor_reduction`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC27`]{#lh:DC27}`DecisionQuotient.StochasticSequential.SequentialAnchorCheckInstance`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC28`]{#lh:DC28}`DecisionQuotient.StochasticSequential.reduceTQBF_correct_anchor`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC29`]{#lh:DC29}`DecisionQuotient.StochasticSequential.reduceTQBF_to_sequential_anchor_reduction`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC30`]{#lh:DC30}`DecisionQuotient.StochasticSequential.StatePotential`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC31`]{#lh:DC31}`DecisionQuotient.StochasticSequential.utilityFromPotentialDrop_le_iff_nextPotential_ge`                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC32`]{#lh:DC32}`DecisionQuotient.StochasticSequential.utility_from_action_state_potential`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC33`]{#lh:DC33}`DecisionQuotient.StochasticSequential.stochasticExpectedUtility_eq_neg_expectedActionPotential`               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC34`]{#lh:DC34}`DecisionQuotient.StochasticSequential.stochasticExpectedUtility_le_iff_expectedActionPotential_ge`            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC35`]{#lh:DC35}`DecisionQuotient.StochasticSequential.landauerEnergyFloor_nonneg`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC36`]{#lh:DC36}`DecisionQuotient.StochasticSequential.landauerEnergyFloor_mono_bits`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DC37`]{#lh:DC37}`DecisionQuotient.StochasticSequential.thermodynamicCost_eq_landauerEnergyFloorRoom_states`                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DE1`]{#lh:DE1}`DecisionQuotient.ClaimClosure.DE1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DE2`]{#lh:DE2}`DecisionQuotient.ClaimClosure.DE2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DE3`]{#lh:DE3}`DecisionQuotient.ClaimClosure.DE3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DE4`]{#lh:DE4}`DecisionQuotient.ClaimClosure.DE4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG1`]{#lh:DG1}`DecisionQuotient.Outside`                                                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG2`]{#lh:DG2}`DecisionQuotient.anchoredSlice`                                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG3`]{#lh:DG3}`DecisionQuotient.anchoredSliceEquivOutside`                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG4`]{#lh:DG4}`DecisionQuotient.card_outside_eq_sub`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG5`]{#lh:DG5}`DecisionQuotient.card_anchoredSlice`                                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG6`]{#lh:DG6}`DecisionQuotient.card_anchoredSlice_eq_pow_sub`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG7`]{#lh:DG7}`DecisionQuotient.card_anchoredSlice_eq_uniform`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG8`]{#lh:DG8}`DecisionQuotient.anchoredSlice_mul_fixed_eq_full`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG9`]{#lh:DG9}`DecisionQuotient.constantBoolDP`                                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG10`]{#lh:DG10}`DecisionQuotient.firstCoordDP`                                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG11`]{#lh:DG11}`DecisionQuotient.constantBoolDP_opt`                                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG12`]{#lh:DG12}`DecisionQuotient.firstCoordDP_opt`                                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG13`]{#lh:DG13}`DecisionQuotient.constantBoolDP_empty_sufficient`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG14`]{#lh:DG14}`DecisionQuotient.firstCoordDP_empty_not_sufficient`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG15`]{#lh:DG15}`DecisionQuotient.boolHypercube_node_count`                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG16`]{#lh:DG16}`DecisionQuotient.node_count_does_not_determine_edge_geometry`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG17`]{#lh:DG17}`DecisionQuotient.DecisionProblem.edgeOnComplement`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DG18`]{#lh:DG18}`DecisionQuotient.DecisionProblem.edgeOnComplement_iff_not_sufficient`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DP1`]{#lh:DP1}`DecisionQuotient.DecisionProblem.minimalSufficient_iff_relevant`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DP2`]{#lh:DP2}`DecisionQuotient.DecisionProblem.relevantSet_is_minimal`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DP3`]{#lh:DP3}`DecisionQuotient.DecisionProblem.sufficient_implies_selectorSufficient`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DP4`]{#lh:DP4}`DecisionQuotient.ClaimClosure.DecisionProblem.epsOpt_zero_eq_opt`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DP5`]{#lh:DP5}`DecisionQuotient.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DP6`]{#lh:DP6}`DecisionQuotient.ClaimClosure.DP6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DP7`]{#lh:DP7}`DecisionQuotient.ClaimClosure.DP7`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DP8`]{#lh:DP8}`DecisionQuotient.ClaimClosure.DP8`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ1`]{#lh:DQ1}`DecisionQuotient.ClaimClosure.DQ1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ2`]{#lh:DQ2}`DecisionQuotient.ClaimClosure.DQ2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ3`]{#lh:DQ3}`DecisionQuotient.ClaimClosure.DQ3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ4`]{#lh:DQ4}`DecisionQuotient.ClaimClosure.DQ4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ5`]{#lh:DQ5}`DecisionQuotient.ClaimClosure.DQ5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ6`]{#lh:DQ6}`DecisionQuotient.ClaimClosure.DQ6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ7`]{#lh:DQ7}`DecisionQuotient.ClaimClosure.DQ7`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DQ8`]{#lh:DQ8}`DecisionQuotient.ClaimClosure.DQ8`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DS1`]{#lh:DS1}`DecisionQuotient.ClaimClosure.DS1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DS2`]{#lh:DS2}`DecisionQuotient.ClaimClosure.DS2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DS3`]{#lh:DS3}`DecisionQuotient.ClaimClosure.DS3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DS4`]{#lh:DS4}`DecisionQuotient.ClaimClosure.DS4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DS5`]{#lh:DS5}`DecisionQuotient.ClaimClosure.DS5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DS6`]{#lh:DS6}`DecisionQuotient.ClaimClosure.DS6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT1`]{#lh:DT1}`DecisionQuotient.Physics.DecisionTime.TimedState`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT2`]{#lh:DT2}`DecisionQuotient.Physics.DecisionTime.DecisionProcess`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT3`]{#lh:DT3}`DecisionQuotient.Physics.DecisionTime.tick`                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT4`]{#lh:DT4}`DecisionQuotient.Physics.DecisionTime.DecisionEvent`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT5`]{#lh:DT5}`DecisionQuotient.Physics.DecisionTime.TimeUnitStep`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT6`]{#lh:DT6}`DecisionQuotient.Physics.DecisionTime.time_is_discrete`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT7`]{#lh:DT7}`DecisionQuotient.Physics.DecisionTime.time_coordinate_falsifiable`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT8`]{#lh:DT8}`DecisionQuotient.Physics.DecisionTime.tick_increments_time`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT9`]{#lh:DT9}`DecisionQuotient.Physics.DecisionTime.tick_decision_witness`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT10`]{#lh:DT10}`DecisionQuotient.Physics.DecisionTime.tick_is_decision_event`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT11`]{#lh:DT11}`DecisionQuotient.Physics.DecisionTime.decision_event_implies_time_unit`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT12`]{#lh:DT12}`DecisionQuotient.Physics.DecisionTime.decision_taking_place_is_unit_of_time`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT13`]{#lh:DT13}`DecisionQuotient.Physics.DecisionTime.decision_event_iff_eq_tick`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT14`]{#lh:DT14}`DecisionQuotient.Physics.DecisionTime.run`                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT15`]{#lh:DT15}`DecisionQuotient.Physics.DecisionTime.run_time_exact`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT16`]{#lh:DT16}`DecisionQuotient.Physics.DecisionTime.run_elapsed_time_eq_ticks`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT17`]{#lh:DT17}`DecisionQuotient.Physics.DecisionTime.decisionTrace`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT18`]{#lh:DT18}`DecisionQuotient.Physics.DecisionTime.decisionTrace_length_eq_ticks`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT19`]{#lh:DT19}`DecisionQuotient.Physics.DecisionTime.decision_count_equals_elapsed_time`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT20`]{#lh:DT20}`DecisionQuotient.Physics.DecisionTime.SubstrateKind`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT21`]{#lh:DT21}`DecisionQuotient.Physics.DecisionTime.SubstrateModel`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT22`]{#lh:DT22}`DecisionQuotient.Physics.DecisionTime.substrate_step_realizes_decision_event`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT23`]{#lh:DT23}`DecisionQuotient.Physics.DecisionTime.substrate_step_is_time_unit`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`DT24`]{#lh:DT24}`DecisionQuotient.Physics.DecisionTime.time_unit_law_substrate_invariant`                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`EI1`]{#lh:EI1}`DecisionQuotient.ThermodynamicLift.energy_ge_kbt_nat_entropy`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`EI2`]{#lh:EI2}`DecisionQuotient.ThermodynamicLift.energy_ground_state_tracks_entropy`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`EI4`]{#lh:EI4}`DecisionQuotient.ThermodynamicLift.landauerJoulesPerBit_pos`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`EI5`]{#lh:EI5}`DecisionQuotient.ThermodynamicLift.neukart_vinokur_duality`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`EP1`]{#lh:EP1}`DecisionQuotient.Physics.LocalityPhysics.landauer_principle`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`EP2`]{#lh:EP2}`DecisionQuotient.Physics.LocalityPhysics.finite_regional_energy`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`EP3`]{#lh:EP3}`DecisionQuotient.Physics.LocalityPhysics.finite_signal_speed`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`EP4`]{#lh:EP4}`DecisionQuotient.Physics.LocalityPhysics.nontrivial_physics`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FI3`]{#lh:FI3}`DecisionQuotient.FunctionalInformation.functional_information_from_counting`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FI6`]{#lh:FI6}`DecisionQuotient.FunctionalInformation.functional_information_from_thermodynamics`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FI7`]{#lh:FI7}`DecisionQuotient.FunctionalInformation.first_principles_thermo_coincide`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FN7`]{#lh:FN7}`DecisionQuotient.BayesOptimalityProof.KL_nonneg`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FN8`]{#lh:FN8}`DecisionQuotient.BayesOptimalityProof.entropy_le_crossEntropy`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FN12`]{#lh:FN12}`DecisionQuotient.BayesOptimalityProof.crossEntropy_eq_entropy_add_KL`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FN14`]{#lh:FN14}`DecisionQuotient.BayesOptimalityProof.bayes_is_optimal`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FN15`]{#lh:FN15}`DecisionQuotient.BayesOptimalityProof.KL_eq_sum_klFun`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FN16`]{#lh:FN16}`DecisionQuotient.BayesOptimalityProof.KL_eq_zero_iff_eq`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP1`]{#lh:FP1}`DecisionQuotient.Physics.LocalityPhysics.trivial_states_all_equal`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP2`]{#lh:FP2}`DecisionQuotient.Physics.LocalityPhysics.equal_states_constant_function`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP3`]{#lh:FP3}`DecisionQuotient.Physics.LocalityPhysics.constant_function_singleton_image`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP4`]{#lh:FP4}`DecisionQuotient.Physics.LocalityPhysics.singleton_image_zero_entropy`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP5`]{#lh:FP5}`DecisionQuotient.Physics.LocalityPhysics.zero_entropy_no_information`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP6`]{#lh:FP6}`DecisionQuotient.Physics.LocalityPhysics.triviality_implies_no_information`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP7`]{#lh:FP7}`DecisionQuotient.Physics.LocalityPhysics.information_requires_nontriviality`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP8`]{#lh:FP8}`DecisionQuotient.Physics.LocalityPhysics.atypical_states_rare`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP9`]{#lh:FP9}`DecisionQuotient.Physics.LocalityPhysics.random_misses_target`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP10`]{#lh:FP10}`DecisionQuotient.Physics.LocalityPhysics.errors_accumulate`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP11`]{#lh:FP11}`DecisionQuotient.Physics.LocalityPhysics.wrong_paths_dominate`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP12`]{#lh:FP12}`DecisionQuotient.Physics.LocalityPhysics.second_law_from_counting`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP13`]{#lh:FP13}`DecisionQuotient.Physics.LocalityPhysics.verification_is_information`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP14`]{#lh:FP14}`DecisionQuotient.Physics.LocalityPhysics.entropy_is_information`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FP15`]{#lh:FP15}`DecisionQuotient.Physics.LocalityPhysics.landauer_structure`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT1`]{#lh:FPT1}`DecisionQuotient.Physics.LocalityPhysics.Timeline`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT2`]{#lh:FPT2}`DecisionQuotient.Physics.LocalityPhysics.FPT2_function_deterministic`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT3`]{#lh:FPT3}`DecisionQuotient.Physics.LocalityPhysics.FPT3_outputs_differ_inputs_differ`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT4`]{#lh:FPT4}`DecisionQuotient.Physics.LocalityPhysics.FPT4_step_requires_distinct_moments`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT5`]{#lh:FPT5}`DecisionQuotient.Physics.LocalityPhysics.FPT5_distinct_moments_positive_duration`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT6`]{#lh:FPT6}`DecisionQuotient.Physics.LocalityPhysics.FPT6_step_takes_positive_time`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT7`]{#lh:FPT7}`DecisionQuotient.Physics.LocalityPhysics.FPT7_no_instantaneous_steps`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT8`]{#lh:FPT8}`DecisionQuotient.Physics.LocalityPhysics.FPT8_propagation_takes_time`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT9`]{#lh:FPT9}`DecisionQuotient.Physics.LocalityPhysics.FPT9_speed_bounded_by_positive_time`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FPT10`]{#lh:FPT10}`DecisionQuotient.Physics.LocalityPhysics.FPT10_ec3_is_logical`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FS1`]{#lh:FS1}`DecisionQuotient.Statistics.sum_fisherScore_eq_srank`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FS2`]{#lh:FS2}`DecisionQuotient.Statistics.fisherMatrix_rank_eq_srank`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FS3`]{#lh:FS3}`DecisionQuotient.Statistics.fisherMatrix_trace_eq_srank`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FS4`]{#lh:FS4}`DecisionQuotient.Statistics.fisherScore_relevant`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`FS5`]{#lh:FS5}`DecisionQuotient.Statistics.fisherScore_irrelevant`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE1`]{#lh:GE1}`DecisionQuotient.ClaimClosure.GE1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE2`]{#lh:GE2}`DecisionQuotient.ClaimClosure.GE2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE3`]{#lh:GE3}`DecisionQuotient.ClaimClosure.GE3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE4`]{#lh:GE4}`DecisionQuotient.ClaimClosure.GE4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE5`]{#lh:GE5}`DecisionQuotient.ClaimClosure.GE5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE6`]{#lh:GE6}`DecisionQuotient.ClaimClosure.GE6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE7`]{#lh:GE7}`DecisionQuotient.ClaimClosure.GE7`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE8`]{#lh:GE8}`DecisionQuotient.ClaimClosure.GE8`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GE9`]{#lh:GE9}`DecisionQuotient.ClaimClosure.GE9`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN1`]{#lh:GN1}`DecisionQuotient.LogicGraph.isCycle`                                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN2`]{#lh:GN2}`DecisionQuotient.LogicGraph.cycleWitnessBits_pos`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN3`]{#lh:GN3}`DecisionQuotient.LogicGraph.pathProb_nonneg`                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN4`]{#lh:GN4}`DecisionQuotient.LogicGraph.pathSurprisal_nonneg_of_positive_mass`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN5`]{#lh:GN5}`DecisionQuotient.LogicGraph.nontrivialityScore_unknown`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN6`]{#lh:GN6}`DecisionQuotient.LogicGraph.observerEntropy_nonneg`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN7`]{#lh:GN7}`DecisionQuotient.LogicGraph.dqFromEntropy_in_unit_interval`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN8`]{#lh:GN8}`DecisionQuotient.LogicGraph.path_belief_forced_under_uncertainty`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN9`]{#lh:GN9}`DecisionQuotient.LogicGraph.bayes_update_exists_for_observer_paths`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN10`]{#lh:GN10}`DecisionQuotient.LogicGraph.cycle_witness_implies_positive_landauer`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN11`]{#lh:GN11}`DecisionQuotient.LogicGraph.cycle_witness_implies_positive_nv_work`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN12`]{#lh:GN12}`DecisionQuotient.LogicGraph.dna_erasure_implies_positive_landauer`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`GN13`]{#lh:GN13}`DecisionQuotient.LogicGraph.dna_room_temp_environmental_stability`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`H1`]{#lh:H1}`...`                                                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD1`]{#lh:HD1}`DecisionQuotient.HardnessDistribution.centralization_dominance_bundle`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD2`]{#lh:HD2}`DecisionQuotient.HardnessDistribution.centralization_step_saves_n_minus_one`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD3`]{#lh:HD3}`DecisionQuotient.HardnessDistribution.centralized_higher_leverage`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD4`]{#lh:HD4}`DecisionQuotient.HardnessDistribution.complete_model_dominates_after_threshold`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD5`]{#lh:HD5}`DecisionQuotient.HardnessDistribution.gap_conservation_card`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD6`]{#lh:HD6}`DecisionQuotient.HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD7`]{#lh:HD7}`DecisionQuotient.HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD8`]{#lh:HD8}`DecisionQuotient.HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD9`]{#lh:HD9}`DecisionQuotient.HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower`           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD10`]{#lh:HD10}`DecisionQuotient.HardnessDistribution.generalized_right_eventually_dominates_wrong`                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD11`]{#lh:HD11}`DecisionQuotient.HardnessDistribution.hardnessEfficiency_eq_central_share`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD12`]{#lh:HD12}`DecisionQuotient.HardnessDistribution.isRightHardness`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD13`]{#lh:HD13}`DecisionQuotient.HardnessDistribution.isWrongHardness`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD14`]{#lh:HD14}`DecisionQuotient.HardnessDistribution.linear_lt_exponential_plus_constant_eventually`                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD15`]{#lh:HD15}`DecisionQuotient.HardnessDistribution.native_dominates_manual`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD16`]{#lh:HD16}`DecisionQuotient.HardnessDistribution.no_positive_slope_linear_represents_saturating`                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD17`]{#lh:HD17}`DecisionQuotient.HardnessDistribution.requiredWork`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD18`]{#lh:HD18}`DecisionQuotient.HardnessDistribution.requiredWork_eq_affine_in_sites`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD19`]{#lh:HD19}`DecisionQuotient.HardnessDistribution.right_dominates_wrong`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD20`]{#lh:HD20}`DecisionQuotient.HardnessDistribution.saturatingSiteCost_eventually_constant`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD21`]{#lh:HD21}`DecisionQuotient.HardnessDistribution.simplicityTax_grows`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD22`]{#lh:HD22}`DecisionQuotient.HardnessDistribution.hardnessLowerBound`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD23`]{#lh:HD23}`DecisionQuotient.HardnessDistribution.hardness_is_irreducible_required_work`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD24`]{#lh:HD24}`DecisionQuotient.HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD25`]{#lh:HD25}`DecisionQuotient.HardnessDistribution.totalDOF_ge_intrinsic`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD26`]{#lh:HD26}`DecisionQuotient.HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD27`]{#lh:HD27}`DecisionQuotient.HardnessDistribution.workGrowthDegree`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HD28`]{#lh:HD28}`DecisionQuotient.HardnessDistribution.workGrowthDegree_zero_iff_eventually_constant`                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HS1`]{#lh:HS1}`DecisionQuotient.Physics.HeisenbergStrong.NoisyPhysicalEncoding`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HS2`]{#lh:HS2}`DecisionQuotient.Physics.HeisenbergStrong.HeisenbergStrongBinding`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HS3`]{#lh:HS3}`DecisionQuotient.Physics.HeisenbergStrong.strong_binding_implies_core_nontrivial`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HS4`]{#lh:HS4}`DecisionQuotient.Physics.HeisenbergStrong.strong_binding_yields_core_encoding_witness`                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HS5`]{#lh:HS5}`DecisionQuotient.Physics.HeisenbergStrong.strong_binding_implies_physical_nontrivial_opt_assumption`            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`HS6`]{#lh:HS6}`DecisionQuotient.Physics.HeisenbergStrong.strong_binding_implies_nontrivial_opt_via_uncertainty`                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA1`]{#lh:IA1}`DecisionQuotient.ClaimClosure.IA1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA2`]{#lh:IA2}`DecisionQuotient.ClaimClosure.IA2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA3`]{#lh:IA3}`DecisionQuotient.ClaimClosure.IA3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA4`]{#lh:IA4}`DecisionQuotient.ClaimClosure.IA4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA5`]{#lh:IA5}`DecisionQuotient.ClaimClosure.IA5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA6`]{#lh:IA6}`DecisionQuotient.ClaimClosure.IA6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA7`]{#lh:IA7}`DecisionQuotient.ClaimClosure.IA7`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA8`]{#lh:IA8}`DecisionQuotient.ClaimClosure.IA8`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA9`]{#lh:IA9}`DecisionQuotient.ClaimClosure.IA9`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA10`]{#lh:IA10}`DecisionQuotient.ClaimClosure.IA10`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA11`]{#lh:IA11}`DecisionQuotient.ClaimClosure.IA11`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA12`]{#lh:IA12}`DecisionQuotient.ClaimClosure.IA12`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IA13`]{#lh:IA13}`DecisionQuotient.ClaimClosure.IA13`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC1`]{#lh:IC1}`DecisionQuotient.IntegrityCompetence.CertaintyInflation`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC2`]{#lh:IC2}`DecisionQuotient.IntegrityCompetence.CompletionFractionDefined`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC3`]{#lh:IC3}`DecisionQuotient.IntegrityCompetence.EvidenceForReport`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC4`]{#lh:IC4}`DecisionQuotient.IntegrityCompetence.ExactCertaintyInflation`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC5`]{#lh:IC5}`DecisionQuotient.IntegrityCompetence.Percent`                                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC6`]{#lh:IC6}`DecisionQuotient.IntegrityCompetence.RLFFWeights`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC7`]{#lh:IC7}`DecisionQuotient.IntegrityCompetence.ReportSignal`                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC8`]{#lh:IC8}`DecisionQuotient.IntegrityCompetence.ReportBitModel`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC9`]{#lh:IC9}`DecisionQuotient.IntegrityCompetence.SignalConsistent`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC10`]{#lh:IC10}`DecisionQuotient.IntegrityCompetence.admissible_irrational_strictly_more_than_rational`                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC11`]{#lh:IC11}`DecisionQuotient.IntegrityCompetence.admissible_matrix_counts`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC12`]{#lh:IC12}`DecisionQuotient.IntegrityCompetence.abstain_signal_exists_with_guess_self`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC13`]{#lh:IC13}`DecisionQuotient.IntegrityCompetence.certaintyInflation_iff_not_admissible`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC14`]{#lh:IC14}`DecisionQuotient.IntegrityCompetence.certificationOverheadBits`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC15`]{#lh:IC15}`DecisionQuotient.IntegrityCompetence.certificationOverheadBits_of_evidence`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC16`]{#lh:IC16}`DecisionQuotient.IntegrityCompetence.certificationOverheadBits_of_no_evidence`                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC17`]{#lh:IC17}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC18`]{#lh:IC18}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits_ge_raw`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC19`]{#lh:IC19}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits_gt_raw_of_evidence`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC20`]{#lh:IC20}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits_of_evidence`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC21`]{#lh:IC21}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits_of_no_evidence`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC22`]{#lh:IC22}`DecisionQuotient.IntegrityCompetence.claim_admissible_of_evidence`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC23`]{#lh:IC23}`DecisionQuotient.IntegrityCompetence.competence_implies_integrity`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC24`]{#lh:IC24}`DecisionQuotient.IntegrityCompetence.completion_fraction_defined_of_declared_bound`                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC25`]{#lh:IC25}`DecisionQuotient.IntegrityCompetence.epsilon_competence_implies_integrity`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC26`]{#lh:IC26}`DecisionQuotient.IntegrityCompetence.evidence_nonempty_iff_claim_admissible`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC27`]{#lh:IC27}`DecisionQuotient.IntegrityCompetence.evidence_of_claim_admissible`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC28`]{#lh:IC28}`DecisionQuotient.IntegrityCompetence.exact_claim_admissible_iff_exact_evidence_nonempty`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC29`]{#lh:IC29}`DecisionQuotient.IntegrityCompetence.exact_claim_requires_evidence`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC30`]{#lh:IC30}`DecisionQuotient.IntegrityCompetence.exactCertaintyInflation_iff_no_exact_competence`                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC31`]{#lh:IC31}`DecisionQuotient.IntegrityCompetence.exact_raw_only_of_no_exact_admissible`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC32`]{#lh:IC32}`DecisionQuotient.IntegrityCompetence.integrity_forces_abstention`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC33`]{#lh:IC33}`DecisionQuotient.IntegrityCompetence.integrity_not_competent_of_nonempty_scope`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC34`]{#lh:IC34}`DecisionQuotient.IntegrityCompetence.integrity_resource_bound`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC35`]{#lh:IC35}`DecisionQuotient.IntegrityCompetence.no_completion_fraction_without_declared_bound`                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC36`]{#lh:IC36}`DecisionQuotient.IntegrityCompetence.overModelVerdict_rational_iff`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC37`]{#lh:IC37}`DecisionQuotient.IntegrityCompetence.percentZero`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC38`]{#lh:IC38}`DecisionQuotient.IntegrityCompetence.rlffBaseReward`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC39`]{#lh:IC39}`DecisionQuotient.IntegrityCompetence.rlffReward`                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC40`]{#lh:IC40}`DecisionQuotient.IntegrityCompetence.rlff_abstain_strictly_prefers_no_certificates`                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC41`]{#lh:IC41}`DecisionQuotient.IntegrityCompetence.rlff_maximizer_has_evidence`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC42`]{#lh:IC42}`DecisionQuotient.IntegrityCompetence.rlff_maximizer_is_admissible`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC43`]{#lh:IC43}`DecisionQuotient.IntegrityCompetence.self_reflected_confidence_not_certification`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC44`]{#lh:IC44}`DecisionQuotient.IntegrityCompetence.signal_certified_positive_implies_admissible`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC45`]{#lh:IC45}`DecisionQuotient.IntegrityCompetence.signal_consistent_of_claim_admissible`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC46`]{#lh:IC46}`DecisionQuotient.IntegrityCompetence.signal_no_evidence_forces_zero_certified`                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC47`]{#lh:IC47}`DecisionQuotient.IntegrityCompetence.signal_exact_no_competence_forces_zero_certified`                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC48`]{#lh:IC48}`DecisionQuotient.IntegrityCompetence.steps_run_scalar_always_defined`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC49`]{#lh:IC49}`DecisionQuotient.IntegrityCompetence.steps_run_scalar_falsifiable`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IC50`]{#lh:IC50}`DecisionQuotient.IntegrityCompetence.zero_epsilon_competence_iff_exact`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE1`]{#lh:IE1}`DecisionQuotient.ClaimClosure.IE1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE2`]{#lh:IE2}`DecisionQuotient.ClaimClosure.IE2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE3`]{#lh:IE3}`DecisionQuotient.ClaimClosure.IE3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE4`]{#lh:IE4}`DecisionQuotient.ClaimClosure.IE4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE5`]{#lh:IE5}`DecisionQuotient.ClaimClosure.IE5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE6`]{#lh:IE6}`DecisionQuotient.ClaimClosure.IE6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE7`]{#lh:IE7}`DecisionQuotient.ClaimClosure.IE7`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE8`]{#lh:IE8}`DecisionQuotient.ClaimClosure.IE8`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE9`]{#lh:IE9}`DecisionQuotient.ClaimClosure.IE9`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE10`]{#lh:IE10}`DecisionQuotient.ClaimClosure.IE10`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE11`]{#lh:IE11}`DecisionQuotient.ClaimClosure.IE11`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE12`]{#lh:IE12}`DecisionQuotient.ClaimClosure.IE12`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE13`]{#lh:IE13}`DecisionQuotient.ClaimClosure.IE13`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE14`]{#lh:IE14}`DecisionQuotient.ClaimClosure.IE14`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE15`]{#lh:IE15}`DecisionQuotient.ClaimClosure.IE15`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE16`]{#lh:IE16}`DecisionQuotient.ClaimClosure.IE16`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IE17`]{#lh:IE17}`DecisionQuotient.ClaimClosure.IE17`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN1`]{#lh:IN1}`DecisionQuotient.Physics.Instantiation.Geometry`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN2`]{#lh:IN2}`DecisionQuotient.Physics.Instantiation.Dynamics`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN3`]{#lh:IN3}`DecisionQuotient.Physics.Instantiation.Circuit`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN4`]{#lh:IN4}`DecisionQuotient.Physics.Instantiation.geometry_plus_dynamics_is_circuit`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN5`]{#lh:IN5}`DecisionQuotient.Physics.Instantiation.DecisionInterpretation`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN6`]{#lh:IN6}`DecisionQuotient.Physics.Instantiation.DecisionCircuit`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN7`]{#lh:IN7}`DecisionQuotient.Physics.Instantiation.Molecule`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN8`]{#lh:IN8}`DecisionQuotient.Physics.Instantiation.Reaction`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN9`]{#lh:IN9}`DecisionQuotient.Physics.Instantiation.ReactionOutcome`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN10`]{#lh:IN10}`DecisionQuotient.Physics.Instantiation.MoleculeGeometry`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN11`]{#lh:IN11}`DecisionQuotient.Physics.Instantiation.MoleculeDynamics`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN12`]{#lh:IN12}`DecisionQuotient.Physics.Instantiation.MoleculeCircuit`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN13`]{#lh:IN13}`DecisionQuotient.Physics.Instantiation.MoleculeAsCircuit`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN14`]{#lh:IN14}`DecisionQuotient.Physics.Instantiation.MoleculeAsDecisionCircuit`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN15`]{#lh:IN15}`DecisionQuotient.Physics.Instantiation.molecule_decision_preserves_geometry`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN16`]{#lh:IN16}`DecisionQuotient.Physics.Instantiation.molecule_decision_preserves_dynamics`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN17`]{#lh:IN17}`DecisionQuotient.Physics.Instantiation.asDecisionCircuit`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN18`]{#lh:IN18}`DecisionQuotient.Physics.Instantiation.asDecisionCircuit_preserves_circuit`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN19`]{#lh:IN19}`DecisionQuotient.Physics.Instantiation.Configuration`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN20`]{#lh:IN20}`DecisionQuotient.Physics.Instantiation.EnergyLandscape`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN21`]{#lh:IN21}`DecisionQuotient.Physics.Instantiation.k_Boltzmann`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN22`]{#lh:IN22}`DecisionQuotient.Physics.Instantiation.LandauerBound`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN23`]{#lh:IN23}`DecisionQuotient.Physics.Instantiation.law_objective_schema`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN24`]{#lh:IN24}`DecisionQuotient.Physics.Instantiation.law_opt_eq_feasible_of_gap`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IN25`]{#lh:IN25}`DecisionQuotient.Physics.Instantiation.law_opt_singleton_of_deterministic`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IP1`]{#lh:IP1}`DecisionQuotient.Physics.LocalityPhysics.ec1_can_be_true`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IP2`]{#lh:IP2}`DecisionQuotient.Physics.LocalityPhysics.ec1_independent_of_ec2_ec3`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IP3`]{#lh:IP3}`DecisionQuotient.Physics.LocalityPhysics.ec2_can_be_true`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IP4`]{#lh:IP4}`DecisionQuotient.Physics.LocalityPhysics.ec2_independent_of_ec1_ec3`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IP5`]{#lh:IP5}`DecisionQuotient.Physics.LocalityPhysics.ec3_can_be_true`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IP6`]{#lh:IP6}`DecisionQuotient.Physics.LocalityPhysics.ec3_independent_of_ec1_ec2`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IP7`]{#lh:IP7}`DecisionQuotient.Physics.LocalityPhysics.empirical_claims_mutually_independent`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IT1`]{#lh:IT1}`DecisionQuotient.DecisionProblem.numOptClasses`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IT3`]{#lh:IT3}`DecisionQuotient.quotientEntropy_le_srank_binary`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IT4`]{#lh:IT4}`DecisionQuotient.numOptClasses_le_pow_srank_binary`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IT5`]{#lh:IT5}`DecisionQuotient.nontrivial_bounds_binary`                                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IT6`]{#lh:IT6}`DecisionQuotient.nontrivial_implies_srank_pos`                                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV1`]{#lh:IV1}`DecisionQuotient.InteriorVerification.GoalClass`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV2`]{#lh:IV2}`DecisionQuotient.InteriorVerification.InteriorDominanceVerifiable`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV3`]{#lh:IV3}`DecisionQuotient.InteriorVerification.TautologicalSetIdentifiable`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV4`]{#lh:IV4}`DecisionQuotient.InteriorVerification.agreeOnSet`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV5`]{#lh:IV5}`DecisionQuotient.InteriorVerification.interiorParetoDominates`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV6`]{#lh:IV6}`DecisionQuotient.InteriorVerification.interior_certificate_implies_non_rejection`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV7`]{#lh:IV7}`DecisionQuotient.InteriorVerification.interior_dominance_implies_universal_non_rejection`                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV8`]{#lh:IV8}`DecisionQuotient.InteriorVerification.interior_dominance_not_full_sufficiency`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV9`]{#lh:IV9}`DecisionQuotient.InteriorVerification.interior_verification_tractable_certificate`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV10`]{#lh:IV10}`DecisionQuotient.InteriorVerification.not_sufficientOnSet_of_counterexample`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`IV11`]{#lh:IV11}`DecisionQuotient.InteriorVerification.singleton_coordinate_interior_certificate`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP1`]{#lh:LP1}`DecisionQuotient.Physics.LocalityPhysics.SpacetimePoint`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP2`]{#lh:LP2}`DecisionQuotient.Physics.LocalityPhysics.lightCone`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP3`]{#lh:LP3}`DecisionQuotient.Physics.LocalityPhysics.causalPast`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP4`]{#lh:LP4}`DecisionQuotient.Physics.LocalityPhysics.self_in_lightCone`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP5`]{#lh:LP5}`DecisionQuotient.Physics.LocalityPhysics.self_in_causalPast`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP6`]{#lh:LP6}`DecisionQuotient.Physics.LocalityPhysics.LocalRegion`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP7`]{#lh:LP7}`DecisionQuotient.Physics.LocalityPhysics.canObserve`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP8`]{#lh:LP8}`DecisionQuotient.Physics.LocalityPhysics.spacelikeSeparated`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP9`]{#lh:LP9}`DecisionQuotient.Physics.LocalityPhysics.spacelike_disjoint_observation`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP11`]{#lh:LP11}`DecisionQuotient.Physics.LocalityPhysics.LocalConfiguration`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP12`]{#lh:LP12}`DecisionQuotient.Physics.LocalityPhysics.isLocallyValid`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP13`]{#lh:LP13}`DecisionQuotient.Physics.LocalityPhysics.MergeResult`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP14`]{#lh:LP14}`DecisionQuotient.Physics.LocalityPhysics.boardMerge`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP15`]{#lh:LP15}`DecisionQuotient.Physics.LocalityPhysics.independent_configs_can_disagree`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP16`]{#lh:LP16}`DecisionQuotient.Physics.LocalityPhysics.merge_compatible_iff`                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP17`]{#lh:LP17}`DecisionQuotient.Physics.LocalityPhysics.merge_contradiction_iff`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP18`]{#lh:LP18}`DecisionQuotient.Physics.LocalityPhysics.locality_implies_possible_contradiction`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP19`]{#lh:LP19}`DecisionQuotient.Physics.LocalityPhysics.Superposition`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP20`]{#lh:LP20}`DecisionQuotient.Physics.LocalityPhysics.superposition_can_contain_contradictions`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP21`]{#lh:LP21}`DecisionQuotient.Physics.LocalityPhysics.superposition_requires_separation`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP22`]{#lh:LP22}`DecisionQuotient.Physics.LocalityPhysics.bell_separation_is_real`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP23`]{#lh:LP23}`DecisionQuotient.Physics.LocalityPhysics.measurement_is_merge_contradiction`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP24`]{#lh:LP24}`DecisionQuotient.Physics.LocalityPhysics.entanglement_is_shared_origin`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP31`]{#lh:LP31}`DecisionQuotient.Physics.LocalityPhysics.complete_knowledge_requires_all_queries`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP32`]{#lh:LP32}`DecisionQuotient.Physics.LocalityPhysics.finite_energy_constraint`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP33`]{#lh:LP33}`DecisionQuotient.Physics.LocalityPhysics.self_knowledge_impossible_if_insufficient_energy`                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP34`]{#lh:LP34}`DecisionQuotient.Physics.LocalityPhysics.bounded_energy_forces_locality`                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP35`]{#lh:LP35}`DecisionQuotient.Physics.LocalityPhysics.locality_implies_independent_regions`                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP36`]{#lh:LP36}`DecisionQuotient.Physics.LocalityPhysics.independent_regions_imply_possible_contradiction`                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP38`]{#lh:LP38}`DecisionQuotient.Physics.LocalityPhysics.pne_np_necessary_for_physics`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP39`]{#lh:LP39}`DecisionQuotient.Physics.LocalityPhysics.matter_exists_because_pne_np`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP40`]{#lh:LP40}`DecisionQuotient.Physics.LocalityPhysics.physics_is_the_game`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP41`]{#lh:LP41}`DecisionQuotient.Physics.LocalityPhysics.without_positive_query_cost_no_bound`                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP42`]{#lh:LP42}`DecisionQuotient.Physics.LocalityPhysics.without_nontrivial_states_no_disagreement`                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP43`]{#lh:LP43}`DecisionQuotient.Physics.LocalityPhysics.without_separation_no_independence`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP44`]{#lh:LP44}`DecisionQuotient.Physics.LocalityPhysics.without_finite_capacity_no_gap`                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP45`]{#lh:LP45}`DecisionQuotient.Physics.LocalityPhysics.all_premises_used`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP46`]{#lh:LP46}`DecisionQuotient.Physics.LocalityPhysics.premises_necessary_and_sufficient`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP50`]{#lh:LP50}`DecisionQuotient.Physics.LocalityPhysics.shannon_value_is_intractability`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP51`]{#lh:LP51}`DecisionQuotient.Physics.LocalityPhysics.economic_value_requires_scarcity`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP52`]{#lh:LP52}`DecisionQuotient.Physics.LocalityPhysics.thermodynamic_value_requires_gradient`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP53`]{#lh:LP53}`DecisionQuotient.Physics.LocalityPhysics.voi_requires_uncertainty`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP54`]{#lh:LP54}`DecisionQuotient.Physics.LocalityPhysics.physics_requires_intractability`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP55`]{#lh:LP55}`DecisionQuotient.Physics.LocalityPhysics.value_is_intractability`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP56`]{#lh:LP56}`DecisionQuotient.Physics.LocalityPhysics.observers_value_the_intractable`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP57`]{#lh:LP57}`DecisionQuotient.Physics.LocalityPhysics.finite_steps_finite_coverage`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP58`]{#lh:LP58}`DecisionQuotient.Physics.LocalityPhysics.counting_gap`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP59`]{#lh:LP59}`DecisionQuotient.Physics.LocalityPhysics.time_is_counting`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP60`]{#lh:LP60}`DecisionQuotient.Physics.LocalityPhysics.gap_equivalence`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`LP61`]{#lh:LP61}`DecisionQuotient.Physics.LocalityPhysics.light_cone_is_time_gap`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MI1`]{#lh:MI1}`DecisionQuotient.ClaimClosure.MI1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MI2`]{#lh:MI2}`DecisionQuotient.ClaimClosure.MI2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MI3`]{#lh:MI3}`DecisionQuotient.ClaimClosure.MI3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MI4`]{#lh:MI4}`DecisionQuotient.ClaimClosure.MI4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MI5`]{#lh:MI5}`DecisionQuotient.ClaimClosure.MI5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN1`]{#lh:MN1}`DecisionQuotient.Physics.MeasureNecessity.quantitative_claim_has_measure`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN2`]{#lh:MN2}`DecisionQuotient.Physics.MeasureNecessity.stochastic_claim_has_probability_measure`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN3`]{#lh:MN3}`DecisionQuotient.Physics.MeasureNecessity.stochastic_claim_has_measure`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN4`]{#lh:MN4}`DecisionQuotient.Physics.MeasureNecessity.count_univ_bool`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN5`]{#lh:MN5}`DecisionQuotient.Physics.MeasureNecessity.counting_measure_not_probability_on_bool`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN6`]{#lh:MN6}`DecisionQuotient.Physics.MeasureNecessity.deterministic_dirac_is_probability`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN7`]{#lh:MN7}`DecisionQuotient.Physics.MeasureNecessity.quantitative_value_depends_on_measure`                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN8`]{#lh:MN8}`DecisionQuotient.Physics.MeasureNecessity.deterministic_models_still_measure_based`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN9`]{#lh:MN9}`DecisionQuotient.Physics.MeasureNecessity.measure_does_not_imply_probability`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN10`]{#lh:MN10}`DecisionQuotient.Physics.MeasureNecessity.quantitative_measure_is_logical_prerequisite`                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`MN11`]{#lh:MN11}`DecisionQuotient.Physics.MeasureNecessity.stochastic_probability_is_logical_prerequisite`                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR1`]{#lh:OR1}`DecisionQuotient.Physics.ObserverRelativeState.ObserverClass`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR2`]{#lh:OR2}`DecisionQuotient.Physics.ObserverRelativeState.obsEquiv`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR3`]{#lh:OR3}`DecisionQuotient.Physics.ObserverRelativeState.EffectiveStateSpace`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR4`]{#lh:OR4}`DecisionQuotient.Physics.ObserverRelativeState.project_eq_iff`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR5`]{#lh:OR5}`DecisionQuotient.Physics.ObserverRelativeState.observer_relative_equivalence_witness`                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR6`]{#lh:OR6}`DecisionQuotient.Physics.ObserverRelativeState.PhysicalObserverClass`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR7`]{#lh:OR7}`DecisionQuotient.Physics.ObserverRelativeState.PhysicalStateSpace`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR8`]{#lh:OR8}`DecisionQuotient.Physics.ObserverRelativeState.physical_state_space_has_instance_witness`                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`OR9`]{#lh:OR9}`DecisionQuotient.Physics.ObserverRelativeState.physical_observer_relative_effective_space`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA1`]{#lh:PA1}`DecisionQuotient.Physics.AnchorChecks.obsEquiv_all_of_effective_subsingleton`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA2`]{#lh:PA2}`DecisionQuotient.Physics.AnchorChecks.stochasticAnchorSufficient_iff_exists_anchor_singleton`                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA3`]{#lh:PA3}`DecisionQuotient.Physics.AnchorChecks.stochastic_anchor_check_iff_exists_anchor_singleton`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA4`]{#lh:PA4}`DecisionQuotient.Physics.AnchorChecks.stochastic_sufficient_of_observer_collapse_and_seed`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA5`]{#lh:PA5}`DecisionQuotient.Physics.AnchorChecks.stochastic_anchor_check_of_observer_collapse_and_seed`                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA6`]{#lh:PA6}`DecisionQuotient.Physics.AnchorChecks.sequential_sufficient_of_observer_collapse`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA7`]{#lh:PA7}`DecisionQuotient.Physics.AnchorChecks.sequential_anchor_check_of_observer_collapse`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA8`]{#lh:PA8}`DecisionQuotient.Physics.AnchorChecks.physical_observer_collapse_implies_obsEquiv_all`                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PA9`]{#lh:PA9}`DecisionQuotient.Physics.AnchorChecks.physical_stochastic_anchor_check_of_observer_collapse_and_seed`           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC1`]{#lh:PBC1}`DecisionQuotient.PhysicalBudgetCrossover.CrossoverAt`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC2`]{#lh:PBC2}`DecisionQuotient.PhysicalBudgetCrossover.SuccinctInfeasible`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC3`]{#lh:PBC3}`DecisionQuotient.PhysicalBudgetCrossover.SuccinctUnbounded`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC4`]{#lh:PBC4}`DecisionQuotient.PhysicalBudgetCrossover.explicit_infeasible_succinct_feasible_of_crossover`                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC5`]{#lh:PBC5}`DecisionQuotient.PhysicalBudgetCrossover.exists_least_crossover_point`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC6`]{#lh:PBC6}`DecisionQuotient.PhysicalBudgetCrossover.has_crossover_of_bounded_succinct_unbounded_explicit`                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC7`]{#lh:PBC7}`DecisionQuotient.PhysicalBudgetCrossover.explicit_eventual_infeasibility_of_monotone_and_witness`             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC8`]{#lh:PBC8}`DecisionQuotient.PhysicalBudgetCrossover.crossover_eventually_of_eventual_split`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC9`]{#lh:PBC9}`DecisionQuotient.PhysicalBudgetCrossover.payoff_threshold_explicit_vs_succinct`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC10`]{#lh:PBC10}`DecisionQuotient.PhysicalBudgetCrossover.no_universal_survivor_without_succinct_bound`                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC11`]{#lh:PBC11}`DecisionQuotient.PhysicalBudgetCrossover.policy_closure_at_divergence`                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PBC12`]{#lh:PBC12}`DecisionQuotient.PhysicalBudgetCrossover.policy_closure_beyond_divergence`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH1`]{#lh:PH1}`PhysicalComplexity.k_Boltzmann`                                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH2`]{#lh:PH2}`PhysicalComplexity.PhysicalComputer`                                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH3`]{#lh:PH3}`PhysicalComplexity.bit_energy_cost`                                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH4`]{#lh:PH4}`PhysicalComplexity.Landauer_bound`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH5`]{#lh:PH5}`PhysicalComplexity.InstanceSize`                                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH6`]{#lh:PH6}`PhysicalComplexity.ComputationalRequirement`                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH7`]{#lh:PH7}`PhysicalComplexity.coNP_requirement`                                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH8`]{#lh:PH8}`PhysicalComplexity.coNP_physically_impossible`                                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH9`]{#lh:PH9}`PhysicalComplexity.coNP_not_in_P_physically`                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH10`]{#lh:PH10}`PhysicalComplexity.sufficiency_physically_impossible`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH11`]{#lh:PH11}`DecisionQuotient.PhysicalComplexity.PhysicalCollapseAtRequirement`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH12`]{#lh:PH12}`DecisionQuotient.PhysicalComplexity.no_physical_collapse_at_requirement`                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH13`]{#lh:PH13}`DecisionQuotient.PhysicalComplexity.canonical_physical_collapse_impossible`                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH14`]{#lh:PH14}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_of_collapse_map`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH15`]{#lh:PH15}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_canonical`                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH16`]{#lh:PH16}`DecisionQuotient.PhysicalComplexity.P_eq_NP_via_SAT`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH17`]{#lh:PH17}`DecisionQuotient.PhysicalComplexity.SAT3ReductionBridge`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH18`]{#lh:PH18}`DecisionQuotient.PhysicalComplexity.sat_reduction_transfers_energy_lower_bound`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH19`]{#lh:PH19}`DecisionQuotient.PhysicalComplexity.physical_collapse_of_polytime_sat_realization`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH20`]{#lh:PH20}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_via_sat_bridge`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH21`]{#lh:PH21}`DecisionQuotient.PhysicalComplexity.SAT3HardFamily`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH22`]{#lh:PH22}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_via_sat_hard_family`                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH23`]{#lh:PH23}`DecisionQuotient.PhysicalComplexity.collapse_possible_without_positive_bit_cost`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH24`]{#lh:PH24}`DecisionQuotient.PhysicalComplexity.collapse_possible_without_exponential_lower_bound`                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH25`]{#lh:PH25}`DecisionQuotient.PhysicalComplexity.no_go_transfer_requires_collapse_map`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH26`]{#lh:PH26}`DecisionQuotient.PhysicalComplexity.no_collapse_of_bounded_budget_pos_cost_exp_lb`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH27`]{#lh:PH27}`DecisionQuotient.PhysicalComplexity.collapse_implies_assumption_failure_disjunction`                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH28`]{#lh:PH28}`DecisionQuotient.PhysicalComplexity.deterministic_no_physical_collapse`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH29`]{#lh:PH29}`DecisionQuotient.PhysicalComplexity.probabilistic_no_physical_collapse`                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH30`]{#lh:PH30}`DecisionQuotient.PhysicalComplexity.sequential_no_physical_collapse`                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH31`]{#lh:PH31}`DecisionQuotient.PhysicalComplexity.collapse_possible_with_unbounded_budget_profile`                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH32`]{#lh:PH32}`DecisionQuotient.PhysicalComplexity.exp_budget_profile_unbounded`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH33`]{#lh:PH33}`DecisionQuotient.PhysicalComplexity.finite_budget_assumption_is_necessary`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH34`]{#lh:PH34}`DecisionQuotient.PhysicalComplexity.CoherentDQRejectionAtRequirement`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH35`]{#lh:PH35}`DecisionQuotient.PhysicalComplexity.coherent_dq_rejection_impossible_at_requirement`                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PH36`]{#lh:PH36}`DecisionQuotient.PhysicalComplexity.coherent_dq_rejection_impossible_canonical`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PI1`]{#lh:PI1}`DecisionQuotient.Physics.PhysicalIncompleteness.UniverseModel`                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PI2`]{#lh:PI2}`DecisionQuotient.Physics.PhysicalIncompleteness.PhysicallyInstantiated`                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PI3`]{#lh:PI3}`DecisionQuotient.Physics.PhysicalIncompleteness.no_surjective_instantiation_of_card_gap`                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PI4`]{#lh:PI4}`DecisionQuotient.Physics.PhysicalIncompleteness.physical_incompleteness_of_card_gap`                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PI5`]{#lh:PI5}`DecisionQuotient.Physics.PhysicalIncompleteness.physical_incompleteness_of_bounds`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PI6`]{#lh:PI6}`DecisionQuotient.Physics.PhysicalIncompleteness.under_resolution_implies_collision`                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PI7`]{#lh:PI7}`DecisionQuotient.Physics.PhysicalIncompleteness.under_resolution_implies_decision_collision`                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PS1`]{#lh:PS1}`DecisionQuotient.Physics.ClaimTransport.PhysicalStateSemantics`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PS2`]{#lh:PS2}`DecisionQuotient.Physics.ClaimTransport.physical_state_has_witness`                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PS3`]{#lh:PS3}`DecisionQuotient.Physics.ClaimTransport.physical_state_claim_of_instance_claim`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`PS4`]{#lh:PS4}`DecisionQuotient.Physics.ClaimTransport.physical_state_claim_of_universal_core`                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`QT1`]{#lh:QT1}`DecisionQuotient.DecisionProblem.quotient_is_coarsest`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`QT2`]{#lh:QT2}`DecisionQuotient.DecisionProblem.quotientMap_preservesOpt`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`QT3`]{#lh:QT3}`DecisionQuotient.DecisionProblem.quotient_represents_opt_equiv`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`QT4`]{#lh:QT4}`DecisionQuotient.DecisionProblem.factors_implies_respects`                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`RD1`]{#lh:RD1}`DecisionQuotient.Information.shannonEntropy_nonneg`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`RD2`]{#lh:RD2}`DecisionQuotient.Information.rate_zero_distortion`                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`RD3`]{#lh:RD3}`DecisionQuotient.Information.rate_monotone`                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`RS1`]{#lh:RS1}`DecisionQuotient.Information.equiv_preserves_decision`                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`RS2`]{#lh:RS2}`DecisionQuotient.Information.rate_equals_srank`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`RS3`]{#lh:RS3}`DecisionQuotient.Information.compression_below_srank_fails`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`RS4`]{#lh:RS4}`DecisionQuotient.Information.srank_bits_sufficient`                                                             |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`RS5`]{#lh:RS5}`DecisionQuotient.Information.rate_distortion_bridge`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P1`]{#lh:S2P1}`DecisionQuotient.Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P2`]{#lh:S2P2}`DecisionQuotient.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P3`]{#lh:S2P3}`DecisionQuotient.Sigma2PHardness.min_sufficient_set_iff_relevant_card`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P4`]{#lh:S2P4}`DecisionQuotient.Sigma2PHardness.representationGap`                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P5`]{#lh:S2P5}`DecisionQuotient.Sigma2PHardness.representationGap_eq_waste_plus_missing`                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P6`]{#lh:S2P6}`DecisionQuotient.Sigma2PHardness.representationGap_eq_zero_iff`                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P7`]{#lh:S2P7}`DecisionQuotient.Sigma2PHardness.representationGap_missing_eq_gapCard`                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P8`]{#lh:S2P8}`DecisionQuotient.Sigma2PHardness.representationGap_zero_iff_minimalSufficient`                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`S2P9`]{#lh:S2P9}`DecisionQuotient.Sigma2PHardness.sufficient_iff_relevant_subset`                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SE1`]{#lh:SE1}`DecisionQuotient.ClaimClosure.SE1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SE2`]{#lh:SE2}`DecisionQuotient.ClaimClosure.SE2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SE3`]{#lh:SE3}`DecisionQuotient.ClaimClosure.SE3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SE4`]{#lh:SE4}`DecisionQuotient.ClaimClosure.SE4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SE5`]{#lh:SE5}`DecisionQuotient.ClaimClosure.SE5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SE6`]{#lh:SE6}`DecisionQuotient.ClaimClosure.SE6`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SR1`]{#lh:SR1}`DecisionQuotient.ClaimClosure.SR1`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SR2`]{#lh:SR2}`DecisionQuotient.ClaimClosure.SR2`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SR3`]{#lh:SR3}`DecisionQuotient.ClaimClosure.SR3`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SR4`]{#lh:SR4}`DecisionQuotient.ClaimClosure.SR4`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`SR5`]{#lh:SR5}`DecisionQuotient.ClaimClosure.SR5`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC1`]{#lh:TC1}`DecisionQuotient.ToolCollapse.WorkProfile`                                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC2`]{#lh:TC2}`DecisionQuotient.ToolCollapse.WorkModel`                                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC3`]{#lh:TC3}`DecisionQuotient.ToolCollapse.ToolModel`                                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC4`]{#lh:TC4}`DecisionQuotient.ToolCollapse.EventualStrictImprovement`                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC5`]{#lh:TC5}`DecisionQuotient.ToolCollapse.EffectiveCollapse`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC6`]{#lh:TC6}`DecisionQuotient.ToolCollapse.tool_never_worse`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC7`]{#lh:TC7}`DecisionQuotient.ToolCollapse.strict_improvement_has_witness`                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC8`]{#lh:TC8}`DecisionQuotient.ToolCollapse.effective_collapse_of_eventual_strict`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC9`]{#lh:TC9}`DecisionQuotient.ToolCollapse.expBaseline`                                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC10`]{#lh:TC10}`DecisionQuotient.ToolCollapse.linearTool`                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC11`]{#lh:TC11}`DecisionQuotient.ToolCollapse.linear_tool_eventual_strict`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TC12`]{#lh:TC12}`DecisionQuotient.ToolCollapse.linear_tool_effective_collapse`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TL3`]{#lh:TL3}`DecisionQuotient.ThermodynamicLift.joulesPerBit_pos_of_landauer_calibration`                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TL4`]{#lh:TL4}`DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration`                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TUR1`]{#lh:TUR1}`DecisionQuotient.Physics.transitionProb_nonneg`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TUR2`]{#lh:TUR2}`DecisionQuotient.Physics.transitionProb_sum_one`                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TUR5`]{#lh:TUR5}`DecisionQuotient.Physics.tur_bridge`                                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`TUR6`]{#lh:TUR6}`DecisionQuotient.Physics.multiple_futures_entropy_production`                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO1`]{#lh:UO1}`DecisionQuotient.UniverseDynamics`                                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO2`]{#lh:UO2}`DecisionQuotient.feasibleActions`                                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO3`]{#lh:UO3}`DecisionQuotient.lawDecisionProblem`                                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO4`]{#lh:UO4}`DecisionQuotient.lawUtility`                                                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO5`]{#lh:UO5}`DecisionQuotient.logicallyDeterministic`                                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO6`]{#lh:UO6}`DecisionQuotient.universe_sets_objective_schema`                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO7`]{#lh:UO7}`DecisionQuotient.lawUtility_eq_of_allowed_iff`                                                                  |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO8`]{#lh:UO8}`DecisionQuotient.opt_eq_feasible_of_gap`                                                                        |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO9`]{#lh:UO9}`DecisionQuotient.infeasible_not_optimal_of_gap`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO10`]{#lh:UO10}`DecisionQuotient.opt_singleton_of_logicallyDeterministic`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UO11`]{#lh:UO11}`DecisionQuotient.opt_eq_of_allowed_iff`                                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UQ1`]{#lh:UQ1}`DecisionQuotient.Physics.Uncertainty.binaryIdentityProblem`                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UQ2`]{#lh:UQ2}`DecisionQuotient.Physics.Uncertainty.binaryIdentityProblem_opt_true`                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UQ3`]{#lh:UQ3}`DecisionQuotient.Physics.Uncertainty.binaryIdentityProblem_opt_false`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UQ4`]{#lh:UQ4}`DecisionQuotient.Physics.Uncertainty.exists_decision_problem_with_nontrivial_opt`                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UQ5`]{#lh:UQ5}`DecisionQuotient.Physics.Uncertainty.PhysicalNontrivialOptAssumption`                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`UQ6`]{#lh:UQ6}`DecisionQuotient.Physics.Uncertainty.exists_decision_problem_with_nontrivial_opt_of_physical`                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`W1`]{#lh:W1}`DecisionQuotient.Physics.single_future_zero_cost`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`W2`]{#lh:W2}`DecisionQuotient.Physics.transportCost_pos_of_offDiag`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`W3`]{#lh:W3}`DecisionQuotient.Physics.integrity_is_centroid`                                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`W4`]{#lh:W4}`DecisionQuotient.Physics.wasserstein_bridge`                                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`WD1`]{#lh:WD1}`DecisionQuotient.checking_witnessing_duality_budget`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`WD2`]{#lh:WD2}`DecisionQuotient.no_sound_checker_below_witness_budget`                                                         |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`WD3`]{#lh:WD3}`DecisionQuotient.checking_time_ge_witness_budget`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`WD4`]{#lh:WD4}`DecisionQuotient.witnessBudgetEmpty`                                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`WD5`]{#lh:WD5}`DecisionQuotient.checkingBudgetPairs`                                                                           |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`XC1`]{#lh:XC1}`DecisionQuotient.Physics.srank_determines_states`                                                               |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`XC2`]{#lh:XC2}`DecisionQuotient.Physics.more_states_more_transport`                                                            |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`XC3`]{#lh:XC3}`DecisionQuotient.Physics.transport_lower_bound`                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`XC4`]{#lh:XC4}`DecisionQuotient.Physics.transport_independent_of_energy`                                                       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`XC5`]{#lh:XC5}`DecisionQuotient.Physics.transport_independent_of_precision`                                                    |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`XC6`]{#lh:XC6}`DecisionQuotient.Physics.srank_unified_complexity`                                                              |
-+----------------------------------------------------------------------------------------------------------------------------------+
-| [`XC7`]{#lh:XC7}`DecisionQuotient.Physics.complete_bridge_set`                                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------------+
+| Lean handle entry                                                                                                                      |
++:=======================================================================================================================================+
+| Lean handle entry (continued)                                                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| ::: {#lh:AB1}                                                                                                                          |
+| `AB1`                                                                                                                                  |
+| :::                                                                                                                                    |
+|                                                                                                                                        |
+| `DecisionQuotient.DecisionProblem.not_preservesOpt_iff_erasesDecisionRelevantDistinction`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AB2`]{#lh:AB2}`DecisionQuotient.DecisionProblem.surjective_abstraction_factors_or_erases`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AB3`]{#lh:AB3}`DecisionQuotient.DecisionProblem.collapseBeyondQuotient_physically_impossible`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AB4`]{#lh:AB4}`DecisionQuotient.DecisionProblem.surjective_abstraction_with_feasible_collapse_map_factors`                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AC1`]{#lh:AC1}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC1`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AC3`]{#lh:AC3}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC3`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AC4`]{#lh:AC4}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC4`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AC5`]{#lh:AC5}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC5`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AC6`]{#lh:AC6}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC6`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AC8`]{#lh:AC8}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC8`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AC9`]{#lh:AC9}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC9`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AC11`]{#lh:AC11}`DecisionQuotient.ClaimClosure.AtomicCircuitExports.AC11`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AN1`]{#lh:AN1}`DecisionQuotient.Physics.AssumptionNecessity.no_assumption_free_proof_of_refutable_claim`                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AN2`]{#lh:AN2}`DecisionQuotient.Physics.AssumptionNecessity.countermodel_violates_some_assumption`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AN3`]{#lh:AN3}`DecisionQuotient.Physics.AssumptionNecessity.physical_claim_requires_physical_assumption`                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AN4`]{#lh:AN4}`DecisionQuotient.Physics.AssumptionNecessity.physical_claim_requires_empirically_justified_physical_assumption`       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AN5`]{#lh:AN5}`DecisionQuotient.Physics.AssumptionNecessity.strong_physical_no_go_meta`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AQ1`]{#lh:AQ1}`DecisionQuotient.ClaimClosure.AQ1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AQ2`]{#lh:AQ2}`DecisionQuotient.ClaimClosure.AQ2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AQ3`]{#lh:AQ3}`DecisionQuotient.ClaimClosure.AQ3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AQ4`]{#lh:AQ4}`DecisionQuotient.ClaimClosure.AQ4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AQ5`]{#lh:AQ5}`DecisionQuotient.ClaimClosure.AQ5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AQ6`]{#lh:AQ6}`DecisionQuotient.ClaimClosure.AQ6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AQ7`]{#lh:AQ7}`DecisionQuotient.ClaimClosure.AQ7`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`AQ8`]{#lh:AQ8}`DecisionQuotient.ClaimClosure.AQ8`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG1`]{#lh:ARG1}`PhysicalComplexity.AccessRegime.PhysicalDevice`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG2`]{#lh:ARG2}`PhysicalComplexity.AccessRegime.AccessRegime`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG3`]{#lh:ARG3}`PhysicalComplexity.AccessRegime.RegimeEval`                                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG4`]{#lh:ARG4}`PhysicalComplexity.AccessRegime.RegimeSample`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG5`]{#lh:ARG5}`PhysicalComplexity.AccessRegime.RegimeProof`                                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG6`]{#lh:ARG6}`PhysicalComplexity.AccessRegime.RegimeWithCertificate`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG7`]{#lh:ARG7}`PhysicalComplexity.AccessRegime.RegimeEvalOn`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG8`]{#lh:ARG8}`PhysicalComplexity.AccessRegime.RegimeSampleOn`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG9`]{#lh:ARG9}`PhysicalComplexity.AccessRegime.RegimeProofOn`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG10`]{#lh:ARG10}`PhysicalComplexity.AccessRegime.RegimeWithCertificateOn`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG11`]{#lh:ARG11}`PhysicalComplexity.AccessRegime.HardUnderEval`                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG12`]{#lh:ARG12}`PhysicalComplexity.AccessRegime.AuditableWithCertificate`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG13`]{#lh:ARG13}`PhysicalComplexity.AccessRegime.certificate_upgrades_regime`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG14`]{#lh:ARG14}`PhysicalComplexity.AccessRegime.certificate_upgrades_regime_on`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG15`]{#lh:ARG15}`PhysicalComplexity.AccessRegime.physical_succinct_certification_hard`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG16`]{#lh:ARG16}`PhysicalComplexity.AccessRegime.certificate_amortizes_hardness`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG17`]{#lh:ARG17}`PhysicalComplexity.AccessRegime.regime_upgrade_with_certificate`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG18`]{#lh:ARG18}`PhysicalComplexity.AccessRegime.regime_upgrade_with_certificate_on`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG19`]{#lh:ARG19}`PhysicalComplexity.AccessRegime.AccessChannelLaw`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`ARG20`]{#lh:ARG20}`PhysicalComplexity.AccessRegime.FiveWayMeet`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA1`]{#lh:BA1}`DecisionQuotient.Physics.BoundedAcquisition.BoundedRegion`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA2`]{#lh:BA2}`DecisionQuotient.Physics.BoundedAcquisition.acquisition_rate_bound`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA3`]{#lh:BA3}`DecisionQuotient.Physics.BoundedAcquisition.acquisitions_are_transitions`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA4`]{#lh:BA4}`DecisionQuotient.Physics.BoundedAcquisition.one_bit_per_transition`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA5`]{#lh:BA5}`DecisionQuotient.Physics.BoundedAcquisition.resolution_reads_sufficient`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA6`]{#lh:BA6}`DecisionQuotient.Physics.BoundedAcquisition.srank_le_resolution_bits`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA7`]{#lh:BA7}`DecisionQuotient.Physics.BoundedAcquisition.energy_ge_srank_cost`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA8`]{#lh:BA8}`DecisionQuotient.Physics.BoundedAcquisition.srank_one_energy_minimum`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA9`]{#lh:BA9}`DecisionQuotient.Physics.BoundedAcquisition.physical_grounding_bundle`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BA10`]{#lh:BA10}`DecisionQuotient.Physics.BoundedAcquisition.counting_gap_theorem`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BB1`]{#lh:BB1}`DecisionQuotient.BayesianDQ`                                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BB2`]{#lh:BB2}`DecisionQuotient.BayesianDQ.certaintyGain`                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BB3`]{#lh:BB3}`DecisionQuotient.dq_is_bayesian_certainty_fraction`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BB4`]{#lh:BB4}`DecisionQuotient.bayesian_dq_matches_physics_dq`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BB5`]{#lh:BB5}`DecisionQuotient.dq_derived_from_bayes`                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BC1`]{#lh:BC1}`DecisionQuotient.Foundations.counting_nonneg`                                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BC2`]{#lh:BC2}`DecisionQuotient.Foundations.counting_total`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BC3`]{#lh:BC3}`DecisionQuotient.Foundations.counting_additive`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BC4`]{#lh:BC4}`DecisionQuotient.Foundations.bayes_from_conditional`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BC5`]{#lh:BC5}`DecisionQuotient.Foundations.entropy_contraction`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BF1`]{#lh:BF1}`DecisionQuotient.certainty_of_not_nondegenerateBelief`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BF2`]{#lh:BF2}`DecisionQuotient.nondegenerateBelief_of_uncertaintyForced`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BF3`]{#lh:BF3}`DecisionQuotient.forced_action_under_uncertainty`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BF4`]{#lh:BF4}`DecisionQuotient.bayes_update_exists_of_nondegenerateBelief`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR1`]{#lh:BR1}`DecisionQuotient.Bridges.eth_structural_rank_exponential_hardness`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR2`]{#lh:BR2}`DecisionQuotient.Bridges.fisher_rank_lower_bounds_sufficient_set`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR3`]{#lh:BR3}`DecisionQuotient.Bridges.fpt_srank_parameterized_dichotomy`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR4`]{#lh:BR4}`DecisionQuotient.Bridges.tur_srank_thermodynamic_cost`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR5`]{#lh:BR5}`DecisionQuotient.Bridges.dichotomy_eth_complete_classification`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR6`]{#lh:BR6}`DecisionQuotient.Bridges.reduction_eth_conp_exponential`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR7`]{#lh:BR7}`DecisionQuotient.Bridges.geometry_covering_certificate_complexity`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR8`]{#lh:BR8}`DecisionQuotient.Bridges.rate_distortion_fisher_information_bridge`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR9`]{#lh:BR9}`DecisionQuotient.Bridges.counting_complexity_sharp_p_hardness`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`BR10`]{#lh:BR10}`DecisionQuotient.Bridges.approximation_counting_hardness_bridge`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC1`]{#lh:CC1}`DecisionQuotient.ClaimClosure.RegimeSimulation`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC2`]{#lh:CC2}`DecisionQuotient.ClaimClosure.adq_ordering`                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC3`]{#lh:CC3}`DecisionQuotient.ClaimClosure.system_transfer_licensed_iff_snapshot`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC4`]{#lh:CC4}`DecisionQuotient.ClaimClosure.anchor_sigma2p_complete_conditional`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC5`]{#lh:CC5}`DecisionQuotient.ClaimClosure.anchor_sigma2p_reduction_core`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC6`]{#lh:CC6}`DecisionQuotient.ClaimClosure.anchor_query_relation_false_iff`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC7`]{#lh:CC7}`DecisionQuotient.ClaimClosure.anchor_query_relation_true_iff`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC8`]{#lh:CC8}`DecisionQuotient.ClaimClosure.boundaryCharacterized_iff_exists_sufficient_subset`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC9`]{#lh:CC9}`DecisionQuotient.ClaimClosure.bounded_actions_detectable`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC10`]{#lh:CC10}`DecisionQuotient.ClaimClosure.bridge_boundary_represented_family`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC11`]{#lh:CC11}`DecisionQuotient.ClaimClosure.bridge_failure_witness_non_one_step`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC12`]{#lh:CC12}`DecisionQuotient.ClaimClosure.bridge_transfer_iff_one_step_class`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC13`]{#lh:CC13}`DecisionQuotient.ClaimClosure.certified_total_bits_split_core`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC14`]{#lh:CC14}`DecisionQuotient.ClaimClosure.cost_asymmetry_eth_conditional`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC15`]{#lh:CC15}`DecisionQuotient.ClaimClosure.declaredBudgetSlice`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC16`]{#lh:CC16}`DecisionQuotient.ClaimClosure.declaredRegimeFamily_complete`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC17`]{#lh:CC17}`DecisionQuotient.ClaimClosure.declared_physics_no_universal_exact_certifier_core`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC18`]{#lh:CC18}`DecisionQuotient.ClaimClosure.dichotomy_conditional`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC19`]{#lh:CC19}`DecisionQuotient.ClaimClosure.epsilon_admissible_iff_raw_lt_certified_total_core`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC20`]{#lh:CC20}`DecisionQuotient.ClaimClosure.exact_admissible_iff_raw_lt_certified_total_core`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC21`]{#lh:CC21}`DecisionQuotient.ClaimClosure.exact_certainty_inflation_under_hardness_core`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC22`]{#lh:CC22}`DecisionQuotient.ClaimClosure.exact_raw_eq_certified_iff_certainty_inflation_core`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC23`]{#lh:CC23}`DecisionQuotient.ClaimClosure.exact_raw_only_of_no_exact_admissible_core`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC24`]{#lh:CC24}`DecisionQuotient.ClaimClosure.explicit_assumptions_required_of_not_excused_core`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC25`]{#lh:CC25}`DecisionQuotient.ClaimClosure.explicit_state_upper_core`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC26`]{#lh:CC26}`DecisionQuotient.ClaimClosure.hard_family_all_coords_core`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC27`]{#lh:CC27}`DecisionQuotient.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC28`]{#lh:CC28}`DecisionQuotient.ClaimClosure.horizon_gt_one_bridge_can_fail_on_sufficiency`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC29`]{#lh:CC29}`DecisionQuotient.ClaimClosure.information_barrier_opt_oracle_core`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC30`]{#lh:CC30}`DecisionQuotient.ClaimClosure.information_barrier_state_batch_core`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC31`]{#lh:CC31}`DecisionQuotient.ClaimClosure.information_barrier_value_entry_core`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC32`]{#lh:CC32}`DecisionQuotient.ClaimClosure.integrity_resource_bound_for_sufficiency`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC33`]{#lh:CC33}`DecisionQuotient.ClaimClosure.integrity_universal_applicability_core`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC34`]{#lh:CC34}`DecisionQuotient.ClaimClosure.meta_coordinate_irrelevant_of_invariance_on_declared_slice`                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC35`]{#lh:CC35}`DecisionQuotient.ClaimClosure.meta_coordinate_not_relevant_on_declared_slice`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC36`]{#lh:CC36}`DecisionQuotient.ClaimClosure.minsuff_collapse_core`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC37`]{#lh:CC37}`DecisionQuotient.ClaimClosure.minsuff_collapse_to_conp_conditional`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC38`]{#lh:CC38}`DecisionQuotient.ClaimClosure.minsuff_conp_complete_conditional`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC39`]{#lh:CC39}`DecisionQuotient.ClaimClosure.no_auto_minimize_of_p_neq_conp`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC40`]{#lh:CC40}`DecisionQuotient.ClaimClosure.no_exact_claim_admissible_under_hardness_core`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC41`]{#lh:CC41}`DecisionQuotient.ClaimClosure.no_exact_claim_under_declared_assumptions_unless_excused_core`                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC42`]{#lh:CC42}`DecisionQuotient.ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC43`]{#lh:CC43}`DecisionQuotient.ClaimClosure.no_uncertified_exact_claim_core`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC44`]{#lh:CC44}`DecisionQuotient.ClaimClosure.one_step_bridge`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC45`]{#lh:CC45}`DecisionQuotient.ClaimClosure.oracle_lattice_transfer_as_regime_simulation`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC46`]{#lh:CC46}`DecisionQuotient.ClaimClosure.physical_crossover_above_cap_core`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC47`]{#lh:CC47}`DecisionQuotient.ClaimClosure.physical_crossover_core`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC48`]{#lh:CC48}`DecisionQuotient.ClaimClosure.physical_crossover_hardness_core`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC49`]{#lh:CC49}`DecisionQuotient.ClaimClosure.physical_crossover_policy_core`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC50`]{#lh:CC50}`DecisionQuotient.ClaimClosure.process_bridge_failure_witness`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC51`]{#lh:CC51}`DecisionQuotient.ClaimClosure.poseAnchorQuery`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC52`]{#lh:CC52}`DecisionQuotient.ClaimClosure.pose_returns_anchor_query_object`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC53`]{#lh:CC53}`DecisionQuotient.ClaimClosure.posed_anchor_checked_true_implies_truth`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC54`]{#lh:CC54}`DecisionQuotient.ClaimClosure.posed_anchor_exact_claim_admissible_iff_competent`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC55`]{#lh:CC55}`DecisionQuotient.ClaimClosure.posed_anchor_exact_claim_requires_evidence`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC56`]{#lh:CC56}`DecisionQuotient.ClaimClosure.posed_anchor_no_competence_no_exact_claim`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC57`]{#lh:CC57}`DecisionQuotient.ClaimClosure.posed_anchor_query_truth_iff_exists_anchor`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC58`]{#lh:CC58}`DecisionQuotient.ClaimClosure.posed_anchor_query_truth_iff_exists_forall`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC59`]{#lh:CC59}`DecisionQuotient.ClaimClosure.posed_anchor_signal_positive_certified_implies_admissible`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC60`]{#lh:CC60}`DecisionQuotient.ClaimClosure.query_obstruction_boolean_corollary`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC61`]{#lh:CC61}`DecisionQuotient.ClaimClosure.query_obstruction_finite_state_core`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC62`]{#lh:CC62}`DecisionQuotient.ClaimClosure.regime_core_claim_proved`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC63`]{#lh:CC63}`DecisionQuotient.ClaimClosure.regime_simulation_transfers_hardness`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC64`]{#lh:CC64}`DecisionQuotient.ClaimClosure.reusable_heuristic_of_detectable`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC65`]{#lh:CC65}`DecisionQuotient.ClaimClosure.selectorSufficient_not_implies_setSufficient`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC66`]{#lh:CC66}`DecisionQuotient.ClaimClosure.separable_detectable`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC67`]{#lh:CC67}`DecisionQuotient.ClaimClosure.snapshot_vs_process_typed_boundary`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC68`]{#lh:CC68}`DecisionQuotient.ClaimClosure.standard_assumption_ledger_unpack`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC69`]{#lh:CC69}`DecisionQuotient.ClaimClosure.stochastic_objective_bridge_can_fail_on_sufficiency`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC70`]{#lh:CC70}`DecisionQuotient.ClaimClosure.subproblem_hardness_lifts_to_full`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC71`]{#lh:CC71}`DecisionQuotient.ClaimClosure.subproblem_transfer_as_regime_simulation`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC72`]{#lh:CC72}`DecisionQuotient.ClaimClosure.sufficiency_conp_complete_conditional`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC73`]{#lh:CC73}`DecisionQuotient.ClaimClosure.sufficiency_conp_reduction_core`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC74`]{#lh:CC74}`DecisionQuotient.ClaimClosure.sufficiency_iff_dq_ratio`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC75`]{#lh:CC75}`DecisionQuotient.ClaimClosure.sufficiency_iff_projectedOptCover_eq_opt`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC76`]{#lh:CC76}`DecisionQuotient.ClaimClosure.thermo_conservation_additive_core`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC77`]{#lh:CC77}`DecisionQuotient.ClaimClosure.thermo_energy_carbon_lift_core`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC78`]{#lh:CC78}`DecisionQuotient.ClaimClosure.thermo_eventual_lift_core`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC79`]{#lh:CC79}`DecisionQuotient.ClaimClosure.thermo_hardness_bundle_core`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC80`]{#lh:CC80}`DecisionQuotient.ClaimClosure.thermo_mandatory_cost_core`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC81`]{#lh:CC81}`DecisionQuotient.ClaimClosure.tractable_bounded_core`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC82`]{#lh:CC82}`DecisionQuotient.ClaimClosure.tractable_separable_core`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC83`]{#lh:CC83}`DecisionQuotient.ClaimClosure.tractable_subcases_conditional`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC84`]{#lh:CC84}`DecisionQuotient.ClaimClosure.tractable_tree_core`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC85`]{#lh:CC85}`DecisionQuotient.ClaimClosure.transition_coupled_bridge_can_fail_on_sufficiency`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC86`]{#lh:CC86}`DecisionQuotient.ClaimClosure.tree_structure_detectable`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC87`]{#lh:CC87}`DecisionQuotient.ClaimClosure.typed_claim_admissibility_core`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC88`]{#lh:CC88}`DecisionQuotient.ClaimClosure.typed_static_class_completeness`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CC89`]{#lh:CC89}`DecisionQuotient.ClaimClosure.universal_solver_framing_core`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CCC1`]{#lh:CCC1}`DecisionQuotient.CC.anchor_sigma2p_complete_conditional`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CCC2`]{#lh:CCC2}`DecisionQuotient.CC.cost_asymmetry_eth_conditional`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CCC3`]{#lh:CCC3}`DecisionQuotient.CC.dichotomy_conditional`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CCC4`]{#lh:CCC4}`DecisionQuotient.CC.minsuff_collapse_to_conp_conditional`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CCC5`]{#lh:CCC5}`DecisionQuotient.CC.minsuff_conp_complete_conditional`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CCC6`]{#lh:CCC6}`DecisionQuotient.CC.sufficiency_conp_complete_conditional`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CCC7`]{#lh:CCC7}`DecisionQuotient.CC.tractable_subcases_conditional`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF1`]{#lh:CF1}`DecisionQuotient.Physics.ConstraintForcing.laws_not_determined_of_parameter_separation`                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF2`]{#lh:CF2}`DecisionQuotient.Physics.ConstraintForcing.logic_time_not_sufficient_for_unique_law`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF3`]{#lh:CF3}`DecisionQuotient.Physics.ConstraintForcing.laws_determined_implies_objective_determined`                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF4`]{#lh:CF4}`DecisionQuotient.Physics.ConstraintForcing.objective_not_determined_of_parameter_separation`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF5`]{#lh:CF5}`DecisionQuotient.Physics.ConstraintForcing.forcedDecisionBits_pos_of_deadline`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF6`]{#lh:CF6}`DecisionQuotient.Physics.ConstraintForcing.actionForced_of_deadline`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF7`]{#lh:CF7}`DecisionQuotient.Physics.ConstraintForcing.nondegenerateBelief_of_deadline_and_uncertainty`                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF8`]{#lh:CF8}`DecisionQuotient.Physics.ConstraintForcing.forced_decision_implies_positive_landauer_cost`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CF9`]{#lh:CF9}`DecisionQuotient.Physics.ConstraintForcing.forced_decision_implies_positive_nv_work`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CH1`]{#lh:CH1}`DecisionQuotient.ClaimClosure.CH1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CH2`]{#lh:CH2}`DecisionQuotient.ClaimClosure.CH2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CH3`]{#lh:CH3}`DecisionQuotient.ClaimClosure.CH3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CH5`]{#lh:CH5}`DecisionQuotient.ClaimClosure.CH5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CH6`]{#lh:CH6}`DecisionQuotient.ClaimClosure.CH6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CR1`]{#lh:CR1}`DecisionQuotient.ConfigReduction.config_sufficiency_iff_behavior_preserving`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT1`]{#lh:CT1}`DecisionQuotient.Physics.ClaimTransport.PhysicalEncoding`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT2`]{#lh:CT2}`DecisionQuotient.Physics.ClaimTransport.physical_claim_lifts_from_core`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT3`]{#lh:CT3}`DecisionQuotient.Physics.ClaimTransport.physical_claim_lifts_from_core_conditional`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT4`]{#lh:CT4}`DecisionQuotient.Physics.ClaimTransport.physical_counterexample_yields_core_counterexample`                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT5`]{#lh:CT5}`DecisionQuotient.Physics.ClaimTransport.physical_counterexample_invalidates_core_rule`                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT6`]{#lh:CT6}`DecisionQuotient.Physics.ClaimTransport.no_physical_counterexample_of_core_theorem`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT7`]{#lh:CT7}`DecisionQuotient.Physics.ClaimTransport.LawGapInstance`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT8`]{#lh:CT8}`DecisionQuotient.Physics.ClaimTransport.lawGapEncoding`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT9`]{#lh:CT9}`DecisionQuotient.Physics.ClaimTransport.lawGapPhysicalClaim`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT10`]{#lh:CT10}`DecisionQuotient.Physics.ClaimTransport.law_gap_physical_claim_holds`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT11`]{#lh:CT11}`DecisionQuotient.Physics.ClaimTransport.no_law_gap_counterexample`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CT12`]{#lh:CT12}`DecisionQuotient.Physics.ClaimTransport.physical_bridge_bundle`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV1`]{#lh:CV1}`DecisionQuotient.Physics.Conversation.RecurrentCircuit`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV2`]{#lh:CV2}`DecisionQuotient.Physics.Conversation.CoupledConversation`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV3`]{#lh:CV3}`DecisionQuotient.Physics.Conversation.JointState`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV4`]{#lh:CV4}`DecisionQuotient.Physics.Conversation.tick_uses_shared_node`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV5`]{#lh:CV5}`DecisionQuotient.Physics.Conversation.tick_shared_is_merged_emissions`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV6`]{#lh:CV6}`DecisionQuotient.Physics.Conversation.channel_projection_eq_iff_quantized_eq`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV7`]{#lh:CV7}`DecisionQuotient.Physics.Conversation.clamp_projection_eq_iff_same_clamped_bit`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV10`]{#lh:CV10}`DecisionQuotient.Physics.Conversation.explanationGap_add_explanationBits`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV11`]{#lh:CV11}`DecisionQuotient.Physics.Conversation.toClaimReport`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV12`]{#lh:CV12}`DecisionQuotient.Physics.Conversation.abstain_iff_no_answer`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV13`]{#lh:CV13}`DecisionQuotient.Physics.Conversation.yes_no_iff_exact_claim`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV14`]{#lh:CV14}`DecisionQuotient.Physics.Conversation.toReportSignal_completion_defined_of_budget`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV15`]{#lh:CV15}`DecisionQuotient.Physics.Conversation.toReportSignal_signal_consistent_zero_certified`                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV16`]{#lh:CV16}`DecisionQuotient.Physics.Conversation.abstain_report_can_carry_explanation`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV17`]{#lh:CV17}`DecisionQuotient.Physics.Conversation.clampDecisionEvent_iff_bitOps_pos`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV18`]{#lh:CV18}`DecisionQuotient.Physics.Conversation.clamp_event_implies_positive_energy`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV19`]{#lh:CV19}`DecisionQuotient.Physics.Conversation.BinaryAnswer`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV20`]{#lh:CV20}`DecisionQuotient.Physics.Conversation.ConversationReport`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV21`]{#lh:CV21}`DecisionQuotient.Physics.Conversation.explanationGap`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV26`]{#lh:CV26}`DecisionQuotient.Physics.Conversation.toClaimReport_ne_epsilon`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV27`]{#lh:CV27}`DecisionQuotient.Physics.Conversation.toReportSignal`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`CV28`]{#lh:CV28}`DecisionQuotient.Physics.Conversation.toReportSignal_declares_bound`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC1`]{#lh:DC1}`DecisionQuotient.StochasticSequential.static_stochastic_strict_separation`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC2`]{#lh:DC2}`DecisionQuotient.StochasticSequential.stochastic_sequential_strict_separation`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC3`]{#lh:DC3}`DecisionQuotient.StochasticSequential.complexity_dichotomy_hierarchy`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC4`]{#lh:DC4}`DecisionQuotient.StochasticSequential.regime_hierarchy`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC5`]{#lh:DC5}`DecisionQuotient.StochasticSequential.coNP_subset_PP`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC6`]{#lh:DC6}`DecisionQuotient.StochasticSequential.PP_subset_PSPACE`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC7`]{#lh:DC7}`DecisionQuotient.StochasticSequential.coNP_subset_PSPACE`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC8`]{#lh:DC8}`DecisionQuotient.StochasticSequential.static_to_coNP`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC9`]{#lh:DC9}`DecisionQuotient.StochasticSequential.stochastic_to_PP`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC10`]{#lh:DC10}`DecisionQuotient.StochasticSequential.sequential_to_PSPACE`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC11`]{#lh:DC11}`DecisionQuotient.StochasticSequential.ClaimClosure.claim_six_subcases`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC12`]{#lh:DC12}`DecisionQuotient.StochasticSequential.ClaimClosure.claim_hierarchy`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC13`]{#lh:DC13}`DecisionQuotient.StochasticSequential.ClaimClosure.claim_tractable_subcases_to_P`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC14`]{#lh:DC14}`DecisionQuotient.StochasticSequential.stochastic_dichotomy`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC15`]{#lh:DC15}`DecisionQuotient.StochasticSequential.above_threshold_hard`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC16`]{#lh:DC16}`DecisionQuotient.StochasticSequential.StochasticAnchorSufficient`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC17`]{#lh:DC17}`DecisionQuotient.StochasticSequential.StochasticAnchorSufficiencyCheck`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC18`]{#lh:DC18}`DecisionQuotient.StochasticSequential.stochastic_anchor_check_iff`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC19`]{#lh:DC19}`DecisionQuotient.StochasticSequential.stochastic_anchor_sufficient_of_stochastic_sufficient`                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC20`]{#lh:DC20}`DecisionQuotient.StochasticSequential.SequentialAnchorSufficient`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC21`]{#lh:DC21}`DecisionQuotient.StochasticSequential.SequentialAnchorSufficiencyCheck`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC22`]{#lh:DC22}`DecisionQuotient.StochasticSequential.sequential_anchor_check_iff`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC23`]{#lh:DC23}`DecisionQuotient.StochasticSequential.sequential_anchor_sufficient_of_sequential_sufficient`                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC24`]{#lh:DC24}`DecisionQuotient.StochasticSequential.StochasticAnchorCheckInstance`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC25`]{#lh:DC25}`DecisionQuotient.StochasticSequential.reduceMAJSAT_correct_anchor_strict`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC26`]{#lh:DC26}`DecisionQuotient.StochasticSequential.reduceMAJSAT_to_stochastic_anchor_reduction`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC27`]{#lh:DC27}`DecisionQuotient.StochasticSequential.SequentialAnchorCheckInstance`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC28`]{#lh:DC28}`DecisionQuotient.StochasticSequential.reduceTQBF_correct_anchor`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC29`]{#lh:DC29}`DecisionQuotient.StochasticSequential.reduceTQBF_to_sequential_anchor_reduction`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC30`]{#lh:DC30}`DecisionQuotient.StochasticSequential.StatePotential`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC31`]{#lh:DC31}`DecisionQuotient.StochasticSequential.utilityFromPotentialDrop_le_iff_nextPotential_ge`                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC32`]{#lh:DC32}`DecisionQuotient.StochasticSequential.utility_from_action_state_potential`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC33`]{#lh:DC33}`DecisionQuotient.StochasticSequential.stochasticExpectedUtility_eq_neg_expectedActionPotential`                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC34`]{#lh:DC34}`DecisionQuotient.StochasticSequential.stochasticExpectedUtility_le_iff_expectedActionPotential_ge`                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC35`]{#lh:DC35}`DecisionQuotient.StochasticSequential.landauerEnergyFloor_nonneg`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC36`]{#lh:DC36}`DecisionQuotient.StochasticSequential.landauerEnergyFloor_mono_bits`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DC37`]{#lh:DC37}`DecisionQuotient.StochasticSequential.thermodynamicCost_eq_landauerEnergyFloorRoom_states`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DE1`]{#lh:DE1}`DecisionQuotient.ClaimClosure.DE1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DE2`]{#lh:DE2}`DecisionQuotient.ClaimClosure.DE2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DE3`]{#lh:DE3}`DecisionQuotient.ClaimClosure.DE3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DE4`]{#lh:DE4}`DecisionQuotient.ClaimClosure.DE4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG1`]{#lh:DG1}`DecisionQuotient.Outside`                                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG2`]{#lh:DG2}`DecisionQuotient.anchoredSlice`                                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG3`]{#lh:DG3}`DecisionQuotient.anchoredSliceEquivOutside`                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG4`]{#lh:DG4}`DecisionQuotient.card_outside_eq_sub`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG5`]{#lh:DG5}`DecisionQuotient.card_anchoredSlice`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG6`]{#lh:DG6}`DecisionQuotient.card_anchoredSlice_eq_pow_sub`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG7`]{#lh:DG7}`DecisionQuotient.card_anchoredSlice_eq_uniform`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG8`]{#lh:DG8}`DecisionQuotient.anchoredSlice_mul_fixed_eq_full`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG9`]{#lh:DG9}`DecisionQuotient.constantBoolDP`                                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG10`]{#lh:DG10}`DecisionQuotient.firstCoordDP`                                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG11`]{#lh:DG11}`DecisionQuotient.constantBoolDP_opt`                                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG12`]{#lh:DG12}`DecisionQuotient.firstCoordDP_opt`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG13`]{#lh:DG13}`DecisionQuotient.constantBoolDP_empty_sufficient`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG14`]{#lh:DG14}`DecisionQuotient.firstCoordDP_empty_not_sufficient`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG15`]{#lh:DG15}`DecisionQuotient.boolHypercube_node_count`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG16`]{#lh:DG16}`DecisionQuotient.node_count_does_not_determine_edge_geometry`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG17`]{#lh:DG17}`DecisionQuotient.DecisionProblem.edgeOnComplement`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DG18`]{#lh:DG18}`DecisionQuotient.DecisionProblem.edgeOnComplement_iff_not_sufficient`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DP1`]{#lh:DP1}`DecisionQuotient.DecisionProblem.minimalSufficient_iff_relevant`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DP2`]{#lh:DP2}`DecisionQuotient.DecisionProblem.relevantSet_is_minimal`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DP3`]{#lh:DP3}`DecisionQuotient.DecisionProblem.sufficient_implies_selectorSufficient`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DP4`]{#lh:DP4}`DecisionQuotient.ClaimClosure.DecisionProblem.epsOpt_zero_eq_opt`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DP5`]{#lh:DP5}`DecisionQuotient.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DP6`]{#lh:DP6}`DecisionQuotient.ClaimClosure.DP6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DP7`]{#lh:DP7}`DecisionQuotient.ClaimClosure.DP7`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DP8`]{#lh:DP8}`DecisionQuotient.ClaimClosure.DP8`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DQ1`]{#lh:DQ1}`DecisionQuotient.ClaimClosure.DQ1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DQ2`]{#lh:DQ2}`DecisionQuotient.ClaimClosure.DQ2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DQ3`]{#lh:DQ3}`DecisionQuotient.ClaimClosure.DQ3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DQ4`]{#lh:DQ4}`DecisionQuotient.ClaimClosure.DQ4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DQ5`]{#lh:DQ5}`DecisionQuotient.ClaimClosure.DQ5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DQ6`]{#lh:DQ6}`DecisionQuotient.ClaimClosure.DQ6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DQ7`]{#lh:DQ7}`DecisionQuotient.ClaimClosure.DQ7`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DQ8`]{#lh:DQ8}`DecisionQuotient.ClaimClosure.DQ8`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DS1`]{#lh:DS1}`DecisionQuotient.ClaimClosure.DS1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DS2`]{#lh:DS2}`DecisionQuotient.ClaimClosure.DS2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DS3`]{#lh:DS3}`DecisionQuotient.ClaimClosure.DS3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DS4`]{#lh:DS4}`DecisionQuotient.ClaimClosure.DS4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DS5`]{#lh:DS5}`DecisionQuotient.ClaimClosure.DS5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DS6`]{#lh:DS6}`DecisionQuotient.ClaimClosure.DS6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT1`]{#lh:DT1}`DecisionQuotient.Physics.DecisionTime.TimedState`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT2`]{#lh:DT2}`DecisionQuotient.Physics.DecisionTime.DecisionProcess`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT3`]{#lh:DT3}`DecisionQuotient.Physics.DecisionTime.tick`                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT4`]{#lh:DT4}`DecisionQuotient.Physics.DecisionTime.DecisionEvent`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT5`]{#lh:DT5}`DecisionQuotient.Physics.DecisionTime.TimeUnitStep`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT6`]{#lh:DT6}`DecisionQuotient.Physics.DecisionTime.time_is_discrete`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT7`]{#lh:DT7}`DecisionQuotient.Physics.DecisionTime.time_coordinate_falsifiable`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT8`]{#lh:DT8}`DecisionQuotient.Physics.DecisionTime.tick_increments_time`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT9`]{#lh:DT9}`DecisionQuotient.Physics.DecisionTime.tick_decision_witness`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT10`]{#lh:DT10}`DecisionQuotient.Physics.DecisionTime.tick_is_decision_event`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT11`]{#lh:DT11}`DecisionQuotient.Physics.DecisionTime.decision_event_implies_time_unit`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT12`]{#lh:DT12}`DecisionQuotient.Physics.DecisionTime.decision_taking_place_is_unit_of_time`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT13`]{#lh:DT13}`DecisionQuotient.Physics.DecisionTime.decision_event_iff_eq_tick`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT14`]{#lh:DT14}`DecisionQuotient.Physics.DecisionTime.run`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT15`]{#lh:DT15}`DecisionQuotient.Physics.DecisionTime.run_time_exact`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT16`]{#lh:DT16}`DecisionQuotient.Physics.DecisionTime.run_elapsed_time_eq_ticks`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT17`]{#lh:DT17}`DecisionQuotient.Physics.DecisionTime.decisionTrace`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT18`]{#lh:DT18}`DecisionQuotient.Physics.DecisionTime.decisionTrace_length_eq_ticks`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT19`]{#lh:DT19}`DecisionQuotient.Physics.DecisionTime.decision_count_equals_elapsed_time`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT20`]{#lh:DT20}`DecisionQuotient.Physics.DecisionTime.SubstrateKind`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT21`]{#lh:DT21}`DecisionQuotient.Physics.DecisionTime.SubstrateModel`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT22`]{#lh:DT22}`DecisionQuotient.Physics.DecisionTime.substrate_step_realizes_decision_event`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT23`]{#lh:DT23}`DecisionQuotient.Physics.DecisionTime.substrate_step_is_time_unit`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`DT24`]{#lh:DT24}`DecisionQuotient.Physics.DecisionTime.time_unit_law_substrate_invariant`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`EI1`]{#lh:EI1}`DecisionQuotient.ThermodynamicLift.energy_ge_kbt_nat_entropy`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`EI2`]{#lh:EI2}`DecisionQuotient.ThermodynamicLift.energy_ground_state_tracks_entropy`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`EI4`]{#lh:EI4}`DecisionQuotient.ThermodynamicLift.landauerJoulesPerBit_pos`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`EI5`]{#lh:EI5}`DecisionQuotient.ThermodynamicLift.neukart_vinokur_duality`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`EP1`]{#lh:EP1}`DecisionQuotient.Physics.LocalityPhysics.landauer_principle`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`EP2`]{#lh:EP2}`DecisionQuotient.Physics.LocalityPhysics.finite_regional_energy`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`EP3`]{#lh:EP3}`DecisionQuotient.Physics.LocalityPhysics.finite_signal_speed`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`EP4`]{#lh:EP4}`DecisionQuotient.Physics.LocalityPhysics.nontrivial_physics`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FI3`]{#lh:FI3}`DecisionQuotient.FunctionalInformation.functional_information_from_counting`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FI6`]{#lh:FI6}`DecisionQuotient.FunctionalInformation.functional_information_from_thermodynamics`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FI7`]{#lh:FI7}`DecisionQuotient.FunctionalInformation.first_principles_thermo_coincide`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FN7`]{#lh:FN7}`DecisionQuotient.BayesOptimalityProof.KL_nonneg`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FN8`]{#lh:FN8}`DecisionQuotient.BayesOptimalityProof.entropy_le_crossEntropy`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FN12`]{#lh:FN12}`DecisionQuotient.BayesOptimalityProof.crossEntropy_eq_entropy_add_KL`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FN14`]{#lh:FN14}`DecisionQuotient.BayesOptimalityProof.bayes_is_optimal`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FN15`]{#lh:FN15}`DecisionQuotient.BayesOptimalityProof.KL_eq_sum_klFun`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FN16`]{#lh:FN16}`DecisionQuotient.BayesOptimalityProof.KL_eq_zero_iff_eq`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP1`]{#lh:FP1}`DecisionQuotient.Physics.LocalityPhysics.trivial_states_all_equal`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP2`]{#lh:FP2}`DecisionQuotient.Physics.LocalityPhysics.equal_states_constant_function`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP3`]{#lh:FP3}`DecisionQuotient.Physics.LocalityPhysics.constant_function_singleton_image`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP4`]{#lh:FP4}`DecisionQuotient.Physics.LocalityPhysics.singleton_image_zero_entropy`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP5`]{#lh:FP5}`DecisionQuotient.Physics.LocalityPhysics.zero_entropy_no_information`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP6`]{#lh:FP6}`DecisionQuotient.Physics.LocalityPhysics.triviality_implies_no_information`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP7`]{#lh:FP7}`DecisionQuotient.Physics.LocalityPhysics.information_requires_nontriviality`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP8`]{#lh:FP8}`DecisionQuotient.Physics.LocalityPhysics.atypical_states_rare`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP9`]{#lh:FP9}`DecisionQuotient.Physics.LocalityPhysics.random_misses_target`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP10`]{#lh:FP10}`DecisionQuotient.Physics.LocalityPhysics.errors_accumulate`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP11`]{#lh:FP11}`DecisionQuotient.Physics.LocalityPhysics.wrong_paths_dominate`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP12`]{#lh:FP12}`DecisionQuotient.Physics.LocalityPhysics.second_law_from_counting`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP13`]{#lh:FP13}`DecisionQuotient.Physics.LocalityPhysics.verification_is_information`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP14`]{#lh:FP14}`DecisionQuotient.Physics.LocalityPhysics.entropy_is_information`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FP15`]{#lh:FP15}`DecisionQuotient.Physics.LocalityPhysics.landauer_structure`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT1`]{#lh:FPT1}`DecisionQuotient.Physics.LocalityPhysics.Timeline`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT2`]{#lh:FPT2}`DecisionQuotient.Physics.LocalityPhysics.FPT2_function_deterministic`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT3`]{#lh:FPT3}`DecisionQuotient.Physics.LocalityPhysics.FPT3_outputs_differ_inputs_differ`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT4`]{#lh:FPT4}`DecisionQuotient.Physics.LocalityPhysics.FPT4_step_requires_distinct_moments`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT5`]{#lh:FPT5}`DecisionQuotient.Physics.LocalityPhysics.FPT5_distinct_moments_positive_duration`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT6`]{#lh:FPT6}`DecisionQuotient.Physics.LocalityPhysics.FPT6_step_takes_positive_time`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT7`]{#lh:FPT7}`DecisionQuotient.Physics.LocalityPhysics.FPT7_no_instantaneous_steps`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT8`]{#lh:FPT8}`DecisionQuotient.Physics.LocalityPhysics.FPT8_propagation_takes_time`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT9`]{#lh:FPT9}`DecisionQuotient.Physics.LocalityPhysics.FPT9_speed_bounded_by_positive_time`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FPT10`]{#lh:FPT10}`DecisionQuotient.Physics.LocalityPhysics.FPT10_ec3_is_logical`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FS1`]{#lh:FS1}`DecisionQuotient.Statistics.sum_fisherScore_eq_srank`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FS2`]{#lh:FS2}`DecisionQuotient.Statistics.fisherMatrix_rank_eq_srank`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FS3`]{#lh:FS3}`DecisionQuotient.Statistics.fisherMatrix_trace_eq_srank`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FS4`]{#lh:FS4}`DecisionQuotient.Statistics.fisherScore_relevant`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`FS5`]{#lh:FS5}`DecisionQuotient.Statistics.fisherScore_irrelevant`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE1`]{#lh:GE1}`DecisionQuotient.ClaimClosure.GE1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE2`]{#lh:GE2}`DecisionQuotient.ClaimClosure.GE2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE3`]{#lh:GE3}`DecisionQuotient.ClaimClosure.GE3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE4`]{#lh:GE4}`DecisionQuotient.ClaimClosure.GE4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE5`]{#lh:GE5}`DecisionQuotient.ClaimClosure.GE5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE6`]{#lh:GE6}`DecisionQuotient.ClaimClosure.GE6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE7`]{#lh:GE7}`DecisionQuotient.ClaimClosure.GE7`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE8`]{#lh:GE8}`DecisionQuotient.ClaimClosure.GE8`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GE9`]{#lh:GE9}`DecisionQuotient.ClaimClosure.GE9`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN1`]{#lh:GN1}`DecisionQuotient.LogicGraph.isCycle`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN2`]{#lh:GN2}`DecisionQuotient.LogicGraph.cycleWitnessBits_pos`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN3`]{#lh:GN3}`DecisionQuotient.LogicGraph.pathProb_nonneg`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN4`]{#lh:GN4}`DecisionQuotient.LogicGraph.pathSurprisal_nonneg_of_positive_mass`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN5`]{#lh:GN5}`DecisionQuotient.LogicGraph.nontrivialityScore_unknown`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN6`]{#lh:GN6}`DecisionQuotient.LogicGraph.observerEntropy_nonneg`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN7`]{#lh:GN7}`DecisionQuotient.LogicGraph.dqFromEntropy_in_unit_interval`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN8`]{#lh:GN8}`DecisionQuotient.LogicGraph.path_belief_forced_under_uncertainty`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN9`]{#lh:GN9}`DecisionQuotient.LogicGraph.bayes_update_exists_for_observer_paths`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN10`]{#lh:GN10}`DecisionQuotient.LogicGraph.cycle_witness_implies_positive_landauer`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN11`]{#lh:GN11}`DecisionQuotient.LogicGraph.cycle_witness_implies_positive_nv_work`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN12`]{#lh:GN12}`DecisionQuotient.LogicGraph.dna_erasure_implies_positive_landauer`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`GN13`]{#lh:GN13}`DecisionQuotient.LogicGraph.dna_room_temp_environmental_stability`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`H1`]{#lh:H1}`...`                                                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD1`]{#lh:HD1}`DecisionQuotient.HardnessDistribution.centralization_dominance_bundle`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD2`]{#lh:HD2}`DecisionQuotient.HardnessDistribution.centralization_step_saves_n_minus_one`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD3`]{#lh:HD3}`DecisionQuotient.HardnessDistribution.centralized_higher_leverage`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD4`]{#lh:HD4}`DecisionQuotient.HardnessDistribution.complete_model_dominates_after_threshold`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD5`]{#lh:HD5}`DecisionQuotient.HardnessDistribution.gap_conservation_card`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD6`]{#lh:HD6}`DecisionQuotient.HardnessDistribution.generalizedTotal_with_saturation_eventually_constant`                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD7`]{#lh:HD7}`DecisionQuotient.HardnessDistribution.generalized_dominance_can_fail_without_right_boundedness`                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD8`]{#lh:HD8}`DecisionQuotient.HardnessDistribution.generalized_dominance_can_fail_without_wrong_growth`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD9`]{#lh:HD9}`DecisionQuotient.HardnessDistribution.generalized_right_dominates_wrong_of_bounded_vs_identity_lower`                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD10`]{#lh:HD10}`DecisionQuotient.HardnessDistribution.generalized_right_eventually_dominates_wrong`                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD11`]{#lh:HD11}`DecisionQuotient.HardnessDistribution.hardnessEfficiency_eq_central_share`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD12`]{#lh:HD12}`DecisionQuotient.HardnessDistribution.isRightHardness`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD13`]{#lh:HD13}`DecisionQuotient.HardnessDistribution.isWrongHardness`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD14`]{#lh:HD14}`DecisionQuotient.HardnessDistribution.linear_lt_exponential_plus_constant_eventually`                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD15`]{#lh:HD15}`DecisionQuotient.HardnessDistribution.native_dominates_manual`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD16`]{#lh:HD16}`DecisionQuotient.HardnessDistribution.no_positive_slope_linear_represents_saturating`                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD17`]{#lh:HD17}`DecisionQuotient.HardnessDistribution.requiredWork`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD18`]{#lh:HD18}`DecisionQuotient.HardnessDistribution.requiredWork_eq_affine_in_sites`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD19`]{#lh:HD19}`DecisionQuotient.HardnessDistribution.right_dominates_wrong`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD20`]{#lh:HD20}`DecisionQuotient.HardnessDistribution.saturatingSiteCost_eventually_constant`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD21`]{#lh:HD21}`DecisionQuotient.HardnessDistribution.simplicityTax_grows`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD22`]{#lh:HD22}`DecisionQuotient.HardnessDistribution.hardnessLowerBound`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD23`]{#lh:HD23}`DecisionQuotient.HardnessDistribution.hardness_is_irreducible_required_work`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD24`]{#lh:HD24}`DecisionQuotient.HardnessDistribution.totalDOF_eventually_constant_iff_zero_distributed`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD25`]{#lh:HD25}`DecisionQuotient.HardnessDistribution.totalDOF_ge_intrinsic`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD26`]{#lh:HD26}`DecisionQuotient.HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD27`]{#lh:HD27}`DecisionQuotient.HardnessDistribution.workGrowthDegree`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HD28`]{#lh:HD28}`DecisionQuotient.HardnessDistribution.workGrowthDegree_zero_iff_eventually_constant`                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HS1`]{#lh:HS1}`DecisionQuotient.Physics.HeisenbergStrong.NoisyPhysicalEncoding`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HS2`]{#lh:HS2}`DecisionQuotient.Physics.HeisenbergStrong.HeisenbergStrongBinding`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HS3`]{#lh:HS3}`DecisionQuotient.Physics.HeisenbergStrong.strong_binding_implies_core_nontrivial`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HS4`]{#lh:HS4}`DecisionQuotient.Physics.HeisenbergStrong.strong_binding_yields_core_encoding_witness`                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HS5`]{#lh:HS5}`DecisionQuotient.Physics.HeisenbergStrong.strong_binding_implies_physical_nontrivial_opt_assumption`                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`HS6`]{#lh:HS6}`DecisionQuotient.Physics.HeisenbergStrong.strong_binding_implies_nontrivial_opt_via_uncertainty`                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA1`]{#lh:IA1}`DecisionQuotient.ClaimClosure.IA1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA2`]{#lh:IA2}`DecisionQuotient.ClaimClosure.IA2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA3`]{#lh:IA3}`DecisionQuotient.ClaimClosure.IA3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA4`]{#lh:IA4}`DecisionQuotient.ClaimClosure.IA4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA5`]{#lh:IA5}`DecisionQuotient.ClaimClosure.IA5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA6`]{#lh:IA6}`DecisionQuotient.ClaimClosure.IA6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA7`]{#lh:IA7}`DecisionQuotient.ClaimClosure.IA7`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA8`]{#lh:IA8}`DecisionQuotient.ClaimClosure.IA8`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA9`]{#lh:IA9}`DecisionQuotient.ClaimClosure.IA9`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA10`]{#lh:IA10}`DecisionQuotient.ClaimClosure.IA10`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA11`]{#lh:IA11}`DecisionQuotient.ClaimClosure.IA11`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA12`]{#lh:IA12}`DecisionQuotient.ClaimClosure.IA12`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IA13`]{#lh:IA13}`DecisionQuotient.ClaimClosure.IA13`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC1`]{#lh:IC1}`DecisionQuotient.IntegrityCompetence.CertaintyInflation`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC2`]{#lh:IC2}`DecisionQuotient.IntegrityCompetence.CompletionFractionDefined`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC3`]{#lh:IC3}`DecisionQuotient.IntegrityCompetence.EvidenceForReport`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC4`]{#lh:IC4}`DecisionQuotient.IntegrityCompetence.ExactCertaintyInflation`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC5`]{#lh:IC5}`DecisionQuotient.IntegrityCompetence.Percent`                                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC6`]{#lh:IC6}`DecisionQuotient.IntegrityCompetence.RLFFWeights`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC7`]{#lh:IC7}`DecisionQuotient.IntegrityCompetence.ReportSignal`                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC8`]{#lh:IC8}`DecisionQuotient.IntegrityCompetence.ReportBitModel`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC9`]{#lh:IC9}`DecisionQuotient.IntegrityCompetence.SignalConsistent`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC10`]{#lh:IC10}`DecisionQuotient.IntegrityCompetence.admissible_irrational_strictly_more_than_rational`                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC11`]{#lh:IC11}`DecisionQuotient.IntegrityCompetence.admissible_matrix_counts`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC12`]{#lh:IC12}`DecisionQuotient.IntegrityCompetence.abstain_signal_exists_with_guess_self`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC13`]{#lh:IC13}`DecisionQuotient.IntegrityCompetence.certaintyInflation_iff_not_admissible`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC14`]{#lh:IC14}`DecisionQuotient.IntegrityCompetence.certificationOverheadBits`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC15`]{#lh:IC15}`DecisionQuotient.IntegrityCompetence.certificationOverheadBits_of_evidence`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC16`]{#lh:IC16}`DecisionQuotient.IntegrityCompetence.certificationOverheadBits_of_no_evidence`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC17`]{#lh:IC17}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC18`]{#lh:IC18}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits_ge_raw`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC19`]{#lh:IC19}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits_gt_raw_of_evidence`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC20`]{#lh:IC20}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits_of_evidence`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC21`]{#lh:IC21}`DecisionQuotient.IntegrityCompetence.certifiedTotalBits_of_no_evidence`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC22`]{#lh:IC22}`DecisionQuotient.IntegrityCompetence.claim_admissible_of_evidence`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC23`]{#lh:IC23}`DecisionQuotient.IntegrityCompetence.competence_implies_integrity`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC24`]{#lh:IC24}`DecisionQuotient.IntegrityCompetence.completion_fraction_defined_of_declared_bound`                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC25`]{#lh:IC25}`DecisionQuotient.IntegrityCompetence.epsilon_competence_implies_integrity`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC26`]{#lh:IC26}`DecisionQuotient.IntegrityCompetence.evidence_nonempty_iff_claim_admissible`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC27`]{#lh:IC27}`DecisionQuotient.IntegrityCompetence.evidence_of_claim_admissible`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC28`]{#lh:IC28}`DecisionQuotient.IntegrityCompetence.exact_claim_admissible_iff_exact_evidence_nonempty`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC29`]{#lh:IC29}`DecisionQuotient.IntegrityCompetence.exact_claim_requires_evidence`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC30`]{#lh:IC30}`DecisionQuotient.IntegrityCompetence.exactCertaintyInflation_iff_no_exact_competence`                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC31`]{#lh:IC31}`DecisionQuotient.IntegrityCompetence.exact_raw_only_of_no_exact_admissible`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC32`]{#lh:IC32}`DecisionQuotient.IntegrityCompetence.integrity_forces_abstention`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC33`]{#lh:IC33}`DecisionQuotient.IntegrityCompetence.integrity_not_competent_of_nonempty_scope`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC34`]{#lh:IC34}`DecisionQuotient.IntegrityCompetence.integrity_resource_bound`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC35`]{#lh:IC35}`DecisionQuotient.IntegrityCompetence.no_completion_fraction_without_declared_bound`                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC36`]{#lh:IC36}`DecisionQuotient.IntegrityCompetence.overModelVerdict_rational_iff`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC37`]{#lh:IC37}`DecisionQuotient.IntegrityCompetence.percentZero`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC38`]{#lh:IC38}`DecisionQuotient.IntegrityCompetence.rlffBaseReward`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC39`]{#lh:IC39}`DecisionQuotient.IntegrityCompetence.rlffReward`                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC40`]{#lh:IC40}`DecisionQuotient.IntegrityCompetence.rlff_abstain_strictly_prefers_no_certificates`                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC41`]{#lh:IC41}`DecisionQuotient.IntegrityCompetence.rlff_maximizer_has_evidence`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC42`]{#lh:IC42}`DecisionQuotient.IntegrityCompetence.rlff_maximizer_is_admissible`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC43`]{#lh:IC43}`DecisionQuotient.IntegrityCompetence.self_reflected_confidence_not_certification`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC44`]{#lh:IC44}`DecisionQuotient.IntegrityCompetence.signal_certified_positive_implies_admissible`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC45`]{#lh:IC45}`DecisionQuotient.IntegrityCompetence.signal_consistent_of_claim_admissible`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC46`]{#lh:IC46}`DecisionQuotient.IntegrityCompetence.signal_no_evidence_forces_zero_certified`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC47`]{#lh:IC47}`DecisionQuotient.IntegrityCompetence.signal_exact_no_competence_forces_zero_certified`                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC48`]{#lh:IC48}`DecisionQuotient.IntegrityCompetence.steps_run_scalar_always_defined`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC49`]{#lh:IC49}`DecisionQuotient.IntegrityCompetence.steps_run_scalar_falsifiable`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IC50`]{#lh:IC50}`DecisionQuotient.IntegrityCompetence.zero_epsilon_competence_iff_exact`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE1`]{#lh:IE1}`DecisionQuotient.ClaimClosure.IE1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE2`]{#lh:IE2}`DecisionQuotient.ClaimClosure.IE2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE3`]{#lh:IE3}`DecisionQuotient.ClaimClosure.IE3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE4`]{#lh:IE4}`DecisionQuotient.ClaimClosure.IE4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE5`]{#lh:IE5}`DecisionQuotient.ClaimClosure.IE5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE6`]{#lh:IE6}`DecisionQuotient.ClaimClosure.IE6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE7`]{#lh:IE7}`DecisionQuotient.ClaimClosure.IE7`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE8`]{#lh:IE8}`DecisionQuotient.ClaimClosure.IE8`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE9`]{#lh:IE9}`DecisionQuotient.ClaimClosure.IE9`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE10`]{#lh:IE10}`DecisionQuotient.ClaimClosure.IE10`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE11`]{#lh:IE11}`DecisionQuotient.ClaimClosure.IE11`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE12`]{#lh:IE12}`DecisionQuotient.ClaimClosure.IE12`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE13`]{#lh:IE13}`DecisionQuotient.ClaimClosure.IE13`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE14`]{#lh:IE14}`DecisionQuotient.ClaimClosure.IE14`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE15`]{#lh:IE15}`DecisionQuotient.ClaimClosure.IE15`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE16`]{#lh:IE16}`DecisionQuotient.ClaimClosure.IE16`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IE17`]{#lh:IE17}`DecisionQuotient.ClaimClosure.IE17`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN1`]{#lh:IN1}`DecisionQuotient.Physics.Instantiation.Geometry`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN2`]{#lh:IN2}`DecisionQuotient.Physics.Instantiation.Dynamics`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN3`]{#lh:IN3}`DecisionQuotient.Physics.Instantiation.Circuit`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN4`]{#lh:IN4}`DecisionQuotient.Physics.Instantiation.geometry_plus_dynamics_is_circuit`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN5`]{#lh:IN5}`DecisionQuotient.Physics.Instantiation.DecisionInterpretation`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN6`]{#lh:IN6}`DecisionQuotient.Physics.Instantiation.DecisionCircuit`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN7`]{#lh:IN7}`DecisionQuotient.Physics.Instantiation.Molecule`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN8`]{#lh:IN8}`DecisionQuotient.Physics.Instantiation.Reaction`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN9`]{#lh:IN9}`DecisionQuotient.Physics.Instantiation.ReactionOutcome`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN10`]{#lh:IN10}`DecisionQuotient.Physics.Instantiation.MoleculeGeometry`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN11`]{#lh:IN11}`DecisionQuotient.Physics.Instantiation.MoleculeDynamics`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN12`]{#lh:IN12}`DecisionQuotient.Physics.Instantiation.MoleculeCircuit`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN13`]{#lh:IN13}`DecisionQuotient.Physics.Instantiation.MoleculeAsCircuit`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN14`]{#lh:IN14}`DecisionQuotient.Physics.Instantiation.MoleculeAsDecisionCircuit`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN15`]{#lh:IN15}`DecisionQuotient.Physics.Instantiation.molecule_decision_preserves_geometry`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN16`]{#lh:IN16}`DecisionQuotient.Physics.Instantiation.molecule_decision_preserves_dynamics`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN17`]{#lh:IN17}`DecisionQuotient.Physics.Instantiation.asDecisionCircuit`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN18`]{#lh:IN18}`DecisionQuotient.Physics.Instantiation.asDecisionCircuit_preserves_circuit`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN19`]{#lh:IN19}`DecisionQuotient.Physics.Instantiation.Configuration`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN20`]{#lh:IN20}`DecisionQuotient.Physics.Instantiation.EnergyLandscape`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN21`]{#lh:IN21}`DecisionQuotient.Physics.Instantiation.k_Boltzmann`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN22`]{#lh:IN22}`DecisionQuotient.Physics.Instantiation.LandauerBound`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN23`]{#lh:IN23}`DecisionQuotient.Physics.Instantiation.law_objective_schema`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN24`]{#lh:IN24}`DecisionQuotient.Physics.Instantiation.law_opt_eq_feasible_of_gap`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IN25`]{#lh:IN25}`DecisionQuotient.Physics.Instantiation.law_opt_singleton_of_deterministic`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IP1`]{#lh:IP1}`DecisionQuotient.Physics.LocalityPhysics.ec1_can_be_true`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IP2`]{#lh:IP2}`DecisionQuotient.Physics.LocalityPhysics.ec1_independent_of_ec2_ec3`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IP3`]{#lh:IP3}`DecisionQuotient.Physics.LocalityPhysics.ec2_can_be_true`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IP4`]{#lh:IP4}`DecisionQuotient.Physics.LocalityPhysics.ec2_independent_of_ec1_ec3`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IP5`]{#lh:IP5}`DecisionQuotient.Physics.LocalityPhysics.ec3_can_be_true`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IP6`]{#lh:IP6}`DecisionQuotient.Physics.LocalityPhysics.ec3_independent_of_ec1_ec2`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IP7`]{#lh:IP7}`DecisionQuotient.Physics.LocalityPhysics.empirical_claims_mutually_independent`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IT1`]{#lh:IT1}`DecisionQuotient.DecisionProblem.numOptClasses`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IT3`]{#lh:IT3}`DecisionQuotient.quotientEntropy_le_srank_binary`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IT4`]{#lh:IT4}`DecisionQuotient.numOptClasses_le_pow_srank_binary`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IT5`]{#lh:IT5}`DecisionQuotient.nontrivial_bounds_binary`                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IT6`]{#lh:IT6}`DecisionQuotient.nontrivial_implies_srank_pos`                                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV1`]{#lh:IV1}`DecisionQuotient.InteriorVerification.GoalClass`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV2`]{#lh:IV2}`DecisionQuotient.InteriorVerification.InteriorDominanceVerifiable`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV3`]{#lh:IV3}`DecisionQuotient.InteriorVerification.TautologicalSetIdentifiable`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV4`]{#lh:IV4}`DecisionQuotient.InteriorVerification.agreeOnSet`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV5`]{#lh:IV5}`DecisionQuotient.InteriorVerification.interiorParetoDominates`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV6`]{#lh:IV6}`DecisionQuotient.InteriorVerification.interior_certificate_implies_non_rejection`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV7`]{#lh:IV7}`DecisionQuotient.InteriorVerification.interior_dominance_implies_universal_non_rejection`                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV8`]{#lh:IV8}`DecisionQuotient.InteriorVerification.interior_dominance_not_full_sufficiency`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV9`]{#lh:IV9}`DecisionQuotient.InteriorVerification.interior_verification_tractable_certificate`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV10`]{#lh:IV10}`DecisionQuotient.InteriorVerification.not_sufficientOnSet_of_counterexample`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`IV11`]{#lh:IV11}`DecisionQuotient.InteriorVerification.singleton_coordinate_interior_certificate`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP1`]{#lh:LP1}`DecisionQuotient.Physics.LocalityPhysics.SpacetimePoint`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP2`]{#lh:LP2}`DecisionQuotient.Physics.LocalityPhysics.lightCone`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP3`]{#lh:LP3}`DecisionQuotient.Physics.LocalityPhysics.causalPast`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP4`]{#lh:LP4}`DecisionQuotient.Physics.LocalityPhysics.self_in_lightCone`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP5`]{#lh:LP5}`DecisionQuotient.Physics.LocalityPhysics.self_in_causalPast`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP6`]{#lh:LP6}`DecisionQuotient.Physics.LocalityPhysics.LocalRegion`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP7`]{#lh:LP7}`DecisionQuotient.Physics.LocalityPhysics.canObserve`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP8`]{#lh:LP8}`DecisionQuotient.Physics.LocalityPhysics.spacelikeSeparated`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP9`]{#lh:LP9}`DecisionQuotient.Physics.LocalityPhysics.spacelike_disjoint_observation`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP11`]{#lh:LP11}`DecisionQuotient.Physics.LocalityPhysics.LocalConfiguration`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP12`]{#lh:LP12}`DecisionQuotient.Physics.LocalityPhysics.isLocallyValid`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP13`]{#lh:LP13}`DecisionQuotient.Physics.LocalityPhysics.MergeResult`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP14`]{#lh:LP14}`DecisionQuotient.Physics.LocalityPhysics.boardMerge`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP15`]{#lh:LP15}`DecisionQuotient.Physics.LocalityPhysics.independent_configs_can_disagree`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP16`]{#lh:LP16}`DecisionQuotient.Physics.LocalityPhysics.merge_compatible_iff`                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP17`]{#lh:LP17}`DecisionQuotient.Physics.LocalityPhysics.merge_contradiction_iff`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP18`]{#lh:LP18}`DecisionQuotient.Physics.LocalityPhysics.locality_implies_possible_contradiction`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP19`]{#lh:LP19}`DecisionQuotient.Physics.LocalityPhysics.Superposition`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP20`]{#lh:LP20}`DecisionQuotient.Physics.LocalityPhysics.superposition_can_contain_contradictions`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP21`]{#lh:LP21}`DecisionQuotient.Physics.LocalityPhysics.superposition_requires_separation`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP22`]{#lh:LP22}`DecisionQuotient.Physics.LocalityPhysics.bell_separation_is_real`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP23`]{#lh:LP23}`DecisionQuotient.Physics.LocalityPhysics.measurement_is_merge_contradiction`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP24`]{#lh:LP24}`DecisionQuotient.Physics.LocalityPhysics.entanglement_is_shared_origin`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP31`]{#lh:LP31}`DecisionQuotient.Physics.LocalityPhysics.complete_knowledge_requires_all_queries`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP32`]{#lh:LP32}`DecisionQuotient.Physics.LocalityPhysics.finite_energy_constraint`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP33`]{#lh:LP33}`DecisionQuotient.Physics.LocalityPhysics.self_knowledge_impossible_if_insufficient_energy`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP34`]{#lh:LP34}`DecisionQuotient.Physics.LocalityPhysics.bounded_energy_forces_locality`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP35`]{#lh:LP35}`DecisionQuotient.Physics.LocalityPhysics.locality_implies_independent_regions`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP36`]{#lh:LP36}`DecisionQuotient.Physics.LocalityPhysics.independent_regions_imply_possible_contradiction`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP38`]{#lh:LP38}`DecisionQuotient.Physics.LocalityPhysics.pne_np_necessary_for_physics`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP39`]{#lh:LP39}`DecisionQuotient.Physics.LocalityPhysics.matter_exists_because_pne_np`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP40`]{#lh:LP40}`DecisionQuotient.Physics.LocalityPhysics.physics_is_the_game`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP41`]{#lh:LP41}`DecisionQuotient.Physics.LocalityPhysics.without_positive_query_cost_no_bound`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP42`]{#lh:LP42}`DecisionQuotient.Physics.LocalityPhysics.without_nontrivial_states_no_disagreement`                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP43`]{#lh:LP43}`DecisionQuotient.Physics.LocalityPhysics.without_separation_no_independence`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP44`]{#lh:LP44}`DecisionQuotient.Physics.LocalityPhysics.without_finite_capacity_no_gap`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP45`]{#lh:LP45}`DecisionQuotient.Physics.LocalityPhysics.all_premises_used`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP46`]{#lh:LP46}`DecisionQuotient.Physics.LocalityPhysics.premises_necessary_and_sufficient`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP50`]{#lh:LP50}`DecisionQuotient.Physics.LocalityPhysics.shannon_value_is_intractability`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP51`]{#lh:LP51}`DecisionQuotient.Physics.LocalityPhysics.economic_value_requires_scarcity`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP52`]{#lh:LP52}`DecisionQuotient.Physics.LocalityPhysics.thermodynamic_value_requires_gradient`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP53`]{#lh:LP53}`DecisionQuotient.Physics.LocalityPhysics.voi_requires_uncertainty`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP54`]{#lh:LP54}`DecisionQuotient.Physics.LocalityPhysics.physics_requires_intractability`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP55`]{#lh:LP55}`DecisionQuotient.Physics.LocalityPhysics.value_is_intractability`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP56`]{#lh:LP56}`DecisionQuotient.Physics.LocalityPhysics.observers_value_the_intractable`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP57`]{#lh:LP57}`DecisionQuotient.Physics.LocalityPhysics.finite_steps_finite_coverage`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP58`]{#lh:LP58}`DecisionQuotient.Physics.LocalityPhysics.counting_gap`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP59`]{#lh:LP59}`DecisionQuotient.Physics.LocalityPhysics.time_is_counting`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP60`]{#lh:LP60}`DecisionQuotient.Physics.LocalityPhysics.gap_equivalence`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`LP61`]{#lh:LP61}`DecisionQuotient.Physics.LocalityPhysics.light_cone_is_time_gap`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MI1`]{#lh:MI1}`DecisionQuotient.ClaimClosure.MI1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MI2`]{#lh:MI2}`DecisionQuotient.ClaimClosure.MI2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MI3`]{#lh:MI3}`DecisionQuotient.ClaimClosure.MI3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MI4`]{#lh:MI4}`DecisionQuotient.ClaimClosure.MI4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MI5`]{#lh:MI5}`DecisionQuotient.ClaimClosure.MI5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN1`]{#lh:MN1}`DecisionQuotient.Physics.MeasureNecessity.quantitative_claim_has_measure`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN2`]{#lh:MN2}`DecisionQuotient.Physics.MeasureNecessity.stochastic_claim_has_probability_measure`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN3`]{#lh:MN3}`DecisionQuotient.Physics.MeasureNecessity.stochastic_claim_has_measure`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN4`]{#lh:MN4}`DecisionQuotient.Physics.MeasureNecessity.count_univ_bool`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN5`]{#lh:MN5}`DecisionQuotient.Physics.MeasureNecessity.counting_measure_not_probability_on_bool`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN6`]{#lh:MN6}`DecisionQuotient.Physics.MeasureNecessity.deterministic_dirac_is_probability`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN7`]{#lh:MN7}`DecisionQuotient.Physics.MeasureNecessity.quantitative_value_depends_on_measure`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN8`]{#lh:MN8}`DecisionQuotient.Physics.MeasureNecessity.deterministic_models_still_measure_based`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN9`]{#lh:MN9}`DecisionQuotient.Physics.MeasureNecessity.measure_does_not_imply_probability`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN10`]{#lh:MN10}`DecisionQuotient.Physics.MeasureNecessity.quantitative_measure_is_logical_prerequisite`                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`MN11`]{#lh:MN11}`DecisionQuotient.Physics.MeasureNecessity.stochastic_probability_is_logical_prerequisite`                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR1`]{#lh:OR1}`DecisionQuotient.Physics.ObserverRelativeState.ObserverClass`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR2`]{#lh:OR2}`DecisionQuotient.Physics.ObserverRelativeState.obsEquiv`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR3`]{#lh:OR3}`DecisionQuotient.Physics.ObserverRelativeState.EffectiveStateSpace`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR4`]{#lh:OR4}`DecisionQuotient.Physics.ObserverRelativeState.project_eq_iff`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR5`]{#lh:OR5}`DecisionQuotient.Physics.ObserverRelativeState.observer_relative_equivalence_witness`                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR6`]{#lh:OR6}`DecisionQuotient.Physics.ObserverRelativeState.PhysicalObserverClass`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR7`]{#lh:OR7}`DecisionQuotient.Physics.ObserverRelativeState.PhysicalStateSpace`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR8`]{#lh:OR8}`DecisionQuotient.Physics.ObserverRelativeState.physical_state_space_has_instance_witness`                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`OR9`]{#lh:OR9}`DecisionQuotient.Physics.ObserverRelativeState.physical_observer_relative_effective_space`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA1`]{#lh:PA1}`DecisionQuotient.Physics.AnchorChecks.obsEquiv_all_of_effective_subsingleton`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA2`]{#lh:PA2}`DecisionQuotient.Physics.AnchorChecks.stochasticAnchorSufficient_iff_exists_anchor_singleton`                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA3`]{#lh:PA3}`DecisionQuotient.Physics.AnchorChecks.stochastic_anchor_check_iff_exists_anchor_singleton`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA4`]{#lh:PA4}`DecisionQuotient.Physics.AnchorChecks.stochastic_sufficient_of_observer_collapse_and_seed`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA5`]{#lh:PA5}`DecisionQuotient.Physics.AnchorChecks.stochastic_anchor_check_of_observer_collapse_and_seed`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA6`]{#lh:PA6}`DecisionQuotient.Physics.AnchorChecks.sequential_sufficient_of_observer_collapse`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA7`]{#lh:PA7}`DecisionQuotient.Physics.AnchorChecks.sequential_anchor_check_of_observer_collapse`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA8`]{#lh:PA8}`DecisionQuotient.Physics.AnchorChecks.physical_observer_collapse_implies_obsEquiv_all`                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PA9`]{#lh:PA9}`DecisionQuotient.Physics.AnchorChecks.physical_stochastic_anchor_check_of_observer_collapse_and_seed`                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC1`]{#lh:PBC1}`DecisionQuotient.PhysicalBudgetCrossover.CrossoverAt`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC2`]{#lh:PBC2}`DecisionQuotient.PhysicalBudgetCrossover.SuccinctInfeasible`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC3`]{#lh:PBC3}`DecisionQuotient.PhysicalBudgetCrossover.SuccinctUnbounded`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC4`]{#lh:PBC4}`DecisionQuotient.PhysicalBudgetCrossover.explicit_infeasible_succinct_feasible_of_crossover`                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC5`]{#lh:PBC5}`DecisionQuotient.PhysicalBudgetCrossover.exists_least_crossover_point`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC6`]{#lh:PBC6}`DecisionQuotient.PhysicalBudgetCrossover.has_crossover_of_bounded_succinct_unbounded_explicit`                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC7`]{#lh:PBC7}`DecisionQuotient.PhysicalBudgetCrossover.explicit_eventual_infeasibility_of_monotone_and_witness`                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC8`]{#lh:PBC8}`DecisionQuotient.PhysicalBudgetCrossover.crossover_eventually_of_eventual_split`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC9`]{#lh:PBC9}`DecisionQuotient.PhysicalBudgetCrossover.payoff_threshold_explicit_vs_succinct`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC10`]{#lh:PBC10}`DecisionQuotient.PhysicalBudgetCrossover.no_universal_survivor_without_succinct_bound`                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC11`]{#lh:PBC11}`DecisionQuotient.PhysicalBudgetCrossover.policy_closure_at_divergence`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PBC12`]{#lh:PBC12}`DecisionQuotient.PhysicalBudgetCrossover.policy_closure_beyond_divergence`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH1`]{#lh:PH1}`PhysicalComplexity.k_Boltzmann`                                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH2`]{#lh:PH2}`PhysicalComplexity.PhysicalComputer`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH3`]{#lh:PH3}`PhysicalComplexity.bit_energy_cost`                                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH4`]{#lh:PH4}`PhysicalComplexity.Landauer_bound`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH5`]{#lh:PH5}`PhysicalComplexity.InstanceSize`                                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH6`]{#lh:PH6}`PhysicalComplexity.ComputationalRequirement`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH7`]{#lh:PH7}`PhysicalComplexity.coNP_requirement`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH8`]{#lh:PH8}`PhysicalComplexity.coNP_physically_impossible`                                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH9`]{#lh:PH9}`PhysicalComplexity.coNP_not_in_P_physically`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH10`]{#lh:PH10}`PhysicalComplexity.sufficiency_physically_impossible`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH11`]{#lh:PH11}`DecisionQuotient.PhysicalComplexity.PhysicalCollapseAtRequirement`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH12`]{#lh:PH12}`DecisionQuotient.PhysicalComplexity.no_physical_collapse_at_requirement`                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH13`]{#lh:PH13}`DecisionQuotient.PhysicalComplexity.canonical_physical_collapse_impossible`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH14`]{#lh:PH14}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_of_collapse_map`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH15`]{#lh:PH15}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_canonical`                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH16`]{#lh:PH16}`DecisionQuotient.PhysicalComplexity.P_eq_NP_via_SAT`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH17`]{#lh:PH17}`DecisionQuotient.PhysicalComplexity.SAT3ReductionBridge`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH18`]{#lh:PH18}`DecisionQuotient.PhysicalComplexity.sat_reduction_transfers_energy_lower_bound`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH19`]{#lh:PH19}`DecisionQuotient.PhysicalComplexity.physical_collapse_of_polytime_sat_realization`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH20`]{#lh:PH20}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_via_sat_bridge`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH21`]{#lh:PH21}`DecisionQuotient.PhysicalComplexity.SAT3HardFamily`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH22`]{#lh:PH22}`DecisionQuotient.PhysicalComplexity.p_eq_np_physically_impossible_via_sat_hard_family`                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH23`]{#lh:PH23}`DecisionQuotient.PhysicalComplexity.collapse_possible_without_positive_bit_cost`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH24`]{#lh:PH24}`DecisionQuotient.PhysicalComplexity.collapse_possible_without_exponential_lower_bound`                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH25`]{#lh:PH25}`DecisionQuotient.PhysicalComplexity.no_go_transfer_requires_collapse_map`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH26`]{#lh:PH26}`DecisionQuotient.PhysicalComplexity.no_collapse_of_bounded_budget_pos_cost_exp_lb`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH27`]{#lh:PH27}`DecisionQuotient.PhysicalComplexity.collapse_implies_assumption_failure_disjunction`                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH28`]{#lh:PH28}`DecisionQuotient.PhysicalComplexity.deterministic_no_physical_collapse`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH29`]{#lh:PH29}`DecisionQuotient.PhysicalComplexity.probabilistic_no_physical_collapse`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH30`]{#lh:PH30}`DecisionQuotient.PhysicalComplexity.sequential_no_physical_collapse`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH31`]{#lh:PH31}`DecisionQuotient.PhysicalComplexity.collapse_possible_with_unbounded_budget_profile`                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH32`]{#lh:PH32}`DecisionQuotient.PhysicalComplexity.exp_budget_profile_unbounded`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH33`]{#lh:PH33}`DecisionQuotient.PhysicalComplexity.finite_budget_assumption_is_necessary`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH34`]{#lh:PH34}`DecisionQuotient.PhysicalComplexity.CoherentDQRejectionAtRequirement`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH35`]{#lh:PH35}`DecisionQuotient.PhysicalComplexity.coherent_dq_rejection_impossible_at_requirement`                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PH36`]{#lh:PH36}`DecisionQuotient.PhysicalComplexity.coherent_dq_rejection_impossible_canonical`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PI1`]{#lh:PI1}`DecisionQuotient.Physics.PhysicalIncompleteness.UniverseModel`                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PI2`]{#lh:PI2}`DecisionQuotient.Physics.PhysicalIncompleteness.PhysicallyInstantiated`                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PI3`]{#lh:PI3}`DecisionQuotient.Physics.PhysicalIncompleteness.no_surjective_instantiation_of_card_gap`                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PI4`]{#lh:PI4}`DecisionQuotient.Physics.PhysicalIncompleteness.physical_incompleteness_of_card_gap`                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PI5`]{#lh:PI5}`DecisionQuotient.Physics.PhysicalIncompleteness.physical_incompleteness_of_bounds`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PI6`]{#lh:PI6}`DecisionQuotient.Physics.PhysicalIncompleteness.under_resolution_implies_collision`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PI7`]{#lh:PI7}`DecisionQuotient.Physics.PhysicalIncompleteness.under_resolution_implies_decision_collision`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PS1`]{#lh:PS1}`DecisionQuotient.Physics.ClaimTransport.PhysicalStateSemantics`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PS2`]{#lh:PS2}`DecisionQuotient.Physics.ClaimTransport.physical_state_has_witness`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PS3`]{#lh:PS3}`DecisionQuotient.Physics.ClaimTransport.physical_state_claim_of_instance_claim`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`PS4`]{#lh:PS4}`DecisionQuotient.Physics.ClaimTransport.physical_state_claim_of_universal_core`                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`QT1`]{#lh:QT1}`DecisionQuotient.DecisionProblem.quotient_is_coarsest`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`QT2`]{#lh:QT2}`DecisionQuotient.DecisionProblem.quotientMap_preservesOpt`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`QT3`]{#lh:QT3}`DecisionQuotient.DecisionProblem.quotient_represents_opt_equiv`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`QT4`]{#lh:QT4}`DecisionQuotient.DecisionProblem.factors_implies_respects`                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`QT6`]{#lh:QT6}`DecisionQuotient.DecisionProblem.quotientEquivOptRange_apply_quotientMap`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`QT7`]{#lh:QT7}`DecisionQuotient.DecisionProblem.quotient_has_unique_factorization`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`RD1`]{#lh:RD1}`DecisionQuotient.Information.shannonEntropy_nonneg`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`RD2`]{#lh:RD2}`DecisionQuotient.Information.rate_zero_distortion`                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`RD3`]{#lh:RD3}`DecisionQuotient.Information.rate_monotone`                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`RS1`]{#lh:RS1}`DecisionQuotient.Information.equiv_preserves_decision`                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`RS2`]{#lh:RS2}`DecisionQuotient.Information.rate_equals_srank`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`RS3`]{#lh:RS3}`DecisionQuotient.Information.compression_below_srank_fails`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`RS4`]{#lh:RS4}`DecisionQuotient.Information.srank_bits_sufficient`                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`RS5`]{#lh:RS5}`DecisionQuotient.Information.rate_distortion_bridge`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P1`]{#lh:S2P1}`DecisionQuotient.Sigma2PHardness.exactlyIdentifiesRelevant_iff_sufficient_and_subset_relevantFinset`                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P2`]{#lh:S2P2}`DecisionQuotient.Sigma2PHardness.min_representationGap_zero_iff_relevant_card`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P3`]{#lh:S2P3}`DecisionQuotient.Sigma2PHardness.min_sufficient_set_iff_relevant_card`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P4`]{#lh:S2P4}`DecisionQuotient.Sigma2PHardness.representationGap`                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P5`]{#lh:S2P5}`DecisionQuotient.Sigma2PHardness.representationGap_eq_waste_plus_missing`                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P6`]{#lh:S2P6}`DecisionQuotient.Sigma2PHardness.representationGap_eq_zero_iff`                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P7`]{#lh:S2P7}`DecisionQuotient.Sigma2PHardness.representationGap_missing_eq_gapCard`                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P8`]{#lh:S2P8}`DecisionQuotient.Sigma2PHardness.representationGap_zero_iff_minimalSufficient`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`S2P9`]{#lh:S2P9}`DecisionQuotient.Sigma2PHardness.sufficient_iff_relevant_subset`                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SE1`]{#lh:SE1}`DecisionQuotient.ClaimClosure.SE1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SE2`]{#lh:SE2}`DecisionQuotient.ClaimClosure.SE2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SE3`]{#lh:SE3}`DecisionQuotient.ClaimClosure.SE3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SE4`]{#lh:SE4}`DecisionQuotient.ClaimClosure.SE4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SE5`]{#lh:SE5}`DecisionQuotient.ClaimClosure.SE5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SE6`]{#lh:SE6}`DecisionQuotient.ClaimClosure.SE6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SR1`]{#lh:SR1}`DecisionQuotient.ClaimClosure.SR1`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SR2`]{#lh:SR2}`DecisionQuotient.ClaimClosure.SR2`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SR3`]{#lh:SR3}`DecisionQuotient.ClaimClosure.SR3`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SR4`]{#lh:SR4}`DecisionQuotient.ClaimClosure.SR4`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SR5`]{#lh:SR5}`DecisionQuotient.ClaimClosure.SR5`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC1`]{#lh:TC1}`DecisionQuotient.ToolCollapse.WorkProfile`                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC2`]{#lh:TC2}`DecisionQuotient.ToolCollapse.WorkModel`                                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC3`]{#lh:TC3}`DecisionQuotient.ToolCollapse.ToolModel`                                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC4`]{#lh:TC4}`DecisionQuotient.ToolCollapse.EventualStrictImprovement`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC5`]{#lh:TC5}`DecisionQuotient.ToolCollapse.EffectiveCollapse`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC6`]{#lh:TC6}`DecisionQuotient.ToolCollapse.tool_never_worse`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC7`]{#lh:TC7}`DecisionQuotient.ToolCollapse.strict_improvement_has_witness`                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC8`]{#lh:TC8}`DecisionQuotient.ToolCollapse.effective_collapse_of_eventual_strict`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC9`]{#lh:TC9}`DecisionQuotient.ToolCollapse.expBaseline`                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC10`]{#lh:TC10}`DecisionQuotient.ToolCollapse.linearTool`                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC11`]{#lh:TC11}`DecisionQuotient.ToolCollapse.linear_tool_eventual_strict`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TC12`]{#lh:TC12}`DecisionQuotient.ToolCollapse.linear_tool_effective_collapse`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TL3`]{#lh:TL3}`DecisionQuotient.ThermodynamicLift.joulesPerBit_pos_of_landauer_floor`                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TL4`]{#lh:TL4}`DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_floor`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TL5`]{#lh:TL5}`DecisionQuotient.ThermodynamicLift.joulesPerBit_pos_of_landauer_calibration`                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TL6`]{#lh:TL6}`DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration`                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TUR1`]{#lh:TUR1}`DecisionQuotient.Physics.transitionProb_nonneg`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TUR2`]{#lh:TUR2}`DecisionQuotient.Physics.transitionProb_sum_one`                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TUR5`]{#lh:TUR5}`DecisionQuotient.Physics.tur_bridge`                                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`TUR6`]{#lh:TUR6}`DecisionQuotient.Physics.multiple_futures_entropy_production`                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO1`]{#lh:UO1}`DecisionQuotient.UniverseDynamics`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO2`]{#lh:UO2}`DecisionQuotient.feasibleActions`                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO3`]{#lh:UO3}`DecisionQuotient.lawDecisionProblem`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO4`]{#lh:UO4}`DecisionQuotient.lawUtility`                                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO5`]{#lh:UO5}`DecisionQuotient.logicallyDeterministic`                                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO6`]{#lh:UO6}`DecisionQuotient.universe_sets_objective_schema`                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO7`]{#lh:UO7}`DecisionQuotient.lawUtility_eq_of_allowed_iff`                                                                        |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO8`]{#lh:UO8}`DecisionQuotient.opt_eq_feasible_of_gap`                                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO9`]{#lh:UO9}`DecisionQuotient.infeasible_not_optimal_of_gap`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO10`]{#lh:UO10}`DecisionQuotient.opt_singleton_of_logicallyDeterministic`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UO11`]{#lh:UO11}`DecisionQuotient.opt_eq_of_allowed_iff`                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UQ1`]{#lh:UQ1}`DecisionQuotient.Physics.Uncertainty.binaryIdentityProblem`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UQ2`]{#lh:UQ2}`DecisionQuotient.Physics.Uncertainty.binaryIdentityProblem_opt_true`                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UQ3`]{#lh:UQ3}`DecisionQuotient.Physics.Uncertainty.binaryIdentityProblem_opt_false`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UQ4`]{#lh:UQ4}`DecisionQuotient.Physics.Uncertainty.exists_decision_problem_with_nontrivial_opt`                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UQ5`]{#lh:UQ5}`DecisionQuotient.Physics.Uncertainty.PhysicalNontrivialOptAssumption`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`UQ6`]{#lh:UQ6}`DecisionQuotient.Physics.Uncertainty.exists_decision_problem_with_nontrivial_opt_of_physical`                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`W1`]{#lh:W1}`DecisionQuotient.Physics.single_future_zero_cost`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`W2`]{#lh:W2}`DecisionQuotient.Physics.transportCost_pos_of_offDiag`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`W3`]{#lh:W3}`DecisionQuotient.Physics.integrity_is_centroid`                                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`W4`]{#lh:W4}`DecisionQuotient.Physics.wasserstein_bridge`                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WC1`]{#lh:WC1}`DecisionQuotient.Physics.WolpertConstraints.landauer_floor_plus_overhead_lower_bound`                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WC2`]{#lh:WC2}`DecisionQuotient.Physics.WolpertConstraints.effective_model_dominates_landauer_floor`                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WC3`]{#lh:WC3}`DecisionQuotient.Physics.WolpertConstraints.effective_model_strictly_exceeds_landauer_of_strict_overhead`             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WC4`]{#lh:WC4}`DecisionQuotient.Physics.WolpertConstraints.energy_lower_bound_mono_under_overhead`                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WC5`]{#lh:WC5}`DecisionQuotient.Physics.WolpertConstraints.physical_grounding_bundle_with_wolpert_overhead`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WD1`]{#lh:WD1}`DecisionQuotient.checking_witnessing_duality_budget`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WD2`]{#lh:WD2}`DecisionQuotient.no_sound_checker_below_witness_budget`                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WD3`]{#lh:WD3}`DecisionQuotient.checking_time_ge_witness_budget`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WD4`]{#lh:WD4}`DecisionQuotient.witnessBudgetEmpty`                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WD5`]{#lh:WD5}`DecisionQuotient.checkingBudgetPairs`                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WM1`]{#lh:WM1}`DecisionQuotient.Physics.WolpertMismatch.mismatchKL_nonneg`                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WM2`]{#lh:WM2}`DecisionQuotient.Physics.WolpertMismatch.mismatchKL_eq_zero_iff_eq`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WM3`]{#lh:WM3}`DecisionQuotient.Physics.WolpertMismatch.mismatchKL_pos_of_exists_ne`                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WM4`]{#lh:WM4}`DecisionQuotient.Physics.WolpertMismatch.mismatchNatLowerBound_pos_of_exists_ne`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WM5`]{#lh:WM5}`DecisionQuotient.Physics.WolpertDecomposition.periodic_modular_mismatch_of_distribution_mismatch`                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WM6`]{#lh:WM6}`DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_distribution_mismatch`     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP1`]{#lh:WP1}`DecisionQuotient.Physics.WolpertDecomposition.DecomposedProcessModel.totalOverheadPerBit_eq_sum`                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP2`]{#lh:WP2}`DecisionQuotient.Physics.WolpertDecomposition.landauer_floor_plus_decomposition_lower_bound`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP3`]{#lh:WP3}`DecisionQuotient.Physics.WolpertDecomposition.effective_model_dominates_landauer_floor_decomposition`                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP4`]{#lh:WP4}`DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_periodic_modular_mismatch` |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP5`]{#lh:WP5}`DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_stopping_time_residual`    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP6`]{#lh:WP6}`DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_either_cited_component`    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP7`]{#lh:WP7}`DecisionQuotient.Physics.WolpertDecomposition.landauer_floor_plus_structural_resource_lower_bound`                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP8`]{#lh:WP8}`DecisionQuotient.Physics.WolpertDecomposition.energy_lower_bound_increases_by_structural_resource`                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WP9`]{#lh:WP9}`DecisionQuotient.Physics.WolpertDecomposition.physical_grounding_bundle_with_wolpert_decomposition`                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR1`]{#lh:WR1}`DecisionQuotient.Physics.WolpertResidual.pairwiseResidualKL_nonneg`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR2`]{#lh:WR2}`DecisionQuotient.Physics.WolpertResidual.pairwiseResidualKL_pos_of_asymmetry`                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR3`]{#lh:WR3}`DecisionQuotient.Physics.WolpertResidual.residualNatLowerBound_pos_of_asymmetry`                                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR4`]{#lh:WR4}`DecisionQuotient.Physics.WolpertDecomposition.stopping_time_residual_of_pairwise_flow_asymmetry`                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR5`]{#lh:WR5}`DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_pairwise_flow_asymmetry`   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR6`]{#lh:WR6}`DecisionQuotient.Physics.WolpertResidual.discreteResidualNatLowerBound_pos_of_asymmetry_or_oneway`                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR7`]{#lh:WR7}`DecisionQuotient.Physics.WolpertDecomposition.stopping_time_residual_of_discrete_edge_split`                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR8`]{#lh:WR8}`DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_discrete_edge_split`       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR9`]{#lh:WR9}`DecisionQuotient.Physics.WolpertDecomposition.stopping_time_residual_of_finite_discrete_witness`                      |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`WR10`]{#lh:WR10}`DecisionQuotient.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_finite_discrete_witness` |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`XC1`]{#lh:XC1}`DecisionQuotient.Physics.srank_determines_states`                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`XC2`]{#lh:XC2}`DecisionQuotient.Physics.more_states_more_transport`                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`XC3`]{#lh:XC3}`DecisionQuotient.Physics.transport_lower_bound`                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`XC4`]{#lh:XC4}`DecisionQuotient.Physics.transport_independent_of_energy`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`XC5`]{#lh:XC5}`DecisionQuotient.Physics.transport_independent_of_precision`                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`XC6`]{#lh:XC6}`DecisionQuotient.Physics.srank_unified_complexity`                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`XC7`]{#lh:XC7}`DecisionQuotient.Physics.complete_bridge_set`                                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------+
 
 
 ## Assumption Ledger (Auto)
@@ -5638,9 +5724,9 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 -   `BF4` $\to$ `DQ.bayes_update_exists_of_nondegenerateBelief`
 
 
-  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   **Paper handle**                                **Status**   **Lean support**
-  ----------------------------------------------- ------------ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ----------------------------------------------- ------------ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   `cor:channel-degradation`                       Full         `DQ.ClaimClosure.CH2`, `DQ.ClaimClosure.CH6`
 
   `cor:ego-trap`                                  Unmapped     *(no derived Lean handle found)*
@@ -5839,6 +5925,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:one-step-bridge`                          Full         `DQ.ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`
 
+  `prop:optimizer-coimage`                        Full         `DQ.DecisionProblem.quotient_has_unique_factorization`
+
   `prop:oracle-lattice-strict`                    Full         `DQ.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`, `DQ.ClaimClosure.information_barrier_opt_oracle_core`
 
   `prop:oracle-lattice-transfer`                  Full         `DQ.ClaimClosure.no_uncertified_exact_claim_core`, `DQ.ClaimClosure.pose_returns_anchor_query_object`
@@ -5959,6 +6047,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:zero-epsilon-reduction`                   Full         `DQ.ClaimClosure.DecisionProblem.epsOpt_zero_eq_opt`, `DQ.DecisionProblem.minimalSufficient_iff_relevant`
 
+  `thm:abstraction-boundary`                      Full         `DQ.DecisionProblem.collapseBeyondQuotient_physically_impossible`, `DQ.DecisionProblem.not_preservesOpt_iff_erasesDecisionRelevantDistinction`, `DQ.DecisionProblem.surjective_abstraction_factors_or_erases`, `DQ.DecisionProblem.surjective_abstraction_with_feasible_collapse_map_factors`
+
   `thm:amortization`                              Full         `DQ.HardnessDistribution.complete_model_dominates_after_threshold`
 
   `thm:assumption-necessity`                      Full         `DQ.Physics.AssumptionNecessity.physical_claim_requires_empirically_justified_physical_assumption`, `DQ.Physics.AssumptionNecessity.physical_claim_requires_physical_assumption`
@@ -6019,7 +6109,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:exact-certified-gap-iff-admissible`        Full         `DQ.ClaimClosure.declared_physics_no_universal_exact_certifier_core`, `DQ.ClaimClosure.dichotomy_conditional`, `DQ.ClaimClosure.exact_admissible_iff_raw_lt_certified_total_core`, `DQ.IntegrityCompetence.exact_raw_only_of_no_exact_admissible`
 
-  `thm:fi-coincide`                               Full         `DQ.FunctionalInformation.first_principles_thermo_coincide`, `DQ.FunctionalInformation.functional_information_from_counting`, `DQ.FunctionalInformation.functional_information_from_thermodynamics`
+  `thm:fi-coincide`                               Full         `DQ.FunctionalInformation.first_principles_thermo_coincide`, `DQ.FunctionalInformation.functional_information_from_counting`, `DQ.FunctionalInformation.functional_information_from_thermodynamics`, `DQ.Physics.WolpertConstraints.effective_model_dominates_landauer_floor`, `DQ.Physics.WolpertConstraints.effective_model_strictly_exceeds_landauer_of_strict_overhead`, `DQ.Physics.WolpertConstraints.landauer_floor_plus_overhead_lower_bound`, `DQ.Physics.WolpertDecomposition.DecomposedProcessModel.totalOverheadPerBit_eq_sum`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_discrete_edge_split`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_distribution_mismatch`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_either_cited_component`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_finite_discrete_witness`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_pairwise_flow_asymmetry`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_stopping_time_residual`, `DQ.Physics.WolpertDecomposition.energy_lower_bound_increases_by_structural_resource`, `DQ.Physics.WolpertDecomposition.landauer_floor_plus_structural_resource_lower_bound`, `DQ.Physics.WolpertDecomposition.periodic_modular_mismatch_of_distribution_mismatch`, `DQ.Physics.WolpertDecomposition.stopping_time_residual_of_discrete_edge_split`, `DQ.Physics.WolpertDecomposition.stopping_time_residual_of_finite_discrete_witness`, `DQ.Physics.WolpertDecomposition.stopping_time_residual_of_pairwise_flow_asymmetry`, `DQ.Physics.WolpertMismatch.mismatchKL_nonneg`, `DQ.Physics.WolpertMismatch.mismatchKL_pos_of_exists_ne`, `DQ.Physics.WolpertMismatch.mismatchNatLowerBound_pos_of_exists_ne`, `DQ.Physics.WolpertResidual.discreteResidualNatLowerBound_pos_of_asymmetry_or_oneway`, `DQ.Physics.WolpertResidual.pairwiseResidualKL_nonneg`, `DQ.Physics.WolpertResidual.pairwiseResidualKL_pos_of_asymmetry`, `DQ.Physics.WolpertResidual.residualNatLowerBound_pos_of_asymmetry`
 
   `thm:fisher-rank-srank`                         Full         `DQ.Statistics.fisherMatrix_rank_eq_srank`, `DQ.Statistics.sum_fisherScore_eq_srank`
 
@@ -6051,7 +6141,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:physical-incompleteness`                   Full         `DQ.Physics.PhysicalIncompleteness.no_surjective_instantiation_of_card_gap`, `DQ.Physics.PhysicalIncompleteness.physical_incompleteness_of_bounds`, `DQ.Physics.PhysicalIncompleteness.physical_incompleteness_of_card_gap`
 
-  `thm:quotient-universal`                        Full         `DQ.DecisionProblem.quotientMap_preservesOpt`, `DQ.DecisionProblem.quotient_is_coarsest`, `DQ.DecisionProblem.quotient_represents_opt_equiv`
+  `thm:quotient-universal`                        Full         `DQ.DecisionProblem.quotientMap_preservesOpt`, `DQ.DecisionProblem.quotient_has_unique_factorization`, `DQ.DecisionProblem.quotient_is_coarsest`, `DQ.DecisionProblem.quotient_represents_opt_equiv`
 
   `thm:rate-distortion-bridge`                    Full         `DQ.Information.compression_below_srank_fails`, `DQ.Information.equiv_preserves_decision`, `DQ.Information.rate_distortion_bridge`, `DQ.Information.rate_equals_srank`, `DQ.Information.rate_monotone`, `DQ.Information.rate_zero_distortion`, `DQ.Information.shannonEntropy_nonneg`, `DQ.Information.srank_bits_sufficient`
 
@@ -6071,7 +6161,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:tax-grows`                                 Full         `DQ.HardnessDistribution.totalExternalWork_eq_n_mul_gapCard`
 
-  `thm:thermo-derived`                            Full         `DQ.Physics.BoundedAcquisition.physical_grounding_bundle`
+  `thm:thermo-derived`                            Full         `DQ.Physics.BoundedAcquisition.physical_grounding_bundle`, `DQ.Physics.WolpertConstraints.landauer_floor_plus_overhead_lower_bound`, `DQ.Physics.WolpertConstraints.physical_grounding_bundle_with_wolpert_overhead`, `DQ.Physics.WolpertDecomposition.DecomposedProcessModel.totalOverheadPerBit_eq_sum`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_discrete_edge_split`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_distribution_mismatch`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_either_cited_component`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_finite_discrete_witness`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_pairwise_flow_asymmetry`, `DQ.Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_stopping_time_residual`, `DQ.Physics.WolpertDecomposition.energy_lower_bound_increases_by_structural_resource`, `DQ.Physics.WolpertDecomposition.landauer_floor_plus_decomposition_lower_bound`, `DQ.Physics.WolpertDecomposition.landauer_floor_plus_structural_resource_lower_bound`, `DQ.Physics.WolpertDecomposition.periodic_modular_mismatch_of_distribution_mismatch`, `DQ.Physics.WolpertDecomposition.physical_grounding_bundle_with_wolpert_decomposition`, `DQ.Physics.WolpertDecomposition.stopping_time_residual_of_discrete_edge_split`, `DQ.Physics.WolpertDecomposition.stopping_time_residual_of_finite_discrete_witness`, `DQ.Physics.WolpertDecomposition.stopping_time_residual_of_pairwise_flow_asymmetry`, `DQ.Physics.WolpertMismatch.mismatchKL_eq_zero_iff_eq`, `DQ.Physics.WolpertMismatch.mismatchKL_nonneg`, `DQ.Physics.WolpertMismatch.mismatchKL_pos_of_exists_ne`, `DQ.Physics.WolpertMismatch.mismatchNatLowerBound_pos_of_exists_ne`, `DQ.Physics.WolpertResidual.discreteResidualNatLowerBound_pos_of_asymmetry_or_oneway`, `DQ.Physics.WolpertResidual.pairwiseResidualKL_nonneg`, `DQ.Physics.WolpertResidual.pairwiseResidualKL_pos_of_asymmetry`, `DQ.Physics.WolpertResidual.residualNatLowerBound_pos_of_asymmetry`
 
   `thm:topology-motion`                           Full         `DQ.ClaimClosure.declaredRegimeFamily_complete`, `DQ.ClaimClosure.explicit_assumptions_required_of_not_excused_core`
 
@@ -6084,16 +6174,16 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
   `thm:universe-membership`                       Unmapped     *(no derived Lean handle found)*
 
   `thm:wasserstein-bridge`                        Full         `DQ.Physics.integrity_is_centroid`, `DQ.Physics.single_future_zero_cost`, `DQ.Physics.transportCost_pos_of_offDiag`, `DQ.Physics.wasserstein_bridge`
-  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 *Notes:* *(1) Full rows come from theorem-local inline anchors in this paper.* *(2) Derived rows are filled by dependency/scaffold claim-handle derivation (same paper-handle label across proof dependencies).* *(3) Unmapped means no local anchor and no derivable dependency support were found.*
 
-*Auto summary: mapped 200/222 (full=200, derived=0, unmapped=22).*
+*Auto summary: mapped 202/224 (full=202, derived=0, unmapped=22).*
 
 
-  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   **Paper handle**                                **Hardness profile**     **Regime tags**                                 **Lean support**
-  ----------------------------------------------- ------------------------ ----------------------------------------------- ------------------------------------------------------
+  ----------------------------------------------- ------------------------ ----------------------------------------------- -----------------------------------------------------------------------------------------------------------------------------------
   `cor:channel-degradation`                       `cost-growth`            H=cost-growth,Q_fin                             CH2, CH6
 
   `cor:finite-lifetime`                           `cost-growth`            H=cost-growth,Q_fin                             SE5
@@ -6390,6 +6480,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:one-step-bridge`                          `unspecified`            \-                                              CC42
 
+  `prop:optimizer-coimage`                        `unspecified`            \-                                              QT7
+
   `prop:outside-excuses-explicit-assumptions`     `unspecified`            CR,DC                                           CC22
 
   `prop:physical-claim-transport`                 `unspecified`            AR                                              CT6, CT3, CT5
@@ -6458,6 +6550,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:zero-epsilon-reduction`                   `unspecified`            \-                                              DP4, DP1
 
+  `thm:abstraction-boundary`                      `unspecified`            \-                                              AB3, AB1, AB2, AB4
+
   `thm:assumption-necessity`                      `unspecified`            \-                                              AN4, AN3
 
   `thm:bayes-from-counting`                       `unspecified`            \-                                              BC4, BC3, BC1, BC2, BC5
@@ -6494,7 +6588,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:entropy-rank`                              `unspecified`            \-                                              IT4, IT3
 
-  `thm:fi-coincide`                               `unspecified`            \-                                              FI7, FI3, FI6
+  `thm:fi-coincide`                               `unspecified`            \-                                              FI7, FI3, FI6, WC2, WC3, WC1, WP1, WR8, WM6, WP6, WR10, WR5, WP5, WP8, WP7, WM5, WR7, WR9, WR4, WM1, WM3, WM4, WR6, WR1, WR2, WR3
 
   `thm:fisher-rank-srank`                         `unspecified`            \-                                              FS2, FS1
 
@@ -6516,7 +6610,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:physical-incompleteness`                   `unspecified`            AR                                              PI3, PI5, PI4
 
-  `thm:quotient-universal`                        `unspecified`            \-                                              QT2, QT1, QT3
+  `thm:quotient-universal`                        `unspecified`            DM                                              QT2, QT7, QT1, QT3
 
   `thm:rate-distortion-bridge`                    `unspecified`            \-                                              RS3, RS1, RS5, RS2, RD3, RD2, RD1, RS4
 
@@ -6528,7 +6622,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:tax-grows`                                 `unspecified`            LC                                              HD26
 
-  `thm:thermo-derived`                            `unspecified`            \-                                              BA9
+  `thm:thermo-derived`                            `unspecified`            \-                                              BA9, WC1, WC5, WP1, WR8, WM6, WP6, WR10, WR5, WP5, WP8, WP2, WP7, WM5, WP9, WR7, WR9, WR4, WM2, WM1, WM3, WM4, WR6, WR1, WR2, WR3
 
   `thm:topology-motion`                           `unspecified`            AR,E,Q,S                                        CC16, CC24
 
@@ -6537,9 +6631,9 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
   `thm:universe-membership`                       `unspecified`            \-                                              *(no derived Lean handle found)*
 
   `thm:wasserstein-bridge`                        `unspecified`            \-                                              W3, W1, W2, W4
-  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-*Auto summary: indexed 222 claims by hardness profile (cost-growth=56; exp-lb-conditional=11; query-lb=8; succinct-hard=6; tractable-structured=12; unspecified=129).*
+*Auto summary: indexed 224 claims by hardness profile (cost-growth=56; exp-lb-conditional=11; query-lb=8; succinct-hard=6; tractable-structured=12; unspecified=131).*
 
 
 
@@ -6550,6 +6644,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 31898
-- Theorems: 1323
+- Lines: 33161
+- Theorems: 1375
 - `sorry` placeholders: 0

@@ -1025,6 +1025,9 @@ abbrev QT1 := @DecisionProblem.quotient_is_coarsest
 abbrev QT2 := @DecisionProblem.quotientMap_preservesOpt
 abbrev QT3 := @DecisionProblem.quotient_represents_opt_equiv
 abbrev QT4 := @DecisionProblem.factors_implies_respects
+noncomputable abbrev QT5 := @DecisionProblem.quotientEquivOptRange
+abbrev QT6 := @DecisionProblem.quotientEquivOptRange_apply_quotientMap
+abbrev QT7 := @DecisionProblem.quotient_has_unique_factorization
 
 -- AB: Abstraction Boundary (AbstractionCollapse.lean)
 abbrev AB1 := @DecisionProblem.not_preservesOpt_iff_erasesDecisionRelevantDistinction

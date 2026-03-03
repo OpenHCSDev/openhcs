@@ -1,6 +1,6 @@
 \section{Formal Foundations}\label{sec:foundations}
 
-We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory \cite{savage1954foundations, raiffa1961applied}.
+We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the optimizer quotient object, drawing on classical decision theory \cite{savage1954foundations, raiffa1961applied}.
 The core definitions in this section are substrate-neutral: they specify the decision relation independently of implementation medium. The mechanized physical-lift and claim-transport scaffolding is summarized later in Section~\ref{sec:foundations-mechanized-metadata} so that the mathematical core appears first.
 
 \subsection{Decision Problems with Coordinate Structure}
@@ -167,18 +167,18 @@ The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordina
 
 Informally: all later results use this same sufficiency definition.
 
-\subsection{The Decision Quotient}
+\subsection{Decision-Quotient Score and Optimizer Quotient Object}
 
 \begin{definition}[Decision Equivalence]\label{def:decision-equiv}
 For coordinate set $I$, states $s, s'$ are \emph{$I$-equivalent} (written $s \sim_I s'$) if $s_I = s'_I$.
 \end{definition}
 
-\begin{definition}[Decision Quotient]\label{def:decision-quotient}
-The \emph{decision quotient} for state $s$ under coordinate set $I$ is:
+\begin{definition}[Decision-Quotient Score]\label{def:decision-quotient}
+The \emph{decision-quotient score} for state $s$ under coordinate set $I$ is:
 \[
 \text{DQ}_I(s) = \frac{|\{a \in A : a \in \Opt(s') \text{ for some } s' \sim_I s\}|}{|A|}
 \]
-This measures the fraction of actions that are optimal for at least one state consistent with $I$.
+This is a normalized ambiguity score: it measures the fraction of actions that are optimal for at least one state consistent with $I$. It is not the quotient object $S/{\sim}$ used later for the optimizer map.
 \end{definition}
 
 \begin{proposition}[Sufficiency Characterization]\label{prop:sufficiency-char}
@@ -194,16 +194,38 @@ If $I$ is sufficient, then $s \sim_I s' \implies \Opt(s) = \Opt(s')$, so the set
 Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal actions form the same set (since $\text{DQ}_I(s) = \text{DQ}_I(s')$ and both equal the relative size of the common optimal set).
 \end{proof}
 
-The next theorem makes the collapse boundary explicit. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The decision quotient is the coarsest such collapse that still preserves the optimal-action boundary.
+The quotient object behind the optimizer map has a familiar form in \textbf{Set}. It is useful to state that explicitly before the later abstraction-boundary theorem.
 
-Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the decision quotient, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.\leanmeta{\LH{AB1},\LH{AB2},\LH{AB3},\LH{AB4}.}
+\begin{proposition}[Optimizer Quotient as Coimage/Image Factorization]\label{prop:optimizer-coimage}
+For the optimizer map $\Opt : S \to \mathcal{P}(A)$:
+\begin{enumerate}
+\item the optimizer quotient object is canonically equivalent to $\mathrm{range}(\Opt)$;
+\item any surjective abstraction $\phi : S \to T$ that preserves $\Opt$ factors uniquely through this quotient.
+\end{enumerate}
+Thus, in \textbf{Set}, the optimizer quotient object is the familiar coimage of $\Opt$, canonically identified with its image/range.\cite{maclane1998categories}
+\leanmeta{\LH{QT5},\LH{QT7}.}
+\end{proposition}
+
+\begin{proof}
+Proof sketch:
+\begin{enumerate}
+\item The quotient identifies exactly those states with equal optimal-action sets, so its elements correspond bijectively to the values attained by $\Opt$. This gives the canonical equivalence with $\mathrm{range}(\Opt)$.
+\item If a surjective abstraction preserves $\Opt$, then the optimizer map already factors through that abstraction. The quotient universal property supplies the mediating map, and surjectivity makes that factorization unique.
+\end{enumerate}
+\end{proof}
+
+Informally: this proposition is only a familiarity anchor. The object is not exotic in \textbf{Set}; the later novelty is that this familiar coimage/image factorization governs the complexity and physical-collapse arguments.
+
+The next theorem concerns the quotient object rather than the scalar score above. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The optimizer quotient object is the coarsest such collapse that still preserves the optimal-action boundary.
+
+Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the optimizer quotient object, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. In \textbf{Set}, the quotient object here is the familiar coimage of $\Opt$, canonically equivalent to its image/range \cite{maclane1998categories}. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.\leanmeta{\LH{QT5},\LH{AB1},\LH{AB2},\LH{AB3},\LH{AB4}.}
 
 \begin{theorem}[Decision-Preserving Collapse Boundary]\label{thm:abstraction-boundary}
 Let $\phi : S \to T$ be a surjective abstraction of the state space.
 
 \begin{enumerate}
-\item Either $\phi$ factors through the decision quotient, or it collapses a decision-relevant distinction, i.e., there exist states $s,s' \in S$ such that $\phi(s)=\phi(s')$ but $\Opt(s)\neq\Opt(s')$.
-\item If every such extra collapse is mapped to a physically feasible collapse at the canonical requirement profile, then no such extra collapse can occur. Therefore $\phi$ must factor through the decision quotient.
+\item Either $\phi$ factors through the optimizer quotient object, or it collapses a decision-relevant distinction, i.e., there exist states $s,s' \in S$ such that $\phi(s)=\phi(s')$ but $\Opt(s)\neq\Opt(s')$.
+\item If every such extra collapse is mapped to a physically feasible collapse at the canonical requirement profile, then no such extra collapse can occur. Therefore $\phi$ must factor through the optimizer quotient object.
 \end{enumerate}
 \leanmeta{\LH{AB1},\LH{AB2},\LH{AB3},\LH{AB4}.}
 \end{theorem}
@@ -211,12 +233,12 @@ Let $\phi : S \to T$ be a surjective abstraction of the state space.
 \begin{proof}
 Proof sketch:
 \begin{enumerate}
-\item If $\phi$ preserves $\Opt$, then the quotient universal property already proved in the previous layer supplies the factorization $\pi = \psi \circ \phi$. If it does not preserve $\Opt$, then by definition there must exist $s,s'$ with $\phi(s)=\phi(s')$ but $\Opt(s)\neq\Opt(s')$. That witness is exactly the erased decision-relevant distinction.
-\item Suppose such an erased distinction is further interpreted as a physically feasible collapse at the canonical requirement profile. The existing physical no-collapse theorem then blocks that collapse map. Therefore the ``extra erasure'' branch is impossible, leaving only factorization through the decision quotient.
+\item If $\phi$ preserves $\Opt$, then the quotient universal property already proved in the previous layer supplies the factorization $\pi = \psi \circ \phi$. In \textbf{Set}, this is exactly the coimage factorization of the optimizer map through its image/range. If $\phi$ does not preserve $\Opt$, then by definition there must exist $s,s'$ with $\phi(s)=\phi(s')$ but $\Opt(s)\neq\Opt(s')$. That witness is exactly the erased decision-relevant distinction.
+\item Suppose such an erased distinction is further interpreted as a physically feasible collapse at the canonical requirement profile. The existing physical no-collapse theorem then blocks that collapse map. Therefore the ``extra erasure'' branch is impossible, leaving only factorization through the optimizer quotient object.
 \end{enumerate}
 \end{proof}
 
-Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the decision quotient is the maximal lossless collapse. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
+Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the optimizer quotient object is the maximal lossless collapse. In \textbf{Set}, that means the familiar coimage/image factorization of $\Opt$. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
 
 \subsection{Mechanized Physical-Lift and Claim Metadata}\label{sec:foundations-mechanized-metadata}
 

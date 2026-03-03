@@ -12,8 +12,8 @@
 \newlabel{thm:bayes-optimal}{{1.2}{3}{Bayes Minimizes Expected Log Loss}{theorem.1.2}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {1.1.3}3. Measure Theory Typing}{3}{subsubsection.1.1.3}\protected@file@percent }
 \newlabel{thm:measure-prerequisite}{{1.3}{3}{Measure-Theoretic Typing}{theorem.1.3}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.1.4}4. Universal Property of Decision Quotient}{3}{subsubsection.1.1.4}\protected@file@percent }
-\newlabel{thm:quotient-universal}{{1.4}{3}{Universal Property of Decision Quotient}{theorem.1.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.1.4}4. Universal Property of the Optimizer Quotient}{3}{subsubsection.1.1.4}\protected@file@percent }
+\newlabel{thm:quotient-universal}{{1.4}{3}{Universal Property of the Optimizer Quotient}{theorem.1.4}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {1.1.5}5. Witness-Checking Duality}{4}{subsubsection.1.1.5}\protected@file@percent }
 \newlabel{thm:checking-duality}{{1.5}{4}{Checking-Witnessing Duality}{theorem.1.5}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {1.1.6}6. Bayes from Counting}{4}{subsubsection.1.1.6}\protected@file@percent }
@@ -71,171 +71,178 @@
 \newlabel{def:relevant}{{2.14}{13}{Relevant Coordinate}{theorem.2.14}{}}
 \newlabel{prop:minimal-relevant-equiv}{{2.15}{13}{Minimal-Set/Relevance Equivalence}{theorem.2.15}{}}
 \newlabel{def:exact-identifiability}{{2.16}{13}{Exact Relevance Identifiability}{theorem.2.16}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}The Decision Quotient}{14}{subsection.2.3}\protected@file@percent }
+\citation{maclane1998categories}
+\citation{maclane1998categories}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Decision-Quotient Score and Optimizer Quotient Object}{14}{subsection.2.3}\protected@file@percent }
 \newlabel{def:decision-equiv}{{2.18}{14}{Decision Equivalence}{theorem.2.18}{}}
-\newlabel{def:decision-quotient}{{2.19}{14}{Decision Quotient}{theorem.2.19}{}}
+\newlabel{def:decision-quotient}{{2.19}{14}{Decision-Quotient Score}{theorem.2.19}{}}
 \newlabel{prop:sufficiency-char}{{2.20}{14}{Sufficiency Characterization}{theorem.2.20}{}}
-\newlabel{thm:abstraction-boundary}{{2.21}{14}{Decision-Preserving Collapse Boundary}{theorem.2.21}{}}
-\citation{arora2009computational}
-\citation{papadimitriou1994complexity}
+\newlabel{prop:optimizer-coimage}{{2.21}{14}{Optimizer Quotient as Coimage/Image Factorization}{theorem.2.21}{}}
+\newlabel{thm:abstraction-boundary}{{2.22}{15}{Decision-Preserving Collapse Boundary}{theorem.2.22}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Mechanized Physical-Lift and Claim Metadata}{15}{subsection.2.4}\protected@file@percent }
 \newlabel{sec:foundations-mechanized-metadata}{{2.4}{15}{Mechanized Physical-Lift and Claim Metadata}{subsection.2.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Computational Model and Input Encoding}{15}{subsection.2.5}\protected@file@percent }
-\newlabel{sec:encoding}{{2.5}{15}{Computational Model and Input Encoding}{subsection.2.5}{}}
-\@writefile{toc}{\contentsline {paragraph}{Succinct encoding (primary for hardness).}{15}{section*.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Explicit-state encoding (used for enumeration algorithms and experiments).}{15}{section*.3}\protected@file@percent }
+\citation{arora2009computational}
+\citation{papadimitriou1994complexity}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Computational Model and Input Encoding}{16}{subsection.2.5}\protected@file@percent }
+\newlabel{sec:encoding}{{2.5}{16}{Computational Model and Input Encoding}{subsection.2.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Succinct encoding (primary for hardness).}{16}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Explicit-state encoding (used for enumeration algorithms and experiments).}{16}{section*.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Query-access regime (intermediate black-box access).}{16}{section*.4}\protected@file@percent }
-\newlabel{rem:question-vs-problem}{{2.22}{16}{Decision Questions vs Decision Problems}{theorem.2.22}{}}
-\newlabel{def:anchor-query-object}{{2.23}{16}{Anchor Query Object}{theorem.2.23}{}}
-\newlabel{def:pose-anchor-query}{{2.24}{16}{Pose Operation for Anchor Queries}{theorem.2.24}{}}
-\newlabel{prop:pose-anchor-object}{{2.25}{16}{Posing Produces a Formal Query Object}{theorem.2.25}{}}
-\newlabel{prop:posed-anchor-typed-exact}{{2.26}{16}{Typed Exact Claims on Posed Anchor Queries}{theorem.2.26}{}}
-\newlabel{cor:posed-anchor-certified-gate}{{2.27}{16}{Certified-Confidence Gate for Posed Anchor Queries}{theorem.2.27}{}}
-\newlabel{prop:under-resolution-collision}{{2.28}{16}{Under-Resolution Forces Representation Collision}{theorem.2.28}{}}
-\newlabel{thm:physical-incompleteness}{{2.29}{17}{Physical Incompleteness of Instantiation}{theorem.2.29}{}}
-\newlabel{def:regime-simulation}{{2.30}{17}{Regime Simulation}{theorem.2.30}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Model Contract and Regime Tags}{17}{subsection.2.6}\protected@file@percent }
-\newlabel{sec:model-contract}{{2.6}{17}{Model Contract and Regime Tags}{subsection.2.6}{}}
-\newlabel{rem:uniform-assumption-discipline}{{2.31}{18}{Uniform Assumption Discipline}{theorem.2.31}{}}
-\newlabel{rem:modal-should}{{2.32}{18}{Modal Convention: Contract-Conditional Necessity}{theorem.2.32}{}}
+\newlabel{rem:question-vs-problem}{{2.23}{16}{Decision Questions vs Decision Problems}{theorem.2.23}{}}
+\newlabel{def:anchor-query-object}{{2.24}{17}{Anchor Query Object}{theorem.2.24}{}}
+\newlabel{def:pose-anchor-query}{{2.25}{17}{Pose Operation for Anchor Queries}{theorem.2.25}{}}
+\newlabel{prop:pose-anchor-object}{{2.26}{17}{Posing Produces a Formal Query Object}{theorem.2.26}{}}
+\newlabel{prop:posed-anchor-typed-exact}{{2.27}{17}{Typed Exact Claims on Posed Anchor Queries}{theorem.2.27}{}}
+\newlabel{cor:posed-anchor-certified-gate}{{2.28}{17}{Certified-Confidence Gate for Posed Anchor Queries}{theorem.2.28}{}}
+\newlabel{prop:under-resolution-collision}{{2.29}{17}{Under-Resolution Forces Representation Collision}{theorem.2.29}{}}
+\newlabel{thm:physical-incompleteness}{{2.30}{17}{Physical Incompleteness of Instantiation}{theorem.2.30}{}}
+\newlabel{def:regime-simulation}{{2.31}{17}{Regime Simulation}{theorem.2.31}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Model Contract and Regime Tags}{18}{subsection.2.6}\protected@file@percent }
+\newlabel{sec:model-contract}{{2.6}{18}{Model Contract and Regime Tags}{subsection.2.6}{}}
+\newlabel{rem:uniform-assumption-discipline}{{2.32}{18}{Uniform Assumption Discipline}{theorem.2.32}{}}
+\newlabel{rem:modal-should}{{2.33}{18}{Modal Convention: Contract-Conditional Necessity}{theorem.2.33}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.7}Discrete-Time Event Semantics}{18}{subsection.2.7}\protected@file@percent }
 \newlabel{sec:discrete-time-semantics}{{2.7}{18}{Discrete-Time Event Semantics}{subsection.2.7}{}}
-\newlabel{def:timed-interface-state}{{2.33}{18}{Timed Interface State}{theorem.2.33}{}}
-\newlabel{def:decision-tick-event}{{2.34}{18}{Decision Tick and Decision Event}{theorem.2.34}{}}
-\newlabel{prop:time-discrete}{{2.35}{18}{Time Coordinate Is Discrete}{theorem.2.35}{}}
-\newlabel{prop:decision-unit-time}{{2.36}{18}{Decision Event Is One Unit of Time}{theorem.2.36}{}}
-\newlabel{prop:run-time-accounting}{{2.37}{18}{Run Accounting Identity}{theorem.2.37}{}}
-\newlabel{prop:substrate-unit-time}{{2.38}{18}{Substrate Realization Preserves Unit-Time Events}{theorem.2.38}{}}
+\newlabel{def:timed-interface-state}{{2.34}{18}{Timed Interface State}{theorem.2.34}{}}
+\newlabel{def:decision-tick-event}{{2.35}{18}{Decision Tick and Decision Event}{theorem.2.35}{}}
+\newlabel{prop:time-discrete}{{2.36}{19}{Time Coordinate Is Discrete}{theorem.2.36}{}}
+\newlabel{prop:decision-unit-time}{{2.37}{19}{Decision Event Is One Unit of Time}{theorem.2.37}{}}
+\newlabel{prop:run-time-accounting}{{2.38}{19}{Run Accounting Identity}{theorem.2.38}{}}
+\newlabel{prop:substrate-unit-time}{{2.39}{19}{Substrate Realization Preserves Unit-Time Events}{theorem.2.39}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.8}Physical-System Encoding and Theorem Transport}{19}{subsection.2.8}\protected@file@percent }
 \newlabel{sec:physical-transport}{{2.8}{19}{Physical-System Encoding and Theorem Transport}{subsection.2.8}{}}
-\newlabel{def:physical-core-encoding}{{2.39}{19}{Physical-to-Core Encoding}{theorem.2.39}{}}
-\newlabel{def:physical-scope-gate}{{2.40}{19}{Physical Scope Gate}{theorem.2.40}{}}
-\newlabel{prop:typed-physical-transport-requirement}{{2.41}{19}{Typed Physical Transport Requirement}{theorem.2.41}{}}
-\newlabel{prop:heisenberg-strong-nontrivial-opt}{{2.42}{19}{Heisenberg-Strong Binding Yields Nontrivial Decision Boundary}{theorem.2.42}{}}
-\newlabel{prop:physical-claim-transport}{{2.43}{19}{Physical Claim Transport}{theorem.2.43}{}}
-\newlabel{cor:physical-counterexample-core-failure}{{2.44}{20}{Physical Counterexample Implies Core Failure on Encoded Slice}{theorem.2.44}{}}
-\newlabel{prop:law-instance-objective-bridge}{{2.45}{20}{Law-Instance Objective Bridge}{theorem.2.45}{}}
-\newlabel{thm:physical-bridge-bundle}{{2.46}{20}{Physical Bridge Bundle}{theorem.2.46}{}}
-\newlabel{thm:regime-coverage}{{2.47}{20}{Declared Regime Coverage for the Static Class}{theorem.2.47}{}}
-\@writefile{toc}{\contentsline {paragraph}{Scope Lattice (typed classes and transfer boundary).}{20}{section*.5}\protected@file@percent }
+\newlabel{def:physical-core-encoding}{{2.40}{19}{Physical-to-Core Encoding}{theorem.2.40}{}}
+\newlabel{def:physical-scope-gate}{{2.41}{19}{Physical Scope Gate}{theorem.2.41}{}}
+\newlabel{prop:typed-physical-transport-requirement}{{2.42}{20}{Typed Physical Transport Requirement}{theorem.2.42}{}}
+\newlabel{prop:heisenberg-strong-nontrivial-opt}{{2.43}{20}{Heisenberg-Strong Binding Yields Nontrivial Decision Boundary}{theorem.2.43}{}}
+\newlabel{prop:physical-claim-transport}{{2.44}{20}{Physical Claim Transport}{theorem.2.44}{}}
+\newlabel{cor:physical-counterexample-core-failure}{{2.45}{20}{Physical Counterexample Implies Core Failure on Encoded Slice}{theorem.2.45}{}}
+\newlabel{prop:law-instance-objective-bridge}{{2.46}{21}{Law-Instance Objective Bridge}{theorem.2.46}{}}
+\newlabel{thm:physical-bridge-bundle}{{2.47}{21}{Physical Bridge Bundle}{theorem.2.47}{}}
+\newlabel{thm:regime-coverage}{{2.48}{21}{Declared Regime Coverage for the Static Class}{theorem.2.48}{}}
+\@writefile{toc}{\contentsline {paragraph}{Scope Lattice (typed classes and transfer boundary).}{21}{section*.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.9}Adjacent Objective Regimes and Bridge}{21}{subsection.2.9}\protected@file@percent }
-\newlabel{def:adjacent-sequential-regime}{{2.48}{21}{Adjacent Sequential Objective Regime}{theorem.2.48}{}}
-\newlabel{prop:one-step-bridge}{{2.49}{21}{One-Step Deterministic Bridge}{theorem.2.49}{}}
-\newlabel{prop:bridge-transfer-scope}{{2.50}{21}{Bridge Transfer Rule}{theorem.2.50}{}}
-\newlabel{prop:bridge-failure-horizon}{{2.52}{21}{Horizon-$>1$ Bridge-Failure Witness}{theorem.2.52}{}}
-\newlabel{prop:bridge-failure-stochastic}{{2.53}{21}{Stochastic-Criterion Bridge-Failure Witness}{theorem.2.53}{}}
-\newlabel{prop:bridge-failure-transition}{{2.54}{22}{Transition-Coupled Bridge-Failure Witness}{theorem.2.54}{}}
-\newlabel{thm:bridge-boundary-represented}{{2.55}{22}{Exact Bridge Boundary in the Represented Adjacent Family}{theorem.2.55}{}}
-\newlabel{def:system-snapshot-process}{{2.56}{22}{System Snapshot vs System Process Typing}{theorem.2.56}{}}
-\newlabel{prop:snapshot-process-typing}{{2.57}{22}{Snapshot/Process Transfer Typing}{theorem.2.57}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Interpretive Foundations: Hardness and Solver Claims}{22}{section.3}\protected@file@percent }
-\newlabel{sec:interpretive-foundations}{{3}{22}{Interpretive Foundations: Hardness and Solver Claims}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Structural Complexity vs Representational Hardness}{22}{subsection.3.1}\protected@file@percent }
-\newlabel{def:structural-complexity}{{3.1}{22}{Structural Complexity}{theorem.3.1}{}}
-\newlabel{def:representational-hardness}{{3.2}{22}{Representational Hardness}{theorem.3.2}{}}
+\newlabel{def:adjacent-sequential-regime}{{2.49}{21}{Adjacent Sequential Objective Regime}{theorem.2.49}{}}
+\newlabel{prop:one-step-bridge}{{2.50}{22}{One-Step Deterministic Bridge}{theorem.2.50}{}}
+\newlabel{prop:bridge-transfer-scope}{{2.51}{22}{Bridge Transfer Rule}{theorem.2.51}{}}
+\newlabel{prop:bridge-failure-horizon}{{2.53}{22}{Horizon-$>1$ Bridge-Failure Witness}{theorem.2.53}{}}
+\newlabel{prop:bridge-failure-stochastic}{{2.54}{22}{Stochastic-Criterion Bridge-Failure Witness}{theorem.2.54}{}}
+\newlabel{prop:bridge-failure-transition}{{2.55}{22}{Transition-Coupled Bridge-Failure Witness}{theorem.2.55}{}}
+\newlabel{thm:bridge-boundary-represented}{{2.56}{22}{Exact Bridge Boundary in the Represented Adjacent Family}{theorem.2.56}{}}
+\newlabel{def:system-snapshot-process}{{2.57}{23}{System Snapshot vs System Process Typing}{theorem.2.57}{}}
+\newlabel{prop:snapshot-process-typing}{{2.58}{23}{Snapshot/Process Transfer Typing}{theorem.2.58}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Interpretive Foundations: Hardness and Solver Claims}{23}{section.3}\protected@file@percent }
+\newlabel{sec:interpretive-foundations}{{3}{23}{Interpretive Foundations: Hardness and Solver Claims}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Structural Complexity vs Representational Hardness}{23}{subsection.3.1}\protected@file@percent }
+\newlabel{def:structural-complexity}{{3.1}{23}{Structural Complexity}{theorem.3.1}{}}
+\newlabel{def:representational-hardness}{{3.2}{23}{Representational Hardness}{theorem.3.2}{}}
+\newlabel{thm:typed-completeness-static}{{3.4}{23}{Typed Completeness for the Static Sufficiency Class}{theorem.3.4}{}}
 \citation{mcconnell2010certifying}
 \citation{necula1997proof}
 \citation{papadimitriou1994complexity}
 \citation{arora2009computational}
 \citation{forster2019verified}
-\newlabel{thm:typed-completeness-static}{{3.4}{23}{Typed Completeness for the Static Sufficiency Class}{theorem.3.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Solver Integrity and Regime Competence}{23}{subsection.3.2}\protected@file@percent }
-\newlabel{def:certifying-solver}{{3.5}{23}{Certifying Solver}{theorem.3.5}{}}
-\newlabel{def:induced-solver-relation}{{3.6}{23}{Induced Solver Relation}{theorem.3.6}{}}
-\newlabel{prop:universal-solver-framing}{{3.7}{23}{Universality of Solver Framing}{theorem.3.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Solver Integrity and Regime Competence}{24}{subsection.3.2}\protected@file@percent }
+\newlabel{def:certifying-solver}{{3.5}{24}{Certifying Solver}{theorem.3.5}{}}
+\newlabel{def:induced-solver-relation}{{3.6}{24}{Induced Solver Relation}{theorem.3.6}{}}
+\newlabel{prop:universal-solver-framing}{{3.7}{24}{Universality of Solver Framing}{theorem.3.7}{}}
 \newlabel{def:solver-integrity}{{3.8}{24}{Solver Integrity}{theorem.3.8}{}}
 \newlabel{def:competence-regime}{{3.9}{24}{Competence Under a Regime}{theorem.3.9}{}}
-\newlabel{cor:integrity-universal}{{3.10}{24}{Universality of Integrity Applicability}{theorem.3.10}{}}
-\newlabel{rem:external-task-nonvacuity}{{3.11}{24}{External-Task Non-Vacuity}{theorem.3.11}{}}
-\newlabel{def:epsilon-objective-family}{{3.12}{24}{$\varepsilon $-Objective Relation Family}{theorem.3.12}{}}
-\newlabel{def:epsilon-competence-regime}{{3.13}{24}{$\varepsilon $-Competence Under a Regime}{theorem.3.13}{}}
-\newlabel{prop:zero-epsilon-competence}{{3.14}{24}{Zero-$\varepsilon $ Competence Reduction}{theorem.3.14}{}}
-\newlabel{def:typed-claim-report}{{3.15}{24}{Typed Claim Report}{theorem.3.15}{}}
+\newlabel{cor:integrity-universal}{{3.10}{25}{Universality of Integrity Applicability}{theorem.3.10}{}}
+\newlabel{rem:external-task-nonvacuity}{{3.11}{25}{External-Task Non-Vacuity}{theorem.3.11}{}}
+\newlabel{def:epsilon-objective-family}{{3.12}{25}{$\varepsilon $-Objective Relation Family}{theorem.3.12}{}}
+\newlabel{def:epsilon-competence-regime}{{3.13}{25}{$\varepsilon $-Competence Under a Regime}{theorem.3.13}{}}
+\newlabel{prop:zero-epsilon-competence}{{3.14}{25}{Zero-$\varepsilon $ Competence Reduction}{theorem.3.14}{}}
+\newlabel{def:typed-claim-report}{{3.15}{25}{Typed Claim Report}{theorem.3.15}{}}
 \newlabel{prop:typed-claim-admissibility}{{3.16}{25}{Typed Claim Admissibility Discipline}{theorem.3.16}{}}
-\newlabel{def:evidence-object}{{3.17}{25}{Evidence Object for a Typed Report}{theorem.3.17}{}}
-\newlabel{prop:evidence-admissibility-equivalence}{{3.18}{25}{Evidence--Admissibility Equivalence}{theorem.3.18}{}}
-\@writefile{toc}{\contentsline {paragraph}{Security-game reading (derived).}{25}{section*.6}\protected@file@percent }
-\newlabel{def:signaled-typed-report}{{3.19}{25}{Signaled Typed Report (Guess + Confidence)}{theorem.3.19}{}}
+\newlabel{def:evidence-object}{{3.17}{26}{Evidence Object for a Typed Report}{theorem.3.17}{}}
+\newlabel{prop:evidence-admissibility-equivalence}{{3.18}{26}{Evidence--Admissibility Equivalence}{theorem.3.18}{}}
+\@writefile{toc}{\contentsline {paragraph}{Security-game reading (derived).}{26}{section*.6}\protected@file@percent }
+\newlabel{def:signaled-typed-report}{{3.19}{26}{Signaled Typed Report (Guess + Confidence)}{theorem.3.19}{}}
 \newlabel{def:signal-consistency}{{3.20}{26}{Signal Consistency Discipline}{theorem.3.20}{}}
 \newlabel{prop:exact-requires-evidence}{{3.21}{26}{Exact Claims Require Exact Evidence}{theorem.3.21}{}}
-\newlabel{def:completion-fraction}{{3.22}{26}{Bound-Dependent Completion Fraction}{theorem.3.22}{}}
-\newlabel{prop:certified-confidence-gate}{{3.23}{26}{Certified-Confidence Gate}{theorem.3.23}{}}
-\newlabel{prop:no-evidence-zero-certified}{{3.24}{26}{No Evidence Forces Zero Certified Confidence}{theorem.3.24}{}}
-\newlabel{cor:exact-no-competence-zero-certified}{{3.25}{26}{Exact-No-Competence Zero-Certified Constraint}{theorem.3.25}{}}
-\newlabel{prop:steps-run-scalar}{{3.26}{26}{Scalar Step Witness Is Always Defined and Falsifiable}{theorem.3.26}{}}
-\newlabel{prop:no-fraction-without-bound}{{3.27}{26}{No Completion Fraction Without Declared Bound}{theorem.3.27}{}}
+\newlabel{def:completion-fraction}{{3.22}{27}{Bound-Dependent Completion Fraction}{theorem.3.22}{}}
+\newlabel{prop:certified-confidence-gate}{{3.23}{27}{Certified-Confidence Gate}{theorem.3.23}{}}
+\newlabel{prop:no-evidence-zero-certified}{{3.24}{27}{No Evidence Forces Zero Certified Confidence}{theorem.3.24}{}}
+\newlabel{cor:exact-no-competence-zero-certified}{{3.25}{27}{Exact-No-Competence Zero-Certified Constraint}{theorem.3.25}{}}
+\newlabel{prop:steps-run-scalar}{{3.26}{27}{Scalar Step Witness Is Always Defined and Falsifiable}{theorem.3.26}{}}
+\newlabel{prop:no-fraction-without-bound}{{3.27}{27}{No Completion Fraction Without Declared Bound}{theorem.3.27}{}}
 \newlabel{prop:fraction-defined-under-bound}{{3.28}{27}{Completion Fraction Under Explicit Bound}{theorem.3.28}{}}
 \newlabel{prop:abstain-guess-self-signal}{{3.29}{27}{Abstain Can Carry Guess and Self-Confidence}{theorem.3.29}{}}
-\newlabel{prop:self-confidence-not-certification}{{3.30}{27}{Self-Reflected Confidence Is Not Certification}{theorem.3.30}{}}
-\newlabel{def:declared-budget-slice}{{3.31}{27}{Declared Budget Slice}{theorem.3.31}{}}
-\newlabel{prop:bounded-slice-meta-irrelevance}{{3.32}{27}{Bounded-Slice Irrelevance of a Meta-Coordinate}{theorem.3.32}{}}
-\newlabel{def:goal-class}{{3.33}{27}{Goal Class}{theorem.3.33}{}}
-\newlabel{def:interior-pareto-dominance}{{3.34}{27}{Interior Pareto Dominance}{theorem.3.34}{}}
+\newlabel{prop:self-confidence-not-certification}{{3.30}{28}{Self-Reflected Confidence Is Not Certification}{theorem.3.30}{}}
+\newlabel{def:declared-budget-slice}{{3.31}{28}{Declared Budget Slice}{theorem.3.31}{}}
+\newlabel{prop:bounded-slice-meta-irrelevance}{{3.32}{28}{Bounded-Slice Irrelevance of a Meta-Coordinate}{theorem.3.32}{}}
+\newlabel{def:goal-class}{{3.33}{28}{Goal Class}{theorem.3.33}{}}
+\newlabel{def:interior-pareto-dominance}{{3.34}{28}{Interior Pareto Dominance}{theorem.3.34}{}}
 \newlabel{prop:interior-universal-non-rejection}{{3.35}{28}{Interior Dominance Implies Universal Non-Rejection}{theorem.3.35}{}}
 \newlabel{prop:interior-verification-tractable}{{3.36}{28}{Interior Verification Tractability}{theorem.3.36}{}}
-\newlabel{prop:interior-one-sidedness}{{3.37}{28}{Interior Dominance Is One-Sided}{theorem.3.37}{}}
-\newlabel{cor:interior-singleton-certificate}{{3.38}{28}{Singleton Interior Certificate}{theorem.3.38}{}}
-\newlabel{def:rlff-objective}{{3.39}{28}{RLFF Objective (Evidence-Gated Report Reward)}{theorem.3.39}{}}
-\newlabel{prop:rlff-maximizer-admissible}{{3.40}{28}{RLFF Maximizer Is Admissible}{theorem.3.40}{}}
-\newlabel{cor:rlff-abstain-no-certs}{{3.41}{28}{RLFF Abstain Preference Without Certificates}{theorem.3.41}{}}
-\newlabel{def:certainty-inflation}{{3.42}{28}{Certainty Inflation}{theorem.3.42}{}}
-\newlabel{prop:certainty-inflation-iff-inadmissible}{{3.43}{28}{Certainty Inflation Equals Report Inadmissibility}{theorem.3.43}{}}
+\newlabel{prop:interior-one-sidedness}{{3.37}{29}{Interior Dominance Is One-Sided}{theorem.3.37}{}}
+\newlabel{cor:interior-singleton-certificate}{{3.38}{29}{Singleton Interior Certificate}{theorem.3.38}{}}
+\newlabel{def:rlff-objective}{{3.39}{29}{RLFF Objective (Evidence-Gated Report Reward)}{theorem.3.39}{}}
+\newlabel{prop:rlff-maximizer-admissible}{{3.40}{29}{RLFF Maximizer Is Admissible}{theorem.3.40}{}}
+\newlabel{cor:rlff-abstain-no-certs}{{3.41}{29}{RLFF Abstain Preference Without Certificates}{theorem.3.41}{}}
+\newlabel{def:certainty-inflation}{{3.42}{29}{Certainty Inflation}{theorem.3.42}{}}
+\newlabel{prop:certainty-inflation-iff-inadmissible}{{3.43}{29}{Certainty Inflation Equals Report Inadmissibility}{theorem.3.43}{}}
 \newlabel{cor:hardness-exact-certainty-inflation}{{3.44}{29}{Hardness-Blocked Regimes Induce Exact Certainty Inflation}{theorem.3.44}{}}
 \newlabel{def:raw-certified-bits}{{3.45}{29}{Raw-vs-Certified Bit Accounting}{theorem.3.45}{}}
-\newlabel{prop:raw-certified-bit-split}{{3.46}{29}{Raw/Certified Bit Split}{theorem.3.46}{}}
-\newlabel{thm:exact-certified-gap-iff-admissible}{{3.47}{29}{Exact Report: Certified-Bit Gap iff Admissibility}{theorem.3.47}{}}
-\newlabel{cor:finite-budget-no-exact-admissibility}{{3.48}{29}{Finite Budget Eventually Blocks Exact Admissibility}{theorem.3.48}{}}
+\newlabel{prop:raw-certified-bit-split}{{3.46}{30}{Raw/Certified Bit Split}{theorem.3.46}{}}
+\newlabel{thm:exact-certified-gap-iff-admissible}{{3.47}{30}{Exact Report: Certified-Bit Gap iff Admissibility}{theorem.3.47}{}}
+\newlabel{cor:finite-budget-no-exact-admissibility}{{3.48}{30}{Finite Budget Eventually Blocks Exact Admissibility}{theorem.3.48}{}}
 \newlabel{cor:hardness-raw-only-exact}{{3.49}{30}{Hardness-Blocked Exact Reports Are Raw-Only}{theorem.3.49}{}}
 \newlabel{cor:no-uncertified-exact-claim}{{3.50}{30}{No Uncertified Exact-Exhaustion Claim}{theorem.3.50}{}}
 \newlabel{prop:declared-contract-selection-validity}{{3.51}{30}{Declared-Contract Separation: Selection vs. Validity}{theorem.3.51}{}}
-\newlabel{def:exact-claim-excuses}{{3.52}{30}{Exact-Claim Excuse Carve-Outs}{theorem.3.52}{}}
-\newlabel{def:explicit-hardness-profile}{{3.53}{30}{Explicit Hardness-Assumption Profile}{theorem.3.53}{}}
-\newlabel{def:exact-claim-welltyped}{{3.54}{30}{Well-Typed Exact Physical Claim Policy}{theorem.3.54}{}}
+\newlabel{def:exact-claim-excuses}{{3.52}{31}{Exact-Claim Excuse Carve-Outs}{theorem.3.52}{}}
+\newlabel{def:explicit-hardness-profile}{{3.53}{31}{Explicit Hardness-Assumption Profile}{theorem.3.53}{}}
+\newlabel{def:exact-claim-welltyped}{{3.54}{31}{Well-Typed Exact Physical Claim Policy}{theorem.3.54}{}}
 \newlabel{prop:outside-excuses-explicit-assumptions}{{3.55}{31}{Outside Carve-Outs, Explicit Assumptions Are Required}{theorem.3.55}{}}
 \newlabel{thm:claim-integrity-meta}{{3.56}{31}{Claim-Integrity Meta-Theorem}{theorem.3.56}{}}
 \newlabel{cor:outside-excuses-no-exact-report}{{3.57}{31}{Outside Carve-Outs, Declared Hardness Blocks Exact Reports}{theorem.3.57}{}}
-\newlabel{prop:integrity-competence-separation}{{3.58}{31}{Integrity--Competence Separation}{theorem.3.58}{}}
-\newlabel{def:attempted-competence-failure}{{3.59}{31}{Attempted Competence Failure}{theorem.3.59}{}}
-\newlabel{prop:attempted-competence-matrix}{{3.60}{31}{Attempted-Competence Rationality Matrix}{theorem.3.60}{}}
+\newlabel{prop:integrity-competence-separation}{{3.58}{32}{Integrity--Competence Separation}{theorem.3.58}{}}
+\newlabel{def:attempted-competence-failure}{{3.59}{32}{Attempted Competence Failure}{theorem.3.59}{}}
+\newlabel{prop:attempted-competence-matrix}{{3.60}{32}{Attempted-Competence Rationality Matrix}{theorem.3.60}{}}
 \@writefile{toc}{\contentsline {paragraph}{Mechanized status.}{32}{section*.7}\protected@file@percent }
 \newlabel{prop:integrity-resource-bound}{{3.61}{32}{Integrity-Resource Bound}{theorem.3.61}{}}
-\newlabel{prop:physics-no-universal-exact}{{3.62}{32}{Declared-Physics No-Universal-Exact-Certifier Schema}{theorem.3.62}{}}
-\newlabel{cor:physics-no-universal-exact-claim}{{3.63}{32}{No Universal Exact-Claim Admissibility in Hardness-Blocked Classes}{theorem.3.63}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Computational Complexity of Decision-Relevant Uncertainty}{32}{section.4}\protected@file@percent }
-\newlabel{sec:hardness}{{4}{32}{Computational Complexity of Decision-Relevant Uncertainty}{section.4}{}}
-\citation{papadimitriou1994complexity}
-\citation{arora2009computational}
+\newlabel{prop:physics-no-universal-exact}{{3.62}{33}{Declared-Physics No-Universal-Exact-Certifier Schema}{theorem.3.62}{}}
+\newlabel{cor:physics-no-universal-exact-claim}{{3.63}{33}{No Universal Exact-Claim Admissibility in Hardness-Blocked Classes}{theorem.3.63}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Computational Complexity of Decision-Relevant Uncertainty}{33}{section.4}\protected@file@percent }
+\newlabel{sec:hardness}{{4}{33}{Computational Complexity of Decision-Relevant Uncertainty}{section.4}{}}
 \@writefile{toc}{\contentsline {paragraph}{Reading convention for this section.}{33}{section*.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Problem Definitions}{33}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Succinct/circuit encoding.}{33}{section*.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Hardness of SUFFICIENCY-CHECK}{33}{subsection.4.2}\protected@file@percent }
-\newlabel{thm:sufficiency-conp}{{4.6}{33}{coNP-completeness of SUFFICIENCY-CHECK}{theorem.4.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Immediate recovery boundary (SUFFICIENCY-CHECK).}{34}{section*.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Mechanized strengthening (all coordinates relevant).}{34}{section*.11}\protected@file@percent }
 \citation{papadimitriou1994complexity}
 \citation{arora2009computational}
+\@writefile{toc}{\contentsline {paragraph}{Succinct/circuit encoding.}{34}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Hardness of SUFFICIENCY-CHECK}{34}{subsection.4.2}\protected@file@percent }
+\newlabel{thm:sufficiency-conp}{{4.6}{34}{coNP-completeness of SUFFICIENCY-CHECK}{theorem.4.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Immediate recovery boundary (SUFFICIENCY-CHECK).}{35}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mechanized strengthening (all coordinates relevant).}{35}{section*.11}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Complexity of MINIMUM-SUFFICIENT-SET}{35}{subsection.4.3}\protected@file@percent }
 \newlabel{thm:minsuff-conp}{{4.7}{35}{MINIMUM-SUFFICIENT-SET is coNP-complete}{theorem.4.7}{}}
-\@writefile{toc}{\contentsline {paragraph}{Immediate recovery boundary (MINIMUM-SUFFICIENT-SET).}{35}{section*.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Anchor Sufficiency (Fixed Coordinates)}{35}{subsection.4.4}\protected@file@percent }
-\newlabel{thm:anchor-sigma2p}{{4.9}{35}{ANCHOR-SUFFICIENCY is $\Sigma _2^P$-complete}{theorem.4.9}{}}
-\@writefile{toc}{\contentsline {paragraph}{Immediate boundary statement (ANCHOR-SUFFICIENCY).}{36}{section*.13}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Tractable Subcases}{36}{subsection.4.5}\protected@file@percent }
+\citation{papadimitriou1994complexity}
+\citation{arora2009computational}
+\@writefile{toc}{\contentsline {paragraph}{Immediate recovery boundary (MINIMUM-SUFFICIENT-SET).}{36}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Anchor Sufficiency (Fixed Coordinates)}{36}{subsection.4.4}\protected@file@percent }
+\newlabel{thm:anchor-sigma2p}{{4.9}{36}{ANCHOR-SUFFICIENCY is $\Sigma _2^P$-complete}{theorem.4.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Immediate boundary statement (ANCHOR-SUFFICIENCY).}{37}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Tractable Subcases}{37}{subsection.4.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Implications}{37}{subsection.4.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}The succinct--minimal gap and physical controllers}{37}{subsection.4.7}\protected@file@percent }
-\newlabel{sec:neuro-correspondence}{{4.7}{37}{The succinct--minimal gap and physical controllers}{subsection.4.7}{}}
-\@writefile{toc}{\contentsline {paragraph}{The gap.}{37}{section*.14}\protected@file@percent }
-\newlabel{prop:representation-gap}{{4.14}{37}{Coordinate Representation Gap as a Formal Object}{theorem.4.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}The succinct--minimal gap and physical controllers}{38}{subsection.4.7}\protected@file@percent }
+\newlabel{sec:neuro-correspondence}{{4.7}{38}{The succinct--minimal gap and physical controllers}{subsection.4.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{The gap.}{38}{section*.14}\protected@file@percent }
+\newlabel{prop:representation-gap}{{4.14}{38}{Coordinate Representation Gap as a Formal Object}{theorem.4.14}{}}
 \@writefile{toc}{\contentsline {paragraph}{Physical systems as circuits.}{38}{section*.15}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{The simplicity tax as $\varepsilon $.}{38}{section*.16}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Consequences for learned circuits.}{38}{section*.17}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Scope and caveats.}{38}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The simplicity tax as $\varepsilon $.}{39}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Consequences for learned circuits.}{39}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Scope and caveats.}{39}{section*.18}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.8}Quantifier Collapse for MINIMUM-SUFFICIENT-SET}{39}{subsection.4.8}\protected@file@percent }
 \newlabel{thm:minsuff-collapse}{{4.15}{39}{Collapse of the Apparent $\exists \forall $ Structure}{theorem.4.15}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Physical Grounding of Discrete Information Acquisition}{39}{section.5}\protected@file@percent }
-\newlabel{sec:physical-grounding}{{5}{39}{Physical Grounding of Discrete Information Acquisition}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Continuous vs Discrete: A Question of Tractability, Not Validity}{39}{subsection.5.1}\protected@file@percent }
-\newlabel{sec:continuous-discrete}{{5.1}{39}{Continuous vs Discrete: A Question of Tractability, Not Validity}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Physical Grounding of Discrete Information Acquisition}{40}{section.5}\protected@file@percent }
+\newlabel{sec:physical-grounding}{{5}{40}{Physical Grounding of Discrete Information Acquisition}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Continuous vs Discrete: A Question of Tractability, Not Validity}{40}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:continuous-discrete}{{5.1}{40}{Continuous vs Discrete: A Question of Tractability, Not Validity}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}First-Principles Derivation: The Counting Gap}{40}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:first-principles}{{5.2}{40}{First-Principles Derivation: The Counting Gap}{subsection.5.2}{}}
+\newlabel{thm:counting-gap}{{5.1}{40}{Counting Gap Theorem}{theorem.5.1}{}}
+\newlabel{cor:forced-finite-speed}{{5.2}{40}{Forced Finiteness of Propagation Speed}{theorem.5.2}{}}
 \citation{einstein1905electrodynamics}
 \citation{minkowski1908space}
 \citation{planck1901distribution}
@@ -246,130 +253,128 @@
 \citation{wolpert2024stochastic}
 \citation{manzano2024absolute}
 \citation{yadav2026minimal}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}First-Principles Derivation: The Counting Gap}{40}{subsection.5.2}\protected@file@percent }
-\newlabel{sec:first-principles}{{5.2}{40}{First-Principles Derivation: The Counting Gap}{subsection.5.2}{}}
-\newlabel{thm:counting-gap}{{5.1}{40}{Counting Gap Theorem}{theorem.5.1}{}}
-\newlabel{cor:forced-finite-speed}{{5.2}{40}{Forced Finiteness of Propagation Speed}{theorem.5.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Three Empirical Laws: The Numerical Content}{40}{subsection.5.3}\protected@file@percent }
-\newlabel{sec:three-laws}{{5.3}{40}{Three Empirical Laws: The Numerical Content}{subsection.5.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Three Empirical Laws: The Numerical Content}{41}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:three-laws}{{5.3}{41}{Three Empirical Laws: The Numerical Content}{subsection.5.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Why Positive Cost is Derived, Not Assumed}{41}{subsection.5.4}\protected@file@percent }
 \newlabel{sec:positive-cost-derived}{{5.4}{41}{Why Positive Cost is Derived, Not Assumed}{subsection.5.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Bounded Information Acquisition Rate}{41}{subsection.5.5}\protected@file@percent }
-\newlabel{sec:bounded-acquisition}{{5.5}{41}{Bounded Information Acquisition Rate}{subsection.5.5}{}}
-\newlabel{prop:bounded-region}{{5.4}{41}{Bounded Region}{theorem.5.4}{}}
-\newlabel{thm:bounded-acquisition}{{5.5}{41}{Bounded Acquisition Rate}{theorem.5.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Acquisitions are Discrete State Transitions}{41}{subsection.5.6}\protected@file@percent }
-\newlabel{sec:discrete-transitions}{{5.6}{41}{Acquisitions are Discrete State Transitions}{subsection.5.6}{}}
-\newlabel{thm:discrete-acquisition}{{5.6}{41}{Discrete Acquisition}{theorem.5.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Bounded Information Acquisition Rate}{42}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:bounded-acquisition}{{5.5}{42}{Bounded Information Acquisition Rate}{subsection.5.5}{}}
+\newlabel{prop:bounded-region}{{5.4}{42}{Bounded Region}{theorem.5.4}{}}
+\newlabel{thm:bounded-acquisition}{{5.5}{42}{Bounded Acquisition Rate}{theorem.5.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Acquisitions are Discrete State Transitions}{42}{subsection.5.6}\protected@file@percent }
+\newlabel{sec:discrete-transitions}{{5.6}{42}{Acquisitions are Discrete State Transitions}{subsection.5.6}{}}
+\newlabel{thm:discrete-acquisition}{{5.6}{42}{Discrete Acquisition}{theorem.5.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.7}One Transition = One Bit}{42}{subsection.5.7}\protected@file@percent }
 \newlabel{sec:one-bit}{{5.7}{42}{One Transition = One Bit}{subsection.5.7}{}}
 \newlabel{thm:boolean-primitive}{{5.7}{42}{Boolean Encoding is Physically Primitive}{theorem.5.7}{}}
 \newlabel{cor:finite-state}{{5.8}{42}{Finite Accessible State Space}{theorem.5.8}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Structural Rank = Minimum Physical Bit Operations}{42}{subsection.5.8}\protected@file@percent }
-\newlabel{sec:srank-physical}{{5.8}{42}{Structural Rank = Minimum Physical Bit Operations}{subsection.5.8}{}}
-\newlabel{thm:resolution-sufficient}{{5.9}{42}{Resolution Requires a Sufficient Coordinate Set}{theorem.5.9}{}}
-\newlabel{thm:srank-physical}{{5.10}{42}{Structural Rank = Minimum Bit Operations}{theorem.5.10}{}}
 \citation{berut2012experimental}
 \citation{wolpert2024stochastic}
 \citation{manzano2024absolute}
 \citation{yadav2026minimal}
 \citation{manzano2024absolute}
 \citation{yadav2026minimal}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Structural Rank = Minimum Physical Bit Operations}{43}{subsection.5.8}\protected@file@percent }
+\newlabel{sec:srank-physical}{{5.8}{43}{Structural Rank = Minimum Physical Bit Operations}{subsection.5.8}{}}
+\newlabel{thm:resolution-sufficient}{{5.9}{43}{Resolution Requires a Sufficient Coordinate Set}{theorem.5.9}{}}
+\newlabel{thm:srank-physical}{{5.10}{43}{Structural Rank = Minimum Bit Operations}{theorem.5.10}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.9}Thermodynamic Lower Bound as Physical Consequence}{43}{subsection.5.9}\protected@file@percent }
 \newlabel{sec:thermo-derived}{{5.9}{43}{Thermodynamic Lower Bound as Physical Consequence}{subsection.5.9}{}}
 \newlabel{thm:thermo-derived}{{5.11}{43}{Thermodynamic Cost Derived from SR, QM, TD}{theorem.5.11}{}}
 \newlabel{cor:ground-state}{{5.12}{44}{srank $= 1$ is the Energy Ground State}{theorem.5.12}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.10}Connection to the Formal Model}{44}{subsection.5.10}\protected@file@percent }
 \newlabel{sec:physical-to-formal}{{5.10}{44}{Connection to the Formal Model}{subsection.5.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.11}Universe Membership via Shared Invariants}{44}{subsection.5.11}\protected@file@percent }
-\newlabel{sec:universe-membership}{{5.11}{44}{Universe Membership via Shared Invariants}{subsection.5.11}{}}
-\newlabel{def:invariant-set}{{5.13}{44}{Shared Invariant Set}{theorem.5.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.11}Universe Membership via Shared Invariants}{45}{subsection.5.11}\protected@file@percent }
+\newlabel{sec:universe-membership}{{5.11}{45}{Universe Membership via Shared Invariants}{subsection.5.11}{}}
+\newlabel{def:invariant-set}{{5.13}{45}{Shared Invariant Set}{theorem.5.13}{}}
 \newlabel{thm:universe-membership}{{5.14}{45}{Universe Membership is Defined by Invariant Agreement}{theorem.5.14}{}}
-\newlabel{cor:ego-trap}{{5.15}{45}{The Ego Trap}{theorem.5.15}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Stochastic Decision Problems}{45}{section.6}\protected@file@percent }
-\newlabel{sec:stochastic}{{6}{45}{Stochastic Decision Problems}{section.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Stochastic Decision Problem}{45}{subsection.6.1}\protected@file@percent }
-\newlabel{def:stochastic-decision-problem}{{6.1}{45}{Stochastic Decision Problem}{theorem.6.1}{}}
+\newlabel{cor:ego-trap}{{5.15}{46}{The Ego Trap}{theorem.5.15}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Stochastic Decision Problems}{46}{section.6}\protected@file@percent }
+\newlabel{sec:stochastic}{{6}{46}{Stochastic Decision Problems}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Stochastic Decision Problem}{46}{subsection.6.1}\protected@file@percent }
+\newlabel{def:stochastic-decision-problem}{{6.1}{46}{Stochastic Decision Problem}{theorem.6.1}{}}
 \newlabel{def:stochastic-sufficient}{{6.2}{46}{Distribution-Conditional Sufficiency}{theorem.6.2}{}}
 \newlabel{def:expected-value-sufficient}{{6.3}{46}{Expected-Value Sufficiency (Alternative)}{theorem.6.3}{}}
 \newlabel{dec:stochastic-sufficiency-check}{{6.4}{46}{}{theorem.6.4}{}}
 \newlabel{dec:stochastic-minsuff}{{6.5}{46}{}{theorem.6.5}{}}
 \newlabel{dec:stochastic-anchor-sufficiency-check}{{6.6}{46}{}{theorem.6.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Complexity: \textsf  {PP}-Completeness}{46}{subsection.6.2}\protected@file@percent }
-\newlabel{th:stochastic-sufficiency-pp}{{6.7}{46}{STOCHASTIC-SUFFICIENCY-CHECK is \PP -complete}{theorem.6.7}{}}
-\newlabel{prop:stochastic-anchor-refinement}{{6.8}{46}{Stochastic anchor refinement}{theorem.6.8}{}}
-\newlabel{prop:stochastic-anchor-strict-reduction}{{6.9}{46}{Strict-side anchor reduction}{theorem.6.9}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Potential and Physical Bounds}{47}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Complexity: \textsf  {PP}-Completeness}{47}{subsection.6.2}\protected@file@percent }
+\newlabel{th:stochastic-sufficiency-pp}{{6.7}{47}{STOCHASTIC-SUFFICIENCY-CHECK is \PP -complete}{theorem.6.7}{}}
+\newlabel{prop:stochastic-anchor-refinement}{{6.8}{47}{Stochastic anchor refinement}{theorem.6.8}{}}
+\newlabel{prop:stochastic-anchor-strict-reduction}{{6.9}{47}{Strict-side anchor reduction}{theorem.6.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Potential and Physical Bounds}{48}{subsection.6.3}\protected@file@percent }
 \newlabel{prop:stochastic-potential-duality}{{6.12}{48}{Expected-Utility/Potential Duality}{theorem.6.12}{}}
 \newlabel{prop:stochastic-landauer-floor}{{6.13}{48}{Landauer Floor and State-Cardinality Specialization}{theorem.6.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Tractable Subcases}{48}{subsection.6.4}\protected@file@percent }
-\newlabel{prop:stochastic-product-tractable}{{6.14}{48}{Tractability under product distributions}{theorem.6.14}{}}
-\newlabel{prop:stochastic-bounded-support}{{6.15}{48}{Tractability under bounded support}{theorem.6.15}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Bridge from Static}{48}{subsection.6.5}\protected@file@percent }
-\newlabel{prop:static-stochastic-transfer}{{6.16}{48}{Static to stochastic transfer}{theorem.6.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Tractable Subcases}{49}{subsection.6.4}\protected@file@percent }
+\newlabel{prop:stochastic-product-tractable}{{6.14}{49}{Tractability under product distributions}{theorem.6.14}{}}
+\newlabel{prop:stochastic-bounded-support}{{6.15}{49}{Tractability under bounded support}{theorem.6.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Bridge from Static}{49}{subsection.6.5}\protected@file@percent }
+\newlabel{prop:static-stochastic-transfer}{{6.16}{49}{Static to stochastic transfer}{theorem.6.16}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {7}Sequential Decision Problems}{49}{section.7}\protected@file@percent }
 \newlabel{sec:sequential}{{7}{49}{Sequential Decision Problems}{section.7}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Sequential Decision Problem (POMDP)}{49}{subsection.7.1}\protected@file@percent }
 \newlabel{def:sequential-decision-problem}{{7.1}{49}{Sequential Decision Problem}{theorem.7.1}{}}
-\newlabel{def:sequential-sufficient}{{7.3}{49}{Sequential Sufficiency}{theorem.7.3}{}}
-\newlabel{dec:sequential-sufficiency-check}{{7.4}{49}{}{theorem.7.4}{}}
-\newlabel{dec:sequential-minsuff}{{7.5}{49}{}{theorem.7.5}{}}
-\newlabel{dec:sequential-anchor-sufficiency-check}{{7.6}{49}{}{theorem.7.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Complexity: \textsf  {PSPACE}-Completeness}{49}{subsection.7.2}\protected@file@percent }
-\newlabel{th:sequential-sufficiency-pspace}{{7.7}{49}{SEQUENTIAL-SUFFICIENCY-CHECK is \PSPACE -complete}{theorem.7.7}{}}
-\newlabel{prop:sequential-anchor-refinement}{{7.8}{49}{Sequential anchor refinement}{theorem.7.8}{}}
+\newlabel{def:sequential-sufficient}{{7.3}{50}{Sequential Sufficiency}{theorem.7.3}{}}
+\newlabel{dec:sequential-sufficiency-check}{{7.4}{50}{}{theorem.7.4}{}}
+\newlabel{dec:sequential-minsuff}{{7.5}{50}{}{theorem.7.5}{}}
+\newlabel{dec:sequential-anchor-sufficiency-check}{{7.6}{50}{}{theorem.7.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Complexity: \textsf  {PSPACE}-Completeness}{50}{subsection.7.2}\protected@file@percent }
+\newlabel{th:sequential-sufficiency-pspace}{{7.7}{50}{SEQUENTIAL-SUFFICIENCY-CHECK is \PSPACE -complete}{theorem.7.7}{}}
+\newlabel{prop:sequential-anchor-refinement}{{7.8}{50}{Sequential anchor refinement}{theorem.7.8}{}}
 \newlabel{prop:sequential-anchor-tqbf-reduction}{{7.9}{50}{TQBF Reduction to Sequential Anchor Check}{theorem.7.9}{}}
-\newlabel{constr:tqbf-to-sequential}{{7.10}{50}{TQBF Reduction}{theorem.7.10}{}}
-\newlabel{prop:sequential-static-relation}{{7.11}{50}{Sequential sufficiency implies static sufficiency}{theorem.7.11}{}}
+\newlabel{constr:tqbf-to-sequential}{{7.10}{51}{TQBF Reduction}{theorem.7.10}{}}
+\newlabel{prop:sequential-static-relation}{{7.11}{51}{Sequential sufficiency implies static sufficiency}{theorem.7.11}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Tractable Subcases}{51}{subsection.7.3}\protected@file@percent }
-\newlabel{prop:mdp-tractable}{{7.12}{51}{Tractability under full observability}{theorem.7.12}{}}
-\newlabel{prop:sequential-bounded-horizon}{{7.13}{51}{Tractability under bounded horizon}{theorem.7.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Bridge from Static and Stochastic}{51}{subsection.7.4}\protected@file@percent }
-\newlabel{prop:stochastic-sequential-bridge-fail}{{7.14}{51}{Stochastic to sequential bridge failure}{theorem.7.14}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Regime Hierarchy}{51}{section.8}\protected@file@percent }
-\newlabel{sec:regime-hierarchy}{{8}{51}{Regime Hierarchy}{section.8}{}}
+\newlabel{prop:mdp-tractable}{{7.12}{52}{Tractability under full observability}{theorem.7.12}{}}
+\newlabel{prop:sequential-bounded-horizon}{{7.13}{52}{Tractability under bounded horizon}{theorem.7.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Bridge from Static and Stochastic}{52}{subsection.7.4}\protected@file@percent }
+\newlabel{prop:stochastic-sequential-bridge-fail}{{7.14}{52}{Stochastic to sequential bridge failure}{theorem.7.14}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Regime Hierarchy}{52}{section.8}\protected@file@percent }
+\newlabel{sec:regime-hierarchy}{{8}{52}{Regime Hierarchy}{section.8}{}}
 \newlabel{prop:static-stochastic-strict}{{8.1}{52}{Strict inclusion static $\subset $ stochastic}{theorem.8.1}{}}
 \newlabel{prop:stochastic-sequential-strict}{{8.2}{52}{Strict inclusion stochastic $\subset $ sequential}{theorem.8.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Integrity-Resource Bound per Regime}{52}{subsection.8.1}\protected@file@percent }
-\newlabel{prop:abstention-frontier}{{8.3}{52}{Abstention frontier shifts}{theorem.8.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Regime Detection}{52}{subsection.8.2}\protected@file@percent }
-\newlabel{dec:regime-detection}{{8.4}{52}{}{theorem.8.4}{}}
-\citation{impagliazzo2001complexity}
-\citation{arora2009computational}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Integrity-Resource Bound per Regime}{53}{subsection.8.1}\protected@file@percent }
+\newlabel{prop:abstention-frontier}{{8.3}{53}{Abstention frontier shifts}{theorem.8.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Regime Detection}{53}{subsection.8.2}\protected@file@percent }
+\newlabel{dec:regime-detection}{{8.4}{53}{}{theorem.8.4}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {9}Encoding-Regime Separation}{53}{section.9}\protected@file@percent }
 \newlabel{sec:dichotomy}{{9}{53}{Encoding-Regime Separation}{section.9}{}}
-\@writefile{toc}{\contentsline {paragraph}{Model note.}{53}{section*.19}\protected@file@percent }
-\newlabel{thm:dichotomy}{{9.1}{53}{Explicit--Succinct Regime Separation}{theorem.9.1}{}}
+\citation{impagliazzo2001complexity}
+\citation{arora2009computational}
+\@writefile{toc}{\contentsline {paragraph}{Model note.}{54}{section*.19}\protected@file@percent }
+\newlabel{thm:dichotomy}{{9.1}{54}{Explicit--Succinct Regime Separation}{theorem.9.1}{}}
 \@writefile{toc}{\contentsline {paragraph}{Remark (bounded coordinate domains).}{54}{section*.20}\protected@file@percent }
-\newlabel{prop:query-regime-obstruction}{{9.3}{54}{Finite-State Query Lower-Bound Core via Empty-Set Subproblem}{theorem.9.3}{}}
-\newlabel{prop:checking-witnessing-duality}{{9.4}{54}{Checking--Witnessing Duality on the Empty-Set Core}{theorem.9.4}{}}
+\newlabel{prop:query-regime-obstruction}{{9.3}{55}{Finite-State Query Lower-Bound Core via Empty-Set Subproblem}{theorem.9.3}{}}
+\newlabel{prop:checking-witnessing-duality}{{9.4}{55}{Checking--Witnessing Duality on the Empty-Set Core}{theorem.9.4}{}}
 \newlabel{cor:information-barrier-query}{{9.5}{55}{Information Barrier in Query Regimes}{theorem.9.5}{}}
 \newlabel{cor:query-obstruction-bool}{{9.6}{55}{Boolean-Coordinate Instantiation}{theorem.9.6}{}}
-\newlabel{prop:query-value-entry-lb}{{9.7}{55}{Value-Entry Query Lower Bound}{theorem.9.7}{}}
-\newlabel{prop:query-subproblem-transfer}{{9.8}{55}{Subproblem-to-Full Transfer Rule}{theorem.9.8}{}}
-\newlabel{prop:query-randomized-robustness}{{9.9}{55}{Randomized Robustness (Seedwise)}{theorem.9.9}{}}
-\newlabel{prop:query-randomized-weighted}{{9.10}{55}{Randomized Robustness (Weighted Form)}{theorem.9.10}{}}
-\newlabel{prop:query-state-batch-lb}{{9.11}{55}{State-Batch Query Lower Bound}{theorem.9.11}{}}
-\newlabel{prop:query-finite-state-generalization}{{9.12}{55}{Finite-State Empty-Subproblem Generalization}{theorem.9.12}{}}
+\newlabel{prop:query-value-entry-lb}{{9.7}{56}{Value-Entry Query Lower Bound}{theorem.9.7}{}}
+\newlabel{prop:query-subproblem-transfer}{{9.8}{56}{Subproblem-to-Full Transfer Rule}{theorem.9.8}{}}
+\newlabel{prop:query-randomized-robustness}{{9.9}{56}{Randomized Robustness (Seedwise)}{theorem.9.9}{}}
+\newlabel{prop:query-randomized-weighted}{{9.10}{56}{Randomized Robustness (Weighted Form)}{theorem.9.10}{}}
+\newlabel{prop:query-state-batch-lb}{{9.11}{56}{State-Batch Query Lower Bound}{theorem.9.11}{}}
+\newlabel{prop:query-finite-state-generalization}{{9.12}{56}{Finite-State Empty-Subproblem Generalization}{theorem.9.12}{}}
 \newlabel{prop:query-tightness-full-scan}{{9.13}{56}{Adversary-Family Tightness by Full Scan}{theorem.9.13}{}}
 \newlabel{prop:query-weighted-transfer}{{9.14}{56}{Weighted Query-Cost Transfer}{theorem.9.14}{}}
 \newlabel{prop:oracle-lattice-transfer}{{9.15}{56}{Oracle-Lattice Transfer: Batch $\Rightarrow $ Entry}{theorem.9.15}{}}
-\newlabel{prop:oracle-lattice-strict}{{9.16}{56}{Oracle-Lattice Strictness: Opt vs Value Entries}{theorem.9.16}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}Budgeted Physical Crossover}{56}{subsection.9.1}\protected@file@percent }
+\newlabel{prop:oracle-lattice-strict}{{9.16}{57}{Oracle-Lattice Strictness: Opt vs Value Entries}{theorem.9.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}Budgeted Physical Crossover}{57}{subsection.9.1}\protected@file@percent }
 \newlabel{prop:budgeted-crossover}{{9.18}{57}{Budgeted Crossover Witness}{theorem.9.18}{}}
 \newlabel{prop:crossover-above-cap}{{9.19}{57}{Above-Cap Crossover Existence}{theorem.9.19}{}}
-\newlabel{prop:crossover-not-certification}{{9.20}{57}{Crossover Does Not Imply Exact-Certification Competence}{theorem.9.20}{}}
-\newlabel{prop:crossover-policy}{{9.21}{57}{Crossover Policy Closure Under Integrity}{theorem.9.21}{}}
-\newlabel{cor:finite-budget-threshold-impossibility}{{9.22}{57}{Finite Budget Implies Eventual Exact-Certification Failure}{theorem.9.22}{}}
+\newlabel{prop:crossover-not-certification}{{9.20}{58}{Crossover Does Not Imply Exact-Certification Competence}{theorem.9.20}{}}
+\newlabel{prop:crossover-policy}{{9.21}{58}{Crossover Policy Closure Under Integrity}{theorem.9.21}{}}
+\newlabel{cor:finite-budget-threshold-impossibility}{{9.22}{58}{Finite Budget Implies Eventual Exact-Certification Failure}{theorem.9.22}{}}
 \newlabel{prop:least-divergence-point}{{9.23}{58}{Least Divergence Point at Fixed Budget}{theorem.9.23}{}}
 \newlabel{prop:eventual-explicit-infeasibility}{{9.24}{58}{Eventual Explicit Infeasibility from Monotone Growth}{theorem.9.24}{}}
 \newlabel{prop:payoff-threshold}{{9.25}{58}{Payoff Threshold as Eventual Split}{theorem.9.25}{}}
-\newlabel{cor:no-universal-survivor-no-succinct-bound}{{9.26}{58}{No Universal Survivor Without Succinct Bound}{theorem.9.26}{}}
-\newlabel{prop:policy-closure-beyond-divergence}{{9.27}{58}{Policy Closure at and Beyond Divergence}{theorem.9.27}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Thermodynamic Lift and Cost Accounting}{58}{subsection.9.2}\protected@file@percent }
-\newlabel{prop:thermo-lift}{{9.28}{58}{Bit-to-Energy/Carbon Lift}{theorem.9.28}{}}
-\newlabel{prop:thermo-hardness-bundle}{{9.29}{58}{Hardness--Thermodynamics Bundle}{theorem.9.29}{}}
-\newlabel{prop:thermo-mandatory-cost}{{9.30}{58}{Mandatory Physical Cost}{theorem.9.30}{}}
+\newlabel{cor:no-universal-survivor-no-succinct-bound}{{9.26}{59}{No Universal Survivor Without Succinct Bound}{theorem.9.26}{}}
+\newlabel{prop:policy-closure-beyond-divergence}{{9.27}{59}{Policy Closure at and Beyond Divergence}{theorem.9.27}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Thermodynamic Lift and Cost Accounting}{59}{subsection.9.2}\protected@file@percent }
+\newlabel{prop:thermo-lift}{{9.28}{59}{Bit-to-Energy/Carbon Lift}{theorem.9.28}{}}
+\newlabel{prop:thermo-hardness-bundle}{{9.29}{59}{Hardness--Thermodynamics Bundle}{theorem.9.29}{}}
+\newlabel{prop:thermo-mandatory-cost}{{9.30}{59}{Mandatory Physical Cost}{theorem.9.30}{}}
+\newlabel{prop:thermo-conservation-additive}{{9.31}{59}{Conserved Additive Accounting}{theorem.9.31}{}}
+\newlabel{cor:neukart-vinokur}{{9.32}{59}{Neukart--Vinokur Thermodynamic Duality}{theorem.9.32}{}}
 \citation{einstein1905electrodynamics}
 \citation{minkowski1908space}
 \citation{snyder1947quantized}
@@ -378,13 +383,6 @@
 \citation{bennett2003notes}
 \citation{berut2012experimental}
 \citation{berut2012experimental}
-\newlabel{prop:thermo-conservation-additive}{{9.31}{59}{Conserved Additive Accounting}{theorem.9.31}{}}
-\newlabel{cor:neukart-vinokur}{{9.32}{59}{Neukart--Vinokur Thermodynamic Duality}{theorem.9.32}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.1}Physical Grounding: Discrete State to Thermodynamic Cost}{59}{subsubsection.9.2.1}\protected@file@percent }
-\newlabel{sec:discrete-spacetime-chain}{{9.2.1}{59}{Physical Grounding: Discrete State to Thermodynamic Cost}{subsubsection.9.2.1}{}}
-\newlabel{prop:discrete-state-time}{{9.33}{59}{Discrete State Implies Discrete Effective Time}{theorem.9.33}{}}
-\newlabel{prop:lorentz-discrete}{{9.34}{59}{Lorentz Invariance Forces Compatible Discreteness}{theorem.9.34}{}}
-\newlabel{prop:comp-thermo-chain}{{9.35}{59}{Computational-Thermodynamic Chain}{theorem.9.35}{}}
 \citation{boltzmann1877beziehung}
 \citation{jaynes1957information}
 \citation{kittel1980thermal}
@@ -400,40 +398,39 @@
 \citation{berut2012experimental}
 \citation{shannon1948mathematical}
 \citation{cover2006elements}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.1}Physical Grounding: Discrete State to Thermodynamic Cost}{60}{subsubsection.9.2.1}\protected@file@percent }
+\newlabel{sec:discrete-spacetime-chain}{{9.2.1}{60}{Physical Grounding: Discrete State to Thermodynamic Cost}{subsubsection.9.2.1}{}}
+\newlabel{prop:discrete-state-time}{{9.33}{60}{Discrete State Implies Discrete Effective Time}{theorem.9.33}{}}
+\newlabel{prop:lorentz-discrete}{{9.34}{60}{Lorentz Invariance Forces Compatible Discreteness}{theorem.9.34}{}}
+\newlabel{prop:comp-thermo-chain}{{9.35}{60}{Computational-Thermodynamic Chain}{theorem.9.35}{}}
 \@writefile{toc}{\contentsline {paragraph}{Axiom Status Table.}{60}{section*.21}\protected@file@percent }
+\newlabel{def:decision-event}{{9.36}{61}{Decision Event}{theorem.9.36}{}}
+\newlabel{prop:decision-equivalence}{{9.37}{61}{Decision--Transition--Thermodynamic Equivalence}{theorem.9.37}{}}
 \citation{landauer1961irreversibility}
 \citation{bennett2003notes}
 \citation{berut2012experimental}
 \citation{landauer1961irreversibility}
-\newlabel{def:decision-event}{{9.36}{61}{Decision Event}{theorem.9.36}{}}
-\newlabel{prop:decision-equivalence}{{9.37}{61}{Decision--Transition--Thermodynamic Equivalence}{theorem.9.37}{}}
-\@writefile{toc}{\contentsline {paragraph}{Decision Circuits and the Landauer Constraint.}{61}{section*.22}\protected@file@percent }
-\newlabel{thm:cycle-cost}{{9.38}{61}{Cycle Cost Lower Bound}{theorem.9.38}{}}
-\newlabel{cor:no-free-computation}{{9.39}{61}{No Free Computation}{theorem.9.39}{}}
-\newlabel{def:integrity-competence}{{9.41}{61}{Integrity and Competence}{theorem.9.41}{}}
+\@writefile{toc}{\contentsline {paragraph}{Decision Circuits and the Landauer Constraint.}{62}{section*.22}\protected@file@percent }
+\newlabel{thm:cycle-cost}{{9.38}{62}{Cycle Cost Lower Bound}{theorem.9.38}{}}
+\newlabel{cor:no-free-computation}{{9.39}{62}{No Free Computation}{theorem.9.39}{}}
+\newlabel{def:integrity-competence}{{9.41}{62}{Integrity and Competence}{theorem.9.41}{}}
 \newlabel{prop:structural-asymmetry}{{9.42}{62}{Structural Asymmetry}{theorem.9.42}{}}
-\newlabel{cor:import-asymmetry}{{9.43}{62}{Competence Is Importable; Integrity Is Not}{theorem.9.43}{}}
-\newlabel{def:gap-energy}{{9.45}{62}{Gap Energy}{theorem.9.45}{}}
-\newlabel{thm:choice-pays}{{9.46}{62}{Every Choice Pays Gap Energy}{theorem.9.46}{}}
-\newlabel{cor:zero-gap}{{9.47}{62}{Zero Gap Implies Determinism}{theorem.9.47}{}}
-\newlabel{def:dq-from-gap}{{9.48}{62}{Decision Quotient from Gap}{theorem.9.48}{}}
-\newlabel{thm:dq-physical}{{9.49}{62}{Decision Quotient as Physical Primitive}{theorem.9.49}{}}
+\newlabel{cor:import-asymmetry}{{9.43}{63}{Competence Is Importable; Integrity Is Not}{theorem.9.43}{}}
+\newlabel{def:gap-energy}{{9.45}{63}{Gap Energy}{theorem.9.45}{}}
+\newlabel{thm:choice-pays}{{9.46}{63}{Every Choice Pays Gap Energy}{theorem.9.46}{}}
+\newlabel{cor:zero-gap}{{9.47}{63}{Zero Gap Implies Determinism}{theorem.9.47}{}}
+\newlabel{def:dq-from-gap}{{9.48}{63}{Decision-Quotient Ratio from Gap}{theorem.9.48}{}}
+\newlabel{thm:dq-physical}{{9.49}{63}{Decision-Quotient Ratio as Physical Primitive}{theorem.9.49}{}}
 \newlabel{thm:bayes-from-dq}{{9.50}{63}{Bayes Uniquely Forced by DQ Axioms}{theorem.9.50}{}}
-\newlabel{cor:thermo-dq}{{9.51}{63}{Thermodynamic Decision Quotient}{theorem.9.51}{}}
-\newlabel{prop:landauer-constraint}{{9.52}{63}{Landauer Constraint on Strategy}{theorem.9.52}{}}
+\newlabel{cor:thermo-dq}{{9.51}{64}{Thermodynamic Decision-Quotient Ratio}{theorem.9.51}{}}
+\newlabel{prop:landauer-constraint}{{9.52}{64}{Landauer Constraint on Strategy}{theorem.9.52}{}}
 \newlabel{cor:theorem-equilibrium}{{9.53}{64}{Theorem Count Shifts Equilibrium}{theorem.9.53}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.2}Derivation of Bayesian Reasoning}{64}{subsubsection.9.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Path 1: Four Bridges from Counting to DQ.}{64}{section*.23}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Path 2: Bayes from Thermodynamic Admissibility.}{64}{section*.24}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Integrity Self-Preservation.}{64}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Path 1: Four Bridges from Counting to DQ.}{65}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Path 2: Bayes from Thermodynamic Admissibility.}{65}{section*.24}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Integrity Self-Preservation.}{65}{section*.25}\protected@file@percent }
 \newlabel{prop:temporal-equilibrium}{{9.54}{65}{Temporal Integrity Equilibrium}{theorem.9.54}{}}
 \newlabel{cor:phase-transition}{{9.55}{65}{Publication Phase Transition}{theorem.9.55}{}}
-\@writefile{toc}{\contentsline {paragraph}{Zero-Integrity Circuits.}{65}{section*.26}\protected@file@percent }
-\newlabel{prop:integrity-prerequisite}{{9.56}{65}{Integrity Prerequisite for Coherence}{theorem.9.56}{}}
-\@writefile{toc}{\contentsline {paragraph}{Molecular Grounding.}{65}{section*.27}\protected@file@percent }
-\newlabel{def:environmental-stability}{{9.57}{65}{Environmental Stability}{theorem.9.57}{}}
-\newlabel{prop:reaction-competence}{{9.58}{65}{Reaction Competence Requirement}{theorem.9.58}{}}
-\newlabel{ex:dna-persistence}{{9.59}{65}{DNA Persistence}{theorem.9.59}{}}
 \citation{schrodinger1926undulatory}
 \citation{sakurai2017modern}
 \citation{pauli1925zusammenhang}
@@ -444,72 +441,79 @@
 \citation{sakurai2017modern}
 \citation{kittel1980thermal}
 \citation{sakurai2017modern}
-\citation{sakurai2017modern}
+\@writefile{toc}{\contentsline {paragraph}{Zero-Integrity Circuits.}{66}{section*.26}\protected@file@percent }
+\newlabel{prop:integrity-prerequisite}{{9.56}{66}{Integrity Prerequisite for Coherence}{theorem.9.56}{}}
+\@writefile{toc}{\contentsline {paragraph}{Molecular Grounding.}{66}{section*.27}\protected@file@percent }
+\newlabel{def:environmental-stability}{{9.57}{66}{Environmental Stability}{theorem.9.57}{}}
+\newlabel{prop:reaction-competence}{{9.58}{66}{Reaction Competence Requirement}{theorem.9.58}{}}
+\newlabel{ex:dna-persistence}{{9.59}{66}{DNA Persistence}{theorem.9.59}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.3}Atomic Circuits: Active Physical Decision Systems}{66}{subsubsection.9.2.3}\protected@file@percent }
 \newlabel{sec:atomic-circuits}{{9.2.3}{66}{Atomic Circuits: Active Physical Decision Systems}{subsubsection.9.2.3}{}}
-\newlabel{def:atomic-config}{{9.60}{66}{Atomic Configuration}{theorem.9.60}{}}
-\newlabel{thm:orbital-transition}{{9.61}{66}{Orbital Transition Is State Transition}{theorem.9.61}{}}
-\newlabel{cor:ground-state-passive}{{9.62}{66}{Ground-State Atoms Are Passive}{theorem.9.62}{}}
-\newlabel{thm:orbital-cost}{{9.63}{66}{Orbital Transition Cost}{theorem.9.63}{}}
-\newlabel{prop:orbital-symmetry}{{9.64}{66}{Symmetry Tractability}{theorem.9.64}{}}
-\newlabel{def:active-matter-system}{{9.65}{66}{Active Matter as State-Transition System}{theorem.9.65}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.4}Self-Erosion: Computation Consumes Its Substrate}{66}{subsubsection.9.2.4}\protected@file@percent }
-\newlabel{sec:self-erosion}{{9.2.4}{66}{Self-Erosion: Computation Consumes Its Substrate}{subsubsection.9.2.4}{}}
-\newlabel{thm:substrate-degradation}{{9.67}{66}{Substrate Degradation}{theorem.9.67}{}}
+\citation{sakurai2017modern}
+\newlabel{def:atomic-config}{{9.60}{67}{Atomic Configuration}{theorem.9.60}{}}
+\newlabel{thm:orbital-transition}{{9.61}{67}{Orbital Transition Is State Transition}{theorem.9.61}{}}
+\newlabel{cor:ground-state-passive}{{9.62}{67}{Ground-State Atoms Are Passive}{theorem.9.62}{}}
+\newlabel{thm:orbital-cost}{{9.63}{67}{Orbital Transition Cost}{theorem.9.63}{}}
+\newlabel{prop:orbital-symmetry}{{9.64}{67}{Symmetry Tractability}{theorem.9.64}{}}
+\newlabel{def:active-matter-system}{{9.65}{67}{Active Matter as State-Transition System}{theorem.9.65}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.4}Self-Erosion: Computation Consumes Its Substrate}{67}{subsubsection.9.2.4}\protected@file@percent }
+\newlabel{sec:self-erosion}{{9.2.4}{67}{Self-Erosion: Computation Consumes Its Substrate}{subsubsection.9.2.4}{}}
+\newlabel{thm:substrate-degradation}{{9.67}{67}{Substrate Degradation}{theorem.9.67}{}}
 \newlabel{cor:finite-lifetime}{{9.68}{67}{Finite Computational Lifetime}{theorem.9.68}{}}
 \newlabel{cor:speed-integrity}{{9.69}{67}{Speed-Integrity Tradeoff}{theorem.9.69}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.5}Regime as Channel: Competence as Capacity}{67}{subsubsection.9.2.5}\protected@file@percent }
-\newlabel{sec:regime-channel}{{9.2.5}{67}{Regime as Channel: Competence as Capacity}{subsubsection.9.2.5}{}}
-\newlabel{def:regime-channel}{{9.71}{67}{Regime-Channel Equivalence}{theorem.9.71}{}}
-\newlabel{thm:competence-capacity}{{9.72}{67}{Competence Is Channel Capacity}{theorem.9.72}{}}
-\newlabel{cor:channel-degradation}{{9.73}{67}{Channel Capacity Degradation}{theorem.9.73}{}}
-\newlabel{cor:zero-capacity}{{9.74}{67}{Zero Capacity Halts Decisions}{theorem.9.74}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.6}Resource Flow and Conservation}{67}{subsubsection.9.2.6}\protected@file@percent }
-\newlabel{sec:resource-flow}{{9.2.6}{67}{Resource Flow and Conservation}{subsubsection.9.2.6}{}}
-\newlabel{thm:growth-time}{{9.76}{67}{Growth Requires Time}{theorem.9.76}{}}
-\newlabel{thm:conservation}{{9.77}{67}{Conservation}{theorem.9.77}{}}
-\newlabel{def:deficit-transfer}{{9.78}{67}{Deficit Transfer}{theorem.9.78}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.5}Regime as Channel: Competence as Capacity}{68}{subsubsection.9.2.5}\protected@file@percent }
+\newlabel{sec:regime-channel}{{9.2.5}{68}{Regime as Channel: Competence as Capacity}{subsubsection.9.2.5}{}}
+\newlabel{def:regime-channel}{{9.71}{68}{Regime-Channel Equivalence}{theorem.9.71}{}}
+\newlabel{thm:competence-capacity}{{9.72}{68}{Competence Is Channel Capacity}{theorem.9.72}{}}
+\newlabel{cor:channel-degradation}{{9.73}{68}{Channel Capacity Degradation}{theorem.9.73}{}}
+\newlabel{cor:zero-capacity}{{9.74}{68}{Zero Capacity Halts Decisions}{theorem.9.74}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.6}Resource Flow and Conservation}{68}{subsubsection.9.2.6}\protected@file@percent }
+\newlabel{sec:resource-flow}{{9.2.6}{68}{Resource Flow and Conservation}{subsubsection.9.2.6}{}}
+\newlabel{thm:growth-time}{{9.76}{68}{Growth Requires Time}{theorem.9.76}{}}
+\newlabel{thm:conservation}{{9.77}{68}{Conservation}{theorem.9.77}{}}
+\newlabel{def:deficit-transfer}{{9.78}{68}{Deficit Transfer}{theorem.9.78}{}}
 \newlabel{thm:deficit-source}{{9.79}{68}{Deficit Transfer Requires Source}{theorem.9.79}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.7}Information Access: Logic Is Complete, Access Is Not}{68}{subsubsection.9.2.7}\protected@file@percent }
 \newlabel{sec:information-access}{{9.2.7}{68}{Information Access: Logic Is Complete, Access Is Not}{subsubsection.9.2.7}{}}
-\newlabel{def:system-information}{{9.80}{68}{System Information}{theorem.9.80}{}}
-\newlabel{def:observer-channel}{{9.81}{68}{Observer Channel}{theorem.9.81}{}}
-\newlabel{thm:information-gap}{{9.82}{68}{Information Gap}{theorem.9.82}{}}
-\newlabel{thm:gap-physical}{{9.83}{68}{Gap Is Physical, Not Logical}{theorem.9.83}{}}
-\newlabel{thm:competence-access}{{9.84}{68}{Competence Bounded by Access}{theorem.9.84}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.8}Dimensional Complexity: Each Subcase Is a Complexity Class}{68}{subsubsection.9.2.8}\protected@file@percent }
-\newlabel{sec:dimensional-complexity}{{9.2.8}{68}{Dimensional Complexity: Each Subcase Is a Complexity Class}{subsubsection.9.2.8}{}}
-\newlabel{def:complexity-classes}{{9.85}{68}{Complexity Classes}{theorem.9.85}{}}
-\newlabel{thm:six-subcases}{{9.86}{68}{Six Tractable Subcases Are Complexity Classes}{theorem.9.86}{}}
-\citation{bodlaender1993tourist}
-\citation{freuder1990complexity}
+\newlabel{def:system-information}{{9.80}{69}{System Information}{theorem.9.80}{}}
+\newlabel{def:observer-channel}{{9.81}{69}{Observer Channel}{theorem.9.81}{}}
+\newlabel{thm:information-gap}{{9.82}{69}{Information Gap}{theorem.9.82}{}}
+\newlabel{thm:gap-physical}{{9.83}{69}{Gap Is Physical, Not Logical}{theorem.9.83}{}}
+\newlabel{thm:competence-access}{{9.84}{69}{Competence Bounded by Access}{theorem.9.84}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {9.2.8}Dimensional Complexity: Each Subcase Is a Complexity Class}{69}{subsubsection.9.2.8}\protected@file@percent }
+\newlabel{sec:dimensional-complexity}{{9.2.8}{69}{Dimensional Complexity: Each Subcase Is a Complexity Class}{subsubsection.9.2.8}{}}
+\newlabel{def:complexity-classes}{{9.85}{69}{Complexity Classes}{theorem.9.85}{}}
+\newlabel{thm:six-subcases}{{9.86}{69}{Six Tractable Subcases Are Complexity Classes}{theorem.9.86}{}}
 \newlabel{thm:topology-motion}{{9.87}{69}{Topology and Motion}{theorem.9.87}{}}
 \newlabel{thm:complexity-dichotomy}{{9.88}{69}{Complexity Dichotomy}{theorem.9.88}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {10}Tractable Special Cases: When You Can Solve It}{69}{section.10}\protected@file@percent }
-\newlabel{sec:tractable}{{10}{69}{Tractable Special Cases: When You Can Solve It}{section.10}{}}
-\newlabel{thm:tractable}{{10.1}{69}{Tractable Subcases}{theorem.10.1}{}}
+\citation{bodlaender1993tourist}
+\citation{freuder1990complexity}
+\@writefile{toc}{\contentsline {section}{\numberline {10}Tractable Special Cases: When You Can Solve It}{70}{section.10}\protected@file@percent }
+\newlabel{sec:tractable}{{10}{70}{Tractable Special Cases: When You Can Solve It}{section.10}{}}
+\newlabel{thm:tractable}{{10.1}{70}{Tractable Subcases}{theorem.10.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}Bounded Actions (Explicit-State)}{70}{subsection.10.1}\protected@file@percent }
 \citation{kolda2009tensor}
 \citation{cichocki2016tensor}
 \citation{bodlaender1993tourist}
 \citation{freuder1990complexity}
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}Bounded Actions (Explicit-State)}{70}{subsection.10.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Separable Utility (Rank 1)}{70}{subsection.10.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.3}Low Tensor Rank}{70}{subsection.10.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.4}Tree-Structured Dependencies}{70}{subsection.10.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.5}Bounded Treewidth}{70}{subsection.10.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Separable Utility (Rank 1)}{71}{subsection.10.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.3}Low Tensor Rank}{71}{subsection.10.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.4}Tree-Structured Dependencies}{71}{subsection.10.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.5}Bounded Treewidth}{71}{subsection.10.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {10.6}Coordinate Symmetry}{71}{subsection.10.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.7}Practical Implications}{71}{subsection.10.7}\protected@file@percent }
-\newlabel{prop:heuristic-reusability}{{10.2}{71}{Heuristic Reusability}{theorem.10.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {11}Regime-Conditional Corollaries}{71}{section.11}\protected@file@percent }
-\newlabel{sec:engineering-justification}{{11}{71}{Regime-Conditional Corollaries}{section.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.7}Practical Implications}{72}{subsection.10.7}\protected@file@percent }
+\newlabel{prop:heuristic-reusability}{{10.2}{72}{Heuristic Reusability}{theorem.10.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {11}Regime-Conditional Corollaries}{72}{section.11}\protected@file@percent }
+\newlabel{sec:engineering-justification}{{11}{72}{Regime-Conditional Corollaries}{section.11}{}}
 \citation{sep_bounded_rationality}
 \citation{arora2009computational}
-\@writefile{toc}{\contentsline {paragraph}{Conditional rationality criterion.}{72}{section*.28}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {11.1}Configuration Simplification is SUFFICIENCY-CHECK}{72}{subsection.11.1}\protected@file@percent }
-\newlabel{thm:config-reduction}{{11.2}{72}{C1--C4: Configuration Simplification Reduces to SUFFICIENCY-CHECK}{theorem.11.2}{}}
-\newlabel{thm:overmodel-diagnostic}{{11.4}{73}{S: Over-Modeling as Boundary-Signal Corollary}{theorem.11.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Conditional rationality criterion.}{73}{section*.28}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.1}Configuration Simplification is SUFFICIENCY-CHECK}{73}{subsection.11.1}\protected@file@percent }
+\newlabel{thm:config-reduction}{{11.2}{73}{C1--C4: Configuration Simplification Reduces to SUFFICIENCY-CHECK}{theorem.11.2}{}}
+\newlabel{thm:overmodel-diagnostic}{{11.4}{74}{S: Over-Modeling as Boundary-Signal Corollary}{theorem.11.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {11.2}Cost Asymmetry Under ETH}{74}{subsection.11.2}\protected@file@percent }
 \newlabel{thm:cost-asymmetry-eth}{{11.5}{74}{S+ETH: Cost-Asymmetry Consequence}{theorem.11.5}{}}
+\newlabel{cor:no-auto-minimize}{{11.6}{75}{Impossibility of Automated Configuration Minimization}{theorem.11.6}{}}
 \citation{akaike1974new}
 \citation{schwarz1978estimating}
 \citation{stone1974cross}
@@ -519,55 +523,54 @@
 \citation{brooks1987no}
 \citation{bass2012software}
 \citation{shaw1996software}
-\newlabel{cor:no-auto-minimize}{{11.6}{75}{Impossibility of Automated Configuration Minimization}{theorem.11.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {11.3}Regime-Conditional Operational Corollaries}{75}{subsection.11.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.3}Regime-Conditional Operational Corollaries}{76}{subsection.11.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {12}Dominance Theorems for Hardness Placement}{76}{section.12}\protected@file@percent }
 \newlabel{sec:implications}{{12}{76}{Dominance Theorems for Hardness Placement}{section.12}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.1}Over-Specification as Diagnostic Signal}{76}{subsection.12.1}\protected@file@percent }
-\newlabel{cor:overmodel-diagnostic-implication}{{12.1}{76}{Persistent Over-Specification}{theorem.12.1}{}}
-\newlabel{cor:exact-identifiability}{{12.2}{76}{Exact Relevance Identifiability Criterion}{theorem.12.2}{}}
-\newlabel{rem:overmodel-conditional}{{12.3}{76}{Over-Specification Is Regime-Conditional, Not Default}{theorem.12.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.2}Architectural Decision Quotient}{76}{subsection.12.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.1}Over-Specification as Diagnostic Signal}{77}{subsection.12.1}\protected@file@percent }
+\newlabel{cor:overmodel-diagnostic-implication}{{12.1}{77}{Persistent Over-Specification}{theorem.12.1}{}}
+\newlabel{cor:exact-identifiability}{{12.2}{77}{Exact Relevance Identifiability Criterion}{theorem.12.2}{}}
+\newlabel{rem:overmodel-conditional}{{12.3}{77}{Over-Specification Is Regime-Conditional, Not Default}{theorem.12.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.2}Architectural Decision Quotient}{77}{subsection.12.2}\protected@file@percent }
 \newlabel{prop:adq-ordering}{{12.5}{77}{ADQ Ordering}{theorem.12.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.3}Corollaries for Practice}{77}{subsection.12.3}\protected@file@percent }
-\newlabel{cor:practice-diagnostic}{{12.6}{77}{Cardinality Criterion for Exact Minimization}{theorem.12.6}{}}
-\newlabel{cor:practice-bounded}{{12.7}{77}{Bounded-Regime Tractability}{theorem.12.7}{}}
-\newlabel{cor:practice-structured}{{12.8}{77}{Separable-Utility Tractability}{theorem.12.8}{}}
-\newlabel{cor:practice-tree}{{12.9}{77}{Tree-Structured Tractability}{theorem.12.9}{}}
-\newlabel{cor:practice-tensor}{{12.10}{77}{Low-Tensor-Rank Tractability}{theorem.12.10}{}}
-\newlabel{cor:practice-treewidth}{{12.11}{77}{Bounded-Treewidth Tractability}{theorem.12.11}{}}
-\newlabel{cor:practice-symmetry}{{12.12}{77}{Coordinate-Symmetry Tractability}{theorem.12.12}{}}
-\newlabel{cor:practice-unstructured}{{12.13}{77}{Mechanized Hard Family}{theorem.12.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.4}Hardness Distribution: Right Place vs Wrong Place}{78}{subsection.12.4}\protected@file@percent }
-\newlabel{sec:hardness-distribution}{{12.4}{78}{Hardness Distribution: Right Place vs Wrong Place}{subsection.12.4}{}}
-\newlabel{def:hardness-distribution}{{12.14}{78}{Hardness Distribution}{theorem.12.14}{}}
-\newlabel{prop:hardness-conservation}{{12.15}{78}{Baseline Lower-Bound Principle}{theorem.12.15}{}}
-\newlabel{def:hardness-efficiency}{{12.16}{78}{Hardness Efficiency}{theorem.12.16}{}}
-\newlabel{prop:hardness-efficiency-interpretation}{{12.17}{78}{Efficiency Equivalence}{theorem.12.17}{}}
-\newlabel{def:right-wrong-placement}{{12.18}{78}{Right vs Wrong Hardness Placement}{theorem.12.18}{}}
-\newlabel{thm:centralization-dominance}{{12.19}{78}{Centralization Dominance}{theorem.12.19}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.3}Corollaries for Practice}{78}{subsection.12.3}\protected@file@percent }
+\newlabel{cor:practice-diagnostic}{{12.6}{78}{Cardinality Criterion for Exact Minimization}{theorem.12.6}{}}
+\newlabel{cor:practice-bounded}{{12.7}{78}{Bounded-Regime Tractability}{theorem.12.7}{}}
+\newlabel{cor:practice-structured}{{12.8}{78}{Separable-Utility Tractability}{theorem.12.8}{}}
+\newlabel{cor:practice-tree}{{12.9}{78}{Tree-Structured Tractability}{theorem.12.9}{}}
+\newlabel{cor:practice-tensor}{{12.10}{78}{Low-Tensor-Rank Tractability}{theorem.12.10}{}}
+\newlabel{cor:practice-treewidth}{{12.11}{78}{Bounded-Treewidth Tractability}{theorem.12.11}{}}
+\newlabel{cor:practice-symmetry}{{12.12}{78}{Coordinate-Symmetry Tractability}{theorem.12.12}{}}
+\newlabel{cor:practice-unstructured}{{12.13}{78}{Mechanized Hard Family}{theorem.12.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.4}Hardness Distribution: Right Place vs Wrong Place}{79}{subsection.12.4}\protected@file@percent }
+\newlabel{sec:hardness-distribution}{{12.4}{79}{Hardness Distribution: Right Place vs Wrong Place}{subsection.12.4}{}}
+\newlabel{def:hardness-distribution}{{12.14}{79}{Hardness Distribution}{theorem.12.14}{}}
+\newlabel{prop:hardness-conservation}{{12.15}{79}{Baseline Lower-Bound Principle}{theorem.12.15}{}}
+\newlabel{def:hardness-efficiency}{{12.16}{79}{Hardness Efficiency}{theorem.12.16}{}}
+\newlabel{prop:hardness-efficiency-interpretation}{{12.17}{79}{Efficiency Equivalence}{theorem.12.17}{}}
+\newlabel{def:right-wrong-placement}{{12.18}{79}{Right vs Wrong Hardness Placement}{theorem.12.18}{}}
+\newlabel{thm:centralization-dominance}{{12.19}{79}{Centralization Dominance}{theorem.12.19}{}}
 \citation{Cardelli1985}
 \citation{reynolds1983types}
 \citation{pierce2002types}
 \citation{liskov1994behavioral}
 \citation{siek2006gradual}
 \citation{gamma1994design}
-\newlabel{cor:right-wrong-hardness}{{12.20}{79}{Right-Place vs Wrong-Place Hardness}{theorem.12.20}{}}
-\newlabel{prop:dominance-modes}{{12.21}{79}{Dominance Modes}{theorem.12.21}{}}
-\newlabel{cor:type-system-threshold}{{12.22}{80}{Type-System Threshold}{theorem.12.22}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {12.5}Extension: Non-Additive Site-Cost Models}{80}{subsection.12.5}\protected@file@percent }
-\newlabel{sec:nonadditive-site-costs}{{12.5}{80}{Extension: Non-Additive Site-Cost Models}{subsection.12.5}{}}
-\newlabel{def:generalized-site-accumulation}{{12.23}{80}{Generalized Site Accumulation}{theorem.12.23}{}}
-\newlabel{def:eventual-saturation}{{12.24}{80}{Eventual Saturation}{theorem.12.24}{}}
-\newlabel{thm:generalized-dominance}{{12.25}{80}{Generalized Dominance by Growth Separation}{theorem.12.25}{}}
-\newlabel{cor:generalized-eventual-dominance}{{12.26}{80}{Eventual Generalized Dominance}{theorem.12.26}{}}
-\newlabel{prop:generalized-assumption-boundary}{{12.27}{80}{Generalized Assumption Boundary}{theorem.12.27}{}}
-\newlabel{thm:linear-saturation-iff-zero}{{12.28}{81}{Linear Model: Saturation iff Zero Distributed Hardness}{theorem.12.28}{}}
-\newlabel{thm:generalized-saturation-possible}{{12.29}{81}{Generalized Model: Saturation is Possible}{theorem.12.29}{}}
-\newlabel{cor:linear-positive-no-saturation}{{12.30}{81}{Positive Linear Slope Cannot Represent Saturation}{theorem.12.30}{}}
-\@writefile{toc}{\contentsline {paragraph}{Mechanized strengthening reference.}{81}{section*.29}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {13}Redistribution Identity for Decision-Relevant Coordinates}{81}{section.13}\protected@file@percent }
-\newlabel{sec:simplicity-tax}{{13}{81}{Redistribution Identity for Decision-Relevant Coordinates}{section.13}{}}
+\newlabel{cor:right-wrong-hardness}{{12.20}{80}{Right-Place vs Wrong-Place Hardness}{theorem.12.20}{}}
+\newlabel{prop:dominance-modes}{{12.21}{80}{Dominance Modes}{theorem.12.21}{}}
+\newlabel{cor:type-system-threshold}{{12.22}{81}{Type-System Threshold}{theorem.12.22}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.5}Extension: Non-Additive Site-Cost Models}{81}{subsection.12.5}\protected@file@percent }
+\newlabel{sec:nonadditive-site-costs}{{12.5}{81}{Extension: Non-Additive Site-Cost Models}{subsection.12.5}{}}
+\newlabel{def:generalized-site-accumulation}{{12.23}{81}{Generalized Site Accumulation}{theorem.12.23}{}}
+\newlabel{def:eventual-saturation}{{12.24}{81}{Eventual Saturation}{theorem.12.24}{}}
+\newlabel{thm:generalized-dominance}{{12.25}{81}{Generalized Dominance by Growth Separation}{theorem.12.25}{}}
+\newlabel{cor:generalized-eventual-dominance}{{12.26}{81}{Eventual Generalized Dominance}{theorem.12.26}{}}
+\newlabel{prop:generalized-assumption-boundary}{{12.27}{81}{Generalized Assumption Boundary}{theorem.12.27}{}}
+\newlabel{thm:linear-saturation-iff-zero}{{12.28}{82}{Linear Model: Saturation iff Zero Distributed Hardness}{theorem.12.28}{}}
+\newlabel{thm:generalized-saturation-possible}{{12.29}{82}{Generalized Model: Saturation is Possible}{theorem.12.29}{}}
+\newlabel{cor:linear-positive-no-saturation}{{12.30}{82}{Positive Linear Slope Cannot Represent Saturation}{theorem.12.30}{}}
+\@writefile{toc}{\contentsline {paragraph}{Mechanized strengthening reference.}{82}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {13}Redistribution Identity for Decision-Relevant Coordinates}{82}{section.13}\protected@file@percent }
+\newlabel{sec:simplicity-tax}{{13}{82}{Redistribution Identity for Decision-Relevant Coordinates}{section.13}{}}
 \citation{Lean2015}
 \citation{demoura2021lean4}
 \citation{mathlib2020}
@@ -578,12 +581,12 @@
 \citation{haslbeck2016verified}
 \citation{leroy2009compcert}
 \citation{necula1997proof}
-\newlabel{def:simplicity-tax}{{13.2}{82}{Simplicity Tax}{theorem.13.2}{}}
-\newlabel{thm:tax-conservation}{{13.3}{82}{Redistribution Identity}{theorem.13.3}{}}
-\newlabel{thm:tax-grows}{{13.5}{82}{Linear Growth}{theorem.13.5}{}}
-\newlabel{thm:amortization}{{13.6}{82}{Amortization}{theorem.13.6}{}}
-\newlabel{cor:gap-externalization}{{13.7}{82}{Gap Externalization}{theorem.13.7}{}}
-\newlabel{cor:gap-minimization-hard}{{13.8}{82}{Exact Minimization Criterion}{theorem.13.8}{}}
+\newlabel{def:simplicity-tax}{{13.2}{83}{Simplicity Tax}{theorem.13.2}{}}
+\newlabel{thm:tax-conservation}{{13.3}{83}{Redistribution Identity}{theorem.13.3}{}}
+\newlabel{thm:tax-grows}{{13.5}{83}{Linear Growth}{theorem.13.5}{}}
+\newlabel{thm:amortization}{{13.6}{83}{Amortization}{theorem.13.6}{}}
+\newlabel{cor:gap-externalization}{{13.7}{83}{Gap Externalization}{theorem.13.7}{}}
+\newlabel{cor:gap-minimization-hard}{{13.8}{83}{Exact Minimization Criterion}{theorem.13.8}{}}
 \citation{yuan2025fp32}
 \citation{papadimitriou1994complexity}
 \citation{arora2009computational}
@@ -592,6 +595,7 @@
 \citation{myerson1979incentive}
 \citation{milgrom1986price}
 \citation{kamenica2011bayesian}
+\citation{maclane1998categories}
 \citation{chickering2004large}
 \citation{shpitser2006identification}
 \citation{koller2009probabilistic}
@@ -602,15 +606,15 @@
 \citation{papadimitriou1987mdp}
 \citation{mundhenk2000mdp}
 \citation{littman1998probplanning}
+\@writefile{toc}{\contentsline {section}{\numberline {14}Related Work}{84}{section.14}\protected@file@percent }
+\newlabel{sec:related}{{14}{84}{Related Work}{section.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.1}Formalized Complexity and Mechanized Proof Infrastructure}{84}{subsection.14.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.2}Computational Decision Theory}{84}{subsection.14.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Categorical framing of the quotient object.}{84}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Relation to prior hardness results.}{84}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Functional information and selection.}{84}{section*.32}\protected@file@percent }
 \citation{dobzinski2012query}
 \citation{buhrman2002complexity}
-\@writefile{toc}{\contentsline {section}{\numberline {14}Related Work}{83}{section.14}\protected@file@percent }
-\newlabel{sec:related}{{14}{83}{Related Work}{section.14}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.1}Formalized Complexity and Mechanized Proof Infrastructure}{83}{subsection.14.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.2}Computational Decision Theory}{83}{subsection.14.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Relation to prior hardness results.}{83}{section*.30}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Functional information and selection.}{83}{section*.31}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.3}Succinct Representations and Regime Separation}{83}{subsection.14.3}\protected@file@percent }
 \citation{simas2026identification}
 \citation{wales2003energy}
 \citation{wales2005energy}
@@ -619,25 +623,25 @@
 \citation{andersen2012maximizing}
 \citation{alaniz2023complexity}
 \citation{flamml2013complexity}
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.4}Oracle and Query-Access Lower Bounds}{84}{subsection.14.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.5}Energy Landscapes and Chemical Reaction Networks}{84}{subsection.14.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.3}Succinct Representations and Regime Separation}{85}{subsection.14.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.4}Oracle and Query-Access Lower Bounds}{85}{subsection.14.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.5}Energy Landscapes and Chemical Reaction Networks}{85}{subsection.14.5}\protected@file@percent }
 \citation{landauer1961irreversibility}
 \citation{bennett2003notes}
 \citation{vandenbroeck2015ensemble}
 \citation{wolpert2024stochastic}
 \citation{manzano2024absolute}
 \citation{yadav2026minimal}
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.6}Thermodynamic Costs and Landauer's Principle}{85}{subsection.14.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Physics assumptions decompose into regime tags.}{85}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.6}Thermodynamic Costs and Landauer's Principle}{86}{subsection.14.6}\protected@file@percent }
 \citation{neukart2025thermodynamic}
+\@writefile{toc}{\contentsline {paragraph}{Physics assumptions decompose into regime tags.}{87}{section*.33}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Physics-Assumption-to-Regime-Tag Decomposition}}{87}{table.1}\protected@file@percent }
+\newlabel{tab:physics-regime-decomposition}{{1}{87}{Physics-Assumption-to-Regime-Tag Decomposition}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.7}Neukart--Vinokur Thermodynamic Duality}{87}{subsection.14.7}\protected@file@percent }
 \citation{blum1997selection}
 \citation{guyon2003introduction}
 \citation{howard1966information}
 \citation{raiffa1961applied}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Physics-Assumption-to-Regime-Tag Decomposition}}{86}{table.1}\protected@file@percent }
-\newlabel{tab:physics-regime-decomposition}{{1}{86}{Physics-Assumption-to-Regime-Tag Decomposition}{table.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.7}Neukart--Vinokur Thermodynamic Duality}{86}{subsection.14.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.8}Feature Selection}{86}{subsection.14.8}\protected@file@percent }
 \citation{akaike1974new}
 \citation{schwarz1978estimating}
 \citation{stone1974cross}
@@ -657,17 +661,18 @@
 \citation{necula1997proof}
 \citation{necula1997proof}
 \citation{mcconnell2010certifying}
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.8}Feature Selection}{88}{subsection.14.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.9}Value of Information}{88}{subsection.14.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.10}Model Selection}{88}{subsection.14.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.11}Information Compression vs Certification Length}{88}{subsection.14.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.12}Certifying Outputs and Proof-Carrying Claims}{88}{subsection.14.12}\protected@file@percent }
 \citation{sep_bounded_rationality}
 \citation{arora2009computational}
 \citation{goldwasser1989knowledge}
 \citation{necula1997proof}
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.9}Value of Information}{87}{subsection.14.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.10}Model Selection}{87}{subsection.14.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.11}Information Compression vs Certification Length}{87}{subsection.14.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {14.12}Certifying Outputs and Proof-Carrying Claims}{87}{subsection.14.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Cryptographic-verifiability perspective (scope).}{87}{section*.33}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Three-axis integration.}{88}{section*.34}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {15}Conclusion}{88}{section.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Cryptographic-verifiability perspective (scope).}{89}{section*.34}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Three-axis integration.}{89}{section*.35}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {15}Conclusion}{89}{section.15}\protected@file@percent }
 \citation{einstein1905electrodynamics}
 \citation{minkowski1908space}
 \citation{planck1901distribution}
@@ -676,39 +681,39 @@
 \citation{berut2012experimental}
 \citation{demoura2021lean4}
 \citation{mathlib2020}
-\@writefile{toc}{\contentsline {paragraph}{Physical Scope Guard.}{92}{section*.42}\protected@file@percent }
 \citation{sep_bounded_rationality}
 \citation{arora2009computational}
-\@writefile{toc}{\contentsline {paragraph}{Truth-Objective Abstention Requirement.}{93}{section*.44}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {A}Lean 4 Proof Listings}{93}{appendix.A}\protected@file@percent }
-\newlabel{app:lean}{{A}{93}{Lean 4 Proof Listings}{appendix.A}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Lean Handle ID Map}{94}{subsection.A.1}\protected@file@percent }
-\newlabel{sec:lean-handle-id-map}{{A.1}{94}{Lean Handle ID Map}{subsection.A.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Physical Scope Guard.}{94}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Truth-Objective Abstention Requirement.}{94}{section*.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Lean 4 Proof Listings}{95}{appendix.A}\protected@file@percent }
+\newlabel{app:lean}{{A}{95}{Lean 4 Proof Listings}{appendix.A}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Lean Handle ID Map}{95}{subsection.A.1}\protected@file@percent }
+\newlabel{sec:lean-handle-id-map}{{A.1}{95}{Lean Handle ID Map}{subsection.A.1}{}}
 \gdef \LT@i {\LT@entry 
     {1}{469.75502pt}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}What Is Machine-Checked}{113}{subsection.A.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Assumption Ledger (Auto)}{113}{subsection.A.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Source files.}{113}{section*.45}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Assumption bundles and fields.}{113}{section*.46}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Conditional closure handles.}{114}{section*.47}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{First-principles Bayes derivation handles.}{114}{section*.48}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Compact Bayes handle IDs.}{115}{section*.49}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Polynomial-Time Reduction Definition}{115}{subsection.A.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.5}The Main Reduction Theorem}{116}{subsection.A.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.6}Economic Results}{116}{subsection.A.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.7}Complete Claim Coverage Matrix}{117}{subsection.A.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}What Is Machine-Checked}{114}{subsection.A.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Assumption Ledger (Auto)}{115}{subsection.A.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Source files.}{115}{section*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Assumption bundles and fields.}{115}{section*.47}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Conditional closure handles.}{115}{section*.48}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{First-principles Bayes derivation handles.}{115}{section*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Compact Bayes handle IDs.}{116}{section*.50}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Polynomial-Time Reduction Definition}{117}{subsection.A.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.5}The Main Reduction Theorem}{117}{subsection.A.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.6}Economic Results}{117}{subsection.A.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.7}Complete Claim Coverage Matrix}{118}{subsection.A.7}\protected@file@percent }
 \gdef \LT@ii {\LT@entry 
     {1}{116.74377pt}\LT@entry 
     {1}{64.3683pt}\LT@entry 
     {1}{285.85587pt}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.8}Proof Hardness Index (Auto)}{125}{subsection.A.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.8}Proof Hardness Index (Auto)}{126}{subsection.A.8}\protected@file@percent }
 \gdef \LT@iii {\LT@entry 
     {1}{92.2546pt}\LT@entry 
     {1}{67.07043pt}\LT@entry 
     {1}{128.13371pt}\LT@entry 
     {1}{181.5092pt}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.9}Claims Not Fully Mechanized}{132}{subsection.A.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.10}Module Structure}{132}{subsection.A.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.9}Claims Not Fully Mechanized}{133}{subsection.A.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.10}Module Structure}{133}{subsection.A.10}\protected@file@percent }
 \bibstyle{plain}
 \bibdata{references}
 \bibcite{akaike1974new}{1}
@@ -724,8 +729,8 @@
 \bibcite{blum1997selection}{11}
 \bibcite{bodlaender1993tourist}{12}
 \bibcite{boltzmann1877beziehung}{13}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.11}Verification}{134}{subsection.A.11}\protected@file@percent }
 \bibcite{brooks1987no}{14}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.11}Verification}{133}{subsection.A.11}\protected@file@percent }
 \bibcite{buhrman2002complexity}{15}
 \bibcite{Cardelli1985}{16}
 \bibcite{chickering2004large}{17}
@@ -761,53 +766,54 @@
 \bibcite{liskov1994behavioral}{47}
 \bibcite{littman1998probplanning}{48}
 \bibcite{lovasz1979shannon}{49}
-\bibcite{manzano2024absolute}{50}
-\bibcite{mcconnell2010certifying}{51}
-\bibcite{milgrom1986price}{52}
-\bibcite{minkowski1908space}{53}
-\bibcite{mundhenk2000mdp}{54}
-\bibcite{myerson1979incentive}{55}
-\bibcite{necula1997proof}{56}
-\bibcite{neukart2025thermodynamic}{57}
-\bibcite{nipkow2014concrete}{58}
-\bibcite{nipkow2002isabelle}{59}
-\bibcite{noether1918invariante}{60}
-\bibcite{onuchic1997protein}{61}
-\bibcite{papadimitriou1994complexity}{62}
-\bibcite{papadimitriou1987mdp}{63}
-\bibcite{parnas1972criteria}{64}
-\bibcite{pauli1925zusammenhang}{65}
-\bibcite{pearl2009causality}{66}
-\bibcite{pierce2002types}{67}
-\bibcite{planck1899irreversible}{68}
-\bibcite{planck1901distribution}{69}
-\bibcite{raiffa1961applied}{70}
-\bibcite{reynolds1983types}{71}
-\bibcite{rissanen1978modeling}{72}
-\bibcite{sakurai2017modern}{73}
-\bibcite{savage1954foundations}{74}
-\bibcite{schrodinger1926undulatory}{75}
-\bibcite{schwarz1978estimating}{76}
-\bibcite{shannon1948mathematical}{77}
-\bibcite{shannon1956zero}{78}
-\bibcite{shannon1959coding}{79}
-\bibcite{shaw1996software}{80}
-\bibcite{shpitser2006identification}{81}
-\bibcite{siek2006gradual}{82}
-\bibcite{simas2026identification}{83}
-\bibcite{slepian1973noiseless}{84}
-\bibcite{snyder1947quantized}{85}
-\bibcite{spence1973job}{86}
-\bibcite{stone1974cross}{87}
-\bibcite{szostak2003functional}{88}
-\bibcite{mathlib2020}{89}
-\bibcite{vandenbroeck2015ensemble}{90}
-\bibcite{wales2003energy}{91}
-\bibcite{wales2005energy}{92}
-\bibcite{wales2018exploring}{93}
-\bibcite{sep_bounded_rationality}{94}
-\bibcite{wolpert2024stochastic}{95}
-\bibcite{wong2023roles}{96}
-\bibcite{yadav2026minimal}{97}
-\bibcite{yuan2025fp32}{98}
-\gdef \@abspage@last{138}
+\bibcite{maclane1998categories}{50}
+\bibcite{manzano2024absolute}{51}
+\bibcite{mcconnell2010certifying}{52}
+\bibcite{milgrom1986price}{53}
+\bibcite{minkowski1908space}{54}
+\bibcite{mundhenk2000mdp}{55}
+\bibcite{myerson1979incentive}{56}
+\bibcite{necula1997proof}{57}
+\bibcite{neukart2025thermodynamic}{58}
+\bibcite{nipkow2014concrete}{59}
+\bibcite{nipkow2002isabelle}{60}
+\bibcite{noether1918invariante}{61}
+\bibcite{onuchic1997protein}{62}
+\bibcite{papadimitriou1994complexity}{63}
+\bibcite{papadimitriou1987mdp}{64}
+\bibcite{parnas1972criteria}{65}
+\bibcite{pauli1925zusammenhang}{66}
+\bibcite{pearl2009causality}{67}
+\bibcite{pierce2002types}{68}
+\bibcite{planck1899irreversible}{69}
+\bibcite{planck1901distribution}{70}
+\bibcite{raiffa1961applied}{71}
+\bibcite{reynolds1983types}{72}
+\bibcite{rissanen1978modeling}{73}
+\bibcite{sakurai2017modern}{74}
+\bibcite{savage1954foundations}{75}
+\bibcite{schrodinger1926undulatory}{76}
+\bibcite{schwarz1978estimating}{77}
+\bibcite{shannon1948mathematical}{78}
+\bibcite{shannon1956zero}{79}
+\bibcite{shannon1959coding}{80}
+\bibcite{shaw1996software}{81}
+\bibcite{shpitser2006identification}{82}
+\bibcite{siek2006gradual}{83}
+\bibcite{simas2026identification}{84}
+\bibcite{slepian1973noiseless}{85}
+\bibcite{snyder1947quantized}{86}
+\bibcite{spence1973job}{87}
+\bibcite{stone1974cross}{88}
+\bibcite{szostak2003functional}{89}
+\bibcite{mathlib2020}{90}
+\bibcite{vandenbroeck2015ensemble}{91}
+\bibcite{wales2003energy}{92}
+\bibcite{wales2005energy}{93}
+\bibcite{wales2018exploring}{94}
+\bibcite{sep_bounded_rationality}{95}
+\bibcite{wolpert2024stochastic}{96}
+\bibcite{wong2023roles}{97}
+\bibcite{yadav2026minimal}{98}
+\bibcite{yuan2025fp32}{99}
+\gdef \@abspage@last{140}

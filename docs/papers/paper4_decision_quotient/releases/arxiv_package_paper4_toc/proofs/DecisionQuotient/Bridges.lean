@@ -1080,7 +1080,7 @@ This is a GENUINE cross-cluster composition:
 
     This theorem composes:
     1. FROM ThermodynamicLift.lean: Energy/carbon scale with bit operations
-    2. FROM ThermodynamicLift.lean: Landauer calibration gives positive per-bit cost
+    2. FROM ThermodynamicLift.lean: Landauer floor gives a positive minimum per-bit cost
     3. FROM StructuralRank.lean: srank determines computational complexity
 
     COMPOSITION: The bit-operation lower bound is 2^srank (from complexity).
@@ -1621,7 +1621,7 @@ These bridges connect the remaining disconnected clusters in Paper 4:
 
 This is a GENUINE cross-cluster composition:
 - FROM LocalityPhysics.lean: landauer_principle (EP1), finite_regional_energy (EP2)
-- FROM ThermodynamicLift.lean: landauerJoulesPerBit, Landauer calibration
+- FROM ThermodynamicLift.lean: landauerJoulesPerBit, Landauer floor
 - COMPOSITION: The empirical axioms (EP1-EP3) ground the thermodynamic cost theory.
   Energy bounds derive from BOTH the physics axioms AND the bit-erasure cost.
 -/
@@ -1835,7 +1835,7 @@ This is a GENUINE cross-cluster composition:
 - FROM LocalityPhysics.lean: second_law_from_counting (derivation from microstate counting)
 - FROM ThermodynamicLift.lean: landauerJoulesPerBit (operational form)
 - COMPOSITION: The second law (entropy increases) derives from counting arguments.
-  Combined with Landauer calibration, this gives the operational energy bounds.
+  Combined with the Landauer floor, this gives the operational energy bounds.
 -/
 
 /-- **NON-TRIVIAL BRIDGE**: Second Law derivation + Landauer = operational thermodynamics.
@@ -1845,7 +1845,7 @@ This is a GENUINE cross-cluster composition:
     2. FROM ThermodynamicLift.lean: Landauer bound (E ≥ kT ln 2 per bit)
 
     COMPOSITION: The second law is DERIVED from counting microstates (not axiomatized).
-    Combined with Landauer calibration, this gives:
+    Combined with the Landauer floor, this gives:
     - Information erasure → entropy increase → minimum energy cost
 
     DERIVATION CHAIN:

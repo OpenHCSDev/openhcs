@@ -10,6 +10,9 @@ Recent LLM-evaluation work also highlights inference nondeterminism from numeric
 
 The complexity of decision-making has been studied extensively. Foundational treatments of computational complexity and strategic decision settings establish the baseline used here \cite{papadimitriou1994complexity,arora2009computational}. Our work extends this to the meta-question of identifying relevant information. Decision-theoretic and information-selection framing in this paper also sits in the tradition of statistical sufficiency and signaling/information economics \cite{fisher1922mathematical, spence1973job, myerson1979incentive, milgrom1986price, kamenica2011bayesian}.
 
+\paragraph{Categorical framing of the quotient object.}
+The universal property of the optimizer quotient object is not, by itself, a probabilistic construction. In the category \textbf{Set}, quotienting states by equality of $\Opt$ is the standard coimage construction for the optimizer map $\Opt : S \to \mathcal{P}(A)$, canonically equivalent to its image/range \cite{maclane1998categories}. The novelty in this paper is therefore not that coimages exist, but that this particular coimage organizes coordinate sufficiency, witness lower bounds, and physical collapse constraints in one mechanized chain.\claimstamp{T\ref{thm:quotient-universal}}{DM}\leanmeta{\LH{QT1},\LH{QT3},\LH{QT5}.}
+
 Large-sample Bayesian-network structure learning and causal identification are already known to be hard in adjacent formulations \cite{chickering2004large,shpitser2006identification,koller2009probabilistic}. Our object differs: we classify coordinate sufficiency for optimal-action invariance across static/stochastic/sequential regimes, with theorem-level placements and mechanized reductions.
 
 \paragraph{Relation to prior hardness results.}
