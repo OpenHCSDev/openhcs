@@ -57,7 +57,7 @@ Theorem~\ref{thm:counting-gap} proves that a finite bound exists. It does not su
 
 \item[\textbf{TD.}] \textbf{Thermodynamics (Landauer).}
   Each event costs positive energy.
-  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. The Wolpert-style interface used in this artifact adds an explicit nonnegative overhead term above that floor; when that overhead is positive, the per-bit lower bound is strictly larger than $k_B T \ln 2$.
+  Landauer established the universal floor: $\varepsilon \geq k_B T \ln 2$ joules per irreversible bit. The Wolpert-style interface used in this artifact adds explicit nonnegative mismatch and residual dissipation terms above that floor; when either contribution is positive, the per-bit lower bound is strictly larger than $k_B T \ln 2$.
   \cite{landauer1961irreversibility,bennett1982thermodynamics,berut2012experimental,wolpert2024stochastic,manzano2024absolute,yadav2026minimal}
 \end{enumerate}
 \leanmeta{\LH{WC1},\LH{WC2},\LH{WC3}.}
@@ -66,7 +66,7 @@ Theorem~\ref{thm:counting-gap} proves that a finite bound exists. It does not su
 
 \subsection{Why Positive Cost is Derived, Not Assumed}\label{sec:positive-cost-derived}
 
-The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$. In the explicit constrained-process interface, any extra dissipation above that floor is represented by a separate nonnegative overhead term rather than folded into the floor itself.
+The premise $\varepsilon > 0$ is not arbitrary. A check is a physical state transition. Physical transitions require force. Force over distance requires energy. At $T > 0$, any irreversible transition carries at least the Landauer floor $k_B T \ln 2$. In the explicit constrained-process interface, any extra dissipation above that floor is represented by separate nonnegative mismatch and residual terms rather than folded into the floor itself.
 
 If $\varepsilon = 0$, a bounded system could perform infinitely many checks, resolving any decision in zero time and zero energy. This contradicts energy conservation. Therefore $\varepsilon > 0$ is derived from thermodynamics.
 \leanmeta{\LH{BA10},\LH{WC2},\LH{WC3}}
@@ -207,13 +207,29 @@ bit erasure, experimentally verified to $\pm 10\%$
 \cite{berut2012experimental}. It is not, in general, a tight expression for the
 actual energetic cost of constrained computation
 \cite{wolpert2024stochastic,manzano2024absolute,yadav2026minimal}. In the Lean
-model, that distinction is explicit: a constrained-process model starts from a
-base lower-bound conversion model and adds a separate nonnegative overhead term.
-Theorems \LH{WC1}--\LH{WC3} show the exact shape of the floor-plus-overhead
-interface, \LH{WC4} proves that the induced energy lower bound can only
-increase, and \LH{WC5} proves that the physical grounding bundle survives under
-the strengthened premise. Exact equality is retained only as an optional
-idealized specialization.
+model, that distinction is explicit in two layers. First, a coarse
+floor-plus-overhead interface records that any constrained process may dissipate
+more than the Landauer floor (\LH{WC1}--\LH{WC5}). Second, a refined Wolpert
+decomposition splits that extra dissipation into a mismatch term and a residual
+term. Theorem \LH{WP1} states that the declared total overhead is exactly the
+sum of those two components, and \LH{WP2} proves that the effective per-bit
+lower bound dominates the Landauer floor plus both terms. The periodic /
+modular mismatch regime imported from \cite{wolpert2024stochastic,yadav2026minimal}
+is represented by \LH{WP4}; the stopping-time / absolute-irreversibility
+residual regime imported from \cite{manzano2024absolute} is represented by
+\LH{WP5}; and \LH{WP6} shows that either cited strictness premise is already
+sufficient to force strict separation above the Landauer floor. For the circuit
+cost interface of \cite{yadav2026minimal}, \LH{WP7} and \LH{WP8} prove that a
+declared structural resource lower-bounded by mismatch further tightens the
+per-bit and total energy lower bounds. Finally, \LH{WP9} proves that the
+existing physical grounding bundle survives under this refined decomposition.
+Exact equality is retained only as an optional idealized specialization.
+
+\noindent\textbf{Informally:} the cited stochastic-thermodynamics papers are
+not rederived inside this artifact. Instead, their relevant constrained-process
+consequences are imported as named theorem-level hypotheses, and Lean verifies
+the exact downstream consequences of composing those hypotheses with the
+decision-theoretic lower bounds already proved in the core system.
 \LH{BA9}
 \end{theorem}
 \leanmeta{\LH{BA9}}

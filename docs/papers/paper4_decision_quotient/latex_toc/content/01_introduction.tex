@@ -184,8 +184,8 @@ The relevant coordinate set $R$ is sufficient (Theorem~\ref{thm:resolution-suffi
 The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the decision quotient is fixed.
 
 \begin{theorem}[Thermodynamic Cost from Counting]\label{thm:fi-coincide}
-For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and a Landauer floor converts that bit count into a universal energy lower bound. In the sharpened physical interface, an explicit nonnegative overhead term is added above that floor to represent constrained-process dissipation. The thermodynamic statement is therefore the counting statement plus a floor-plus-overhead empirical conversion law; stronger empirical lower bounds only tighten it.
-\LH{FI3}\LH{FI6}\LH{FI7}\LH{WC1}\LH{WC2}\LH{WC3}
+For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and a Landauer floor converts that bit count into a universal energy lower bound. In the sharpened physical interface, explicit nonnegative mismatch and residual terms are added above that floor to represent constrained-process dissipation. The thermodynamic statement is therefore the counting statement plus a floor-plus-overhead empirical conversion law; positivity of either cited constrained-process component forces strict separation above the Landauer floor, and any declared structural lower bound absorbed by mismatch only strengthens the resulting energy estimate.
+\LH{FI3}\LH{FI6}\LH{FI7}\LH{WC1}\LH{WC2}\LH{WC3}\LH{WP1}\LH{WP4}\LH{WP5}\LH{WP6}\LH{WP7}\LH{WP8}
 \end{theorem}
 
 \begin{proof}
@@ -326,13 +326,13 @@ where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natu
 Three steps:
 \begin{enumerate}
 \item $\mathrm{srank}$ bits are required to resolve $\mathcal{D}$. Each bit requires one state transition.
-\item Each transition costs at least the Landauer floor $k_B T \ln 2$. In the stronger constrained-process model, an explicit nonnegative overhead term may raise that per-bit lower bound further. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$ remains the universal floor, and any declared overhead tightens it monotonically.
+\item Each transition costs at least the Landauer floor $k_B T \ln 2$. In the stronger constrained-process model, explicit nonnegative mismatch and residual dissipation terms may raise that per-bit lower bound further. Therefore $E \geq \mathrm{srank} \cdot k_B T \ln 2$ remains the universal floor, and any declared constrained-process contribution tightens it monotonically.
 \item $H_{\mathrm{nats}} = \ln(\mathrm{numOptClasses}) \leq \mathrm{srank} \cdot \ln 2$ (Theorem~\ref{thm:entropy-rank}).
 \end{enumerate}
 Combining: $E \geq \mathrm{srank} \cdot k_B T \ln 2 \geq k_B T \cdot H_{\mathrm{nats}}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from the Landauer floor (Theorem 9) composed with the entropy-rank inequality (Theorem 8); in the explicit floor-plus-overhead interface, any declared nonnegative overhead only strengthens the estimate.\LH{WC1}\LH{WC4}
+\noindent\textbf{Consequence.} Thermodynamic cost tracks information content: energy per decision $\geq k_B T$ per nat of decision entropy. This is derived from the Landauer floor (Theorem 9) composed with the entropy-rank inequality (Theorem 8); in the explicit decomposed constrained-process interface, any declared nonnegative mismatch or residual term only strengthens the estimate.\LH{WC1}\LH{WC4}\LH{WP1}\LH{WP4}\LH{WP5}\LH{WP6}
 
 \subsubsection{17. Thermodynamic Uncertainty Relations}
 

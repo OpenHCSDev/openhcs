@@ -1,0 +1,239 @@
+/-
+  Paper 4: Decision-Relevant Uncertainty
+
+  Physics/WolpertDecomposition.lean
+
+  Refined Wolpert-facing interface:
+
+  - Landauer remains the universal floor for irreversible bit erasure.
+  - Extra constrained-process dissipation is split explicitly into a mismatch
+    term and a residual term.
+  - We do not claim to rederive the full stochastic-thermodynamics proofs of
+    Wolpert et al., Manzano et al., or Yadav et al. here. Instead, we package
+    the relevant cited premises as named imported hypotheses and prove the exact
+    downstream consequences inside the decision-theoretic framework.
+
+  This gives the paper a theorem-level representation of the specific parts of
+  the cited work that it uses:
+  - PNAS 2024: constrained computation is not characterized by Landauer alone
+  - Phys. Rev. X 2024: mismatch / intrinsic dissipation under periodic,
+    stopping-time, absolutely irreversible regimes
+  - arXiv 2026: structural resource can lower-bound thermodynamic mismatch cost
+-/
+
+import DecisionQuotient.Physics.WolpertConstraints
+
+namespace DecisionQuotient
+namespace Physics
+namespace WolpertDecomposition
+
+open ThermodynamicLift
+open WolpertConstraints
+open BoundedAcquisition
+
+/-- A more explicit constrained-process model in which the extra dissipation
+above the Landauer floor is decomposed into two named components:
+
+* `mismatchCostPerBit`: the mismatch / intrinsic-dissipation contribution
+* `residualDissipationPerBit`: additional residual entropy production
+
+Both are represented as declared lower-bound terms in the same discrete units as
+the existing `ThermoModel`. -/
+structure DecomposedProcessModel where
+  base : ThermoModel
+  mismatchCostPerBit : ℕ
+  residualDissipationPerBit : ℕ
+
+/-- Total explicit constrained-process overhead above the base model. -/
+def DecomposedProcessModel.totalOverheadPerBit (W : DecomposedProcessModel) : ℕ :=
+  W.mismatchCostPerBit + W.residualDissipationPerBit
+
+/-- Forgetful map to the coarser floor-plus-overhead interface. -/
+def DecomposedProcessModel.asConstrainedProcessModel
+    (W : DecomposedProcessModel) : ConstrainedProcessModel :=
+  { base := W.base
+    extraDissipationPerBit := W.totalOverheadPerBit }
+
+/-- Effective thermodynamic lower-bound model after adding both decomposition
+components. -/
+def DecomposedProcessModel.effectiveModel (W : DecomposedProcessModel) : ThermoModel :=
+  (W.asConstrainedProcessModel).effectiveModel
+
+/-- The total declared overhead is exactly the sum of the mismatch and residual
+components. -/
+theorem DecomposedProcessModel.totalOverheadPerBit_eq_sum
+    (W : DecomposedProcessModel) :
+    W.totalOverheadPerBit = W.mismatchCostPerBit + W.residualDissipationPerBit := rfl
+
+/-- The refined floor statement: if the base declared model dominates the
+Landauer floor, then the effective constrained-process model dominates the
+Landauer floor plus both declared decomposition terms. -/
+theorem landauer_floor_plus_decomposition_lower_bound
+    (W : DecomposedProcessModel) {kB T : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ)) :
+    landauerJoulesPerBit kB T + (W.mismatchCostPerBit : ℝ) + (W.residualDissipationPerBit : ℝ) ≤
+      ((W.effectiveModel).joulesPerBit : ℝ) := by
+  have hBase :=
+    landauer_floor_plus_overhead_lower_bound W.asConstrainedProcessModel hFloor
+  simpa [DecomposedProcessModel.effectiveModel, DecomposedProcessModel.asConstrainedProcessModel,
+    DecomposedProcessModel.totalOverheadPerBit, add_assoc]
+    using hBase
+
+/-- The decomposed effective model still dominates the Landauer floor. -/
+theorem effective_model_dominates_landauer_floor_decomposition
+    (W : DecomposedProcessModel) {kB T : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ)) :
+    landauerJoulesPerBit kB T ≤ ((W.effectiveModel).joulesPerBit : ℝ) := by
+  exact effective_model_dominates_landauer_floor W.asConstrainedProcessModel hFloor
+
+/-- Imported empirical interface for the periodic / modular mismatch regime
+discussed by Wolpert et al. (PNAS 2024) and Yadav et al. (2026). We record only
+the theorem-level consequence needed by this artifact: the mismatch component is
+strictly positive under the declared constrained-process regime. -/
+structure PeriodicModularMismatchHypothesis (W : DecomposedProcessModel) : Prop where
+  mismatchPos : 0 < W.mismatchCostPerBit
+
+/-- Imported empirical interface for the stopping-time / absolute-irreversibility
+regime of Manzano et al. (Phys. Rev. X 2024). Again, only the theorem-level
+consequence used here is recorded: the residual term is strictly positive under
+the declared constrained-process regime. -/
+structure StoppingTimeResidualHypothesis (W : DecomposedProcessModel) : Prop where
+  residualPos : 0 < W.residualDissipationPerBit
+
+/-- Imported structural-scaling interface for repeated circuit families in
+Yadav--Yousef--Wolpert (2026): a declared structural resource can lower-bound the
+mismatch contribution. This is the exact part that composes with the present
+artifact. -/
+structure CircuitStructuralScalingHypothesis
+    (W : DecomposedProcessModel) (structuralResource : ℕ) : Prop where
+  resourceDominated : structuralResource ≤ W.mismatchCostPerBit
+
+/-- Positive mismatch implies positive total overhead. -/
+theorem total_overhead_pos_of_positive_mismatch
+    (W : DecomposedProcessModel)
+    (h : PeriodicModularMismatchHypothesis W) :
+    0 < W.totalOverheadPerBit := by
+  have hmle : W.mismatchCostPerBit ≤ W.totalOverheadPerBit := by
+    simp [DecomposedProcessModel.totalOverheadPerBit]
+  exact lt_of_lt_of_le h.mismatchPos hmle
+
+/-- Positive residual dissipation implies positive total overhead. -/
+theorem total_overhead_pos_of_positive_residual
+    (W : DecomposedProcessModel)
+    (h : StoppingTimeResidualHypothesis W) :
+    0 < W.totalOverheadPerBit := by
+  have hrle : W.residualDissipationPerBit ≤ W.totalOverheadPerBit := by
+    simp [DecomposedProcessModel.totalOverheadPerBit]
+  exact lt_of_lt_of_le h.residualPos hrle
+
+/-- Under the periodic / modular mismatch hypothesis, the effective per-bit
+lower bound is strictly above the Landauer floor. -/
+theorem effective_model_strictly_exceeds_landauer_of_periodic_modular_mismatch
+    (W : DecomposedProcessModel) {kB T : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))
+    (h : PeriodicModularMismatchHypothesis W) :
+    landauerJoulesPerBit kB T < ((W.effectiveModel).joulesPerBit : ℝ) := by
+  have hOver : 0 < W.totalOverheadPerBit :=
+    total_overhead_pos_of_positive_mismatch W h
+  exact effective_model_strictly_exceeds_landauer_of_strict_overhead
+    W.asConstrainedProcessModel hFloor hOver
+
+/-- Under the stopping-time / absolute-irreversibility residual hypothesis, the
+effective per-bit lower bound is strictly above the Landauer floor. -/
+theorem effective_model_strictly_exceeds_landauer_of_stopping_time_residual
+    (W : DecomposedProcessModel) {kB T : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))
+    (h : StoppingTimeResidualHypothesis W) :
+    landauerJoulesPerBit kB T < ((W.effectiveModel).joulesPerBit : ℝ) := by
+  have hOver : 0 < W.totalOverheadPerBit :=
+    total_overhead_pos_of_positive_residual W h
+  exact effective_model_strictly_exceeds_landauer_of_strict_overhead
+    W.asConstrainedProcessModel hFloor hOver
+
+/-- Either cited strictness hypothesis is already sufficient to force strict
+separation above the Landauer floor. -/
+theorem effective_model_strictly_exceeds_landauer_of_either_cited_component
+    (W : DecomposedProcessModel) {kB T : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))
+    (h :
+      PeriodicModularMismatchHypothesis W ∨
+      StoppingTimeResidualHypothesis W) :
+    landauerJoulesPerBit kB T < ((W.effectiveModel).joulesPerBit : ℝ) := by
+  rcases h with hMismatch | hResidual
+  · exact effective_model_strictly_exceeds_landauer_of_periodic_modular_mismatch W hFloor hMismatch
+  · exact effective_model_strictly_exceeds_landauer_of_stopping_time_residual W hFloor hResidual
+
+/-- The coarse monotonicity theorem remains valid for the decomposed model. -/
+theorem energy_lower_bound_mono_under_decomposition
+    (W : DecomposedProcessModel) (bitOpsLB : ℕ) :
+    energyLowerBound W.base bitOpsLB ≤
+      energyLowerBound (W.effectiveModel) bitOpsLB := by
+  exact energy_lower_bound_mono_under_overhead W.asConstrainedProcessModel bitOpsLB
+
+/-- If a declared structural resource is lower-bounded by the mismatch term,
+then the effective per-bit lower bound also dominates the Landauer floor plus
+that structural resource. This is the theorem-level interface to the
+thermodynamic circuit-scaling discussion. -/
+theorem landauer_floor_plus_structural_resource_lower_bound
+    (W : DecomposedProcessModel) (structuralResource : ℕ) {kB T : ℝ}
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ))
+    (hScale : CircuitStructuralScalingHypothesis W structuralResource) :
+    landauerJoulesPerBit kB T + (structuralResource : ℝ) ≤
+      ((W.effectiveModel).joulesPerBit : ℝ) := by
+  have hDecomp := landauer_floor_plus_decomposition_lower_bound W hFloor
+  have hScale' : (structuralResource : ℝ) ≤ (W.mismatchCostPerBit : ℝ) := by
+    exact_mod_cast hScale.resourceDominated
+  have hResidualNonneg : 0 ≤ (W.residualDissipationPerBit : ℝ) := by
+    exact_mod_cast Nat.zero_le _
+  linarith
+
+/-- If a declared structural resource is absorbed by the mismatch term, then
+the induced energy lower bound increases by at least that resource times the
+bit-operation lower bound. -/
+theorem energy_lower_bound_increases_by_structural_resource
+    (W : DecomposedProcessModel) (bitOpsLB structuralResource : ℕ)
+    (hScale : CircuitStructuralScalingHypothesis W structuralResource) :
+    energyLowerBound W.base bitOpsLB + structuralResource * bitOpsLB ≤
+      energyLowerBound (W.effectiveModel) bitOpsLB := by
+  rcases hScale with ⟨hScale⟩
+  have hMismatchMul :
+      structuralResource * bitOpsLB ≤ W.mismatchCostPerBit * bitOpsLB :=
+    Nat.mul_le_mul_right _ hScale
+  have hMismatchLeTotal : W.mismatchCostPerBit ≤ W.totalOverheadPerBit := by
+    simp [DecomposedProcessModel.totalOverheadPerBit]
+  have hTotalMul :
+      W.mismatchCostPerBit * bitOpsLB ≤ W.totalOverheadPerBit * bitOpsLB :=
+    Nat.mul_le_mul_right _ hMismatchLeTotal
+  calc
+    energyLowerBound W.base bitOpsLB + structuralResource * bitOpsLB
+      ≤ energyLowerBound W.base bitOpsLB + W.mismatchCostPerBit * bitOpsLB :=
+        Nat.add_le_add_left hMismatchMul _
+    _ ≤ energyLowerBound W.base bitOpsLB + W.totalOverheadPerBit * bitOpsLB :=
+        Nat.add_le_add_left hTotalMul _
+    _ = (W.base.joulesPerBit + W.totalOverheadPerBit) * bitOpsLB := by
+        simp [energyLowerBound, Nat.add_mul, Nat.add_assoc]
+    _ = (W.effectiveModel).joulesPerBit * bitOpsLB := by
+        rfl
+    _ = energyLowerBound (W.effectiveModel) bitOpsLB := by
+        rfl
+
+/-- The physical grounding bundle remains valid under the fully decomposed
+Wolpert-style refinement. -/
+theorem physical_grounding_bundle_with_wolpert_decomposition
+    {A S : Type*} {n : ℕ} [CoordinateSpace S n] [DecidableEq (Fin n)]
+    (dp : DecisionProblem A S)
+    (I : Finset (Fin n))
+    (hI : dp.isSufficient I)
+    (hI_pos : 0 < I.card)
+    (W : DecomposedProcessModel)
+    {kB T : ℝ} (hkB : 0 < kB) (hT : 0 < T)
+    (hFloor : landauerJoulesPerBit kB T ≤ (W.base.joulesPerBit : ℝ)) :
+    dp.srank ≤ I.card ∧
+    (W.effectiveModel).joulesPerBit * dp.srank ≤ energyLowerBound (W.effectiveModel) I.card ∧
+    0 < energyLowerBound (W.effectiveModel) I.card := by
+  exact physical_grounding_bundle_with_wolpert_overhead
+    dp I hI hI_pos W.asConstrainedProcessModel hkB hT hFloor
+
+end WolpertDecomposition
+end Physics
+end DecisionQuotient

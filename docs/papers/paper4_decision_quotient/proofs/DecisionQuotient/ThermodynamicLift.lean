@@ -119,9 +119,12 @@ theorem energy_lower_mandatory_of_landauer_floor
     0 < energyLowerBound M b := by
   exact energy_lower_mandatory M (joulesPerBit_pos_of_landauer_floor M hkB hT hFloor) hb
 
-/-- Mandatory energy lower bound derived from exact Landauer calibration and
-    positive physical constants (`k_B > 0`, `T > 0`). This is the stricter
-    calibration specialization of `energy_lower_mandatory_of_landauer_floor`. -/
+/-- Mandatory energy lower bound derived from the idealized exact-equality
+    specialization `joulesPerBit = landauerJoulesPerBit kB T` together with
+    positive physical constants (`k_B > 0`, `T > 0`). This is a narrower
+    specialization of `energy_lower_mandatory_of_landauer_floor`; constrained
+    processes with extra dissipation are handled by the Wolpert-facing
+    floor-plus-overhead layers. -/
 theorem energy_lower_mandatory_of_landauer_calibration
     (M : ThermoModel) {kB T : ℝ} {b : ℕ}
     (hkB : 0 < kB) (hT : 0 < T)

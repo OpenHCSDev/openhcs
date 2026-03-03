@@ -37,6 +37,7 @@ import DecisionQuotient.Physics.Uncertainty
 import DecisionQuotient.Physics.HeisenbergStrong
 import DecisionQuotient.Physics.BoundedAcquisition
 import DecisionQuotient.Physics.WolpertConstraints
+import DecisionQuotient.Physics.WolpertDecomposition
 import DecisionQuotient.Physics.TUR
 import DecisionQuotient.Physics.WassersteinIntegrity
 import DecisionQuotient.Physics.TransportCost
@@ -1029,6 +1030,17 @@ abbrev AB1 := @DecisionProblem.not_preservesOpt_iff_erasesDecisionRelevantDistin
 abbrev AB2 := @DecisionProblem.surjective_abstraction_factors_or_erases
 abbrev AB3 := @DecisionProblem.collapseBeyondQuotient_physically_impossible
 abbrev AB4 := @DecisionProblem.surjective_abstraction_with_feasible_collapse_map_factors
+
+-- WP: Wolpert Physics (Physics/WolpertDecomposition.lean)
+abbrev WP1 := @Physics.WolpertDecomposition.DecomposedProcessModel.totalOverheadPerBit_eq_sum
+abbrev WP2 := @Physics.WolpertDecomposition.landauer_floor_plus_decomposition_lower_bound
+abbrev WP3 := @Physics.WolpertDecomposition.effective_model_dominates_landauer_floor_decomposition
+abbrev WP4 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_periodic_modular_mismatch
+abbrev WP5 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_stopping_time_residual
+abbrev WP6 := @Physics.WolpertDecomposition.effective_model_strictly_exceeds_landauer_of_either_cited_component
+abbrev WP7 := @Physics.WolpertDecomposition.landauer_floor_plus_structural_resource_lower_bound
+abbrev WP8 := @Physics.WolpertDecomposition.energy_lower_bound_increases_by_structural_resource
+abbrev WP9 := @Physics.WolpertDecomposition.physical_grounding_bundle_with_wolpert_decomposition
 
 -- WD: Witness-Checking Duality (WitnessCheckingDuality.lean)
 -- WD1 is the main duality: any sound checker needs ≥ 2^(n-1) witness pairs

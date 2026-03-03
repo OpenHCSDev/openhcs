@@ -7,6 +7,7 @@ import DecisionQuotient.AbstractionCollapse
 import DecisionQuotient.Information
 import DecisionQuotient.ThermodynamicLift
 import DecisionQuotient.Physics.WolpertConstraints
+import DecisionQuotient.Physics.WolpertDecomposition
 import DecisionQuotient.PhysicalBudgetCrossover
 import DecisionQuotient.Dichotomy
 import DecisionQuotient.FunctionalInformation
@@ -53,6 +54,8 @@ import DecisionQuotient.Physics.PhysicalHardness
 #print axioms DecisionQuotient.ThermodynamicLift.energy_lower_mandatory_of_landauer_calibration
 -- Wolpert-style constrained-process interface: floor plus explicit overhead
 #print axioms DecisionQuotient.Physics.WolpertConstraints.physical_grounding_bundle_with_wolpert_overhead
+-- Wolpert decomposition interface: mismatch + residual refinement
+#print axioms DecisionQuotient.Physics.WolpertDecomposition.physical_grounding_bundle_with_wolpert_decomposition
 
 -- ── PHYSICAL HARDNESS / P≠NP NO-GO ─────────────────────────────────────────
 -- Core: exponential ops exceed any finite budget
