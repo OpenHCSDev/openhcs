@@ -138,7 +138,7 @@ The chain from counting to Bayesian updating and the normalized quotient score:
 
 \subsubsection{7. Fisher Rank = Structural Rank}
 
-With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant.
+With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant. In the finite-coordinate model, $\mathrm{srank}$ is just the cardinality of the relevant-coordinate support, so the question is whether those formalisms recover that same support-size quantity.\LH{SK1}\LH{SK2}\LH{SK3}
 
 \begin{theorem}[Fisher Information = Structural Rank]\label{thm:fisher-rank-srank}
 Define the Fisher information score of coordinate $i$ as:
@@ -158,7 +158,7 @@ $\sum_i \mathrm{score}(i) = \sum_i \mathbf{1}[\text{isRelevant}(i)] = |\{i \mid 
 For the diagonal matrix: $\mathrm{rank} = |\{i \mid \mathrm{score}(i) \neq 0\}| = |\{i \mid \text{isRelevant}(i)\}| = \mathrm{srank}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} The decision manifold has dimension exactly $\mathrm{srank}$. The Fisher information sees the relevant coordinates. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
+\noindent\textbf{Consequence.} The decision manifold has dimension exactly the size of the relevant-coordinate support. The Fisher information sees the same coordinates already counted by $\mathrm{srank}$. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
 
 \subsubsection{8. Entropy-Rank Inequality}
 
@@ -206,7 +206,7 @@ When all states lead to one future, the diagonal coupling gives zero transport c
 \noindent\textbf{Consequence.} Optimal transport recovers the same complexity signal as the coordinate-relevance analysis.
 
 \begin{theorem}[Rate-Distortion = Structural Rank]\label{thm:rate-distortion-bridge}
-At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, and compression below $\mathrm{srank}$ necessarily introduces decision errors.
+At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, i.e. exactly the cardinality of the relevant-coordinate support, and compression below that support size necessarily introduces decision errors.
 \LH{RD1}\LH{RD2}\LH{RD3}\LH{RS1}\LH{RS2}\LH{RS3}\LH{RS4}\LH{RS5}
 \end{theorem}
 
@@ -214,7 +214,7 @@ At zero distortion, the minimum lossless rate needed to preserve optimal actions
 Zero distortion means that decision-equivalent states may be merged, but decision-distinguishing states may not. The quotient therefore partitions the source into exactly the classes that must remain distinguishable. Their count determines the minimum lossless rate, which is the same structural quantity measured by $\mathrm{srank}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} Description length and relevant-coordinate complexity coincide at zero distortion.
+\noindent\textbf{Consequence.} Description length and relevant-coordinate support size coincide at zero distortion.
 
 \begin{theorem}[Information Requires Nontriviality]\label{thm:nontriviality-counting}
 If decision-relevant information exists, then the state space cannot be trivial: the existence of information forces at least two distinguishable states.

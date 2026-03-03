@@ -16,6 +16,8 @@ Tobias Fritz's feedback on the decision quotient universal property suggested th
    - coimage
    - quotient by kernel pair / equalizer relation
    - factorization through image/range
+   - support of an indicator / cardinality of that support
+   - normalized support fraction of a multivalued image
 3. Use the familiar name in the prose if it is accurate.
 4. Treat the novelty as the role the construction plays in the paper, not as the mere existence of the construction.
 
@@ -27,6 +29,10 @@ Tobias Fritz's feedback on the decision quotient universal property suggested th
 - The paper should therefore say:
   - the quotient object is familiar in `Set`
   - the novelty is that this coimage governs sufficiency, lower bounds, and collapse obstructions in one mechanized chain
+- The structural-rank invariant should likewise be introduced in its most familiar finite form:
+  - `srank` is the cardinality of the relevant-coordinate support
+  - later Fisher/rate-distortion/thermodynamic theorems recover that same support-size quantity
+- The decision-quotient score should be introduced as a normalized support fraction of the multivalued image of an equivalence class under `Opt`, not only as a bespoke score.
 
 ## Anti-pattern to avoid
 

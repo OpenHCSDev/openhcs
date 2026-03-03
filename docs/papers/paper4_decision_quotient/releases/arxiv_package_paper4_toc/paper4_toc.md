@@ -1,6 +1,6 @@
 # Paper: Computational Complexity of Physical Counting
 
-**Status**: Theory of Computing-ready | **Lean**: 33090 lines, 1370 theorems
+**Status**: Theory of Computing-ready | **Lean**: 33173 lines, 1375 theorems
 
 ---
 
@@ -8,9 +8,9 @@
 
 **Abstract**
 
-Which parts of a system's state are actually needed to determine the optimal action? A decision problem consists of actions $A$, states $S$, a utility function $U$, and the optimizer $\operatorname{Opt}$ that returns the action set maximizing utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action set: $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The decision quotient $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the coarsest abstraction that preserves optimal actions: any abstraction preserving optimal actions factors uniquely through $Q$.
+Which parts of a system's state are actually needed to determine the optimal action? A decision problem consists of actions $A$, states $S$, a utility function $U$, and the optimizer $\operatorname{Opt}$ that returns the action set maximizing utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action set: $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The optimizer quotient object $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the coarsest abstraction that preserves optimal actions; in **Set**, it is the coimage of the optimizer map and is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.
 
-From finite set cardinality, we derive a chain from counting measure to probability, Bayes' theorem, and the decision quotient. Several independent information-theoretic and geometric formalisms then recover the same invariant, $\mathrm{srank}$, as the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
+From finite set cardinality, we derive a chain from counting measure to probability, Bayes' theorem, and the optimizer quotient object. Several independent information-theoretic and geometric formalisms then recover the same invariant, $\mathrm{srank}$, namely the cardinality of the relevant-coordinate support, as the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
 
 Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds. Verification requires $\geq 2^{n-1}$ witness pairs.
 
@@ -23,9 +23,9 @@ Two results carry empirical premises. Composing bit-operation lower bounds with 
 
 This paper studies a simple question with a hard combinatorial core: when a system exposes many state coordinates, which of those coordinates are actually needed to preserve the optimal decision? The aim is not to list all observable state variables, but to isolate the smallest part of the state that still determines what the best action is.
 
-We model this with a decision problem: $A$ is the finite set of possible actions, $S$ is the state space, $U(a,s)$ is the utility of taking action $a$ in state $s$, and $\operatorname{Opt}(s)$ is the set of actions that maximize utility at state $s$. A coordinate set $I$ is sufficient when any two states that agree on $I$ also agree on $\operatorname{Opt}$. The decision quotient then collapses exactly those states with the same optimal-action set, yielding the canonical abstraction through which every decision-preserving abstraction factors.
+We model this with a decision problem: $A$ is the finite set of possible actions, $S$ is the state space, $U(a,s)$ is the utility of taking action $a$ in state $s$, and $\operatorname{Opt}(s)$ is the set of actions that maximize utility at state $s$. A coordinate set $I$ is sufficient when any two states that agree on $I$ also agree on $\operatorname{Opt}$. The optimizer quotient object then collapses exactly those states with the same optimal-action set, yielding the canonical abstraction through which every decision-preserving abstraction factors.
 
-Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference="sec:foundations"} makes that collapse boundary explicit: any surjective abstraction either factors through the decision quotient or erases a decision-relevant distinction, and any attempt to treat such extra erasure as physically feasible runs into the same no-collapse obstruction used later in the hardness chain. This is the structural bridge between abstraction at the state level and collapse claims at the complexity level.AB2AB3AB4
+Section [\[sec:foundations\]](#sec:foundations){reference-type="ref" reference="sec:foundations"} makes that collapse boundary explicit: any surjective abstraction either factors through the optimizer quotient object or erases a decision-relevant distinction, and any attempt to treat such extra erasure as physically feasible runs into the same no-collapse obstruction used later in the hardness chain. In **Set**, this quotient object is the familiar coimage of $\operatorname{Opt}$, canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.QT5AB2AB3AB4
 
 The results in this section are organized as one derivation chain rather than a theorem ledger. The opening results establish the structural core from counting, set theory, arithmetic, and logic; later results then place the same core in complexity-theoretic and physical terms. Theorems 1--14 are derived from pure mathematics, while Theorems 15--17 add explicit empirical lower-bound premises. One irreducible empirical claim (EC1) supplies the thermodynamic scale: irreversible bit operations carry a positive lower-bound cost, with Landauer furnishing a universal floor. Counting and logic provide the structural part of the chain. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
 
@@ -79,23 +79,23 @@ MN1MN2MN10MN11
 
 **Consequence.** Quantitative and stochastic claims are typed differently. Probability normalization is not automatic from measure structure.
 
-### 4. Universal Property of Decision Quotient
+### 4. Universal Property of the Optimizer Quotient
 
 With the measurement layer typed, we can identify the canonical abstraction that preserves the decision boundary itself.
 
 ::: theorem
-[]{#thm:quotient-universal label="thm:quotient-universal"} Let $Q = S/{\sim}$ be the decision quotient where $s \sim s' \iff \operatorname{Opt}(s) = \operatorname{Opt}(s')$. For any surjective abstraction $\phi: S \to T$ that preserves the optimal action ($\phi(s) = \phi(s') \Rightarrow \operatorname{Opt}(s) = \operatorname{Opt}(s')$), there exists a unique factorization $\psi: T \to Q$ such that $\pi = \psi \circ \phi$ where $\pi: S \to Q$ is the quotient map. $$\begin{array}{ccc}
+[]{#thm:quotient-universal label="thm:quotient-universal"} Let $Q = S/{\sim}$ be the optimizer quotient object where $s \sim s' \iff \operatorname{Opt}(s) = \operatorname{Opt}(s')$. For any surjective abstraction $\phi: S \to T$ that preserves the optimal action ($\phi(s) = \phi(s') \Rightarrow \operatorname{Opt}(s) = \operatorname{Opt}(s')$), there exists a unique factorization $\psi: T \to Q$ such that $\pi = \psi \circ \phi$ where $\pi: S \to Q$ is the quotient map. $$\begin{array}{ccc}
     S & \xrightarrow{\pi} & Q \\
     \downarrow & & \uparrow \\
     T & \xrightarrow{\psi} & Q
-  \end{array}$$ The decision quotient is the coarsest abstraction through which $\operatorname{Opt}$ factors. QT1QT2QT3
+  \end{array}$$ The optimizer quotient object is the coarsest abstraction through which $\operatorname{Opt}$ factors. In **Set**, it is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$, i.e. the familiar coimage/image factorization of the optimizer map. QT1QT2QT3QT5QT7
 :::
 
 ::: proof
 *Proof.* Since $\phi$ preserves $\operatorname{Opt}$, we have $\phi(s) = \phi(s') \Rightarrow \operatorname{Opt}(s) = \operatorname{Opt}(s')$. By surjectivity, for each $t \in T$ pick some $s$ with $\phi(s) = t$ and define $\psi(t) = \pi(s)$. This is well-defined: if $\phi(s) = \phi(s') = t$, then $\operatorname{Opt}(s) = \operatorname{Opt}(s')$, so $\pi(s) = \pi(s')$. Uniqueness follows because $\pi = \psi \circ \phi$ forces $\psi(t) = \pi(s)$ for any $s$ with $\phi(s) = t$. ◻
 :::
 
-**Consequence.** The decision quotient is canonical. Any other state abstraction that preserves optimal actions must refine it.
+**Consequence.** The optimizer quotient object is canonical. In **Set**, the familiar construction is not exotic: it is the coimage of $\operatorname{Opt}$, canonically identified with the image/range of $\operatorname{Opt}$. Any other state abstraction that preserves optimal actions must refine it.
 
 ### 5. Witness-Checking Duality
 
@@ -113,10 +113,10 @@ Once the canonical abstraction is fixed, we can ask how many state comparisons a
 
 ### 6. Bayes from Counting
 
-That verification bound rests on a simpler structural fact: probability, Bayes, and the normalized decision quotient already emerge from counting on finite sets.
+That verification bound rests on a simpler structural fact: probability, Bayes, and the normalized quotient score already emerge from counting on finite sets.
 
 ::: theorem
-[]{#thm:bayes-from-counting label="thm:bayes-from-counting"} The chain from counting to Decision Quotient:
+[]{#thm:bayes-from-counting label="thm:bayes-from-counting"} The chain from counting to Bayesian updating and the normalized quotient score:
 
 1.  $P(A) = |A|/|\Omega|$ satisfies Kolmogorov axioms: nonnegativity, normalization, and additivity for disjoint sets.
 
@@ -133,11 +133,11 @@ BC1BC2BC3BC4BC5
 *Proof.* (1) $|A| \geq 0$ (counting), $|\Omega|/|\Omega| = 1$ (normalization), $|A \cup B| = |A| + |B|$ for $A \cap B = \emptyset$ (additivity). (2) $P(H|E) := P(H \cap E)/P(E)$. Rearranging: $P(H|E) \cdot P(E) = P(H \cap E) = P(E|H) \cdot P(H)$. (3) $H(H|E) = H(H) - I(H;E)$ and $I(H;E) = D_{\mathrm{KL}}(P_{H,E} \| P_H \otimes P_E) \geq 0$ by Gibbs. (4) $I(H;E) \leq H(H)$ by (3), so $\DQ = I(H;E)/H(H) \in [0,1]$. ◻
 :::
 
-**Consequence.** Bayesian updating is derived from counting measure. Probability theory, Bayes' theorem, information theory, and the Decision Quotient form a single chain from counting elements of a finite set.
+**Consequence.** Bayesian updating is derived from counting measure. Probability theory, Bayes' theorem, information theory, and the normalized quotient score form a single chain from counting elements of a finite set.
 
 ### 7. Fisher Rank = Structural Rank
 
-With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant.
+With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant. In the finite-coordinate model, $\mathrm{srank}$ is just the cardinality of the relevant-coordinate support, so the question is whether those formalisms recover that same support-size quantity.SK1SK2SK3
 
 ::: theorem
 []{#thm:fisher-rank-srank label="thm:fisher-rank-srank"} Define the Fisher information score of coordinate $i$ as: $$\mathrm{score}(i) = \begin{cases} 1 & \text{if } i \text{ is relevant} \\ 0 & \text{otherwise} \end{cases}$$ Then: $$\sum_{i=1}^{n} \mathrm{score}(i) = \mathrm{srank}(\mathcal{D})$$ The diagonal Fisher information matrix $I(\theta)_{ii} = \mathrm{score}(i)$ has rank $\mathrm{srank}(\mathcal{D})$. FS1FS2
@@ -147,25 +147,25 @@ With that probabilistic chain in place, the next results compare independent mat
 *Proof.* $\sum_i \mathrm{score}(i) = \sum_i \mathbf{1}[\text{isRelevant}(i)] = |\{i \mid \text{isRelevant}(i)\}| = \mathrm{srank}$. For the diagonal matrix: $\mathrm{rank} = |\{i \mid \mathrm{score}(i) \neq 0\}| = |\{i \mid \text{isRelevant}(i)\}| = \mathrm{srank}$. ◻
 :::
 
-**Consequence.** The decision manifold has dimension exactly $\mathrm{srank}$. The Fisher information sees the relevant coordinates. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
+**Consequence.** The decision manifold has dimension exactly the size of the relevant-coordinate support. The Fisher information sees the same coordinates already counted by $\mathrm{srank}$. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
 
 ### 8. Entropy-Rank Inequality
 
 The first bridge is information-theoretic: quotient entropy cannot exceed the number of coordinates that actually matter.
 
 ::: theorem
-[]{#thm:entropy-rank label="thm:entropy-rank"} For a decision problem $\mathcal{D}$ with boolean coordinate spaces ($X_i = \{0,1\}$): $$H(\mathcal{D}) \leq \mathrm{srank}(\mathcal{D})$$ where $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses})$ is the Shannon entropy of the decision quotient. IT3IT4
+[]{#thm:entropy-rank label="thm:entropy-rank"} For a decision problem $\mathcal{D}$ with boolean coordinate spaces ($X_i = \{0,1\}$): $$H(\mathcal{D}) \leq \mathrm{srank}(\mathcal{D})$$ where $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses})$ is the Shannon entropy of the optimizer quotient object. IT3IT4
 :::
 
 ::: proof
 *Proof.* The relevant coordinate set $R$ is sufficient (Theorem [\[thm:resolution-sufficient\]](#thm:resolution-sufficient){reference-type="ref" reference="thm:resolution-sufficient"}): $\mathrm{Opt}$ factors through $\pi_R : S \to \{0,1\}^{|R|}$. Therefore $\mathrm{numOptClasses} \leq |\{0,1\}^{|R|}| = 2^{\mathrm{srank}}$. Therefore $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses}) \leq \log_2(2^{\mathrm{srank}}) = \mathrm{srank}$. ◻
 :::
 
-**Consequence.** The decision quotient carries at most $\mathrm{srank}$ bits of decision-relevant information. Coordinates outside the relevant set are information-theoretically inert.
+**Consequence.** The optimizer quotient object carries at most $\mathrm{srank}$ bits of decision-relevant information. Coordinates outside the relevant set are information-theoretically inert.
 
 ### 9--14. Later Bridge Theorems
 
-The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the decision quotient is fixed.
+The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the optimizer quotient object is fixed.
 
 ::: theorem
 []{#thm:fi-coincide label="thm:fi-coincide"} For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and a Landauer floor converts that bit count into a universal energy lower bound. In the sharpened physical interface, explicit nonnegative mismatch and residual terms are added above that floor to represent constrained-process dissipation. The mismatch branch is now justified as far as the existing mathematics allows: distinct strictly positive finite input distributions yield strictly positive KL mismatch, which is then rounded upward into the discrete lower-bound units used by the thermodynamic accounting and injected into the Wolpert decomposition. A second derived branch now captures the strongest residual theorem supported by the current finite machinery: for finite discrete computational-state processes, positive forward edge flow together with decision-relevant edge asymmetry yields strict residual positivity by an exhaustive local split on the reverse edge. If the reverse flow is positive, the pairwise KL branch applies. If the reverse flow vanishes, the process performs an irreversible one-way state transition, and the existing Landauer-scaled transition-cost theorem supplies a positive lower-bound witness. That local argument is now also packaged as a process-level theorem: any finite computational-state process with at least one such asymmetric forward edge already carries a theorem-level residual witness. The broader stopping-time / absolute-irreversibility residual regime remains a separate imported premise. The thermodynamic statement is therefore the counting statement plus a floor-plus-overhead empirical conversion law; a derived mismatch branch, a derived finite residual branch from this exhaustive edge split, or the cited broader stopping-time branch can each force strict separation above the Landauer floor, and any declared structural lower bound absorbed by mismatch only strengthens the resulting energy estimate. FI3FI6FI7WC1WC2WC3WM1WM3WM4WM5WM6WR1WR2WR3WR4WR5WR6WR7WR8WR9WR10WP1WP5WP6WP7WP8
@@ -188,14 +188,14 @@ The next six introductory results are bridge theorems. They are proved in their 
 **Consequence.** Optimal transport recovers the same complexity signal as the coordinate-relevance analysis.
 
 ::: theorem
-[]{#thm:rate-distortion-bridge label="thm:rate-distortion-bridge"} At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, and compression below $\mathrm{srank}$ necessarily introduces decision errors. RD1RD2RD3RS1RS2RS3RS4RS5
+[]{#thm:rate-distortion-bridge label="thm:rate-distortion-bridge"} At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, i.e. exactly the cardinality of the relevant-coordinate support, and compression below that support size necessarily introduces decision errors. RD1RD2RD3RS1RS2RS3RS4RS5
 :::
 
 ::: proof
 *Proof.* Zero distortion means that decision-equivalent states may be merged, but decision-distinguishing states may not. The quotient therefore partitions the source into exactly the classes that must remain distinguishable. Their count determines the minimum lossless rate, which is the same structural quantity measured by $\mathrm{srank}$. ◻
 :::
 
-**Consequence.** Description length and relevant-coordinate complexity coincide at zero distortion.
+**Consequence.** Description length and relevant-coordinate support size coincide at zero distortion.
 
 ::: theorem
 []{#thm:nontriviality-counting label="thm:nontriviality-counting"} If decision-relevant information exists, then the state space cannot be trivial: the existence of information forces at least two distinguishable states. FP1FP2FP3FP4FP5FP6FP7
@@ -302,7 +302,7 @@ Then $\Gamma$ contains at least one physical axiom that is empirically justified
 ### 16. Energy Bound
 
 ::: theorem
-[]{#thm:energy-information label="thm:energy-information"} For any physical system resolving decision problem $\mathcal{D}$ at temperature $T > 0$: $$E_{\mathrm{decision}} \geq k_B T \cdot H_{\mathrm{nats}}(\mathcal{D})$$ where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natural-log Shannon entropy of the decision quotient. EI1
+[]{#thm:energy-information label="thm:energy-information"} For any physical system resolving decision problem $\mathcal{D}$ at temperature $T > 0$: $$E_{\mathrm{decision}} \geq k_B T \cdot H_{\mathrm{nats}}(\mathcal{D})$$ where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natural-log Shannon entropy of the optimizer quotient object. EI1
 :::
 
 ::: proof
@@ -410,7 +410,7 @@ Claims are stamped with theorem references $[T:n; P:m]$ and Lean handles (H1).
 
 # Formal Foundations {#sec:foundations}
 
-We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory [@savage1954foundations; @raiffa1961applied]. The core definitions in this section are substrate-neutral: they specify the decision relation independently of implementation medium. The mechanized physical-lift and claim-transport scaffolding is summarized later in Section [1.4](#sec:foundations-mechanized-metadata){reference-type="ref" reference="sec:foundations-mechanized-metadata"} so that the mathematical core appears first.
+We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the optimizer quotient object, drawing on classical decision theory [@savage1954foundations; @raiffa1961applied]. The core definitions in this section are substrate-neutral: they specify the decision relation independently of implementation medium. The mechanized physical-lift and claim-transport scaffolding is summarized later in Section [1.4](#sec:foundations-mechanized-metadata){reference-type="ref" reference="sec:foundations-mechanized-metadata"} so that the mathematical core appears first.
 
 ## Decision Problems with Coordinate Structure
 
@@ -506,6 +506,18 @@ Formally: this subsection fixes the core tuple, projection, optimizer, and suffi
 *Proof.* The "only if" direction follows by minimality: if $i\in I$ were irrelevant, removing $i$ would preserve sufficiency, contradicting minimality. The "if" direction follows from sufficiency: every sufficient set must contain each relevant coordinate. ◻
 :::
 
+::: proposition
+[]{#prop:srank-support label="prop:srank-support"} The structural rank $\mathrm{srank}(\mathcal{D})$ is the cardinality of the relevant-coordinate support: $$\mathrm{srank}(\mathcal{D})
+=
+\left|\{i \in \{1,\ldots,n\} : i \text{ is relevant}\}\right|.$$ Hence $\mathrm{srank}(\mathcal{D})$ is bounded by the ambient coordinate dimension $n$, and $\mathrm{srank}(\mathcal{D}) = 0$ exactly when the decision boundary is constant across coordinates.
+:::
+
+::: proof
+*Proof.* Proof sketch: by definition, structural rank counts the coordinates that survive the relevance filter. The upper bound follows because at most all coordinates can be relevant. The zero case is equivalent to the relevance support being empty, which is exactly the coordinate-constant boundary case. ◻
+:::
+
+Informally: this is a familiarity anchor for the invariant used throughout the later bridge theorems. In the finite-coordinate setting, $\mathrm{srank}$ is simply the support size of the relevance indicator. Later theorems show that Fisher rank, zero-distortion rate, and physical bit cost recover this same support-size quantity through different frameworks.
+
 ::: definition
 []{#def:exact-identifiability label="def:exact-identifiability"} For a decision problem $\mathcal{D}$ and candidate coordinate set $I$, we say $I$ is *exactly relevance-identifying* if $$\forall i \in \{1,\ldots,n\}:\quad i \in I \iff i \text{ is relevant for } \mathcal{D}.$$ Equivalently, $I$ is exactly relevance-identifying iff $I$ equals the full relevant-coordinate set.
 :::
@@ -524,14 +536,14 @@ The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordina
 
 Informally: all later results use this same sufficiency definition.
 
-## The Decision Quotient
+## Decision-Quotient Score and Optimizer Quotient Object
 
 ::: definition
 []{#def:decision-equiv label="def:decision-equiv"} For coordinate set $I$, states $s, s'$ are *$I$-equivalent* (written $s \sim_I s'$) if $s_I = s'_I$.
 :::
 
 ::: definition
-[]{#def:decision-quotient label="def:decision-quotient"} The *decision quotient* for state $s$ under coordinate set $I$ is: $$\text{DQ}_I(s) = \frac{|\{a \in A : a \in \operatorname{Opt}(s') \text{ for some } s' \sim_I s\}|}{|A|}$$ This measures the fraction of actions that are optimal for at least one state consistent with $I$.
+[]{#def:decision-quotient label="def:decision-quotient"} The *decision-quotient score* for state $s$ under coordinate set $I$ is: $$\text{DQ}_I(s) = \frac{|\{a \in A : a \in \operatorname{Opt}(s') \text{ for some } s' \sim_I s\}|}{|A|}$$ This is a normalized ambiguity score: equivalently, it is the normalized support fraction of the multivalued image of the $I$-equivalence class under $\operatorname{Opt}$. It measures the fraction of actions that are optimal for at least one state consistent with $I$. It is not the quotient object $S/{\sim}$ used later for the optimizer map.
 :::
 
 ::: proposition
@@ -544,29 +556,67 @@ Informally: all later results use this same sufficiency definition.
 Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal actions form the same set (since $\text{DQ}_I(s) = \text{DQ}_I(s')$ and both equal the relative size of the common optimal set). ◻
 :::
 
-The next theorem makes the collapse boundary explicit. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The decision quotient is the coarsest such collapse that still preserves the optimal-action boundary.
+The quotient object behind the optimizer map has a familiar form in **Set**. It is useful to state that explicitly before the later abstraction-boundary theorem.
 
-Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the decision quotient, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.
+::: proposition
+[]{#prop:optimizer-coimage label="prop:optimizer-coimage"} For the optimizer map $\operatorname{Opt}: S \to \mathcal{P}(A)$:
 
-::: theorem
-[]{#thm:abstraction-boundary label="thm:abstraction-boundary"} Let $\phi : S \to T$ be a surjective abstraction of the state space.
+1.  the optimizer quotient object is canonically equivalent to $\mathrm{range}(\operatorname{Opt})$;
 
-1.  Either $\phi$ factors through the decision quotient, or it collapses a decision-relevant distinction, i.e., there exist states $s,s' \in S$ such that $\phi(s)=\phi(s')$ but $\operatorname{Opt}(s)\neq\operatorname{Opt}(s')$.
+2.  any surjective abstraction $\phi : S \to T$ that preserves $\operatorname{Opt}$ factors uniquely through this quotient.
 
-2.  If every such extra collapse is mapped to a physically feasible collapse at the canonical requirement profile, then no such extra collapse can occur. Therefore $\phi$ must factor through the decision quotient.
+Thus, in **Set**, the optimizer quotient object is the familiar coimage of $\operatorname{Opt}$, canonically identified with its image/range.[@maclane1998categories]
 :::
 
 ::: proof
 *Proof.* Proof sketch:
 
-1.  If $\phi$ preserves $\operatorname{Opt}$, then the quotient universal property already proved in the previous layer supplies the factorization $\pi = \psi \circ \phi$. If it does not preserve $\operatorname{Opt}$, then by definition there must exist $s,s'$ with $\phi(s)=\phi(s')$ but $\operatorname{Opt}(s)\neq\operatorname{Opt}(s')$. That witness is exactly the erased decision-relevant distinction.
+1.  The quotient identifies exactly those states with equal optimal-action sets, so its elements correspond bijectively to the values attained by $\operatorname{Opt}$. This gives the canonical equivalence with $\mathrm{range}(\operatorname{Opt})$.
 
-2.  Suppose such an erased distinction is further interpreted as a physically feasible collapse at the canonical requirement profile. The existing physical no-collapse theorem then blocks that collapse map. Therefore the "extra erasure" branch is impossible, leaving only factorization through the decision quotient.
+2.  If a surjective abstraction preserves $\operatorname{Opt}$, then the optimizer map already factors through that abstraction. The quotient universal property supplies the mediating map, and surjectivity makes that factorization unique.
 
  ◻
 :::
 
-Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the decision quotient is the maximal lossless collapse. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
+Informally: this proposition is only a familiarity anchor. The object is not exotic in **Set**; the later novelty is that this familiar coimage/image factorization governs the complexity and physical-collapse arguments.
+
+The same quotient object has an equally familiar information-theoretic reading: its entropy is just the logarithm of the number of distinct optimizer values actually attained.
+
+::: proposition
+[]{#prop:optimizer-entropy-image label="prop:optimizer-entropy-image"} Let $\mathrm{numOptClasses}(\mathcal{D})$ denote the number of distinct values attained by $\operatorname{Opt}$, equivalently the cardinality of $\mathrm{range}(\operatorname{Opt})$. Then $$H(\mathcal{D}) = \log_2\bigl(\mathrm{numOptClasses}(\mathcal{D})\bigr)
+=
+\log_2\bigl(|\mathrm{range}(\operatorname{Opt})|\bigr).$$ Thus the entropy of the optimizer quotient object is just the base-2 logarithm of the size of the image of $\operatorname{Opt}$.
+:::
+
+::: proof
+*Proof.* Proof sketch: $\mathrm{numOptClasses}$ is defined as the cardinality of the image of $\operatorname{Opt}$, and Proposition [\[prop:optimizer-coimage\]](#prop:optimizer-coimage){reference-type="ref" reference="prop:optimizer-coimage"} identifies the optimizer quotient object with that image in **Set**. The entropy quantity $H(\mathcal{D})$ is then defined to be $\log_2(\mathrm{numOptClasses})$. ◻
+:::
+
+Informally: this is the familiar reading of the entropy term used later in the bridge theorems. Nothing new is being hidden inside the notation: it is just the logarithm of how many different optimal-action sets the system can realize.
+
+The next theorem concerns the quotient object rather than the scalar score above. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The optimizer quotient object is the coarsest such collapse that still preserves the optimal-action boundary.
+
+Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the optimizer quotient object, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. In **Set**, the quotient object here is the familiar coimage of $\operatorname{Opt}$, canonically equivalent to its image/range [@maclane1998categories]. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.
+
+::: theorem
+[]{#thm:abstraction-boundary label="thm:abstraction-boundary"} Let $\phi : S \to T$ be a surjective abstraction of the state space.
+
+1.  Either $\phi$ factors through the optimizer quotient object, or it collapses a decision-relevant distinction, i.e., there exist states $s,s' \in S$ such that $\phi(s)=\phi(s')$ but $\operatorname{Opt}(s)\neq\operatorname{Opt}(s')$.
+
+2.  If every such extra collapse is mapped to a physically feasible collapse at the canonical requirement profile, then no such extra collapse can occur. Therefore $\phi$ must factor through the optimizer quotient object.
+:::
+
+::: proof
+*Proof.* Proof sketch:
+
+1.  If $\phi$ preserves $\operatorname{Opt}$, then the quotient universal property already proved in the previous layer supplies the factorization $\pi = \psi \circ \phi$. In **Set**, this is exactly the coimage factorization of the optimizer map through its image/range. If $\phi$ does not preserve $\operatorname{Opt}$, then by definition there must exist $s,s'$ with $\phi(s)=\phi(s')$ but $\operatorname{Opt}(s)\neq\operatorname{Opt}(s')$. That witness is exactly the erased decision-relevant distinction.
+
+2.  Suppose such an erased distinction is further interpreted as a physically feasible collapse at the canonical requirement profile. The existing physical no-collapse theorem then blocks that collapse map. Therefore the "extra erasure" branch is impossible, leaving only factorization through the optimizer quotient object.
+
+ ◻
+:::
+
+Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the optimizer quotient object is the maximal lossless collapse. In **Set**, that means the familiar coimage/image factorization of $\operatorname{Opt}$. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
 
 ## Mechanized Physical-Lift and Claim Metadata {#sec:foundations-mechanized-metadata}
 
@@ -2604,11 +2654,11 @@ The worry is integrity, not competence. Competence failure is resource shortage 
 :::
 
 ::: definition
-[]{#def:dq-from-gap label="def:dq-from-gap"} \[D:Ddef:dq-from-gap; R:AR,H=cost-growth\] The *decision quotient* measures how much current state predicts future state: $$\mathrm{DQ} = \frac{I(I_t; I_{t+1})}{H(I_{t+1})} = 1 - \frac{H(I_{t+1} \mid I_t)}{H(I_{t+1})} = 1 - \frac{\text{Gap}}{\text{Total}}$$ where $I(I_t; I_{t+1}) = H(I_{t+1}) - H(I_{t+1} \mid I_t)$ is the mutual information between current and future integrity.
+[]{#def:dq-from-gap label="def:dq-from-gap"} \[D:Ddef:dq-from-gap; R:AR,H=cost-growth\] The *decision-quotient ratio* measures how much current state predicts future state: $$\mathrm{DQ} = \frac{I(I_t; I_{t+1})}{H(I_{t+1})} = 1 - \frac{H(I_{t+1} \mid I_t)}{H(I_{t+1})} = 1 - \frac{\text{Gap}}{\text{Total}}$$ where $I(I_t; I_{t+1}) = H(I_{t+1}) - H(I_{t+1} \mid I_t)$ is the mutual information between current and future integrity. This normalized ratio is distinct from the optimizer quotient object $S/{\sim}$ used earlier for the optimizer map.
 :::
 
 ::: theorem
-[]{#thm:dq-physical label="thm:dq-physical"} \[D:Tthm:dq-physical; R:AR,H=cost-growth\] The decision quotient $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$ is a physical quantity with:
+[]{#thm:dq-physical label="thm:dq-physical"} \[D:Tthm:dq-physical; R:AR,H=cost-growth\] The decision-quotient ratio $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$ is a physical quantity with:
 
 1.  $\mathrm{DQ} \in [0, 1]$
 
@@ -2650,7 +2700,7 @@ The uniqueness corollary FN14 shows any two admissible rules must agree.
 :::
 
 ::: corollary
-[]{#cor:thermo-dq label="cor:thermo-dq"} \[D:Ccor:thermo-dq; R:AR,H=cost-growth\] In energy terms: $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$. The decision quotient has a thermodynamic interpretation: it is the fraction of total uncertainty energy that is decision-relevant.
+[]{#cor:thermo-dq label="cor:thermo-dq"} \[D:Ccor:thermo-dq; R:AR,H=cost-growth\] In energy terms: $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$. The decision-quotient ratio has a thermodynamic interpretation: it is the fraction of total uncertainty energy that is decision-relevant.
 :::
 
 ::: proposition
@@ -2671,7 +2721,7 @@ Informally: once operation lower bounds are fixed, energy and accounting lower b
 
 Formally: this block gives two mechanized Bayes derivations: counting/probability identities and admissibility constraints.
 
-The decision quotient framework provides two independent paths to Bayesian updating, each mechanically verified.
+The decision-quotient-ratio layer provides two independent paths to Bayesian updating, each mechanically verified.
 
 #### Path 1: Four Bridges from Counting to DQ.
 
@@ -3538,6 +3588,10 @@ Recent LLM-evaluation work also highlights inference nondeterminism from numeric
 
 The complexity of decision-making has been studied extensively. Foundational treatments of computational complexity and strategic decision settings establish the baseline used here [@papadimitriou1994complexity; @arora2009computational]. Our work extends this to the meta-question of identifying relevant information. Decision-theoretic and information-selection framing in this paper also sits in the tradition of statistical sufficiency and signaling/information economics [@fisher1922mathematical; @spence1973job; @myerson1979incentive; @milgrom1986price; @kamenica2011bayesian].
 
+#### Categorical framing of the quotient object.
+
+The universal property of the optimizer quotient object is not, by itself, a probabilistic construction. In the category **Set**, quotienting states by equality of $\operatorname{Opt}$ is the standard coimage construction for the optimizer map $\operatorname{Opt}: S \to \mathcal{P}(A)$, canonically equivalent to its image/range [@maclane1998categories]. The novelty in this paper is therefore not that coimages exist, but that this particular coimage organizes coordinate sufficiency, witness lower bounds, and physical collapse constraints in one mechanized chain. \[D:Tthm:quotient-universal; R:DM\]
+
 Large-sample Bayesian-network structure learning and causal identification are already known to be hard in adjacent formulations [@chickering2004large; @shpitser2006identification; @koller2009probabilistic]. Our object differs: we classify coordinate sufficiency for optimal-action invariance across static/stochastic/sequential regimes, with theorem-level placements and mechanized reductions.
 
 #### Relation to prior hardness results.
@@ -3817,7 +3871,7 @@ Informally: if exact support is not certified, do not make exact claims; when co
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33090 lines across 123 files, with 1370 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33173 lines across 123 files, with 1375 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -5359,6 +5413,10 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 +----------------------------------------------------------------------------------------------------------------------------------------+
 | [`QT4`]{#lh:QT4}`DecisionQuotient.DecisionProblem.factors_implies_respects`                                                            |
 +----------------------------------------------------------------------------------------------------------------------------------------+
+| [`QT6`]{#lh:QT6}`DecisionQuotient.DecisionProblem.quotientEquivOptRange_apply_quotientMap`                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`QT7`]{#lh:QT7}`DecisionQuotient.DecisionProblem.quotient_has_unique_factorization`                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
 | [`RD1`]{#lh:RD1}`DecisionQuotient.Information.shannonEntropy_nonneg`                                                                   |
 +----------------------------------------------------------------------------------------------------------------------------------------+
 | [`RD2`]{#lh:RD2}`DecisionQuotient.Information.rate_zero_distortion`                                                                    |
@@ -5404,6 +5462,12 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 | [`SE5`]{#lh:SE5}`DecisionQuotient.ClaimClosure.SE5`                                                                                    |
 +----------------------------------------------------------------------------------------------------------------------------------------+
 | [`SE6`]{#lh:SE6}`DecisionQuotient.ClaimClosure.SE6`                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SK1`]{#lh:SK1}`DecisionQuotient.DecisionProblem.srank_eq_relevant_card`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SK2`]{#lh:SK2}`DecisionQuotient.DecisionProblem.srank_le_n`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SK3`]{#lh:SK3}`DecisionQuotient.DecisionProblem.srank_zero_iff_constant`                                                             |
 +----------------------------------------------------------------------------------------------------------------------------------------+
 | [`SR1`]{#lh:SR1}`DecisionQuotient.ClaimClosure.SR1`                                                                                    |
 +----------------------------------------------------------------------------------------------------------------------------------------+
@@ -5893,6 +5957,10 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:one-step-bridge`                          Full         `DQ.ClaimClosure.no_exact_identifier_implies_not_boundary_characterized`
 
+  `prop:optimizer-coimage`                        Full         `DQ.DecisionProblem.quotient_has_unique_factorization`
+
+  `prop:optimizer-entropy-image`                  Full         `DQ.DecisionProblem.numOptClasses`
+
   `prop:oracle-lattice-strict`                    Full         `DQ.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`, `DQ.ClaimClosure.information_barrier_opt_oracle_core`
 
   `prop:oracle-lattice-transfer`                  Full         `DQ.ClaimClosure.no_uncertified_exact_claim_core`, `DQ.ClaimClosure.pose_returns_anchor_query_object`
@@ -5960,6 +6028,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
   `prop:set-to-selector`                          Full         `DQ.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`
 
   `prop:snapshot-process-typing`                  Full         `DQ.ClaimClosure.physical_crossover_hardness_core`, `DQ.ClaimClosure.posed_anchor_no_competence_no_exact_claim`, `DQ.ClaimClosure.system_transfer_licensed_iff_snapshot`
+
+  `prop:srank-support`                            Full         `DQ.DecisionProblem.srank_eq_relevant_card`, `DQ.DecisionProblem.srank_le_n`, `DQ.DecisionProblem.srank_zero_iff_constant`
 
   `prop:static-stochastic-strict`                 Unmapped     *(no derived Lean handle found)*
 
@@ -6107,7 +6177,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:physical-incompleteness`                   Full         `DQ.Physics.PhysicalIncompleteness.no_surjective_instantiation_of_card_gap`, `DQ.Physics.PhysicalIncompleteness.physical_incompleteness_of_bounds`, `DQ.Physics.PhysicalIncompleteness.physical_incompleteness_of_card_gap`
 
-  `thm:quotient-universal`                        Full         `DQ.DecisionProblem.quotientMap_preservesOpt`, `DQ.DecisionProblem.quotient_is_coarsest`, `DQ.DecisionProblem.quotient_represents_opt_equiv`
+  `thm:quotient-universal`                        Full         `DQ.DecisionProblem.quotientMap_preservesOpt`, `DQ.DecisionProblem.quotient_has_unique_factorization`, `DQ.DecisionProblem.quotient_is_coarsest`, `DQ.DecisionProblem.quotient_represents_opt_equiv`
 
   `thm:rate-distortion-bridge`                    Full         `DQ.Information.compression_below_srank_fails`, `DQ.Information.equiv_preserves_decision`, `DQ.Information.rate_distortion_bridge`, `DQ.Information.rate_equals_srank`, `DQ.Information.rate_monotone`, `DQ.Information.rate_zero_distortion`, `DQ.Information.shannonEntropy_nonneg`, `DQ.Information.srank_bits_sufficient`
 
@@ -6144,7 +6214,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 *Notes:* *(1) Full rows come from theorem-local inline anchors in this paper.* *(2) Derived rows are filled by dependency/scaffold claim-handle derivation (same paper-handle label across proof dependencies).* *(3) Unmapped means no local anchor and no derivable dependency support were found.*
 
-*Auto summary: mapped 201/223 (full=201, derived=0, unmapped=22).*
+*Auto summary: mapped 204/226 (full=204, derived=0, unmapped=22).*
 
 
   ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -6446,6 +6516,10 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:one-step-bridge`                          `unspecified`            \-                                              CC42
 
+  `prop:optimizer-coimage`                        `unspecified`            \-                                              QT7
+
+  `prop:optimizer-entropy-image`                  `unspecified`            \-                                              IT1
+
   `prop:outside-excuses-explicit-assumptions`     `unspecified`            CR,DC                                           CC22
 
   `prop:physical-claim-transport`                 `unspecified`            AR                                              CT6, CT3, CT5
@@ -6479,6 +6553,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
   `prop:set-to-selector`                          `unspecified`            \-                                              DP5
 
   `prop:snapshot-process-typing`                  `unspecified`            RA                                              CC48, CC56, CC3
+
+  `prop:srank-support`                            `unspecified`            \-                                              SK1, SK2, SK3
 
   `prop:static-stochastic-strict`                 `unspecified`            P $\neq$ coNP                                   *(no derived Lean handle found)*
 
@@ -6574,7 +6650,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `thm:physical-incompleteness`                   `unspecified`            AR                                              PI3, PI5, PI4
 
-  `thm:quotient-universal`                        `unspecified`            \-                                              QT2, QT1, QT3
+  `thm:quotient-universal`                        `unspecified`            DM                                              QT2, QT7, QT1, QT3
 
   `thm:rate-distortion-bridge`                    `unspecified`            \-                                              RS3, RS1, RS5, RS2, RD3, RD2, RD1, RS4
 
@@ -6597,7 +6673,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
   `thm:wasserstein-bridge`                        `unspecified`            \-                                              W3, W1, W2, W4
   ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-*Auto summary: indexed 223 claims by hardness profile (cost-growth=56; exp-lb-conditional=11; query-lb=8; succinct-hard=6; tractable-structured=12; unspecified=130).*
+*Auto summary: indexed 226 claims by hardness profile (cost-growth=56; exp-lb-conditional=11; query-lb=8; succinct-hard=6; tractable-structured=12; unspecified=133).*
 
 
 
@@ -6608,6 +6684,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 33090
-- Theorems: 1370
+- Lines: 33173
+- Theorems: 1375
 - `sorry` placeholders: 0

@@ -523,19 +523,20 @@ If $H(I_{t+1} \mid I_t) = 0$, the future is determined by the present. No choice
 \leanmeta{\LH{GE4},\LH{GE5}.}
 \end{corollary}
 
-\begin{definition}[Decision Quotient from Gap]\label{def:dq-from-gap}
+\begin{definition}[Decision-Quotient Ratio from Gap]\label{def:dq-from-gap}
 \claimstamp{D\ref{def:dq-from-gap}}{AR,H=cost-growth}
-The \emph{decision quotient} measures how much current state predicts future state:
+The \emph{decision-quotient ratio} measures how much current state predicts future state:
 \[
   \mathrm{DQ} = \frac{I(I_t; I_{t+1})}{H(I_{t+1})} = 1 - \frac{H(I_{t+1} \mid I_t)}{H(I_{t+1})} = 1 - \frac{\text{Gap}}{\text{Total}}
 \]
 where $I(I_t; I_{t+1}) = H(I_{t+1}) - H(I_{t+1} \mid I_t)$ is the mutual information between current and future integrity.
+This normalized ratio is distinct from the optimizer quotient object $S/{\sim}$ used earlier for the optimizer map.
 \leanmeta{\LH{DQ1},\LH{DQ2},\LH{DQ3}.}
 \end{definition}
 
-\begin{theorem}[Decision Quotient as Physical Primitive]\label{thm:dq-physical}
+\begin{theorem}[Decision-Quotient Ratio as Physical Primitive]\label{thm:dq-physical}
 \claimstamp{T\ref{thm:dq-physical}}{AR,H=cost-growth}
-The decision quotient $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$ is a physical quantity with:
+The decision-quotient ratio $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$ is a physical quantity with:
 \begin{enumerate}
   \item $\mathrm{DQ} \in [0, 1]$ \quad \leanmeta{\LH{DQ4}}
   \item $\mathrm{DQ} = 0 \Leftrightarrow$ maximum gap (no information) \quad \leanmeta{\LH{DQ5}}
@@ -574,9 +575,9 @@ The uniqueness corollary \LH{FN14} shows any two admissible rules must agree.
 \textbf{Machine-checked foundation.} The core inequality underlying this result (that Bayesian updating uniquely minimizes cross-entropy) is proved in Lean 4 with zero axioms and zero \texttt{sorry} statements. The proof derives Gibbs' inequality ($\mathrm{KL}(p\|q) \geq 0$) from the fundamental inequality $\log x \leq x - 1$, then shows $\mathrm{CE}(p,q) = H(p) + \mathrm{KL}(p\|q)$, yielding $\mathrm{CE}(p,p) \leq \mathrm{CE}(p,q)$ with equality iff $p = q$ \LH{FN7}, \LH{FN8}, \LH{FN12}, \LH{FN14}.
 \end{proof}
 
-\begin{corollary}[Thermodynamic Decision Quotient]\label{cor:thermo-dq}
+\begin{corollary}[Thermodynamic Decision-Quotient Ratio]\label{cor:thermo-dq}
 \claimstamp{C\ref{cor:thermo-dq}}{AR,H=cost-growth}
-In energy terms: $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$. The decision quotient has a thermodynamic interpretation: it is the fraction of total uncertainty energy that is decision-relevant.
+In energy terms: $\mathrm{DQ} = 1 - \text{GapEnergy}/\text{TotalEnergy}$. The decision-quotient ratio has a thermodynamic interpretation: it is the fraction of total uncertainty energy that is decision-relevant.
 \leanmeta{\LH{DQ7},\LH{DQ8}.}
 \end{corollary}
 
@@ -602,7 +603,7 @@ Informally: once operation lower bounds are fixed, energy and accounting lower b
 
 Formally: this block gives two mechanized Bayes derivations: counting/probability identities and admissibility constraints.
 
-The decision quotient framework provides two independent paths to Bayesian updating, each mechanically verified.
+The decision-quotient-ratio layer provides two independent paths to Bayesian updating, each mechanically verified.
 
 \paragraph{Path 1: Four Bridges from Counting to DQ.}
 The standard derivation proceeds through four elementary bridges:

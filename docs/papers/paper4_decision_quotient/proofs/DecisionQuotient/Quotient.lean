@@ -129,7 +129,7 @@ theorem DecisionProblem.quotient_has_unique_factorization (dp : DecisionProblem 
   rcases dp.quotient_is_coarsest φ hφ hSurj with ⟨ψ, hψ⟩
   refine ⟨ψ, hψ, ?_⟩
   intro ψ' hψ'
-  exact dp.quotient_factorization_unique φ hSurj hψ hψ'
+  exact (dp.quotient_factorization_unique φ hSurj hψ hψ').symm
 
 /-- Canonical map from the quotient object to the range of `Opt`.
 In `Set`, this is the standard coimage-to-image comparison map. -/

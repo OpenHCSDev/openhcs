@@ -1,6 +1,6 @@
 # Paper: Computational Complexity of Physical Counting
 
-**Status**: Theory of Computing-ready | **Lean**: 33161 lines, 1375 theorems
+**Status**: Theory of Computing-ready | **Lean**: 33173 lines, 1375 theorems
 
 ---
 
@@ -10,7 +10,7 @@
 
 Which parts of a system's state are actually needed to determine the optimal action? A decision problem consists of actions $A$, states $S$, a utility function $U$, and the optimizer $\operatorname{Opt}$ that returns the action set maximizing utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action set: $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The optimizer quotient object $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the coarsest abstraction that preserves optimal actions; in **Set**, it is the coimage of the optimizer map and is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.
 
-From finite set cardinality, we derive a chain from counting measure to probability, Bayes' theorem, and the optimizer quotient object. Several independent information-theoretic and geometric formalisms then recover the same invariant, $\mathrm{srank}$, as the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
+From finite set cardinality, we derive a chain from counting measure to probability, Bayes' theorem, and the optimizer quotient object. Several independent information-theoretic and geometric formalisms then recover the same invariant, $\mathrm{srank}$, namely the cardinality of the relevant-coordinate support, as the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
 
 Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds. Verification requires $\geq 2^{n-1}$ witness pairs.
 
@@ -137,7 +137,7 @@ BC1BC2BC3BC4BC5
 
 ### 7. Fisher Rank = Structural Rank
 
-With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant.
+With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant. In the finite-coordinate model, $\mathrm{srank}$ is just the cardinality of the relevant-coordinate support, so the question is whether those formalisms recover that same support-size quantity.SK1SK2SK3
 
 ::: theorem
 []{#thm:fisher-rank-srank label="thm:fisher-rank-srank"} Define the Fisher information score of coordinate $i$ as: $$\mathrm{score}(i) = \begin{cases} 1 & \text{if } i \text{ is relevant} \\ 0 & \text{otherwise} \end{cases}$$ Then: $$\sum_{i=1}^{n} \mathrm{score}(i) = \mathrm{srank}(\mathcal{D})$$ The diagonal Fisher information matrix $I(\theta)_{ii} = \mathrm{score}(i)$ has rank $\mathrm{srank}(\mathcal{D})$. FS1FS2
@@ -147,7 +147,7 @@ With that probabilistic chain in place, the next results compare independent mat
 *Proof.* $\sum_i \mathrm{score}(i) = \sum_i \mathbf{1}[\text{isRelevant}(i)] = |\{i \mid \text{isRelevant}(i)\}| = \mathrm{srank}$. For the diagonal matrix: $\mathrm{rank} = |\{i \mid \mathrm{score}(i) \neq 0\}| = |\{i \mid \text{isRelevant}(i)\}| = \mathrm{srank}$. ◻
 :::
 
-**Consequence.** The decision manifold has dimension exactly $\mathrm{srank}$. The Fisher information sees the relevant coordinates. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
+**Consequence.** The decision manifold has dimension exactly the size of the relevant-coordinate support. The Fisher information sees the same coordinates already counted by $\mathrm{srank}$. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
 
 ### 8. Entropy-Rank Inequality
 
@@ -188,14 +188,14 @@ The next six introductory results are bridge theorems. They are proved in their 
 **Consequence.** Optimal transport recovers the same complexity signal as the coordinate-relevance analysis.
 
 ::: theorem
-[]{#thm:rate-distortion-bridge label="thm:rate-distortion-bridge"} At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, and compression below $\mathrm{srank}$ necessarily introduces decision errors. RD1RD2RD3RS1RS2RS3RS4RS5
+[]{#thm:rate-distortion-bridge label="thm:rate-distortion-bridge"} At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, i.e. exactly the cardinality of the relevant-coordinate support, and compression below that support size necessarily introduces decision errors. RD1RD2RD3RS1RS2RS3RS4RS5
 :::
 
 ::: proof
 *Proof.* Zero distortion means that decision-equivalent states may be merged, but decision-distinguishing states may not. The quotient therefore partitions the source into exactly the classes that must remain distinguishable. Their count determines the minimum lossless rate, which is the same structural quantity measured by $\mathrm{srank}$. ◻
 :::
 
-**Consequence.** Description length and relevant-coordinate complexity coincide at zero distortion.
+**Consequence.** Description length and relevant-coordinate support size coincide at zero distortion.
 
 ::: theorem
 []{#thm:nontriviality-counting label="thm:nontriviality-counting"} If decision-relevant information exists, then the state space cannot be trivial: the existence of information forces at least two distinguishable states. FP1FP2FP3FP4FP5FP6FP7
@@ -506,6 +506,18 @@ Formally: this subsection fixes the core tuple, projection, optimizer, and suffi
 *Proof.* The "only if" direction follows by minimality: if $i\in I$ were irrelevant, removing $i$ would preserve sufficiency, contradicting minimality. The "if" direction follows from sufficiency: every sufficient set must contain each relevant coordinate. ◻
 :::
 
+::: proposition
+[]{#prop:srank-support label="prop:srank-support"} The structural rank $\mathrm{srank}(\mathcal{D})$ is the cardinality of the relevant-coordinate support: $$\mathrm{srank}(\mathcal{D})
+=
+\left|\{i \in \{1,\ldots,n\} : i \text{ is relevant}\}\right|.$$ Hence $\mathrm{srank}(\mathcal{D})$ is bounded by the ambient coordinate dimension $n$, and $\mathrm{srank}(\mathcal{D}) = 0$ exactly when the decision boundary is constant across coordinates.
+:::
+
+::: proof
+*Proof.* Proof sketch: by definition, structural rank counts the coordinates that survive the relevance filter. The upper bound follows because at most all coordinates can be relevant. The zero case is equivalent to the relevance support being empty, which is exactly the coordinate-constant boundary case. ◻
+:::
+
+Informally: this is a familiarity anchor for the invariant used throughout the later bridge theorems. In the finite-coordinate setting, $\mathrm{srank}$ is simply the support size of the relevance indicator. Later theorems show that Fisher rank, zero-distortion rate, and physical bit cost recover this same support-size quantity through different frameworks.
+
 ::: definition
 []{#def:exact-identifiability label="def:exact-identifiability"} For a decision problem $\mathcal{D}$ and candidate coordinate set $I$, we say $I$ is *exactly relevance-identifying* if $$\forall i \in \{1,\ldots,n\}:\quad i \in I \iff i \text{ is relevant for } \mathcal{D}.$$ Equivalently, $I$ is exactly relevance-identifying iff $I$ equals the full relevant-coordinate set.
 :::
@@ -531,7 +543,7 @@ Informally: all later results use this same sufficiency definition.
 :::
 
 ::: definition
-[]{#def:decision-quotient label="def:decision-quotient"} The *decision-quotient score* for state $s$ under coordinate set $I$ is: $$\text{DQ}_I(s) = \frac{|\{a \in A : a \in \operatorname{Opt}(s') \text{ for some } s' \sim_I s\}|}{|A|}$$ This is a normalized ambiguity score: it measures the fraction of actions that are optimal for at least one state consistent with $I$. It is not the quotient object $S/{\sim}$ used later for the optimizer map.
+[]{#def:decision-quotient label="def:decision-quotient"} The *decision-quotient score* for state $s$ under coordinate set $I$ is: $$\text{DQ}_I(s) = \frac{|\{a \in A : a \in \operatorname{Opt}(s') \text{ for some } s' \sim_I s\}|}{|A|}$$ This is a normalized ambiguity score: equivalently, it is the normalized support fraction of the multivalued image of the $I$-equivalence class under $\operatorname{Opt}$. It measures the fraction of actions that are optimal for at least one state consistent with $I$. It is not the quotient object $S/{\sim}$ used later for the optimizer map.
 :::
 
 ::: proposition
@@ -567,6 +579,20 @@ Thus, in **Set**, the optimizer quotient object is the familiar coimage of $\ope
 :::
 
 Informally: this proposition is only a familiarity anchor. The object is not exotic in **Set**; the later novelty is that this familiar coimage/image factorization governs the complexity and physical-collapse arguments.
+
+The same quotient object has an equally familiar information-theoretic reading: its entropy is just the logarithm of the number of distinct optimizer values actually attained.
+
+::: proposition
+[]{#prop:optimizer-entropy-image label="prop:optimizer-entropy-image"} Let $\mathrm{numOptClasses}(\mathcal{D})$ denote the number of distinct values attained by $\operatorname{Opt}$, equivalently the cardinality of $\mathrm{range}(\operatorname{Opt})$. Then $$H(\mathcal{D}) = \log_2\bigl(\mathrm{numOptClasses}(\mathcal{D})\bigr)
+=
+\log_2\bigl(|\mathrm{range}(\operatorname{Opt})|\bigr).$$ Thus the entropy of the optimizer quotient object is just the base-2 logarithm of the size of the image of $\operatorname{Opt}$.
+:::
+
+::: proof
+*Proof.* Proof sketch: $\mathrm{numOptClasses}$ is defined as the cardinality of the image of $\operatorname{Opt}$, and Proposition [\[prop:optimizer-coimage\]](#prop:optimizer-coimage){reference-type="ref" reference="prop:optimizer-coimage"} identifies the optimizer quotient object with that image in **Set**. The entropy quantity $H(\mathcal{D})$ is then defined to be $\log_2(\mathrm{numOptClasses})$. ◻
+:::
+
+Informally: this is the familiar reading of the entropy term used later in the bridge theorems. Nothing new is being hidden inside the notation: it is just the logarithm of how many different optimal-action sets the system can realize.
 
 The next theorem concerns the quotient object rather than the scalar score above. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The optimizer quotient object is the coarsest such collapse that still preserves the optimal-action boundary.
 
@@ -3845,7 +3871,7 @@ Informally: if exact support is not certified, do not make exact claims; when co
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33161 lines across 123 files, with 1375 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33173 lines across 123 files, with 1375 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -5437,6 +5463,12 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 +----------------------------------------------------------------------------------------------------------------------------------------+
 | [`SE6`]{#lh:SE6}`DecisionQuotient.ClaimClosure.SE6`                                                                                    |
 +----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SK1`]{#lh:SK1}`DecisionQuotient.DecisionProblem.srank_eq_relevant_card`                                                              |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SK2`]{#lh:SK2}`DecisionQuotient.DecisionProblem.srank_le_n`                                                                          |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| [`SK3`]{#lh:SK3}`DecisionQuotient.DecisionProblem.srank_zero_iff_constant`                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------+
 | [`SR1`]{#lh:SR1}`DecisionQuotient.ClaimClosure.SR1`                                                                                    |
 +----------------------------------------------------------------------------------------------------------------------------------------+
 | [`SR2`]{#lh:SR2}`DecisionQuotient.ClaimClosure.SR2`                                                                                    |
@@ -5927,6 +5959,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:optimizer-coimage`                        Full         `DQ.DecisionProblem.quotient_has_unique_factorization`
 
+  `prop:optimizer-entropy-image`                  Full         `DQ.DecisionProblem.numOptClasses`
+
   `prop:oracle-lattice-strict`                    Full         `DQ.ClaimClosure.horizonTwoWitness_immediate_empty_sufficient`, `DQ.ClaimClosure.information_barrier_opt_oracle_core`
 
   `prop:oracle-lattice-transfer`                  Full         `DQ.ClaimClosure.no_uncertified_exact_claim_core`, `DQ.ClaimClosure.pose_returns_anchor_query_object`
@@ -5994,6 +6028,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
   `prop:set-to-selector`                          Full         `DQ.ClaimClosure.DecisionProblem.sufficient_iff_zeroEpsilonSufficient`
 
   `prop:snapshot-process-typing`                  Full         `DQ.ClaimClosure.physical_crossover_hardness_core`, `DQ.ClaimClosure.posed_anchor_no_competence_no_exact_claim`, `DQ.ClaimClosure.system_transfer_licensed_iff_snapshot`
+
+  `prop:srank-support`                            Full         `DQ.DecisionProblem.srank_eq_relevant_card`, `DQ.DecisionProblem.srank_le_n`, `DQ.DecisionProblem.srank_zero_iff_constant`
 
   `prop:static-stochastic-strict`                 Unmapped     *(no derived Lean handle found)*
 
@@ -6178,7 +6214,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 *Notes:* *(1) Full rows come from theorem-local inline anchors in this paper.* *(2) Derived rows are filled by dependency/scaffold claim-handle derivation (same paper-handle label across proof dependencies).* *(3) Unmapped means no local anchor and no derivable dependency support were found.*
 
-*Auto summary: mapped 202/224 (full=202, derived=0, unmapped=22).*
+*Auto summary: mapped 204/226 (full=204, derived=0, unmapped=22).*
 
 
   ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -6482,6 +6518,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
   `prop:optimizer-coimage`                        `unspecified`            \-                                              QT7
 
+  `prop:optimizer-entropy-image`                  `unspecified`            \-                                              IT1
+
   `prop:outside-excuses-explicit-assumptions`     `unspecified`            CR,DC                                           CC22
 
   `prop:physical-claim-transport`                 `unspecified`            AR                                              CT6, CT3, CT5
@@ -6515,6 +6553,8 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
   `prop:set-to-selector`                          `unspecified`            \-                                              DP5
 
   `prop:snapshot-process-typing`                  `unspecified`            RA                                              CC48, CC56, CC3
+
+  `prop:srank-support`                            `unspecified`            \-                                              SK1, SK2, SK3
 
   `prop:static-stochastic-strict`                 `unspecified`            P $\neq$ coNP                                   *(no derived Lean handle found)*
 
@@ -6633,7 +6673,7 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
   `thm:wasserstein-bridge`                        `unspecified`            \-                                              W3, W1, W2, W4
   ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-*Auto summary: indexed 224 claims by hardness profile (cost-growth=56; exp-lb-conditional=11; query-lb=8; succinct-hard=6; tractable-structured=12; unspecified=131).*
+*Auto summary: indexed 226 claims by hardness profile (cost-growth=56; exp-lb-conditional=11; query-lb=8; succinct-hard=6; tractable-structured=12; unspecified=133).*
 
 
 
@@ -6644,6 +6684,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 33161
+- Lines: 33173
 - Theorems: 1375
 - `sorry` placeholders: 0

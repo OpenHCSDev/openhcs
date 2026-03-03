@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-03-03T11:25:24.869386
+Generated: 2026-03-03T12:11:55.837560
 
 === HUMAN COPY/PASTE ===
 
@@ -8,9 +8,9 @@ Title: Computational Complexity of Physical Counting
 Abstract (Unicode, for Zenodo):
 Abstract
 
-Which parts of a system’s state are actually needed to determine the optimal action? A decision problem consists of actions A, states S, a utility function U, and the optimizer Opt that returns the action set maximizing utility at a state. For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × Xₙ, coordinate set I is sufficient if agreement on I forces the same optimal-action set: s_I = s′_(I) ⇒ Opt (s) = Opt (s′). The decision quotient Q = S/∼ (s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the coarsest abstraction that preserves optimal actions: any abstraction preserving optimal actions factors uniquely through Q.
+Which parts of a system’s state are actually needed to determine the optimal action? A decision problem consists of actions A, states S, a utility function U, and the optimizer Opt that returns the action set maximizing utility at a state. For 𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × Xₙ, coordinate set I is sufficient if agreement on I forces the same optimal-action set: s_I = s′_(I) ⇒ Opt (s) = Opt (s′). The optimizer quotient object Q = S/∼ (s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the coarsest abstraction that preserves optimal actions; in Set, it is the coimage of the optimizer map and is canonically equivalent to range (Opt ).
 
-From finite set cardinality, we derive a chain from counting measure to probability, Bayes’ theorem, and the decision quotient. Several independent information-theoretic and geometric formalisms then recover the same invariant, srank, as the decision-complexity measure. From log x ≤ x − 1 alone, Bayesian updating uniquely minimizes expected log loss.
+From finite set cardinality, we derive a chain from counting measure to probability, Bayes’ theorem, and the optimizer quotient object. Several independent information-theoretic and geometric formalisms then recover the same invariant, srank, namely the cardinality of the relevant-coordinate support, as the decision-complexity measure. From log x ≤ x − 1 alone, Bayesian updating uniquely minimizes expected log loss.
 
 Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is Σ₂ᴾ-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry 2^Ω(n) lower bounds. Verification requires ≥ 2^(n − 1) witness pairs.
 
@@ -19,16 +19,16 @@ Two results carry empirical premises. Composing bit-operation lower bounds with 
 Abstract (MathJax, for arXiv):
 Abstract
 
-Which parts of a system's state are actually needed to determine the optimal action? A decision problem consists of actions $A$, states $S$, a utility function $U$, and the optimizer $\operatorname{Opt}$ that returns the action set maximizing utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action set: $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The decision quotient $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the coarsest abstraction that preserves optimal actions: any abstraction preserving optimal actions factors uniquely through $Q$.
+Which parts of a system's state are actually needed to determine the optimal action? A decision problem consists of actions $A$, states $S$, a utility function $U$, and the optimizer $\operatorname{Opt}$ that returns the action set maximizing utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action set: $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The optimizer quotient object $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the coarsest abstraction that preserves optimal actions; in Set, it is the coimage of the optimizer map and is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.
 
-From finite set cardinality, we derive a chain from counting measure to probability, Bayes' theorem, and the decision quotient. Several independent information-theoretic and geometric formalisms then recover the same invariant, $\mathrm{srank}$, as the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
+From finite set cardinality, we derive a chain from counting measure to probability, Bayes' theorem, and the optimizer quotient object. Several independent information-theoretic and geometric formalisms then recover the same invariant, $\mathrm{srank}$, namely the cardinality of the relevant-coordinate support, as the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
 
 Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds. Verification requires $\geq 2^{n-1}$ witness pairs.
 
 Two results carry empirical premises. Composing bit-operation lower bounds with a declared per-bit lower bound in a floor-plus-overhead model, where Landauer's principle supplies the universal floor $k_BT\ln 2$ for irreversible bit erasure and explicit nonnegative mismatch and residual terms capture constrained-process dissipation above that floor, yields inequalities such as $dU\geq\lambda\,dC$; exact equality is treated only as an idealized specialization. Within that interface, the mismatch branch is now derived from finite-distribution KL divergence. For finite discrete processes, the residual branch is also derived by an exhaustive local edge split: either the reverse edge flow is positive, in which case asymmetric forward/reverse flows yield positive two-point KL divergence, or the reverse edge flow vanishes, in which case the process performs an irreversible one-way state transition with strictly positive Landauer-scaled cost. Broader stopping-time / absolute-irreversibility regimes remain imported. Under stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$. All results are machine-checked in Lean 4 with explicit theorem-level assumptions and a machine-generated assumption ledger.
 
 arXiv Comments:
-Theory of Computing submission. Lean 4 artifact: 33090 lines, 1370 theorems/lemmas across 123 files (0 sorry placeholders).
+Theory of Computing submission. Lean 4 artifact: 33173 lines, 1375 theorems/lemmas across 123 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper4_toc
@@ -43,16 +43,16 @@ zenodo:
     the optimizer Opt that returns the action set maximizing utility at a state. For
     𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × Xₙ, coordinate set I is sufficient
     if agreement on I forces the same optimal-action set: s_I = s′_(I) ⇒ Opt (s) =
-    Opt (s′). The decision quotient Q = S/∼ (s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the coarsest
-    abstraction that preserves optimal actions: any abstraction preserving optimal
-    actions factors uniquely through Q.
+    Opt (s′). The optimizer quotient object Q = S/∼ (s ∼ s′ ⇔ Opt (s) = Opt (s′))
+    is the coarsest abstraction that preserves optimal actions; in Set, it is the
+    coimage of the optimizer map and is canonically equivalent to range (Opt ).
 
 
     From finite set cardinality, we derive a chain from counting measure to probability,
-    Bayes’ theorem, and the decision quotient. Several independent information-theoretic
-    and geometric formalisms then recover the same invariant, srank, as the decision-complexity
-    measure. From log x ≤ x − 1 alone, Bayesian updating uniquely minimizes expected
-    log loss.
+    Bayes’ theorem, and the optimizer quotient object. Several independent information-theoretic
+    and geometric formalisms then recover the same invariant, srank, namely the cardinality
+    of the relevant-coordinate support, as the decision-complexity measure. From log
+    x ≤ x − 1 alone, Bayesian updating uniquely minimizes expected log loss.
 
 
     Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY
@@ -89,16 +89,17 @@ arxiv:
     utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times
     X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action
     set: $s_I=s''_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$. The
-    decision quotient $Q=S/{\sim}$ ($s\sim s''\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$)
-    is the coarsest abstraction that preserves optimal actions: any abstraction preserving
-    optimal actions factors uniquely through $Q$.
+    optimizer quotient object $Q=S/{\sim}$ ($s\sim s''\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$)
+    is the coarsest abstraction that preserves optimal actions; in Set, it is the
+    coimage of the optimizer map and is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.
 
 
     From finite set cardinality, we derive a chain from counting measure to probability,
-    Bayes'' theorem, and the decision quotient. Several independent information-theoretic
-    and geometric formalisms then recover the same invariant, $\mathrm{srank}$, as
-    the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating
-    uniquely minimizes expected log loss.
+    Bayes'' theorem, and the optimizer quotient object. Several independent information-theoretic
+    and geometric formalisms then recover the same invariant, $\mathrm{srank}$, namely
+    the cardinality of the relevant-coordinate support, as the decision-complexity
+    measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected
+    log loss.
 
 
     Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY
@@ -125,7 +126,7 @@ arxiv:
     decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$.
     All results are machine-checked in Lean 4 with explicit theorem-level assumptions
     and a machine-generated assumption ledger.'
-  comments: 'Theory of Computing submission. Lean 4 artifact: 33090 lines, 1370 theorems/lemmas
+  comments: 'Theory of Computing submission. Lean 4 artifact: 33173 lines, 1375 theorems/lemmas
     across 123 files (0 sorry placeholders).'
 abstract_variants:
   unicode: 'Abstract
@@ -136,16 +137,16 @@ abstract_variants:
     the optimizer Opt that returns the action set maximizing utility at a state. For
     𝒟 = (A, S, U) with factored state space S = X₁ × ⋯ × Xₙ, coordinate set I is sufficient
     if agreement on I forces the same optimal-action set: s_I = s′_(I) ⇒ Opt (s) =
-    Opt (s′). The decision quotient Q = S/∼ (s ∼ s′ ⇔ Opt (s) = Opt (s′)) is the coarsest
-    abstraction that preserves optimal actions: any abstraction preserving optimal
-    actions factors uniquely through Q.
+    Opt (s′). The optimizer quotient object Q = S/∼ (s ∼ s′ ⇔ Opt (s) = Opt (s′))
+    is the coarsest abstraction that preserves optimal actions; in Set, it is the
+    coimage of the optimizer map and is canonically equivalent to range (Opt ).
 
 
     From finite set cardinality, we derive a chain from counting measure to probability,
-    Bayes’ theorem, and the decision quotient. Several independent information-theoretic
-    and geometric formalisms then recover the same invariant, srank, as the decision-complexity
-    measure. From log x ≤ x − 1 alone, Bayesian updating uniquely minimizes expected
-    log loss.
+    Bayes’ theorem, and the optimizer quotient object. Several independent information-theoretic
+    and geometric formalisms then recover the same invariant, srank, namely the cardinality
+    of the relevant-coordinate support, as the decision-complexity measure. From log
+    x ≤ x − 1 alone, Bayesian updating uniquely minimizes expected log loss.
 
 
     Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY
@@ -180,16 +181,17 @@ abstract_variants:
     utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times
     X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action
     set: $s_I=s''_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$. The
-    decision quotient $Q=S/{\sim}$ ($s\sim s''\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$)
-    is the coarsest abstraction that preserves optimal actions: any abstraction preserving
-    optimal actions factors uniquely through $Q$.
+    optimizer quotient object $Q=S/{\sim}$ ($s\sim s''\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s'')$)
+    is the coarsest abstraction that preserves optimal actions; in Set, it is the
+    coimage of the optimizer map and is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.
 
 
     From finite set cardinality, we derive a chain from counting measure to probability,
-    Bayes'' theorem, and the decision quotient. Several independent information-theoretic
-    and geometric formalisms then recover the same invariant, $\mathrm{srank}$, as
-    the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating
-    uniquely minimizes expected log loss.
+    Bayes'' theorem, and the optimizer quotient object. Several independent information-theoretic
+    and geometric formalisms then recover the same invariant, $\mathrm{srank}$, namely
+    the cardinality of the relevant-coordinate support, as the decision-complexity
+    measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected
+    log loss.
 
 
     Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY

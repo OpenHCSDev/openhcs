@@ -1399,4 +1399,16 @@ abbrev BR9 := @Bridges.counting_complexity_sharp_p_hardness
 -- BR10: Approximation + counting hardness bridge
 abbrev BR10 := @Bridges.approximation_counting_hardness_bridge
 
+/-! ## Structural-rank primitive handles (SK)
+    StructuralRank.lean: direct familiar-construction facts about srank as the
+    cardinality of the relevant-coordinate support.
+-/
+
+-- SK1: srank is the cardinality of the relevant-coordinate support
+abbrev SK1 := @DecisionProblem.srank_eq_relevant_card
+-- SK2: srank is bounded by the number of coordinates
+abbrev SK2 := @DecisionProblem.srank_le_n
+-- SK3: srank = 0 iff the decision boundary is coordinate-constant
+abbrev SK3 := @DecisionProblem.srank_zero_iff_constant
+
 end DecisionQuotient

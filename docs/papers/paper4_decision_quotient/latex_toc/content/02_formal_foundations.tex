@@ -146,6 +146,23 @@ Hence every minimal sufficient set is exactly the relevant-coordinate set.
 The ``only if'' direction follows by minimality: if $i\in I$ were irrelevant, removing $i$ would preserve sufficiency, contradicting minimality. The ``if'' direction follows from sufficiency: every sufficient set must contain each relevant coordinate.
 \end{proof}
 
+\begin{proposition}[Structural Rank as Relevant-Support Size]\label{prop:srank-support}
+The structural rank $\mathrm{srank}(\mathcal{D})$ is the cardinality of the relevant-coordinate support:
+\[
+\mathrm{srank}(\mathcal{D})
+=
+\left|\{i \in \{1,\ldots,n\} : i \text{ is relevant}\}\right|.
+\]
+Hence $\mathrm{srank}(\mathcal{D})$ is bounded by the ambient coordinate dimension $n$, and $\mathrm{srank}(\mathcal{D}) = 0$ exactly when the decision boundary is constant across coordinates.
+\leanmeta{\LH{SK1},\LH{SK2},\LH{SK3}.}
+\end{proposition}
+
+\begin{proof}
+Proof sketch: by definition, structural rank counts the coordinates that survive the relevance filter. The upper bound follows because at most all coordinates can be relevant. The zero case is equivalent to the relevance support being empty, which is exactly the coordinate-constant boundary case.
+\end{proof}
+
+Informally: this is a familiarity anchor for the invariant used throughout the later bridge theorems. In the finite-coordinate setting, $\mathrm{srank}$ is simply the support size of the relevance indicator. Later theorems show that Fisher rank, zero-distortion rate, and physical bit cost recover this same support-size quantity through different frameworks.
+
 \begin{definition}[Exact Relevance Identifiability]\label{def:exact-identifiability}
 For a decision problem $\mathcal{D}$ and candidate coordinate set $I$, we say $I$ is \emph{exactly relevance-identifying} if
 \[
@@ -178,7 +195,7 @@ The \emph{decision-quotient score} for state $s$ under coordinate set $I$ is:
 \[
 \text{DQ}_I(s) = \frac{|\{a \in A : a \in \Opt(s') \text{ for some } s' \sim_I s\}|}{|A|}
 \]
-This is a normalized ambiguity score: it measures the fraction of actions that are optimal for at least one state consistent with $I$. It is not the quotient object $S/{\sim}$ used later for the optimizer map.
+This is a normalized ambiguity score: equivalently, it is the normalized support fraction of the multivalued image of the $I$-equivalence class under $\Opt$. It measures the fraction of actions that are optimal for at least one state consistent with $I$. It is not the quotient object $S/{\sim}$ used later for the optimizer map.
 \end{definition}
 
 \begin{proposition}[Sufficiency Characterization]\label{prop:sufficiency-char}
@@ -214,11 +231,29 @@ Proof sketch:
 \end{enumerate}
 \end{proof}
 
-Informally: this proposition is only a familiarity anchor. The object is not exotic in \textbf{Set}; the later novelty is that this familiar coimage/image factorization governs the complexity and physical-collapse arguments.
+Informally: this proposition is only a familiarity anchor. The object is not exotic in \textbf{Set}; the later novelty is that this quotient governs the complexity and physical-collapse arguments.
+
+The same quotient object has an equally familiar information-theoretic reading: its entropy is just the logarithm of the number of distinct optimizer values actually attained.
+
+\begin{proposition}[Optimizer Quotient Entropy as Image-Size Entropy]\label{prop:optimizer-entropy-image}
+Let $\mathrm{numOptClasses}(\mathcal{D})$ denote the number of distinct values attained by $\Opt$, equivalently the cardinality of $\mathrm{range}(\Opt)$. Then
+\[
+H(\mathcal{D}) = \log_2\bigl(\mathrm{numOptClasses}(\mathcal{D})\bigr)
+=
+\log_2\bigl(|\mathrm{range}(\Opt)|\bigr).
+\]
+Thus the entropy of the optimizer quotient object is just the base-2 logarithm of the size of the image of $\Opt$.\leanmeta{\LH{IT1},\LH{IT2},\LH{QT5}.}
+\end{proposition}
+
+\begin{proof}
+Proof sketch: $\mathrm{numOptClasses}$ is defined as the cardinality of the image of $\Opt$, and Proposition~\ref{prop:optimizer-coimage} identifies the optimizer quotient object with that image in \textbf{Set}. The entropy quantity $H(\mathcal{D})$ is then defined to be $\log_2(\mathrm{numOptClasses})$.
+\end{proof}
+
+Informally: this is the familiar reading of the entropy term used later in the bridge theorems. Nothing new is being hidden inside the notation: it is just the logarithm of how many different optimal-action sets the system can realize.
 
 The next theorem concerns the quotient object rather than the scalar score above. Abstraction is a many-to-one quotient operation: it identifies states and thereby removes distinctions. The optimizer quotient object is the coarsest such collapse that still preserves the optimal-action boundary.
 
-Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the optimizer quotient object, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. In \textbf{Set}, the quotient object here is the familiar coimage of $\Opt$, canonically equivalent to its image/range \cite{maclane1998categories}. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.\leanmeta{\LH{QT5},\LH{AB1},\LH{AB2},\LH{AB3},\LH{AB4}.}
+Informally: start with any surjective summary map $\phi : S \to T$. There are only two possibilities. Either $\phi$ keeps every optimal-action distinction intact, in which case the universal property forces it to factor through the optimizer quotient object, or $\phi$ merges two states that require different optimal actions, in which case it has erased a decision-relevant distinction. In \textbf{Set}, the quotient object here is the coimage of $\Opt$, canonically equivalent to its image/range \cite{maclane1998categories}. The physical no-collapse layer then says that if one tries to treat that extra erasure as computationally affordable, the collapse assumption itself is what fails.\leanmeta{\LH{QT5},\LH{AB1},\LH{AB2},\LH{AB3},\LH{AB4}.}
 
 \begin{theorem}[Decision-Preserving Collapse Boundary]\label{thm:abstraction-boundary}
 Let $\phi : S \to T$ be a surjective abstraction of the state space.
@@ -238,7 +273,7 @@ Proof sketch:
 \end{enumerate}
 \end{proof}
 
-Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the optimizer quotient object is the maximal lossless collapse. In \textbf{Set}, that means the familiar coimage/image factorization of $\Opt$. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
+Informally: this is the explicit bridge between state-space abstraction and complexity-class collapse. At the state level, the optimizer quotient object is the maximal lossless collapse. In \textbf{Set}, that means the coimage/image factorization of $\Opt$. At the physical-complexity level, any claim that a coarser collapse remains feasible must pass through the same no-collapse obstruction. The theorem makes the common structure visible instead of leaving it implicit across separate sections.
 
 \subsection{Mechanized Physical-Lift and Claim Metadata}\label{sec:foundations-mechanized-metadata}
 

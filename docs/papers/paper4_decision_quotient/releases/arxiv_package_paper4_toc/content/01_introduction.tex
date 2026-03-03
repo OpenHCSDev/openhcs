@@ -4,9 +4,9 @@
 
 This paper studies a simple question with a hard combinatorial core: when a system exposes many state coordinates, which of those coordinates are actually needed to preserve the optimal decision? The aim is not to list all observable state variables, but to isolate the smallest part of the state that still determines what the best action is.
 
-We model this with a decision problem: $A$ is the finite set of possible actions, $S$ is the state space, $U(a,s)$ is the utility of taking action $a$ in state $s$, and $\Opt(s)$ is the set of actions that maximize utility at state $s$. A coordinate set $I$ is sufficient when any two states that agree on $I$ also agree on $\Opt$. The decision quotient then collapses exactly those states with the same optimal-action set, yielding the canonical abstraction through which every decision-preserving abstraction factors.
+We model this with a decision problem: $A$ is the finite set of possible actions, $S$ is the state space, $U(a,s)$ is the utility of taking action $a$ in state $s$, and $\Opt(s)$ is the set of actions that maximize utility at state $s$. A coordinate set $I$ is sufficient when any two states that agree on $I$ also agree on $\Opt$. The optimizer quotient object then collapses exactly those states with the same optimal-action set, yielding the canonical abstraction through which every decision-preserving abstraction factors.
 
-Section~\ref{sec:foundations} makes that collapse boundary explicit: any surjective abstraction either factors through the decision quotient or erases a decision-relevant distinction, and any attempt to treat such extra erasure as physically feasible runs into the same no-collapse obstruction used later in the hardness chain. This is the structural bridge between abstraction at the state level and collapse claims at the complexity level.\LH{AB2}\LH{AB3}\LH{AB4}
+Section~\ref{sec:foundations} makes that collapse boundary explicit: any surjective abstraction either factors through the optimizer quotient object or erases a decision-relevant distinction, and any attempt to treat such extra erasure as physically feasible runs into the same no-collapse obstruction used later in the hardness chain. In \textbf{Set}, this quotient object is the familiar coimage of $\Opt$, canonically equivalent to $\operatorname{range}(\Opt)$.\LH{QT5}\LH{AB2}\LH{AB3}\LH{AB4}
 
 The results in this section are organized as one derivation chain rather than a theorem ledger. The opening results establish the structural core from counting, set theory, arithmetic, and logic; later results then place the same core in complexity-theoretic and physical terms. Theorems 1--14 are derived from pure mathematics, while Theorems 15--17 add explicit empirical lower-bound premises. One irreducible empirical claim (EC1) supplies the thermodynamic scale: irreversible bit operations carry a positive lower-bound cost, with Landauer furnishing a universal floor. Counting and logic provide the structural part of the chain. Two former claims (EC2: finite resources, EC3: finite speed) are now derived from first principles.
 
@@ -70,12 +70,12 @@ To state those updates correctly, we next distinguish the type of a quantitative
 
 \noindent\textbf{Consequence.} Quantitative and stochastic claims are typed differently. Probability normalization is not automatic from measure structure.
 
-\subsubsection{4. Universal Property of Decision Quotient}
+\subsubsection{4. Universal Property of the Optimizer Quotient}
 
 With the measurement layer typed, we can identify the canonical abstraction that preserves the decision boundary itself.
 
-\begin{theorem}[Universal Property of Decision Quotient]\label{thm:quotient-universal}
-Let $Q = S/{\sim}$ be the decision quotient where $s \sim s' \iff \Opt(s) = \Opt(s')$. For any surjective abstraction $\phi: S \to T$ that preserves the optimal action ($\phi(s) = \phi(s') \Rightarrow \Opt(s) = \Opt(s')$), there exists a unique factorization $\psi: T \to Q$ such that $\pi = \psi \circ \phi$ where $\pi: S \to Q$ is the quotient map.
+\begin{theorem}[Universal Property of the Optimizer Quotient]\label{thm:quotient-universal}
+Let $Q = S/{\sim}$ be the optimizer quotient object where $s \sim s' \iff \Opt(s) = \Opt(s')$. For any surjective abstraction $\phi: S \to T$ that preserves the optimal action ($\phi(s) = \phi(s') \Rightarrow \Opt(s) = \Opt(s')$), there exists a unique factorization $\psi: T \to Q$ such that $\pi = \psi \circ \phi$ where $\pi: S \to Q$ is the quotient map.
 \[
   \begin{array}{ccc}
     S & \xrightarrow{\pi} & Q \\
@@ -83,15 +83,15 @@ Let $Q = S/{\sim}$ be the decision quotient where $s \sim s' \iff \Opt(s) = \Opt
     T & \xrightarrow{\psi} & Q
   \end{array}
 \]
-The decision quotient is the coarsest abstraction through which $\Opt$ factors.
-\LH{QT1}\LH{QT2}\LH{QT3}
+The optimizer quotient object is the coarsest abstraction through which $\Opt$ factors. In \textbf{Set}, it is canonically equivalent to $\operatorname{range}(\Opt)$, i.e. the familiar coimage/image factorization of the optimizer map.
+\LH{QT1}\LH{QT2}\LH{QT3}\LH{QT5}\LH{QT7}
 \end{theorem}
 
 \begin{proof}
 Since $\phi$ preserves $\Opt$, we have $\phi(s) = \phi(s') \Rightarrow \Opt(s) = \Opt(s')$. By surjectivity, for each $t \in T$ pick some $s$ with $\phi(s) = t$ and define $\psi(t) = \pi(s)$. This is well-defined: if $\phi(s) = \phi(s') = t$, then $\Opt(s) = \Opt(s')$, so $\pi(s) = \pi(s')$. Uniqueness follows because $\pi = \psi \circ \phi$ forces $\psi(t) = \pi(s)$ for any $s$ with $\phi(s) = t$.
 \end{proof}
 
-\noindent\textbf{Consequence.} The decision quotient is canonical. Any other state abstraction that preserves optimal actions must refine it.
+\noindent\textbf{Consequence.} The optimizer quotient object is canonical. In \textbf{Set}, the familiar construction is not exotic: it is the coimage of $\Opt$, canonically identified with the image/range of $\Opt$. Any other state abstraction that preserves optimal actions must refine it.
 
 \subsubsection{5. Witness-Checking Duality}
 
@@ -114,10 +114,10 @@ $\emptyset$-sufficiency fails iff $\exists s, s'$ with $\Opt(s) \neq \Opt(s')$. 
 
 \subsubsection{6. Bayes from Counting}
 
-That verification bound rests on a simpler structural fact: probability, Bayes, and the normalized decision quotient already emerge from counting on finite sets.
+That verification bound rests on a simpler structural fact: probability, Bayes, and the normalized quotient score already emerge from counting on finite sets.
 
 \begin{theorem}[Probability Axioms from Counting]\label{thm:bayes-from-counting}
-The chain from counting to Decision Quotient:
+The chain from counting to Bayesian updating and the normalized quotient score:
 \begin{enumerate}
 \item $P(A) = |A|/|\Omega|$ satisfies Kolmogorov axioms: nonnegativity, normalization, and additivity for disjoint sets.
 \item $P(H|E) = P(E|H) \cdot P(H) / P(E)$ follows from the definition of conditional probability.
@@ -134,11 +134,11 @@ The chain from counting to Decision Quotient:
 (4) $I(H;E) \leq H(H)$ by (3), so $\DQ = I(H;E)/H(H) \in [0,1]$.
 \end{proof}
 
-\noindent\textbf{Consequence.} Bayesian updating is derived from counting measure. Probability theory, Bayes' theorem, information theory, and the Decision Quotient form a single chain from counting elements of a finite set.
+\noindent\textbf{Consequence.} Bayesian updating is derived from counting measure. Probability theory, Bayes' theorem, information theory, and the normalized quotient score form a single chain from counting elements of a finite set.
 
 \subsubsection{7. Fisher Rank = Structural Rank}
 
-With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant.
+With that probabilistic chain in place, the next results compare independent mathematical formalisms and ask whether they recover the same structural invariant. In the finite-coordinate model, $\mathrm{srank}$ is just the cardinality of the relevant-coordinate support, so the question is whether those formalisms recover that same support-size quantity.\LH{SK1}\LH{SK2}\LH{SK3}
 
 \begin{theorem}[Fisher Information = Structural Rank]\label{thm:fisher-rank-srank}
 Define the Fisher information score of coordinate $i$ as:
@@ -158,7 +158,7 @@ $\sum_i \mathrm{score}(i) = \sum_i \mathbf{1}[\text{isRelevant}(i)] = |\{i \mid 
 For the diagonal matrix: $\mathrm{rank} = |\{i \mid \mathrm{score}(i) \neq 0\}| = |\{i \mid \text{isRelevant}(i)\}| = \mathrm{srank}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} The decision manifold has dimension exactly $\mathrm{srank}$. The Fisher information sees the relevant coordinates. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
+\noindent\textbf{Consequence.} The decision manifold has dimension exactly the size of the relevant-coordinate support. The Fisher information sees the same coordinates already counted by $\mathrm{srank}$. The Cramer-Rao bound follows: any estimator has difficulty $\geq 1/\mathrm{srank}$.
 
 \subsubsection{8. Entropy-Rank Inequality}
 
@@ -169,7 +169,7 @@ For a decision problem $\mathcal{D}$ with boolean coordinate spaces ($X_i = \{0,
 \[
   H(\mathcal{D}) \leq \mathrm{srank}(\mathcal{D})
 \]
-where $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses})$ is the Shannon entropy of the decision quotient.
+where $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses})$ is the Shannon entropy of the optimizer quotient object.
 \LH{IT3}\LH{IT4}
 \end{theorem}
 
@@ -177,11 +177,11 @@ where $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses})$ is the Shannon entropy o
 The relevant coordinate set $R$ is sufficient (Theorem~\ref{thm:resolution-sufficient}): $\mathrm{Opt}$ factors through $\pi_R : S \to \{0,1\}^{|R|}$. Therefore $\mathrm{numOptClasses} \leq |\{0,1\}^{|R|}| = 2^{\mathrm{srank}}$. Therefore $H(\mathcal{D}) = \log_2(\mathrm{numOptClasses}) \leq \log_2(2^{\mathrm{srank}}) = \mathrm{srank}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} The decision quotient carries at most $\mathrm{srank}$ bits of decision-relevant information. Coordinates outside the relevant set are information-theoretically inert.
+\noindent\textbf{Consequence.} The optimizer quotient object carries at most $\mathrm{srank}$ bits of decision-relevant information. Coordinates outside the relevant set are information-theoretically inert.
 
 \subsubsection{9--14. Later Bridge Theorems}
 
-The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the decision quotient is fixed.
+The next six introductory results are bridge theorems. They are proved in their dedicated sections, but we state them here in compressed form because they all serve the same purpose: independent frameworks recover the same structural core once the optimizer quotient object is fixed.
 
 \begin{theorem}[Thermodynamic Cost from Counting]\label{thm:fi-coincide}
 For functional set $F \subseteq \Omega$, the counting expression $-\log_2(|F|/|\Omega|)$ gives the bit cost, and a Landauer floor converts that bit count into a universal energy lower bound. In the sharpened physical interface, explicit nonnegative mismatch and residual terms are added above that floor to represent constrained-process dissipation. The mismatch branch is now justified as far as the existing mathematics allows: distinct strictly positive finite input distributions yield strictly positive KL mismatch, which is then rounded upward into the discrete lower-bound units used by the thermodynamic accounting and injected into the Wolpert decomposition. A second derived branch now captures the strongest residual theorem supported by the current finite machinery: for finite discrete computational-state processes, positive forward edge flow together with decision-relevant edge asymmetry yields strict residual positivity by an exhaustive local split on the reverse edge. If the reverse flow is positive, the pairwise KL branch applies. If the reverse flow vanishes, the process performs an irreversible one-way state transition, and the existing Landauer-scaled transition-cost theorem supplies a positive lower-bound witness. That local argument is now also packaged as a process-level theorem: any finite computational-state process with at least one such asymmetric forward edge already carries a theorem-level residual witness. The broader stopping-time / absolute-irreversibility residual regime remains a separate imported premise. The thermodynamic statement is therefore the counting statement plus a floor-plus-overhead empirical conversion law; a derived mismatch branch, a derived finite residual branch from this exhaustive edge split, or the cited broader stopping-time branch can each force strict separation above the Landauer floor, and any declared structural lower bound absorbed by mismatch only strengthens the resulting energy estimate.
@@ -206,7 +206,7 @@ When all states lead to one future, the diagonal coupling gives zero transport c
 \noindent\textbf{Consequence.} Optimal transport recovers the same complexity signal as the coordinate-relevance analysis.
 
 \begin{theorem}[Rate-Distortion = Structural Rank]\label{thm:rate-distortion-bridge}
-At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, and compression below $\mathrm{srank}$ necessarily introduces decision errors.
+At zero distortion, the minimum lossless rate needed to preserve optimal actions is exactly $\mathrm{srank}$, i.e. exactly the cardinality of the relevant-coordinate support, and compression below that support size necessarily introduces decision errors.
 \LH{RD1}\LH{RD2}\LH{RD3}\LH{RS1}\LH{RS2}\LH{RS3}\LH{RS4}\LH{RS5}
 \end{theorem}
 
@@ -214,7 +214,7 @@ At zero distortion, the minimum lossless rate needed to preserve optimal actions
 Zero distortion means that decision-equivalent states may be merged, but decision-distinguishing states may not. The quotient therefore partitions the source into exactly the classes that must remain distinguishable. Their count determines the minimum lossless rate, which is the same structural quantity measured by $\mathrm{srank}$.
 \end{proof}
 
-\noindent\textbf{Consequence.} Description length and relevant-coordinate complexity coincide at zero distortion.
+\noindent\textbf{Consequence.} Description length and relevant-coordinate support size coincide at zero distortion.
 
 \begin{theorem}[Information Requires Nontriviality]\label{thm:nontriviality-counting}
 If decision-relevant information exists, then the state space cannot be trivial: the existence of information forces at least two distinguishable states.
@@ -318,7 +318,7 @@ For any physical system resolving decision problem $\mathcal{D}$ at temperature 
 \[
   E_{\mathrm{decision}} \geq k_B T \cdot H_{\mathrm{nats}}(\mathcal{D})
 \]
-where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natural-log Shannon entropy of the decision quotient.
+where $H_{\mathrm{nats}}(\mathcal{D}) = \ln(\mathrm{numOptClasses})$ is the natural-log Shannon entropy of the optimizer quotient object.
 \LH{EI1}
 \end{theorem}
 

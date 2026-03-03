@@ -1025,6 +1025,9 @@ abbrev QT1 := @DecisionProblem.quotient_is_coarsest
 abbrev QT2 := @DecisionProblem.quotientMap_preservesOpt
 abbrev QT3 := @DecisionProblem.quotient_represents_opt_equiv
 abbrev QT4 := @DecisionProblem.factors_implies_respects
+noncomputable abbrev QT5 := @DecisionProblem.quotientEquivOptRange
+abbrev QT6 := @DecisionProblem.quotientEquivOptRange_apply_quotientMap
+abbrev QT7 := @DecisionProblem.quotient_has_unique_factorization
 
 -- AB: Abstraction Boundary (AbstractionCollapse.lean)
 abbrev AB1 := @DecisionProblem.not_preservesOpt_iff_erasesDecisionRelevantDistinction
@@ -1395,5 +1398,17 @@ abbrev BR8 := @Bridges.rate_distortion_fisher_information_bridge
 abbrev BR9 := @Bridges.counting_complexity_sharp_p_hardness
 -- BR10: Approximation + counting hardness bridge
 abbrev BR10 := @Bridges.approximation_counting_hardness_bridge
+
+/-! ## Structural-rank primitive handles (SK)
+    StructuralRank.lean: direct familiar-construction facts about srank as the
+    cardinality of the relevant-coordinate support.
+-/
+
+-- SK1: srank is the cardinality of the relevant-coordinate support
+abbrev SK1 := @DecisionProblem.srank_eq_relevant_card
+-- SK2: srank is bounded by the number of coordinates
+abbrev SK2 := @DecisionProblem.srank_le_n
+-- SK3: srank = 0 iff the decision boundary is coordinate-constant
+abbrev SK3 := @DecisionProblem.srank_zero_iff_constant
 
 end DecisionQuotient
