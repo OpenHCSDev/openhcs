@@ -1,6 +1,6 @@
 # Paper: Computational Complexity of Physical Counting
 
-**Status**: Theory of Computing-ready | **Lean**: 33338 lines, 1378 theorems
+**Status**: Theory of Computing-ready | **Lean**: 33311 lines, 1378 theorems
 
 ---
 
@@ -8,13 +8,13 @@
 
 **Abstract**
 
-Which parts of a system's state are actually needed to determine the optimal action? A decision problem consists of actions $A$, states $S$, a utility function $U$, and the optimizer $\operatorname{Opt}$ that returns the action set maximizing utility at a state. For $\mathcal{D}=(A,S,U)$ with factored state space $S=X_1\times\cdots\times X_n$, coordinate set $I$ is sufficient if agreement on $I$ forces the same optimal-action set: $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The optimizer quotient object $Q=S/{\sim}$ ($s\sim s'\Leftrightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$) is the coarsest abstraction that preserves optimal actions; in **Set**, it is the coimage of the optimizer map and is canonically equivalent to $\operatorname{range}(\operatorname{Opt})$.
+Which coordinates of a system's state determine the optimal action? For decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1\times\cdots\times X_n$, set $I$ is sufficient if $s_I=s'_I\Rightarrow\operatorname{Opt}(s)=\operatorname{Opt}(s')$. The optimizer quotient $Q=S/{\sim}$ is the coarsest abstraction preserving optimal actions.
 
-From finite set cardinality, we derive a chain from counting measure to probability, Bayes' theorem, and the optimizer quotient object. Several independent information-theoretic and geometric formalisms then recover the same invariant, $\mathrm{srank}$, namely the cardinality of the relevant-coordinate support, as the decision-complexity measure. From $\log x\leq x-1$ alone, Bayesian updating uniquely minimizes expected log loss.
+From counting measure we derive probability, Bayes' theorem, and Bayesian optimality (from $\log x\leq x-1$ alone). The invariant $\mathrm{srank}$ (relevant-coordinate cardinality) emerges as the complexity measure.
 
-Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic and sequential variants PP- and PSPACE-complete with strict separation. Six subcases admit polynomial algorithms. Under ETH, succinct encodings carry $2^{\Omega(n)}$ lower bounds. Verification requires $\geq 2^{n-1}$ witness pairs.
+Complexity: SUFFICIENCY-CHECK and MINIMUM-SUFFICIENT-SET are coNP-complete; ANCHOR-SUFFICIENCY is $\Sigma_2^P$-complete; stochastic/sequential variants PP-/PSPACE-complete. Six subcases admit polynomial algorithms. Under ETH, $2^{\Omega(n)}$ lower bounds apply.
 
-Two results carry empirical premises. Composing bit-operation lower bounds with a declared per-bit lower bound in a floor-plus-overhead model, where Landauer's principle supplies the universal floor $k_BT\ln 2$ for irreversible bit erasure and explicit nonnegative mismatch and residual terms capture constrained-process dissipation above that floor, yields inequalities such as $dU\geq\lambda\,dC$; exact equality is treated only as an idealized specialization. Within that interface, the mismatch branch is now derived from finite-distribution KL divergence. For finite discrete processes, the residual branch is also derived by an exhaustive local edge split: either the reverse edge flow is positive, in which case asymmetric forward/reverse flows yield positive two-point KL divergence, or the reverse edge flow vanishes, in which case the process performs an irreversible one-way state transition with strictly positive Landauer-scaled cost. Broader stopping-time / absolute-irreversibility regimes remain imported. Under stochastic thermodynamics (Barato--Seifert 2015), $\mathrm{Var}(J)/\langle J\rangle^2\geq 2/\sigma$ bounds decision precision by entropy production, with minimal $\sigma$ scaling with $\mathrm{srank}$. All results are machine-checked in Lean 4 with explicit theorem-level assumptions and a machine-generated assumption ledger.
+Thermodynamic results use Landauer's floor $k_BT\ln 2$ as a declared premise; mismatch/residual dissipation terms yield $dU\geq\lambda\,dC$. Reduction correctness is machine-checked in Lean 4; polytime computability is a standard hypothesis.
 
 
 # Introduction {#sec:introduction}
@@ -377,7 +377,7 @@ Stochastic variants are PP-complete. Sequential variants are PSPACE-complete. St
 
 ## Machine Verification {#sec:intro-verification}
 
-All results are machine-checked in Lean 4:
+The Lean 4 formalization consists of:
 
 -   24,347 lines of Lean code
 
@@ -387,7 +387,13 @@ All results are machine-checked in Lean 4:
 
 -   0 hidden axioms
 
-Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on a Landauer floor or any stricter declared per-bit lower bound. Complexity results: hypotheses as explicit theorem parameters. Machine-generated assumption ledger records all dependencies.
+#### What is machine-verified.
+
+Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on a Landauer floor or any stricter declared per-bit lower bound. **Reduction correctness**: the membership-preservation property of each reduction (e.g., $\varphi$ is a tautology $\Leftrightarrow$ $I = \emptyset$ is sufficient) is fully machine-verified.
+
+#### What is a standard claim.
+
+**Polynomial-time computability** of the reduction functions is a standard claim stated as an explicit hypothesis in the Lean formalization. Full Turing-machine verification of polynomial-time bounds remains an open problem in formal verification---no formalization project has achieved end-to-end polynomial-time TM proofs for concrete reductions. The gap is made visible by representing polytime as a hypothesis rather than hiding it behind definitions that conflate size bounds with time bounds. Machine-generated assumption ledger records all dependencies.
 
 ## Paper Structure {#sec:intro-structure}
 
@@ -1477,6 +1483,10 @@ A coordinate set $I \subseteq \{1, \ldots, n\}$ is *sufficient* if: $$\forall s,
 ## Hardness of SUFFICIENCY-CHECK
 
 Classical coNP-completeness methodology follows standard NP/coNP reduction frameworks and polynomial-time many-one reducibility [@papadimitriou1994complexity; @arora2009computational]. We instantiate that framework for SUFFICIENCY-CHECK with a mechanized TAUTOLOGY reduction.
+
+#### Correctness vs. polynomial-time computability.
+
+A Karp reduction requires two properties: (1) *correctness*---the reduction preserves membership ($\forall x, x \in A \Leftrightarrow f(x) \in B$), and (2) *efficiency*---the reduction is computable in polynomial time. The Lean formalization **machine-verifies** property (1): the theorem `tautology_iff_sufficient` proves that $\varphi$ is a tautology if and only if $I = \emptyset$ is sufficient in the constructed decision problem. Property (2)---polynomial-time TM computability of the reduction function---is a **standard claim** stated as an explicit hypothesis. This separation is standard in formalization: no existing proof assistant project has achieved end-to-end Turing-machine verification of polynomial-time bounds for concrete reductions.
 
 ::: theorem
 []{#thm:sufficiency-conp label="thm:sufficiency-conp"} SUFFICIENCY-CHECK is coNP-complete.
@@ -3720,13 +3730,13 @@ Informally: this conclusion combines previously proved blocks under explicit tag
 
 **Role of LLMs in this work.** This paper was developed through human-AI collaboration. The author provided the core intuitions: the connection between decision-relevance and computational complexity, the conjecture that SUFFICIENCY-CHECK is coNP-complete, and the insight that the $\Sigma_{2}^{P}$ structure collapses for MINIMUM-SUFFICIENT-SET. Large language models (Claude, GPT-4) served as implementation partners for proof drafting, Lean formalization, and LaTeX generation.
 
-The Lean 4 proofs were iteratively refined: the author specified the target statements, the LLM proposed proof strategies, and the Lean compiler served as the arbiter of correctness. The complexity-theoretic reductions required careful human oversight to ensure the polynomial bounds were correctly established.
+The Lean 4 proofs were iteratively refined: the author specified the target statements, the LLM proposed proof strategies, and the Lean compiler served as the arbiter of correctness. For complexity-theoretic reductions, the Lean formalization machine-verifies *correctness* (membership preservation); polynomial-time computability of the reduction functions is a standard claim stated as an explicit hypothesis, consistent with the state of formal verification where end-to-end Turing-machine polytime proofs for concrete reductions remain an open problem.
 
 **What the author contributed:** The informal problem formulations (SUFFICIENCY-CHECK, MINIMUM-SUFFICIENT-SET, ANCHOR-SUFFICIENCY), the informal hardness conjectures, the informal tractability conditions, and the connection to over-modeling in engineering practice.
 
 **What LLMs contributed:** LaTeX drafting, Lean tactic exploration, reduction construction assistance, and prose refinement.
 
-The proofs are machine-checked; their validity is independent of generation method. This methodology is disclosed for academic transparency.
+Reduction correctness is machine-checked; polynomial-time computability is a standard hypothesis. This methodology is disclosed for academic transparency.
 
 ::: center
 
@@ -3741,7 +3751,7 @@ This work depends on results whose authors made possible the insights that could
 
 **Proof infrastructure.** The Lean 4 proof assistant [@demoura2021lean4] served as the arbiter of correctness. Leonardo de Moura, Sebastian Ullrich, and the Lean 4 team built a tool that transforms mathematical claims into mechanically verified theorems. The Mathlib library [@mathlib2020] provided the formal infrastructure: order theory, linear algebra, complexity-theoretic definitions, and the lemmas that made the formalization possible.
 
-**Methodological note.** The proofs in this paper are machine-checked; their validity is independent of generation method. The human author contributed the informal problem formulations, informal hardness conjectures, informal tractability conditions, and the connection to over-modeling in engineering practice. The machine contributors (Claude, GPT-4, Lean 4) served as proof assistants, tactic explorers, and drafting partners. The final arbiter was the Lean compiler: if it accepts the proof, the theorem holds.
+**Methodological note.** Reduction correctness is machine-checked; polynomial-time computability of reduction functions is a standard claim stated as an explicit hypothesis. The human author contributed the informal problem formulations, informal hardness conjectures, informal tractability conditions, and the connection to over-modeling in engineering practice. The machine contributors (Claude, GPT-4, Lean 4) served as proof assistants, tactic explorers, and drafting partners. The final arbiter was the Lean compiler: if it accepts the proof, the theorem holds.
 
 ::: center
 
@@ -3871,7 +3881,7 @@ Informally: if exact support is not certified, do not make exact claims; when co
 
 # Lean 4 Proof Listings {#app:lean}
 
-The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33338 lines across 123 files, with 1378 theorem/lemma statements.
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of 33311 lines across 123 files, with 1378 theorem/lemma statements.
 
 **Handle IDs.** Inline theorem metadata now cites compact IDs (for example, `HD6`, `CC12`, `IC4`) instead of full theorem constants. The full ID-to-handle mapping is listed in Section [1.1](#sec:lean-handle-id-map){reference-type="ref" reference="sec:lean-handle-id-map"}.
 
@@ -3906,6 +3916,8 @@ We use Mathlib's Turing machine framework to define polynomial-time computabilit
       ∃ f : α → β, PolyTime ea eb f ∧ ∀ x, x ∈ A ↔ f x ∈ B
 
 This uses the standard definition: a reduction is polynomial-time computable via Turing machines and preserves membership.
+
+**Note on verification status.** The Lean formalization machine-verifies *correctness* (the membership-preservation property, i.e., the second conjunct of `ManyOneReducesPoly`). Proving that a concrete function satisfies `PolyTime`---i.e., constructing an actual Turing machine witness with a polynomial time bound---remains an open problem in formal verification. No existing proof assistant project has achieved end-to-end TM-based polytime proofs for concrete reductions. In our formalization, polytime computability is stated as an explicit hypothesis in `valid_karp_reduction`, making the gap visible rather than hiding it.
 
 ## The Main Reduction Theorem
 
@@ -6684,6 +6696,6 @@ The proofs compile with Lean 4 and contain no `sorry` placeholders. Run `lake bu
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper4_decision_quotient/proofs/`
-- Lines: 33338
+- Lines: 33311
 - Theorems: 1378
 - `sorry` placeholders: 0

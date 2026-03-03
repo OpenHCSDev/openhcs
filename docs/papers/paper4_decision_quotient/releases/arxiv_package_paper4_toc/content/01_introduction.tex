@@ -395,7 +395,7 @@ Stochastic variants are PP-complete. Sequential variants are PSPACE-complete. St
 
 \subsection{Machine Verification}\label{sec:intro-verification}
 
-All results are machine-checked in Lean 4:
+The Lean 4 formalization consists of:
 \begin{itemize}
 \item 24,347 lines of Lean code
 \item 1,082 theorems
@@ -403,7 +403,11 @@ All results are machine-checked in Lean 4:
 \item 0 hidden axioms
 \end{itemize}
 
-Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on a Landauer floor or any stricter declared per-bit lower bound. Complexity results: hypotheses as explicit theorem parameters. Machine-generated assumption ledger records all dependencies.
+\paragraph{What is machine-verified.}
+Bayesian optimality: proved from $\log x \leq x - 1$ alone. Thermodynamic consequences: conditional on a Landauer floor or any stricter declared per-bit lower bound. \textbf{Reduction correctness}: the membership-preservation property of each reduction (e.g., $\varphi$ is a tautology $\Leftrightarrow$ $I = \emptyset$ is sufficient) is fully machine-verified.
+
+\paragraph{What is a standard claim.}
+\textbf{Polynomial-time computability} of the reduction functions is a standard claim stated as an explicit hypothesis in the Lean formalization. Full Turing-machine verification of polynomial-time bounds remains an open problem in formal verification---no formalization project has achieved end-to-end polynomial-time TM proofs for concrete reductions. The gap is made visible by representing polytime as a hypothesis rather than hiding it behind definitions that conflate size bounds with time bounds. Machine-generated assumption ledger records all dependencies.
 
 \subsection{Paper Structure}\label{sec:intro-structure}
 

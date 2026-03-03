@@ -350,25 +350,6 @@ def SizeBoundedReduction.id (A : Type*) [SizeOf A] : SizeBoundedReduction A A wh
   f := fun a => a
   size_bound := ⟨2, 1, fun a => by simp only [ge_iff_le, pow_one]; omega⟩
 
-/-! ## Backwards Compatibility Aliases
-
-These aliases maintain compatibility with existing code while we transition
-to the more honest naming. They will be deprecated in future versions. -/
-
-/-- DEPRECATED: Use `SizeBoundedReduction` instead.
-
-    This alias exists for backwards compatibility. The name `PolyReduction`
-    was misleading because it suggested polynomial-time TM computability,
-    when it only captures polynomial SIZE bounds. -/
-abbrev PolyReduction (A B : Type*) [SizeOf A] [SizeOf B] := SizeBoundedReduction A B
-
-/-- DEPRECATED: Use `SizeBoundedReduction.comp_exists` instead. -/
-abbrev PolyReduction.comp_exists {A B C : Type*} [SizeOf A] [SizeOf B] [SizeOf C] :=
-  @SizeBoundedReduction.comp_exists A B C _ _ _
-
-/-- DEPRECATED: Use `SizeBoundedReduction.id` instead. -/
-abbrev PolyReduction.id (A : Type*) [SizeOf A] := SizeBoundedReduction.id A
-
 /-! ## Reduction from Sufficiency to Set Comparison
 
 The sufficiency-checking problem reduces to comparing sets of optimal actions. -/
@@ -405,10 +386,6 @@ theorem size_bounded_reduction_implies_many_one_exists {A B : Type*} [SizeOf A] 
     (h : ∀ a, pA a ↔ pB (r.f a)) :
     ∃ f : A → B, ∀ a, pA a ↔ pB (f a) :=
   ⟨r.f, h⟩
-
-/-- Backwards compatibility alias -/
-abbrev poly_reduction_implies_many_one_exists {A B : Type*} [SizeOf A] [SizeOf B] :=
-  @size_bounded_reduction_implies_many_one_exists A B _ _
 
 /-! ## Complexity Classes
 
@@ -467,9 +444,5 @@ theorem size_bounded_reduction_preserves_P {A B : Type*} [SizeOf A] [SizeOf B]
       (decideB (r.f a)).result = true
           ↔ pB (r.f a) := hcorrect (r.f a)
       _ ↔ pA a := (h a).symm
-
-/-- Backwards compatibility alias -/
-abbrev poly_reduction_preserves_P {A B : Type*} [SizeOf A] [SizeOf B] :=
-  @size_bounded_reduction_preserves_P A B _ _
 
 end DecisionQuotient
