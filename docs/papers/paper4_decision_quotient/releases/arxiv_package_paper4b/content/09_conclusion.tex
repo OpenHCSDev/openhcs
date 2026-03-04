@@ -1,31 +1,19 @@
-\section{Conclusion}\label{sec:conclusion}
+\section{Conclusion}
 
-This paper extends the static decision quotient to stochastic and sequential regimes.
+This paper studies the convergence structure of decision-relevant information. Starting from shared definitions of sufficiency and relevance, it identifies the optimizer quotient as the canonical decision-preserving abstraction and shows that multiple mathematical frameworks recover the same structural core.
 
-\subsection*{Summary of Results}
+\subsection*{What Converges}
 
-\begin{itemize}
-\item \textbf{Stochastic sufficiency} (Section~\ref{sec:stochastic}): STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT reduction. Tractable under product distributions, bounded support, log-concave.
+The common invariant is structural rank: the size of the relevant-coordinate support. Quotient entropy, Fisher-style support counting, and lossless zero-distortion summaries recover that same support-size quantity once the optimizer quotient is fixed. The significance is not that these frameworks become identical, but that they agree on what counts as the dimension of decision relevance.
 
-\item \textbf{Sequential sufficiency} (Section~\ref{sec:sequential}): SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF reduction. Tractable under full observability, bounded horizon, tree structure.
+\subsection*{Bayesian Consequence}
 
-\item \textbf{Regime hierarchy} (Section~\ref{sec:regime-hierarchy}): Static $\subset$ Stochastic $\subset$ Sequential; coNP $\subset$ PP $\subset$ PSPACE.
+The Bayesian argument is equally direct. Counting on finite sets yields probability after normalization; $\log x \le x - 1$ yields Gibbs' inequality; Gibbs' inequality yields cross-entropy minimization; and Bayes emerges as the unique optimizer under log loss. This places the Bayesian conclusions on the same foundational footing as the quotient and entropy results.
 
-\item \textbf{Substrate cost} (Section~\ref{sec:substrate-cost}): Verdict is $\kappa$-independent; trajectory is $\kappa$-dependent.
+\subsection*{Contribution}
 
-\item \textbf{Temporal learning} (Section~\ref{sec:temporal-learning}): Bayesian structure detection reduces abstention over time.
+The contribution is to place quotient structure, structural-rank recovery, and Bayesian optimality in a single mathematical framework.
 
-\item \textbf{Temporal integrity} (Section~\ref{sec:temporal-integrity}): Evidence-monotone retractions preserve integrity.
-\end{itemize}
+\subsection*{Outlook}
 
-These results place stochastic and sequential sufficiency at higher complexity levels than static sufficiency.
-
-\subsection*{Open Questions}
-
-\begin{itemize}
-\item \textbf{Exact transfer conditions:} Characterize when stochastic sufficiency transfers to sequential.
-\item \textbf{PAC learning bounds:} Prove sample complexity bounds for structure detection.
-\item \textbf{Temporal integrity complexity:} Tight complexity bounds for TEMPORAL-INTEGRITY-CHECK.
-\end{itemize}
-
-This work extends Paper 4's framework to dynamic settings while preserving the core insight: identifying sufficient information is computationally hard, and integrity forces abstention when resources don't match problem complexity.
+Natural next questions are refinement questions rather than boundary questions: which additional frameworks recover the same invariant, how much of the quotient story can be internalized categorically, and which convergence statements admit the cleanest mechanized forms in Lean.

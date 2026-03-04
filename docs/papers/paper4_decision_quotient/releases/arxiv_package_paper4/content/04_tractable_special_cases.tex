@@ -41,8 +41,8 @@ When $k$ is constant, this is polynomial in $|S|$.
 
 \noindent\textbf{Lean formalization:} \texttt{DecisionQuotient/Tractability/BoundedActions.lean}
 \begin{itemize}
-\item \LH{sufficiency\_poly\_bounded\_actions}: Correctness of the algorithm.
-\item \LH{bounded\_actions\_polynomial\_time}: Complexity bound $|S|^2 \cdot (1 + k^2)$.
+\item \LH{L10}: Correctness of the algorithm.
+\item \LH{L2}: Complexity bound $|S|^2 \cdot (1 + k^2)$.
 \end{itemize}
 
 %% ============================================================
@@ -69,8 +69,8 @@ The optimal action depends only on $f$, not on $s$. Hence $\Opt(s) = \Opt(s')$ f
 \noindent\textbf{Lean formalization:} \texttt{DecisionQuotient/Tractability/SeparableUtility.lean}
 \begin{itemize}
 \item \LH{SeparableUtility}: Structure encoding the separability condition.
-\item \LH{separable\_optimal\_action\_constant}: Optimal actions are state-independent.
-\item \LH{separable\_empty\_sufficient}: The empty set is sufficient.
+\item \LH{L8}: Optimal actions are state-independent.
+\item \LH{L8}: The empty set is sufficient.
 \end{itemize}
 
 
@@ -107,9 +107,9 @@ The factored representation enables efficient computation:
 \noindent\textbf{Lean formalization:} \texttt{DecisionQuotient/Tractability/SeparableUtility.lean}
 \begin{itemize}
 \item \LH{TensorRankDecomposition}: Structure encoding rank-$R$ decomposition.
-\item \LH{tensor\_contraction\_tractable}: Axiom citing tensor network algorithms~\cite{kolda2009tensor,cichocki2016tensor}.
-\item \LH{low\_rank\_sufficiency\_structure}: Reduction theorem for factored computation.
-\item \LH{low\_rank\_tractability}: Tractability via factored sufficiency check.
+\item \LH{L14}: Axiom citing tensor network algorithms~\cite{kolda2009tensor,cichocki2016tensor}.
+\item \LH{L4}: Reduction theorem for factored computation.
+\item \LH{L6}: Tractability via factored sufficiency check.
 \end{itemize}
 
 %% ============================================================
@@ -143,7 +143,7 @@ A coordinate is relevant iff varying its value changes the optimal action set.
 \noindent\textbf{Lean formalization:} \texttt{DecisionQuotient/Tractability/TreeStructure.lean}
 \begin{itemize}
 \item \LH{TreeStructured}: Predicate encoding tree dependency structure.
-\item \LH{tree\_dp\_tractable}: Axiom citing standard DP on trees.
+\item \LH{L16}: Axiom citing standard DP on trees.
 \end{itemize}
 
 %% ============================================================
@@ -184,10 +184,10 @@ The reduction is polynomial; the algorithm is standard.
 \begin{itemize}
 \item \LH{InteractionGraph}: Definition of the interaction graph.
 \item \LH{PairwiseUtility}: Structure encoding pairwise decomposition.
-\item \LH{treewidth\_le}: Axiom for treewidth (citing Bodlaender~\cite{bodlaender1993tourist}).
-\item \LH{csp\_treewidth\_tractable}: Axiom citing CSP algorithms.
-\item \LH{sufficiency\_reduces\_to\_interaction\_csp}: Paper-specific reduction theorem.
-\item \LH{bounded\_treewidth\_tractability}: Tractability statement combining reduction and algorithm.
+\item \LH{L16}: Axiom for treewidth (citing Bodlaender~\cite{bodlaender1993tourist}).
+\item \LH{L4}: Axiom citing CSP algorithms.
+\item \LH{L12}: Paper-specific reduction theorem.
+\item \LH{L2}: Tractability statement combining reduction and algorithm.
 \end{itemize}
 
 
@@ -257,10 +257,10 @@ For fixed $k$, this is $O(d^{k-1})$ --- polynomial in $d$.
 \item \LH{DimensionalStateSpace}: Definition of $k$-ary $d$-dimensional state space.
 \item \LH{SymmetricUtility}: Predicate for coordinate-permutation invariance.
 \item \LH{orbitType}: Function computing the orbit type (histogram).
-\item \LH{orbitType\_eq\_iff}: \textbf{(Core result)} Orbit types equal iff permutation exists.
-\item \LH{symmetric\_optimalActions\_orbit\_invariant}: Optimal actions constant on orbits.
-\item \LH{sufficiency\_reduces\_to\_cross\_orbit\_check}: Reduction to cross-orbit pairs.
-\item \LH{symmetric\_sufficiency\_complexity\_bound}: $O\bigl(\binom{d+k-1}{k-1}^2\bigr)$ bound.
+\item \LH{L6}: \textbf{(Core result)} Orbit types equal iff permutation exists.
+\item \LH{L12}: Optimal actions constant on orbits.
+\item \LH{L10}: Reduction to cross-orbit pairs.
+\item \LH{L14}: $O\bigl(\binom{d+k-1}{k-1}^2\bigr)$ bound.
 \end{itemize}
 
 %% ============================================================

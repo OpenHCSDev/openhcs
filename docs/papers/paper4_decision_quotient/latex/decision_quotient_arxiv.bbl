@@ -16,12 +16,12 @@ Sanjeev Arora and Boaz Barak.
 \newblock {\em Computational Complexity: A Modern Approach}.
 \newblock Cambridge University Press, 2009.
 
-\bibitem{berut2012experimental}
-Antoine B{\'e}rut, Artak Arakelyan, Artyom Petrosyan, Sergio Ciliberto, Raoul
-  Dillenschneider, and Eric Lutz.
-\newblock Experimental verification of {L}andauer's principle linking
-  information and thermodynamics.
-\newblock {\em Nature}, 483:187--189, 2012.
+\bibitem{bessiere2013detecting}
+Christian Bessiere, Clement Carbonnel, Emmanuel Hebrard, George Katsirelos, and
+  Toby Walsh.
+\newblock Detecting and exploiting subproblem tractability.
+\newblock In {\em Proceedings of the Twenty-Third International Joint
+  Conference on Artificial Intelligence (IJCAI)}, pages 468--474, 2013.
 
 \bibitem{blum1997selection}
 Avrim~L. Blum and Pat Langley.
@@ -32,6 +32,13 @@ Avrim~L. Blum and Pat Langley.
 Hans~L. Bodlaender.
 \newblock A tourist guide through treewidth.
 \newblock In {\em Acta Cybernetica}, volume~11, pages 1--21, 1993.
+
+\bibitem{cai2025pns}
+Ruichu Cai, Yuxuan Zhu, Xuexin Chen, Yuan Fang, Min Wu, Jie Qiao, and Zhifeng
+  Hao.
+\newblock On the probability of necessity and sufficiency of explaining graph
+  neural networks: A lower bound optimization approach.
+\newblock {\em Neural Networks}, 184:107065, 2025.
 
 \bibitem{chickering2004large}
 David~Maxwell Chickering, David Heckerman, and Christopher Meek.
@@ -52,21 +59,11 @@ Stephen~A. Cook.
 \newblock In {\em Proceedings of the Third Annual ACM Symposium on Theory of
   Computing}, pages 151--158. ACM, 1971.
 
-\bibitem{cook2018complexity}
-Stephen~A. Cook.
-\newblock The {P} versus {NP} problem, 2018.
-\newblock Millennium Prize Problems, Clay Mathematics Institute.
-
 \bibitem{dobzinski2012query}
 Shahar Dobzinski and Jan Vondr{\'a}k.
 \newblock From query complexity to computational complexity.
 \newblock In {\em Proceedings of the 44th ACM Symposium on Theory of
   Computing}, pages 1107--1116, 2012.
-
-\bibitem{feige1998threshold}
-Uriel Feige.
-\newblock A threshold of $\ln n$ for approximating set cover.
-\newblock {\em Journal of the ACM}, 45(4):634--652, 1998.
 
 \bibitem{fisher1922mathematical}
 Ronald~A. Fisher.
@@ -89,11 +86,6 @@ Eugene~C. Freuder.
 Peter~D. Gr{\"u}nwald.
 \newblock {\em The Minimum Description Length Principle}.
 \newblock MIT Press, 2007.
-
-\bibitem{guyon2003introduction}
-Isabelle Guyon and Andr{\'e} Elisseeff.
-\newblock An introduction to variable and feature selection.
-\newblock {\em Journal of Machine Learning Research}, 3:1157--1182, 2003.
 
 \bibitem{haslbeck2021verified}
 Maximilian P.~L. Haslbeck and Tobias Nipkow.
@@ -130,11 +122,6 @@ Fabian Kunze, Gert Smolka, and Yannick Forster.
 \newblock In {\em Asian Symposium on Programming Languages and Systems}, pages
   264--283. Springer, 2019.
 
-\bibitem{landauer1961irreversibility}
-Rolf Landauer.
-\newblock Irreversibility and heat generation in the computing process.
-\newblock {\em IBM Journal of Research and Development}, 5(3):183--191, 1961.
-
 \bibitem{lehmann1950completeness}
 Erich~L. Lehmann and Henry Scheff{\'e}.
 \newblock Completeness, similar regions, and unbiased estimation.
@@ -162,11 +149,6 @@ Martin Mundhenk, Judy Goldsmith, Christopher Lusena, and Eric Allender.
 \newblock The complexity of finite-horizon markov decision process problems.
 \newblock {\em Journal of the ACM}, 47(4):681--720, 2000.
 
-\bibitem{nipkow2014concrete}
-Tobias Nipkow and Gerwin Klein.
-\newblock {\em Concrete Semantics with {Isabelle/HOL}}.
-\newblock Springer, 2014.
-
 \bibitem{nipkow2002isabelle}
 Tobias Nipkow, Lawrence~C. Paulson, and Markus Wenzel.
 \newblock {\em {Isabelle/HOL}: A Proof Assistant for Higher-Order Logic}.
@@ -187,20 +169,10 @@ Judea Pearl.
 \newblock {\em Causality: Models, Reasoning, and Inference}.
 \newblock Cambridge University Press, 2nd edition, 2009.
 
-\bibitem{raiffa1961applied}
-Howard Raiffa and Robert Schlaifer.
-\newblock {\em Applied Statistical Decision Theory}.
-\newblock Harvard University Press, 1961.
-
 \bibitem{rissanen1978modeling}
 Jorma Rissanen.
 \newblock Modeling by shortest data description.
 \newblock {\em Automatica}, 14(5):465--471, 1978.
-
-\bibitem{savage1954foundations}
-Leonard~J. Savage.
-\newblock {\em The Foundations of Statistics}.
-\newblock John Wiley \& Sons, 1954.
 
 \bibitem{schwarz1978estimating}
 Gideon Schwarz.
@@ -236,12 +208,6 @@ Mervyn Stone.
 \newblock Cross-validatory choice and assessment of statistical predictions.
 \newblock {\em Journal of the Royal Statistical Society: Series B
   (Methodological)}, 36(2):111--133, 1974.
-
-\bibitem{teyssier2012ordering}
-Marc Teyssier and Daphne Koller.
-\newblock Ordering-based search: A simple and effective algorithm for learning
-  {Bayesian} networks.
-\newblock {\em arXiv preprint arXiv:1207.1429}, 2012.
 
 \bibitem{mathlib2020}
 {The mathlib Community}.

@@ -1,51 +1,27 @@
 # arXiv abstract (paper4b)
 
-Title: Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency
+Title: Decision Quotient Foundations and Convergence: Optimizer Quotients, Structural Rank, and Bayesian Optimality
 
 ## Abstract (MathJax, arXiv-ready)
 
 ```text
-We extend the static decision quotient framework of Paper 4 to stochastic and sequential regimes. Given a decision problem with actions $A$, factored state space $S = X_1 \times \cdots \times X_n$, and utility $U$, we ask: what complexity is required to identify sufficient coordinate sets when (a) the state is drawn from a distribution $P$, or (b) decisions unfold over time with transitions and observations?
+This paper studies convergence in decision-relevant information. For a decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1 \times \cdots \times X_n$, a coordinate set is sufficient when agreement on those coordinates determines the optimal-action set. The associated optimizer quotient is the canonical abstraction that preserves decision structure.
 
-Results:
+The main result is that several standard mathematical viewpoints converge on the same structural invariant once that quotient is fixed. The invariant is structural rank, the cardinality of the relevant-coordinate support. We show that the optimizer quotient has the expected coimage/image universal property in Set, that quotient entropy is bounded by structural rank, that Fisher-style support counting recovers the same support size, and that zero-distortion decision-preserving compression is governed by the same quantity.
 
-- Stochastic regime: STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT reduction. Tractable under product distributions, bounded support, log-concave.
+A parallel Bayesian thread starts from finite counting and the inequality $\log x \le x - 1$ and derives probability normalization, Bayes' rule, cross-entropy decomposition, Bayes optimality under log loss, and the normalized decision-quotient score.
 
-- Sequential regime: SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF reduction. Tractable under full observability, bounded horizon, tree structure.
-
-- Regime hierarchy: Static $\subset$ Stochastic $\subset$ Sequential; coNP $\subset$ PP $\subset$ PSPACE.
-
-- Substrate cost: The integrity-competence verdict is substrate-independent; trajectories diverge based on substrate cost $\kappa$.
-
-- Temporal learning: Bayesian structure detection reduces abstention over time.
-
-- Temporal integrity: Evidence-monotone retractions preserve integrity across sequences.
-
-The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
-
-Keywords: computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
+The Lean 4 development records the quotient, Bayesian, and information-theoretic lemmas used in the paper.
 ```
 
 ## Abstract (Unicode, Zenodo-ready)
 
 ```text
-We extend the static decision quotient framework of Paper 4 to stochastic and sequential regimes. Given a decision problem with actions A, factored state space S = X₁ × ⋯ × X_(n), and utility U, we ask: what complexity is required to identify sufficient coordinate sets when (a) the state is drawn from a distribution P, or (b) decisions unfold over time with transitions and observations?
+This paper studies convergence in decision-relevant information. For a decision problem 𝒟 = (A, S, U) with S = X₁ × ⋯ × Xₙ, a coordinate set is sufficient when agreement on those coordinates determines the optimal-action set. The associated optimizer quotient is the canonical abstraction that preserves decision structure.
 
-Results:
+The main result is that several standard mathematical viewpoints converge on the same structural invariant once that quotient is fixed. The invariant is structural rank, the cardinality of the relevant-coordinate support. We show that the optimizer quotient has the expected coimage/image universal property in Set, that quotient entropy is bounded by structural rank, that Fisher-style support counting recovers the same support size, and that zero-distortion decision-preserving compression is governed by the same quantity.
 
-• Stochastic regime: STOCHASTIC-SUFFICIENCY-CHECK is PP-complete via MAJSAT reduction. Tractable under product distributions, bounded support, log-concave.
+A parallel Bayesian thread starts from finite counting and the inequality log x ≤ x − 1 and derives probability normalization, Bayes’ rule, cross-entropy decomposition, Bayes optimality under log loss, and the normalized decision-quotient score.
 
-• Sequential regime: SEQUENTIAL-SUFFICIENCY-CHECK is PSPACE-complete via TQBF reduction. Tractable under full observability, bounded horizon, tree structure.
-
-• Regime hierarchy: Static ⊂ Stochastic ⊂ Sequential; coNP ⊂ PP ⊂ PSPACE.
-
-• Substrate cost: The integrity-competence verdict is substrate-independent; trajectories diverge based on substrate cost κ.
-
-• Temporal learning: Bayesian structure detection reduces abstention over time.
-
-• Temporal integrity: Evidence-monotone retractions preserve integrity across sequences.
-
-The reduction constructions are machine-checked in Lean 4 (3593 lines, 124 theorems).
-
-Keywords: computational complexity, decision theory, stochastic decision problems, POMDPs, polynomial hierarchy, PSPACE
+The Lean 4 development records the quotient, Bayesian, and information-theoretic lemmas used in the paper.
 ```

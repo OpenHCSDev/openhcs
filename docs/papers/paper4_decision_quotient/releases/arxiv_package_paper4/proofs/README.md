@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Decision Quotient.
 
-- **Lines:** 31898
-- **Theorems:** 1323
+- **Lines:** 33311
+- **Theorems:** 1378
 - **`sorry` placeholders:** 0
 
 
@@ -25,6 +25,7 @@ lake build
 
 | File | Module |
 |------|--------|
+| `AbstractionCollapse.lean` | AbstractionCollapse |
 | `AlgorithmComplexity.lean` | AlgorithmComplexity |
 | `Basic.lean` | Basic |
 | `BayesFoundations.lean` | BayesFoundations |
@@ -94,6 +95,10 @@ lake build
 | `TransportCost.lean` | TransportCost |
 | `Uncertainty.lean` | Uncertainty |
 | `WassersteinIntegrity.lean` | WassersteinIntegrity |
+| `WolpertConstraints.lean` | WolpertConstraints |
+| `WolpertDecomposition.lean` | WolpertDecomposition |
+| `WolpertMismatch.lean` | WolpertMismatch |
+| `WolpertResidual.lean` | WolpertResidual |
 | `PolynomialReduction.lean` | PolynomialReduction |
 | `QueryComplexity.lean` | QueryComplexity |
 | `Quotient.lean` | Quotient |

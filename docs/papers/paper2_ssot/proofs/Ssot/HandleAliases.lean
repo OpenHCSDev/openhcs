@@ -24,6 +24,14 @@ abbrev GPH2 := @GraphEntropy.clique_card_le_colors
 abbrev GPH3 := @GraphEntropy.complete_graph_needs_all_colors
 abbrev GPH4 := @GraphEntropy.fiber_card_le_tag_alphabet
 abbrev GPH5 := @GraphEntropy.constant_observation_needs_all_tags
+abbrev GPH6 := @GraphEntropy.maxFiberCard_le_tag_alphabet
+abbrev GPH7 := @GraphEntropy.card_div_le_tag_alphabet
+abbrev GPH8 := @GraphEntropy.card_le_mul_tag_alphabet
+abbrev GPH9 := @GraphEntropy.tagFeasible_mono
+abbrev GPH10 := @GraphEntropy.maxFiberCard_le_of_tagFeasible
+abbrev GPH11 := @GraphEntropy.card_div_le_of_tagFeasible
+abbrev GPH12 := @GraphEntropy.tagFeasible_of_maxFiberCard_le
+abbrev GPH13 := @GraphEntropy.tagFeasible_iff_maxFiberCard_le
 abbrev CIA1 := ClaimClosure.ClassicalInfoAssumptions
 -- CIA2-CIA4 require ClassicalInfoAssumptions instance; define as functions taking instance explicitly
 abbrev CIA2 := fun (inst : ClaimClosure.ClassicalInfoAssumptions) =>

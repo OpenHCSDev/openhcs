@@ -1,0 +1,61 @@
+\section{Bayesian Optimality}\label{sec:bayesian-optimality}
+
+This section isolates the Bayesian chain in a stripped-down form. The key input is the inequality $\log x \le x - 1$, which yields Gibbs' inequality and therefore the standard optimality of Bayes under log loss. The substantive point is not merely that Bayes is optimal, but that the Bayes chain fits the same first-principles pattern as the quotient and entropy bridges: finite counting first, normalization second, optimization consequences third.
+
+\subsection{Cross-Entropy Decomposition}
+
+\begin{theorem}[Bayes Minimizes Expected Log Loss]\label{thm:bayes-optimal}
+For distributions $p,q$ on a finite hypothesis space,
+\[
+\mathrm{CE}(p,q)=H(p)+D_{\mathrm{KL}}(p\|q),
+\]
+and therefore $q=p$ uniquely minimizes expected log loss.
+\end{theorem}
+
+\begin{proof}
+Gibbs' inequality gives $D_{\mathrm{KL}}(p\|q)\ge 0$, with equality exactly when $p=q$.
+\end{proof}
+
+\begin{theorem}[Measure Before Probability]\label{thm:measure-prerequisite}
+Quantitative claims require a specified measure, while probabilistic claims require a normalized measure. Counting measure on a finite set is therefore a precursor to probability, not probability itself, until normalization is performed.
+\end{theorem}
+
+\begin{proof}
+Expectations are integrals relative to measures. Probability is the special case in which the total mass is $1$.
+\end{proof}
+
+\subsection{Decision-Quotient Ratio}
+
+\begin{proposition}[Normalized Decision-Quotient Score]\label{prop:dq-range}
+The normalized decision-quotient score
+\[
+\DQ = \frac{I(H;E)}{H(H)}
+\]
+lies in $[0,1]$ whenever $H(H)>0$.
+\end{proposition}
+
+\begin{proof}
+Mutual information satisfies $0 \le I(H;E) \le H(H)$.
+\end{proof}
+
+\begin{theorem}[Bayesian Optimality Chain]\label{thm:bayesian-optimality-chain}
+Within the finite setting of this paper, the following derivation chain holds:
+\begin{enumerate}
+\item counting induces a finite measure;
+\item normalization turns that measure into probability;
+\item Bayes' rule follows from conditional probability;
+\item $\log x \le x-1$ yields Gibbs' inequality and KL nonnegativity;
+\item cross-entropy decomposes as entropy plus KL divergence;
+\item Bayes is therefore the unique minimizer of expected log loss.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+The counting-to-probability part is Theorem~\ref{thm:bayes-from-counting}. Bayes' rule is an algebraic rearrangement of the conditional-probability identity. Gibbs' inequality follows from $\log x \le x-1$, and the cross-entropy decomposition rewrites expected log loss as $H(p)+D_{\mathrm{KL}}(p\|q)$. Since KL divergence is nonnegative and vanishes only at $q=p$, Bayes uniquely minimizes expected log loss.
+\end{proof}
+
+\subsection{Interpretation}
+
+The convergence claim is therefore twofold. Structurally, multiple frameworks recover $\mathrm{srank}$. Statistically, multiple inferential identities collapse to the same Bayesian optimum once the finite counting model is fixed.
+
+The manuscript does not rely on a broad philosophical analogy between decision relevance and other frameworks. Instead it proves a sequence of concrete equivalences and bounds inside ordinary finite mathematics, with the optimizer quotient serving as the comparison object throughout.

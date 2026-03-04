@@ -5,6 +5,7 @@ import Ssot.Coherence
 import Ssot.Completeness
 import Ssot.CrossPaperDependencies  -- Bridge theorems linking Paper 2 → Paper 1
 import Ssot.Entropy
+import Ssot.GraphEntropy
 import Ssot.Foundations
 import Ssot.Inconsistency
 import Ssot.LangPython
@@ -19,6 +20,8 @@ open Ssot
     `lean_handle_ids_auto.tex`, which then powers `\LH{CODE}` links in the PDF. -/
 
 abbrev ENT1 := Entropy.ClassicalEntropyAssumptions
+abbrev GPH2 := @GraphEntropy.clique_card_le_colors
+abbrev GPH3 := @GraphEntropy.complete_graph_needs_all_colors
 abbrev CIA1 := ClaimClosure.ClassicalInfoAssumptions
 -- CIA2-CIA4 require ClassicalInfoAssumptions instance; define as functions taking instance explicitly
 abbrev CIA2 := fun (inst : ClaimClosure.ClassicalInfoAssumptions) =>

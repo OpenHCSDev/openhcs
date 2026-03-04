@@ -1,6 +1,8 @@
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Combinatorics.Pigeonhole
 import Mathlib.Combinatorics.SimpleGraph.Clique
+import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Data.Finset.Card
 import Mathlib.Tactic
 import Ssot.Entropy
@@ -103,7 +105,7 @@ end Coloring
 
 section Confusability
 
-variable {α β : Type*} [Fintype α] [DecidableEq α] [DecidableEq β]
+variable {α β : Type*} [Fintype α] [Fintype β] [DecidableEq α] [DecidableEq β]
 
 /-- Confusability graph induced by an observation map. -/
 def confusabilityGraph (observe : α → β) : SimpleGraph α where
@@ -136,6 +138,147 @@ theorem fiber_card_le_tag_alphabet (observe : α → β) (b : β)
     {n : ℕ} (tag : α → Fin n) (htag : ZeroErrorTagging observe n tag) :
     (Finset.univ.filter (fun a : α => observe a = b)).card ≤ n := by
   exact clique_card_le_colors tag htag (fiber_finset_is_clique observe b)
+
+/-- Worst-case confusable fiber size under the observation map. -/
+noncomputable def maxFiberCard (observe : α → β) : ℕ :=
+  Finset.sup Finset.univ (fun b : β => (Finset.univ.filter (fun a : α => observe a = b)).card)
+
+/-- Every observation fiber is bounded by the worst-case confusable fiber. -/
+theorem fiber_card_le_maxFiberCard (observe : α → β) (b : β) :
+    (Finset.univ.filter (fun a : α => observe a = b)).card ≤ maxFiberCard observe := by
+  unfold maxFiberCard
+  exact Finset.le_sup
+    (s := Finset.univ)
+    (f := fun b : β => (Finset.univ.filter (fun a : α => observe a = b)).card)
+    (by exact Finset.mem_univ b)
+
+/-- Zero-error tag alphabets must dominate the worst-case confusable fiber size. -/
+theorem maxFiberCard_le_tag_alphabet (observe : α → β)
+    {n : ℕ} (tag : α → Fin n) (htag : ZeroErrorTagging observe n tag) :
+    maxFiberCard observe ≤ n := by
+  unfold maxFiberCard
+  refine Finset.sup_le ?_
+  intro b hb
+  exact fiber_card_le_tag_alphabet observe b tag htag
+
+/-- Pigeonhole lower bound: some observation fiber has size at least the average occupancy. -/
+theorem card_div_le_maxFiberCard (observe : α → β) [Nonempty β] :
+    Fintype.card α / Fintype.card β ≤ maxFiberCard observe := by
+  let n : ℕ := Fintype.card α / Fintype.card β
+  have hmul : Fintype.card β * n ≤ Fintype.card α := by
+    dsimp [n]
+    exact Nat.mul_div_le (Fintype.card α) (Fintype.card β)
+  obtain ⟨b, hb⟩ :=
+    Fintype.exists_le_card_fiber_of_mul_le_card (f := observe) (n := n) hmul
+  have hb' :
+      n ≤ (Finset.univ.filter (fun a : α => observe a = b)).card := by
+    simpa using hb
+  exact hb'.trans (fiber_card_le_maxFiberCard observe b)
+
+/-- Any zero-error tagging alphabet must dominate the average observation-fiber occupancy. -/
+theorem card_div_le_tag_alphabet (observe : α → β) [Nonempty β]
+    {n : ℕ} (tag : α → Fin n) (htag : ZeroErrorTagging observe n tag) :
+    Fintype.card α / Fintype.card β ≤ n := by
+  exact (card_div_le_maxFiberCard observe).trans (maxFiberCard_le_tag_alphabet observe tag htag)
+
+/-- Pigeonhole impossibility: too-small tag alphabets cannot support zero-error tagging. -/
+theorem no_zeroErrorTagging_of_mul_lt_card (observe : α → β) [Nonempty β]
+    {n : ℕ} (hcard : Fintype.card β * n < Fintype.card α) :
+    ¬ ∃ tag : α → Fin n, ZeroErrorTagging observe n tag := by
+  obtain ⟨b, hb⟩ :=
+    Fintype.exists_lt_card_fiber_of_mul_lt_card (f := observe) (n := n) hcard
+  intro htag
+  rcases htag with ⟨tag, htag⟩
+  have hle :
+      (Finset.univ.filter (fun a : α => observe a = b)).card ≤ n :=
+    fiber_card_le_tag_alphabet observe b tag htag
+  exact (Nat.not_lt_of_ge hle) (by simpa using hb)
+
+/-- Global counting converse: zero-error tagging implies `|α| ≤ |β| * n`. -/
+theorem card_le_mul_tag_alphabet (observe : α → β) [Nonempty β]
+    {n : ℕ} (tag : α → Fin n) (htag : ZeroErrorTagging observe n tag) :
+    Fintype.card α ≤ Fintype.card β * n := by
+  by_contra hle
+  have hlt : Fintype.card β * n < Fintype.card α := Nat.lt_of_not_ge hle
+  exact (no_zeroErrorTagging_of_mul_lt_card observe (n := n) hlt) ⟨tag, htag⟩
+
+/-- Predicate: alphabet size `n` supports a zero-error tagging for `observe`. -/
+def TagFeasible (observe : α → β) (n : ℕ) : Prop :=
+  ∃ tag : α → Fin n, ZeroErrorTagging observe n tag
+
+/-- Lift a zero-error tagging to a larger alphabet by `Fin.castLE`. -/
+theorem lift_zeroErrorTagging (observe : α → β) {m n : ℕ} (hmn : m ≤ n)
+    {tag : α → Fin m} (htag : ZeroErrorTagging observe m tag) :
+    ZeroErrorTagging observe n (fun a => Fin.castLE hmn (tag a)) := by
+  intro u v hadj hEq
+  apply htag hadj
+  exact Fin.castLE_injective hmn hEq
+
+/-- Feasibility is monotone in the available tag alphabet size. -/
+theorem tagFeasible_mono (observe : α → β) {m n : ℕ} (hmn : m ≤ n) :
+    TagFeasible observe m → TagFeasible observe n := by
+  intro hfeas
+  rcases hfeas with ⟨tag, htag⟩
+  exact ⟨fun a => Fin.castLE hmn (tag a), lift_zeroErrorTagging observe hmn htag⟩
+
+/-- Any feasible alphabet size must be at least `maxFiberCard`. -/
+theorem maxFiberCard_le_of_tagFeasible (observe : α → β) {n : ℕ}
+    (hfeas : TagFeasible observe n) :
+    maxFiberCard observe ≤ n := by
+  rcases hfeas with ⟨tag, htag⟩
+  exact maxFiberCard_le_tag_alphabet observe tag htag
+
+/-- Any feasible alphabet size must dominate the average fiber occupancy floor. -/
+theorem card_div_le_of_tagFeasible (observe : α → β) [Nonempty β] {n : ℕ}
+    (hfeas : TagFeasible observe n) :
+    Fintype.card α / Fintype.card β ≤ n := by
+  rcases hfeas with ⟨tag, htag⟩
+  exact card_div_le_tag_alphabet observe tag htag
+
+/-- Constructive feasibility: if `n` dominates the worst observation fiber, a zero-error tagging exists. -/
+theorem tagFeasible_of_maxFiberCard_le (observe : α → β) {n : ℕ}
+    (hn : maxFiberCard observe ≤ n) :
+    TagFeasible observe n := by
+  classical
+  let emb : ∀ b : β, {a : α // observe a = b} ↪ Fin n := fun b =>
+    Classical.choice <|
+      Function.Embedding.nonempty_of_card_le <|
+        (by
+          have hfiber :
+              (Finset.univ.filter (fun a : α => observe a = b)).card ≤ maxFiberCard observe :=
+            fiber_card_le_maxFiberCard observe b
+          have hcard :
+              Fintype.card {a : α // observe a = b} ≤ maxFiberCard observe := by
+            simpa [Fintype.card_subtype] using hfiber
+          have hcard' : Fintype.card {a : α // observe a = b} ≤ Fintype.card (Fin n) := by
+            simpa using hcard.trans hn
+          exact hcard')
+  let tag : α → Fin n := fun a => emb (observe a) ⟨a, rfl⟩
+  refine ⟨tag, ?_⟩
+  intro u v hadj hEq
+  rcases hadj with ⟨hneq, hobs⟩
+  have hEq0 :
+      emb (observe u) ⟨u, rfl⟩ = emb (observe v) ⟨v, rfl⟩ := by
+    simpa [tag] using hEq
+  have hEq1 :
+      emb (observe u) ⟨u, rfl⟩ = emb (observe u) ⟨v, hobs.symm⟩ := by
+    exact Eq.rec
+      (motive := fun b hb => emb (observe u) ⟨u, rfl⟩ = emb b ⟨v, hb⟩)
+      hEq0 hobs.symm
+  have hsub : (⟨u, rfl⟩ : {a : α // observe a = observe u}) = ⟨v, hobs.symm⟩ :=
+    (emb (observe u)).injective hEq1
+  have huv : u = v := by
+    simpa using congrArg Subtype.val hsub
+  exact hneq huv
+
+/-- Exact feasibility characterization by the maximal observation-fiber size. -/
+theorem tagFeasible_iff_maxFiberCard_le (observe : α → β) {n : ℕ} :
+    TagFeasible observe n ↔ maxFiberCard observe ≤ n := by
+  constructor
+  · intro hfeas
+    exact maxFiberCard_le_of_tagFeasible observe hfeas
+  · intro hn
+    exact tagFeasible_of_maxFiberCard_le observe hn
 
 /-- If the observation map is constant, every pair of distinct vertices is confusable. -/
 theorem confusabilityGraph_eq_top_of_constant

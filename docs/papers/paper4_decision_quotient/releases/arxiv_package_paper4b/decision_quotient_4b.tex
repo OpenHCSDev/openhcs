@@ -2,7 +2,7 @@
 \usepackage{pentalogy-preamble}
 \IfFileExists{content/lean_stats.tex}{\input{content/lean_stats.tex}}{}
 
-\title{Stochastic and Sequential Regimes: Extending the Decision Quotient to Dynamic Information Sufficiency}
+\title{Decision Quotient Foundations and Convergence: Optimizer Quotients, Structural Rank, and Bayesian Optimality}
 \author{
   Tristan Simas\\
   McGill University\\
@@ -10,10 +10,32 @@
 }
 \date{\today}
 
-% Keep claim stamps and Lean tags inline and wrap-friendly.
-\newcommand{\claimstamp}[2]{\allowbreak{\scriptsize\textit{[C:#1;R:#2]}}}
-\newcommand{\leanmeta}[1]{\allowbreak{\scriptsize\textit{(L: #1)}}}
+% Keep claim stamps and Lean tags inline and wrap-friendly (avoid overflow/clipping).
+% C = grouped claim refs (D/P/C/T/L/R), R = compact regime codes.
+% Insert explicit break opportunities after comma separators.
+\makeatletter
+\@ifundefined{ifdq@first}{\newif\ifdq@first}{}
+\newcommand{\dqcommabreak}[1]{%
+  \dq@firsttrue
+  \@for\dq@item:=#1\do{%
+    \ifdq@first
+      \dq@item
+      \dq@firstfalse
+    \else
+      , \allowbreak\dq@item
+    \fi
+  }%
+}
+\makeatother
+\providecommand{\claimstamp}[2]{}
+\providecommand{\leanmeta}[1]{}
+\renewcommand{\claimstamp}[2]{\allowbreak{\scriptsize\textit{[C:\dqcommabreak{#1};R:\dqcommabreak{#2}]}}}
+\renewcommand{\leanmeta}[1]{\allowbreak{\scriptsize\textit{(L: \dqcommabreak{#1})}}}
+% Compact inline handle-id token used inside \leanmeta.
+% Shared preamble defines this globally; keep local fallback only if absent.
 \providecommand{\LH}[1]{\hyperlink{lh:#1}{\texttt{#1}}}
+% Decision Quality: normalized mutual information I(H;E)/H(H) in [0,1].
+\newcommand{\DQ}{\mathrm{DQ}}
 
 \begin{document}
 \maketitle
@@ -33,13 +55,9 @@ License: \url{https://creativecommons.org/licenses/by/4.0/}
 \end{abstract}
 
 \input{content/01_introduction.tex}
-\input{content/02_stochastic.tex}
-\input{content/03_sequential.tex}
-\input{content/04_regime_hierarchy.tex}
-\input{content/05_substrate_cost.tex}
-\input{content/06_temporal_learning.tex}
-\input{content/07_temporal_integrity.tex}
-\input{content/08_cross_regime.tex}
+\input{content/02_formal_foundations.tex}
+\input{content/03_convergence_frameworks.tex}
+\input{content/04_bayesian_optimality.tex}
 \input{content/08_related_work.tex}
 \input{content/09_conclusion.tex}
 \input{content/10_lean_4_proof_listings.tex}

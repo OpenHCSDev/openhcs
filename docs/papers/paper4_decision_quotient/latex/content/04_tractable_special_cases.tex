@@ -41,8 +41,8 @@ When $k$ is constant, this is polynomial in $|S|$.
 
 \noindent\textbf{Lean formalization:} \texttt{DecisionQuotient/Tractability/BoundedActions.lean}
 \begin{itemize}
-\item \LH{L9}: Correctness of the algorithm.
-\item \LH{L1}: Complexity bound $|S|^2 \cdot (1 + k^2)$.
+\item \LH{L10}: Correctness of the algorithm.
+\item \LH{L2}: Complexity bound $|S|^2 \cdot (1 + k^2)$.
 \end{itemize}
 
 %% ============================================================
@@ -70,7 +70,7 @@ The optimal action depends only on $f$, not on $s$. Hence $\Opt(s) = \Opt(s')$ f
 \begin{itemize}
 \item \LH{SeparableUtility}: Structure encoding the separability condition.
 \item \LH{L8}: Optimal actions are state-independent.
-\item \LH{L7}: The empty set is sufficient.
+\item \LH{L8}: The empty set is sufficient.
 \end{itemize}
 
 
@@ -109,7 +109,7 @@ The factored representation enables efficient computation:
 \item \LH{TensorRankDecomposition}: Structure encoding rank-$R$ decomposition.
 \item \LH{L14}: Axiom citing tensor network algorithms~\cite{kolda2009tensor,cichocki2016tensor}.
 \item \LH{L4}: Reduction theorem for factored computation.
-\item \LH{L5}: Tractability via factored sufficiency check.
+\item \LH{L6}: Tractability via factored sufficiency check.
 \end{itemize}
 
 %% ============================================================
@@ -143,7 +143,7 @@ A coordinate is relevant iff varying its value changes the optimal action set.
 \noindent\textbf{Lean formalization:} \texttt{DecisionQuotient/Tractability/TreeStructure.lean}
 \begin{itemize}
 \item \LH{TreeStructured}: Predicate encoding tree dependency structure.
-\item \LH{L15}: Axiom citing standard DP on trees.
+\item \LH{L16}: Axiom citing standard DP on trees.
 \end{itemize}
 
 %% ============================================================
@@ -185,8 +185,8 @@ The reduction is polynomial; the algorithm is standard.
 \item \LH{InteractionGraph}: Definition of the interaction graph.
 \item \LH{PairwiseUtility}: Structure encoding pairwise decomposition.
 \item \LH{L16}: Axiom for treewidth (citing Bodlaender~\cite{bodlaender1993tourist}).
-\item \LH{L3}: Axiom citing CSP algorithms.
-\item \LH{L11}: Paper-specific reduction theorem.
+\item \LH{L4}: Axiom citing CSP algorithms.
+\item \LH{L12}: Paper-specific reduction theorem.
 \item \LH{L2}: Tractability statement combining reduction and algorithm.
 \end{itemize}
 
@@ -260,7 +260,7 @@ For fixed $k$, this is $O(d^{k-1})$ --- polynomial in $d$.
 \item \LH{L6}: \textbf{(Core result)} Orbit types equal iff permutation exists.
 \item \LH{L12}: Optimal actions constant on orbits.
 \item \LH{L10}: Reduction to cross-orbit pairs.
-\item \LH{L13}: $O\bigl(\binom{d+k-1}{k-1}^2\bigr)$ bound.
+\item \LH{L14}: $O\bigl(\binom{d+k-1}{k-1}^2\bigr)$ bound.
 \end{itemize}
 
 %% ============================================================
