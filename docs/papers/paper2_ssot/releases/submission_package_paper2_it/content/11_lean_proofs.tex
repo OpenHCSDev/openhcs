@@ -14,10 +14,18 @@ Each theorem-level handle is typed as one of:
 
 \paragraph{Classical-assumption handles (explicit in Lean).}
 \begin{itemize}
-\item \LH{ENT1} (entropy-side classical inequalities)
+\item \LH{FLP1} (entropy-side classical inequalities)
 \item \LH{CIA1} (Fano / side-information closure assumptions)
-\item \LH{CIA2}
 \item \LH{CIA3}
+\item \LH{CIA3}
+\end{itemize}
+
+\paragraph{Graph/confusability handles (fully mechanized finite zero-error layer).}
+\begin{itemize}
+\item \LH{GPH2} (proper coloring bounds clique size by alphabet size)
+\item \LH{GPH4} (complete confusability graph forces one tag per state)
+\item \LH{GPH4} (observation-fiber clique lower bound for zero-error tagging)
+\item \LH{IND1} (constant-observation / maximal-barrier lower bound)
 \end{itemize}
 
 \subsection*{Complete Claim Coverage Matrix}
@@ -28,63 +36,63 @@ Each theorem-level handle is typed as one of:
 \begin{itemize}
 \item \nolinkurl{thm:oracle-arbitrary}: Full -- \LH{ORA1}.
 \item \nolinkurl{thm:dof-one-coherence}: Full -- \LH{COH1}.
-\item \nolinkurl{thm:dof-gt-one-incoherence}: Full -- \LH{COH2}.
+\item \nolinkurl{thm:dof-gt-one-incoherence}: Full -- \LH{COH3}.
 \item \nolinkurl{cor:coherence-forces-ssot}: Full -- \LH{COH3}.
 \item \nolinkurl{thm:correctness-forcing}: Full -- \LH{BAS1}.
-\item \nolinkurl{thm:dof-inconsistency}: Full -- \LH{BAS2}.
+\item \nolinkurl{thm:dof-inconsistency}: Full -- \LH{BAS3}.
 \item \nolinkurl{cor:dof-risk}: Full -- \LH{BAS3}.
-\item \nolinkurl{thm:dof-optimal}: Full -- \LH{INS1}, \LH{INS2}.
-\item \nolinkurl{thm:cap-encoding}: Full (conditional) -- \LH{CAP1}.
+\item \nolinkurl{thm:dof-optimal}: Full -- \LH{INS2}, \LH{INS2}.
+\item \nolinkurl{thm:cap-encoding}: Full (conditional) -- \LH{CAP2}.
 \item \nolinkurl{thm:static-flp}: Full -- \LH{FLP1}.
 \item \nolinkurl{thm:redundancy-incoherence}: Full -- \LH{RED1}.
 \item \nolinkurl{thm:coherence-capacity}: Full -- \LH{COH3}.
 \item \nolinkurl{thm:capacity-achievability}: Full -- \LH{CAP2}.
-\item \nolinkurl{thm:capacity-converse}: Full -- \LH{CAP3}.
-\item \nolinkurl{cor:capacity-unique}: Full -- \LH{INS3}.
+\item \nolinkurl{thm:capacity-converse}: Full -- \LH{CIA1}.
+\item \nolinkurl{cor:capacity-unique}: Full -- \LH{L1}.
 \item \nolinkurl{cor:redundancy-above}: Full -- \LH{RED1}.
-\item \nolinkurl{thm:rate-incoherence-step}: Full -- \LH{RAT1}.
+\item \nolinkurl{thm:rate-incoherence-step}: Full -- \LH{RED1}.
 \item \nolinkurl{thm:design-necessity}: Full -- \LH{DES1}.
-\item \nolinkurl{cor:architectural-forcing}: Full (conditional classical) -- \LH{INS4}, \LH{CIA2}.
-\item \nolinkurl{thm:incoherence-graph}: Full (derived/model-level) -- \LH{RED1}, \LH{RAT1}.
-\item \nolinkurl{thm:side-info}: Full (conditional classical) -- \LH{CIA2}.
+\item \nolinkurl{cor:architectural-forcing}: Full (conditional classical) -- \LH{L1}, \LH{CIA3}.
+\item \nolinkurl{thm:incoherence-graph}: Full (derived/model-level) -- \LH{RED1}, \LH{RED1}.
+\item \nolinkurl{thm:side-info}: Full (conditional classical) -- \LH{CIA3}.
 \item \nolinkurl{cor:dof1-zero-side}: Full -- \LH{SID1}.
-\item \nolinkurl{cor:side-info-redundancy}: Full -- \LH{SID2}.
-\item \nolinkurl{cor:multi-terminal}: Full (derived/model-level) -- \LH{RED1}, \LH{RAT1}.
+\item \nolinkurl{cor:side-info-redundancy}: Full -- \LH{UNQ1}.
+\item \nolinkurl{cor:multi-terminal}: Full (derived/model-level) -- \LH{RED1}, \LH{RED1}.
 \item \nolinkurl{thm:fano-converse}: Full (conditional classical) -- \LH{CIA3}.
-\item \nolinkurl{lem:info-dof}: Full (conditional classical) -- \LH{CIA4}.
+\item \nolinkurl{lem:info-dof}: Full (conditional classical) -- \LH{COH1}.
 \end{itemize}
 
 \paragraph{Derivation and realizability chain.}
 \begin{itemize}
 \item \nolinkurl{thm:derivation-lattice}: Full (model-level) -- \LH{DER1}.
-\item \nolinkurl{thm:dof-antimonotone}: Full (model-level) -- \LH{AXM1}, \LH{AXM2}.
-\item \nolinkurl{cor:minimal-dof1}: Full (model-level) -- \LH{AXM3}, \LH{AXM4}.
-\item \nolinkurl{thm:dof-complexity}: Full (model-level) -- \LH{CPL1}.
+\item \nolinkurl{thm:dof-antimonotone}: Full (model-level) -- \LH{AXM1}, \LH{AXM3}.
+\item \nolinkurl{cor:minimal-dof1}: Full (model-level) -- \LH{AXM3}, \LH{BAS1}.
+\item \nolinkurl{thm:dof-complexity}: Full (model-level) -- \LH{DER1}.
 \item \nolinkurl{thm:ssot-determinate}: Full -- \LH{COH1}.
-\item \nolinkurl{thm:ssot-optimal}: Full -- \LH{BND1}.
-\item \nolinkurl{thm:ssot-unique}: Full -- \LH{INS3}.
-\item \nolinkurl{cor:no-redundancy}: Full -- \LH{COH2}.
-\item \nolinkurl{thm:derivation-excludes}: Full -- \LH{DER2}.
-\item \nolinkurl{cor:metaprogramming}: Full (derived/model-level) -- \LH{DER2}, \LH{COH1}.
-\item \nolinkurl{lem:confusability-clique}: Full (conditional classical) -- \LH{CIA3}.
-\item \nolinkurl{thm:timing-forces}: Full -- \LH{REQ1}.
-\item \nolinkurl{thm:causal-necessary}: Full -- \LH{REQ2}.
-\item \nolinkurl{thm:provenance-necessary}: Full -- \LH{REQ3}.
-\item \nolinkurl{thm:independence}: Full -- \LH{IND1}, \LH{IND2}.
-\item \nolinkurl{thm:ssot-iff}: Full -- \LH{SOT1}.
-\item \nolinkurl{thm:generated-second}: Full -- \LH{GEN1}.
-\item \nolinkurl{cor:lang-realizability}: Full -- \LH{LNG1}.
+\item \nolinkurl{thm:ssot-optimal}: Full -- \LH{BND2}.
+\item \nolinkurl{thm:ssot-unique}: Full -- \LH{L1}.
+\item \nolinkurl{cor:no-redundancy}: Full -- \LH{COH3}.
+\item \nolinkurl{thm:derivation-excludes}: Full -- \LH{DES1}.
+\item \nolinkurl{cor:metaprogramming}: Full (derived/model-level) -- \LH{DES1}, \LH{COH1}.
+\item \nolinkurl{lem:confusability-clique}: Full (finite zero-error graph layer) -- \LH{GPH4}, \LH{IND1}; Full (conditional classical refinement) -- \LH{CIA3}.
+\item \nolinkurl{thm:timing-forces}: Full -- \LH{SID1}.
+\item \nolinkurl{thm:causal-necessary}: Full -- \LH{SID1}.
+\item \nolinkurl{thm:provenance-necessary}: Full -- \LH{SID1}.
+\item \nolinkurl{thm:independence}: Full -- \LH{IND1}, \LH{INS2}.
+\item \nolinkurl{thm:ssot-iff}: Full -- \LH{UNQ1}.
+\item \nolinkurl{thm:generated-second}: Full -- \LH{GPH2}.
+\item \nolinkurl{cor:lang-realizability}: Full -- \LH{ORA1}.
 \end{itemize}
 
 \paragraph{Bounds, regimes, and optimization chain.}
 \begin{itemize}
-\item \nolinkurl{thm:upper-bound}: Full -- \LH{BND1}.
+\item \nolinkurl{thm:upper-bound}: Full -- \LH{BND2}.
 \item \nolinkurl{thm:lower-bound}: Full -- \LH{BND2}.
-\item \nolinkurl{thm:unbounded-gap}: Full -- \LH{BND3}.
+\item \nolinkurl{thm:unbounded-gap}: Full -- \LH{BND4}.
 \item \nolinkurl{cor:arbitrary-reduction}: Full -- \LH{BND4}.
-\item \nolinkurl{thm:operating-regimes}: Full -- \LH{REG1}.
-\item \nolinkurl{thm:pareto-optimal}: Full -- \LH{REG2}.
-\item \nolinkurl{cor:no-tradeoff}: Full -- \LH{REG3}.
+\item \nolinkurl{thm:operating-regimes}: Full -- \LH{REG4}.
+\item \nolinkurl{thm:pareto-optimal}: Full -- \LH{REG4}.
+\item \nolinkurl{cor:no-tradeoff}: Full -- \LH{REG4}.
 \item \nolinkurl{thm:amortized}: Full -- \LH{REG4}.
 \end{itemize}
 \endgroup

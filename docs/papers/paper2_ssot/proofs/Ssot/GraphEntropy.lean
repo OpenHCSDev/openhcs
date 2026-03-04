@@ -101,5 +101,68 @@ theorem complete_graph_needs_all_colors {n m : ℕ} (c : Fin n → Fin m)
 
 end Coloring
 
+section Confusability
+
+variable {α β : Type*} [Fintype α] [DecidableEq α] [DecidableEq β]
+
+/-- Confusability graph induced by an observation map. -/
+def confusabilityGraph (observe : α → β) : SimpleGraph α where
+  Adj u v := u ≠ v ∧ observe u = observe v
+  symm := by
+    intro u v h
+    exact ⟨h.1.symm, h.2.symm⟩
+  loopless := by
+    intro u h
+    exact h.1 rfl
+
+/-- A zero-error tag assignment is exactly a proper coloring of the confusability graph. -/
+def ZeroErrorTagging (observe : α → β) (n : ℕ) (tag : α → Fin n) : Prop :=
+  IsProperColoring (confusabilityGraph observe) n tag
+
+/-- The fiber of an observation value forms a clique in the confusability graph. -/
+theorem fiber_is_clique (observe : α → β) (b : β) :
+    (confusabilityGraph observe).IsClique {a : α | observe a = b} := by
+  intro u hu v hv huv
+  exact ⟨huv, hu.trans hv.symm⟩
+
+/-- Finite observation fibers are cliques. -/
+theorem fiber_finset_is_clique (observe : α → β) (b : β) :
+    (confusabilityGraph observe).IsClique
+      (↑(Finset.univ.filter (fun a : α => observe a = b)) : Set α) := by
+  simpa using fiber_is_clique observe b
+
+/-- Any zero-error tagging must use at least as many tags as any confusable fiber size. -/
+theorem fiber_card_le_tag_alphabet (observe : α → β) (b : β)
+    {n : ℕ} (tag : α → Fin n) (htag : ZeroErrorTagging observe n tag) :
+    (Finset.univ.filter (fun a : α => observe a = b)).card ≤ n := by
+  exact clique_card_le_colors tag htag (fiber_finset_is_clique observe b)
+
+/-- If the observation map is constant, every pair of distinct vertices is confusable. -/
+theorem confusabilityGraph_eq_top_of_constant
+    (observe : α → β) (hconst : ∀ u v : α, observe u = observe v) :
+    confusabilityGraph observe = ⊤ := by
+  ext u v
+  constructor
+  · intro h
+    simpa using h.1
+  · intro h
+    exact ⟨by simpa using h, hconst u v⟩
+
+/-- In the maximal-barrier regime, zero-error tagging needs at least one tag per state. -/
+theorem constant_observation_needs_all_tags
+    (observe : α → β) (hconst : ∀ u v : α, observe u = observe v)
+    {n : ℕ} (tag : α → Fin n) (htag : ZeroErrorTagging observe n tag) :
+    Fintype.card α ≤ n := by
+  let s : Finset α := Finset.univ
+  have htop : confusabilityGraph observe = ⊤ :=
+    confusabilityGraph_eq_top_of_constant observe hconst
+  have hs : (confusabilityGraph observe).IsClique (↑s : Set α) := by
+    rw [htop]
+    intro u hu v hv huv
+    simpa using huv
+  simpa [s] using clique_card_le_colors tag htag hs
+
+end Confusability
+
 end GraphEntropy
 end Ssot

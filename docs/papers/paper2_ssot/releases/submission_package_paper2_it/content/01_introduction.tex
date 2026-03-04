@@ -6,7 +6,7 @@ We begin with a proof from first principles. Consider any system that encodes a 
 
 \textbf{Theorem (Single-Source Coherence).} Among all possible degrees of freedom (DOF = number of independent encoding locations), exactly one value (DOF = 1) guarantees coherence. DOF = 0 fails (no fact encoded). DOF $\geq$ 2 fails (permits explicit construction of inconsistency).
 
-\textbf{Proof Sketch.} Case analysis on $\mathbb{N}$: For DOF = 1, any two queries return the single location's value; transitivity of equality forces agreement. For DOF $\geq$ 2, construct two locations with values $v$ and $v' \neq v$; queries return different answers. By trichotomy of naturals, DOF = 1 is the unique solution (\LH{TRI1}). (Formalized in Lean 4, 0 \texttt{sorry}.)
+\textbf{Proof Sketch.} Case analysis on $\mathbb{N}$: For DOF = 1, any two queries return the single location's value; transitivity of equality forces agreement. For DOF $\geq$ 2, construct two locations with values $v$ and $v' \neq v$; queries return different answers. By trichotomy of naturals, DOF = 1 is the unique solution (\LH{UNQ1}). (Formalized in Lean 4, 0 \texttt{sorry}.)
 
 This theorem is the foundation. It establishes that single-source-of-truth (SSOT) is not merely preferable but \emph{mathematically forced} for systems requiring coherence (\LH{UNQ1}). The rest of this paper derives the information-theoretic consequences.
 
@@ -24,9 +24,9 @@ This is a zero-error style result in the Shannon tradition~\cite{shannon1956zero
 \begin{itemize}
 \tightlist
 \item \textbf{Achievability (Theorem~\ref{thm:capacity-achievability}):} DOF $= 1$ achieves zero incoherence (\LH{CAP2}).
-\item \textbf{Converse (Theorem~\ref{thm:capacity-converse}):} DOF $> 1$ does not achieve zero incoherence (\LH{CAP3}).
+\item \textbf{Converse (Theorem~\ref{thm:capacity-converse}):} DOF $> 1$ does not achieve zero incoherence (\LH{CIA1}).
 \item \textbf{Capacity (Theorem~\ref{thm:coherence-capacity}):} $C_0 = 1$ exactly. Tight (\LH{COH3}).
-\item \textbf{Side Information (Theorem~\ref{thm:side-info}):} Resolution of $k$-way incoherence requires $\geq \log_2 k$ bits (\LH{CIA2}).
+\item \textbf{Side Information (Theorem~\ref{thm:side-info}):} Resolution of $k$-way incoherence requires $\geq \log_2 k$ bits (\LH{CIA3}).
 \end{itemize}
 
 \begin{theorem}[Resolution Impossibility, informal]
@@ -75,11 +75,11 @@ Our results extend classical source coding theory to interactive multi-terminal 
 
 \textbf{1. Multi-terminal source coding.} Slepian-Wolf~\cite{slepian1973noiseless} characterizes distributed encoding of correlated sources. We model encoding locations as terminals: derivation introduces \emph{perfect correlation} (deterministic dependence), reducing effective rate. The capacity result shows that only complete correlation (all terminals derived from one source) guarantees coherence--partial correlation permits divergence. Section~\ref{sec:side-information} develops this connection.
 
-\textbf{2. Zero-error capacity.} Shannon~\cite{shannon1956zero}, Körner~\cite{korner1973graphs}, and Lovász~\cite{lovasz1979shannon} characterize zero-error communication. We characterize \textbf{zero-incoherence encoding}--a storage analog where ``errors'' are disagreements among locations. The achievability/converse structure (Theorems~\ref{thm:capacity-achievability},~\ref{thm:capacity-converse}) parallels zero-error capacity proofs (\LH{CAP2}, \LH{CAP3}).
+\textbf{2. Zero-error capacity.} Shannon~\cite{shannon1956zero}, Körner~\cite{korner1973graphs}, and Lovász~\cite{lovasz1979shannon} characterize zero-error communication. We characterize \textbf{zero-incoherence encoding}--a storage analog where ``errors'' are disagreements among locations. The achievability/converse structure (Theorems~\ref{thm:capacity-achievability},~\ref{thm:capacity-converse}) parallels zero-error capacity proofs (\LH{CAP2}, \LH{CIA1}).
 
 \textbf{3. Interactive information theory.} The BIRS workshop~\cite{birs2012interactive} identified interactive IT as encoding/decoding with feedback and multi-round protocols. Our model is interactive: encodings are modified over time, and causal propagation (a realizability requirement) is analogous to channel feedback. Ma-Ishwar~\cite{ma2011distributed} showed interaction can reduce rate; we show derivation (a form of interaction) can reduce effective DOF.
 
-\textbf{4. Rate-complexity tradeoffs.} Rate-distortion theory~\cite{cover2006elements} trades rate $R$ against distortion $D$. We trade encoding rate (DOF) against modification complexity $M$: DOF $= 1$ achieves $M = O(1)$; DOF $> 1$ requires $M = \Omega(n)$. The gap is unbounded (Theorem~\ref{thm:unbounded-gap}, \LH{BND3}).
+\textbf{4. Rate-complexity tradeoffs.} Rate-distortion theory~\cite{cover2006elements} trades rate $R$ against distortion $D$. We trade encoding rate (DOF) against modification complexity $M$: DOF $= 1$ achieves $M = O(1)$; DOF $> 1$ requires $M = \Omega(n)$. The gap is unbounded (Theorem~\ref{thm:unbounded-gap}, \LH{BND4}).
 
 \subsection{Encoder Realizability}\label{sec:realizability}
 
@@ -92,7 +92,7 @@ A key question: what encoder properties are necessary and sufficient to achieve 
 \end{enumerate}
 
 \begin{theorem}[Encoder Realizability, informal]
-An encoding system achieves $C_0 = 1$ iff it provides both causal propagation and provenance observability (\LH{SOT1}). Neither alone suffices (Theorem~\ref{thm:independence}, \LH{IND1}).
+An encoding system achieves $C_0 = 1$ iff it provides both causal propagation and provenance observability (\LH{UNQ1}). Neither alone suffices (Theorem~\ref{thm:independence}, \LH{IND1}).
 \end{theorem}
 
 \textbf{Connection to multi-version coding.} Rashmi et al.~\cite{rashmi2015multiversion} prove an ``inevitable storage cost for consistency'' in distributed storage. Our realizability theorem is analogous: systems lacking either encoder property \emph{cannot} achieve capacity--the constraint is information-theoretic, not implementation-specific.
@@ -126,7 +126,7 @@ We establish five \emph{core} theorems:
   \emph{Structure:} Achievability (Theorem~\ref{thm:capacity-achievability}) + Converse (Theorem~\ref{thm:capacity-converse}).
 
 \item
-  \textbf{Theorem~\ref{thm:side-info} (Side Information Bound):} Resolution of $k$-way incoherence requires $\geq \log_2 k$ bits of side information. At DOF $= 1$, zero bits suffice (\LH{CIA2}).
+  \textbf{Theorem~\ref{thm:side-info} (Side Information Bound):} Resolution of $k$-way incoherence requires $\geq \log_2 k$ bits of side information. At DOF $= 1$, zero bits suffice (\LH{CIA3}).
 
   \emph{Proof:} The $k$ alternatives have entropy $H(S) = \log_2 k$. Resolution requires mutual information $I(S; Y) \geq H(S)$.
 
@@ -136,17 +136,17 @@ We establish five \emph{core} theorems:
   \emph{Proof:} By incoherence, $k \geq 2$ values exist. Any selection leaves $k-1$ values disagreeing. No internal information distinguishes them.
 
 \item
-  \textbf{Theorem~\ref{thm:ssot-iff} (Encoder Realizability):} Achieving capacity requires encoder properties: (a) causal propagation (feedback), and (b) provenance observability (side information). Both necessary; together sufficient (\LH{SOT1}).
+  \textbf{Theorem~\ref{thm:ssot-iff} (Encoder Realizability):} Achieving capacity requires encoder properties: (a) causal propagation (feedback), and (b) provenance observability (side information). Both necessary; together sufficient (\LH{UNQ1}).
 
   \emph{Proof:} Necessity by constructing above-capacity configurations when either is missing. Sufficiency by exhibiting capacity-achieving encoders.
 
 \item
-  \textbf{Theorem~\ref{thm:unbounded-gap} (Rate-Complexity Tradeoff):} Modification complexity scales as $O(1)$ at capacity vs. $\Omega(n)$ above capacity. The gap is unbounded (\LH{BND3}).
+  \textbf{Theorem~\ref{thm:unbounded-gap} (Rate-Complexity Tradeoff):} Modification complexity scales as $O(1)$ at capacity vs. $\Omega(n)$ above capacity. The gap is unbounded (\LH{BND4}).
 
   \emph{Proof:} At capacity, one source update suffices. Above capacity, $n$ independent locations require $n$ updates.
 \end{enumerate}
 
-\textbf{Uniqueness.} $C_0 = 1$ is the \textbf{unique} capacity: DOF $= 0$ fails to encode; DOF $> 1$ exceeds capacity. Given zero-incoherence as a constraint, the rate is mathematically forced (\LH{UNQ1}, \LH{MDL5}).
+\textbf{Uniqueness.} $C_0 = 1$ is the \textbf{unique} capacity: DOF $= 0$ fails to encode; DOF $> 1$ exceeds capacity. Given zero-incoherence as a constraint, the rate is mathematically forced (\LH{UNQ1}, \LH{ORA1}).
 
 \subsection{Scope}\label{sec:scope}
 
@@ -162,14 +162,14 @@ This paper makes five information-theoretic contributions:
 \begin{itemize}
 \tightlist
 \item Definition of encoding rate (DOF) and incoherence
-\item \textbf{Theorem~\ref{thm:coherence-capacity}:} $C_0 = 1$ (tight: achievability + converse) (\LH{COH3}, \LH{CAP2}, \LH{CAP3})
+\item \textbf{Theorem~\ref{thm:coherence-capacity}:} $C_0 = 1$ (tight: achievability + converse) (\LH{COH3}, \LH{CAP2}, \LH{CIA1})
 \item \textbf{Theorem~\ref{thm:redundancy-incoherence}:} Redundancy $\rho > 0$ iff incoherence reachable (\LH{RED1})
 \end{itemize}
 
 \textbf{2. Side information bounds (Section~\ref{sec:side-information}):}
 \begin{itemize}
 \tightlist
-\item \textbf{Theorem~\ref{thm:side-info}:} $k$-way resolution requires $\geq \log_2 k$ bits (\LH{CIA2})
+\item \textbf{Theorem~\ref{thm:side-info}:} $k$-way resolution requires $\geq \log_2 k$ bits (\LH{CIA3})
 \item \textbf{Corollary~\ref{cor:dof1-zero-side}:} DOF $= 1$ requires zero side information (\LH{SID1})
 \item Multi-terminal interpretation: derivation as perfect correlation
 \end{itemize}
@@ -177,23 +177,23 @@ This paper makes five information-theoretic contributions:
 \textbf{3. Encoder realizability (Section~\ref{sec:requirements}):}
 \begin{itemize}
 \tightlist
-\item \textbf{Theorem~\ref{thm:ssot-iff}:} Capacity achieved iff causal propagation AND provenance observability (\LH{SOT1})
-\item \textbf{Theorem~\ref{thm:independence}:} Requirements are independent (\LH{IND1}, \LH{IND2})
+\item \textbf{Theorem~\ref{thm:ssot-iff}:} Capacity achieved iff causal propagation AND provenance observability (\LH{UNQ1})
+\item \textbf{Theorem~\ref{thm:independence}:} Requirements are independent (\LH{IND1}, \LH{INS2})
 \item Connection to feedback channels and Slepian-Wolf side information
 \end{itemize}
 
 \textbf{4. Rate-complexity tradeoffs (Section~\ref{sec:bounds}):}
 \begin{itemize}
 \tightlist
-\item \textbf{Theorem~\ref{thm:upper-bound}:} $O(1)$ at capacity (\LH{BND1})
+\item \textbf{Theorem~\ref{thm:upper-bound}:} $O(1)$ at capacity (\LH{BND2})
 \item \textbf{Theorem~\ref{thm:lower-bound}:} $\Omega(n)$ above capacity (\LH{BND2})
-\item \textbf{Theorem~\ref{thm:unbounded-gap}:} Gap unbounded (\LH{BND3})
+\item \textbf{Theorem~\ref{thm:unbounded-gap}:} Gap unbounded (\LH{BND4})
 \end{itemize}
 
 \textbf{5. Encoding-theoretic CAP/FLP (Section~\ref{sec:cap-flp}):}
 \begin{itemize}
 \tightlist
-\item \textbf{Theorem~\ref{thm:cap-encoding}:} CAP as encoding impossibility (\LH{CAP1})
+\item \textbf{Theorem~\ref{thm:cap-encoding}:} CAP as encoding impossibility (\LH{CAP2})
 \item \textbf{Theorem~\ref{thm:static-flp}:} FLP as resolution impossibility (\LH{FLP1})
 \end{itemize}
 
