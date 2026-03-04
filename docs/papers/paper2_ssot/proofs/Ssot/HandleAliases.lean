@@ -4,9 +4,7 @@ import Ssot.ClaimClosure
 import Ssot.Coherence
 import Ssot.Completeness
 import Ssot.CrossPaperDependencies  -- Bridge theorems linking Paper 2 → Paper 1
-import Ssot.Entropy
-import Ssot.GraphEntropy
-import Ssot.GraphEntropyAsymptotic
+import Paper1IT.Entropy
 import Ssot.Foundations
 import Ssot.Inconsistency
 import Ssot.LangPython
@@ -21,29 +19,6 @@ open Ssot
     `lean_handle_ids_auto.tex`, which then powers `\LH{CODE}` links in the PDF. -/
 
 abbrev ENT1 := Entropy.ClassicalEntropyAssumptions
-abbrev GPH2 := @GraphEntropy.clique_card_le_colors
-abbrev GPH3 := @GraphEntropy.complete_graph_needs_all_colors
-abbrev GPH4 := @GraphEntropy.fiber_card_le_tag_alphabet
-abbrev GPH5 := @GraphEntropy.constant_observation_needs_all_tags
-abbrev GPH6 := @GraphEntropy.maxFiberCard_le_tag_alphabet
-abbrev GPH7 := @GraphEntropy.card_div_le_tag_alphabet
-abbrev GPH8 := @GraphEntropy.card_le_mul_tag_alphabet
-abbrev GPH9 := @GraphEntropy.tagFeasible_mono
-abbrev GPH10 := @GraphEntropy.maxFiberCard_le_of_tagFeasible
-abbrev GPH11 := @GraphEntropy.card_div_le_of_tagFeasible
-abbrev GPH12 := @GraphEntropy.tagFeasible_of_maxFiberCard_le
-abbrev GPH13 := @GraphEntropy.tagFeasible_iff_maxFiberCard_le
-abbrev GPH14 := @GraphEntropy.block_tagFeasible_of_tagFeasible
-abbrev GPH15 := @GraphEntropy.pow_maxFiberCard_le_of_block_tagFeasible
-abbrev GPH16 := @GraphEntropy.block_tagFeasible_iff_pow_maxFiberCard_le
-abbrev GPH17 := @GraphEntropy.maxFiberCard_blockObserve_eq_pow
-abbrev GPH18 := @GraphEntropy.blockTagRateBits_eq_mul_oneShot
-abbrev GPH19 := @GraphEntropy.blockTagRateBitsPerCoordinate_eq_oneShot
-abbrev GPH20 := @GraphEntropy.minBlockFeasibleAlphabet_eq_pow
-abbrev GPH21 := @GraphEntropy.minBlockFeasibleBits_eq_blockTagRateBits
-abbrev GPH22 := @GraphEntropy.tendsto_blockTagRateBitsPerCoordinate_succ
-abbrev GPH23 := @GraphEntropy.block_tagFeasible_pow_budget_iff
-abbrev GPH24 := @GraphEntropy.feasibleAtAlphabetBase_iff
 abbrev CIA1 := ClaimClosure.ClassicalInfoAssumptions
 -- CIA2-CIA4 require ClassicalInfoAssumptions instance; define as functions taking instance explicitly
 abbrev CIA2 := fun (inst : ClaimClosure.ClassicalInfoAssumptions) =>

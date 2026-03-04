@@ -10,7 +10,7 @@ import Ssot.Bounds
 import Ssot.Inconsistency
 import Ssot.Requirements
 import Ssot.Completeness
-import Ssot.Entropy
+import Paper1IT.Entropy
 import Ssot.DependencyBridge
 
 namespace ClaimClosure

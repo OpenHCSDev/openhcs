@@ -8,12 +8,12 @@ We adopt $\Phi$ as the complete observation universe for this paper: to claim ap
 \begin{proposition}[Observational Quotient]\label{prop:observational-quotient}
 For any admissible strategy using only $\Phi$, the entire interaction transcript (and hence the output) depends only on $\alpha(v)$. Equivalently, any in-scope semantic property $P$ factors through $\alpha$: there exists $\tilde{P}$ with $P(v) = \tilde{P}(\alpha(v))$ for all $v$.
 \end{proposition}
-\leanmeta{ \LH{UNIQ1}, \LH{L2}, \LH{L2}}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}, \LH{UNIQ1}}
 
 \begin{corollary}[Why ``ad hoc'' = adding an axis/tag]\label{cor:ad-hoc-add-axis}
 If two values $v, w$ satisfy $\alpha(v) = \alpha(w)$, then no admissible $\Phi$-only strategy can distinguish them with zero error. Any mechanism that does distinguish such pairs must introduce additional information not present in $\alpha$ (equivalently, refine the axis map by adding a new axis/tag).
 \end{corollary}
-\leanmeta{ \LH{L2}, \LH{L2}, \LH{L2}}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}, \LH{UNIQ1}}
 
 \subsection{Query Families and Distinguishing Sets}
 
@@ -46,7 +46,7 @@ A distinguishing set $S$ is \emph{minimal} if no proper subset of $S$ is disting
 \item ``Minimal'' means inclusion-minimal: no proper subset suffices.
 \end{itemize}
 
-No further assumptions are required within this theory beyond the fixed observation family $\Phi$. In Lean, the mechanization is explicit end-to-end. Closure-operator lemmas (extensive, monotone, idempotent) are proved in \nolinkurl{proofs/abstract_class_system.lean} via \nolinkurl{AxisClosure}. Exchange and equicardinality lemmas are proved in \nolinkurl{proofs/axis_framework.lean} via \LH{UNIQ1} and \LH{UNIQ1}. The composition point is formalized by \nolinkurl{closureInducedAxisMatroid} and \LH{L2}, with closure-induced nodup/subset/exchange hypotheses made explicit.
+No further assumptions are required within this theory beyond the fixed observation family $\Phi$. In Lean, the mechanization is explicit end-to-end. Closure-operator lemmas (extensive, monotone, idempotent) are proved in \nolinkurl{proofs/abstract_class_system.lean} via \nolinkurl{AxisClosure}. Exchange and equicardinality lemmas are proved in \nolinkurl{proofs/axis_framework.lean} via \LH{UNIQ1} and \LH{UNIQ1}. The composition point is formalized by \nolinkurl{closureInducedAxisMatroid} and \LH{UNIQ1}, with closure-induced nodup/subset/exchange hypotheses made explicit.
 
 \begin{definition}[Bases family]
 Let $E = \Phi\;(=\mathcal{Q})$ be the ground set of primitive queries (attribute predicates). Let $\mathcal{B} \subseteq 2^E$ be the family of minimal distinguishing sets.
@@ -89,14 +89,14 @@ Let $n := |\mathcal{I}|$ be the ambient number of available attributes. Clearly 
 \begin{corollary}[Well-defined distinguishing dimension]\label{cor:well-defined-distinguishing-dimension}
 All minimal distinguishing sets have equal cardinality. Thus the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}) is well-defined.
 \end{corollary}
-\leanmeta{ \LH{UNIQ1}, \LH{L2}}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}}
 
 \subsection{Implications for Witness Cost}
 
 \begin{corollary}[Lower bound on attribute-only witness cost]\label{cor:attribute-only-witness-lb}
 For any attribute-only observer, $W(\text{class-identity}) \geq d$ where $d$ is the distinguishing dimension.
 \end{corollary}
-\leanmeta{ \LH{L2}}
+\leanmeta{ \LH{UNIQ1}}
 
 \begin{proof}
 If a procedure queried fewer than $d$ attributes on every execution path, each such queried set would be non-distinguishing by definition of $d$. For that path, there would exist two different classes with identical answers on all queried attributes, yielding identical transcripts and forcing the same output on both values. This contradicts zero-error class identification. Hence some path requires at least $d$ queries.

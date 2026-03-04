@@ -1,7 +1,7 @@
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Data.Finset.Max
 import Mathlib.Order.Filter.Tendsto
-import Ssot.GraphEntropy
+import Paper1IT.GraphEntropy
 
 namespace Ssot
 namespace GraphEntropy

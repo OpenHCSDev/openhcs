@@ -107,3 +107,23 @@ Rationale: Paper 2 already depends on Paper 1; we should keep dependency flow on
 3. Cut Paper 2 directly to Paper 1 imports (no wrappers).
 4. Rebuild both papers and submission artifacts.
 5. Keep only canonical ownership in Paper 1; remove all duplicate Paper 2 handle definitions.
+
+---
+
+## Execution Notes (Completed 2026-03-04)
+- Shared IT modules now live in Paper 1 under:
+  - `paper1/proofs/Paper1IT/Entropy.lean`
+  - `paper1/proofs/Paper1IT/GraphEntropy.lean`
+  - `paper1/proofs/Paper1IT/GraphEntropyAsymptotic.lean`
+- Canonical `GPH*` IDs now live in `paper1/proofs/HandleAliases.lean`.
+- Paper 2 no longer owns `GPH*` aliases in `paper2/proofs/Ssot/HandleAliases.lean`.
+- Paper 2 imports `Paper1IT.Entropy` directly where needed (`ClaimClosure`, `HandleAliases`, export files).
+- Local Paper 2 duplicates were removed:
+  - `paper2/proofs/Ssot/Entropy.lean`
+  - `paper2/proofs/Ssot/GraphEntropy.lean`
+  - `paper2/proofs/Ssot/GraphEntropyAsymptotic.lean`
+- Validation completed:
+  - `lake build` in `paper1/proofs`
+  - `lake build` in `paper2/proofs`
+  - `python scripts/build_papers.py submission paper1_jsait -q`
+  - `python scripts/build_papers.py submission paper2_it -q`

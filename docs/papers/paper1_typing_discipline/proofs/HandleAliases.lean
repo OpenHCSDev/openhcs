@@ -1,6 +1,8 @@
 import AbstractClassSystem.Core
 import AbstractClassSystem.Bridge
 import AbstractClassSystem.Extended
+import Paper1IT.GraphEntropy
+import Paper1IT.GraphEntropyAsymptotic
 import axis_framework
 
 open AbstractClassSystem
@@ -22,6 +24,31 @@ abbrev ENC1 := encoding_location_gap             -- Encoding location gap
 abbrev SHP2 := @shape_provenance_impossible       -- Shape provenance impossible
 abbrev ADV1 := adversary_forces_n_minus_1_queries -- Adversary forces n-1 queries
 abbrev MDL1 := model_completeness                -- Model completeness
+
+/-- Canonical graph-entropy handle IDs (shared downstream). -/
+abbrev GPH2 := @Ssot.GraphEntropy.clique_card_le_colors
+abbrev GPH3 := @Ssot.GraphEntropy.complete_graph_needs_all_colors
+abbrev GPH4 := @Ssot.GraphEntropy.fiber_card_le_tag_alphabet
+abbrev GPH5 := @Ssot.GraphEntropy.constant_observation_needs_all_tags
+abbrev GPH6 := @Ssot.GraphEntropy.maxFiberCard_le_tag_alphabet
+abbrev GPH7 := @Ssot.GraphEntropy.card_div_le_tag_alphabet
+abbrev GPH8 := @Ssot.GraphEntropy.card_le_mul_tag_alphabet
+abbrev GPH9 := @Ssot.GraphEntropy.tagFeasible_mono
+abbrev GPH10 := @Ssot.GraphEntropy.maxFiberCard_le_of_tagFeasible
+abbrev GPH11 := @Ssot.GraphEntropy.card_div_le_of_tagFeasible
+abbrev GPH12 := @Ssot.GraphEntropy.tagFeasible_of_maxFiberCard_le
+abbrev GPH13 := @Ssot.GraphEntropy.tagFeasible_iff_maxFiberCard_le
+abbrev GPH14 := @Ssot.GraphEntropy.block_tagFeasible_of_tagFeasible
+abbrev GPH15 := @Ssot.GraphEntropy.pow_maxFiberCard_le_of_block_tagFeasible
+abbrev GPH16 := @Ssot.GraphEntropy.block_tagFeasible_iff_pow_maxFiberCard_le
+abbrev GPH17 := @Ssot.GraphEntropy.maxFiberCard_blockObserve_eq_pow
+abbrev GPH18 := @Ssot.GraphEntropy.blockTagRateBits_eq_mul_oneShot
+abbrev GPH19 := @Ssot.GraphEntropy.blockTagRateBitsPerCoordinate_eq_oneShot
+abbrev GPH20 := @Ssot.GraphEntropy.minBlockFeasibleAlphabet_eq_pow
+abbrev GPH21 := @Ssot.GraphEntropy.minBlockFeasibleBits_eq_blockTagRateBits
+abbrev GPH22 := @Ssot.GraphEntropy.tendsto_blockTagRateBitsPerCoordinate_succ
+abbrev GPH23 := @Ssot.GraphEntropy.block_tagFeasible_pow_budget_iff
+abbrev GPH24 := @Ssot.GraphEntropy.feasibleAtAlphabetBase_iff
 
 /-- ## FIRST PRINCIPLES FORCING CHAIN
     These theorems establish that typing discipline choice is FORCED by first principles.

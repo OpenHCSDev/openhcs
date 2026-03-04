@@ -5,7 +5,7 @@ import Mathlib.Combinatorics.SimpleGraph.Clique
 import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Data.Finset.Card
 import Mathlib.Tactic
-import Ssot.Entropy
+import Paper1IT.Entropy
 
 open scoped BigOperators
 
