@@ -23,10 +23,10 @@ If the confusability graph for $F$ contains a clique of size $k$, then any side-
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-Restrict $F$ to the $k$ values in the clique. In the finite zero-error setting, any zero-error tag assignment is a proper coloring of the confusability graph, so a $k$-clique forces at least $k$ distinct tag values (\LH{RED1}, \LH{RED1}). More generally, the required tag alphabet is bounded below by the worst-case observation-fiber size (\LH{RED1}), and therefore by the average fiber occupancy $\lfloor |\mathcal V|/|\mathcal O| \rfloor$ induced by observation alphabet size (\LH{RED1}); equivalently, any zero-error scheme must satisfy the global counting converse $|\mathcal V|\le |\mathcal O|\cdot |\mathcal T|$ (\LH{RED1}). For the distribution-sensitive refinement, apply the Fano-style bound (Theorem~\ref{thm:fano-converse} in Section~\ref{sec:info-converse}) to conclude that vanishing error requires $I(F;S)\ge\log k - o(1)$. If $I(F;S)$ is strictly smaller than $\log k$, Fano's inequality implies a non-zero lower bound on error probability.
+Restrict $F$ to the $k$ values in the clique. In the finite zero-error setting, any zero-error tag assignment is a proper coloring of the confusability graph, so a $k$-clique forces at least $k$ distinct tag values (\LH{UNQ1}, \LH{UNQ1}). More generally, the required tag alphabet is bounded below by the worst-case observation-fiber size (\LH{UNQ1}), and therefore by the average fiber occupancy $\lfloor |\mathcal V|/|\mathcal O| \rfloor$ induced by observation alphabet size (\LH{UNQ1}); equivalently, any zero-error scheme must satisfy the global counting converse $|\mathcal V|\le |\mathcal O|\cdot |\mathcal T|$ (\LH{UNQ1}). For the distribution-sensitive refinement, apply the Fano-style bound (Theorem~\ref{thm:fano-converse} in Section~\ref{sec:info-converse}) to conclude that vanishing error requires $I(F;S)\ge\log k - o(1)$. If $I(F;S)$ is strictly smaller than $\log k$, Fano's inequality implies a non-zero lower bound on error probability.
 \end{proof}
 
-\noindent The confusability graph provides a compact combinatorial certificate of necessary side-information: large cliques force large zero-error tag alphabets in the finite model (\LH{RED1}, \LH{RED1}), the worst-case fiber bound captures the same obstruction globally (\LH{RED1}), a pigeonhole refinement gives an explicit alphabet-size floor (\LH{RED1}), and a global counting converse gives $|\mathcal V|\le |\mathcal O|\cdot |\mathcal T|$ for any zero-error scheme (\LH{RED1}). The Fano refinement turns this obstruction into a mutual-information lower bound (\LH{RED1}).
+\noindent The confusability graph provides a compact combinatorial certificate of necessary side-information: large cliques force large zero-error tag alphabets in the finite model (\LH{UNQ1}, \LH{UNQ1}), the worst-case fiber bound captures the same obstruction globally (\LH{UNQ1}), a pigeonhole refinement gives an explicit alphabet-size floor (\LH{UNQ1}), and a global counting converse gives $|\mathcal V|\le |\mathcal O|\cdot |\mathcal T|$ for any zero-error scheme (\LH{UNQ1}). The Fano refinement turns this obstruction into a mutual-information lower bound (\LH{UNQ1}).
 
 \subsection{The Structural Timing Constraint}\label{sec:timing}
 
@@ -202,7 +202,7 @@ Configuration & Terraform \texttt{graph}, Kubernetes API server \\
 \subsection{Independence of Requirements}\label{sec:independence}
 %==============================================================================
 
-The two requirements--causal propagation and provenance observability--are independent. Neither implies the other (\LH{RED1}, \LH{RED1}).
+The two requirements--causal propagation and provenance observability--are independent. Neither implies the other (\LH{UNQ1}, \LH{UNQ1}).
 
 \begin{theorem}[Requirements are Independent]\label{thm:independence}
 \begin{enumerate}
@@ -211,7 +211,7 @@ The two requirements--causal propagation and provenance observability--are indep
 \item An encoding system can have provenance observability without causal propagation
 \end{enumerate}
 \end{theorem}
-\leanmeta{\LH{RED1}}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 \textbf{(1) Causal without provenance:} Rust proc macros execute at compile time (causal propagation: definition triggers code generation). But the generated code is opaque at runtime--the program cannot query what was generated (no provenance observability).
@@ -365,7 +365,7 @@ public class HandlerRegistry {
 \begin{theorem}[Generated Files Are Independent Sources]\label{thm:generated-second}
 A generated source file constitutes an independent encoding, not a derivation. Code generation does not achieve DOF = 1.
 \end{theorem}
-\leanmeta{\LH{RED1}}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 Let $E_1$ be the annotation on \texttt{PNGHandler.java}. Let $E_2$ be the generated \texttt{HandlerRegistry.java}.

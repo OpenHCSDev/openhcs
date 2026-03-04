@@ -72,7 +72,7 @@ The model is empirically vulnerable. No counterexample has been produced.
 
 \textbf{Objection:} ``Your claim that DOF = 1 is optimal is too restrictive. Real-world encoding systems have acceptable levels of redundancy.''
 
-\textbf{Response:} The optimality is \textbf{derived}, not chosen. DOF = 1 is the unique optimal encoding rate under coherence constraints (\LH{UNQ1}, \LH{RED1}):
+\textbf{Response:} The optimality is \textbf{derived}, not chosen. DOF = 1 is the unique optimal encoding rate under coherence constraints (\LH{UNQ1}, \LH{UNQ1}):
 
 \begin{center}
 \begin{tabular}{cl}
@@ -309,7 +309,7 @@ The macro generates the registry at compile time. There's no second DOF that can
 struct SneakyHandler;
 impl Handler for SneakyHandler { ... }  // No #[derive]--NOT in registry
 \end{code}
-The impl exists; the registry entry does not. \textbf{DOF = 2}: the impl and the registry are independent locations that can disagree (\LH{RED1}).
+The impl exists; the registry entry does not. \textbf{DOF = 2}: the impl and the registry are independent locations that can disagree (\LH{UNQ1}).
 
 \item \textbf{The \texttt{inventory} crate uses linker tricks, not language semantics.} It works by emitting items into special linker sections and collecting them at link time. This is external to language semantics (\LH{IND3}):
 \begin{itemize}

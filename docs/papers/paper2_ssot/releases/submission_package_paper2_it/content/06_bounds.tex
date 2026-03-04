@@ -1,7 +1,7 @@
 \section{Rate-Complexity Bounds}\label{sec:bounds}
 %==============================================================================
 
-We now prove the rate-complexity bounds that make DOF = 1 optimal. The key result: the gap between DOF-1-complete and DOF-1-incomplete architectures is \emph{unbounded}--it grows without limit as encoding systems scale (\LH{RED1}).
+We now prove the rate-complexity bounds that make DOF = 1 optimal. The key result: the gap between DOF-1-complete and DOF-1-incomplete architectures is \emph{unbounded}--it grows without limit as encoding systems scale (\LH{UNQ1}).
 
 \subsection{Cost Model}\label{sec:cost-model}
 
@@ -28,7 +28,7 @@ M_{\text{effective}}(C, \delta_F) = O(1)
 \]
 Effective modification complexity is constant regardless of system size.
 \end{theorem}
-\leanmeta{\LH{RED1}}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 Let $\text{DOF}(C, F) = 1$. By Definition~\ref{def:ssot}, $C$ has exactly one independent encoding location. Let $L_s$ be this single independent location.
@@ -54,7 +54,7 @@ For an encoding system with DOF $>$ 1 for fact $F$, if $F$ is encoded at $n$ ind
 M_{\text{effective}}(C, \delta_F) = \Omega(n)
 \]
 \end{theorem}
-\leanmeta{\LH{RED1}}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 Let $\text{DOF}(C, F) = n$ where $n > 1$.
@@ -72,7 +72,7 @@ Therefore, $M_{\text{effective}}(C, \delta_F) = \Omega(n)$.
 
 \subsection{Information-theoretic converse (mutual information / Fano)}\label{sec:info-converse}
 
-To make the converse argument explicit in information-theoretic terms we give a concise mutual-information / Fano-style bound showing that insufficient side information forces a non-vanishing error probability when attempting to recover structural facts from distributed encodings (\LH{RED1}, \LH{RED1}).
+To make the converse argument explicit in information-theoretic terms we give a concise mutual-information / Fano-style bound showing that insufficient side information forces a non-vanishing error probability when attempting to recover structural facts from distributed encodings (\LH{UNQ1}, \LH{UNQ1}).
 
 \begin{remark}[Formalization status]
 The results in this subsection apply Fano's inequality, a standard tool in information theory~\cite{cover2006elements}. We state and apply these results without separate Lean formalization; the proofs are direct applications of the classical inequality. The core capacity and complexity theorems (Sections~\ref{sec:capacity}--\ref{sec:requirements}) are fully machine-checked.
@@ -142,7 +142,7 @@ As a second illustration, if $I(F;S)=1.5$ bits then $H(F|S)=0.5$ and Fano's boun
 
 
 
-\textbf{Tightness (Achievability + Converse).} Theorems~\ref{thm:upper-bound} and~\ref{thm:lower-bound} form a tight information-theoretic bound: DOF = 1 achieves constant modification cost (achievability), while any encoding with more than one independent location incurs linear cost in the number of independent encodings (converse) (\LH{RED1}, \LH{RED1}). There is no intermediate regime with sublinear manual edits when $k > 1$ independent encodings are permitted.
+\textbf{Tightness (Achievability + Converse).} Theorems~\ref{thm:upper-bound} and~\ref{thm:lower-bound} form a tight information-theoretic bound: DOF = 1 achieves constant modification cost (achievability), while any encoding with more than one independent location incurs linear cost in the number of independent encodings (converse) (\LH{UNQ1}, \LH{UNQ1}). There is no intermediate regime with sublinear manual edits when $k > 1$ independent encodings are permitted.
 
 \subsection{The Unbounded Gap}\label{sec:gap}
 
@@ -152,7 +152,7 @@ The ratio of modification complexity between DOF-1-incomplete and DOF-1-complete
 \lim_{n \to \infty} \frac{M_{\text{DOF}>1}(n)}{M_{\text{DOF}=1}} = \lim_{n \to \infty} \frac{n}{1} = \infty
 \]
 \end{theorem}
-\leanmeta{\LH{RED1}}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 By Theorem~\ref{thm:upper-bound}, $M_{\text{DOF}=1} = O(1)$. Specifically, $M_{\text{DOF}=1} = 1$ for any system size.
@@ -170,7 +170,7 @@ As $n \to \infty$, the ratio $\to \infty$. The gap is unbounded.
 \begin{corollary}[Arbitrary Reduction Factor]\label{cor:arbitrary-reduction}
 For any constant $k$, there exists a system size $n$ such that DOF = 1 provides at least $k\times$ reduction in modification complexity.
 \end{corollary}
-\leanmeta{\LH{RED1}}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 Choose $n = k$. Then $M_{\text{DOF}>1}(n) = n = k$ and $M_{\text{DOF}=1} = 1$. The reduction factor is $k/1 = k$.

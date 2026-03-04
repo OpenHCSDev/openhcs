@@ -6,6 +6,7 @@ import Ssot.Completeness
 import Ssot.CrossPaperDependencies  -- Bridge theorems linking Paper 2 → Paper 1
 import Ssot.Entropy
 import Ssot.GraphEntropy
+import Ssot.GraphEntropyAsymptotic
 import Ssot.Foundations
 import Ssot.Inconsistency
 import Ssot.LangPython
@@ -32,6 +33,17 @@ abbrev GPH10 := @GraphEntropy.maxFiberCard_le_of_tagFeasible
 abbrev GPH11 := @GraphEntropy.card_div_le_of_tagFeasible
 abbrev GPH12 := @GraphEntropy.tagFeasible_of_maxFiberCard_le
 abbrev GPH13 := @GraphEntropy.tagFeasible_iff_maxFiberCard_le
+abbrev GPH14 := @GraphEntropy.block_tagFeasible_of_tagFeasible
+abbrev GPH15 := @GraphEntropy.pow_maxFiberCard_le_of_block_tagFeasible
+abbrev GPH16 := @GraphEntropy.block_tagFeasible_iff_pow_maxFiberCard_le
+abbrev GPH17 := @GraphEntropy.maxFiberCard_blockObserve_eq_pow
+abbrev GPH18 := @GraphEntropy.blockTagRateBits_eq_mul_oneShot
+abbrev GPH19 := @GraphEntropy.blockTagRateBitsPerCoordinate_eq_oneShot
+abbrev GPH20 := @GraphEntropy.minBlockFeasibleAlphabet_eq_pow
+abbrev GPH21 := @GraphEntropy.minBlockFeasibleBits_eq_blockTagRateBits
+abbrev GPH22 := @GraphEntropy.tendsto_blockTagRateBitsPerCoordinate_succ
+abbrev GPH23 := @GraphEntropy.block_tagFeasible_pow_budget_iff
+abbrev GPH24 := @GraphEntropy.feasibleAtAlphabetBase_iff
 abbrev CIA1 := ClaimClosure.ClassicalInfoAssumptions
 -- CIA2-CIA4 require ClassicalInfoAssumptions instance; define as functions taking instance explicitly
 abbrev CIA2 := fun (inst : ClaimClosure.ClassicalInfoAssumptions) =>
