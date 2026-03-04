@@ -1,25 +1,21 @@
 \section{Related Work}\label{sec:related}
 
-This paper extends the static decision quotient to stochastic and sequential regimes. Related work falls into several categories.
+\subsection{Sufficient Statistics and Information Reduction}
 
-\subsection{Complexity of Dynamic Decision Problems}
+The closest classical analogue to coordinate sufficiency is the theory of sufficient statistics. In both settings the goal is to replace a large object by a smaller one without losing decision-relevant structure. The difference here is one of object and emphasis: the retained information is indexed by optimal-action preservation rather than parameter inference, and the central summary is the optimizer quotient rather than a statistic defined relative to a parametric family.
 
-The complexity of MDPs and POMDPs is well-established: optimal MDP planning is in P, optimal POMDP planning is PSPACE-complete \cite{papadimitriou1987mdp, mundhenk2000mdp, littman1998probplanning}. Our contribution extends this to the meta-question of identifying sufficient coordinates in these settings.
+\subsection{Information Geometry and Bayesian Decision Theory}
 
-Sufficient statistics \cite{fisher1922mathematical} is the classical foundation. Our stochastic sufficiency definition connects to this tradition but focuses on decision-relevant information rather than statistical estimation.
+The Bayesian chain used here is standard: cross-entropy decomposes into entropy plus KL divergence, and Gibbs' inequality yields Bayes optimality under log loss. What is distinctive here is the way those classical identities are attached to the optimizer quotient and to structural rank, so that Bayesian optimality appears as one part of a larger convergence story rather than as an isolated fact.
 
-\subsection{Information and Signaling}
+\subsection{Rate-Distortion and Lossless Compression}
 
-Value of information \cite{howard1966information, raiffa1961applied} quantifies payment for information. We address a different question: the complexity of identifying which information is sufficient for decision.
+The link between lossless compression and decision structure is conceptually close to the minimum-description-length viewpoint. We focus on the zero-distortion boundary relevant to exact decision preservation: once only decision-equivalent states may be merged, the quotient structure fixes the admissible compression target. This places rate-distortion language in direct contact with the relevant-coordinate support.
 
-Signaling games \cite{spence1973job, myerson1979incentive, milgrom1986price} connect to our temporal integrity and credibility results (Paper 5). The agent must abstain (Paper 4), cannot credibly signal why (Paper 5), and can only escape via costly signals.
+\subsection{Categorical and Quotient Viewpoints}
 
-\subsection{Feature Selection in Machine Learning}
+The optimizer quotient is a familiar object in \textbf{Set}: it is the coimage/image factorization of the optimizer map. The contribution here is not novelty of construction but novelty of use. The quotient is the organizing object through which the Bayesian, entropy, and structural-rank viewpoints can be compared within a single framework.
 
-Feature selection asks which inputs predict outputs, known NP-hard in general \cite{blum1997selection, amaldi1998complexity, guyon2003introduction}. Our decision-theoretic analog for sufficiency is PP-complete (stochastic) and PSPACE-complete (sequential).
+\subsection{Formalized Mathematics and Verified Complexity}
 
-\subsection{Regime Complexity Hierarchy}
-
-Our hierarchy Static $\subset$ Stochastic $\subset$ Sequential with complexity classes coNP $\subset$ PP $\subset$ PSPACE extends the representation-sensitive complexity results established for MDPs/POMDPs to the meta-level sufficiency problem.
-
-This paper integrates: (i) stochastic and sequential extensions, (ii) substrate cost formalization, (iii) temporal learning and integrity, and (iv) cross-regime transfer conditions.
+Formal verification has made major progress in algebra, analysis, and basic computability. The present work belongs to the growing body of research that uses mechanization to stabilize arguments spanning more than one mathematical viewpoint. Here the mechanized layer supports quotient-theoretic, information-theoretic, and Bayesian statements within a single development.

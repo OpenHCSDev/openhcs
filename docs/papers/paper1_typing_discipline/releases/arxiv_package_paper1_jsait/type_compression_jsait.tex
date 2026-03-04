@@ -52,25 +52,19 @@
 
 % Author block - IEEE format
 \author{Tristan~Simas%
-\thanks{T. Simas is with McGill University, Montreal, QC, Canada (e-mail: tristan.simas@mail.mcgill.ca).}%
-\thanks{Manuscript received \today.}}
+\thanks{T. Simas is with McGill University, Montreal, QC, Canada (e-mail: tristan.simas@mail.mcgill.ca).}}
 
 \begin{document}
 \ifdefined\JSAITREVIEW\doublespacing\fi
 
 \maketitle
 
-% Copyright notice
-\renewcommand{\thefootnote}{}
-\footnotetext{
-  \textcopyright\ 2026 Tristan Simas.
-  This work is licensed under CC BY 4.0.
-  License: \url{https://creativecommons.org/licenses/by/4.0/}
-}
-\renewcommand{\thefootnote}{\arabic{footnote}}
-
 % Include abstract
 \input{content/abstract.tex}
+\ifdefined\JSAITREVIEW
+\noindent\textit{Supplementary artifact (Lean 4 formalization):} \url{https://doi.org/10.5281/zenodo.18123531}
+\par\medskip
+\fi
 
 % Main content sections
 \section{Introduction}
@@ -88,14 +82,16 @@
 \section{Witness Cost Analysis}\label{sec:witness}
 \input{content/04_kolmogorov_witness.tex}
 
-\section{$(L, W, D)$ Optimality}\label{sec:lwd}
+\section{\texorpdfstring{$(L, W, D)$}{(L, W, D)} Optimality}\label{sec:lwd}
 \input{content/05_rate_distortion.tex}
 
 \section{Cross-Domain Instantiations}\label{sec:applications}
 \input{content/06_applications.tex}
 
+\ifdefined\JSAITREVIEW\else
 \section{Extensions}\label{sec:extensions}
 \input{content/06b_extensions.tex}
+\fi
 
 \section{Conclusion}\label{sec:conclusion}
 \input{content/07_conclusion.tex}
@@ -105,8 +101,10 @@
 \bibliography{references}
 
 % Appendix
+\ifdefined\JSAITREVIEW\else
 \appendix
 \section{Lean 4 Formalization}\label{sec:lean}
 \input{content/appendix_lean.tex}
+\fi
 
 \end{document}

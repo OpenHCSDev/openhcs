@@ -2,6 +2,13 @@
 
 The core claims in this paper are machine-checked in Lean 4. We keep the appendix concise for JSAIT and move full operational listings and implementation-level proof scripts to the supplementary artifact.
 
+\newcommand{\LeanLinesAbstractClassSystemAggregate}{\number\numexpr\LeanLinesAbstractClassSystemBZeroFourFiveefNineFour+\LeanLinesAbstractClassSystemAxisClosure+\LeanLinesAbstractClassSystemBridge+\LeanLinesAbstractClassSystemCore+\LeanLinesAbstractClassSystemExtended+\LeanLinesAbstractClassSystemGraphBridges+\LeanLinesAbstractClassSystemTyping+\LeanLinesAbstractClassSystemEightOneSixTwoFourOnebFour\relax}
+\newcommand{\LeanTheoremsAbstractClassSystemAggregate}{\number\numexpr\LeanTheoremsAbstractClassSystemBZeroFourFiveefNineFour+\LeanTheoremsAbstractClassSystemAxisClosure+\LeanTheoremsAbstractClassSystemBridge+\LeanTheoremsAbstractClassSystemCore+\LeanTheoremsAbstractClassSystemExtended+\LeanTheoremsAbstractClassSystemGraphBridges+\LeanTheoremsAbstractClassSystemTyping+\LeanTheoremsAbstractClassSystemEightOneSixTwoFourOnebFour\relax}
+\newcommand{\LeanLinesCoreShown}{\number\numexpr\LeanLinesAbstractClassSystemAggregate+\LeanLinesAxisFramework+\LeanLinesNominalResolution+\LeanLinesDisciplineMigration+\LeanLinesContextFormalization+\LeanLinesPythonInstantiation+\LeanLinesTypescriptInstantiation+\LeanLinesJavaInstantiation+\LeanLinesRustInstantiation+\LeanLinesLwdConverse\relax}
+\newcommand{\LeanTheoremsCoreShown}{\number\numexpr\LeanTheoremsAbstractClassSystemAggregate+\LeanTheoremsAxisFramework+\LeanTheoremsNominalResolution+\LeanTheoremsDisciplineMigration+\LeanTheoremsContextFormalization+\LeanTheoremsPythonInstantiation+\LeanTheoremsTypescriptInstantiation+\LeanTheoremsJavaInstantiation+\LeanTheoremsRustInstantiation+\LeanTheoremsLwdConverse\relax}
+\newcommand{\LeanLinesSupportFiles}{\number\numexpr\LeanTotalLines-\LeanLinesCoreShown\relax}
+\newcommand{\LeanTheoremsSupportFiles}{\number\numexpr\LeanTotalTheorems-\LeanTheoremsCoreShown\relax}
+
 \begin{table*}[t]
 \centering
 \caption{Lean 4 Formalization Modules}
@@ -11,7 +18,7 @@ The core claims in this paper are machine-checked in Lean 4. We keep the appendi
 \toprule
 Module & Lines & Theorems & Purpose \\
 \midrule
-\texttt{abstract\_class\_system.lean} & \LeanLinesAbstractClassSystem & \LeanTheoremsAbstractClassSystem & Two-axis instantiation, barrier, dominance \\
+\texttt{abstract\_class\_system.lean} & \LeanLinesAbstractClassSystemAggregate & \LeanTheoremsAbstractClassSystemAggregate & Two-axis instantiation, barrier, dominance \\
 \texttt{axis\_framework.lean} & \LeanLinesAxisFramework & \LeanTheoremsAxisFramework & Query families, closure, matroid bridge \\
 \texttt{nominal\_resolution.lean} & \LeanLinesNominalResolution & \LeanTheoremsNominalResolution & Nominal identification and witness procedures \\
 \texttt{discipline\_migration.lean} & \LeanLinesDisciplineMigration & \LeanTheoremsDisciplineMigration & Discipline vs. migration consequences \\
@@ -22,19 +29,19 @@ Module & Lines & Theorems & Purpose \\
 \texttt{rust\_instantiation.lean} & \LeanLinesRustInstantiation & \LeanTheoremsRustInstantiation & Rust instantiation \\
 \texttt{lwd\_converse.lean} & \LeanLinesLwdConverse & \LeanTheoremsLwdConverse & Zero-error converse chain on collision blocks \\
 \midrule
-\textbf{Core modules subtotal} & \textbf{\number\numexpr\LeanLinesAbstractClassSystem+\LeanLinesAxisFramework+\LeanLinesNominalResolution+\LeanLinesDisciplineMigration+\LeanLinesContextFormalization+\LeanLinesPythonInstantiation+\LeanLinesTypescriptInstantiation+\LeanLinesJavaInstantiation+\LeanLinesRustInstantiation+\LeanLinesLwdConverse\relax} & \textbf{\number\numexpr\LeanTheoremsAbstractClassSystem+\LeanTheoremsAxisFramework+\LeanTheoremsNominalResolution+\LeanTheoremsDisciplineMigration+\LeanTheoremsContextFormalization+\LeanTheoremsPythonInstantiation+\LeanTheoremsTypescriptInstantiation+\LeanTheoremsJavaInstantiation+\LeanTheoremsRustInstantiation+\LeanTheoremsLwdConverse\relax} & \textbf{10 representative modules shown} \\
+\textbf{Core modules subtotal} & \textbf{\LeanLinesCoreShown} & \textbf{\LeanTheoremsCoreShown} & \textbf{10 representative modules shown} \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
 \paragraph{What is in scope in the mechanization.}
-The formalization covers the abstract observer model, the information barrier, constant-witness vs. query lower-bound separation, matroid structure of minimal distinguishing query sets, and the $(L,W,D)$ zero-error frontier claims stated in the main text. For matroid statements, closure axioms are mechanized in \texttt{AxisClosure} (\texttt{abstract\_class\_system.lean}); exchange/equicardinality lemmas are mechanized in \texttt{axis\_framework.lean}; and the closure-to-matroid composition is formalized there via \texttt{closureInducedAxisMatroid} and \texttt{closureInducedBasisEquicardinality} (with induced nodup/subset/exchange hypotheses explicit). For the converse in particular, \texttt{lwd\_converse.lean} formalizes: \texttt{collision\_block\_requires\_outcomes}, \texttt{collision\_block\_requires\_bits}, \texttt{maximal\_barrier\_requires\_bits}, and \texttt{impossible\_when\_bits\_too\_small}.
+The formalization covers the abstract observer model, the information barrier, constant-witness versus query lower-bound separation, matroid structure of minimal distinguishing query sets, and the $(L,W,D)$ zero-error frontier claims stated in the main text. For matroid statements, closure axioms are mechanized in \nolinkurl{AxisClosure} inside \nolinkurl{abstract_class_system.lean}; exchange and equicardinality lemmas are mechanized in \nolinkurl{axis_framework.lean}; and the closure-to-matroid composition is formalized there via \nolinkurl{closureInducedAxisMatroid} and \LH{UNIQ1}. For the converse in particular, \nolinkurl{lwd_converse.lean} formalizes \LH{L9}, \LH{L8}, \LH{L11}, and \LH{L10}.
 
 \paragraph{What is moved to supplementary artifact.}
 Implementation-specific operational details and extended code listings are included in supplementary material and are not required to follow the IT contribution in the main paper.
 
 \paragraph{Artifact totals.}
-The complete artifact contains \LeanTotalFiles\ Lean files totaling \LeanTotalLines\ lines and \LeanTotalTheorems\ theorem/lemma statements; the table above highlights the core modules directly used by the main-text derivations. The remaining utility files (\texttt{Paper1.lean}, \texttt{PrintAxioms.lean}, \texttt{check\_axioms.lean}, \texttt{lakefile.lean}) contribute \number\numexpr\LeanTotalLines-\LeanLinesAbstractClassSystem-\LeanLinesAxisFramework-\LeanLinesNominalResolution-\LeanLinesDisciplineMigration-\LeanLinesContextFormalization-\LeanLinesPythonInstantiation-\LeanLinesTypescriptInstantiation-\LeanLinesJavaInstantiation-\LeanLinesRustInstantiation-\LeanLinesLwdConverse\relax\ lines and \number\numexpr\LeanTotalTheorems-\LeanTheoremsAbstractClassSystem-\LeanTheoremsAxisFramework-\LeanTheoremsNominalResolution-\LeanTheoremsDisciplineMigration-\LeanTheoremsContextFormalization-\LeanTheoremsPythonInstantiation-\LeanTheoremsTypescriptInstantiation-\LeanTheoremsJavaInstantiation-\LeanTheoremsRustInstantiation-\LeanTheoremsLwdConverse\relax\ theorem/lemma statements.
+The complete artifact contains \LeanTotalFiles\ Lean files totaling \LeanTotalLines\ lines and \LeanTotalTheorems\ theorem/lemma statements. The table above highlights the core modules directly used by the main-text derivations. The remaining support files, including \nolinkurl{Paper1.lean}, \nolinkurl{PrintAxioms.lean}, \nolinkurl{HandleAliases.lean}, export helpers, and \nolinkurl{lakefile.lean}, contribute \LeanLinesSupportFiles\ lines and \LeanTheoremsSupportFiles\ theorem/lemma statements.
 
 \subsection{Attribute-Only Formalization}\label{interface-only-formalization}
 

@@ -8,12 +8,12 @@ We adopt $\Phi$ as the complete observation universe for this paper: to claim ap
 \begin{proposition}[Observational Quotient]\label{prop:observational-quotient}
 For any admissible strategy using only $\Phi$, the entire interaction transcript (and hence the output) depends only on $\alpha(v)$. Equivalently, any in-scope semantic property $P$ factors through $\alpha$: there exists $\tilde{P}$ with $P(v) = \tilde{P}(\alpha(v))$ for all $v$.
 \end{proposition}
-\leanmeta{ \LH{L6}, \LH{COMPL1}, \LH{FORC2}}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}, \LH{UNIQ1}}
 
 \begin{corollary}[Why ``ad hoc'' = adding an axis/tag]\label{cor:ad-hoc-add-axis}
 If two values $v, w$ satisfy $\alpha(v) = \alpha(w)$, then no admissible $\Phi$-only strategy can distinguish them with zero error. Any mechanism that does distinguish such pairs must introduce additional information not present in $\alpha$ (equivalently, refine the axis map by adding a new axis/tag).
 \end{corollary}
-\leanmeta{ \LH{ACS8}, \LH{IMP1}, \LH{COH1}}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}, \LH{UNIQ1}}
 
 \subsection{Query Families and Distinguishing Sets}
 
@@ -46,7 +46,7 @@ A distinguishing set $S$ is \emph{minimal} if no proper subset of $S$ is disting
 \item ``Minimal'' means inclusion-minimal: no proper subset suffices.
 \end{itemize}
 
-No further assumptions are required within this theory (i.e., beyond the fixed observation family $\Phi$ already specified). In Lean, the mechanization is now explicit end-to-end: closure-operator lemmas (extensive/monotone/idempotent) are proved in \texttt{proofs/abstract\_class\_system.lean} (\texttt{AxisClosure}); exchange/equicardinality lemmas are proved in \texttt{proofs/axis\_framework.lean} (\texttt{orthogonal\_implies\_exchange}, \texttt{matroid\_basis\_equicardinality}); and the composition point is formalized by \texttt{closureInducedAxisMatroid} and \texttt{closureInducedBasisEquicardinality} (with closure-induced nodup/subset/exchange hypotheses made explicit).
+No further assumptions are required within this theory beyond the fixed observation family $\Phi$. In Lean, the mechanization is explicit end-to-end. Closure-operator lemmas (extensive, monotone, idempotent) are proved in \nolinkurl{proofs/abstract_class_system.lean} via \nolinkurl{AxisClosure}. Exchange and equicardinality lemmas are proved in \nolinkurl{proofs/axis_framework.lean} via \LH{UNIQ1} and \LH{UNIQ1}. The composition point is formalized by \nolinkurl{closureInducedAxisMatroid} and \LH{UNIQ1}, with closure-induced nodup/subset/exchange hypotheses made explicit.
 
 \begin{definition}[Bases family]
 Let $E = \Phi\;(=\mathcal{Q})$ be the ground set of primitive queries (attribute predicates). Let $\mathcal{B} \subseteq 2^E$ be the family of minimal distinguishing sets.
@@ -54,9 +54,8 @@ Let $E = \Phi\;(=\mathcal{Q})$ be the ground set of primitive queries (attribute
 
 \begin{lemma}[Basis exchange]\label{lem:basis-exchange}
 For any $B_1, B_2 \in \mathcal{B}$ and any $q \in B_1 \setminus B_2$, there exists $q' \in B_2 \setminus B_1$ such that $(B_1 \setminus \{q\}) \cup \{q'\} \in \mathcal{B}$.
-\LH{L5}.)}
 \end{lemma}
-\leanmeta{ \LH{L4},
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}}
 
 \begin{proof}
 Define the closure operator $\text{cl}(X) = \{q : X\text{-equivalence implies }q\text{-equivalence}\}$. We verify the matroid axioms:
@@ -72,9 +71,8 @@ Minimal distinguishing sets are exactly the bases of the matroid defined by this
 
 \begin{theorem}[Matroid bases]\label{thm:matroid-bases}
 $\mathcal{B}$ is the set of bases of a matroid on ground set $E$.
-\LH{L5}.)}
 \end{theorem}
-\leanmeta{ \LH{L3},
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}}
 
 \begin{proof}
 By the basis-exchange lemma and the standard characterization of matroid bases \cite{Welsh1976}.
@@ -90,16 +88,15 @@ Let $n := |\mathcal{I}|$ be the ambient number of available attributes. Clearly 
 
 \begin{corollary}[Well-defined distinguishing dimension]\label{cor:well-defined-distinguishing-dimension}
 All minimal distinguishing sets have equal cardinality. Thus the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}) is well-defined.
-\LH{L1}.)}
 \end{corollary}
-\leanmeta{ \LH{L3},
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}}
 
 \subsection{Implications for Witness Cost}
 
 \begin{corollary}[Lower bound on attribute-only witness cost]\label{cor:attribute-only-witness-lb}
 For any attribute-only observer, $W(\text{class-identity}) \geq d$ where $d$ is the distinguishing dimension.
 \end{corollary}
-\leanmeta{ \LH{ACS1}}
+\leanmeta{ \LH{UNIQ1}}
 
 \begin{proof}
 If a procedure queried fewer than $d$ attributes on every execution path, each such queried set would be non-distinguishing by definition of $d$. For that path, there would exist two different classes with identical answers on all queried attributes, yielding identical transcripts and forcing the same output on both values. This contradicts zero-error class identification. Hence some path requires at least $d$ queries.

@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99e (TeX Live 2026/Arch Linux)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: decision_quotient_4c.aux
+The style file: plain.bst
+Database file #1: references.bib
+Warning--can't use both volume and number fields in cichocki2016tensor
+You've used 102 entries,
+            2118 wiz_defined-function locations,
+            1101 strings with 20097 characters,
+and the built_in function-call counts, 33735 in all, are:
+= -- 3442
+> -- 1320
+< -- 23
++ -- 549
+- -- 426
+* -- 2285
+:= -- 5510
+add.period$ -- 328
+call.type$ -- 102
+change.case$ -- 506
+chr.to.int$ -- 0
+cite$ -- 103
+duplicate$ -- 1323
+empty$ -- 2779
+format.name$ -- 426
+if$ -- 7102
+int.to.chr$ -- 0
+int.to.str$ -- 102
+missing$ -- 120
+newline$ -- 525
+num.names$ -- 204
+pop$ -- 507
+preamble$ -- 1
+purify$ -- 417
+quote$ -- 0
+skip$ -- 927
+stack$ -- 0
+substring$ -- 2425
+swap$ -- 277
+text.length$ -- 23
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 366
+warning$ -- 1
+while$ -- 365
+width$ -- 105
+write$ -- 1146
+(There was 1 warning)

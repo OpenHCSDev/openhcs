@@ -15,7 +15,7 @@ We prove three results:
 \item \textbf{Matroid structure (query complexity).} Minimal sufficient query sets form the bases of a matroid. The \emph{distinguishing dimension} (the common cardinality of all minimal sets) is well-defined and lower-bounds the query cost $W$ for any tag-free scheme.
 \end{enumerate}
 
-These results are universal: the theory applies to type systems, databases, biological taxonomy, and knowledge graphs. We develop the mathematics in full generality, then exhibit concrete instantiations.
+These results are domain-independent within the stated observation model: the same lower bounds appear in type systems, databases, biological taxonomy, and knowledge graphs. We develop the mathematics in full generality, then give concrete illustrations. In the programming-language setting, the point is not to ``discover'' nominal typing, but to characterize a long-observed design regularity information-theoretically: once classes collide under observable attributes, constant-cost zero-error identification requires auxiliary naming information. In particular, in maximal-barrier domains the paper shows that nominal tagging is the unique $D=0$ Pareto solution, so the issue is not stylistic preference but which resource a system chooses to spend.
 
 \subsection{The Observation Model}
 
@@ -74,7 +74,7 @@ v \sim w \implies P(v) = P(w)
 \]
 Equivalently: no attribute-only observer can compute any property that varies within an equivalence class.
 \end{theorem}
-\leanmeta{ \LH{ACS8}, \LH{IMP1}, \LH{COH1}}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}, \LH{UNIQ1}}
 
 \begin{proof}
 Suppose $P$ is attribute-computable via $f$, i.e., $P(v) = f(\pi(v))$ for all $v$. Let $v \sim w$, so $\pi(v) = \pi(w)$. Then:
@@ -94,7 +94,7 @@ Theorem~\ref{thm:information-barrier} is the foundational invariance statement. 
 \begin{corollary}[Class identity is not attribute-computable]\label{cor:provenance-barrier}
 Let $C: \mathcal{V} \to \{1,\ldots,k\}$ be the class assignment function. If there exist values $v, w$ with $\pi(v) = \pi(w)$ but $C(v) \neq C(w)$, then class identity is not attribute-computable.
 \end{corollary}
-\leanmeta{ \LH{ACS9}}
+\leanmeta{ \LH{UNIQ1}}
 
 \begin{proof}
 Direct application of Theorem~\ref{thm:information-barrier} to $P = C$.
@@ -128,7 +128,7 @@ W(\text{class-identity}) = O(1)
 \]
 Specifically, the witness procedure is: return $\tau(v_1) = \tau(v_2)$.
 \end{theorem}
-\leanmeta{ \LH{ACS7}, \LH{FORC2}, \LH{DOM1}}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}, \LH{UNIQ1}}
 
 \begin{proof}
 The procedure makes exactly 2 primitive queries (one $\tau$ access per value) and one comparison. This is $O(1)$ regardless of the number of available attributes $|\mathcal{I}|$.
@@ -141,7 +141,7 @@ W(\text{class-identity}) = \Omega(d)
 \]
 in the worst case, where $d$ is the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}).
 \end{theorem}
-\leanmeta{ \LH{ACS1}}
+\leanmeta{ \LH{UNIQ1}}
 
 \begin{proof}
 Assume a zero-error attribute-only procedure halts after fewer than $d$ queries on every execution path. Fix any execution path and let $Q \subseteq \mathcal{I}$ be the set of queried attributes on that path, so $|Q|<d$. Since $d$ is the cardinality of every minimal distinguishing set, no set of size $<d$ is distinguishing; hence there exist values $v,w$ from different classes with identical answers on all attributes in $Q$.
@@ -154,35 +154,39 @@ An adversary can answer the procedure's queries consistently with both $v$ and $
 This paper establishes the following results:
 
 \begin{enumerate}
-\item \textbf{Information Barrier Theorem} (Theorem~\ref{thm:information-barrier}): Attribute-only observers cannot compute any property that varies within $\sim$-equivalence classes. This is an information-theoretic impossibility, not a computational limitation.
+\item \textbf{Information Barrier Theorem} (Theorem~\ref{thm:information-barrier}): Attribute-only observers cannot compute any property that varies within $\sim$-equivalence classes. This is an information-theoretic impossibility, not a computational limitation, and it is the source of the downstream rate-query tradeoffs.
 
-\item \textbf{Constant-Witness Theorem} (Theorem~\ref{thm:constant-witness}): Nominal-tag access achieves $W(\text{class-identity}) = O(1)$, with matching lower bound $\Omega(d)$ for attribute-only observers (Theorem~\ref{thm:interface-lower-bound}), where $d$ is the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}).
+\item \textbf{Constant-Witness Theorem} (Theorem~\ref{thm:constant-witness}): Nominal-tag access achieves constant witness cost for class identity. Attribute-only observers have matching lower bound $\Omega(d)$ (Theorem~\ref{thm:interface-lower-bound}), where $d$ is the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}).
 
 \item \textbf{Complexity Separation} (Section~\ref{sec:complexity}): We establish O(1) vs O(k) vs $\Omega(d)$ complexity bounds for error localization under different observation regimes (where $d$ is the distinguishing dimension).
 
-\item \textbf{Matroid Structure} (Section~\ref{sec:matroid}): Minimal distinguishing query sets form the bases of a matroid. All such sets have equal cardinality, establishing a well-defined ``distinguishing dimension.''
+\item \textbf{Matroid Structure} (Section~\ref{sec:matroid}): Minimal distinguishing query sets form the bases of a matroid. All such sets have equal cardinality, so the distinguishing dimension is an invariant of the observation model rather than an artifact of a particular proof or query order.
 
-\item \textbf{$(L, W, D)$ Optimality} (Section~\ref{sec:lwd}): We characterize the zero-error converse via collision multiplicity $A_\pi$ and prove uniqueness of the nominal point in the maximal-barrier regime ($A_\pi=k$).
+\item \textbf{$(L, W, D)$ Optimality} (Section~\ref{sec:lwd}): We characterize the zero-error converse via collision multiplicity $A_\pi$ and prove uniqueness of the nominal point in the maximal-barrier regime ($A_\pi=k$), turning an informal design preference into an explicit Pareto statement.
 
 \item \textbf{Machine-Checked Proofs}: All results formalized in Lean 4 (\LeanTotalLines\ lines, \LeanTotalTheorems\ theorem/lemma statements, \LeanTotalSorry\ \texttt{sorry} placeholders).
 \end{enumerate}
 
+Without the equicardinality result behind the matroid structure, the lower bound would depend on which distinguishing set or query strategy one chose. The matroid theorem is what makes $d$ strategy-independent.
+
 \subsection{Related Work and Positioning}
 
-\textbf{Identification via channels.} Our work extends the identification paradigm introduced by Ahlswede and Dueck \cite{ahlswede1989identification, ahlswede1989identification2}. In their framework, a decoder need not reconstruct a message but only answer ``is the message $m$?'' for a given hypothesis. This yields dramatically different capacity: double-exponential codebook sizes become achievable. Our setting differs in three ways: (1) we consider zero-error identification rather than vanishing error, (2) queries are adaptive rather than block codes, and (3) we allow auxiliary tagging (rate $L$) to reduce query cost. The $(L, W, D)$ tradeoff generalizes Ahlswede-Dueck to a multi-dimensional operating regime.
+This paper does not develop asymptotic coding theorems or claim new zero-error capacity results. Its contribution is to make explicit the bit/query/error tradeoffs governing zero-error classification under constrained observations.
 
-\textbf{Rate-distortion theory.} The $(L, W, D)$ framework connects to Shannon's rate-distortion theory \cite{shannon1959coding, berger1971rate} with an important twist: the ``distortion'' $D$ is semantic (class misidentification), and there is a second resource $W$ (query cost) alongside rate $L$. Classical rate-distortion asks: what is the minimum rate to achieve distortion $D$? We ask: given rate $L$, what is the minimum query cost $W$ to achieve distortion $D = 0$? Theorem~\ref{thm:lwd-optimal} gives the converse in terms of collision multiplicity and identifies the unique nominal point in the maximal-barrier regime.
+\textbf{Identification via channels.} Our work is adjacent to the identification paradigm introduced by Ahlswede and Dueck \cite{ahlswede1989identification, ahlswede1989identification2}. In their framework, a decoder need not reconstruct a message but only answer ``is the message $m$?'' for a given hypothesis. Our setting is different in three ways: (1) we consider one-shot zero-error class identification rather than asymptotic vanishing-error identification, (2) queries are adaptive rather than block codes, and (3) we allow auxiliary tagging (rate $L$) to reduce query cost. The connection is motivational and terminological rather than a direct reuse of the original coding theorem.
 
-\textbf{Rate-distortion-perception tradeoffs.} Blau and Michaeli \cite{blau2019rethinking} extended rate-distortion theory by adding a perception constraint, creating a three-way tradeoff. Our query cost $W$ plays an analogous role: it measures the interactive cost of achieving low distortion rather than a distributional constraint. This parallel suggests that $(L, W, D)$ tradeoffs may admit similar geometric characterizations. Section~\ref{sec:extensions} develops this connection further.
+\textbf{Rate-distortion theory.} The $(L, W, D)$ framework is analogous to rate-distortion theory \cite{shannon1959coding, berger1971rate}: the ``distortion'' $D$ is semantic (class misidentification), and there is a second resource $W$ (query cost) alongside rate $L$. Classical rate-distortion asks for the minimum rate needed to achieve distortion $D$; here the main question is which combinations of tag bits and queries permit $D=0$. Theorem~\ref{thm:lwd-optimal} gives the resulting converse in terms of collision multiplicity and identifies the unique nominal point in the maximal-barrier regime.
 
-\textbf{Zero-error information theory.} The matroid structure (Section~\ref{sec:matroid}) connects to zero-error capacity and graph entropy. K\"orner \cite{korner1973coding} and Witsenhausen \cite{witsenhausen1976zero} studied zero-error source coding where confusable symbols must be distinguished. Our distinguishing dimension (Definition~\ref{def:distinguishing-dimension}) is the minimum number of binary queries to separate all classes, which is precisely the zero-error identification cost when $L = 0$.
+\textbf{Rate-distortion-perception tradeoffs.} Blau and Michaeli \cite{blau2019rethinking} extended rate-distortion theory by adding a perception constraint, creating a three-way tradeoff. Our query cost $W$ plays an analogous role: it measures the interactive cost of achieving low distortion rather than a distributional constraint. We cite this as a structural analogy, not as a claim that the present model inherits the full geometry of that setting.
+
+\textbf{Zero-error information theory.} The matroid structure (Section~\ref{sec:matroid}) places the model near zero-error information theory. K\"orner \cite{korner1973coding} and Witsenhausen \cite{witsenhausen1976zero} studied zero-error source coding where confusable symbols must be distinguished. Here the direct theorem is simpler: when $L = 0$, the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}) is the minimum number of binary queries needed for zero-error class separation. Stronger entropy-style consequences are discussed more cautiously and should not be read as having already been fully developed in the body of this paper.
 
 \textbf{Query complexity and communication complexity.} The $\Omega(d)$ lower bound for attribute-only identification relates to decision tree complexity \cite{buhrman2002complexity} and interactive communication \cite{orlitsky1991worst}. The key distinction is that our queries are constrained to a fixed observable family $\mathcal{I}$, not arbitrary predicates.
 
-\textbf{Compression in classification systems.} The framework applies uniformly to databases, knowledge graphs, taxonomy, and typed software systems: for zero-error identification, ambiguity induces a minimum metadata requirement $L \ge \log_2 A_\pi$ (Theorem~\ref{thm:converse}), with maximal-barrier specialization $L \ge \log_2 k$.
+\textbf{Compression in classification systems.} The same ambiguity bound appears across databases, knowledge graphs, taxonomy, and typed software systems: for zero-error identification, ambiguity induces a minimum metadata requirement $L \ge \log_2 A_\pi$ (Theorem~\ref{thm:converse}), with maximal-barrier specialization $L \ge \log_2 k$.
 
 \textbf{Programming-language corollary (secondary).} In nominal-vs-structural typing settings \cite{Cardelli1985, cook1990inheritance}, the model yields a concrete cost statement: under attribute collisions, purely structural identification has worst-case $\Omega(d)$ witness cost, while nominal tags achieve $O(1)$ identification using $O(\log A_\pi)$ bits. This is the paper's PL-facing corollary; the main contribution remains the information-theoretic characterization.
 
 \subsection{Paper Organization}
 
-Section~\ref{sec:framework} formalizes the compression framework and defines the $(L, W, D)$ tradeoff. Section~\ref{sec:complexity} establishes complexity bounds for error localization. Section~\ref{sec:matroid} proves the matroid structure of distinguishing query families. Section~\ref{sec:witness} analyzes witness cost in detail. Section~\ref{sec:lwd} proves the ambiguity-based converse and Pareto characterization. Section~\ref{sec:applications} provides cross-domain instantiations as secondary illustrations. Section~\ref{sec:conclusion} concludes. Appendix~\ref{sec:lean} describes the Lean 4 formalization.
+Section~\ref{sec:framework} formalizes the compression framework and defines the $(L, W, D)$ tradeoff. Section~\ref{sec:complexity} establishes complexity bounds for error localization. Section~\ref{sec:matroid} proves the matroid structure of distinguishing query families. Section~\ref{sec:witness} analyzes witness cost in detail. Section~\ref{sec:lwd} proves the ambiguity-based converse and Pareto characterization. Section~\ref{sec:conclusion} concludes. Extended instantiations and the Lean formalization are provided in the supplementary material.

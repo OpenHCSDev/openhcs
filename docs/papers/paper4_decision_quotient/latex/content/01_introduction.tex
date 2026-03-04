@@ -1,52 +1,41 @@
 \section{Introduction}\label{sec:introduction}
 
-Computational complexity theory provides the mathematical foundation for understanding algorithmic hardness, yet its proofs remain largely unverified by machine. While proof assistants have transformed areas from program verification to pure mathematics (with projects like Mathlib formalizing substantial portions of undergraduate mathematics), complexity-theoretic reductions remain underrepresented in formal libraries.
+Which coordinates of a system's state determine the optimal action? For a decision problem $\mathcal{D}=(A,S,U)$ with $S = X_1 \times \cdots \times X_n$, a coordinate set $I$ is sufficient when agreement on $I$ forces agreement on the optimal-action set:
+\[
+s_I = s'_I \implies \Opt(s) = \Opt(s').
+\]
+This is the basic problem of decision-relevant information: how much of the state must remain visible in order to preserve the decision boundary.
 
-This gap matters. Reductions are notoriously error-prone: they require careful polynomial-time bounds, precise correspondence between instances, and subtle handling of edge cases. Published proofs occasionally contain errors that survive peer review. Machine verification eliminates this uncertainty while producing reusable artifacts.
+The question is easy to state but not algorithmically benign. Evaluating $U(a,s)$ on a given state is one task; certifying that an entire family of coordinates may be ignored is another. The latter carries universal quantification over state pairs and leads naturally to coNP and $\Sigma_2^P$ phenomena. The optimizer quotient packages the same issue structurally: it is the coarsest abstraction of the state space that preserves optimal-action distinctions.
 
-We address this gap by developing a Lean 4 framework for formalizing polynomial-time reductions, demonstrated through a comprehensive complexity analysis of \emph{decision-relevant information}: the problem of identifying which variables matter for optimal decision-making.
+This paper isolates that abstract problem. We work entirely with finite coordinate-structured decision problems and explicit encoding regimes.
 
-Section~\ref{sec:encoding} fixes the computational model and input encodings used for all complexity claims.
+Section~\ref{sec:encoding} fixes the computational model and the encoding regimes used by every complexity claim.
 
 \subsection{Contributions}
 
-This paper makes the following contributions, ordered by formalization significance:
-
 \begin{enumerate}
-\item \textbf{A Lean 4 framework for polynomial-time reductions.} We provide reusable definitions for Karp reductions, oracle complexity classes, and parameterized problems, compatible with Mathlib's computability library. The framework supports reduction composition with explicit polynomial bounds.
+\item \textbf{Shared foundations for coordinate sufficiency.} We formalize decision problems with coordinate structure, relevant-coordinate witnesses, exact relevance identification, and the optimizer quotient as the canonical decision-preserving abstraction.
 
-\item \textbf{Machine-verified NP/coNP-completeness proofs.} We formalize a complete reduction from TAUTOLOGY to SUFFICIENCY-CHECK, demonstrating the methodology for coNP-hardness proofs in Lean 4. The reduction includes machine-checked polynomial-time bounds.
+\item \textbf{Exact complexity classifications.} We prove that \textsc{Sufficiency-Check} is coNP-complete, \textsc{Minimum-Sufficient-Set} is coNP-complete, and \textsc{Anchor-Sufficiency} is $\Sigma_2^P$-complete.
 
-\item \textbf{Formalized approximation hardness.} We provide (to our knowledge) the first Lean formalization of an inapproximability result via L-reduction, showing $(1-\varepsilon)\ln n$-hardness for MINIMUM-SUFFICIENT-SET from SET-COVER.
+\item \textbf{Encoding-sensitive hardness and tractability.} We prove an explicit-state versus succinct dichotomy, derive ETH-conditioned lower bounds, and isolate natural tractable subcases under structural restrictions.
 
-\item \textbf{ETH-based lower bounds in Lean.} We formalize conditional lower bounds using the Exponential Time Hypothesis, including circuit-based argument structure for $2^{\Omega(n)}$ bounds.
+\item \textbf{Direct engineering corollaries.} We show that exact behavior-preserving minimization inherits the hardness of \textsc{Minimum-Sufficient-Set}, while conservative over-specification can be rational in the hard succinct regime under an explicit cost model.
 
-\item \textbf{Parameterized complexity in Lean 4.} We prove W[2]-hardness with kernelization lower bounds, extending Lean's coverage to parameterized complexity theory.
-
-\item \textbf{Case study: Decision-relevant information.} We apply the framework to prove that identifying which coordinates of a decision problem suffice for optimal action is coNP-complete, with a sharp complexity dichotomy and tractability conditions.
+\item \textbf{Machine-checked reductions and proof artifacts.} The main reductions and supporting lemmas are mechanized in Lean 4, yielding a reproducible proof artifact for the core complexity claims.
 \end{enumerate}
 
-\paragraph{What is new.}
-We contribute (i) a reusable Lean 4 framework for polynomial-time reductions with explicit polynomial bounds; (ii) the first machine-checked coNP-completeness proof for a decision-theoretic sufficiency problem; and (iii) a complete complexity landscape for coordinate sufficiency under explicit encoding assumptions. Prior work studies decision complexity in general or feature selection hardness, but does not formalize these reductions or establish this landscape in Lean.
+\subsection{Why the Problem Is Different}
 
-\subsection{The Case Study: Sufficiency Checking}
-
-Our case study addresses a core question in decision theory:
-
+The slogan of the paper is simple:
 \begin{quote}
-\textbf{Which variables are sufficient to determine the optimal action?}
+\textbf{Determining what you need to know can be harder than evaluating the full objective once everything is known.}
 \end{quote}
 
-Consider a decision problem with actions $A$ and states $S = X_1 \times \cdots \times X_n$. A coordinate set $I \subseteq \{1, \ldots, n\}$ is \emph{sufficient} if knowing only coordinates in $I$ determines optimal action:
-\[
-s_I = s'_I \implies \Opt(s) = \Opt(s')
-\]
+The complexity gap comes from the structure of the question. Insufficiency has short witnesses: two states that agree on the proposed coordinates but induce different optimal-action sets. Sufficiency, by contrast, asks for the absence of every such witness. This difference drives the coNP classification and explains why relevance identification is not just another forward evaluation problem.
 
-We prove this problem is coNP-complete (Theorem~\ref{thm:sufficiency-conp}), finding minimum sufficient sets is coNP-complete (Theorem~\ref{thm:minsuff-conp}), and a complexity dichotomy separates polynomial time in the explicit-state model for $O(\log |S|)$-size sufficient sets from $2^{\Omega(n)}$ lower bounds under ETH in the succinct model for $\Omega(n)$-size sets.
-
-The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/\(\Sigma_2^P\) completeness and tractable cases under explicit encoding assumptions). The practical corollary (that ``determining what you need to know is harder than knowing everything'') explains ubiquitous over-modeling across engineering, science, and finance. For CPP/ITP readers, the significance is methodological: these results demonstrate an end-to-end pipeline from problem formulation to machine-verified hardness proof.
-
-\subsection{Formalization Statistics}
+\subsection{Formalization Snapshot}
 
 \begin{center}
 \begin{tabular}{lr}
@@ -56,18 +45,16 @@ The primary contribution is theoretical: a formalized reduction framework and a 
 Lines of Lean 4 & \LeanTotalLines \\
 Theorems/lemmas & \LeanTotalTheorems \\
 Proof files & \LeanTotalFiles \\
-Reduction proofs & 5 (SAT, TAUTOLOGY, SET-COVER, ETH, W[2]) \\
-External dependencies & Mathlib (computability, data.finset) \\
 \texttt{sorry} count & \LeanTotalSorry \\
 \hline
 \end{tabular}
 \end{center}
 
-All proofs compile with \texttt{lake build} and pass \texttt{\#print axioms} verification (depending only on \texttt{propext}, \texttt{Quot.sound}, and \texttt{Classical.choice} where necessary for classical reasoning).
+The artifact builds with \texttt{lake build}. The purpose of the mechanization here is not to replace the mathematical narrative, but to guarantee the correctness of the reduction constructions and the formal statements attached to them.
 
 \subsection{Paper Structure}
 
-Section~\ref{sec:methodology} describes our formalization methodology and Lean 4 framework design. Section~\ref{sec:foundations} establishes formal foundations for the case study. Sections~\ref{sec:hardness}--\ref{sec:tractable} develop the core complexity results with machine-verified proofs. Sections~\ref{sec:implications} and~\ref{sec:simplicity-tax} present corollaries and implications for practice (also machine-verified). Section~\ref{sec:related} surveys related work in both complexity theory and formal verification. Section~\ref{sec:engineering} discusses proof engineering insights. Appendix~\ref{app:lean} contains proof listings.
+Section~\ref{sec:foundations} introduces the abstract foundations and the encoding contract. The hardness theorems are stated in Section~\ref{sec:hardness}. Section~\ref{sec:dichotomy} gives the encoding-sensitive dichotomy and ETH chain, Section~\ref{sec:tractable} records tractable subcases, and Section~\ref{sec:engineering-corollaries} states the resulting engineering corollaries. Section~\ref{sec:related} situates the work within formalized complexity theory and decision-theoretic relevance. Section~\ref{app:lean} summarizes the Lean artifact.
 
 \subsection{Artifact Availability}
 
@@ -75,4 +62,4 @@ The complete Lean 4 formalization is available at:
 \begin{center}
 \url{https://doi.org/10.5281/zenodo.18140965}
 \end{center}
-The proofs build with \texttt{lake build} using the Lean toolchain specified in \texttt{lean-toolchain}. We encourage artifact evaluation and welcome contributions extending the reduction framework.
+The proofs build with the Lean toolchain specified in \texttt{lean-toolchain}.

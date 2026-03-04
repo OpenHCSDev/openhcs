@@ -1,4 +1,4 @@
-The preceding sections established abstract information-theoretic results (Sections~\ref{sec:framework}--\ref{sec:lwd}). This section provides secondary cross-domain illustrations. The mathematics is unchanged by domain; these examples only instantiate the same observer-model primitives.
+The preceding sections established abstract information-theoretic results (Sections~\ref{sec:framework}--\ref{sec:lwd}). This section provides secondary cross-domain illustrations. The mathematics is unchanged by domain; the examples are meant to show where the same bit/query/error tradeoffs already govern practice, not to claim that the theory generated those domain designs historically.
 
 \subsection{Biological Taxonomy: Phenotype vs Genotype}
 
@@ -6,7 +6,7 @@ Linnean taxonomy classifies organisms by observable phenotypic characters: morph
 
 \textbf{The cryptic species problem:} Cryptic species share identical phenotypic profiles but are reproductively isolated and genetically distinct. Attribute-only observation (morphology) cannot distinguish them: $\pi(A) = \pi(B)$ but $\text{species}(A) \neq \text{species}(B)$.
 
-\textbf{The nominal tag:} DNA barcoding provides the resolution \cite{DNABarcoding}. A short genetic sequence (e.g., mitochondrial COI) acts as the nominal tag: $O(1)$ identity verification via sequence comparison. This reduced cryptic species identification from $\Omega(s)$ phenotypic examination (checking $s$ characters) to constant-time molecular lookup.
+\textbf{The nominal tag:} DNA barcoding provides the resolution \cite{DNABarcoding}. A short genetic sequence (e.g., mitochondrial COI) acts as the nominal tag: $O(1)$ identity verification via sequence comparison. This fits the same tradeoff shape: when phenotype induces collision blocks, an additional genetic identifier supplies the extra information needed for zero-error separation.
 
 \subsection{Library Classification: Subject vs ISBN}
 
@@ -18,7 +18,7 @@ Library classification systems like Dewey Decimal observe subject matter, a form
 
 In big-data systems, relational databases observe entities via column values. The information barrier applies: rows with identical column values, excluding the key, are indistinguishable.
 
-\textbf{The nominal tag:} The primary key is the nominal tag \cite{Codd1990}. Entity identity is $O(1)$: compare keys. This is why database theory requires keys---without them, the system cannot answer ``is this the same entity?''
+\textbf{The nominal tag:} The primary key is the nominal tag \cite{Codd1990}. Entity identity is $O(1)$: compare keys. Under row collisions on observable columns, surrogate keys are therefore not merely a design preference; they realize the $D=0$ solution predicted by the tradeoff.
 
 \textbf{Natural vs surrogate keys:} Natural keys (composed of attributes) are attribute-only observation and inherit its limitations. Surrogate keys (auto-increment IDs, UUIDs) are pure nominal tags: no semantic content, pure identity.
 
@@ -26,7 +26,7 @@ In big-data systems, relational databases observe entities via column values. Th
 
 Programming-language runtimes are one instantiation of the same abstraction, not the source of the theory. Table~\ref{tab:pl-snapshot} summarizes the mapping from runtime mechanisms to $(L,W,D)$ model primitives.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \begin{tabular}{|l|l|c|}
 \hline
@@ -46,7 +46,7 @@ Without a class tag, identity checks are structural and scale with inspected str
 
 \subsection{Cross-Domain Summary}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \begin{tabular}{|l|l|l|c|}
 \hline
@@ -64,7 +64,7 @@ Rust (static) & Trait bounds & \texttt{TypeId} & $O(1)$ \\
 \caption{Witness cost for identity across classification systems. Nominal tags achieve $O(1)$; attribute-only pays $O(s)$ per structural check (or $O(k)$ when enumerating classes under declared attribute catalogs, e.g., interfaces in PL runtimes).}
 \end{table}
 
-The pattern is universal: systems with nominal tags achieve $O(1)$ witness cost; systems without them pay $O(s)$ or $O(k)$. This is not domain-specific; it is the information barrier theorem instantiated across classification systems.
+The same constraint recurs across these systems: when identity is carried by an explicit tag, witness cost is $O(1)$; when identity must be reconstructed from observable attributes alone, witness cost grows with the amount of structure that must be checked. The point of the examples is to show that the bound is not peculiar to programming languages.
 
 \subsection{Machine Learning: Model Identification and Versioning}
 

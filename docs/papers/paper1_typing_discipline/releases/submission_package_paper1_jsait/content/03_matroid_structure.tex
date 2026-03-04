@@ -1,0 +1,105 @@
+\subsection{Model Contract (Fixed-Axis Domains)}
+
+Model contract (fixed-axis domain). A domain is specified by a fixed observation family $\Phi$ derived from a fixed axis map $\alpha: \mathcal{V} \to \mathcal{A}$ (e.g., $\alpha(v) = (B(v), S(v))$). An observer is permitted to interact with $v$ only through primitive queries in $\Phi$, and each primitive query factors through $\alpha$: for every $q \in \Phi$, there exists $\tilde{q}$ such that $q(v) = \tilde{q}(\alpha(v))$.
+A property is in-scope semantic iff it is computable by an admissible strategy that uses only responses to queries in $\Phi$ (under our admissibility constraints: no global preprocessing tables, no amortized caching, etc.).
+
+We adopt $\Phi$ as the complete observation universe for this paper: to claim applicability to a concrete runtime one must either (i) exhibit mappings from each runtime observable into $\Phi$, or (ii) enforce the admissibility constraints (no external registries, no reflection, no preprocessing/amortization). Under either condition the theorems apply without qualification.
+
+\begin{proposition}[Observational Quotient]\label{prop:observational-quotient}
+For any admissible strategy using only $\Phi$, the entire interaction transcript (and hence the output) depends only on $\alpha(v)$. Equivalently, any in-scope semantic property $P$ factors through $\alpha$: there exists $\tilde{P}$ with $P(v) = \tilde{P}(\alpha(v))$ for all $v$.
+\end{proposition}
+\leanmeta{ \LH{UNIQ1}, \LH{L2}, \LH{L2}}
+
+\begin{corollary}[Why ``ad hoc'' = adding an axis/tag]\label{cor:ad-hoc-add-axis}
+If two values $v, w$ satisfy $\alpha(v) = \alpha(w)$, then no admissible $\Phi$-only strategy can distinguish them with zero error. Any mechanism that does distinguish such pairs must introduce additional information not present in $\alpha$ (equivalently, refine the axis map by adding a new axis/tag).
+\end{corollary}
+\leanmeta{ \LH{L2}, \LH{L2}, \LH{L2}}
+
+\subsection{Query Families and Distinguishing Sets}
+
+The classification problem is: given a set of queries, which subsets suffice to distinguish all entities?
+
+\begin{definition}[Query family]
+Let $\mathcal{Q}$ be the set of all primitive queries available to an observer. For a classification system with attribute set $\mathcal{I}$, we have $\mathcal{Q} = \{q_I : I \in \mathcal{I}\}$ where $q_I(v) = 1$ iff $v$ satisfies attribute $I$.
+\end{definition}
+
+% Syntactic scope binding: make it explicit that queries range over the declared primitive set
+\noindent In this section, ``queries'' are the primitive attribute predicates $q \in \Phi$ (equivalently, each $q$ factors through the axis map: $q = \tilde{q} \circ \alpha$). See the Convention above where $\Phi := \mathcal{Q}$.
+
+\noindent\textbf{Convention:} $\Phi := \mathcal{Q}$. All universal quantification over ``queries'' ranges over $q \in \Phi$ only.
+
+\begin{definition}[Distinguishing set]
+A subset $S \subseteq \mathcal{Q}$ is \emph{distinguishing} if, for all values $v, w$ with $\text{class}(v) \neq \text{class}(w)$, there exists $q \in S$ such that $q(v) \neq q(w)$.
+\end{definition}
+
+\begin{definition}[Minimal distinguishing set]
+A distinguishing set $S$ is \emph{minimal} if no proper subset of $S$ is distinguishing.
+\end{definition}
+
+\subsection{Matroid Structure of Query Families}
+
+\textbf{Scope and assumptions.} The matroid theorem below is unconditional within the fixed-axis observational theory defined above. In this section, ``query'' always means a primitive predicate $q \in \Phi$ (equivalently, $q$ factors through $\alpha$ as in the Model Contract). It depends only on:
+
+\begin{itemize}
+\item $E = \Phi$ is the ground set of primitive queries (attribute predicates).
+\item ``Distinguishing'': for all values $v,w$ with $\text{class}(v) \neq \text{class}(w)$, there exists $q \in S$ such that $q(v) \neq q(w)$ (Def. above).
+\item ``Minimal'' means inclusion-minimal: no proper subset suffices.
+\end{itemize}
+
+No further assumptions are required within this theory beyond the fixed observation family $\Phi$. In Lean, the mechanization is explicit end-to-end. Closure-operator lemmas (extensive, monotone, idempotent) are proved in \nolinkurl{proofs/abstract_class_system.lean} via \nolinkurl{AxisClosure}. Exchange and equicardinality lemmas are proved in \nolinkurl{proofs/axis_framework.lean} via \LH{UNIQ1} and \LH{UNIQ1}. The composition point is formalized by \nolinkurl{closureInducedAxisMatroid} and \LH{L2}, with closure-induced nodup/subset/exchange hypotheses made explicit.
+
+\begin{definition}[Bases family]
+Let $E = \Phi\;(=\mathcal{Q})$ be the ground set of primitive queries (attribute predicates). Let $\mathcal{B} \subseteq 2^E$ be the family of minimal distinguishing sets.
+\end{definition}
+
+\begin{lemma}[Basis exchange]\label{lem:basis-exchange}
+For any $B_1, B_2 \in \mathcal{B}$ and any $q \in B_1 \setminus B_2$, there exists $q' \in B_2 \setminus B_1$ such that $(B_1 \setminus \{q\}) \cup \{q'\} \in \mathcal{B}$.
+\end{lemma}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}}
+
+\begin{proof}
+Define the closure operator $\text{cl}(X) = \{q : X\text{-equivalence implies }q\text{-equivalence}\}$. We verify the matroid axioms:
+\begin{enumerate}
+\item \textbf{Closure axioms}: $\text{cl}$ is extensive, monotone, and idempotent. These follow directly from the definition of logical implication.
+\item \textbf{Exchange property}: If $q \in \text{cl}(X \cup \{q'\}) \setminus \text{cl}(X)$, then $q' \in \text{cl}(X \cup \{q\})$.
+\end{enumerate}
+
+For exchange, take $q \in \text{cl}(X \cup \{q'\}) \setminus \text{cl}(X)$. Since $q \notin \text{cl}(X)$, there exist $v,w$ that are $X$-equivalent but disagree on $q$. Because $q \in \text{cl}(X \cup \{q'\})$, any pair that is $(X \cup \{q'\})$-equivalent must agree on $q$; therefore this witness pair cannot be $(X \cup \{q'\})$-equivalent, so it must disagree on $q'$. Now fix any pair $v',w'$ that are $(X \cup \{q\})$-equivalent. They are in particular $X$-equivalent and agree on $q$. If they disagreed on $q'$, then by the previous implication we could derive disagreement on $q$, contradiction. Hence $v',w'$ agree on $q'$, proving $q' \in \text{cl}(X \cup \{q\})$.
+
+Minimal distinguishing sets are exactly the bases of the matroid defined by this closure operator. The closure component is machine-checked in \texttt{AxisClosure}; the exchange/equicardinality component and the closure-to-matroid bridge used for distinguishing-dimension well-definedness are machine-checked in \texttt{axis\_framework.lean}.
+\end{proof}
+
+\begin{theorem}[Matroid bases]\label{thm:matroid-bases}
+$\mathcal{B}$ is the set of bases of a matroid on ground set $E$.
+\end{theorem}
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}}
+
+\begin{proof}
+By the basis-exchange lemma and the standard characterization of matroid bases \cite{Welsh1976}.
+\end{proof}
+
+\begin{definition}[Distinguishing dimension]\label{def:distinguishing-dimension}
+The \emph{distinguishing dimension} of a classification system is the common cardinality of all minimal distinguishing sets.
+\end{definition}
+
+\begin{remark}[Ambient attribute count vs. distinguishing dimension]
+Let $n := |\mathcal{I}|$ be the ambient number of available attributes. Clearly $d \le n$, and there exist worst-case families with $d = n$.
+\end{remark}
+
+\begin{corollary}[Well-defined distinguishing dimension]\label{cor:well-defined-distinguishing-dimension}
+All minimal distinguishing sets have equal cardinality. Thus the distinguishing dimension (Definition~\ref{def:distinguishing-dimension}) is well-defined.
+\end{corollary}
+\leanmeta{ \LH{UNIQ1}, \LH{L2}}
+
+\subsection{Implications for Witness Cost}
+
+\begin{corollary}[Lower bound on attribute-only witness cost]\label{cor:attribute-only-witness-lb}
+For any attribute-only observer, $W(\text{class-identity}) \geq d$ where $d$ is the distinguishing dimension.
+\end{corollary}
+\leanmeta{ \LH{L2}}
+
+\begin{proof}
+If a procedure queried fewer than $d$ attributes on every execution path, each such queried set would be non-distinguishing by definition of $d$. For that path, there would exist two different classes with identical answers on all queried attributes, yielding identical transcripts and forcing the same output on both values. This contradicts zero-error class identification. Hence some path requires at least $d$ queries.
+\end{proof}
+
+The key insight: the distinguishing dimension is invariant across all minimal query strategies. The difference between nominal-tag and attribute-only observers lies in \emph{witness cost}: a nominal tag achieves $W = O(1)$ by storing the identity directly, bypassing query enumeration.

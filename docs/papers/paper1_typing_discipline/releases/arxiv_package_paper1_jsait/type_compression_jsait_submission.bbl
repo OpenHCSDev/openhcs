@@ -40,9 +40,13 @@ T.~Berger, \emph{Rate Distortion Theory: A Mathematical Basis for Data
   Compression}.\hskip 1em plus 0.5em minus 0.4em\relax Prentice-Hall, 1971.
 
 \bibitem{blau2019rethinking}
+\BIBentryALTinterwordspacing
 Y.~Blau and T.~Michaeli, ``Rethinking lossy compression: The
-  rate-distortion-perception tradeoff,'' \emph{Proceedings of the 36th
-  International Conference on Machine Learning}, pp. 675--685, 2019.
+  rate-distortion-perception tradeoff,'' in \emph{Proceedings of the 36th
+  International Conference on Machine Learning}, ser. Proceedings of Machine
+  Learning Research, vol.~97, 2019, pp. 675--685. [Online]. Available:
+  \url{https://proceedings.mlr.press/v97/blau19a.html}
+\BIBentrySTDinterwordspacing
 
 \bibitem{korner1973coding}
 J.~K{\"o}rner, ``Coding of an information source having ambiguous alphabet and
@@ -55,13 +59,14 @@ H.~S. Witsenhausen, ``The zero-error side information problem and chromatic
   pp. 592--593, 1976.
 
 \bibitem{buhrman2002complexity}
-H.~Buhrman, L.~Fortnow, M.~Koucký, and B.~Loff, ``Computational complexity of
-  discrete problems,'' \emph{Bulletin of the EATCS}, vol.~77, pp. 42--56, 2002.
+H.~Buhrman and R.~de~Wolf, ``Complexity measures and decision tree complexity:
+  A survey,'' \emph{Theoretical Computer Science}, vol. 288, no.~1, pp. 21--43,
+  2002.
 
 \bibitem{orlitsky1991worst}
 A.~Orlitsky, ``Worst-case interactive communication i: Two messages are almost
-  optimal,'' \emph{IEEE Transactions on Information Theory}, vol.~37, no.~4,
-  pp. 994--1009, 1991.
+  optimal,'' \emph{IEEE Transactions on Information Theory}, vol.~36, no.~5,
+  pp. 1111--1126, 1990.
 
 \bibitem{Cardelli1985}
 L.~Cardelli and P.~Wegner, ``On understanding types, data abstraction, and
@@ -79,7 +84,9 @@ D.~J.~A. Welsh, \emph{Matroid Theory}.\hskip 1em plus 0.5em minus 0.4em\relax
 
 \bibitem{DNABarcoding}
 P.~D.~N. Hebert, A.~Cywinska, S.~L. Ball, and J.~R. deWaard, ``Biological
-  identifications through dna barcodes,'' pp. 313--321, 2003.
+  identifications through dna barcodes,'' \emph{Proceedings of the Royal
+  Society of London. Series B: Biological Sciences}, vol. 270, no. 1512, pp.
+  313--321, 2003.
 
 \bibitem{ISBN}
 {International ISBN Agency}, \emph{ISBN Users' Manual}, 7th~ed.\hskip 1em plus
@@ -109,7 +116,8 @@ Microsoft, ``Typescript handbook: Type compatibility,''
   2024.
 
 \bibitem{RustDocs}
-R.~Foundation, ``Rust std::any::type\_id,''
-  \url{https://doc.rust-lang.org/std/any/fn.type_id.html}, 2024.
+{Rust Project Developers}, ``Rust standard library:
+  \texttt{std::any::TypeId},''
+  \url{https://doc.rust-lang.org/std/any/struct.TypeId.html}, 2024.
 
 \end{thebibliography}

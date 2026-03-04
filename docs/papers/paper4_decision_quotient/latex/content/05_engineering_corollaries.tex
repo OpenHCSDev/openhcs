@@ -1,0 +1,75 @@
+\section{Engineering Corollaries}\label{sec:engineering-corollaries}
+
+The complexity results of Sections~\ref{sec:hardness}--\ref{sec:tractable} have direct engineering corollaries. This section records consequences of the preceding hardness and tractability theorems when the coordinate model is used to represent configuration, feature, or interface choices.
+
+Every claim in this section is model-conditional. The conclusions apply when a design problem is faithfully represented as a decision problem with coordinate structure and when the relevant computational cost is the cost of certifying sufficiency or finding a minimal sufficient set.
+
+\subsection{Configuration Simplification as Sufficiency Checking}
+
+\begin{proposition}[Configuration Simplification as \textsc{Sufficiency-Check}]
+\label{prop:config-sufficiency}
+Let $P=\{p_1,\ldots,p_n\}$ be configuration parameters and let $B$ be a finite set of observable behaviors. Suppose each configuration state determines the subset of behaviors that remain feasible or optimal. Then the question
+\[
+\text{``Does parameter subset } I \subseteq P \text{ preserve all decision-relevant behavior?''}
+\]
+is an instance of \textsc{Sufficiency-Check}.
+\end{proposition}
+
+\begin{proof}
+Construct a decision problem $\mathcal{D}=(A,X_1,\ldots,X_n,U)$ by taking actions $A=B$, coordinate domains $X_i$ equal to the domains of the parameters $p_i$, and defining $U(b,s)=1$ exactly when behavior $b$ is realized or admissible under configuration state $s$. Then $\Opt(s)$ is the behavior set induced by $s$, and coordinate subset $I$ is sufficient exactly when agreement on the parameters in $I$ forces agreement on the induced optimal-behavior set.
+\end{proof}
+
+\subsection{Limits of Exact Minimization}
+
+\begin{corollary}[No General-Purpose Exact Configuration Minimizer]
+\label{cor:no-general-minimizer}
+Assuming $\Pclass \neq \coNP$, there is no polynomial-time general-purpose procedure that takes an arbitrary succinctly encoded configuration problem and always returns a smallest behavior-preserving parameter subset.
+\end{corollary}
+
+\begin{proof}
+Such a procedure would solve \textsc{Minimum-Sufficient-Set} in polynomial time for arbitrary succinctly encoded instances, contradicting Theorem~\ref{thm:minsuff-conp} under the assumption $\Pclass \neq \coNP$.
+\end{proof}
+
+\begin{remark}
+This does not rule out useful tools. It rules out a fully general exact minimizer with worst-case polynomial guarantees. Domain restrictions of the kind isolated in Section~\ref{sec:tractable} remain viable.
+\end{remark}
+
+\subsection{Why Over-Specification Can Be Rational}
+
+\begin{proposition}[Model-Conditional Rationality of Over-Specification]
+\label{prop:rational-overspecification}
+Consider a design process in which:
+\begin{enumerate}
+\item removing a parameter requires certifying that it is irrelevant,
+\item exact irrelevance certification is charged according to the computational model of Section~\ref{sec:encoding}, and
+\item carrying an extra parameter incurs only linear or otherwise low-order maintenance overhead.
+\end{enumerate}
+Then, for sufficiently expressive succinctly encoded instances, retaining extra parameters can be an economically rational response to the hardness of exact minimization.
+\end{proposition}
+
+\begin{proof}
+By Theorems~\ref{thm:sufficiency-conp} and~\ref{thm:minsuff-conp}, exact sufficiency certification and exact minimization are coNP-complete in the general succinct regime. By Section~\ref{sec:dichotomy}, this hardness is accompanied by exponential lower bounds under ETH in the linear-support regime. If the cost of carrying extra parameters grows only linearly while exact minimization inherits worst-case exponential cost, then beyond a problem-dependent threshold the latter dominates the former. Under that cost model, over-specification is a rational hedge against intractable exact pruning.
+\end{proof}
+
+\begin{remark}
+The conclusion is not that over-specification is always best. It is that, in the absence of tractable structure, exact minimality need not be a computationally reasonable target.
+\end{remark}
+
+\subsection{Heuristics and Structural Restrictions}
+
+The tractable regimes of Section~\ref{sec:tractable} explain when exact simplification is computationally realistic. When bounded action sets, separable utility, low tensor rank, tree structure, bounded treewidth, or coordinate symmetry are present, exact certification becomes feasible. Outside such regimes, approximate selection, conservative over-inclusion, and domain-specific simplification strategies are often better aligned with the complexity landscape than unconditional demands for exact minimality.
+
+\subsection{Competence by Regime}
+
+\begin{proposition}[Exact Certification Competence Depends on Regime]
+\label{prop:competence-by-regime}
+Within the model of this paper, exact certification competence is regime-dependent. In the general succinct regime, exact relevance certification and exact minimization inherit the hardness results of Sections~\ref{sec:hardness} and~\ref{sec:dichotomy}. In the structured regimes of Section~\ref{sec:tractable}, exact certification becomes available in polynomial time.
+\end{proposition}
+
+\begin{proof}
+The negative side is given by Theorems~\ref{thm:sufficiency-conp} and~\ref{thm:minsuff-conp}, together with the ETH-conditioned lower bounds summarized in Section~\ref{sec:dichotomy}. The positive side is given by the tractability results of Section~\ref{sec:tractable}, which provide explicit polynomial-time certification procedures under structural restrictions.
+\end{proof}
+
+\begin{remark}
+This is the only competence distinction needed in Paper~A: not a general theory of reporting or abstention, but a theorem-driven separation between regimes in which exact certification is computationally available and regimes in which it is not.
+\end{remark}

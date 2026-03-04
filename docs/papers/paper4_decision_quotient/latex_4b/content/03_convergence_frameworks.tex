@@ -1,0 +1,77 @@
+\section{Convergence Frameworks}\label{sec:convergence-frameworks}
+
+This section shows that several mathematical frameworks recover the same structural invariant once the optimizer quotient has been fixed. That invariant is structural rank. The individual bridge theorems do not identify the surrounding theories with one another; they show that these theories agree on the same support-size core when exact decision preservation is the comparison criterion.
+
+\subsection{Counting, Entropy, and the Quotient}
+
+\begin{theorem}[Counting Induces Finite Probability]\label{thm:bayes-from-counting}
+Let $\Omega$ be a finite nonempty set and define $P(E)=|E|/|\Omega|$. Then:
+\begin{enumerate}
+\item $P$ satisfies the finite Kolmogorov axioms;
+\item conditional probability and Bayes' rule follow algebraically wherever denominators are nonzero;
+\item mutual information is well-defined after normalization;
+\item the normalized decision-quotient score $\DQ=I(H;E)/H(H)$ lies in $[0,1]$ whenever $H(H)>0$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Nonnegativity, normalization, and finite additivity are immediate from counting. Conditional probability is then defined by quotienting joint counts by marginal counts, and Bayes' rule is obtained by rearranging the identity $P(H\cap E)=P(H\mid E)P(E)=P(E\mid H)P(H)$. Mutual information and the normalized score are standard consequences once probability and entropy are defined. The bound $\DQ\in[0,1]$ follows from $0\le I(H;E)\le H(H)$.
+\end{proof}
+
+\begin{theorem}[Entropy Bounded by Structural Rank]\label{thm:entropy-rank}
+For Boolean coordinate spaces,
+\[
+H(\mathcal{D}) \le \mathrm{srank}(\mathcal{D}),
+\]
+where $H(\mathcal{D})$ is the base-$2$ entropy of the optimizer quotient.
+\end{theorem}
+
+\begin{proof}
+The relevant-coordinate set is sufficient, so the optimizer map factors through a Boolean cube of dimension $\mathrm{srank}(\mathcal{D})$. Hence the optimizer quotient has at most $2^{\mathrm{srank}(\mathcal{D})}$ classes.
+\end{proof}
+
+\subsection{Structural Rank Recovery}
+
+\begin{theorem}[Fisher Support Recovers Structural Rank]\label{thm:fisher-rank-srank}
+If one assigns score $1$ to relevant coordinates and $0$ to irrelevant ones, the resulting diagonal Fisher-style support matrix has rank $\mathrm{srank}(\mathcal{D})$.
+\end{theorem}
+
+\begin{proof}
+The rank of a diagonal matrix is the number of nonzero diagonal entries, which is exactly the number of relevant coordinates.
+\end{proof}
+
+\begin{theorem}[Zero-Distortion Rate Is Governed by Structural Rank]\label{thm:rate-distortion-bridge}
+At zero distortion, the minimum lossless rate needed to preserve optimal actions is governed by the same support-size quantity that defines $\mathrm{srank}(\mathcal{D})$, and any attempted compression below that support size must merge states that are not decision-equivalent.
+\end{theorem}
+
+\begin{proof}
+Zero distortion allows only mergers of states that are already decision-equivalent. Hence the number of distinguishable summaries is controlled by the size of the optimizer quotient, which is in turn controlled by the relevant-coordinate support.
+\end{proof}
+
+\begin{theorem}[Decision-Relevant Information Requires Nontriviality]\label{thm:nontriviality-counting}
+If a decision problem carries nonzero decision-relevant information, then its optimizer quotient is nontrivial. Equivalently, a singleton quotient cannot support positive decision-relevant entropy.
+\end{theorem}
+
+\begin{proof}
+If the optimizer quotient has one class, then $\Opt$ is constant on all states. A constant optimizer map yields a single attained optimal-action set, so the quotient entropy is zero and there is no decision-relevant distinction to preserve. The contrapositive gives the result.
+\end{proof}
+
+\subsection{Framework Convergence}
+
+\begin{theorem}[Six-Framework Structural-Rank Recovery]\label{thm:six-framework-recovery}
+Within the finite setting of this paper, the following objects recover the same structural core up to the identifications proved above:
+\begin{enumerate}
+\item relevant-coordinate support,
+\item structural rank,
+\item optimizer-quotient image size,
+\item quotient entropy,
+\item Fisher-style support count,
+\item zero-distortion lossless decision summary size.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+The equivalences are obtained by combining the foundational results of Section~\ref{sec:foundations}---especially Proposition~\ref{prop:minimal-relevant-equiv}, Proposition~\ref{prop:optimizer-coimage}, and Theorem~\ref{thm:quotient-universal}---with Theorems~\ref{thm:entropy-rank}, \ref{thm:fisher-rank-srank}, \ref{thm:rate-distortion-bridge}, and \ref{thm:nontriviality-counting}.
+\end{proof}
+
+The point is not that these frameworks become identical in every technical sense. Rather, once the optimizer quotient is fixed, they converge on the same support-size invariant for decision relevance. The paper's backbone is therefore simple: shared definitions, the quotient universal property, and a family of bridge theorems centered on $\mathrm{srank}$.

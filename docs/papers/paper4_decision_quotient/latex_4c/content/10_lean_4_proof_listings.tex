@@ -1,0 +1,140 @@
+\section{Lean 4 Proof Listings}\label{app:lean}
+
+The complete Lean 4 formalization is available in the companion artifact (Zenodo DOI listed on the title page). The mechanization consists of \LeanTotalLines\ lines across \LeanTotalFiles\ files, with \LeanTotalTheorems\ theorem/lemma statements.
+
+\noindent\textbf{Handle IDs.} Inline theorem metadata now cites compact IDs (for example, \texttt{HD6}, \texttt{CC12}, \texttt{IC4}) instead of full theorem constants. The full ID-to-handle mapping is listed in Section~\ref{sec:lean-handle-id-map}.
+
+\subsection{Lean Handle ID Map}\label{sec:lean-handle-id-map}
+\IfFileExists{content/lean_handle_ids_auto.tex}{
+  \input{content/lean_handle_ids_auto.tex}
+}{
+  \textit{Auto handle-id table not found. Run the paper build script to generate \texttt{content/lean\_handle\_ids\_auto.tex}.}
+}
+
+\subsection{What Is Machine-Checked}
+
+The Lean formalization establishes:
+
+\begin{enumerate}
+\item \textbf{Correctness of the TAUTOLOGY reduction:} The theorem \texttt{tautology\_iff\_sufficient} proves that the mapping from Boolean formulas to decision problems preserves the decision structure (accept iff the formula is a tautology).
+
+\item \textbf{Decision problem definitions:} Formal definitions of sufficiency, optimality, and the decision quotient.
+
+\item \textbf{Economic theorems:} Simplicity Tax redistribution identities and hardness distribution results.
+
+\item \textbf{Query-access lower-bound core:} Formalized Boolean query-model indistinguishability theorem for the full problem via the $I=\emptyset$ subproblem (\texttt{emptySufficiency\_query\_indistinguishable\_pair}), plus obstruction-scale identities (\texttt{queryComplexityLowerBound}, \texttt{exponential\_query\_complexity}).
+\end{enumerate}
+
+\textbf{Complexity classifications} (coNP-completeness, $\Sigma_2^P$-completeness) follow by conditional composition with standard results (e.g., TAUTOLOGY coNP-completeness and $\exists\forall$-SAT $\Sigma_2^P$-completeness), represented explicitly as hypotheses in the conditional transfer theorems listed below. The Lean proofs verify the reduction constructions and the transfer closures under those hypotheses.
+The assumptions themselves are unpacked by an explicit ledger projection theorem (\LH{CC5}) so dependency tracking is machine-auditable.
+\IfFileExists{content/assumption_ledger_auto.tex}{\input{content/assumption_ledger_auto.tex}}{}
+
+\subsection{Polynomial-Time Reduction Definition}
+
+We use Mathlib's Turing machine framework to define polynomial-time computability:
+
+\begin{verbatim}
+/-- Polynomial-time computable function using Turing machines -/
+def PolyTime {α β : Type} (ea : FinEncoding α) (eb : FinEncoding β) 
+    (f : α → β) : Prop :=
+  Nonempty (Turing.TM2ComputableInPolyTime ea eb f)
+
+/-- Polynomial-time many-one (Karp) reduction -/
+def ManyOneReducesPoly {α β : Type} (ea : FinEncoding α) (eb : FinEncoding β)
+    (A : Set α) (B : Set β) : Prop :=
+  ∃ f : α → β, PolyTime ea eb f ∧ ∀ x, x ∈ A ↔ f x ∈ B
+\end{verbatim}
+
+This uses the standard definition: a reduction is polynomial-time computable via Turing machines and preserves membership.
+
+\textbf{Note on verification status.} The Lean formalization machine-verifies \emph{correctness} (the membership-preservation property, i.e., the second conjunct of \texttt{ManyOneReducesPoly}). Proving that a concrete function satisfies \texttt{PolyTime}---i.e., constructing an actual Turing machine witness with a polynomial time bound---remains an open problem in formal verification. No existing proof assistant project has achieved end-to-end TM-based polytime proofs for concrete reductions. In our formalization, polytime computability is stated as an explicit hypothesis in \texttt{valid\_karp\_reduction}, making the gap visible rather than hiding it.
+
+\subsection{The Main Reduction Theorem}
+
+\begin{theorem}[TAUTOLOGY Reduction Correctness, Lean]
+The reduction from TAUTOLOGY to SUFFICIENCY-CHECK is correct:
+\end{theorem}
+
+\begin{verbatim}
+theorem tautology_iff_sufficient (φ : Formula n) :
+    φ.isTautology ↔ (reductionProblem φ).isSufficient Finset.empty
+\end{verbatim}
+
+This theorem is proven by showing both directions:
+\begin{itemize}
+\item If $\varphi$ is a tautology, then the empty coordinate set is sufficient
+\item If the empty coordinate set is sufficient, then $\varphi$ is a tautology
+\end{itemize}
+
+The proof verifies that the utility construction in \texttt{reductionProblem} creates the appropriate decision structure where:
+\begin{itemize}
+\item At reference states, \texttt{accept} is optimal with utility 1
+\item At assignment states, \texttt{accept} is optimal iff $\varphi(a) = \text{true}$
+\end{itemize}
+
+\subsection{Economic Results}
+
+The hardness distribution theorems (Section~\ref{sec:simplicity-tax}) are fully formalized:
+
+\begin{verbatim}
+theorem simplicityTax_conservation (P : SpecificationProblem)
+    (S : SolutionArchitecture P) :
+    S.centralDOF + simplicityTax P S ≥ P.intrinsicDOF
+
+theorem simplicityTax_grows (P : SpecificationProblem)
+    (S : SolutionArchitecture P) (n₁ n₂ : ℕ)
+    (hn : n₁ < n₂) (htax : simplicityTax P S > 0) :
+    totalDOF S n₁ < totalDOF S n₂
+
+theorem native_dominates_manual (P : SpecificationProblem) (n : Nat)
+    (hn : n > P.intrinsicDOF) :
+    totalDOF (nativeTypeSystem P) n < totalDOF (manualApproach P) n
+
+theorem totalDOF_eventually_constant_iff_zero_distributed
+    (S : SolutionArchitecture P) :
+    IsEventuallyConstant (fun n => totalDOF S n) ↔ S.distributedDOF = 0
+
+theorem no_positive_slope_linear_represents_saturating
+    (c d K : ℕ) (hd : d > 0) :
+    ¬ (∀ n, c + n * d = generalizedTotalDOF c (saturatingSiteCost K) n)
+\end{verbatim}
+
+\noindent\textbf{Identifier note.}
+Lean identifiers retain internal naming (\texttt{intrinsicDOF}, \texttt{simplicityTax\_conservation}); in paper terminology these correspond to \emph{baseline hardness} and the \emph{redistribution lower-bound identity}, respectively.
+
+\subsection{Complete Claim Coverage Matrix}
+\IfFileExists{content/claim_mapping_auto.tex}{
+  \input{content/claim_mapping_auto.tex}
+}{
+  \textit{Auto claim-mapping table not found. Run the paper build script to generate \texttt{content/claim\_mapping\_auto.tex}.}
+}
+
+\subsection{Proof Hardness Index (Auto)}
+\IfFileExists{content/proof_hardness_index_auto.tex}{
+  \input{content/proof_hardness_index_auto.tex}
+}{
+  \textit{Auto hardness-index table not found. Run the paper build script to generate \texttt{content/proof\_hardness\_index\_auto.tex}.}
+}
+
+\subsection{Claims Not Fully Mechanized}
+
+\textbf{Status:} all theorem/proposition/corollary handles in this paper now have Lean backing.
+Entries marked \textbf{Full (conditional)} are explicitly mechanized transfer theorems that depend on standard external complexity facts (e.g., source-class completeness or ETH assumptions), with those dependencies represented as hypotheses in Lean.
+
+\subsection{Module Structure}
+
+\begin{itemize}
+\item \texttt{Basic.lean} -- Core definitions (DecisionProblem, sufficiency, optimality)
+\item \texttt{Sufficiency.lean} -- Sufficiency checking algorithms and properties
+\item \texttt{Reduction.lean} -- TAUTOLOGY reduction construction and correctness
+\item \texttt{Hardness/ConfigReduction.lean} -- Sentinel-action configuration reduction theorem
+\item \texttt{Complexity.lean} -- Polynomial-time reduction definitions using mathlib
+\item \texttt{HardnessDistribution.lean} -- Simplicity Tax redistribution and amortization theorems
+\item \texttt{IntegrityCompetence.lean} -- Solver integrity vs regime competence separation
+\item \texttt{ClaimClosure.lean} -- Mechanized closure of paper-level bridge and diagnostic claims
+\item \texttt{Tractability/} -- Bounded actions, separable utilities, tree structure
+\end{itemize}
+
+\subsection{Verification}
+
+The proofs compile with Lean 4 and contain no \texttt{sorry} placeholders. Run \texttt{lake build} in the proof directory to verify.

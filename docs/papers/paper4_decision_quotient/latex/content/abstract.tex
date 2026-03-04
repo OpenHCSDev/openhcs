@@ -1,19 +1,7 @@
-We present a Lean 4 formalization of polynomial-time reductions and computational complexity proofs, demonstrated through a comprehensive analysis of \emph{decision-relevant information}: the problem of identifying which variables matter for optimal decision-making.
+We study \emph{decision-relevant information}: which coordinates of a state space suffice to determine the optimal action. For a decision problem $\mathcal{D}=(A,S,U)$ with $S=X_1 \times \cdots \times X_n$, a coordinate set $I$ is sufficient if $s_I=s'_I$ implies $\Opt(s)=\Opt(s')$. The associated optimizer quotient records the coarsest abstraction that preserves optimal-action distinctions.
 
-\textbf{Formalization contributions.} We develop a reusable framework for expressing Karp reductions, oracle complexity classes, and parameterized hardness in Lean 4. The framework integrates with Mathlib's computability library and provides: (1) bundled reduction types with polynomial-time witnesses; (2) tactics for composing reductions; (3) templates for NP/coNP/\SigmaP{2} membership and hardness proofs.
+Under the encoding model fixed in Section~\ref{sec:encoding}, we prove that \textsc{Sufficiency-Check} is coNP-complete, \textsc{Minimum-Sufficient-Set} is coNP-complete, and \textsc{Anchor-Sufficiency} is $\SigmaP{2}$-complete. We also prove an encoding-sensitive dichotomy: explicit-state instances with logarithmic-size sufficient sets admit polynomial-time algorithms, while succinctly encoded instances with linear-size sufficient sets inherit ETH-conditioned exponential lower bounds. In addition, we isolate tractable subcases for bounded actions, separable utility, low tensor rank, tree structure, bounded treewidth, and coordinate symmetry.
 
-\textbf{Verified complexity results.} As a case study, we formalize the complexity of the SUFFICIENCY-CHECK problem, determining which coordinates of a decision problem suffice for optimal action. We machine-verify:
-\begin{itemize}
-\item \textbf{coNP-completeness} of sufficiency checking via reduction from TAUTOLOGY \cite{cook1971complexity}
-\item \textbf{Inapproximability} within $(1-\varepsilon)\ln n$ via L-reduction from SET-COVER \cite{feige1998threshold}
-\item \textbf{$2^{\Omega(n)}$ lower bounds} under ETH via circuit-based arguments \cite{impagliazzo2001complexity}
-\item \textbf{W[2]-hardness} for the parameterized variant with kernelization lower bounds
-\item \textbf{A complexity dichotomy}: polynomial time in the explicit-state model for $O(\log |S|)$-size sufficient sets, exponential under ETH in the succinct model for $\Omega(n)$-size
-\end{itemize}
-All complexity claims use the input encodings fixed in Section~\ref{sec:encoding}.
+These results also yield direct corollaries for exact simplification tasks: in the general succinct regime, exact behavior-preserving minimization has no polynomial-time worst-case solution unless $\Pclass=\coNP$, while conservative over-specification can be a rational response when exact pruning carries exponential cost.
 
-The formalization comprises \LeanTotalLines\ lines of Lean 4 with \LeanTotalTheorems\ machine-verified theorems/lemmas across \LeanTotalFiles\ files. All reductions include explicit polynomial bounds. We identify proof engineering patterns for complexity theory in dependent type systems and discuss challenges of formalizing computational hardness constructively.
-
-\textbf{Practical corollaries.} The primary contribution is theoretical: a formalized reduction framework and a complete characterization of the core decision-relevant problems in the formal model (coNP/\(\Sigma_2^P\) completeness and tractable cases under explicit encoding assumptions). The case study formalizes the principle \emph{determining what you need to know is harder than knowing everything}. This implies that over-modeling is rational under the model and that ``simpler'' incomplete tools create more work (the Simplicity Tax Theorem, also machine-verified).
-
-\textbf{Keywords:} Lean 4, formal verification, polynomial-time reductions, coNP-completeness, computational complexity, Mathlib, interactive theorem proving
+The Lean 4 development mechanizes the core reductions and theorem statements, with \LeanTotalLines\ lines, \LeanTotalTheorems\ theorems/lemmas, and \LeanTotalFiles\ proof files.

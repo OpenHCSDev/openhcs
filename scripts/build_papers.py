@@ -376,12 +376,21 @@ class PaperBuilder:
         """Return configured auto-generated content file names."""
         return set(self.build_config.generated_content_files)
 
-    def _iter_manual_content_tex(self, paper_id: str) -> List[Path]:
+    def _iter_manual_content_tex(
+        self, paper_id: str, files: Optional[List[Path]] = None
+    ) -> List[Path]:
         """Return non-generated content .tex files for a paper."""
+        generated_files = self._generated_content_files()
+        if files is not None:
+            return sorted(
+                tex_file
+                for tex_file in files
+                if tex_file.suffix == ".tex" and tex_file.name not in generated_files
+            )
+
         content_dir = self._get_content_dir(paper_id)
         if not content_dir.exists():
             return []
-        generated_files = self._generated_content_files()
         return sorted(
             tex_file
             for tex_file in content_dir.glob("*.tex")
@@ -843,8 +852,10 @@ end {module_root}
             "skipped_files": skipped_files,
         }
 
-    def _discover_content_files(self, paper_id: str) -> List[Path]:
-        """Discover markdown content files by following main LaTeX include order."""
+    def _discover_content_files_for_flags(
+        self, paper_id: str, defined_flags: Optional[Set[str]] = None
+    ) -> List[Path]:
+        """Discover included TeX files for a paper under simple flag evaluation."""
         meta = self._get_paper_meta(paper_id)
         main_tex = self._get_paper_dir(paper_id) / meta.latex_dir / meta.latex_file
         if not main_tex.exists():
@@ -854,6 +865,7 @@ end {module_root}
             main_tex,
             include_document_body_only=True,
             include_self=False,
+            defined_flags=defined_flags,
         )
         if files:
             ordered_unique: List[Path] = []
@@ -870,9 +882,12 @@ end {module_root}
         print(
             f"[build-md] Warning: no includes parsed from {main_tex.name}; falling back to content/*.tex"
         )
-        content_dir = self._get_content_dir(paper_id)
-        fallback = sorted(content_dir.glob("*.tex"))
-        return [f for f in fallback if f.name != "abstract.tex"]
+        return self._iter_manual_content_tex(paper_id)
+
+    def _discover_content_files(self, paper_id: str) -> List[Path]:
+        """Discover markdown content files by following main LaTeX include order."""
+        files = self._discover_content_files_for_flags(paper_id)
+        return [f for f in files if f.name != "abstract.tex"]
 
     def _strip_latex_comments(self, content: str) -> str:
         """Remove LaTeX comments while preserving escaped percent signs."""
@@ -916,13 +931,64 @@ end {module_root}
         # Return best-effort path for warning output.
         return checked[-1]
 
+    def _evaluate_simple_ifdefined(
+        self, content: str, defined_flags: Optional[Set[str]] = None
+    ) -> str:
+        """Resolve simple `\\ifdefined\\FLAG ... \\else ... \\fi` blocks."""
+        if not defined_flags:
+            return content
+        normalized_flags = {flag.lstrip("\\") for flag in defined_flags}
+
+        token_pattern = re.compile(r"\\ifdefined\\([A-Za-z@]+)|\\else|\\fi")
+        pos = 0
+        out: List[str] = []
+        stack: List[Dict[str, object]] = []
+
+        for match in token_pattern.finditer(content):
+            if not stack or all(bool(frame["take"]) for frame in stack):
+                out.append(content[pos : match.start()])
+
+            token = match.group(0)
+            if token.startswith("\\ifdefined\\"):
+                flag = token[len("\\ifdefined\\") :]
+                parent_take = all(bool(frame["take"]) for frame in stack)
+                cond = flag in normalized_flags
+                stack.append(
+                    {
+                        "flag": flag,
+                        "cond": cond,
+                        "parent_take": parent_take,
+                        "take": parent_take and cond,
+                    }
+                )
+            elif token == r"\else":
+                if stack:
+                    frame = stack[-1]
+                    frame["take"] = bool(frame["parent_take"]) and not bool(
+                        frame["cond"]
+                    )
+            elif token == r"\fi":
+                if stack:
+                    stack.pop()
+
+            pos = match.end()
+
+        if not stack or all(bool(frame["take"]) for frame in stack):
+            out.append(content[pos:])
+        return "".join(out)
+
     def _find_tex_includes(
-        self, tex_file: Path, include_document_body_only: bool, search_root: Path
+        self,
+        tex_file: Path,
+        include_document_body_only: bool,
+        search_root: Path,
+        defined_flags: Optional[Set[str]] = None,
     ) -> List[Path]:
         """Parse direct \\input/\\include dependencies from a .tex file."""
         content = tex_file.read_text(encoding="utf-8", errors="replace")
         if include_document_body_only:
             content = self._extract_document_body(content)
+        content = self._evaluate_simple_ifdefined(content, defined_flags)
         content = self._strip_latex_comments(content)
 
         include_targets = re.findall(r"\\(?:input|include)\{([^}]+)\}", content)
@@ -944,6 +1010,7 @@ end {module_root}
         include_self: bool = True,
         active_stack: Tuple[Path, ...] = (),
         search_root: Path | None = None,
+        defined_flags: Optional[Set[str]] = None,
     ) -> List[Path]:
         """Recursively collect include files in document order.
 
@@ -961,6 +1028,7 @@ end {module_root}
             resolved_tex,
             include_document_body_only=include_document_body_only,
             search_root=search_root,
+            defined_flags=defined_flags,
         )
         ordered_files: List[Path] = [resolved_tex] if include_self else []
         next_stack = (*active_stack, resolved_tex)
@@ -972,6 +1040,7 @@ end {module_root}
                     include_self=True,
                     active_stack=next_stack,
                     search_root=search_root,
+                    defined_flags=defined_flags,
                 )
             )
         return ordered_files
@@ -2244,6 +2313,9 @@ end {module_root}
             return []
 
         text = map_file.read_text(encoding="utf-8", errors="replace")
+        pair_pattern = re.compile(
+            r"\\hypertarget\{lh:([^}]+)\}\{\\nolinkurl\{[^}]+\}\}(?:\\hspace\{[^}]+\})?\\nolinkurl\{([^}]+)\}"
+        )
         hyper_code_pattern = re.compile(r"\\hypertarget\{lh:([^}]+)\}")
         code_pattern = re.compile(r"\\text(?:tt|sf)\{([^}]+)\}")
         code_url_pattern = re.compile(
@@ -2253,6 +2325,13 @@ end {module_root}
         rows: List[Tuple[str, str]] = []
         for raw_line in text.splitlines():
             if r"\nolinkurl{" not in raw_line:
+                continue
+            pair_matches = pair_pattern.findall(raw_line)
+            if pair_matches:
+                for code, handle in pair_matches:
+                    rows.append(
+                        (code.strip(), handle.strip().replace(r"\_", "_"))
+                    )
                 continue
             hyper_match = hyper_code_pattern.search(raw_line)
             code_match = code_pattern.search(raw_line)
@@ -2337,7 +2416,9 @@ end {module_root}
 
         return handles
 
-    def _extract_referenced_lean_handles_from_content(self, paper_id: str) -> Set[str]:
+    def _extract_referenced_lean_handles_from_content(
+        self, paper_id: str, files: Optional[List[Path]] = None
+    ) -> Set[str]:
         """Extract explicit Lean handles referenced in paper content via `\\nolinkurl{...}`."""
         content_dir = self._get_content_dir(paper_id)
         if not content_dir.exists():
@@ -2346,7 +2427,7 @@ end {module_root}
         paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
         handles: Set[str] = set()
 
-        for tex_file in self._iter_manual_content_tex(paper_id):
+        for tex_file in self._iter_manual_content_tex(paper_id, files=files):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             for raw in re.findall(r"\\nolinkurl\{([^}]+)\}", text):
                 handle = raw.strip().replace(r"\_", "_")
@@ -2362,19 +2443,19 @@ end {module_root}
 
         return handles
 
-    def _extract_lh_ids_from_content(self, paper_id: str) -> Set[str]:
+    def _extract_lh_ids_from_content(
+        self, paper_id: str, files: Optional[List[Path]] = None
+    ) -> Set[str]:
         """Extract compact Lean-handle IDs referenced via `\\LH{...}` in content."""
-        content_dir = self._get_content_dir(paper_id)
-        if not content_dir.exists():
-            return set()
-
         ids: Set[str] = set()
-        for tex_file in sorted(content_dir.glob("*.tex")):
+        for tex_file in self._iter_manual_content_tex(paper_id, files=files):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             ids.update(m.strip() for m in re.findall(r"\\LH\{([^}]+)\}", text))
         return {code for code in ids if re.match(r"^[A-Za-z]+\d+$", code)}
 
-    def _extract_referenced_lh_handles_from_content(self, paper_id: str) -> Set[str]:
+    def _extract_referenced_lh_handles_from_content(
+        self, paper_id: str, files: Optional[List[Path]] = None
+    ) -> Set[str]:
         """Extract raw Lean handles still referenced via `\\LH{handle_name}`."""
         content_dir = self._get_content_dir(paper_id)
         if not content_dir.exists():
@@ -2384,7 +2465,7 @@ end {module_root}
         paper_handle_pattern = re.compile(r"^(?:thm|cor|lem|prop):")
         handles: Set[str] = set()
 
-        for tex_file in self._iter_manual_content_tex(paper_id):
+        for tex_file in self._iter_manual_content_tex(paper_id, files=files):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             for raw in re.findall(r"\\LH\{([^}]+)\}", text):
                 handle = raw.strip().replace(r"\_", "_")
@@ -2506,17 +2587,41 @@ end {module_root}
 
                 # Parse abbrev declarations: abbrev XX := YY
                 abbrev_match = re.match(
-                    r"^abbrev\s+([A-Z]{1,4}\d+)\s*:=\s*([A-Za-z0-9_'.@]+)\s*$", line
+                    r"^abbrev\s+([A-Z]{1,16}\d+)\s*:=\s*(.+)$", line
                 )
                 if abbrev_match:
                     code = abbrev_match.group(1)
-                    target = abbrev_match.group(2).lstrip("@")
-                    # Qualify target with namespace prefix
-                    if namespace_stack:
-                        ns_prefix = ".".join(namespace_stack) + "."
-                        full_handle = ns_prefix + target
+                    expr_lines = [abbrev_match.group(2).strip()]
+                    j = i + 1
+                    while j < len(lines):
+                        next_line = lines[j].strip()
+                        if not next_line:
+                            break
+                        if re.match(
+                            r"^(?:abbrev|theorem|lemma|def|namespace|end|export)\b",
+                            next_line,
+                        ):
+                            break
+                        expr_lines.append(next_line)
+                        j += 1
+
+                    expr = " ".join(expr_lines)
+                    handle_matches = re.findall(
+                        r"@?([A-Za-z0-9_']+\.[A-Za-z0-9_'.]+)", expr
+                    )
+                    if handle_matches:
+                        full_handle = handle_matches[-1]
                     else:
-                        full_handle = target
+                        bare_match = re.search(r"@?([A-Za-z_][A-Za-z0-9_']*)", expr)
+                        if bare_match:
+                            target = bare_match.group(1)
+                            if namespace_stack:
+                                ns_prefix = ".".join(namespace_stack) + "."
+                                full_handle = ns_prefix + target
+                            else:
+                                full_handle = target
+                        else:
+                            full_handle = code
                     local_map[code] = full_handle
 
                 i += 1
@@ -2588,7 +2693,9 @@ end {module_root}
 
         return handle_to_code
 
-    def _write_lean_handle_ids_auto(self, paper_id: str) -> None:
+    def _write_lean_handle_ids_auto(
+        self, paper_id: str, files: Optional[List[Path]] = None
+    ) -> None:
         """Write compact Lean-handle ID table used by `\\LH{...}` references."""
         content_dir = self._get_content_dir(paper_id)
         if not content_dir.exists():
@@ -2608,31 +2715,21 @@ end {module_root}
         )
         alias_rows = sorted(alias_by_code.items())
         referenced_handles = self._extract_referenced_lean_handles_from_content(
-            paper_id
+            paper_id, files=files
         )
         referenced_lh_handles = self._extract_referenced_lh_handles_from_content(
-            paper_id
+            paper_id, files=files
         )
-        referenced_ids = self._extract_lh_ids_from_content(paper_id)
-        referenced_id_handles = {
-            previous_id_to_handle[code]
-            for code in referenced_ids
-            if code in previous_id_to_handle
-        }
-        # DOF=1 policy for handle maps:
-        # derive IDs from support actually used by paper content/claims, not from
-        # every declaration in the transitive Lean dependency graph.
-        claim_to_handles = self._extract_claim_label_to_lean_handles(
-            paper_id, include_dependencies=True
-        )
-        support_handles: Set[str] = set()
-        for handles in claim_to_handles.values():
-            support_handles.update(handles)
-
+        referenced_ids = self._extract_lh_ids_from_content(paper_id, files=files)
+        referenced_id_handles: Set[str] = set()
+        for code in referenced_ids:
+            if code in alias_by_code:
+                referenced_id_handles.add(alias_by_code[code])
+            elif code in previous_id_to_handle:
+                referenced_id_handles.add(previous_id_to_handle[code])
         candidate_handles = (
             set(referenced_handles)
             | set(referenced_lh_handles)
-            | set(support_handles)
             | set(referenced_id_handles)
         )
         # Recovery fallback:
@@ -2650,15 +2747,19 @@ end {module_root}
             (code, handle)
             for code, handle in previous_rows
             if re.match(r"^[A-Za-z]+\d+$", code)
+            and (handle in candidate_handles or code in referenced_ids)
         ]
-        preserved_rows = alias_rows + preserved_existing_rows
+        preserved_alias_rows = [
+            (code, handle)
+            for code, handle in alias_rows
+            if handle in candidate_handles or code in referenced_ids
+        ]
+        preserved_rows = preserved_alias_rows + preserved_existing_rows
         preserved_handles = {handle for _, handle in preserved_rows}
 
-        # Single derived universe: local references + derived theorem support
-        # plus any explicitly-declared alias handles.
-        all_handles = (
-            set(candidate_handles) | preserved_handles | set(alias_by_code.values())
-        )
+        # Single derived universe: only handles referenced directly in prose,
+        # plus any explicit alias rows needed to preserve the cited IDs.
+        all_handles = set(candidate_handles) | preserved_handles
 
         handle_to_code = self._assign_compact_handle_ids(all_handles, preserved_rows)
         code_to_handle = {code: handle for handle, code in handle_to_code.items()}
@@ -2673,31 +2774,71 @@ end {module_root}
             "% Auto-generated by scripts/build_papers.py. Do not edit manually.",
             f"% Generated: {datetime.now().isoformat()}",
             r"\begingroup",
-            r"\scriptsize",
+            r"\tiny",
             r"\setlength{\tabcolsep}{3pt}",
-            r"\renewcommand{\arraystretch}{0.90}",
+            r"\renewcommand{\arraystretch}{0.82}",
+            r"\setlength{\LTpre}{0pt}",
+            r"\setlength{\LTpost}{0pt}",
             r"\urlstyle{same}",
-            r"\begin{longtable}{@{}>{\raggedright\arraybackslash}p{\linewidth}@{}}",
-            r"\toprule",
-            r"Lean handle entry \\",
-            r"\midrule",
-            r"\endfirsthead",
-            r"\toprule",
-            r"Lean handle entry (continued) \\",
-            r"\midrule",
-            r"\endhead",
+            r"\makeatletter",
+            r"\if@twocolumn",
+            r"\begin{list}{}{\leftmargin=0pt\itemindent=0pt\itemsep=1pt\parsep=0pt\topsep=0pt}",
         ]
 
         if code_to_handle:
             for code in sorted(code_to_handle.keys(), key=sort_key):
                 handle = code_to_handle[code]
                 lines.append(
-                    rf"\hypertarget{{lh:{code}}}{{\nolinkurl{{{code}}}}}\hspace{{0.35em}}\nolinkurl{{{handle}}} \\"
+                    rf"\item \hypertarget{{lh:{code}}}{{\nolinkurl{{{code}}}}}\hspace{{0.35em}}\nolinkurl{{{handle}}}"
                 )
         else:
-            lines.append(r"\textit{No Lean handles parsed yet.} \\")
+            lines.append(r"\item \textit{No Lean handles parsed yet.}")
 
-        lines.extend([r"\bottomrule", r"\end{longtable}", r"\endgroup", ""])
+        lines.extend(
+            [
+                r"\end{list}",
+                r"\else",
+                r"\begin{longtable}{@{}p{0.07\linewidth}p{0.39\linewidth}p{0.07\linewidth}p{0.39\linewidth}@{}}",
+                r"\toprule",
+                r"ID & Handle & ID & Handle \\",
+                r"\midrule",
+                r"\endfirsthead",
+                r"\toprule",
+                r"ID & Handle & ID & Handle \\",
+                r"\midrule",
+                r"\endhead",
+            ]
+        )
+
+        if code_to_handle:
+            sorted_codes = sorted(code_to_handle.keys(), key=sort_key)
+            for idx in range(0, len(sorted_codes), 2):
+                left_code = sorted_codes[idx]
+                left_handle = code_to_handle[left_code]
+                if idx + 1 < len(sorted_codes):
+                    right_code = sorted_codes[idx + 1]
+                    right_handle = code_to_handle[right_code]
+                    lines.append(
+                        rf"\hypertarget{{lh:{left_code}}}{{\nolinkurl{{{left_code}}}}} & \nolinkurl{{{left_handle}}} & "
+                        rf"\hypertarget{{lh:{right_code}}}{{\nolinkurl{{{right_code}}}}} & \nolinkurl{{{right_handle}}} \\"
+                    )
+                else:
+                    lines.append(
+                        rf"\hypertarget{{lh:{left_code}}}{{\nolinkurl{{{left_code}}}}} & \nolinkurl{{{left_handle}}} & & \\"
+                    )
+        else:
+            lines.append(r"\multicolumn{4}{@{}l@{}}{\textit{No Lean handles parsed yet.}} \\")
+
+        lines.extend(
+            [
+                r"\bottomrule",
+                r"\end{longtable}",
+                r"\fi",
+                r"\makeatother",
+                r"\endgroup",
+                "",
+            ]
+        )
         out_file.write_text("\n".join(lines), encoding="utf-8")
 
     def _rewrite_content_lean_handles_to_ids(self, paper_id: str) -> None:
@@ -3550,7 +3691,8 @@ end {module_root}
 
         Uses the submission_format.latex_flag from papers.yaml to trigger
         format switching (e.g., single-column double-spaced for JSAIT review).
-        Outputs a separate *_submission.pdf alongside the standard PDF.
+        Outputs a separate *_submission.pdf alongside the standard PDF and
+        packages a LaTeX source bundle suitable for manuscript-upload portals.
         """
         # Check if this paper has a submission format defined
         raw_papers = self._raw_metadata.get("papers", {})
@@ -3573,10 +3715,13 @@ end {module_root}
         if not latex_file.exists():
             raise FileNotFoundError(f"LaTeX file not found: {latex_file}")
 
+        submission_files = self._discover_content_files_for_flags(
+            paper_id, defined_flags={latex_flag}
+        )
         self._sync_shared_preambles(paper_id)
         self._write_latex_lean_stats(paper_id)
         self._write_assumption_ledger_auto(paper_id)
-        self._write_lean_handle_ids_auto(paper_id)
+        self._write_lean_handle_ids_auto(paper_id, files=submission_files)
         self._rewrite_content_lean_handles_to_ids(paper_id)
         self._normalize_and_fill_claimstamps(paper_id)
         self._write_claim_mapping_auto(paper_id)
@@ -3587,7 +3732,12 @@ end {module_root}
 
         # Use jobname to output a separate PDF without overwriting the standard one
         job_name = latex_file.stem + "_submission"
-        tex_input = f"\\def{latex_flag}{{}}\\input{{{latex_file.name}}}"
+        hook_name = self._write_submission_build_hook(latex_dir)
+        tex_input = (
+            f"\\def{latex_flag}{{}}"
+            f"\\input{{{hook_name}}}"
+            f"\\input{{{latex_file.name}}}"
+        )
 
         aux_name = job_name
         build_steps = [
@@ -3647,8 +3797,113 @@ end {module_root}
             pdf_dest = releases_dir / f"{paper_id}_submission.pdf"
             shutil.copy2(pdf_src, pdf_dest)
             print(f"[build] ✓ {paper_id}_submission.pdf → releases/")
+            self.package_submission_source(paper_id)
         else:
             print(f"[build] ✗ Submission PDF not generated for {paper_id}")
+
+    def package_submission_source(self, paper_id: str) -> Optional[Path]:
+        """Package LaTeX sources required for manuscript submission portals.
+
+        Creates a source-only archive for the submission/review version:
+        - LaTeX/BibTeX/class/style files
+        - content/ sources
+        - auto-generated LaTeX support files
+        - a small wrapper main file that enables the venue review flag
+
+        Does not include Lean proofs, markdown, graphs, or other supplementary
+        artifacts.
+        """
+        raw_papers = self._raw_metadata.get("papers", {})
+        raw_meta = raw_papers.get(paper_id, {})
+        sub_fmt = raw_meta.get("submission_format")
+        if not sub_fmt:
+            return None
+
+        meta = self._get_paper_meta(paper_id)
+        releases_dir = self._get_releases_dir(paper_id)
+        archive_prefix = self._get_archive_prefix(paper_id)
+        package_dir = releases_dir / f"submission_package_{archive_prefix}"
+        if package_dir.exists():
+            shutil.rmtree(package_dir)
+        package_dir.mkdir(parents=True)
+
+        submission_files = self._discover_content_files_for_flags(
+            paper_id, defined_flags={sub_fmt["latex_flag"]}
+        )
+        self._refresh_derived_content(paper_id)
+        self._write_lean_handle_ids_auto(paper_id, files=submission_files)
+        self._copy_latex_sources(paper_id, package_dir)
+        hook_name = self._write_submission_build_hook(package_dir)
+        wrapper_name = self._write_submission_wrapper_tex(
+            paper_id, package_dir, sub_fmt["latex_flag"], hook_name
+        )
+        self._write_submission_source_readme(paper_id, package_dir, wrapper_name)
+
+        tar_path, zip_path = self._create_named_archive(
+            releases_dir=releases_dir,
+            package_dir=package_dir,
+            archive_stem=f"{archive_prefix}_submission_source",
+            root_dir_name=archive_prefix,
+        )
+        print(
+            f"[submission] ✓ {zip_path.name} → {releases_dir.relative_to(self.repo_root)}/"
+        )
+        return zip_path
+
+    def _write_submission_wrapper_tex(
+        self, paper_id: str, package_dir: Path, latex_flag: str, hook_name: str
+    ) -> str:
+        """Write a compile-ready wrapper that enables the submission flag."""
+        meta = self._get_paper_meta(paper_id)
+        wrapper_name = "main.tex" if meta.latex_file != "main.tex" else "submission_main.tex"
+        wrapper = (
+            "% Auto-generated by scripts/build_papers.py. Submission wrapper.\n"
+            f"\\def{latex_flag}{{}}\n"
+            f"\\input{{{hook_name}}}\n"
+            f"\\input{{{meta.latex_file}}}\n"
+        )
+        (package_dir / wrapper_name).write_text(wrapper, encoding="utf-8")
+        return wrapper_name
+
+    def _write_submission_build_hook(self, target_dir: Path) -> str:
+        """Write generic submission-only LaTeX injections for Lean-handle links."""
+        hook_name = "build_submission_hook.tex"
+        lines = [
+            "% Auto-generated by scripts/build_papers.py. Submission-only hooks.",
+            r"\AtBeginDocument{%",
+            r"  \providecommand{\LH}[1]{\nolinkurl{#1}}%",
+            r"  \renewcommand{\LH}[1]{\hyperlink{lh:#1}{\nolinkurl{#1}}}%",
+            r"}",
+            r"\AtEndDocument{%",
+            r"  \IfFileExists{content/lean_handle_ids_auto.tex}{%",
+            r"    \par\smallskip\begingroup",
+            r"    \footnotesize\noindent\textbf{Lean Handle Index.}\par\smallskip",
+            r"    \input{content/lean_handle_ids_auto.tex}%",
+            r"    \endgroup",
+            r"  }{}%",
+            r"}",
+        ]
+        (target_dir / hook_name).write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return hook_name
+
+    def _write_submission_source_readme(
+        self, paper_id: str, package_dir: Path, wrapper_name: str
+    ) -> None:
+        """Write a short note for manuscript-upload systems/editors."""
+        meta = self._get_paper_meta(paper_id)
+        readme = "\n".join(
+            [
+                f"Submission source bundle for {paper_id}: {meta.full_name}",
+                "",
+                "This archive contains only the main-manuscript LaTeX sources.",
+                "Supplementary materials are intentionally excluded.",
+                "",
+                f"Compile the submission version via: {wrapper_name}",
+                f"Primary manuscript source: {meta.latex_file}",
+                "",
+            ]
+        )
+        (package_dir / "README_SUBMISSION.txt").write_text(readme, encoding="utf-8")
 
     def build_markdown(self, paper_id: str):
         """Build Markdown version of a paper.
@@ -5974,35 +6229,47 @@ Repository: https://github.com/trissim/openhcs
         log_file.write_text(log_content)
         print(f"[arxiv]   Build log: BUILD_LOG.txt (with compilation output)")
 
-    def _create_archive(self, paper_id: str, package_dir: Path) -> tuple[Path, Path]:
-        """Create compressed tar.gz and zip archives of package in releases/.
-
-        For variants (e.g., paper1_jsait), uses variant-specific naming.
-        """
+    def _create_named_archive(
+        self,
+        releases_dir: Path,
+        package_dir: Path,
+        archive_stem: str,
+        root_dir_name: str,
+    ) -> tuple[Path, Path]:
+        """Create compressed tar.gz and zip archives with explicit names."""
         import tarfile
         import zipfile
 
-        archive_prefix = self._get_archive_prefix(paper_id)
-        releases_dir = self._get_releases_dir(paper_id)
-
-        # Create tar.gz with variant-specific naming
-        tar_name = f"{archive_prefix}_arxiv.tar.gz"
+        tar_name = f"{archive_stem}.tar.gz"
         tar_path = releases_dir / tar_name
         with tarfile.open(tar_path, "w:gz") as tar:
-            tar.add(package_dir, arcname=archive_prefix)
+            tar.add(package_dir, arcname=root_dir_name)
 
-        # Create zip with variant-specific naming
-        zip_name = f"{archive_prefix}_arxiv.zip"
+        zip_name = f"{archive_stem}.zip"
         zip_path = releases_dir / zip_name
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for file_path in package_dir.rglob("*"):
                 if file_path.is_file():
                     arcname = str(
-                        Path(archive_prefix) / file_path.relative_to(package_dir)
+                        Path(root_dir_name) / file_path.relative_to(package_dir)
                     )
                     zf.write(file_path, arcname)
 
         return tar_path, zip_path
+
+    def _create_archive(self, paper_id: str, package_dir: Path) -> tuple[Path, Path]:
+        """Create compressed tar.gz and zip archives of package in releases/.
+
+        For variants (e.g., paper1_jsait), uses variant-specific naming.
+        """
+        archive_prefix = self._get_archive_prefix(paper_id)
+        releases_dir = self._get_releases_dir(paper_id)
+        return self._create_named_archive(
+            releases_dir=releases_dir,
+            package_dir=package_dir,
+            archive_stem=f"{archive_prefix}_arxiv",
+            root_dir_name=archive_prefix,
+        )
 
     def release(
         self,
@@ -6020,6 +6287,9 @@ Repository: https://github.com/trissim/openhcs
         # Build in order: Lean → LaTeX → Markdown → Package
         self.build_lean(paper_id, verbose=verbose)
         self.build_latex(paper_id, verbose=verbose)
+        raw_meta = self._raw_metadata.get("papers", {}).get(paper_id, {})
+        if raw_meta.get("submission_format"):
+            self.build_submission(paper_id, verbose=verbose)
         self.build_markdown(paper_id)
         if claim_check:
             self.check_claim_coverage(paper_id, fail_on_missing=True)

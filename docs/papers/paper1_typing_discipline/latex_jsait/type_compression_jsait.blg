@@ -1,4 +1,4 @@
-This is BibTeX, Version 0.99d (TeX Live 2026/dev/Arch Linux)
+This is BibTeX, Version 0.99e (TeX Live 2026/Arch Linux)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: type_compression_jsait.aux
 The style file: IEEEtran.bst
@@ -15,42 +15,42 @@ Database file #1: references.bib
 Done.
 You've used 20 entries,
             4087 wiz_defined-function locations,
-            937 strings with 10106 characters,
-and the built_in function-call counts, 12587 in all, are:
-= -- 1035
-> -- 221
-< -- 109
-+ -- 125
-- -- 32
-* -- 541
-:= -- 1960
+            940 strings with 10258 characters,
+and the built_in function-call counts, 12920 in all, are:
+= -- 1080
+> -- 214
+< -- 114
++ -- 122
+- -- 30
+* -- 570
+:= -- 2031
 add.period$ -- 40
 call.type$ -- 20
 change.case$ -- 17
-chr.to.int$ -- 258
+chr.to.int$ -- 261
 cite$ -- 20
-duplicate$ -- 915
-empty$ -- 1056
-format.name$ -- 39
-if$ -- 2922
+duplicate$ -- 935
+empty$ -- 1078
+format.name$ -- 37
+if$ -- 2999
 int.to.chr$ -- 0
 int.to.str$ -- 20
-missing$ -- 149
-newline$ -- 83
+missing$ -- 152
+newline$ -- 85
 num.names$ -- 20
-pop$ -- 350
+pop$ -- 337
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 2
-skip$ -- 1001
+skip$ -- 1037
 stack$ -- 0
-substring$ -- 605
-swap$ -- 711
-text.length$ -- 23
+substring$ -- 613
+swap$ -- 737
+text.length$ -- 27
 text.prefix$ -- 0
 top$ -- 5
 type$ -- 20
 warning$ -- 0
 while$ -- 65
 width$ -- 22
-write$ -- 200
+write$ -- 209

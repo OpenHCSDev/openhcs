@@ -82,8 +82,7 @@ This explains why practitioners use sampling-based sensitivity analysis rather t
 \subsection{Model Selection}
 
 Statistical model selection (AIC~\cite{akaike1974new}, BIC~\cite{schwarz1978estimating}, cross-validation~\cite{stone1974cross}) provides practical heuristics for choosing among models. Our results provide theoretical justification: optimal model selection is intractable, so heuristics are necessary.
-
-The Simplicity Tax Theorem (Section~\ref{sec:simplicity-tax}) adds a warning: model selection heuristics that favor ``simpler'' models incur hidden costs when the true model is complex. The simplicity preference fallacy (choosing low-parameter models without accounting for per-site costs) is the decision-theoretic formalization of overfitting-by-underfitting.
+At the level of decision relevance, the lesson is structural rather than heuristic: exact identification of the smallest sufficient representation is hard in general, so restricted model classes and structural assumptions are not optional conveniences but complexity-theoretic necessities.
 
 \paragraph{Three-axis integration.}
 To our knowledge, prior work treats these pillars separately: representation-sensitive hardness, query-access lower bounds, and certifying soundness disciplines. This paper integrates all three for the same decision-relevance object in one regime-typed and machine-checked framework.

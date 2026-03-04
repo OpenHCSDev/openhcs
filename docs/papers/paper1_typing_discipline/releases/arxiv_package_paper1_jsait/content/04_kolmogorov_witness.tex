@@ -9,9 +9,8 @@ $$W_{\text{eq}} = O(1)$$
 Specifically, the witness is a single tag read: compare $\text{tag}(v_1) = \text{tag}(v_2)$.
 
 Attribute-only observers require $W_{\text{eq}} = \Omega(d)$ where $d$ is the distinguishing dimension (and $d \le n$, with worst-case $d = n$).
-\LH{ACS1}.)}
 \end{theorem}
-\leanmeta{ \LH{ACS7},
+\leanmeta{ \LH{UNIQ1}, \LH{UNIQ1}}
 
 \begin{proof}
 See Lean formalization: \texttt{proofs/nominal\_resolution.lean}. The proof shows:
@@ -37,4 +36,4 @@ Attribute-only & Query a distinguishing set & $\Omega(d)$ \\
 \caption{Witness cost for class identity by observer class.}
 \end{table}
 
-The Lean 4 formalization (Appendix~\ref{sec:lean}) provides a machine-checked proof that nominal-tag access minimizes witness cost for class identity.
+The Lean 4 formalization in the supplementary artifact provides a machine-checked proof that nominal-tag access minimizes witness cost for class identity.

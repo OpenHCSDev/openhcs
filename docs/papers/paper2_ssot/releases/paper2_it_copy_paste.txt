@@ -1,5 +1,5 @@
 AUTO-GENERATED COPY/PASTE METADATA
-Generated: 2026-03-02T14:43:00.280294
+Generated: 2026-03-04T12:50:53.256249
 
 === HUMAN COPY/PASTE ===
 
@@ -32,7 +32,7 @@ Constructive instantiations (programming patterns, software case study) suppleme
 Index Terms: zero-error capacity, multi-terminal source coding, side information, confusability graph, impossibility theorems
 
 arXiv Comments:
-IEEE Transactions on Information Theory submission. Lean 4 artifact: 3863 lines, 185 theorems/lemmas across 29 files (0 sorry placeholders).
+IEEE Transactions on Information Theory submission. Lean 4 artifact: 11078 lines, 491 theorems/lemmas across 55 files (0 sorry placeholders).
 
 === MACHINE YAML ===
 paper_id: paper2_it
@@ -111,7 +111,7 @@ arxiv:
     Index Terms: zero-error capacity, multi-terminal source coding, side information,
     confusability graph, impossibility theorems'
   comments: 'IEEE Transactions on Information Theory submission. Lean 4 artifact:
-    3863 lines, 185 theorems/lemmas across 29 files (0 sorry placeholders).'
+    11078 lines, 491 theorems/lemmas across 55 files (0 sorry placeholders).'
 abstract_variants:
   unicode: 'Single-Source Coherence Theorem. We prove that among all possible degrees
     of freedom (DOF = number of independent encoding locations), exactly one value

@@ -1,0 +1,80 @@
+\documentclass[journal]{IEEEtran}
+
+% IEEE Transactions on Information Theory Format - IEEEtran class
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Allow URLs to break at any character
+\makeatletter
+\g@addto@macro{\UrlBreaks}{\UrlOrds}
+\makeatother
+
+% Prevent overfull hboxes
+\sloppy
+
+% Load preamble
+\input{preamble}
+
+% Hyperref setup
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+% Title
+\title{Zero-Incoherence Capacity of Interactive Encoding Systems:\\
+Achievability, Converse, and Side Information Bounds}
+
+% Author block - IEEE format
+\author{Tristan~Simas%
+\thanks{T. Simas is with McGill University, Montreal, QC, Canada (e-mail: tristan.simas@mail.mcgill.ca).}%
+\thanks{Manuscript received \today.}}
+
+\begin{document}
+
+\maketitle
+
+% Copyright notice
+\renewcommand{\thefootnote}{}
+\footnotetext{
+  \textcopyright\ 2026 Tristan Simas.
+  This work is licensed under CC BY 4.0.
+  License: \url{https://creativecommons.org/licenses/by/4.0/}
+}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+% Include abstract
+\input{content/abstract.tex}
+
+% Main content sections (section commands are in the content files)
+\input{content/01_introduction.tex}
+\input{content/02_foundations.tex}
+\input{content/03_ssot.tex}
+\input{content/04_requirements.tex}
+\input{content/05_evaluation.tex}
+\input{content/06_bounds.tex}
+\input{content/07_empirical.tex}
+\input{content/08_related.tex}
+\input{content/09_conclusion.tex}
+
+% References
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+% Appendix
+\appendix
+\input{content/11_lean_proofs.tex}
+
+\end{document}

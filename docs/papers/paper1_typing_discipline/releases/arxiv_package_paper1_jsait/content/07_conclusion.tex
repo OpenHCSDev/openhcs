@@ -1,14 +1,14 @@
 This paper presents an information-theoretic analysis of classification under observational constraints. We prove three main results:
 
 \begin{enumerate}
-\item \textbf{Information Barrier}: Observers limited to attribute-membership queries cannot compute properties that vary within indistinguishability classes. This is universal: it applies to biological taxonomy, database systems, library classification, and programming language runtimes alike.
+\item \textbf{Information Barrier}: Observers limited to attribute-membership queries cannot compute properties that vary within indistinguishability classes. This is the structural obstruction from which the later lower bounds and tradeoffs follow.
 
 \item \textbf{Witness Optimality}: Nominal-tag observers achieve $W(\text{identity}) = O(1)$, the minimum witness cost. The gap from attribute-only observation ($\Omega(d)$, with a worst-case family where $d = n$) is unbounded.
 
 \item \textbf{Matroid Structure}: Minimal distinguishing query sets form the bases of a matroid. The distinguishing dimension of a classification problem is well-defined and computable.
 \end{enumerate}
 
-\subsection{The Universal Pattern}
+\subsection{A Recurring Design Constraint}
 
 Across domains, the same structure recurs:
 
@@ -20,7 +20,7 @@ Across domains, the same structure recurs:
 \item \textbf{Type systems}: Attribute observation (interfaces/method signatures in this instantiation) cannot distinguish structurally identical types. Type tags provide $O(1)$ identity.
 \end{itemize}
 
-The information barrier is not a quirk of any particular domain; it is a mathematical necessity arising from the quotient structure induced by limited observations.
+The information barrier is not a quirk of any particular domain; it is a mathematical necessity arising from the quotient structure induced by limited observations. What varies by domain is not the existence of the constraint, but which resource the system chooses to spend to escape it.
 
 \subsection{Implications}
 
@@ -29,25 +29,19 @@ The information barrier is not a quirk of any particular domain; it is a mathema
 
 \item \textbf{The barrier is informational, not computational}: even with unbounded resources, attribute-only observers cannot overcome it.
 
-\item \textbf{Fixed-axis systems are necessarily incomplete outside their axis}: by Corollary~\ref{cor:fixed-axis-incompleteness}, any fixed-axis classifier is complete only for axis-measurable properties and cannot represent properties that vary within an axis fiber unless a new axis/tag is introduced.
+\item \textbf{Fixed-axis systems are necessarily incomplete outside their axis}: by Corollary~\ref{cor:fixed-axis-incompleteness}, any fixed-axis classifier is complete only for axis-measurable properties and cannot represent properties that vary within an axis fiber unless a new axis or explicit tag is introduced.
 
 \item \textbf{Classification system design is constrained}: the choice of observation family determines which properties are computable.
 \end{itemize}
 
 \subsection{Future Work}
 
-\begin{enumerate}
-\item \textbf{Other classification domains}: What is the matroid structure of observation spaces in chemistry (molecular fingerprints), linguistics (phonetic features), or machine learning (feature embeddings)?
-
-\item \textbf{Witness complexity of other properties}: Beyond identity, what are the witness costs for provenance, equivalence, or subsumption?
-
-\item \textbf{Hybrid observers}: Can observer strategies that combine tags and attributes achieve better $(L, W, D)$ tradeoffs for specific query distributions?
-\end{enumerate}
+Natural extensions include other classification domains, witness complexity for properties beyond identity, and hybrid observers that combine tags and attributes under non-uniform query distributions.
 
 \subsection{Conclusion}
 
-Classification under observational constraints admits a clean information-theoretic analysis. The zero-error converse is governed by collision multiplicity: any $D=0$ scheme necessarily has $L \ge \log_2 A_\pi$ (Theorem~\ref{thm:converse}). In maximal-barrier domains ($A_\pi=k$), nominal-tag observation achieves the unique Pareto-optimal $D=0$ point in the $(L, W, D)$ tradeoff (Theorem~\ref{thm:lwd-optimal}). The results are universal within the stated observation model, and all proofs are machine-verified in Lean 4.
+Classification under observational constraints admits a clean information-theoretic analysis. The zero-error converse is governed by collision multiplicity: any $D=0$ scheme necessarily has $L \ge \log_2 A_\pi$ (Theorem~\ref{thm:converse}). In maximal-barrier domains ($A_\pi=k$), nominal-tag observation achieves the unique Pareto-optimal $D=0$ point in the $(L, W, D)$ tradeoff (Theorem~\ref{thm:lwd-optimal}). Within the stated observation model, the paper turns a familiar heuristic into explicit lower bounds, explicit dominance claims, and a structural invariant, and all proofs are machine-verified in Lean 4.
 
 \subsection*{AI Disclosure}
 
-This work was developed with AI assistance (Claude, Anthropic). The AI contributed to exposition, code generation, and proof exploration. All mathematical claims were verified by the authors and machine-checked in Lean 4. The Lean proofs are the authoritative source; no theorem depends solely on AI-generated reasoning.
+The core mathematical ideas and proof strategies were developed by the author. LLM tools assisted with exposition, formal-draft translation, and proof exploration; all stated claims were checked by the author and, where reported, machine-verified in Lean 4 as an integrity layer before submission.

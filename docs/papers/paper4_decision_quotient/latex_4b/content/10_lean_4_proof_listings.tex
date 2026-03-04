@@ -1,43 +1,40 @@
 \section{Lean 4 Proof Listings}\label{app:lean}
 
-The complete Lean 4 formalization extends the Paper 4 artifact. The mechanization consists of \LeanTotalLines\ lines across \LeanTotalFiles\ files, with \LeanTotalTheorems\ theorem/lemma statements.
+The Lean development contains the shared definitions and the quotient-, Bayesian-, and information-theoretic lemmas used by this paper. This appendix lists the support most relevant to the main results.
 
-\noindent\textbf{Handle IDs.} Inline theorem metadata cites compact IDs (for example, \texttt{CC4}, \texttt{HD2}, \texttt{IC3}) instead of full theorem constants.
+\subsection{What Is Mechanized}
 
-\subsection{Lean Handle ID Map}\label{sec:lean-handle-id-map-4b}
-\IfFileExists{content/lean_handle_ids_auto.tex}{
-  \input{content/lean_handle_ids_auto.tex}
-}{
-  \textit{Auto handle-id table not found. Run the paper build script to generate \texttt{content/lean\_handle\_ids\_auto.tex}.}
-}
+The Lean development records:
+\begin{itemize}
+\item core definitions of decision problems, sufficiency, relevance, and optimizer quotients,
+\item quotient/image-factorization lemmas for the optimizer map,
+\item finite probability and Bayesian optimality lemmas,
+\item structural-rank support lemmas and related information-theoretic bridge statements.
+\end{itemize}
 
-\subsection{What Is Machine-Checked}
+\subsection{Lean Handle ID Map}\label{sec:lean-handle-id-map}
+This appendix lists the handle families most relevant to the results of the paper:
+\begin{itemize}
+\item \texttt{QT1}, \texttt{QT2}, \texttt{QT3}, \texttt{QT7} for quotient/coimage factorization;
+\item \texttt{SK1}, \texttt{SK2}, \texttt{SK3} for structural-rank support facts;
+\item \texttt{IT3}, \texttt{IT4} for quotient-entropy bounds;
+\item \texttt{FS1}, \texttt{FS2} for Fisher-style structural-rank recovery;
+\item \texttt{RS1}, \texttt{RS2}, \texttt{RS3}, \texttt{RS4}, \texttt{RD1}, \texttt{RD2}, \texttt{RD3} for rate-distortion and lossless-summary statements;
+\item \texttt{BC1}--\texttt{BC5}, \texttt{FN7}, \texttt{FN8}, \texttt{FN12}, \texttt{FN14} for the finite Bayesian chain.
+\end{itemize}
 
-The Lean formalization establishes:
+These are the handles most relevant to the claims developed in the manuscript. They provide a focused map from the text to the corresponding mechanized support.
 
-\begin{enumerate}
-\item \textbf{STOCHASTIC-SUFFICIENCY PP-completeness}: Reduction from MAJSAT showing stochastic sufficiency checking is PP-complete.
+\subsection{Representative Modules}
 
-\item \textbf{SEQUENTIAL-SUFFICIENCY PSPACE-completeness}: Reduction from TQBF showing sequential sufficiency checking is PSPACE-complete.
+\begin{itemize}
+\item \texttt{DecisionQuotient/Quotient.lean} -- quotient/coimage structure for the optimizer map
+\item \texttt{DecisionQuotient/BayesFoundations.lean} -- finite probability and cross-entropy identities
+\item \texttt{DecisionQuotient/BayesOptimalityProof.lean} -- Bayes optimality under log loss
+\item \texttt{DecisionQuotient/Information.lean} and \texttt{DecisionQuotient/Information/RateDistortion.lean} -- quotient entropy and compression-facing lemmas
+\item \texttt{DecisionQuotient/Statistics/FisherInformation.lean} -- support-count style structural-rank lemmas
+\end{itemize}
 
-\item \textbf{Substrate independence theorems}: Formal proofs that the matrix verdict is $\kappa$-independent while trajectories are $\kappa$-dependent.
+\subsection{Scope}
 
-\item \textbf{Bridge transfer conditions}: Formalized conditions under which sufficiency transfers between regimes.
-\end{enumerate}
-
-\IfFileExists{content/assumption_ledger_auto.tex}{\input{content/assumption_ledger_auto.tex}}{}
-
-\subsection{Complete Claim Coverage Matrix}
-\IfFileExists{content/claim_mapping_auto.tex}{
-  \input{content/claim_mapping_auto.tex}
-}{
-  \textit{Auto claim-mapping table not found. Run the paper build script to generate \texttt{content/claim\_mapping\_auto.tex}.}
-}
-
-\subsection{Claims Not Fully Mechanized}
-
-Entries marked \textbf{Full (conditional)} are explicitly mechanized transfer theorems that depend on standard external complexity facts (e.g., MAJSAT PP-completeness, TQBF PSPACE-completeness), with those dependencies represented as hypotheses in Lean.
-
-\subsection{Verification}
-
-The proofs compile with Lean 4. Run \texttt{lake build} in the proof directory to verify.
+For readability, this appendix provides a focused manual summary rather than repository-level omnibus tables. A paper-specific handle table should include only the statements proved or cited here, together with the Lean handles that support them.

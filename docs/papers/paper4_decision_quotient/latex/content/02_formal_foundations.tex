@@ -1,6 +1,6 @@
 \section{Formal Foundations}\label{sec:foundations}
 
-We formalize decision problems with coordinate structure, sufficiency of coordinate sets, and the decision quotient, drawing on classical decision theory \cite{savage1954foundations, raiffa1961applied}. All definitions in this section are implemented in Lean 4 using the encoding described in Section~\ref{sec:methodology}.
+This section fixes the abstract, non-physical vocabulary used throughout the paper. We work with finite decision problems whose state spaces factor into coordinates, and we isolate the minimal terminology needed to state the later complexity results.
 
 \subsection{Decision Problems with Coordinate Structure}
 
@@ -39,67 +39,115 @@ A coordinate set $I \subseteq \{1, \ldots, n\}$ is \emph{sufficient} for decisio
 Equivalently, the optimal action depends only on coordinates in $I$.
 \end{definition}
 
+\begin{proposition}[Empty-Set Sufficiency Equals Constant Decision Boundary]\label{prop:empty-sufficient-constant}
+The empty set $\emptyset$ is sufficient if and only if $\Opt(s)$ is constant over the entire state space.
+\end{proposition}
+
+\begin{proof}
+If $\emptyset$ is sufficient, then every two states agree on their empty projection, so sufficiency forces $\Opt(s)=\Opt(s')$ for all $s,s' \in S$. The converse is immediate.
+\end{proof}
+
+\begin{proposition}[Insufficiency Equals Counterexample Witness]\label{prop:insufficiency-counterexample}
+Coordinate set $I$ is not sufficient if and only if there exist states $s,s' \in S$ such that $s_I=s'_I$ but $\Opt(s)\neq\Opt(s')$.
+\end{proposition}
+
+\begin{proof}
+This is the direct negation of Definition~\ref{def:sufficient}.
+\end{proof}
+
 \begin{definition}[Minimal Sufficient Set]\label{def:minimal-sufficient}
 A sufficient set $I$ is \emph{minimal} if no proper subset $I' \subsetneq I$ is sufficient.
 \end{definition}
 
 \begin{definition}[Relevant Coordinate]\label{def:relevant}
-Coordinate $i$ is \emph{relevant} if it belongs to some minimal sufficient set.
-\end{definition}
-
-\begin{example}[Weather Decision]
-Consider deciding whether to carry an umbrella:
-\begin{itemize}
-\item Actions: $A = \{\text{carry}, \text{don't carry}\}$
-\item Coordinates: $X_1 = \{\text{rain}, \text{no rain}\}$, $X_2 = \{\text{hot}, \text{cold}\}$, $X_3 = \{\text{Monday}, \ldots, \text{Sunday}\}$
-\item Utility: $U(\text{carry}, s) = -1 + 3 \cdot \mathbf{1}[s_1 = \text{rain}]$, $U(\text{don't carry}, s) = -2 \cdot \mathbf{1}[s_1 = \text{rain}]$
-\end{itemize}
-
-The minimal sufficient set is $I = \{1\}$ (only rain forecast matters). Coordinates 2 and 3 (temperature, day of week) are irrelevant.
-\end{example}
-
-\subsection{The Decision Quotient}
-
-\begin{definition}[Decision Equivalence]\label{def:decision-equiv}
-For coordinate set $I$, states $s, s'$ are \emph{$I$-equivalent} (written $s \sim_I s'$) if $s_I = s'_I$.
-\end{definition}
-
-\begin{definition}[Decision Quotient]\label{def:decision-quotient}
-The \emph{decision quotient} for state $s$ under coordinate set $I$ is:
+Coordinate $i$ is \emph{relevant} if there exist states that differ only at coordinate $i$ and induce different optimal-action sets:
 \[
-\text{DQ}_I(s) = \frac{|\{a \in A : a \in \Opt(s') \text{ for some } s' \sim_I s\}|}{|A|}
+i \text{ is relevant}
+\iff
+\exists s,s' \in S:\;
+\Big(\forall j \neq i,\; s_j=s'_j\Big)
+\ \wedge\
+\Opt(s)\neq\Opt(s').
 \]
-This measures the fraction of actions that are optimal for at least one state consistent with $I$.
 \end{definition}
 
-\begin{proposition}[Sufficiency Characterization]\label{prop:sufficiency-char}
-Coordinate set $I$ is sufficient if and only if $\text{DQ}_I(s) = |\Opt(s)|/|A|$ for all $s \in S$.
+\begin{proposition}[Minimal-Set/Relevance Equivalence]\label{prop:minimal-relevant-equiv}
+For any minimal sufficient set $I$ and any coordinate $i$,
+\[
+i \in I \iff i \text{ is relevant}.
+\]
+Hence every minimal sufficient set is exactly the relevant-coordinate set.
 \end{proposition}
 
 \begin{proof}
-If $I$ is sufficient, then $s \sim_I s' \implies \Opt(s) = \Opt(s')$, so the set of actions optimal for some $s' \sim_I s$ is exactly $\Opt(s)$.
+If $i \in I$ were not relevant, then changing coordinate $i$ while keeping all others fixed would never alter the optimal-action set, so removing $i$ would preserve sufficiency, contradicting minimality. Conversely, every sufficient set must contain each relevant coordinate, because omitting a relevant coordinate leaves a witness pair with identical $I$-projection but different optimal-action sets.
+\end{proof}
 
-Conversely, if the condition holds, then for any $s \sim_I s'$, the optimal actions form the same set (since $\text{DQ}_I(s) = \text{DQ}_I(s')$ and both equal the relative size of the common optimal set).
+\begin{definition}[Exact Relevance Identifiability]\label{def:exact-identifiability}
+For a decision problem $\mathcal{D}$ and candidate set $I$, we say that $I$ is \emph{exactly relevance-identifying} if
+\[
+\forall i \in \{1,\ldots,n\}:\quad i \in I \iff i \text{ is relevant for } \mathcal{D}.
+\]
+\end{definition}
+
+\subsection{Optimizer Quotient}
+
+\begin{definition}[Decision Equivalence]\label{def:decision-equiv}
+States $s,s' \in S$ are \emph{decision-equivalent} if they induce the same optimal-action set:
+\[
+s \sim_{\Opt} s' \iff \Opt(s)=\Opt(s').
+\]
+\end{definition}
+
+\begin{definition}[Decision Quotient]\label{def:decision-quotient}
+The \emph{decision quotient} (equivalently, optimizer quotient) of $\mathcal{D}$ is the quotient object
+\[
+Q_{\mathcal{D}} := S / {\sim_{\Opt}}.
+\]
+Its equivalence classes are exactly the maximal subsets of states on which the optimal-action set is constant.
+\end{definition}
+
+\begin{proposition}[Sufficiency Characterization]\label{prop:sufficiency-char}
+Coordinate set $I$ is sufficient if and only if the optimizer map factors through the projection $\pi_I : S \to S_I$. Equivalently, there exists a function $\overline{\Opt}_I : S_I \to \mathcal{P}(A)$ such that
+\[
+\Opt = \overline{\Opt}_I \circ \pi_I.
+\]
+\end{proposition}
+
+\begin{proof}
+If $I$ is sufficient, define $\overline{\Opt}_I(x)$ to be $\Opt(s)$ for any state $s$ with $s_I = x$; this is well defined exactly because sufficiency makes $\Opt$ constant on each projection fiber. Conversely, any such factorization forces states with equal $I$-projection to have equal optimal-action sets.
 \end{proof}
 
 \subsection{Computational Model and Input Encoding}\label{sec:encoding}
 
-We fix the computational model used by the complexity claims.
+The same decision question yields different computational problems under different input models. We therefore fix the encoding regime before stating any complexity classification.
 
 \paragraph{Succinct encoding (primary for hardness).}
-This succinct circuit encoding is the standard representation for decision problems in complexity theory; hardness is stated with respect to the input length of the circuit description \cite{arora2009computational}.
-An instance is encoded as:
+An instance is encoded by:
 \begin{itemize}
 \item a finite action set $A$ given explicitly,
 \item coordinate domains $X_1,\ldots,X_n$ given by their sizes in binary,
 \item a Boolean or arithmetic circuit $C_U$ that on input $(a,s)$ outputs $U(a,s)$.
 \end{itemize}
-The input length is $L = |A| + \sum_i \log |X_i| + |C_U|$. Polynomial time and all complexity classes (\coNP, $\Sigma_2^P$, ETH, W[2]) are measured in $L$. All hardness results in Section~\ref{sec:hardness} use this encoding.
+The input length is
+\[
+L = |A| + \sum_i \log |X_i| + |C_U|.
+\]
+Unless stated otherwise, all class-theoretic hardness results in this paper are measured in $L$.
 
-\paragraph{Explicit-state encoding (used for enumeration algorithms and experiments).}
-The utility is given as a full table over $A \times S$. The input length is $L_{\text{exp}} = \Theta(|A||S|)$ (up to the bitlength of utilities). Polynomial time is measured in $L_{\text{exp}}$. Results stated in terms of $|S|$ use this encoding.
+\paragraph{Explicit-state encoding.}
+The utility function is given as a full table over $A \times S$. The input length is
+\[
+L_{\mathrm{exp}} = \Theta(|A||S|)
+\]
+up to the bitlength of the utility entries. Polynomial-time claims stated in terms of $|S|$ use this explicit-state regime.
 
-Unless explicitly stated otherwise, ``polynomial time'' refers to the succinct encoding.
+\paragraph{Query-access regime.}
+The solver is given oracle access to $\Opt(s)$ or to the utility values needed to reconstruct it. Complexity is then measured by query count, optionally paired with per-query evaluation cost. This regime separates access obstruction from full-table availability and from succinct circuit input length.
+
+\begin{remark}[Decision Questions vs Decision Problems]\label{rem:question-vs-problem}
+The predicate ``is coordinate set $I$ sufficient for $\mathcal{D}$?'' is an encoding-independent mathematical question. A \emph{decision problem} arises only after fixing how $\mathcal{D}$ and $I$ are represented. Complexity classes are properties of these encoded problems, not of the abstract predicate in isolation.
+\end{remark}
 
 
 % Include the hardness proofs (already developed)
