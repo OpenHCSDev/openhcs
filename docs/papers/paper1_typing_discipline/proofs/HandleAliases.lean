@@ -4,6 +4,7 @@ import AbstractClassSystem.Extended
 import Paper1IT.GraphEntropy
 import Paper1IT.GraphEntropyAsymptotic
 import axis_framework
+import lwd_converse
 
 open AbstractClassSystem
 
@@ -91,3 +92,34 @@ abbrev COH2 := AbstractClassSystem.hedging_incoherent  -- Hedging is incoherent
 abbrev BRG1 := analysis_has_positive_ev          -- Analysis has positive EV
 abbrev BRG2 := ignorant_choice_has_cost          -- Ignorant choice costs
 abbrev BRG3 := retrofit_cost_dominates           -- Retrofit cost dominates
+
+/-- Legacy/stable IDs used in paper text and supplements. -/
+abbrev ACS1 := adversary_forces_n_minus_1_queries
+abbrev ACS2 := complexity_gap_unbounded
+abbrev ACS3 := duck_localization_linear
+abbrev ACS4 := encoding_location_gap
+abbrev ACS5 := model_completeness
+abbrev ACS6 := nominal_centralized
+abbrev ACS7 := nominal_localization_constant_semantic
+abbrev ACS8 := @shape_cannot_distinguish
+abbrev ACS9 := @shape_provenance_impossible
+
+abbrev L1 := @matroid_basis_equicardinality
+abbrev L2 := fixed_axis_incompleteness
+abbrev L3 := matroid_basis_equicardinality
+
+theorem l4_exchange_wrapper {A : _root_.AxisSet}
+    (horth : _root_.OrthogonalAxes A) : _root_.exchangeProperty A :=
+  orthogonal_exchange horth
+
+theorem l5_exchange_wrapper {A : _root_.AxisSet}
+    (horth : _root_.OrthogonalAxes A) : _root_.exchangeProperty A :=
+  orthogonal_implies_exchange horth
+
+abbrev L4 := @l4_exchange_wrapper
+abbrev L5 := @l5_exchange_wrapper
+abbrev L7 := adversary_forces_n_minus_1_queries
+
+abbrev LWDC1 := @LWDConverse.collision_block_requires_bits
+abbrev LWDC2 := @LWDConverse.impossible_when_bits_too_small
+abbrev LWDC3 := @LWDConverse.maximal_barrier_requires_bits

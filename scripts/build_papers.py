@@ -2855,40 +2855,13 @@ end {module_root}
         if not id_to_handle:
             return
         handle_to_id = {handle: code for code, handle in id_to_handle.items()}
-        previous_id_to_handle = (
-            getattr(self, "_previous_lean_handle_id_maps", {}).get(paper_id, {})
-        )
-        legacy_hash_to_new_id: Dict[str, str] = {}
-        for handle, new_code in handle_to_id.items():
-            group = handle.split(".", 1)[0] if "." in handle else "L"
-            prefix = self._compact_lean_prefix(group) or "H"
-            legacy_code = f"{prefix}_{hashlib.sha1(handle.encode('utf-8')).hexdigest()[:8]}"
-            legacy_hash_to_new_id.setdefault(legacy_code, new_code)
-        old_id_to_new_id = {
-            old_code: handle_to_id[handle]
-            for old_code, handle in previous_id_to_handle.items()
-            if handle in handle_to_id and handle_to_id[handle] != old_code
-        }
 
         nolink_pattern = re.compile(r"\\nolinkurl\{([^}]+)\}")
-        lh_pattern = re.compile(r"\\LH\{([^}]+)\}")
         leanmeta_prefix_pattern = re.compile(r"(\\leanmeta\{)\s*Lean handles:\s*")
 
         for tex_file in self._iter_manual_content_tex(paper_id):
             text = tex_file.read_text(encoding="utf-8", errors="replace")
             normalized = leanmeta_prefix_pattern.sub(r"\1", text)
-
-            def rewrite_existing_ids(match: re.Match[str]) -> str:
-                old_code = match.group(1).strip()
-                new_code = old_id_to_new_id.get(old_code) or legacy_hash_to_new_id.get(
-                    old_code
-                )
-                if new_code is None:
-                    raw_handle = old_code.replace(r"\_", "_")
-                    new_code = handle_to_id.get(raw_handle)
-                if new_code is None:
-                    return match.group(0)
-                return rf"\LH{{{new_code}}}"
 
             def repl(match: re.Match[str]) -> str:
                 raw = match.group(1).strip()
@@ -2898,8 +2871,7 @@ end {module_root}
                     return match.group(0)
                 return rf"\LH{{{code}}}"
 
-            migrated = lh_pattern.sub(rewrite_existing_ids, normalized)
-            rewritten = nolink_pattern.sub(repl, migrated)
+            rewritten = nolink_pattern.sub(repl, normalized)
             if rewritten != text:
                 tex_file.write_text(rewritten, encoding="utf-8")
 
