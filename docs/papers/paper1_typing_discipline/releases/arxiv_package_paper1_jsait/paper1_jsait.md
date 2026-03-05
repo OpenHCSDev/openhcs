@@ -1,6 +1,6 @@
 # Paper: Identification Capacity and Rate-Query Tradeoffs in Classification Systems
 
-**Status**: JSAIT-ready | **Lean**: 7215 lines, 306 theorems
+**Status**: JSAIT-ready | **Lean**: 8003 lines, 346 theorems
 
 ---
 
@@ -148,7 +148,7 @@ This paper establishes the following results:
 
 5.  **$(L, W, D)$ Optimality** (Section [\[sec:lwd\]](#sec:lwd){reference-type="ref" reference="sec:lwd"}): We characterize the zero-error converse via collision multiplicity $A_\pi$ and prove uniqueness of the nominal point in the maximal-barrier regime ($A_\pi=k$), turning an informal design preference into an explicit Pareto statement.
 
-6.  **Machine-Checked Proofs**: All results formalized in Lean 4 (7215 lines, 306 theorem/lemma statements, 0 `sorry` placeholders).
+6.  **Machine-Checked Proofs**: All results formalized in Lean 4 (8003 lines, 346 theorem/lemma statements, 0 `sorry` placeholders).
 
 Without the equicardinality result behind the matroid structure, the lower bound would depend on which distinguishing set or query strategy one chose. The matroid theorem is what makes $d$ strategy-independent.
 
@@ -162,7 +162,7 @@ This paper does not develop asymptotic coding theorems or claim new zero-error c
 
 **Rate-distortion-perception tradeoffs.** Blau and Michaeli [@blau2019rethinking] extended rate-distortion theory by adding a perception constraint, creating a three-way tradeoff. Our query cost $W$ plays an analogous role: it measures the interactive cost of achieving low distortion rather than a distributional constraint. We cite this as a structural analogy, not as a claim that the present model inherits the full geometry of that setting.
 
-**Zero-error information theory.** The matroid structure (Section [\[sec:matroid\]](#sec:matroid){reference-type="ref" reference="sec:matroid"}) places the model near zero-error information theory. Körner [@korner1973coding] and Witsenhausen [@witsenhausen1976zero] studied zero-error source coding where confusable symbols must be distinguished. Here the direct theorem is simpler: when $L = 0$, the distinguishing dimension (Definition [\[def:distinguishing-dimension\]](#def:distinguishing-dimension){reference-type="ref" reference="def:distinguishing-dimension"}) is the minimum number of binary queries needed for zero-error class separation. Stronger entropy-style consequences are discussed more cautiously and should not be read as having already been fully developed in the body of this paper.
+**Zero-error information theory.** The matroid structure (Section [\[sec:matroid\]](#sec:matroid){reference-type="ref" reference="sec:matroid"}) places the model near zero-error information theory. Körner [@korner1973coding] and Witsenhausen [@witsenhausen1976zero] studied zero-error source coding where confusable symbols must be distinguished. Here the direct theorem is simpler: when $L = 0$, the distinguishing dimension (Definition [\[def:distinguishing-dimension\]](#def:distinguishing-dimension){reference-type="ref" reference="def:distinguishing-dimension"}) is the minimum number of binary queries needed for zero-error class separation. In addition, the paper proves exact finite-block confusability laws: block feasibility threshold $A_\pi^k$, exact linear log-bit scaling, and per-coordinate stabilization in the worst-case regime. These are formalized in Lean and strengthen the operational converse while remaining distinct from full distribution-optimized graph-entropy/capacity theorems.
 
 **Query complexity and communication complexity.** The $\Omega(d)$ lower bound for attribute-only identification relates to decision tree complexity [@buhrman2002complexity] and interactive communication [@orlitsky1991worst]. The key distinction is that our queries are constrained to a fixed observable family $\mathcal{I}$, not arbitrary predicates.
 
@@ -419,6 +419,32 @@ L \ge \log_2 A_\pi,$$ where $A_\pi$ is the collision multiplicity from Definitio
 []{#cor:max-barrier-converse label="cor:max-barrier-converse"} If the domain is maximal-barrier ($A_\pi = k$), any zero-error scheme satisfies $L \ge \log_2 k$.
 :::
 
+## Confusability Graph Thresholds and Block Scaling
+
+Let $\pi_{\mathcal{C}} : \mathcal{C} \to \{0,1\}^n$ be the class-profile map from Definition [\[def:collision-multiplicity\]](#def:collision-multiplicity){reference-type="ref" reference="def:collision-multiplicity"}. The induced confusability graph connects two distinct classes when they share the same observable profile.
+
+::: theorem
+[]{#thm:graph-one-shot-threshold label="thm:graph-one-shot-threshold"} For an alphabet of $n$ nominal tags, zero-error class tagging is feasible if and only if $$A_\pi \le n.$$
+:::
+
+::: proof
+*Proof.* Classes in the same profile fiber are pairwise confusable, so each such fiber is a clique in the confusability graph. Zero-error tagging is equivalent to a proper graph coloring; therefore feasibility is equivalent to having at least as many colors as the largest clique size, which is exactly $A_\pi$. ◻
+:::
+
+::: theorem
+[]{#thm:graph-block-threshold label="thm:graph-block-threshold"} For block length $t\ge 1$ with coordinatewise observation on $\mathcal{C}^t$, zero-error tagging with alphabet size $n_t$ is feasible if and only if $$A_\pi^t \le n_t.$$ Equivalently, the minimal feasible block alphabet is exactly $A_\pi^t$.
+:::
+
+::: corollary
+[]{#cor:graph-logbit-scaling label="cor:graph-logbit-scaling"} Let $L_t^\star := \log_2(A_\pi^t)$ be the minimum block tag budget in bits. Then $$L_t^\star = t\,\log_2 A_\pi,
+\qquad
+\frac{L_t^\star}{t} = \log_2 A_\pi.$$ So per-entity tag rate is exactly stable across block length.
+:::
+
+::: remark
+These are worst-case finite-block confusability laws. They strengthen the zero-error converse with exact block thresholds, while remaining distinct from full distribution-optimized Körner graph-entropy theory.
+:::
+
 ## Lossy Regime: Deterministic vs Noisy Models
 
 The zero-error corner ($D=0$) is governed by Theorem [\[thm:converse\]](#thm:converse){reference-type="ref" reference="thm:converse"}. For $D>0$, the model matters:
@@ -557,7 +583,7 @@ A distinguishing set $S$ is *minimal* if no proper subset of $S$ is distinguishi
 
 -   "Minimal" means inclusion-minimal: no proper subset suffices.
 
-No further assumptions are required within this theory beyond the fixed observation family $\Phi$. In Lean, the mechanization is explicit end-to-end. Closure-operator lemmas (extensive, monotone, idempotent) are proved in `proofs/abstract_class_system.lean` via `AxisClosure`. Exchange and equicardinality lemmas are proved in `proofs/axis_framework.lean` via UNIQ1 and UNIQ1. The composition point is formalized by `closureInducedAxisMatroid` and UNIQ1, with closure-induced nodup/subset/exchange hypotheses made explicit.
+No further assumptions are required within this theory beyond the fixed observation family $\Phi$. In Lean, the mechanization is explicit end-to-end. Closure-operator lemmas (extensive, monotone, idempotent) are proved in `proofs/abstract_class_system.lean` via `AxisClosure`. Exchange and equicardinality lemmas are proved in `proofs/axis_framework.lean` via L4 and L1. The composition point is formalized by `closureInducedAxisMatroid` and L1, with closure-induced nodup/subset/exchange hypotheses made explicit.
 
 ::: definition
 Let $E = \Phi\;(=\mathcal{Q})$ be the ground set of primitive queries (attribute predicates). Let $\mathcal{B} \subseteq 2^E$ be the family of minimal distinguishing sets.
@@ -734,74 +760,19 @@ When structural typing checks traverse $s$ members/fields (rather than ranging o
 :::
 
 
-The preceding sections established abstract information-theoretic results (Sections [\[sec:framework\]](#sec:framework){reference-type="ref" reference="sec:framework"}--[\[sec:lwd\]](#sec:lwd){reference-type="ref" reference="sec:lwd"}). This section provides secondary cross-domain illustrations. The mathematics is unchanged by domain; the examples are meant to show where the same bit/query/error tradeoffs already govern practice, not to claim that the theory generated those domain designs historically.
+The core theorems are domain-agnostic. This section gives brief illustrations showing the same constraint pattern in established systems.
 
-## Biological Taxonomy: Phenotype vs Genotype
+## Compact Cross-Domain Illustrations
 
-Linnean taxonomy classifies organisms by observable phenotypic characters: morphology, behavior, habitat. This is attribute-only observation. The information barrier applies: phenotypically identical organisms from distinct species are indistinguishable.
+**Biology (phenotype vs genotype).** Distinct species can collide under phenotype, so phenotype-only observation cannot guarantee zero-error identity. DNA barcoding supplies additional naming information that resolves collision blocks in constant-time lookup style [@DNABarcoding].
 
-**The cryptic species problem:** Cryptic species share identical phenotypic profiles but are reproductively isolated and genetically distinct. Attribute-only observation (morphology) cannot distinguish them: $\pi(A) = \pi(B)$ but $\text{species}(A) \neq \text{species}(B)$.
+**Databases (columns vs keys).** Rows may collide on non-key columns, so attribute-only identification is insufficient for guaranteed identity. Primary/surrogate keys realize the nominal-tag role and provide constant-cost identity checks [@Codd1990].
 
-**The nominal tag:** DNA barcoding provides the resolution [@DNABarcoding]. A short genetic sequence (e.g., mitochondrial COI) acts as the nominal tag: $O(1)$ identity verification via sequence comparison. This fits the same tradeoff shape: when phenotype induces collision blocks, an additional genetic identifier supplies the extra information needed for zero-error separation.
+**Software runtimes (structural probes vs type tags).** Structural checks recover identity from observed capabilities and pay query cost that scales with inspected structure. Runtime class/type identifiers behave as nominal tags and collapse identity checks to near-constant cost in the model [@CPythonDocs; @JVMSpec; @JavaDocs; @TypeScriptDocs; @RustDocs].
 
-## Library Classification: Subject vs ISBN
+## Takeaway
 
-Library classification systems like Dewey Decimal observe subject matter, a form of attribute-only classification. Two books on the same subject are indistinguishable by subject code alone.
-
-**The nominal tag:** The ISBN (International Standard Book Number) is the nominal tag [@ISBN]. Given two physical books, identity verification is $O(1)$: compare ISBNs. Without ISBNs, distinguishing two copies of different editions on the same subject requires $O(s)$ attribute inspection (publication date, page count, publisher, etc.).
-
-## Database Systems: Columns vs Primary Keys
-
-In big-data systems, relational databases observe entities via column values. The information barrier applies: rows with identical column values, excluding the key, are indistinguishable.
-
-**The nominal tag:** The primary key is the nominal tag [@Codd1990]. Entity identity is $O(1)$: compare keys. Under row collisions on observable columns, surrogate keys are therefore not merely a design preference; they realize the $D=0$ solution predicted by the tradeoff.
-
-**Natural vs surrogate keys:** Natural keys (composed of attributes) are attribute-only observation and inherit its limitations. Surrogate keys (auto-increment IDs, UUIDs) are pure nominal tags: no semantic content, pure identity.
-
-## Programming-Language Snapshot (Secondary Illustration)
-
-Programming-language runtimes are one instantiation of the same abstraction, not the source of the theory. Table [1](#tab:pl-snapshot){reference-type="ref" reference="tab:pl-snapshot"} summarizes the mapping from runtime mechanisms to $(L,W,D)$ model primitives.
-
-::: {#tab:pl-snapshot}
-  **Runtime**   **Nominal mechanism**                                               **Identity cost**
-  ------------- ------------------------------------------------------------------ -------------------
-  CPython       `ob_type` / `type(a) is type(b)` [@CPythonDocs]                          $O(1)$
-  Java          class tag via `.getClass()` / `instanceof` [@JVMSpec; @JavaDocs]    $O(1)$ to $O(d)$
-  TypeScript    structural compatibility only [@TypeScriptDocs]                          $O(s)$
-  Rust          `TypeId` for nominal identity [@RustDocs]                                $O(1)$
-
-  : Programming-language snapshot as a secondary illustration of the abstract observer model.
-:::
-
-Without a class tag, identity checks are structural and scale with inspected structure size ($O(s)$). With a class tag, identity is constant-time (or near-constant with bounded hierarchy traversal). This is exactly the generic witness-cost separation from Sections [\[sec:witness\]](#sec:witness){reference-type="ref" reference="sec:witness"} and [\[sec:lwd\]](#sec:lwd){reference-type="ref" reference="sec:lwd"}.
-
-## Cross-Domain Summary
-
-  **Domain**      **Attribute-Only**          **Nominal Tag**      **$W$**
-  --------------- --------------------------- ------------------- ---------
-  Biology         Phenotype (morphology)      DNA barcode (COI)    $O(1)$
-  Libraries       Subject (Dewey)             ISBN                 $O(1)$
-  Databases       Column values               Primary key          $O(1)$
-  CPython         `hasattr` probing           `ob_type` pointer    $O(1)$
-  Java            Attribute/interface check   `.getClass()`        $O(1)$
-  TypeScript      Structural check            (none at runtime)    $O(s)$
-  Rust (static)   Trait bounds                `TypeId`             $O(1)$
-
-  : Witness cost for identity across classification systems. Nominal tags achieve $O(1)$; attribute-only pays $O(s)$ per structural check (or $O(k)$ when enumerating classes under declared attribute catalogs, e.g., interfaces in PL runtimes).
-
-The same constraint recurs across these systems: when identity is carried by an explicit tag, witness cost is $O(1)$; when identity must be reconstructed from observable attributes alone, witness cost grows with the amount of structure that must be checked. The point of the examples is to show that the bound is not peculiar to programming languages.
-
-## Machine Learning: Model Identification and Versioning
-
-Neural network models in production systems face the identification problem: given two model instances, determine if they represent the same architecture. Model registries must compress model metadata while enabling efficient identification.
-
-**Attribute-only approach:** Compare architecture fingerprints (layer counts, activation functions, parameter counts, connectivity patterns). Cost: $O(s)$ where $s$ is the number of architectural features.
-
-**Nominal tag:** Model hash (e.g., SHA-256 of architecture definition) or registry ID. Cost: $O(1)$.
-
-The $(L, W, D)$ tradeoff applies directly: storing $\lceil \log_2 k \rceil$ bits per model (where $k$ is the number of distinct architectures in the registry) enables $O(1)$ identification with $D = 0$. Attribute-based versioning requires $\Omega(d)$ feature comparisons and risks false positives ($D > 0$) when architectures share identical fingerprints but differ in subtle structural details.
-
-**Example:** A model registry with $k = 10^6$ architectures requires only 20 bits per model for perfect identification via nominal tags, versus $O(d)$ queries over potentially hundreds of architectural features for attribute-based approaches.
+These illustrations are not historical causality claims. They show a common resource law: when observable profiles collide, zero-error identification requires additional naming information; otherwise the system pays higher query cost and/or nonzero error.
 
 
 ## Noisy Query Model
@@ -896,6 +867,8 @@ The information barrier is not a quirk of any particular domain; it is a mathema
 
 -   **The barrier is informational, not computational**: even with unbounded resources, attribute-only observers cannot overcome it.
 
+-   **Finite-block confusability laws are exact**: the mechanized graph-confusability results give one-shot and block thresholds ($A_\pi$ and $A_\pi^k$) and exact linear log-bit scaling across block length.
+
 -   **Fixed-axis systems are necessarily incomplete outside their axis**: by Corollary [\[cor:fixed-axis-incompleteness\]](#cor:fixed-axis-incompleteness){reference-type="ref" reference="cor:fixed-axis-incompleteness"}, any fixed-axis classifier is complete only for axis-measurable properties and cannot represent properties that vary within an axis fiber unless a new axis or explicit tag is introduced.
 
 -   **Classification system design is constrained**: the choice of observation family determines which properties are computable.
@@ -906,113 +879,11 @@ Natural extensions include other classification domains, witness complexity for 
 
 ## Conclusion
 
-Classification under observational constraints admits a clean information-theoretic analysis. The zero-error converse is governed by collision multiplicity: any $D=0$ scheme necessarily has $L \ge \log_2 A_\pi$ (Theorem [\[thm:converse\]](#thm:converse){reference-type="ref" reference="thm:converse"}). In maximal-barrier domains ($A_\pi=k$), nominal-tag observation achieves the unique Pareto-optimal $D=0$ point in the $(L, W, D)$ tradeoff (Theorem [\[thm:lwd-optimal\]](#thm:lwd-optimal){reference-type="ref" reference="thm:lwd-optimal"}). Within the stated observation model, the paper turns a familiar heuristic into explicit lower bounds, explicit dominance claims, and a structural invariant, and all proofs are machine-verified in Lean 4.
+Classification under observational constraints admits a clean information-theoretic analysis. The zero-error converse is governed by collision multiplicity: any $D=0$ scheme necessarily has $L \ge \log_2 A_\pi$ (Theorem [\[thm:converse\]](#thm:converse){reference-type="ref" reference="thm:converse"}). In maximal-barrier domains ($A_\pi=k$), nominal-tag observation achieves the unique Pareto-optimal $D=0$ point in the $(L, W, D)$ tradeoff (Theorem [\[thm:lwd-optimal\]](#thm:lwd-optimal){reference-type="ref" reference="thm:lwd-optimal"}). The mechanized graph-confusability extension further supplies exact finite-block thresholds and rate scaling. Within the stated observation model, the paper turns a familiar heuristic into explicit lower bounds, explicit dominance claims, and structural invariants, and all proofs are machine-verified in Lean 4.
 
 ## AI Disclosure {#ai-disclosure .unnumbered}
 
 The core mathematical ideas and proof strategies were developed by the author. LLM tools assisted with exposition, formal-draft translation, and proof exploration; all stated claims were checked by the author and, where reported, machine-verified in Lean 4 as an integrity layer before submission.
-
-
-## Formalization and Verification
-
-The core claims in this paper are machine-checked in Lean 4. We keep the appendix concise for JSAIT and move full operational listings and implementation-level proof scripts to the supplementary artifact.
-
-::: table*
-  Module                            Lines                                   Theorems                     Purpose
-  --------------------------------- --------------------------------------- ---------------------------- -----------------------------------------------
-  `abstract_class_system.lean`      3338                                    155                          Two-axis instantiation, barrier, dominance
-  `axis_framework.lean`             1821                                    63                           Query families, closure, matroid bridge
-  `nominal_resolution.lean`         609                                     27                           Nominal identification and witness procedures
-  `discipline_migration.lean`       142                                     11                           Discipline vs. migration consequences
-  `context_formalization.lean`      215                                     7                            Greenfield/retrofit context model
-  `python_instantiation.lean`       249                                     17                           Python instantiation
-  `typescript_instantiation.lean`   65                                      4                            TypeScript instantiation
-  `java_instantiation.lean`         63                                      4                            Java instantiation
-  `rust_instantiation.lean`         64                                      4                            Rust instantiation
-  `lwd_converse.lean`               64                                      4                            Zero-error converse chain on collision blocks
-  **Core modules subtotal**         **+1821+609+142+215+249+65+63+64+64**   **+63+27+11+7+17+4+4+4+4**   **10 representative modules shown**
-:::
-
-#### What is in scope in the mechanization.
-
-The formalization covers the abstract observer model, the information barrier, constant-witness versus query lower-bound separation, matroid structure of minimal distinguishing query sets, and the $(L,W,D)$ zero-error frontier claims stated in the main text. For matroid statements, closure axioms are mechanized in `AxisClosure` inside `abstract_class_system.lean`; exchange and equicardinality lemmas are mechanized in `axis_framework.lean`; and the closure-to-matroid composition is formalized there via `closureInducedAxisMatroid` and UNIQ1. For the converse in particular, `lwd_converse.lean` formalizes L9, L8, L11, and L10.
-
-#### What is moved to supplementary artifact.
-
-Implementation-specific operational details and extended code listings are included in supplementary material and are not required to follow the IT contribution in the main paper.
-
-#### Artifact totals.
-
-The complete artifact contains 26 Lean files totaling 7215 lines and 306 theorem/lemma statements. The table above highlights the core modules directly used by the main-text derivations. The remaining support files, including `Paper1.lean`, `PrintAxioms.lean`, `HandleAliases.lean`, export helpers, and `lakefile.lean`, contribute -+1821+609+142+215+249+65+63+64+64 lines and -+63+27+11+7+17+4+4+4+4 theorem/lemma statements.
-
-## Attribute-Only Formalization {#interface-only-formalization}
-
-Attribute-only observation is formalized by an equivalence relation on values induced by observable query responses.
-
-``` {style="lean"}
-structure InterfaceValue where
-  fields : List (String * Nat)
-deriving DecidableEq
-
-def getField (obj : InterfaceValue) (name : String) : Option Nat :=
-  match obj.fields.find? (fun p => p.1 == name) with
-  | some p => some p.2 | none => none
-
-def interfaceEquivalent (a b : InterfaceValue) : Prop :=
-  forall name, getField a name = getField b name
-
-def InterfaceRespecting (f : InterfaceValue -> a) : Prop :=
-  forall a b, interfaceEquivalent a b -> f a = f b
-```
-
-## Corollary 6.3: Provenance Impossibility {#corollary-6.3-interface-only-cannot-provide-provenance}
-
-Under attribute-only observation, provenance is constant on attribute-equivalence classes; therefore provenance cannot be recovered when distinct classes collide under the observable profile.
-
-``` {style="lean"}
-theorem interface_provenance_indistinguishable
-    (getProvenance : InterfaceValue -> Option DuckProvenance)
-    (h_interface : InterfaceRespecting getProvenance)
-    (obj1 obj2 : InterfaceValue)
-    (h_equiv : interfaceEquivalent obj1 obj2) :
-    getProvenance obj1 = getProvenance obj2 :=
-  h_interface obj1 obj2 h_equiv
-```
-
-This is the mechanized form of the main-text impossibility statement: if an observer factors through attribute profile alone, it cannot separate equal-profile values by source/provenance.
-
-## Abstract Model Lean Formalization
-
-The abstract model is formalized directly at the axis level and then connected to concrete instantiations.
-
-``` {style="lean"}
--- Axis-indexed representation
-abbrev Typ (A : Finset Axis) := (a : Axis) -> a \in A -> axisType a
-
--- Two-axis setting used in the paper
-abbrev Typ2 := Typ ({Axis.Bases, Axis.Shape} : Finset Axis)
-
--- Projectors
-abbrev projBases (t : Typ2) := t Axis.Bases (by simp)
-abbrev projShape (t : Typ2) := t Axis.Shape (by simp)
-```
-
-The corresponding isomorphism theorem establishes that the two-axis representation is complete for in-scope observables in the formal model.
-
-## Reproducibility
-
-The full Lean development is provided in supplementary material. To verify locally:
-
-1.  Install Lean 4 and Lake (<https://leanprover.github.io/>).
-
-2.  From the release package root, run:
-
-    ``` {style="lean"}
-    cd proofs
-    lake build
-    ```
-
-3.  Confirm successful build with no `sorry` placeholders.
 
 
 
@@ -1023,6 +894,6 @@ The full Lean development is provided in supplementary material. To verify local
 
 All theorems are formalized in Lean 4:
 - Location: `docs/papers/paper1_typing_discipline/proofs/`
-- Lines: 7215
-- Theorems: 306
+- Lines: 8003
+- Theorems: 346
 - `sorry` placeholders: 0

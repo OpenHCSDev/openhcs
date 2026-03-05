@@ -29,6 +29,8 @@ The information barrier is not a quirk of any particular domain; it is a mathema
 
 \item \textbf{The barrier is informational, not computational}: even with unbounded resources, attribute-only observers cannot overcome it.
 
+\item \textbf{Finite-block confusability laws are exact}: the mechanized graph-confusability results give one-shot and block thresholds ($A_\pi$ and $A_\pi^k$) and exact linear log-bit scaling across block length.
+
 \item \textbf{Fixed-axis systems are necessarily incomplete outside their axis}: by Corollary~\ref{cor:fixed-axis-incompleteness}, any fixed-axis classifier is complete only for axis-measurable properties and cannot represent properties that vary within an axis fiber unless a new axis or explicit tag is introduced.
 
 \item \textbf{Classification system design is constrained}: the choice of observation family determines which properties are computable.
@@ -40,7 +42,7 @@ Natural extensions include other classification domains, witness complexity for 
 
 \subsection{Conclusion}
 
-Classification under observational constraints admits a clean information-theoretic analysis. The zero-error converse is governed by collision multiplicity: any $D=0$ scheme necessarily has $L \ge \log_2 A_\pi$ (Theorem~\ref{thm:converse}). In maximal-barrier domains ($A_\pi=k$), nominal-tag observation achieves the unique Pareto-optimal $D=0$ point in the $(L, W, D)$ tradeoff (Theorem~\ref{thm:lwd-optimal}). Within the stated observation model, the paper turns a familiar heuristic into explicit lower bounds, explicit dominance claims, and a structural invariant, and all proofs are machine-verified in Lean 4.
+Classification under observational constraints admits a clean information-theoretic analysis. The zero-error converse is governed by collision multiplicity: any $D=0$ scheme necessarily has $L \ge \log_2 A_\pi$ (Theorem~\ref{thm:converse}). In maximal-barrier domains ($A_\pi=k$), nominal-tag observation achieves the unique Pareto-optimal $D=0$ point in the $(L, W, D)$ tradeoff (Theorem~\ref{thm:lwd-optimal}). The mechanized graph-confusability extension further supplies exact finite-block thresholds and rate scaling. Within the stated observation model, the paper turns a familiar heuristic into explicit lower bounds, explicit dominance claims, and structural invariants, and all proofs are machine-verified in Lean 4.
 
 \subsection*{AI Disclosure}
 

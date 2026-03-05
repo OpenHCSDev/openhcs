@@ -1,79 +1,13 @@
-The preceding sections established abstract information-theoretic results (Sections~\ref{sec:framework}--\ref{sec:lwd}). This section provides secondary cross-domain illustrations. The mathematics is unchanged by domain; the examples are meant to show where the same bit/query/error tradeoffs already govern practice, not to claim that the theory generated those domain designs historically.
+The core theorems are domain-agnostic. This section gives brief illustrations showing the same constraint pattern in established systems.
 
-\subsection{Biological Taxonomy: Phenotype vs Genotype}
+\subsection{Compact Cross-Domain Illustrations}
 
-Linnean taxonomy classifies organisms by observable phenotypic characters: morphology, behavior, habitat. This is attribute-only observation. The information barrier applies: phenotypically identical organisms from distinct species are indistinguishable.
+\textbf{Biology (phenotype vs genotype).} Distinct species can collide under phenotype, so phenotype-only observation cannot guarantee zero-error identity. DNA barcoding supplies additional naming information that resolves collision blocks in constant-time lookup style \cite{DNABarcoding}.
 
-\textbf{The cryptic species problem:} Cryptic species share identical phenotypic profiles but are reproductively isolated and genetically distinct. Attribute-only observation (morphology) cannot distinguish them: $\pi(A) = \pi(B)$ but $\text{species}(A) \neq \text{species}(B)$.
+\textbf{Databases (columns vs keys).} Rows may collide on non-key columns, so attribute-only identification is insufficient for guaranteed identity. Primary/surrogate keys realize the nominal-tag role and provide constant-cost identity checks \cite{Codd1990}.
 
-\textbf{The nominal tag:} DNA barcoding provides the resolution \cite{DNABarcoding}. A short genetic sequence (e.g., mitochondrial COI) acts as the nominal tag: $O(1)$ identity verification via sequence comparison. This fits the same tradeoff shape: when phenotype induces collision blocks, an additional genetic identifier supplies the extra information needed for zero-error separation.
+\textbf{Software runtimes (structural probes vs type tags).} Structural checks recover identity from observed capabilities and pay query cost that scales with inspected structure. Runtime class/type identifiers behave as nominal tags and collapse identity checks to near-constant cost in the model \cite{CPythonDocs,JVMSpec,JavaDocs,TypeScriptDocs,RustDocs}.
 
-\subsection{Library Classification: Subject vs ISBN}
+\subsection{Takeaway}
 
-Library classification systems like Dewey Decimal observe subject matter, a form of attribute-only classification. Two books on the same subject are indistinguishable by subject code alone.
-
-\textbf{The nominal tag:} The ISBN (International Standard Book Number) is the nominal tag \cite{ISBN}. Given two physical books, identity verification is $O(1)$: compare ISBNs. Without ISBNs, distinguishing two copies of different editions on the same subject requires $O(s)$ attribute inspection (publication date, page count, publisher, etc.).
-
-\subsection{Database Systems: Columns vs Primary Keys}
-
-In big-data systems, relational databases observe entities via column values. The information barrier applies: rows with identical column values, excluding the key, are indistinguishable.
-
-\textbf{The nominal tag:} The primary key is the nominal tag \cite{Codd1990}. Entity identity is $O(1)$: compare keys. Under row collisions on observable columns, surrogate keys are therefore not merely a design preference; they realize the $D=0$ solution predicted by the tradeoff.
-
-\textbf{Natural vs surrogate keys:} Natural keys (composed of attributes) are attribute-only observation and inherit its limitations. Surrogate keys (auto-increment IDs, UUIDs) are pure nominal tags: no semantic content, pure identity.
-
-\subsection{Programming-Language Snapshot (Secondary Illustration)}
-
-Programming-language runtimes are one instantiation of the same abstraction, not the source of the theory. Table~\ref{tab:pl-snapshot} summarizes the mapping from runtime mechanisms to $(L,W,D)$ model primitives.
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{|l|l|c|}
-\hline
-\textbf{Runtime} & \textbf{Nominal mechanism} & \textbf{Identity cost} \\
-\hline
-CPython & \texttt{ob\_type} / \texttt{type(a) is type(b)} \cite{CPythonDocs} & $O(1)$ \\
-Java & class tag via \texttt{.getClass()} / \texttt{instanceof} \cite{JVMSpec,JavaDocs} & $O(1)$ to $O(d)$ \\
-TypeScript & structural compatibility only \cite{TypeScriptDocs} & $O(s)$ \\
-Rust & \texttt{TypeId} for nominal identity \cite{RustDocs} & $O(1)$ \\
-\hline
-\end{tabular}
-\caption{Programming-language snapshot as a secondary illustration of the abstract observer model.}
-\label{tab:pl-snapshot}
-\end{table}
-
-Without a class tag, identity checks are structural and scale with inspected structure size ($O(s)$). With a class tag, identity is constant-time (or near-constant with bounded hierarchy traversal). This is exactly the generic witness-cost separation from Sections~\ref{sec:witness} and~\ref{sec:lwd}.
-
-\subsection{Cross-Domain Summary}
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{|l|l|l|c|}
-\hline
-\textbf{Domain} & \textbf{Attribute-Only} & \textbf{Nominal Tag} & \textbf{$W$} \\
-\hline
-Biology & Phenotype (morphology) & DNA barcode (COI) & $O(1)$ \\
-Libraries & Subject (Dewey) & ISBN & $O(1)$ \\
-Databases & Column values & Primary key & $O(1)$ \\
-CPython & \texttt{hasattr} probing & \texttt{ob\_type} pointer & $O(1)$ \\
-Java & Attribute/interface check & \texttt{.getClass()} & $O(1)$ \\
-TypeScript & Structural check & (none at runtime) & $O(s)$ \\
-Rust (static) & Trait bounds & \texttt{TypeId} & $O(1)$ \\
-\hline
-\end{tabular}
-\caption{Witness cost for identity across classification systems. Nominal tags achieve $O(1)$; attribute-only pays $O(s)$ per structural check (or $O(k)$ when enumerating classes under declared attribute catalogs, e.g., interfaces in PL runtimes).}
-\end{table}
-
-The same constraint recurs across these systems: when identity is carried by an explicit tag, witness cost is $O(1)$; when identity must be reconstructed from observable attributes alone, witness cost grows with the amount of structure that must be checked. The point of the examples is to show that the bound is not peculiar to programming languages.
-
-\subsection{Machine Learning: Model Identification and Versioning}
-
-Neural network models in production systems face the identification problem: given two model instances, determine if they represent the same architecture. Model registries must compress model metadata while enabling efficient identification.
-
-\textbf{Attribute-only approach:} Compare architecture fingerprints (layer counts, activation functions, parameter counts, connectivity patterns). Cost: $O(s)$ where $s$ is the number of architectural features.
-
-\textbf{Nominal tag:} Model hash (e.g., SHA-256 of architecture definition) or registry ID. Cost: $O(1)$.
-
-The $(L, W, D)$ tradeoff applies directly: storing $\lceil \log_2 k \rceil$ bits per model (where $k$ is the number of distinct architectures in the registry) enables $O(1)$ identification with $D = 0$. Attribute-based versioning requires $\Omega(d)$ feature comparisons and risks false positives ($D > 0$) when architectures share identical fingerprints but differ in subtle structural details.
-
-\textbf{Example:} A model registry with $k = 10^6$ architectures requires only 20 bits per model for perfect identification via nominal tags, versus $O(d)$ queries over potentially hundreds of architectural features for attribute-based approaches.
+These illustrations are not historical causality claims. They show a common resource law: when observable profiles collide, zero-error identification requires additional naming information; otherwise the system pays higher query cost and/or nonzero error.

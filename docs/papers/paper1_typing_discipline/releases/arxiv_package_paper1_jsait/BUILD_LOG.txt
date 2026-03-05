@@ -2,14 +2,14 @@ OpenHCS Paper Build Log
 ========================
 
 Paper: paper1_jsait - Identification Capacity and Rate-Query Tradeoffs in Classification Systems
-Package Date: 2026-03-04T13:45:35.473843
+Package Date: 2026-03-04T20:30:40.041318
 Lean Toolchain: leanprover/lean4:v4.27.0-rc1
 
 Proof Statistics:
 -----------------
-Lean Files: 26
-Lines of Code: 7215
-Theorems: 306
+Lean Files: 29
+Lines of Code: 8003
+Theorems: 346
 Sorry Placeholders: 0
 
 
@@ -28,6 +28,9 @@ Proof Files:
   - GraphExport.lean
   - HandleAliases.lean
   - Paper1.lean
+  - Entropy.lean
+  - GraphEntropy.lean
+  - GraphEntropyAsymptotic.lean
   - PrintAxioms.lean
   - abstract_class_system.lean
   - axis_framework.lean
@@ -46,7 +49,7 @@ Proof Files:
 COMPILATION OUTPUT (lake build)
 ================================================================================
 
-ℹ [3065/3097] Replayed AbstractClassSystem.Typing
+ℹ [3065/3124] Replayed AbstractClassSystem.Typing
 info: AbstractClassSystem/Typing.lean:110:0: []
 info: AbstractClassSystem/Typing.lean:111:0: [AbstractClassSystem.UnifiedCapability.interfaceCheck]
 info: AbstractClassSystem/Typing.lean:112:0: [AbstractClassSystem.UnifiedCapability.identity,
@@ -54,11 +57,11 @@ info: AbstractClassSystem/Typing.lean:112:0: [AbstractClassSystem.UnifiedCapabil
  AbstractClassSystem.UnifiedCapability.enumeration,
  AbstractClassSystem.UnifiedCapability.conflictResolution,
  AbstractClassSystem.UnifiedCapability.interfaceCheck]
-⚠ [3089/3097] Replayed lwd_converse
+⚠ [3089/3124] Replayed lwd_converse
 warning: lwd_converse.lean:36:48: try 'simp' instead of 'simpa'
 
 Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
-ℹ [3091/3097] Replayed PrintAxioms
+ℹ [3091/3124] Replayed PrintAxioms
 info: PrintAxioms.lean:15:0: 'fixed_axis_incompleteness' depends on axioms: [propext, Classical.choice, Quot.sound]
 info: PrintAxioms.lean:16:0: 'parameterized_axis_immunity' depends on axioms: [propext, Quot.sound]
 info: PrintAxioms.lean:17:0: 'fixed_vs_parameterized_asymmetry' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -81,7 +84,73 @@ info: PrintAxioms.lean:35:0: 'PythonInstantiation.pyIsinstance_bases_sensitive' 
 info: PrintAxioms.lean:36:0: 'TypeScriptInstantiation.observables_factor_through_axes' depends on axioms: [propext, Quot.sound]
 info: PrintAxioms.lean:37:0: 'JavaInstantiation.observables_factor_through_axes' depends on axioms: [propext, Quot.sound]
 info: PrintAxioms.lean:38:0: 'RustInstantiation.observables_factor_through_axes' depends on axioms: [propext, Quot.sound]
-Build completed successfully (3097 jobs).
+⚠ [3116/3124] Replayed Paper1IT.Entropy
+warning: Paper1IT/Entropy.lean:120:0: automatically included section variable(s) unused in theorem `Entropy.entropyTerm_zero_iff`:
+  [ClassicalEntropyAssumptions]
+consider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:
+  omit [ClassicalEntropyAssumptions] in theorem ...
+
+Note: This linter can be disabled with `set_option linter.unusedSectionVars false`
+⚠ [3117/3124] Replayed Paper1IT.GraphEntropy
+warning: Paper1IT/GraphEntropy.lean:62:35: unused variable `G`
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: Paper1IT/GraphEntropy.lean:72:0: automatically included section variable(s) unused in theorem `Ssot.GraphEntropy.properColoring_injOn_clique`:
+  [Fintype α]
+consider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:
+  omit [Fintype α] in theorem ...
+
+Note: This linter can be disabled with `set_option linter.unusedSectionVars false`
+warning: Paper1IT/GraphEntropy.lean:125:0: automatically included section variable(s) unused in theorem `Ssot.GraphEntropy.fiber_is_clique`:
+  [Fintype α]
+  [Fintype β]
+  [DecidableEq α]
+  [DecidableEq β]
+consider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:
+  omit [Fintype α] [Fintype β] [DecidableEq α] [DecidableEq β] in theorem ...
+
+Note: This linter can be disabled with `set_option linter.unusedSectionVars false`
+warning: Paper1IT/GraphEntropy.lean:147:0: automatically included section variable(s) unused in theorem `Ssot.GraphEntropy.fiber_card_le_maxFiberCard`:
+  [DecidableEq α]
+consider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:
+  omit [DecidableEq α] in theorem ...
+
+Note: This linter can be disabled with `set_option linter.unusedSectionVars false`
+warning: Paper1IT/GraphEntropy.lean:210:0: automatically included section variable(s) unused in theorem `Ssot.GraphEntropy.lift_zeroErrorTagging`:
+  [Fintype α]
+  [Fintype β]
+  [DecidableEq α]
+  [DecidableEq β]
+consider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:
+  omit [Fintype α] [Fintype β] [DecidableEq α] [DecidableEq β] in theorem ...
+
+Note: This linter can be disabled with `set_option linter.unusedSectionVars false`
+warning: Paper1IT/GraphEntropy.lean:284:0: automatically included section variable(s) unused in theorem `Ssot.GraphEntropy.confusabilityGraph_eq_top_of_constant`:
+  [Fintype α]
+  [Fintype β]
+  [DecidableEq α]
+  [DecidableEq β]
+consider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:
+  omit [Fintype α] [Fintype β] [DecidableEq α] [DecidableEq β] in theorem ...
+
+Note: This linter can be disabled with `set_option linter.unusedSectionVars false`
+⚠ [3120/3124] Replayed Paper1IT.GraphEntropyAsymptotic
+warning: Paper1IT/GraphEntropyAsymptotic.lean:33:0: automatically included section variable(s) unused in theorem `Ssot.GraphEntropy.block_zeroErrorTagging_of_zeroErrorTagging`:
+  [Fintype α]
+  [Fintype β]
+  [DecidableEq β]
+consider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:
+  omit [Fintype α] [Fintype β] [DecidableEq β] in theorem ...
+
+Note: This linter can be disabled with `set_option linter.unusedSectionVars false`
+warning: Paper1IT/GraphEntropyAsymptotic.lean:98:22: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+warning: Paper1IT/GraphEntropyAsymptotic.lean:237:2: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+warning: Paper1IT/GraphEntropyAsymptotic.lean:268:4: Try this: intro hm k
+Build completed successfully (3124 jobs).
 
 
 ================================================================================

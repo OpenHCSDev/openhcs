@@ -46,6 +46,7 @@
   citecolor=blue,
   urlcolor=blue
 }
+\IfFileExists{build_submission_hook.tex}{\input{build_submission_hook.tex}}{}
 
 % Title
 \title{Identification Capacity and Rate-Query Tradeoffs\\ in Classification Systems}
@@ -100,11 +101,6 @@
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
-% Appendix
-\ifdefined\JSAITREVIEW\else
-\appendix
-\section{Lean 4 Formalization}\label{sec:lean}
-\input{content/appendix_lean.tex}
-\fi
+% Lean formalization details are provided in supplementary artifact.
 
 \end{document}

@@ -4,8 +4,8 @@
 
 This directory contains the complete Lean 4 formalization for Classification Theory (JSAIT).
 
-- **Lines:** 7215
-- **Theorems:** 306
+- **Lines:** 8003
+- **Theorems:** 346
 - **`sorry` placeholders:** 0
 
 
@@ -38,6 +38,9 @@ lake build
 | `GraphExport.lean` | GraphExport |
 | `HandleAliases.lean` | HandleAliases |
 | `Paper1.lean` | Paper1 |
+| `Entropy.lean` | Entropy |
+| `GraphEntropy.lean` | GraphEntropy |
+| `GraphEntropyAsymptotic.lean` | GraphEntropyAsymptotic |
 | `PrintAxioms.lean` | PrintAxioms |
 | `abstract_class_system.lean` | abstract_class_system |
 | `axis_framework.lean` | axis_framework |

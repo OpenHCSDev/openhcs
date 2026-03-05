@@ -295,6 +295,49 @@ If the domain is maximal-barrier ($A_\pi = k$), any zero-error scheme satisfies 
 \end{corollary}
 \leanmeta{ \LH{LWDC3}}
 
+\subsection{Confusability Graph Thresholds and Block Scaling}
+
+Let $\pi_{\mathcal{C}} : \mathcal{C} \to \{0,1\}^n$ be the class-profile map from Definition~\ref{def:collision-multiplicity}. The induced confusability graph connects two distinct classes when they share the same observable profile.
+
+\begin{theorem}[Exact one-shot feasibility threshold]
+\label{thm:graph-one-shot-threshold}
+For an alphabet of $n$ nominal tags, zero-error class tagging is feasible if and only if
+\[
+A_\pi \le n.
+\]
+\end{theorem}
+\leanmeta{ \LH{GPH13}}
+
+\begin{proof}
+Classes in the same profile fiber are pairwise confusable, so each such fiber is a clique in the confusability graph. Zero-error tagging is equivalent to a proper graph coloring; therefore feasibility is equivalent to having at least as many colors as the largest clique size, which is exactly $A_\pi$.
+\end{proof}
+
+\begin{theorem}[Exact block feasibility law]
+\label{thm:graph-block-threshold}
+For block length $t\ge 1$ with coordinatewise observation on $\mathcal{C}^t$, zero-error tagging with alphabet size $n_t$ is feasible if and only if
+\[
+A_\pi^t \le n_t.
+\]
+Equivalently, the minimal feasible block alphabet is exactly $A_\pi^t$.
+\end{theorem}
+\leanmeta{ \LH{GPH16}, \LH{GPH17}, \LH{GPH20}}
+
+\begin{corollary}[Linear log-bit scaling]
+\label{cor:graph-logbit-scaling}
+Let $L_t^\star := \log_2(A_\pi^t)$ be the minimum block tag budget in bits. Then
+\[
+L_t^\star = t\,\log_2 A_\pi,
+\qquad
+\frac{L_t^\star}{t} = \log_2 A_\pi.
+\]
+So per-entity tag rate is exactly stable across block length.
+\end{corollary}
+\leanmeta{ \LH{GPH18}, \LH{GPH19}, \LH{GPH24}}
+
+\begin{remark}[Scope]
+These are worst-case finite-block confusability laws. They strengthen the zero-error converse with exact block thresholds, while remaining distinct from full distribution-optimized K\"orner graph-entropy theory.
+\end{remark}
+
 \subsection{Lossy Regime: Deterministic vs Noisy Models}
 
 The zero-error corner ($D=0$) is governed by Theorem~\ref{thm:converse}. For $D>0$, the model matters:
