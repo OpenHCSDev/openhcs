@@ -148,7 +148,9 @@ This paper establishes the following results:
 
 5.  **$(L, W, D)$ Optimality** (Section [\[sec:lwd\]](#sec:lwd){reference-type="ref" reference="sec:lwd"}): We characterize the zero-error converse via collision multiplicity $A_\pi$ and prove uniqueness of the nominal point in the maximal-barrier regime ($A_\pi=k$), turning an informal design preference into an explicit Pareto statement.
 
-6.  **Machine-Checked Proofs**: All results formalized in Lean 4 (8003 lines, 346 theorem/lemma statements, 0 `sorry` placeholders).
+6.  **Finite-Block Confusability Law** (Section [\[sec:framework\]](#sec:framework){reference-type="ref" reference="sec:framework"}): We prove exact block thresholds for zero-error feasibility in the confusability formulation: at blocklength $k$, feasibility is equivalent to an alphabet threshold $A_\pi^k$, with exact linear log-bit scaling and per-coordinate stabilization.
+
+7.  **Machine-Checked Proofs**: All results formalized in Lean 4 (8003 lines, 346 theorem/lemma statements, 0 `sorry` placeholders).
 
 Without the equicardinality result behind the matroid structure, the lower bound would depend on which distinguishing set or query strategy one chose. The matroid theorem is what makes $d$ strategy-independent.
 
