@@ -1,7 +1,7 @@
-\section{Information-Theoretic Realizability Requirements}\label{sec:requirements}
+\section{Realizability Requirements for the Capacity-Achieving Regime}\label{sec:requirements}
 %==============================================================================
 
-This section identifies, at an abstract information-theoretic level, the two properties an encoding system must provide to realize DOF = 1. Concrete programming-language and system-level instantiations are presented in the supplementary material; here we present the abstract requirements and their necessity/sufficiency proofs.
+This section identifies, at an abstract information-theoretic level, the two properties an encoding system must provide to realize the capacity-achieving regime. Concrete system-specific instantiations are treated as applications; here we isolate the abstract realizability conditions and their necessity/sufficiency proofs.
 
 Informally, an encoding system provides a set of locations holding values and a space of allowed modifications. DOF = 1 is realizable when exactly one independent location exists (the source) and all other encodings are deterministic functions (derivations) of that source so divergence is impossible.
 
@@ -19,14 +19,15 @@ The remainder of this section gives formal statements and proofs of necessity an
 To connect realizability to the information available at runtime, define the \emph{confusability graph} for a fact $F$: vertices are distinct values of $F$, and an undirected edge joins two values $x,x'$ iff they are indistinguishable given the available side information (i.e., no observation of derived locations can reliably separate $x$ from $x'$).
 
 \begin{lemma}[Confusability Clique Bound]\label{lem:confusability-clique}
-If the confusability graph for $F$ contains a clique of size $k$, then any side-information channel that yields vanishing error probability for distinguishing all $k$ values must convey at least $\log k$ bits about $F$. Equivalently, if the mutual information between $F$ and side information $S$ satisfies $I(F;S)<\log k - \epsilon$, then the error probability for distinguishing the $k$-clique is bounded away from zero.
+If the confusability graph for $F$ contains a clique of size $k$, then any zero-error side-information scheme for distinguishing all $k$ values requires at least $k$ distinct tags, equivalently at least $\log_2 k$ bits of side information.
 \end{lemma}
+\leanmeta{\LH{UNQ1}, \LH{UNQ1}, \LH{UNQ1}, \LH{UNQ1}, \LH{UNQ1}}
 
 \begin{proof}[Proof sketch]
-Restrict $F$ to the $k$ values in the clique. In the finite zero-error setting, any zero-error tag assignment is a proper coloring of the confusability graph, so a $k$-clique forces at least $k$ distinct tag values (\LH{UNQ1}, \LH{UNQ1}). More generally, the required tag alphabet is bounded below by the worst-case observation-fiber size (\LH{UNQ1}), and therefore by the average fiber occupancy $\lfloor |\mathcal V|/|\mathcal O| \rfloor$ induced by observation alphabet size (\LH{UNQ1}); equivalently, any zero-error scheme must satisfy the global counting converse $|\mathcal V|\le |\mathcal O|\cdot |\mathcal T|$ (\LH{UNQ1}). For the distribution-sensitive refinement, apply the Fano-style bound (Theorem~\ref{thm:fano-converse} in Section~\ref{sec:info-converse}) to conclude that vanishing error requires $I(F;S)\ge\log k - o(1)$. If $I(F;S)$ is strictly smaller than $\log k$, Fano's inequality implies a non-zero lower bound on error probability.
+Restrict $F$ to the $k$ values in the clique. In the finite zero-error setting, any zero-error tag assignment is a proper coloring of the confusability graph, so a $k$-clique forces at least $k$ distinct tag values (\LH{UNQ1}, \LH{UNQ1}). More generally, the Lean observer/tag layer now proves three stronger structural facts: exact recovery is equivalent to injectivity of the combined observation-plus-tag map (\LH{OBS1}, \LH{OBS2}); each observation fiber requires at most as many states as available tags (\LH{OBS3}); and every clique therefore satisfies the direct alphabet bound $|\mathcal C|\le |\mathcal T|$ (\LH{OBS5}). Consequently, the required tag alphabet is bounded below by the worst-case observation-fiber size, and globally every zero-error scheme must satisfy $|\mathcal V|\le |\mathcal O|\cdot |\mathcal T|$ (\LH{OBS4}). Theorem~\ref{thm:fano-converse} packages the same obstruction as a finite counting converse: if only $2^L$ tags are available, then no zero-error resolver can distinguish more than $2^L$ ambiguous states.
 \end{proof}
 
-\noindent The confusability graph provides a compact combinatorial certificate of necessary side-information: large cliques force large zero-error tag alphabets in the finite model (\LH{UNQ1}, \LH{UNQ1}), the worst-case fiber bound captures the same obstruction globally (\LH{UNQ1}), a pigeonhole refinement gives an explicit alphabet-size floor (\LH{UNQ1}), and a global counting converse gives $|\mathcal V|\le |\mathcal O|\cdot |\mathcal T|$ for any zero-error scheme (\LH{UNQ1}). The Fano refinement turns this obstruction into a mutual-information lower bound (\LH{UNQ1}).
+\noindent The confusability graph now has a fully mechanized finite zero-error interpretation: large cliques force large tag alphabets (\LH{OBS5}), nontrivial cliques are impossible for observation-only architectures (\LH{OBS6}), the worst-case fiber bound captures the same obstruction globally (\LH{OBS3}), and a global counting converse gives $|\mathcal V|\le |\mathcal O|\cdot |\mathcal T|$ for any zero-error scheme (\LH{OBS4}).
 
 \subsection{The Structural Timing Constraint}\label{sec:timing}
 
@@ -202,7 +203,7 @@ Configuration & Terraform \texttt{graph}, Kubernetes API server \\
 \subsection{Independence of Requirements}\label{sec:independence}
 %==============================================================================
 
-The two requirements--causal propagation and provenance observability--are independent. Neither implies the other (\LH{UNQ1}, \LH{UNQ1}).
+The two requirements--causal propagation and provenance observability--are independent. Neither implies the other (\LH{UNQ1}, \LH{UNQ1}). This section is included because it explains when the abstract IT optimum can actually be instantiated; it is not needed to state the main threshold theorem itself.
 
 \begin{theorem}[Requirements are Independent]\label{thm:independence}
 \begin{enumerate}

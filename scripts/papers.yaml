@@ -138,8 +138,8 @@ papers:
     claim_mapping_file: "content/claim_mapping_auto.tex"
 
   paper4b:
-    name: "Decision Quotient Foundations and Convergence"
-    full_name: "Decision Quotient Foundations and Convergence: Coimage Structure, SRank Recovery, and Bayesian Optimality"
+    name: "Decision Quotient Structure and Convergence"
+    full_name: "Decision Quotient Structure and Convergence: Coimage Structure, SRank Recovery, and Bayesian Optimality"
     dir: "paper4_decision_quotient"
     proofs_dir: "proofs"
     latex_dir: "latex_4b"

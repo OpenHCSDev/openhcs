@@ -38,17 +38,11 @@ L.~Lov{\'a}sz, ``On the shannon capacity of a graph,'' \emph{IEEE Transactions
   on Information Theory}, vol.~25, no.~1, pp. 1--7, 1979, theta function bounds
   Shannon capacity; foundational for zero-error information theory.
 
-\bibitem{rissanen1978mdl}
-J.~Rissanen, ``Modeling by shortest data description,'' \emph{Automatica},
-  vol.~14, no.~5, pp. 465--471, 1978, foundational paper on Minimum Description
-  Length (MDL) principle: total description = model + data given model; optimal
-  model minimizes this sum.
-
-\bibitem{gruenwald2007mdl}
-P.~D. Gr{\"u}nwald, \emph{The Minimum Description Length Principle}.\hskip 1em
-  plus 0.5em minus 0.4em\relax MIT Press, 2007, comprehensive treatment of MDL;
-  DOF=1 (SSOT) can be framed as the MDL-optimal representation for redundant
-  facts.
+\bibitem{slepian1973noiseless}
+D.~Slepian and J.~K. Wolf, ``Noiseless coding of correlated information
+  sources,'' \emph{IEEE Transactions on Information Theory}, vol.~19, no.~4,
+  pp. 471--480, 1973, distributed source coding with side information; decoder
+  uses correlated information to reduce required rate.
 
 \bibitem{brewer2000cap}
 E.~A. Brewer, ``Towards robust distributed systems,'' in \emph{Proceedings of
@@ -72,12 +66,6 @@ T.~Delaet, W.~Joosen, and J.~Van~de Craen, ``A survey of system configuration
 A.~Hunt and D.~Thomas, \emph{The Pragmatic Programmer: From Journeyman to
   Master}.\hskip 1em plus 0.5em minus 0.4em\relax Addison-Wesley Professional,
   1999.
-
-\bibitem{slepian1973noiseless}
-D.~Slepian and J.~K. Wolf, ``Noiseless coding of correlated information
-  sources,'' \emph{IEEE Transactions on Information Theory}, vol.~19, no.~4,
-  pp. 471--480, 1973, distributed source coding with side information; decoder
-  uses correlated information to reduce required rate.
 
 \bibitem{birs2012interactive}
 {Banff International Research Station}, ``Interactive information theory
@@ -110,12 +98,6 @@ L.~de~Moura and S.~Ullrich, ``The {Lean} 4 theorem prover and programming
   language,'' in \emph{Automated Deduction -- CADE 28}.\hskip 1em plus 0.5em
   minus 0.4em\relax Springer, 2021, pp. 625--635.
 
-\bibitem{heering2015generative}
-J.~Heering, ``Generative software complexity,'' \emph{Science of Computer
-  Programming}, vol.~97, pp. 82--85, 2015, proposes Kolmogorov complexity to
-  measure software structure; the shortest generator for a set of programs
-  indicates maximal complexity reduction.
-
 \bibitem{gilbert2002cap}
 S.~Gilbert and N.~Lynch, ``Brewer's conjecture and the feasibility of
   consistent, available, partition-tolerant web services,'' \emph{ACM SIGACT
@@ -126,11 +108,6 @@ M.~J. Fischer, N.~A. Lynch, and M.~S. Paterson, ``Impossibility of distributed
   consensus with one faulty process,'' \emph{Journal of the ACM}, vol.~32,
   no.~2, pp. 374--382, 1985, fLP impossibility: deterministic consensus
   impossible in async systems with one failure.
-
-\bibitem{shannon1948mathematical}
-C.~E. Shannon, ``A mathematical theory of communication,'' \emph{Bell System
-  Technical Journal}, vol.~27, no.~3, pp. 379--423, 1948, foundational paper
-  establishing information theory; source coding and channel capacity.
 
 \bibitem{rivest1982wom}
 R.~L. Rivest and A.~Shamir, ``How to reuse a ``write-once'' memory,'' in
@@ -148,21 +125,15 @@ J.~K. Wolf \emph{et~al.}, ``Coding for a write-once memory,'' \emph{AT\&T Bell
 {TIOBE Software BV}, ``{TIOBE} index for programming languages,'' TIOBE
   Programming Community Index, 2024, online: tiobe.com/tiobe-index/.
 
+\bibitem{shannon1948mathematical}
+C.~E. Shannon, ``A mathematical theory of communication,'' \emph{Bell System
+  Technical Journal}, vol.~27, no.~3, pp. 379--423, 1948, foundational paper
+  establishing information theory; source coding and channel capacity.
+
 \bibitem{xiang2013interactive}
 Y.~Xiang, ``Interactive schemes in information theory and statistics,'' Ph.D.
   dissertation, University of California, Berkeley, 2013, interactive
   information theory; feedback channels, distributed inference.
-
-\bibitem{lamport1998paxos}
-L.~Lamport, ``The part-time parliament,'' \emph{ACM Transactions on Computer
-  Systems}, vol.~16, no.~2, pp. 133--169, 1998, paxos consensus algorithm;
-  achieves consistency under partial failure.
-
-\bibitem{ongaro2014raft}
-D.~Ongaro and J.~Ousterhout, ``In search of an understandable consensus
-  algorithm,'' in \emph{Proceedings of the 2014 USENIX Annual Technical
-  Conference}.\hskip 1em plus 0.5em minus 0.4em\relax USENIX, 2014, pp.
-  305--319, raft consensus algorithm; designed for understandability.
 
 \bibitem{kiczales1991art}
 G.~Kiczales, J.~des Rivi{\`e}res, and D.~G. Bobrow, \emph{The Art of the
@@ -172,13 +143,6 @@ G.~Kiczales, J.~des Rivi{\`e}res, and D.~G. Bobrow, \emph{The Art of the
 B.~C. Smith, ``Reflection and semantics in lisp,'' in \emph{Proceedings of the
   11th ACM SIGACT-SIGPLAN symposium on Principles of programming languages},
   1984, pp. 23--35.
-
-\bibitem{heering2003software}
-J.~Heering, ``Software architecture and software configuration management,'' in
-  \emph{Software Configuration Management}, ser. Lecture Notes in Computer
-  Science.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 2003, vol. 2649,
-  pp. 1--16, introduces generative complexity as structural complexity measure
-  for software.
 
 \bibitem{parnas1972criteria}
 D.~L. Parnas, ``On the criteria to be used in decomposing systems into

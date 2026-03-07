@@ -2,47 +2,45 @@ This is BibTeX, Version 0.99e (TeX Live 2026/Arch Linux)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: decision_quotient_4b.aux
 The style file: plain.bst
-I found no \citation commands---while reading file decision_quotient_4b.aux
 Database file #1: references.bib
-You've used 0 entries,
+You've used 14 entries,
             2118 wiz_defined-function locations,
-            497 strings with 4023 characters,
-and the built_in function-call counts, 18 in all, are:
-= -- 0
-> -- 0
-< -- 0
-+ -- 0
-- -- 0
-* -- 2
-:= -- 7
-add.period$ -- 0
-call.type$ -- 0
-change.case$ -- 0
+            582 strings with 6132 characters,
+and the built_in function-call counts, 4546 in all, are:
+= -- 464
+> -- 155
+< -- 5
++ -- 66
+- -- 48
+* -- 262
+:= -- 725
+add.period$ -- 48
+call.type$ -- 14
+change.case$ -- 62
 chr.to.int$ -- 0
-cite$ -- 0
-duplicate$ -- 0
-empty$ -- 1
-format.name$ -- 0
-if$ -- 1
+cite$ -- 14
+duplicate$ -- 210
+empty$ -- 400
+format.name$ -- 48
+if$ -- 999
 int.to.chr$ -- 0
-int.to.str$ -- 0
-missing$ -- 0
-newline$ -- 3
-num.names$ -- 0
-pop$ -- 0
+int.to.str$ -- 14
+missing$ -- 21
+newline$ -- 75
+num.names$ -- 28
+pop$ -- 91
 preamble$ -- 1
-purify$ -- 0
+purify$ -- 52
 quote$ -- 0
-skip$ -- 1
+skip$ -- 140
 stack$ -- 0
-substring$ -- 0
-swap$ -- 0
-text.length$ -- 0
+substring$ -- 277
+swap$ -- 56
+text.length$ -- 5
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 0
+type$ -- 42
 warning$ -- 0
-while$ -- 0
-width$ -- 0
-write$ -- 2
-(There was 1 error message)
+while$ -- 46
+width$ -- 16
+write$ -- 162

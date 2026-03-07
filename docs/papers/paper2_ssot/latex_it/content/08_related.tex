@@ -1,58 +1,34 @@
 \section{Related Work}\label{sec:related}
 %==============================================================================
 
-This section surveys related work across five areas: zero-error and multi-terminal source coding, interactive information theory, distributed systems, computational reflection, and formal methods.
+This section focuses on the information-theoretic lineage. Application-side references appear only where they clarify realizability.
 
 \subsection{Zero-Error and Multi-Terminal Source Coding}\label{sec:related-source-coding}
 
-Our zero-incoherence capacity theorem extends classical source coding to interactive multi-terminal systems.
+Our exact-consistency threshold belongs to the intersection of zero-error/confusability theory, side-information source coding, and finite Fano-style converses.
 
-\textbf{Zero-Error Capacity.} Shannon~\cite{shannon1956zero} introduced zero-error capacity: the maximum rate achieving exactly zero error probability. Körner~\cite{korner1973graphs} connected this to graph entropy, and Lovász~\cite{lovasz1979shannon} characterized the Shannon capacity of the pentagon graph. Our zero-incoherence capacity is the storage analog: the maximum encoding rate achieving exactly zero incoherence probability. The achievability/converse structure (Theorems~\ref{thm:capacity-achievability},~\ref{thm:capacity-converse}) parallels zero-error proofs. The key parallel: zero-error capacity requires distinguishability between codewords; zero-incoherence capacity requires indistinguishability (all locations must agree).
+\textbf{Zero-Error Capacity.} Shannon~\cite{shannon1956zero} introduced zero-error capacity as exact communication under a confusability constraint; Körner~\cite{korner1973graphs} and Lovász~\cite{lovasz1979shannon} developed the graph-theoretic language for that regime. Our zero-incoherence capacity is a deterministic storage/update analogue: the confusable objects are reachable multi-location states, and exact recovery means resolving them with zero ambiguity. Ambiguity classes and cliques in our model play the role of confusability classes in zero-error communication, while the threshold $C_0=1$ is the storage-side counterpart of a sharp zero-error feasibility boundary.
 
-\textbf{Multi-Terminal Source Coding.} Slepian and Wolf~\cite{slepian1973noiseless} characterized distributed encoding of correlated sources: sources $(X, Y)$ can be encoded at rates satisfying $R_X \geq H(X|Y)$ when $Y$ is decoder side information. We model encoding locations as terminals (Section~\ref{sec:side-information}). Derivation introduces \emph{perfect correlation}: a derived terminal's output is a deterministic function of its source, so $H(L_d | L_s) = 0$. The capacity result shows that only complete correlation (all terminals derived from one source) achieves zero incoherence.
+\textbf{Multi-Terminal Source Coding and Fano.} Slepian and Wolf~\cite{slepian1973noiseless} characterized distributed encoding with decoder side information, while classical Fano inequalities upper-bound $H(X\mid Y)$ in terms of error probability. Here the side information is not a second stochastic source, but a deterministic transcript produced by a modifiable multi-location encoding. The resulting converse is therefore a deterministic finite-source analogue: the same observation/tag budget controls zero-error resolution, $H(X\mid Y)$, and the entropy of the decoder output. This is closer to finite exact-resolvability with side information than to ordinary vanishing-error distributed compression.
 
-\textbf{Multi-Version Coding.} Rashmi et al.~\cite{rashmi2015multiversion} formalize consistent distributed storage where multiple versions must be accessible while maintaining consistency. They prove an ``inevitable price, in terms of storage cost, to ensure consistency.'' Our DOF = 1 theorem is analogous: we prove the \emph{encoding rate} cost of ensuring coherence. Where multi-version coding trades storage for version consistency, we trade encoding rate for location coherence.
+\textbf{Multi-Version Coding and Interaction.} Rashmi et al.~\cite{rashmi2015multiversion} quantify storage cost under consistency constraints; Ma and Ishwar~\cite{ma2011distributed} and the BIRS interactive-IT agenda~\cite{birs2012interactive} show that interaction can change information requirements. Our setting differs in that the object being constrained is a modifiable encoding itself. That turns exact consistency into a combined zero-error, side-information, and operational-complexity problem.
 
-\textbf{Write-Once Memory Codes.} Rivest and Shamir~\cite{rivest1982wom} introduced WOM codes for storage media where bits can only transition $0 \to 1$. Despite this irreversibility constraint, clever coding achieves capacity $\log_2(t+1)$ for $t$ writes--more than the naive $1$ bit.
-
-Our structural facts have an analogous irreversibility: once defined, structure is fixed. The parallel:
-\begin{itemize}
-\tightlist
-\item \textbf{WOM:} Physical irreversibility (bits only increase) $\Rightarrow$ coding schemes maximize information per cell
-\item \textbf{DOF = 1:} Structural irreversibility (definition is permanent) $\Rightarrow$ derivation schemes minimize independent encodings
-\end{itemize}
-Wolf~\cite{wolf1984wom} extended WOM capacity results; our realizability theorem (Theorem~\ref{thm:ssot-iff}) characterizes what encoding systems can achieve DOF = 1 under structural constraints.
-
-\textbf{Classical Source Coding.} Shannon~\cite{shannon1948mathematical} established source coding theory for static data. Slepian and Wolf~\cite{slepian1973noiseless} extended to distributed sources with correlated side information, proving that joint encoding of $(X, Y)$ can achieve rate $H(X|Y)$ for $X$ when $Y$ is available at the decoder.
-
-Our provenance observability requirement (Section~\ref{sec:provenance-observability}) is the encoding-system analog: the decoder (verification procedure) has ``side information'' about the derivation structure, enabling verification of DOF = 1 without examining all locations independently.
-
-\textbf{Rate-Distortion Theory.} Cover and Thomas~\cite{cover2006elements} formalize the rate-distortion function $R(D)$: the minimum encoding rate to achieve distortion $D$. Our rate-complexity tradeoff (Theorem~\ref{thm:unbounded-gap}) is analogous: encoding rate (DOF) trades against modification complexity. DOF = 1 achieves $O(1)$ complexity; DOF $> 1$ incurs $\Omega(n)$.
-
-\textbf{Interactive Information Theory.} The BIRS workshop~\cite{birs2012interactive} identified interactive information theory as an emerging area combining source coding, channel coding, and directed information. Ma and Ishwar~\cite{ma2011distributed} showed that interaction can reduce rate for function computation. Xiang~\cite{xiang2013interactive} studied interactive schemes including feedback channels.
-
-Our framework extends this to \emph{storage} rather than communication: encoding systems where the encoding itself is modified over time, requiring coherence maintenance.
-
-\textbf{Minimum Description Length.} Rissanen~\cite{rissanen1978mdl} established MDL: the optimal model minimizes total description length (model + data given model). Grünwald~\cite{gruenwald2007mdl} proved uniqueness of MDL-optimal representations.
-
-DOF = 1 is the MDL-optimal encoding for redundant facts: the single source is the model; derived locations have zero marginal description length (fully determined by source). Additional independent encodings add description length without reducing uncertainty--pure overhead. Our Theorem~\ref{thm:dof-optimal} establishes analogous uniqueness for encoding systems under modification constraints.
+\textbf{Classical Source Coding and Rate-Distortion.} Shannon~\cite{shannon1948mathematical} and Slepian--Wolf~\cite{slepian1973noiseless} provide the source-coding background, while Cover and Thomas~\cite{cover2006elements} supply the standard entropy/rate language. We use that language in a deterministic finite model: provenance observability acts as side information, derivation as perfect dependence, and independent rate governs modification cost rather than ordinary distortion.
 
 \paragraph{Closest prior work and novelty.}
-The closest IT lineage is multi-version coding and zero-error/interactive source coding. These settings address consistency or decoding with side information, but they do not model \emph{modifiable} encodings with a coherence constraint over time. Our contribution is a formal encoding model with explicit modification operations, a coherence capacity theorem (unique rate for guaranteed coherence), an iff realizability characterization, and tight rate--complexity bounds.
+Prior work supplies the ingredients separately: zero-error/confusability, side-information source coding, Fano inequalities, and consistency-constrained storage. The novelty here is to make them one theorem family in a model with reachable updates: the same exact-consistency obstruction appears as clique separation, a side-information lower bound, a conditional-entropy converse, a decoder-output converse, and a PMF/KL output-gap witness.
 
 \subsection{Distributed Systems Consistency}\label{sec:related-distributed}
 
-We give formal encoding-theoretic versions of CAP and FLP in Section~\ref{sec:cap-flp}. The connection is structural: CAP corresponds to the impossibility of coherence when replicated encodings remain independently updatable, and FLP corresponds to the impossibility of truth-preserving resolution in incoherent states without side information. Consensus protocols (Paxos~\cite{lamport1998paxos}, Raft~\cite{ongaro2014raft}) operationalize this by enforcing coordination, which in our model corresponds to derivation (reducing DOF).
+Distributed-systems impossibility results provide useful structural analogies. In particular, our CAP/FLP-style statements isolate how independent updates create ambiguity and how ambiguity blocks internally justified resolution without side information.
 
 \subsection{Computational Reflection and Metaprogramming}\label{sec:related-meta}
 
 \textbf{Metaobject protocols and reflection.} Kiczales et al.~\cite{kiczales1991art} and Smith~\cite{smith1984reflection} provide the classical foundations for systems that can execute code at definition time and introspect their own structure. These mechanisms correspond directly to causal propagation and provenance observability in our realizability theorem, explaining why MOP-equipped languages admit DOF = 1 for structural facts.
 
-\textbf{Generative complexity.} Heering~\cite{heering2015generative,heering2003software} formalizes minimal generators for program families. DOF = 1 systems realize this minimal-generator viewpoint by construction: the single source is the generator and derived locations are generated instances.
+\subsection{Application-Level Design Principles}\label{sec:related-software}
 
-\subsection{Software Engineering Principles}\label{sec:related-software}
-
-Classical software-engineering principles such as DRY~\cite{hunt1999pragmatic}, information hiding~\cite{parnas1972criteria}, and code-duplication analyses~\cite{fowler1999refactoring,roy2007survey} motivate coherence and single-source design. Our contribution is not another guideline, but a formal encoding model and theorems that explain when such principles are forced by information constraints. These connections are interpretive; the proofs do not rely on SE assumptions.
+Application-level design principles such as DRY~\cite{hunt1999pragmatic}, information hiding~\cite{parnas1972criteria}, and duplication analyses~\cite{fowler1999refactoring,roy2007survey} motivate coherence and single-source design. These links are interpretive only; the proofs do not rely on them.
 
 \subsection{Formal Methods}\label{sec:related-formal}
 
@@ -63,37 +39,15 @@ Our Lean 4~\cite{demoura2021lean4} formalization follows the tradition of mechan
 To our knowledge, this is the first work to:
 \begin{enumerate}
 \tightlist
-\item \textbf{Define zero-incoherence capacity}--the maximum encoding rate guaranteeing zero probability of location disagreement, extending zero-error capacity to multi-location storage.
+\item \textbf{Characterize the exact-consistency threshold}--$C_0 = 1$ exactly, with explicit achievability and converse.
 
-\item \textbf{Prove a capacity theorem with achievability/converse}--$C_0 = 1$ exactly, with explicit achievability (Theorem~\ref{thm:capacity-achievability}) and converse (Theorem~\ref{thm:capacity-converse}) following the Shannon proof structure.
+\item \textbf{Quantify side information for resolution}--$\geq \log_2 k$ bits for a $k$-way ambiguity class (Theorem~\ref{thm:side-info}).
 
-\item \textbf{Quantify side information for resolution}--$\geq \log_2 k$ bits for $k$-way incoherence (Theorem~\ref{thm:side-info}), connecting to Slepian-Wolf decoder side information.
+\item \textbf{Characterize realizability}--causal propagation and provenance observability are necessary and sufficient to realize the threshold in concrete systems (Theorem~\ref{thm:ssot-iff}).
 
-\item \textbf{Characterize encoder realizability}--causal propagation (feedback) and provenance observability (side information) are necessary and sufficient for achieving capacity (Theorem~\ref{thm:ssot-iff}).
-
-\item \textbf{Establish rate-complexity tradeoffs}--$O(1)$ at capacity vs.\ $\Omega(n)$ above capacity, with unbounded gap (Theorem~\ref{thm:unbounded-gap}).
+\item \textbf{Establish rate-complexity consequences}--$O(1)$ at rate $1$ versus $\Omega(n)$ above it, with unbounded gap (Theorem~\ref{thm:unbounded-gap}).
 \end{enumerate}
 
-\textbf{Relation to classical IT.}
-\begin{center}
-\footnotesize
-\setlength{\tabcolsep}{2pt}
-\renewcommand{\arraystretch}{1.05}
-\begin{tabularx}{\columnwidth}{@{}>{\RaggedRight\arraybackslash}p{0.32\columnwidth}>{\RaggedRight\arraybackslash}p{0.36\columnwidth}>{\RaggedRight\arraybackslash}p{0.24\columnwidth}@{}}
-\toprule
-\textbf{Classical IT Concept} & \textbf{This Work} & \textbf{Theorem} \\
-\midrule
-Zero-error capacity & Zero-incoherence capacity & \ref{thm:coherence-capacity} \\
-Channel capacity proof & Achievability and converse & \ref{thm:capacity-achievability}; \ref{thm:capacity-converse} \\
-Slepian-Wolf side info & Resolution side info & \ref{thm:side-info} \\
-Multi-terminal correlation & Derivation as correlation & Def.~\ref{def:derived} \\
-Feedback channel & Causal propagation & Thm.~\ref{thm:causal-necessary} \\
-Rate-distortion tradeoff & Rate-complexity tradeoff & \ref{thm:unbounded-gap} \\
-\bottomrule
-\end{tabularx}
-\renewcommand{\arraystretch}{1.0}
-\end{center}
-
-\textbf{What is new:} The setting (interactive multi-location encoding with modifications), the capacity theorem for this setting, the side information bound, the encoder realizability iff, and the machine-checked proofs. The instantiations (programming languages, databases) are corollaries illustrating the abstract theory.
+\textbf{What is new:} the modifiable multi-location encoding setting, the exact-consistency threshold for that setting, and the unified converse family tying together ambiguity classes, confusability cliques, deterministic side information, Fano-style entropy bounds, decoder-output entropy bounds, and PMF/KL output-gap witnesses. The application instantiations are corollaries.
 
 %==============================================================================

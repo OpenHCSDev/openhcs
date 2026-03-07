@@ -1,28 +1,20 @@
 \section{Conclusion}\label{sec:conclusion}
 %==============================================================================
 
-We have established a new capacity theorem extending zero-error source coding to interactive multi-location encoding systems. The key contributions are:
+We have studied exact consistency in interactive multi-location encoding systems through an information-theoretic lens. The main conclusion is simple: once ambiguity survives the observation transcript, exact consistency becomes a unified converse problem.
 
-\textbf{1. Zero-Incoherence Capacity Theorem:} We define zero-incoherence capacity $C_0$ as the maximum encoding rate guaranteeing zero probability of location disagreement, and prove $C_0 = 1$ exactly (Theorem~\ref{thm:coherence-capacity}). The proof follows the achievability/converse structure of Shannon's channel capacity theorem.
+The paper contributes three main claims. First, a $k$-way ambiguity class requires at least $\log_2 k$ bits of side information, and the same finite budget reappears as a conditional-entropy/Fano bound, a decoder-output entropy bound, and an output-side PMF/KL gap witness. Second, zero-incoherence capacity is exactly $1$: one independent source can support arbitrarily many derived views, but any higher independent rate creates reachable ambiguity. Third, this threshold has an operational consequence: modification complexity is $O(1)$ at rate $1$ and $\Omega(n)$ above it, with unbounded gap. The realizability theorem identifies when the capacity-achieving regime is attainable: causal propagation and provenance observability are both necessary and sufficient.
 
-\textbf{2. Side Information Bound:} We prove that resolution of $k$-way incoherence requires $\geq \log_2 k$ bits of side information (Theorem~\ref{thm:side-info}). This connects to Slepian-Wolf distributed source coding: provenance information acts as decoder side information.
-
-\textbf{3. Multi-Terminal Interpretation:} We model encoding locations as terminals in a multi-terminal source coding problem. Derivation introduces perfect correlation (deterministic dependence), reducing effective rate. Only complete correlation (all terminals derived from one source) achieves zero incoherence.
-
-\textbf{4. Rate-Complexity Tradeoffs:} We establish tradeoffs analogous to rate-distortion: $O(1)$ modification complexity at capacity vs. $\Omega(n)$ above capacity. The gap is unbounded (Theorem~\ref{thm:unbounded-gap}).
-
-\textbf{5. Encoder Realizability:} Achieving capacity requires two encoder properties: causal propagation (analogous to feedback) and provenance observability (analogous to decoder side information). Both necessary; together sufficient (Theorem~\ref{thm:ssot-iff}).
-
-\textbf{Corollary instantiations.} The abstract theory instantiates across domains (programming languages, distributed databases, configuration systems). Sections~\ref{sec:evaluation} and~\ref{sec:empirical} provide illustrative corollaries; the core theorems are domain-independent.
+The broader IT point is that the same obstruction admits several classical descriptions at once: zero-error/confusability structure, side-information insufficiency, conditional-entropy and decoder-output Fano converses, and KL-detectable output non-uniformity. That unification is the main claim of the paper.
 
 \textbf{Implications:}
 
 \begin{enumerate}
-\item \textbf{For information theorists:} Zero-error capacity theory extends to interactive multi-location encoding. The setting (modifiable encodings, coherence constraints) is new; the achievability/converse structure and side information bounds connect to established IT.
+\item \textbf{For information theorists:} Zero-error, graph-confusability, Fano-style, and KL-gap ideas extend naturally to interactive multi-location encoding with modification constraints. The novelty is that one exact-consistency obstruction admits all of these normal forms in one deterministic finite model.
 
-\item \textbf{For coding theorists:} Derivation is the mechanism that introduces correlation, reducing effective encoding rate. The encoder realizability theorem characterizes what encoder properties enable capacity-achieving codes.
+\item \textbf{For coding theorists:} Derivation is the mechanism that introduces dependence and reduces effective encoding rate. The realizability theorem characterizes when that regime is attainable, while the unified converse identifies what fails when independent rate exceeds the threshold.
 
-\item \textbf{For system designers:} The capacity theorem is a forcing result: if coherence is required, encoding rate must be $\leq 1$. Systems operating above capacity require external side information for resolution.
+\item \textbf{For system designers:} If exact consistency is required, independent rate must be $\leq 1$. Above that threshold, correctness requires external side information or additional operational cost.
 \end{enumerate}
 
 \textbf{Limitations:}
@@ -30,18 +22,18 @@ We have established a new capacity theorem extending zero-error source coding to
 \tightlist
 \item Results apply primarily to facts with modification constraints. Streaming data and high-frequency updates have different characteristics.
 \item The complexity bounds are asymptotic. For small encoding systems (DOF $< 5$), the asymptotic gap is numerically small.
-\item Computational realization examples are primarily from software systems. The theory is general, but database and configuration system case studies are limited to canonical examples.
+\item Application examples are brief and primarily computational. Richer non-software case studies are left to future work.
 \item Realizability requirements focus on computational systems. Physical and biological encoding systems require separate analysis.
 \end{itemize}
 
 \textbf{Future Work:}
 \begin{itemize}
 \tightlist
-\item \textbf{Probabilistic coherence:} Extend to soft constraints where incoherence probability is bounded but non-zero, analogous to the transition from zero-error to vanishing-error capacity.
+\item \textbf{Probabilistic coherence:} Extend the present finite deterministic converse program to soft constraints where incoherence probability is bounded but non-zero.
 \item \textbf{Network encoding:} Study coherence capacity in networked encoding systems with communication constraints, connecting to network information theory.
-\item \textbf{Rate-distortion extension:} Characterize the full rate-complexity function $R(M)$ trading encoding rate against modification complexity, analogous to rate-distortion $R(D)$.
+\item \textbf{Rate-complexity extension:} Characterize the full rate-complexity function $R(M)$ beyond the sharp zero-error boundary analyzed here.
 \item \textbf{Interactive capacity:} Study capacity under multi-round modification protocols, connecting to interactive information theory and directed information.
-\item \textbf{Partial correlation:} Characterize coherence guarantees when derivation introduces partial (non-deterministic) correlation, extending beyond the perfect-correlation case.
+\item \textbf{Partial correlation:} Characterize coherence guarantees when derivation introduces partial (non-deterministic) correlation, moving closer to classical stochastic side-information models.
 \end{itemize}
 
 \subsection{Artifacts}\label{sec:data-availability}

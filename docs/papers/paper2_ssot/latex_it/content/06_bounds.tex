@@ -1,7 +1,7 @@
 \section{Rate-Complexity Bounds}\label{sec:bounds}
 %==============================================================================
 
-We now prove the rate-complexity bounds that make DOF = 1 optimal. The key result: the gap between DOF-1-complete and DOF-1-incomplete architectures is \emph{unbounded}--it grows without limit as encoding systems scale (\LH{UNQ1}).
+This section translates the exact-consistency threshold into an operational consequence: independent rate governs manual synchronization cost. The key point is not merely that rate $1$ is coherent, but that moving above that threshold creates a provable complexity gap that grows with system size (\LH{UNQ1}).
 
 \subsection{Cost Model}\label{sec:cost-model}
 
@@ -15,7 +15,7 @@ where $\text{requires\_manual\_edit}(L, \delta_F)$ holds iff location $L$ must b
 
 \textbf{Unit of cost:} One edit = one syntactic modification to one location. We count locations, not keystrokes or characters. This abstracts over edit complexity to focus on the scaling behavior.
 
-\textbf{What we measure:} Manual edits only. Derived locations that update automatically have zero cost. This distinguishes DOF = 1 systems (where derivation handles propagation) from DOF $>$ 1 systems (where all updates are manual).
+\textbf{What we measure:} Manual edits only. Derived locations that update automatically have zero cost. This isolates the operational consequence of independent information: if a location carries its own freely editable value, it contributes to synchronization burden.
 
 \textbf{Asymptotic parameter:} We measure scaling in the number of encoding locations for fact $F$. Let $n = |\{L \in C : \text{encodes}(L, F)\}|$ and $k = \text{DOF}(C, F)$. Bounds of $O(1)$ and $\Omega(n)$ are in this parameter; in particular, the lower bound uses $n = k$ independent locations.
 
@@ -70,79 +70,177 @@ By Definition~\ref{def:independent}, the $n$ encoding locations are independent-
 Therefore, $M_{\text{effective}}(C, \delta_F) = \Omega(n)$.
 \end{proof}
 
-\subsection{Information-theoretic converse (mutual information / Fano)}\label{sec:info-converse}
+\subsection{Information-theoretic converse (finite counting)}\label{sec:info-converse}
 
-To make the converse argument explicit in information-theoretic terms we give a concise mutual-information / Fano-style bound showing that insufficient side information forces a non-vanishing error probability when attempting to recover structural facts from distributed encodings (\LH{UNQ1}, \LH{UNQ1}).
+To make the converse direction genuinely information-theoretic, we give a finite zero-error counting converse showing that insufficient side-information alphabet size makes exact recovery impossible (\LH{UNQ1}, \LH{UNQ1}). This is the bridge from ambiguity to complexity: if side information is insufficient, exact resolution fails, and systems that still demand correctness must pay through additional independent encodings and manual synchronization.
 
 \begin{remark}[Formalization status]
-The results in this subsection apply Fano's inequality, a standard tool in information theory~\cite{cover2006elements}. We state and apply these results without separate Lean formalization; the proofs are direct applications of the classical inequality. The core capacity and complexity theorems (Sections~\ref{sec:capacity}--\ref{sec:requirements}) are fully machine-checked.
+The results in this subsection are formalized in the source Lean tree as finite zero-error counting theorems rather than probabilistic Fano inequalities. The core capacity, side-information, realizability, and complexity chains are machine-checked in that exact form.
 \end{remark}
 
-\begin{theorem}[Fano-style Converse]\label{thm:fano-converse}
-Let $F$ be a discrete fact taking values in a set of size $K$. Let $S$ denote the available side information (derived locations, observations). Let $\hat F(S)$ be any estimator of $F$ based on $S$, and let $P_e = \Pr(\hat F \neq F)$. Then
+\begin{theorem}[Finite Counting Converse]\label{thm:fano-converse}
+Let $F$ range over $K$ possible values. Suppose exact resolution is attempted using an $L$-bit side-information tag and a decoder that must recover the correct value with zero error from that tag and a fixed observation transcript. Then
 \[
-I(F;S) \ge H(F) - H_b(P_e) - P_e\log(K-1),
+K \le 2^L.
 \]
-where $H_b(\cdot)$ is the binary entropy. In particular, if $P_e\to 0$ then $I(F;S)\to H(F)$, so $S$ must contain essentially $\log K$ bits about $F$.
+Equivalently, exact recovery of $K$ ambiguous states requires at least $\log_2 K$ bits of side information.
 \end{theorem}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}[Proof sketch]
-This is the standard Fano inequality. Let $\hat F$ be any estimator formed from $S$. Then
-\[
-\begin{aligned}
-H(F|S)
-&\le H(F|\hat F) + I(F;\hat F|S) \\
-&= H(F|\hat F) \\
-&\le H_b(P_e) + P_e\log(K-1),
-\end{aligned}
-\]
-and $I(F;S)=H(F)-H(F|S)$ yields the stated bound. The terms $H_b(P_e)$ and $P_e\log(K-1)$ vanish as $P_e\to0$, forcing $I(F;S)\approx H(F)$.
+There are only $2^L$ possible tags. In the strengthened Lean observer/tag model, exact recovery is equivalent to injectivity of the combined observation-plus-tag map (\LH{OBS1}, \LH{OBS2}). If the observation transcript is fixed, this reduces to injectivity of the tag map on the ambiguous states themselves. Hence two distinct values cannot share one tag under zero-error decoding, and injectivity is possible only when $K\le 2^L$.
 \end{proof}
 
-\noindent This inequality formalizes the intuition used in the main text: unless the derived/side-information channels collectively convey essentially the full entropy of the fact, perfect (or vanishing-error) recovery is impossible. Translating this to modification complexity shows that when side-information capacity is limited, systems must retain multiple independent encodings (higher DOF), incurring larger manual update costs.
+\noindent This converse formalizes the intuition used in the main text: unless the side-information channel has enough distinct tags to separate all ambiguous states, exact recovery is impossible. The modification-complexity consequence comes from the architectural fallback: when exact recovery cannot be certified from side information, systems that still require correctness must maintain or consult additional independent sources, which raises DOF and therefore update cost.
 
 \subsection{Information-constrained DOF lower bound}
 \label{sec:info-dof}
 
-The following lemma makes the link explicit between mutual-information capacity of side information and the necessity of multiple independent encodings.
+The following lemma makes that link explicit.
 
 \begin{lemma}[Information-constrained DOF Lower Bound]\label{lem:info-dof}
-Let $F$ be a fact uniformly distributed over $K$ values. Let $S$ be the collective side information provided by derived locations. If
-\[I(F;S) < \log K - \delta\]
-for some $\delta>0$, then any encoding system that guarantees vanishing-error recovery of $F$ from $S$ must include at least two independent encoding locations for some subset of values (i.e., DOF $>1$ for those values). Consequently, for facts encoded at $n$ independent locations the effective modification complexity satisfies $M_{\text{effective}}=\Omega(n)$.
+Let $F$ range over $K$ possible values. If the available side-information scheme exposes at most $2^L$ distinguishable tags with $K>2^L$, then no zero-error resolver can recover $F$ from those tags alone. Any architecture that nevertheless guarantees correctness must therefore retain additional independent encodings for some subset of values, hence DOF $>1$ on that subset. Consequently, for facts encoded at $n$ independent locations the effective modification complexity satisfies $M_{\text{effective}}=\Omega(n)$.
 \end{lemma}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}[Proof sketch]
-By Theorem~\ref{thm:fano-converse}, if $I(F;S)<\log K-\delta$ then any estimator has error probability bounded away from zero for the $K$-ary hypothesis. To achieve correctness despite the insufficient side information, the system must retain additional independent encodings that act as auxiliary sources of information about $F$; these independent encodings increase DOF. Once DOF$>1$ over a set of $n$ independent locations, Theorem~\ref{thm:lower-bound} implies $M_{\text{effective}}=\Omega(n)$, completing the chain from information constraints to modification complexity.
+By Theorem~\ref{thm:fano-converse}, if $K>2^L$ then the side-information tags are too small to support exact recovery of all $K$ possibilities. The strengthened Lean architecture layer makes this explicit: every exact-recovery architecture carries a formal support count, and that support count is lower-bounded both globally by the observation/support product bound (\LH{OBS7}) and locally by any confusability clique (\LH{OBS8}, \LH{OBS9}). In particular, observation-only architectures (support count $=1$) are impossible on nontrivial cliques (\LH{OBS10}). The new bridge theorem then identifies this support count with a concrete instance of the paper's `Dof.dof` semantics under a derivation-free support architecture (\LH{OBS11}); hence nontrivial cliques force a formal DOF strictly above one (\LH{OBS12}). Therefore, if correctness is still required under updates, the architecture must expose additional independently accessible discriminating support; in the paper's DOF reading, this means moving above the single-source regime. Once DOF$>1$ over a set of $n$ independent locations, Theorem~\ref{thm:lower-bound} implies $M_{\text{effective}}=\Omega(n)$.
 \end{proof}
 
-\subsection{Worked example: numeric mutual-information calculation}
+\subsection{Worked example: finite tag budget}
 \label{sec:worked-mi}
 
-Consider a fact $F$ uniformly distributed over $K=4$ values, so $H(F)=\log_2 4 = 2$ bits. Suppose the collective derived side information $S$ conveys only $I(F;S)=1$ bit about $F$ (for example, a summary or hash with one bit of mutual information).
+Consider a fact $F$ with $K=4$ possible values. Suppose the available side-information mechanism supplies only a 1-bit tag, so at most $2^1=2$ distinct tags are available.
 
-Apply the Fano-style bound (Theorem~\ref{thm:fano-converse}). Let $P_e$ denote the probability of incorrect recovery of $F$ from $S$. Then
+Apply Theorem~\ref{thm:fano-converse}. Exact recovery would require
 \[
-H(F|S) = H(F)-I(F;S) = 2 - 1 = 1\text{ bit.}
+4 \le 2^1,
 \]
-Fano's inequality gives
+which is false. So 1 bit of side information cannot resolve the 4-way ambiguity exactly.
+
+Interpretation: with only 2 available tags for 4 possible values, some pair of values must collide. Therefore, to guarantee exact recovery one must either supply more side information (increase $L$ until $2^L\ge 4$) or enrich the architecture with a nontrivial auxiliary channel; in the paper's systems reading, that means additional independently accessible discriminating information, which in turn raises manual modification costs per Theorem~\ref{thm:lower-bound}.
+
+By contrast, a 2-bit tag budget gives $2^2=4$ tags, which is just enough to distinguish all four values in principle.
+
+The same reasoning extends to a finite relaxed-error setting where exact recovery is only required on a designated subset of states: any confusability clique that must still be recovered exactly obeys the same tag-alphabet lower bound (\LH{OBS13}).
+
+More generally, the source proof tree now contains an explicit finite distribution/error layer. For a finite source distribution with point-mass ceiling $m$, the total probability of exactly recovered states is bounded by $(|\mathcal O|\cdot |\mathcal T|)m$ (\LH{PRB2}), so the error probability is bounded below by $1-(|\mathcal O|\cdot |\mathcal T|)m$ (\LH{PRB3}). For families of instances with a uniform budget-mass gap, this yields a fully mechanized non-vanishing-error theorem (\LH{PRB6}).
+
+For the uniform finite source, these bounds sharpen into a direct weak-Fano-style converse: success probability is at most the observation/tag budget fraction (\LH{PRB8}), hence any decoder with error at most $\varepsilon$ must satisfy
 \[
-H_b(P_e) + P_e\log_2(K-1) \ge H(F|S) = 1.
+1-\varepsilon \le \frac{|\mathcal O|\,|\mathcal T|}{K},
 \]
-Plugging $K-1=3$ and solving numerically yields a lower bound $P_e \gtrsim 0.19$ (approximately 19\% error). Concretely: $H_b(0.19)\approx 0.695$ and $0.19\log_2 3\approx 0.301$, summing to $\approx 0.996\approx1$.
+formalized in Lean as \LH{PRB9}. The strengthened source proofs also identify the exact success probability under the uniform source with the fraction of states decoded exactly (\LH{PRB11}, \LH{PRB12}), yielding a cardinality form of the same converse: low error forces a large exactly recovered subset (\LH{PRB13}), which is then bounded by the observation/tag budget to recover the weak-Fano inequality (\LH{PRB14}). Families with a uniform gap below this threshold cannot have vanishing error (\LH{PRB10}).
+
+The entropy layer now goes one step further: a fully mechanized partition identity shows that for the uniform source, the success/failure split satisfies
 \[
-H_b(0.19)\approx 0.695,\qquad
-0.19\log_2 3\approx 0.301,\qquad
-0.996\approx 1.
+\log K = h(P_e) + (1-P_e)\log |S| + P_e\log |F|,
 \]
+where $S$ is the exactly recovered subset and $F$ its complement (\LH{PRB15}). Combining this identity with the exact success-set budget bound yields an explicit finite Fano-style inequality in the source proof tree:
+\[
+\log K \le h(P_e) + (1-P_e)\log(|\mathcal O||\mathcal T|) + P_e\log(K-1)
+\]
+for the uniform finite source with nontrivial success/failure partition (\LH{PRB16}). In the observation-only specialization this reduces to a $q$-ary entropy bound (\LH{PRB17}).
 
-Interpretation: with only 1 bit of side information for a 2-bit fact, no estimator can recover $F$ with error lower than roughly 19\%; therefore, to guarantee vanishing error one must supply more side information (increase $I(F;S)$) or retain extra independent encodings (increase DOF), which in turn raises manual modification costs per Theorem~\ref{thm:lower-bound}.
+The source proofs then sharpen the observation-only case further: for a uniform $K$-state source, observation-only recovery succeeds with probability at most $1/K$ (\LH{PRB18}) and therefore has error probability at least $1-1/K$ (\LH{PRB19}).
 
-As a second illustration, if $I(F;S)=1.5$ bits then $H(F|S)=0.5$ and Fano's bound requires a much smaller $P_e$ (solve $H_b(P_e)+P_e\log_2 3\ge 0.5$ numerically to obtain $P_e\approx 0.08$), showing the smooth tradeoff between conveyed information and achievable error.
+Beyond the uniform case, the probabilistic layer now internalizes the source distribution itself through its maximum atom mass. For any finite source distribution, success probability is bounded by $(|\mathcal O||\mathcal T|)$ times the source's own max-mass parameter (\LH{PRB20}), giving an intrinsic error lower bound (\LH{PRB21}) and a weak-Fano-style converse without an externally supplied mass cap (\LH{PRB22}). Families with a uniform budget--max-mass gap cannot achieve vanishing error (\LH{PRB23}).
+
+The same intrinsic max-mass layer also yields a structural cardinality consequence: the exactly recovered subset must have size at least $(1-\varepsilon)/m_{\max}$ whenever the error probability is at most $\varepsilon$ (\LH{PRB24}, \LH{PRB25}). In the observation-only specialization, success is at most $m_{\max}$ and error is at least $1-m_{\max}$ for arbitrary finite sources (\LH{PRB26}, \LH{PRB27}).
+
+Finally, the arbitrary-source converse can be rewritten in min-entropy form. Defining $H_{\infty}(X)=-\log m_{\max}$, the source proofs now show
+\[
+P_{\mathrm{succ}} \le |\mathcal O||\mathcal T|\, e^{-H_{\infty}(X)},
+\qquad
+P_e \ge 1-|\mathcal O||\mathcal T|\, e^{-H_{\infty}(X)},
+\]
+formalized as \LH{PRB28} and \LH{PRB29}. This gives a clean min-entropy interpretation of the finite-source converse.
+
+The min-entropy layer also yields an exact-recovery-set interpretation: if error is at most $\varepsilon$, then the exactly recovered subset must have size at least $(1-\varepsilon)e^{H_{\infty}(X)}$ (\LH{PRB32}), and therefore the available observation/tag budget must satisfy the same lower bound (\LH{PRB33}).
+
+The source layer also now defines a Shannon-style finite entropy for arbitrary finite sources and proves the entropy sandwich $H_{\infty}(X)\le H(X)$ (\LH{PRB31}), with the uniform finite source attaining $H(X)=\log K$ exactly (\LH{PRB30}). This gives a clean conceptual relation between the earlier uniform-source Fano bounds and the later arbitrary-source min-entropy converses.
+
+It also now records the finite-cardinality ceiling directly at the source level: every $K$-state source satisfies $1/K\le m_{\max}$ (\LH{PRB34}), hence
+\[
+H_{\infty}(X) \le \log K,
+\]
+formalized as \LH{PRB35}. In the observation-only specialization, the min-entropy converse collapses to the intrinsic one-state budget bound
+\[
+P_{\mathrm{succ}} \le e^{-H_{\infty}(X)},
+\qquad
+P_e \ge 1-e^{-H_{\infty}(X)},
+\]
+formalized as \LH{PRB36} and \LH{PRB37}. This isolates the best possible observation-only performance directly in terms of source concentration, without introducing any auxiliary alphabet-size parameter.
+
+The Shannon layer now closes the other side of the finite-source picture as well. The source entropy is always nonnegative (\LH{PRB38}) and is upper-bounded by the ambient alphabet entropy,
+\[
+H(X) \le \log K,
+\]
+formalized as \LH{PRB39}. Combined with the previously mechanized min-entropy lower comparison (\LH{PRB31}), the source proof tree now contains the full finite entropy chain
+\[
+H_{\infty}(X) \le H(X) \le \log K,
+\]
+so the arbitrary-source converses are no longer expressed only through max-mass and min-entropy, but also situated inside the standard Shannon entropy envelope of the finite alphabet.
+
+\subsection{Unified Converse Viewpoint}\label{sec:unified-converse}
+
+The point of this section is that the many finite lemmas are not separate claims but one converse family. Let $X$ be the latent source, let $Y=(O,T)$ denote the deterministic observation/tag transcript, and let $\hat X$ denote any deterministic decoder output. Then the source proof tree supports the following synthesis:
+\begin{theorem}[Unified finite converse, informal synthesis]
+If the observation transcript does not already isolate the true state, then the same finite budget simultaneously constrains
+\begin{enumerate}
+\tightlist
+\item zero-error resolution of ambiguity classes and confusability cliques,
+\item the conditional entropy $H(X\mid Y)$,
+\item the decoder-output entropy $H(\hat X)$,
+\item the deterministic mutual information $I(X;Y)=H(Y)$,
+\item and the entropy deficits $\log |\mathcal Y|-H(Y)$ and $\log |\hat{\mathcal X}|-H(\hat X)$ via KL divergence from the corresponding uniform output laws.
+\end{enumerate}
+Equivalently, the paper's counting, clique, Fano-style, decoder-output, and PMF/KL statements are different normal forms of one finite converse theorem family.
+\end{theorem}
+
+Read the theorem stack in that order: exact zero-error separation first, then entropy converses, then PMF/KL saturation and gap witnesses. The same obstruction simply reappears in several classical information-theoretic languages.
+
+The unified converse can be read in four compressed layers.
+
+\textbf{Min-entropy and Shannon envelope.} The budget first appears as a min-entropy bound:
+\[
+H_{\infty}(X) \le \log(|\mathcal O||\mathcal T|) - \log(1-\varepsilon),
+\]
+formalized as \LH{PRB40}, with the observation-only specialization \LH{PRB41}. Together with the finite-source envelope
+\[
+H_{\infty}(X) \le H(X) \le \log K
+\]
+(\LH{PRB31}, \LH{PRB38}, \LH{PRB39}), this places the later Fano-style converses inside a standard entropy hierarchy.
+
+\textbf{Source-side Fano and conditional entropy.} For arbitrary finite sources, the source entropy obeys the exact success/failure partition bound \LH{PRB42}, the budgeted Fano inequality
+\[
+H(X) \le h(P_e) + (1-P_e)\log(|\mathcal O||\mathcal T|) + P_e\log(K-1),
+\]
+(\LH{PRB43}), and its observation-only specialization \LH{PRB44}. The same family admits a conditional-entropy form: the model defines a genuine deterministic $H(X\mid Y)$ with chain rule \LH{PRB47}, yields
+\[
+H(X\mid Y) \le h(P_e) + (1-P_e)\log(|\mathcal O||\mathcal T|) + P_e\log(K-1)
+\]
+(\LH{PRB50}), and specializes to observation-only as \LH{PRB51}. The graph layer meets this Shannon layer through clique-sensitive entropy bounds \LH{PRB54} and \LH{PRB55}.
+
+\textbf{Observation-side mutual information and KL gaps.} The same model identifies deterministic mutual information with output entropy,
+\[
+I(X;Y)=H(Y)=H(X)-H(X\mid Y),
+\]
+formalized by \LH{PRB49}, \LH{PRB57}, and \LH{PRB58}. The same layer gives the budget and source ceilings \LH{PRB52}, \LH{PRB53}, \LH{PRB60}, \LH{PRB62}, and \LH{PRB63}, deterministic data processing under coarsenings \LH{PRB64}--\LH{PRB68}, and a PMF/KL saturation story: zero KL to the uniform output law forces $H(Y)=I(X;Y)=\log(|\mathcal O||\mathcal T|)$ (\LH{PRB69}--\LH{PRB76}, \LH{ENT10}--\LH{ENT12}).
+
+\textbf{Decoder-output and success/failure forms.} The success/failure indicator is itself a finite pushforward source and Bernoulli PMF with entropy exactly $h(P_e)$ (\LH{PRB56}, \LH{PRB77}, \LH{PRB79}, \LH{ENT9}). The decoder output obeys the same converse program:
+\[
+H(\hat X) \le I(X;Y) \le H(X),
+\]
+with explicit source and alphabet gaps \LH{PRB81}--\LH{PRB83}, a decoder-native Fano bound
+\[
+H(\hat X) \le h(P_e) + (1-P_e)\log(|\mathcal O||\mathcal T|) + P_e\log(K-1)
+\]
+(\LH{PRB84}, \LH{PRB85}, \LH{PRB87}), with its own PMF/KL saturation story on `$\mathrm{Fin}(K+1)$` (\LH{PRB91}--\LH{PRB95}, \LH{ENT13}). The observable/random-variable wrappers simply package these deterministic pushforwards in a reusable interface.
 
 
 
-\textbf{Tightness (Achievability + Converse).} Theorems~\ref{thm:upper-bound} and~\ref{thm:lower-bound} form a tight information-theoretic bound: DOF = 1 achieves constant modification cost (achievability), while any encoding with more than one independent location incurs linear cost in the number of independent encodings (converse) (\LH{UNQ1}, \LH{UNQ1}). There is no intermediate regime with sublinear manual edits when $k > 1$ independent encodings are permitted.
+\textbf{Tightness (Achievability + Converse).} Theorems~\ref{thm:upper-bound} and~\ref{thm:lower-bound} together show that the operational cost transition at rate $1$ is sharp: rate $1$ achieves constant manual cost, while any architecture with more than one independent location incurs linear cost in the number of independent encodings (\LH{UNQ1}, \LH{UNQ1}).
 
 \subsection{The Unbounded Gap}\label{sec:gap}
 
@@ -178,7 +276,7 @@ Choose $n = k$. Then $M_{\text{DOF}>1}(n) = n = k$ and $M_{\text{DOF}=1} = 1$. T
 
 \subsection{The (R, C, P) Tradeoff Space}\label{sec:rcp-tradeoff}
 
-We now formalize the complete tradeoff space, analogous to rate-distortion theory in classical information theory (\LH{UNQ1}, \LH{UNQ1}, \LH{UNQ1}).
+We now summarize the tradeoff space induced by the model.
 
 \begin{definition}[(R, C, P) Tradeoff]\label{def:rcp-tradeoff}
 For an encoding system, define:
@@ -224,6 +322,7 @@ The \emph{Pareto frontier} is the set of all Pareto optimal points.
 \begin{theorem}[Pareto Optimality of DOF = 1]\label{thm:pareto-optimal}
 $(R=1, C=1, P=1)$ is the unique Pareto optimal point for encoding systems requiring coherence ($P = 1$).
 \end{theorem}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 We show $(1, 1, 1)$ is Pareto optimal and unique:
@@ -241,11 +340,12 @@ We show $(1, 1, 1)$ is Pareto optimal and unique:
 \textbf{Uniqueness:} No other point achieves $P = 1$ except $R = 1$.
 \end{proof}
 
-\textbf{Information-theoretic interpretation.} The Pareto frontier in rate-distortion theory is the curve $R(D)$ of minimum rate achieving distortion $D$. Here, the ``distortion'' is $1 - P$ (indicator of incoherence reachability), and the Pareto frontier collapses to a single point: $R = 1$ is the unique rate achieving $D = 0$.
+\textbf{Information-theoretic interpretation.} If one uses $1-P$ as a coarse distortion surrogate, then the zero-distortion boundary collapses to a single point: $R=1$ is the only rate achieving perfect coherence.
 
 \begin{corollary}[No Tradeoff at $P = 1$]\label{cor:no-tradeoff}
 Unlike rate-distortion where you can trade rate for distortion, there is no tradeoff at $P = 1$ (perfect coherence). The only option is $R = 1$.
 \end{corollary}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 Direct consequence of Theorem~\ref{thm:coherence-capacity}.
@@ -267,11 +367,11 @@ In our framework:
 \item $P = 1$ (perfect coherence) requires $R = 1$ exactly
 \end{itemize}
 
-The key difference: redundancy (higher $R$) \emph{hurts} rather than helps coherence (without coordination). This inverts the intuition from error-correcting codes, where redundancy enables error detection/correction. Here, redundancy without derivation enables errors (incoherence).
+The key difference is that extra independent representations increase ambiguity unless they are coordinated by derivation. In this setting, uncontrolled redundancy hurts exact consistency.
 
 \subsection{Practical Implications}\label{sec:practical-implications}
 
-The unbounded gap has practical implications:
+The unbounded gap has practical implications, but these should be read as consequences of the abstract rate/computation result rather than as the main theorem of the paper:
 
 \textbf{1. DOF = 1 matters more at scale.} For small systems ($n = 3$), the difference between 3 edits and 1 edit is minor. For large systems ($n = 50$), the difference between 50 edits and 1 edit is significant.
 
@@ -310,6 +410,7 @@ Let fact $F$ be modified $m$ times over the system lifetime. Let $n$ be the numb
 \item DOF = $n > 1$: $O(mn)$
 \end{itemize}
 \end{theorem}
+\leanmeta{\LH{UNQ1}}
 
 \begin{proof}
 Each modification costs $O(1)$ with DOF = 1 and $O(n)$ with DOF = $n$. Over $m$ modifications, total cost is $m \cdot O(1) = O(m)$ with DOF = 1 and $m \cdot O(n) = O(mn)$ with DOF = $n$.

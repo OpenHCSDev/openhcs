@@ -1,0 +1,83 @@
+\section{Counting Preliminaries}\label{sec:counting-preliminaries}
+
+Before probabilities, entropies, and Bayesian updates, we fix the discrete counting layer used throughout the paper.
+
+\subsection{The Counting Gap Theorem}
+
+\begin{theorem}[Counting Gap]\label{thm:counting-gap}
+Let $\varepsilon, C \in \mathbb{N}$ with $\varepsilon>0$. If each information-acquisition event consumes at least $\varepsilon$ cost units and total capacity is $C$, then the number of admissible events satisfies
+\[
+N \le \left\lfloor\frac{C}{\varepsilon}\right\rfloor.
+\]
+In the unit-cost normalization $\varepsilon=1$, this is $N\le C$.
+\end{theorem}
+
+\begin{proof}
+Let $N$ be the number of admitted events. By hypothesis, each event consumes at least $\varepsilon$, so total consumption is at least $N\varepsilon$. Feasibility under budget $C$ therefore requires
+\[
+N\varepsilon \le C.
+\]
+Because $\varepsilon>0$, division gives $N \le C/\varepsilon$. Since $N\in\mathbb{N}$, this is equivalent to
+\[
+N \le \left\lfloor C/\varepsilon \right\rfloor.
+\]
+Setting $\varepsilon=1$ yields $N\le C$.
+\end{proof}
+
+\subsection{Measure Before Probability}
+
+\begin{theorem}[Measure Before Probability]\label{thm:measure-prerequisite}
+Quantitative claims require a specified measure, while probabilistic claims require a normalized measure. Counting measure on a finite set is therefore a precursor to probability, not probability itself, until normalization is performed.
+\end{theorem}
+
+\begin{proof}
+Any quantitative aggregate (e.g., expectation, average cost, entropy with respect to weights) is defined relative to a measure. On a finite space, counting gives a canonical measure $\mu(E)=|E|$, but this has total mass $|\Omega|$, not $1$ in general. A probability model is obtained only after normalization:
+\[
+P(E)=\frac{\mu(E)}{\mu(\Omega)}.
+\]
+Hence the logical order is measure first, probability second.
+\end{proof}
+
+\subsection{Finite Probability from Counting}
+
+\begin{theorem}[Counting Induces Finite Probability]\label{thm:bayes-from-counting}
+Let $\Omega$ be a finite nonempty set and define $P(E)=|E|/|\Omega|$. Then:
+\begin{enumerate}
+\item $P$ satisfies the finite Kolmogorov axioms;
+\item conditional probability and Bayes' rule follow algebraically wherever denominators are nonzero;
+\item mutual information is well-defined after normalization;
+\item the normalized decision-quotient score $\DQ=I(H;E)/H(H)$ lies in $[0,1]$ whenever $H(H)>0$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\textbf{(1) Kolmogorov axioms.}
+Nonnegativity is immediate from cardinality. Normalization holds because
+\[
+P(\Omega)=\frac{|\Omega|}{|\Omega|}=1.
+\]
+For disjoint $E,F\subseteq \Omega$,
+\[
+P(E\cup F)=\frac{|E\cup F|}{|\Omega|}=\frac{|E|+|F|}{|\Omega|}=P(E)+P(F).
+\]
+
+\textbf{(2) Conditional probability and Bayes.}
+For $P(E)>0$, define $P(H\mid E)=P(H\cap E)/P(E)$. Then
+\[
+P(H\cap E)=P(H\mid E)P(E)=P(E\mid H)P(H),
+\]
+and rearranging gives Bayes' rule wherever denominators are nonzero.
+
+\textbf{(3) Mutual information.}
+After normalization, $(H,E)$ is an ordinary finite pair of random variables, so $I(H;E)$ is well-defined by its standard finite-sum formula.
+
+\textbf{(4) DQ bound.}
+For $H(H)>0$, standard finite information inequalities give
+\[
+0 \le I(H;E) \le H(H),
+\]
+thus
+\[
+0 \le \DQ = \frac{I(H;E)}{H(H)} \le 1.
+\]
+\end{proof}

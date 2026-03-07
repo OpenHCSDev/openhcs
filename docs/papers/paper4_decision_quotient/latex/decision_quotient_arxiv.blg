@@ -4,45 +4,45 @@ The top-level auxiliary file: decision_quotient_arxiv.aux
 The style file: plain.bst
 Database file #1: references.bib
 Warning--can't use both volume and number fields in cichocki2016tensor
-You've used 38 entries,
+You've used 35 entries,
             2118 wiz_defined-function locations,
-            736 strings with 9943 characters,
-and the built_in function-call counts, 13232 in all, are:
-= -- 1356
-> -- 492
-< -- 15
-+ -- 207
-- -- 158
-* -- 879
-:= -- 2102
-add.period$ -- 119
-call.type$ -- 38
-change.case$ -- 188
+            719 strings with 9580 characters,
+and the built_in function-call counts, 12129 in all, are:
+= -- 1233
+> -- 471
+< -- 13
++ -- 196
+- -- 152
+* -- 819
+:= -- 1942
+add.period$ -- 108
+call.type$ -- 35
+change.case$ -- 176
 chr.to.int$ -- 0
-cite$ -- 39
-duplicate$ -- 546
-empty$ -- 1104
-format.name$ -- 158
-if$ -- 2836
+cite$ -- 36
+duplicate$ -- 491
+empty$ -- 1000
+format.name$ -- 152
+if$ -- 2581
 int.to.chr$ -- 0
-int.to.str$ -- 38
-missing$ -- 46
-newline$ -- 193
-num.names$ -- 76
-pop$ -- 203
+int.to.str$ -- 35
+missing$ -- 43
+newline$ -- 178
+num.names$ -- 70
+pop$ -- 189
 preamble$ -- 1
-purify$ -- 155
+purify$ -- 146
 quote$ -- 0
-skip$ -- 397
+skip$ -- 355
 stack$ -- 0
-substring$ -- 979
-swap$ -- 145
-text.length$ -- 15
+substring$ -- 887
+swap$ -- 124
+text.length$ -- 13
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 136
+type$ -- 124
 warning$ -- 1
-while$ -- 146
-width$ -- 40
-write$ -- 424
+while$ -- 132
+width$ -- 37
+write$ -- 389
 (There was 1 warning)
