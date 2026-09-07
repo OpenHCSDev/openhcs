@@ -50,6 +50,36 @@ openhcs_attach_readonly_disk_image() {
   _openhcs_attach_disk_image -readonly "$1" "$2"
 }
 
+_openhcs_disk_image_holders() {
+  local mounted_device=$1
+  local family_plist member member_plist parent
+  local index=0
+  local device_paths=()
+
+  [[ "$mounted_device" =~ ^/dev/disk[0-9]+$ ]] || return 1
+  family_plist=$(/usr/sbin/diskutil list -plist "$mounted_device") || return 1
+  printf '%s\n' "$family_plist" >&2
+  while member=$(printf '%s\n' "$family_plist" | \
+    /usr/bin/plutil -extract "AllDisks.$index" raw -o - - 2>/dev/null); do
+    [[ "$member" =~ ^disk[0-9]+(s[0-9]+)*$ ]] || return 1
+    member_plist=$(/usr/sbin/diskutil info -plist "/dev/$member") || return 1
+    parent=$(printf '%s\n' "$member_plist" | \
+      /usr/bin/plutil -extract ParentWholeDisk raw -o - -) || return 1
+    if [[ "/dev/$parent" != "$mounted_device" ]]; then
+      printf 'Device %s is not owned by %s; skipping holder inspection.\n' \
+        "$member" "$mounted_device" >&2
+      return 1
+    fi
+    # Disk Arbitration checks raw whole/child devices when eject is busy.
+    device_paths+=("/dev/$member" "/dev/r$member")
+    index=$((index + 1))
+  done
+  ((index > 0)) || return 1
+  # Noninteractive elevation exposes root-owned handles without prompting or
+  # changing anything. Failure diagnostics remain visible in the build log.
+  /usr/bin/sudo -n /usr/sbin/lsof -nP -- "${device_paths[@]}" >&2
+}
+
 openhcs_detach_disk_image() {
   local mounted_device=$1
 
@@ -61,14 +91,15 @@ openhcs_detach_disk_image() {
   printf 'Releasing the still-attached owned disk image %s after normal detach.\n' \
     "$mounted_device" >&2
   /usr/sbin/diskutil info -plist "$mounted_device" >&2 || true
-  /usr/sbin/diskutil list -plist "$mounted_device" >&2 || true
-  /usr/sbin/lsof -nP -- "$mounted_device" >&2 || true
+  _openhcs_disk_image_holders "$mounted_device" || true
   # Release filesystems separately from their backing image. Disk Arbitration
   # reports unmount dissent here; preserve it rather than retrying a busy eject.
   /usr/sbin/diskutil unmountDisk force "$mounted_device" >&2 || true
-  /usr/bin/hdiutil detach -verbose -force "$mounted_device" || true
+  /usr/bin/hdiutil detach -debug -force "$mounted_device" || true
   if test -e "$mounted_device"; then
     printf 'Owned disk image remains attached: %s.\n' "$mounted_device" >&2
+    /usr/bin/log show --last 2m --style compact --info --debug \
+      --predicate "process == 'diskarbitrationd' AND eventMessage MATCHES '.*\\\\b${mounted_device#/dev/}(s[0-9]+)*\\\\b.*'" >&2 || true
     return 1
   fi
 }

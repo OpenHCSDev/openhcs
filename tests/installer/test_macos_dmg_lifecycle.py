@@ -57,10 +57,11 @@ elif tool == "diskutil":
         state_path.write_text(json.dumps(state))
         print("Owned volume unmount diagnostic", file=sys.stderr)
         raise SystemExit(state["unmount_status"])
-    elif args == ["info", "-plist", "/dev/disk4"]:
-        emit({"DeviceIdentifier": "disk4", "WholeDisk": True})
     elif args == ["list", "-plist", "/dev/disk4"]:
-        emit({"AllDisks": ["disk4", "disk4s1"]})
+        emit({"AllDisks": state["family"]})
+    elif args[:2] == ["info", "-plist"] and args[-1].startswith("/dev/"):
+        member = args[-1].removeprefix("/dev/")
+        emit({"DeviceIdentifier": member, "ParentWholeDisk": state["parents"][member]})
     elif args[:2] == ["info", "-plist"]:
         assert args[-1] == state["requested_mount"]
         emit(state["volume"])
@@ -72,10 +73,15 @@ elif tool == "test":
     # The partition is absent after partial detach; the whole device persists.
     exists = state["attached"]
     raise SystemExit(0 if (not exists if args[0] == "!" else exists) else 1)
-elif tool == "lsof":
-    assert args == ["-nP", "--", "/dev/disk4"]
+elif tool == "sudo":
+    assert args[:4] == ["-n", "/usr/sbin/lsof", "-nP", "--"]
     print("Owned device holder diagnostic", file=sys.stderr)
-    raise SystemExit(1)
+    raise SystemExit(state["holder_status"])
+elif tool == "log":
+    assert args[:7] == ["show", "--last", "2m", "--style", "compact", "--info", "--debug"]
+    assert args[7] == "--predicate"
+    assert args[8] == "process == 'diskarbitrationd' AND eventMessage MATCHES '.*\\\\bdisk4(s[0-9]+)*\\\\b.*'"
+    print("Owned Disk Arbitration failure diagnostic", file=sys.stderr)
 elif tool == "plutil":
     payload = plistlib.loads(sys.stdin.buffer.read())
     try:
@@ -116,6 +122,9 @@ def lifecycle_harness(tmp_path: Path):
         "normal_removes_disk": True,
         "force_status": 0,
         "force_removes_disk": True,
+        "family": ["disk4", "disk4s1"],
+        "parents": {"disk4": "disk4", "disk4s1": "disk4"},
+        "holder_status": 1,
     }
     state_path, log_path = tmp_path / "state.json", tmp_path / "commands.jsonl"
 
@@ -129,7 +138,8 @@ def lifecycle_harness(tmp_path: Path):
                 ("/usr/bin/hdiutil", "hdiutil"),
                 ("/usr/sbin/diskutil", "diskutil"),
                 ("/usr/bin/plutil", "plutil"),
-                ("/usr/sbin/lsof", "lsof"),
+                ("/usr/bin/sudo", "sudo"),
+                ("/usr/bin/log", "log"),
                 ("/bin/sync", "sync"),
                 ("test", "test"),
             )
@@ -253,7 +263,7 @@ def test_detach_proves_backing_device_absence(
         assert detach_calls[1] == [
             "hdiutil",
             "detach",
-            "-verbose",
+            "-debug",
             "-force",
             "/dev/disk4",
         ]
@@ -266,12 +276,82 @@ def test_detach_proves_backing_device_absence(
         assert "Resource busy" in result.stderr
     if not success:
         assert "remains attached" in result.stderr
-    assert calls[-1] == (
+    terminal_check = (
         ["test", "!", "-e", "/dev/disk4"]
         if normal_removes_disk
         else ["test", "-e", "/dev/disk4"]
     )
+    assert terminal_check in calls
+    assert any(call[0] == "log" for call in calls) is (not success)
+    if not success:
+        assert "Owned Disk Arbitration failure diagnostic" in result.stderr
     assert ["diskutil", "info", "/dev/disk4"] not in calls
+
+
+@pytest.mark.parametrize("family", [["disk4", "disk4s1"], ["disk4s1", "disk4"]])
+def test_holder_probe_covers_declared_raw_and_block_device_family(
+    lifecycle_harness, family
+):
+    _state, run = lifecycle_harness
+    result, calls = run(
+        'openhcs_detach_disk_image "$mounted_device"',
+        normal_removes_disk=False,
+        family=family,
+    )
+    assert result.returncode == 0, result.stderr
+    holder_calls = [call for call in calls if call[0] == "sudo"]
+    assert holder_calls == [
+        [
+            "sudo",
+            "-n",
+            "/usr/sbin/lsof",
+            "-nP",
+            "--",
+            *(
+                path
+                for member in family
+                for path in (f"/dev/{member}", f"/dev/r{member}")
+            ),
+        ]
+    ]
+
+
+@pytest.mark.parametrize(
+    ("family", "parents"),
+    [
+        (["disk4", "disk0s1"], {"disk4": "disk4", "disk0s1": "disk0"}),
+        (["disk4", "../../somewhere"], {"disk4": "disk4"}),
+        ([], {}),
+    ],
+)
+def test_holder_probe_does_not_expand_to_unvalidated_devices(
+    lifecycle_harness, family, parents
+):
+    _state, run = lifecycle_harness
+    result, calls = run(
+        'openhcs_detach_disk_image "$mounted_device"',
+        normal_removes_disk=False,
+        family=family,
+        parents={"disk4": "disk4", **parents},
+    )
+    assert result.returncode == 0, result.stderr
+    assert not any(call[0] == "sudo" for call in calls)
+    assert all(
+        call[-1] == "/dev/disk4" for call in calls if call[:2] == ["hdiutil", "detach"]
+    )
+
+
+def test_unavailable_privileged_diagnostics_do_not_change_detach_outcome(
+    lifecycle_harness,
+):
+    _state, run = lifecycle_harness
+    result, calls = run(
+        'openhcs_detach_disk_image "$mounted_device"',
+        normal_removes_disk=False,
+        holder_status=77,
+    )
+    assert result.returncode == 0, result.stderr
+    assert len([call for call in calls if call[:2] == ["hdiutil", "detach"]]) == 2
 
 
 @pytest.mark.parametrize(
@@ -364,6 +444,31 @@ def test_native_busy_disk_image_detaches_and_retains_payload(tmp_path: Path):
         ).stdout.strip()
         assert Path(device).exists()
         assert (mount / "payload.txt").read_text() == "OpenHCS disk-image round trip.\n"
+        # A root-owned raw-device handle must be visible even though the block
+        # device alone does not identify it. Inspect without changing the image.
+        with subprocess.Popen(
+            [
+                "/usr/bin/sudo",
+                "-n",
+                sys.executable,
+                "-c",
+                "import os,signal,sys; signal.alarm(30); stream=open(sys.argv[1],'rb'); "
+                "print(os.getpid(),flush=True); sys.stdin.read()",
+                str(Path(device).with_name("r" + Path(device).name)),
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+        ) as raw_holder:
+            try:
+                assert select.select([raw_holder.stdout], [], [], 10)[0]
+                holder_pid = int(raw_holder.stdout.readline().strip())
+                diagnostics = lifecycle(
+                    f"_openhcs_disk_image_holders {shlex.quote(device)}"
+                )
+                assert str(holder_pid) in diagnostics.stderr.split()
+            finally:
+                raw_holder.communicate(timeout=10)
         lifecycle(f"openhcs_detach_disk_image {shlex.quote(device)}")
         assert not Path(device).exists()
         device = ""
