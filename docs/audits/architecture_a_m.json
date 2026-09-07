@@ -1679,7 +1679,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "60199e01ab6f91d79722b71349d84120357d61a2c11592e13624bb868a7dc8e5",
+    "source_sha256": "ff79fa3ccce213726fb9878027a541be4b60e1a9fc2d988b5d9ba182524e3b31",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -1754,13 +1754,13 @@
       },
       {
         "path": "openhcs/mcp/stdio.py",
-        "sha256": "adc002730f0552d5a5a76c3b04de1d764e194632cf86c1754b659479a53b6257",
-        "role": "Owns process-wide protocol stdout reservation and routes ordinary Python and native output to stderr."
+        "sha256": "9dadd1c7d46727688315cc51e8d5dcb8b9f8148522b441eabdf2400cebdbc56f",
+        "role": "Owns protocol stdin and stdout reservation, isolates application input and native-library probes, and routes application output to stderr."
       },
       {
         "path": "tests/unit/agent/test_mcp_stdio_transport.py",
-        "sha256": "cb7076c2520b4ed3d3a35a3ac5a30545494d3af213437e18becc7753c33f742b",
-        "role": "Proves a persistent stdio session remains valid after both Python and descriptor-level stdout noise."
+        "sha256": "4aabb6bb92b748992678c07d563512cd2a9d0b8395fa6402c381ed2394339af4",
+        "role": "Proves persistent protocol isolation, cold native imports after handshake, and process-handle restoration on normal and exceptional exits."
       },
       {
         "path": "openhcs/mcp/http.py",
@@ -1814,7 +1814,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "d551e4139623fe7e94096e5cf831b933b01d532138ffc674caffeb7b8b005188",
+        "sha256": "551c4362e863b0802f98565ec1e2fc55a4327e887625ecb73cbb3a66c065bc71",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -1887,7 +1887,8 @@
       "On 2026-08-27, re-read and revised the complete distribution explanation after Intel native acceptance exposed an upstream wheel-availability boundary; one desktop profile now projects its binary-wheel policy into both initial installation and staged update.",
       "On 2026-08-27, applied the Diataxis explanation boundary and re-read the complete page against the MCP wire session and progress binder; revised it to name progress-aware transport inactivity and the absence of a duplicate absolute client ceiling.",
       "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
-      "Re-read the complete explanation on 2026-09-07 against the invocation-wide verbose stack diagnostic and both declared thread-policy regressions. Clarified that liveness can continue while a worker is blocked; diagnostic scope changes neither execution context nor completion semantics."
+      "Re-read the complete explanation on 2026-09-07 against the invocation-wide verbose stack diagnostic and both declared thread-policy regressions. Clarified that liveness can continue while a worker is blocked; diagnostic scope changes neither execution context nor completion semantics.",
+      "On 2026-09-07, reviewed the channel-ownership explanation against real persistent MCP cold-import and descriptor-restoration tests. The transport now reserves stdin as well as stdout through existing SDK hooks; native-library initialisation sees empty application stdin, with no capability-local preload list. Bootstrap changes only the reservation entry point."
     ]
   },
   {

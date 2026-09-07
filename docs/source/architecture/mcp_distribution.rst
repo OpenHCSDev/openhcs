@@ -61,11 +61,16 @@ the unique ``OpenHCSZMQConfig`` field in the canonical ``UIConfig`` Python
 document. The projection derives the field from the dataclass schema and does
 not construct unrelated UI configuration or import Qt.
 
-The stdio transport reserves process stdout before constructing the server.
-JSON-RPC uses a dedicated duplicate of the original stdout descriptor, while
-ordinary Python output and native writes to descriptor 1 are routed to stderr
-for the lifetime of the process. This boundary belongs to the transport;
-individual capabilities and services do not carry local stdout guards.
+The stdio transport reserves process stdin and stdout before constructing the
+server. JSON-RPC uses dedicated duplicates of the original descriptors through
+the SDK's input and output hooks. Application stdin is redirected to the null
+device, while ordinary Python output and native writes to descriptor 1 are
+routed to stderr. This also isolates native-library initialisation from the
+protocol reader: on Windows, a library inspecting standard input can otherwise
+block behind a pending pipe read. Libraries can therefore remain lazily imported
+inside capabilities. The transport restores the process channels when its
+context exits; individual capabilities and services do not carry I/O guards or
+native-library preload lists.
 
 Installing the GUI with the MCP server is a packaging convenience, not a reason
 to merge their process lifetimes. MCP startup must remain usable in a headless

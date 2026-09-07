@@ -170,7 +170,7 @@ def run_bootstrapped_server(
     """Run the OpenHCS MCP server with transport-owned protocol stdout."""
     from openhcs.mcp.stdio import McpStdioTransport
 
-    with McpStdioTransport.reserve_process_stdout() as stdio_transport:
+    with McpStdioTransport.reserve_process_stdio() as stdio_transport:
         try:
             server = (
                 build_bootstrapped_server()
