@@ -57,7 +57,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "8e98fa89a89b5373b52761ff314faf6854d2db7ec76c841b4f20866af3acf7cd",
+        "sha256": "3c743017c829ca1c22d37ffc17dcf9530b3a2eccdcda7a5f8c6868b526bc3c35",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
@@ -96,7 +96,8 @@
       "On 2026-08-27, re-read the complete project page after library registries gained declaration-owned runtime-parameter exclusions; the public function-discovery and UI-integration claims remain accurate.",
       "On 2026-08-27, re-read the complete project page against the final callable-authoring, package-floor, and CellProfiler import declarations; non-authorable runtime controls remain hidden, supported cppipe files still lower into ordinary pipeline declarations, and interactive-only CellProfiler modules now fail clearly without changing the page's public claims.",
       "On 2026-09-07, re-read the complete explanation page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
-      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   }
 ]

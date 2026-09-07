@@ -196,9 +196,10 @@ Failure diagnosis
 -----------------
 
 The installed GUI probe enables Python's fault handler before loading Qt. The
-PyPI installation jobs retain their GUI phase journal, snapshots, OpenHCS logs,
-and available macOS crash reports as ``pypi-gui-*`` artifacts, including
-failed runs. A ready-window result does not replace a successful process exit;
+PyPI installation jobs retain their GUI phase journal, snapshots, and OpenHCS
+logs as ``pypi-gui-*`` artifacts, including failed runs. macOS jobs separately
+retain available native crash reports as ``pypi-gui-crash-*`` artifacts.
+A ready-window result does not replace a successful process exit;
 use the phase journal and crash report to distinguish startup from teardown
 failures.
 

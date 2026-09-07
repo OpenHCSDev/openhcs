@@ -241,6 +241,12 @@ operations. Clients treat those notifications as transport activity, not as
 proof of completion or permission to extend any operation-owned maximum
 duration.
 
+Synthetic-plate generation uses this worker-safe route for the complete service
+call, including plate inspection after image files have been written. Its
+generator owns a separate random state, so concurrent requests preserve seeded
+pixels without changing the caller's random sequence. Progress remains active
+until inspection and the typed result are complete.
+
 Source-backed orchestrator-session creation remains on the MCP process's main
 thread because its import and compiler-facing setup is thread-sensitive. The
 binder emits the standard ``started`` progress event before entering that

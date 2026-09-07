@@ -1939,6 +1939,7 @@ class SearchKnowledgeCapability(
 
 
 class GenerateSyntheticPlateCapability(PlatePathCapability):
+    progress_heartbeat_seconds = 5.0
     name = "openhcs_generate_synthetic_plate"
     cli_command = "generate-synthetic-plate"
     cli_aliases = ("synthetic-plate",)

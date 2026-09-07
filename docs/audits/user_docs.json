@@ -930,7 +930,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5c18de1d82405d5f6c56720ab73ed6e649f48164953cd706033d57a5183cc621",
+        "sha256": "8939e52e20b2f9adb009107910fc691725b85d58da9949934a8554d8c17a5cec",
         "role": "Exercises Windows and macOS native installers and their staged-update transition in installed environments."
       },
       {
@@ -999,7 +999,8 @@
       "On 2026-08-27, re-read the complete installation how-to against the integration workflow's exact-head concurrency declaration; installation, launch, verification, and update guidance remain unchanged.",
       "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml; and the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read the complete installation how-to against the current native-installation workflow; adding failure evidence retention does not change the installation requirements or steps.",
-      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {
@@ -1197,7 +1198,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "8e98fa89a89b5373b52761ff314faf6854d2db7ec76c841b4f20866af3acf7cd",
+        "sha256": "3c743017c829ca1c22d37ffc17dcf9530b3a2eccdcda7a5f8c6868b526bc3c35",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -1238,7 +1239,8 @@
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-25, re-read the complete onboarding how-to after capability surfaces gained declaration-derived development-client preflight; its scientist-facing discovery and authoring route remains accurate.",
       "On 2026-08-26, re-read the complete onboarding how-to against the changed capability declaration; transport instructions now belong to CapabilityTransport members without changing the exposed discovery, authoring, execution, or safety surface.",
-      "On 2026-08-27, applied the Diataxis how-to boundary and re-read the complete page against the CellProfiler import-validation hook and its direct-import test; added the action required before importing a pipeline with interactive desktop modules."
+      "On 2026-08-27, applied the Diataxis how-to boundary and re-read the complete page against the CellProfiler import-validation hook and its direct-import test; added the action required before importing a pipeline with interactive desktop modules.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {
@@ -1549,7 +1551,7 @@
       },
       {
         "path": "openhcs/demo/synthetic_data.py",
-        "sha256": "6a663576083c8256b299e7144e20bcab31dc4761e749fbf2d5ca116789a2f7db",
+        "sha256": "7a8f4a79e716ad944d5ceb1ed14e62cab9211aee65b1c0dc571e097e0f4d3c09",
         "role": "Generates the packaged deterministic synthetic microscopy plate consumed by the introductory workflow."
       },
       {
@@ -1580,7 +1582,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "Re-reviewed the typed GUI workflow proof: it covers synthetic plate import, form readiness, configuration inheritance, persistence, reset, and application teardown.",
       "On 2026-08-28, completed the tutorial in a fresh live desktop session through generation, initialization, and compilation, then inspected its declaration-owned workspace capture at full resolution.",
-      "On 2026-08-28, re-read the complete tutorial against the declaration-derived synthetic-generator, metadata, and live-results captures; the single guided generate, initialise, compile, run, and review path remains accurate."
+      "On 2026-08-28, re-read the complete tutorial against the declaration-derived synthetic-generator, metadata, and live-results captures; the single guided generate, initialise, compile, run, and review path remains accurate.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against generator-owned MT19937 state and exact plane equivalence against the original global RNG leaf on the same numerical stack; fixture parameters, layout and pipeline semantics remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {
@@ -2208,7 +2211,7 @@
   },
   {
     "path": "docs/source/guides/testing_guide.rst",
-    "source_sha256": "112b0f41e519c4f71896e8131efdbcf626e70a2cd4b9410087b4cffe24e97b16",
+    "source_sha256": "45a5ae5979a157265feef625076014ee59e9c6a8b4f8b798fba7a061ebe01a66",
     "audience": [
       "contributors",
       "integration-test operators"
@@ -2228,7 +2231,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5c18de1d82405d5f6c56720ab73ed6e649f48164953cd706033d57a5183cc621",
+        "sha256": "8939e52e20b2f9adb009107910fc691725b85d58da9949934a8554d8c17a5cec",
         "role": "Defines the operating-system integration matrix, dependency setup, installed-wheel live GUI/MCP operation, retained application and three-stage installer screenshot artifacts, pytest commands, and source-gate coverage artifacts used by CI."
       },
       {
@@ -2429,7 +2432,8 @@
       "On 2026-08-27, applied the Diataxis testing how-to boundary and re-read and revised the complete guide after the Website source-validation lane tried to resolve an unpublished first-party floor from PyPI; the page now distinguishes metadata-resolved source validation from dependency-free deployment, 25 CI-boundary tests passed, and a fresh Bash environment passed the catalogue, 19 website tests, and site build.",
       "On 2026-08-27, re-read and revised the complete testing how-to against event-and-ref workflow concurrency; the newest exact-commit run remains authoritative and cancelled predecessors are neither success evidence nor product defects.",
       "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
-      "On 2026-09-07, re-read the complete testing how-to against installed GUI smoke and CI ownership. Added fault-handler and pypi-gui artifact diagnosis, explicitly separating ready-window evidence from process exit; native Qt cleanup regression failed before the fix and 16 focused tests passed after it."
+      "On 2026-09-07, re-read the complete testing how-to against installed GUI smoke and CI ownership. Added fault-handler and pypi-gui artifact diagnosis, explicitly separating ready-window evidence from process exit; native Qt cleanup regression failed before the fix and 16 focused tests passed after it.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {
@@ -3531,7 +3535,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "8e98fa89a89b5373b52761ff314faf6854d2db7ec76c841b4f20866af3acf7cd",
+        "sha256": "3c743017c829ca1c22d37ffc17dcf9530b3a2eccdcda7a5f8c6868b526bc3c35",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -3579,7 +3583,8 @@
       "On 2026-08-26, re-read the complete client how-to against the regenerated 0.8.0 MCPB manifest and the child-process temporary-root regression; installation, path policy, registration, and GUI attachment guidance remain accurate.",
       "On 2026-08-26, re-read the complete client how-to after the shared MCP regression began proving the declaration-owned submission default; installation, registration, reconnect, and GUI attachment guidance remain accurate.",
       "On 2026-08-27, re-read the complete client how-to after adding the declaration-projected endpoint-startup poster beside the selected-surface procedure; the visual and accessibility copy remain owned by its gallery scenario.",
-      "On 2026-08-28, re-read the complete client how-to after gallery dimensions and source evidence became generated projections; installation, capability surfaces, reconnect ownership, path policy, and GUI attachment guidance remain accurate."
+      "On 2026-08-28, re-read the complete client how-to after gallery dimensions and source evidence became generated projections; installation, capability surfaces, reconnect ownership, path policy, and GUI attachment guidance remain accurate.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {

@@ -95,7 +95,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "8e98fa89a89b5373b52761ff314faf6854d2db7ec76c841b4f20866af3acf7cd",
+        "sha256": "3c743017c829ca1c22d37ffc17dcf9530b3a2eccdcda7a5f8c6868b526bc3c35",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -127,7 +127,8 @@
       "On 2026-08-26, re-read the complete explanation against the changed capability owner after transport initialization semantics moved from the server adapter onto CapabilityTransport members; focused capability, MCP, registration, and UI tests passed, and NRA no longer reports the former transport dispatch.",
       "On 2026-08-27, re-read the complete explanation against the current CellProfiler declarations, importer, and direct import test; added declaration-owned headless-import validation to the owner map.",
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
-      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files."
+      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {
@@ -1678,7 +1679,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "106d60484efc7007f9f319fdac883209e9bb580640dfbe583e8f5315c26e62b4",
+    "source_sha256": "f05c3ac0242490addbc354a06cd3ea4c11b86693305f0caa33e3c777c5deb96b",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -1688,7 +1689,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "8e98fa89a89b5373b52761ff314faf6854d2db7ec76c841b4f20866af3acf7cd",
+        "sha256": "3c743017c829ca1c22d37ffc17dcf9530b3a2eccdcda7a5f8c6868b526bc3c35",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -1815,6 +1816,26 @@
         "path": "tests/unit/agent/test_mcp_server.py",
         "sha256": "34ad08a4e5059efe1bd00d6b8030ed7b65a6a572a1ecdc2ba153675b8bb4ffbe",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
+      },
+      {
+        "path": "openhcs/demo/synthetic_data.py",
+        "sha256": "7a8f4a79e716ad944d5ceb1ed14e62cab9211aee65b1c0dc571e097e0f4d3c09",
+        "role": "Owns per-generator MT19937 state without changing seeded image generation or caller randomness."
+      },
+      {
+        "path": "openhcs/agent/services/synthetic_plate_service.py",
+        "sha256": "2860714a9f1f2e66df403bc72331195d912cb180600889a1b4f4207642cc776b",
+        "role": "Owns complete synthetic generation, post-write plate inspection, and the typed result."
+      },
+      {
+        "path": "tests/unit/agent/test_synthetic_plate_mcp_progress.py",
+        "sha256": "281197bf81d03a8e477026df293dbb385342d2a68c3d10c2897f6504ea85c74d",
+        "role": "Exercises real MCP subprocess progress and delayed post-inspection completion against an inactivity deadline, with a heartbeat-disabled timeout control."
+      },
+      {
+        "path": "tests/unit/test_synthetic_generator_randomness.py",
+        "sha256": "6ab3efd7f4e083744dc4dda26d97c60b6a7649dd44432362020027b92271717f",
+        "role": "Proves pixel equivalence with the original global RNG leaf, caller-state isolation, and deterministic concurrent generators."
       }
     ],
     "findings": [
@@ -1864,7 +1885,8 @@
       "On 2026-08-27, re-read the complete distribution explanation after Windows native acceptance exposed an install-root-dependent Numba cache path; process environment semantics now derive the cache through the existing registered host-platform application-data authority, while desktop launchers remain projections of that declaration.",
       "On 2026-08-27, rechecked the complete distribution explanation after the pinned formatter normalized its desktop-deployment authority; the change is mechanical and all ownership and launcher projections remain unchanged.",
       "On 2026-08-27, re-read and revised the complete distribution explanation after Intel native acceptance exposed an upstream wheel-availability boundary; one desktop profile now projects its binary-wheel policy into both initial installation and staged update.",
-      "On 2026-08-27, applied the Diataxis explanation boundary and re-read the complete page against the MCP wire session and progress binder; revised it to name progress-aware transport inactivity and the absence of a duplicate absolute client ceiling."
+      "On 2026-08-27, applied the Diataxis explanation boundary and re-read the complete page against the MCP wire session and progress binder; revised it to name progress-aware transport inactivity and the absence of a duplicate absolute client ceiling.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {

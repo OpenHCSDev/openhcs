@@ -1856,8 +1856,16 @@ jobs:
           path: |
             ${{ runner.temp }}/openhcs-pypi-gui-evidence
             ${{ runner.temp }}/openhcs-gui-data/openhcs/logs
-            ~/Library/Logs/DiagnosticReports
           if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain macOS native crash reports
+        if: always() && runner.os == 'macOS'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pypi-gui-crash-${{ matrix.python-version }}-${{ matrix.os }}
+          path: ~/Library/Logs/DiagnosticReports
+          if-no-files-found: ignore
           retention-days: 14
 
   # Run the real 30-case headless comparator once. The cross-OS/Python matrix

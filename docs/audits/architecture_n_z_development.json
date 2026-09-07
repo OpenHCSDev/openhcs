@@ -2100,13 +2100,18 @@
       },
       {
         "path": "openhcs/demo/synthetic_data.py",
-        "sha256": "6a663576083c8256b299e7144e20bcab31dc4761e749fbf2d5ca116789a2f7db",
+        "sha256": "7a8f4a79e716ad944d5ceb1ed14e62cab9211aee65b1c0dc571e097e0f4d3c09",
         "role": "Installed deterministic synthetic-plate implementation used by the production service and MCP demo."
       },
       {
         "path": "openhcs/mcp/installed_demo.py",
         "sha256": "5ae2b17747a219a180efd6d23dca51c92470d18a2d5b6189af9ebfb13858d21f",
         "role": "Implements the installed workflow rehearsal and derives activity from exact execution progress observations."
+      },
+      {
+        "path": "tests/unit/test_synthetic_generator_randomness.py",
+        "sha256": "6ab3efd7f4e083744dc4dda26d97c60b6a7649dd44432362020027b92271717f",
+        "role": "Proves seeded synthetic image equivalence and isolated randomness across interleaved and concurrent generation."
       }
     ],
     "findings": [
@@ -2122,7 +2127,8 @@
       "On 2026-08-23, re-read the complete workflow page against the progress-aware installed-demo watchdog; focused tests and a live MCP/ZMQ rehearsal with 35 progress events completed successfully.",
       "On 2026-08-24, re-read the complete protocol after stdout containment moved from the synthetic service to the MCP transport; fixture generation and workflow acceptance semantics remain unchanged.",
       "On 2026-08-26, re-read the complete workflow reference against the changed client-registration authority; registered platform leaves now own Claude Desktop paths without changing target identity, supported clients, commands, or acceptance semantics.",
-      "On 2026-08-26, re-read the complete workflow reference after the installed demo stopped overriding the declaration-owned submission deadline; fixture, evidence, and acceptance semantics remain unchanged."
+      "On 2026-08-26, re-read the complete workflow reference after the installed demo stopped overriding the declaration-owned submission deadline; fixture, evidence, and acceptance semantics remain unchanged.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against generator-owned MT19937 state and exact plane equivalence against the original global RNG leaf on the same numerical stack; fixture parameters, layout and pipeline semantics remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {
@@ -2911,7 +2917,7 @@
       },
       {
         "path": "tests/unit/test_mcp_release_workflow.py",
-        "sha256": "9fd0af0857b4e9d10e76e78f50dfd1324b17e1ac9190dbebf5376cea7459779c",
+        "sha256": "a3f57cd3716a0820b5746c5ef99c4d0aefaab522f102cf6e044b07f76f3f31e2",
         "role": "Proves immutable tag resolution, exact-SHA checkout, publication ordering, recovery, Registry policy, and publication-independent native candidate ownership."
       },
       {
@@ -2921,7 +2927,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5c18de1d82405d5f6c56720ab73ed6e649f48164953cd706033d57a5183cc621",
+        "sha256": "8939e52e20b2f9adb009107910fc691725b85d58da9949934a8554d8c17a5cec",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3093,7 +3099,8 @@
       "On 2026-08-27, re-read and revised the complete release how-to against event-and-ref workflow concurrency; cancelled predecessors remain non-evidence, manual dispatches remain separate, and release readiness still requires successful exact-commit push runs.",
       "On 2026-08-27, applied the Diataxis release how-to boundary and re-read the complete page after the 0.8.0 recovery exposed byte-distinct rebuilt archives; 47 focused release-policy tests, 77 installer tests, Ruff, Black, live PyPI materialization, and matching PyPI and GitHub SHA-256 values validate the revised single-artifact-authority path.",
       "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
-      "On 2026-09-07, re-read the complete release how-to against installed GUI smoke and the failure-retention workflow. Publication still requires successful exact-commit runs; no readiness result or retry bypasses process failure."
+      "On 2026-09-07, re-read the complete release how-to against installed GUI smoke and the failure-retention workflow. Publication still requires successful exact-commit runs; no readiness result or retry bypasses process failure.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the regression enforcing separate native-crash and common GUI evidence artifact boundaries; separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {
@@ -3152,7 +3159,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "5c18de1d82405d5f6c56720ab73ed6e649f48164953cd706033d57a5183cc621",
+        "sha256": "8939e52e20b2f9adb009107910fc691725b85d58da9949934a8554d8c17a5cec",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],
@@ -3197,7 +3204,8 @@
       "On 2026-08-27, re-read the complete OMERO testing how-to after the shared workflow made the Python quality baseline job-owned; the independent OMERO matrix, diagnostics, and lifecycle ownership remain unchanged.",
       "On 2026-08-27, re-read the complete OMERO testing how-to against exact-head workflow concurrency; OMERO selection, diagnostics, and ownership remain unchanged while superseded same-ref runs are retired.",
       "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
-      "On 2026-09-07, re-read the complete OMERO testing how-to against the changed CI workflow; added PyPI GUI crash artifacts do not change OMERO lifecycle, readiness, storage or publication ownership."
+      "On 2026-09-07, re-read the complete OMERO testing how-to against the changed CI workflow; added PyPI GUI crash artifacts do not change OMERO lifecycle, readiness, storage or publication ownership.",
+      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
     ]
   },
   {

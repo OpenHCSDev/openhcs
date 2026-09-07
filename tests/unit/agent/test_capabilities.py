@@ -59,6 +59,10 @@ def test_source_session_capability_owns_progress_heartbeat_policy():
     assert function_search.progress_heartbeat_seconds == 5.0
     assert function_search.progress_worker_thread_safe is True
 
+    synthetic_plate = capabilities["openhcs_generate_synthetic_plate"]
+    assert synthetic_plate.progress_heartbeat_seconds == 5.0
+    assert synthetic_plate.progress_worker_thread_safe is True
+
 
 def test_create_pipeline_capability_accepts_optional_pipeline_config_reference():
     declarations = {

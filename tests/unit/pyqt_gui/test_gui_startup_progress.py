@@ -702,6 +702,8 @@ def test_application_reports_ready_after_deferred_initialization() -> None:
 def test_application_cleanup_restores_its_predecessor_exception_hook(
     monkeypatch,
 ) -> None:
+    from PyQt6.QtCore import QEvent
+
     from openhcs.pyqt_gui.app import OpenHCSPyQtApp
 
     events = []
@@ -724,6 +726,12 @@ def test_application_cleanup_restores_its_predecessor_exception_hook(
             events.append("events")
 
         @staticmethod
+        def sendPostedEvents(receiver, event_type):
+            assert receiver is None
+            assert event_type is QEvent.Type.DeferredDelete
+            events.append("deferred deletion")
+
+        @staticmethod
         def handle_exception(*_args):
             events.append("current")
 
@@ -734,7 +742,7 @@ def test_application_cleanup_restores_its_predecessor_exception_hook(
     OpenHCSPyQtApp.cleanup(application)
 
     assert sys.excepthook is predecessor
-    assert events == ["events", "catalogue", "events"]
+    assert events == ["events", "catalogue", "deferred deletion"]
 
 
 def test_show_main_window_reports_ready_only_after_deferred_work(

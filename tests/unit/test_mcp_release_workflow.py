@@ -326,7 +326,14 @@ def test_pypi_gui_retains_native_evidence_even_after_a_process_crash():
     paths = evidence["with"]["path"].splitlines()
     assert "${{ runner.temp }}/openhcs-pypi-gui-evidence" in paths
     assert "${{ runner.temp }}/openhcs-gui-data/openhcs/logs" in paths
-    assert "~/Library/Logs/DiagnosticReports" in paths
+    assert "~/Library/Logs/DiagnosticReports" not in paths
+    crash_reports = next(
+        step
+        for step in steps
+        if step.get("name") == "Retain macOS native crash reports"
+    )
+    assert crash_reports["if"] == "always() && runner.os == 'macOS'"
+    assert crash_reports["with"]["path"] == "~/Library/Logs/DiagnosticReports"
 
 
 def test_pypi_wheel_smoke_uses_the_canonical_pipeline_document_boundary():

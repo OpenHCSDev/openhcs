@@ -25,7 +25,6 @@ Usage:
 """
 
 import json
-import random
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Tuple, List, Dict, Any
@@ -135,7 +134,8 @@ class SyntheticMicroscopyGenerator:
             wells: List of well IDs to generate (e.g., ['A01', 'A02'])
             format: Format of the filenames ('ImageXpress' or 'OperaPhenix')
             openhcs_format: If True, generate OpenHCS native format with openhcs_metadata.json
-            random_seed: Random seed for reproducibility
+            random_seed: Seed for this generator's reproducible random state;
+                does not change the caller's random state.
             include_all_components: If True, include all filename components (timepoint, z-index) even for flat plates
             imagexpress_bioformats_compatible: If True, emit ImageXpress TIFF names with the plate-name
                 prefix and unpadded site/channel axes expected by Bio-Formats' MetaXpress reader.
@@ -200,10 +200,8 @@ class SyntheticMicroscopyGenerator:
         # Store the base random seed
         self.base_random_seed = random_seed
 
-        # Set random seed if provided
-        if random_seed is not None:
-            np.random.seed(random_seed)
-            random.seed(random_seed)
+        # Keep the historical MT19937 sequence without changing caller RNG state.
+        self._random = np.random.RandomState(random_seed)
 
         # Create output directory structure
         # For ImageXpress, create TimePoint_1 directory
@@ -242,33 +240,33 @@ class SyntheticMicroscopyGenerator:
 
             # Very strongly favor overlap regions with 80% probability
             # to ensure very high density of features in the 10% overlap region for reliable registration
-            if np.random.random() < 0.8:
+            if self._random.random() < 0.8:
                 # Position in an overlap region between tiles
-                col = np.random.randint(0, grid_size[1])
-                row = np.random.randint(0, grid_size[0])
+                col = self._random.randint(0, grid_size[1])
+                row = self._random.randint(0, grid_size[0])
 
                 # Calculate base tile position
                 base_x = col * self.step_x
                 base_y = row * self.step_y
 
                 # Position cells in right/bottom overlapping regions
-                if np.random.random() < 0.5:
+                if self._random.random() < 0.5:
                     # Right overlap region
                     x = (
                         base_x
                         + tile_size[0]
                         - overlap_x
-                        + np.random.randint(0, overlap_x)
+                        + self._random.randint(0, overlap_x)
                     )
-                    y = base_y + np.random.randint(0, tile_size[1])
+                    y = base_y + self._random.randint(0, tile_size[1])
                 else:
                     # Bottom overlap region
-                    x = base_x + np.random.randint(0, tile_size[0])
+                    x = base_x + self._random.randint(0, tile_size[0])
                     y = (
                         base_y
                         + tile_size[1]
                         - overlap_y
-                        + np.random.randint(0, overlap_y)
+                        + self._random.randint(0, overlap_y)
                     )
 
                 # Ensure we're within image bounds
@@ -276,13 +274,13 @@ class SyntheticMicroscopyGenerator:
                 y = min(y, self.image_size[1] - 1)
             else:
                 # Random position anywhere in the image
-                x = np.random.randint(0, self.image_size[0])
-                y = np.random.randint(0, self.image_size[1])
+                x = self._random.randint(0, self.image_size[0])
+                y = self._random.randint(0, self.image_size[1])
 
             # Common cell attributes
-            size = np.random.uniform(*self.cell_size_range)
-            eccentricity = np.random.uniform(*self.cell_eccentricity_range)
-            rotation = np.random.uniform(0, 2 * np.pi)
+            size = self._random.uniform(*self.cell_size_range)
+            eccentricity = self._random.uniform(*self.cell_eccentricity_range)
+            rotation = self._random.uniform(0, 2 * np.pi)
 
             base_cells.append(
                 {
@@ -354,15 +352,15 @@ class SyntheticMicroscopyGenerator:
             cells = []
             for i in range(w_num_cells):
                 # Generate random position for this wavelength
-                x = np.random.randint(0, self.image_size[0])
-                y = np.random.randint(0, self.image_size[1])
+                x = self._random.randint(0, self.image_size[0])
+                y = self._random.randint(0, self.image_size[1])
 
                 # Generate random cell properties
-                size = np.random.uniform(w_cell_size_range[0], w_cell_size_range[1])
-                eccentricity = np.random.uniform(
+                size = self._random.uniform(w_cell_size_range[0], w_cell_size_range[1])
+                eccentricity = self._random.uniform(
                     self.cell_eccentricity_range[0], self.cell_eccentricity_range[1]
                 )
-                rotation = np.random.uniform(0, 2 * np.pi)
+                rotation = self._random.uniform(0, 2 * np.pi)
 
                 intensity = self.cell_intensity_for_wavelength(wavelength_idx)
 
@@ -451,7 +449,7 @@ class SyntheticMicroscopyGenerator:
         # Use wavelength-specific noise level if provided (add noise AFTER blur)
         w_noise_level = w_params.get("noise_level", self.noise_level)
         if w_noise_level > 0:
-            noise = np.random.normal(0, w_noise_level, self.image_shape)
+            noise = self._random.normal(0, w_noise_level, self.image_shape)
             image = image.astype(np.float64) + noise
             image = np.clip(image, 0, 65535).astype(np.uint16)
         else:
@@ -845,8 +843,7 @@ class SyntheticMicroscopyGenerator:
             # Use a different random seed for each well if base seed is provided
             if self.base_random_seed is not None:
                 well_seed = self.base_random_seed + well_index
-                np.random.seed(well_seed)
-                random.seed(well_seed)
+                self._random.seed(well_seed)
                 print(f"Using random seed {well_seed} for well {well}")
 
             # Pre-generate the positions for each site to ensure consistency across Z-levels
@@ -868,10 +865,10 @@ class SyntheticMicroscopyGenerator:
                     y = grid_row * self.step_y
 
                     # Add random stage positioning error
-                    x_error = np.random.randint(
+                    x_error = self._random.randint(
                         -self.stage_error_px, self.stage_error_px
                     )
-                    y_error = np.random.randint(
+                    y_error = self._random.randint(
                         -self.stage_error_px, self.stage_error_px
                     )
 
@@ -893,10 +890,10 @@ class SyntheticMicroscopyGenerator:
                         y = row * self.step_y
 
                         # Add random stage positioning error
-                        x_error = np.random.randint(
+                        x_error = self._random.randint(
                             -self.stage_error_px, self.stage_error_px
                         )
-                        y_error = np.random.randint(
+                        y_error = self._random.randint(
                             -self.stage_error_px, self.stage_error_px
                         )
 
