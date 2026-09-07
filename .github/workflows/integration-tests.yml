@@ -355,6 +355,7 @@ jobs:
         run: >-
           python scripts/run_installed_tests.py --coverage --repo-root "$GITHUB_WORKSPACE" --
           tests/integration/
+          tests/unit/agent/test_mcp_stdio_transport.py
           --ignore=tests/integration/test_cellprofiler_generated_pipeline.py
           --cov-append --cov-report=term --it-backends disk
           --it-microscopes ImageXpress --it-dims 3d
