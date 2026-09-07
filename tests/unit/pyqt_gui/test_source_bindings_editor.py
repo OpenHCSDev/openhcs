@@ -3578,13 +3578,15 @@ def test_inline_source_bindings_structural_provenance_navigation_flashes_table_c
         assert isinstance(container, InlineDataclassGroupBox)
         widget = container._inline_value_widget
         assert isinstance(widget, SourceBindingsEditorWidget)
-        widget.add_source_filter_row(
-            SourceFilterClause(
-                SourceFilterSubject.FILE,
-                SourceFilterMatchType.CONTAINS,
-                "DNA",
+        # Separate the first cell's center from the table's center on every style.
+        for value in ("DNA", "RNA", "Protein"):
+            widget.add_source_filter_row(
+                SourceFilterClause(
+                    SourceFilterSubject.FILE,
+                    SourceFilterMatchType.CONTAINS,
+                    value,
+                )
             )
-        )
         app.processEvents()
 
         harness = ScrollHarness(manager)
