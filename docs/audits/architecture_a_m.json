@@ -1070,7 +1070,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
+        "sha256": "1ba33107a1619a508f87ffc7d783cf4a24be101aad614e5ea2e4766e9d1a3e7e",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1185,7 +1185,8 @@
       "On 2026-08-27, re-read the complete reference after the python-introspect floor moved to 0.1.12 and inspected its current callable-analysis owner and tests; the package ownership catalogue remains accurate.",
       "Focused python-introspect signature-analysis and callable-declaration tests passed: 37 tests.",
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
-      "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
     ]
   },
   {

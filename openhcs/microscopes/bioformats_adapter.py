@@ -8,12 +8,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 from itertools import product
 from pathlib import Path
-from typing import Any, ClassVar, Mapping
+from typing import TYPE_CHECKING, Any, ClassVar, Mapping
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
-from ome_zarr.axes import Axes
-from ome_zarr.format import Format
 from polystore.bioformats_java import (
     BioFormatsJavaContext,
     BioFormatsJavaUnavailableError,
@@ -22,7 +20,6 @@ from polystore.bioformats_java import (
     java_str,
 )
 from polystore.bioformats_storage import BioFormatsPlaneRef
-from polystore.ome_zarr_metadata import OmeZarrLocation
 from polystore.ome_zarr_storage import OmeZarrArrayRef
 from polystore.virtual_workspace import SourcePixelRef
 from polystore.zarr_batch import ZarrStoredBatchSemantics
@@ -40,6 +37,10 @@ from openhcs.core.source_projection import (
     SourcePlaneStoreIdentity,
 )
 from openhcs.microscopes.bioformats_well_key import BIOFORMATS_WELL_KEYS
+
+if TYPE_CHECKING:
+    from ome_zarr.format import Format
+    from polystore.ome_zarr_metadata import OmeZarrLocation
 
 BIOFORMATS_MANIFEST_FILENAME = "bioformats_spw.json"
 
@@ -587,10 +588,14 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
         """Return whether ``path`` is an explicit top-level NGFF image or plate."""
         if not path.is_dir():
             return False
+        from polystore.ome_zarr_metadata import OmeZarrLocation
+
         location = OmeZarrLocation(path, mode="r")
         return location.exists() and location.is_dataset
 
     def discover_stores(self, root: Path) -> tuple[SourcePlaneDataset, ...]:
+        from polystore.ome_zarr_metadata import OmeZarrLocation
+
         return tuple(
             self._discover_store(root, location)
             for location in OmeZarrLocation.discover(root)
@@ -652,7 +657,7 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
                     f"NGFF well path {well_path!r} conflicts with row/column identity "
                     f"{expected_path!r}."
                 )
-            well_location = OmeZarrLocation(location.subpath(well_path))
+            well_location = location.create(well_path)
             well_attrs = well_location.root_attrs
             well = _required_mapping(well_attrs["well"], "NGFF well")
             images = _required_sequence(well, "images", "NGFF well")
@@ -663,7 +668,7 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
                 image_candidates, pixel_size = _ngff_image_candidates(
                     collection_root=collection_root,
                     store_root=Path(location.path),
-                    image_location=OmeZarrLocation(well_location.subpath(image_path)),
+                    image_location=well_location.create(image_path),
                     image_prefix=f"{well_path}/{image_path}",
                     dataset_identity=identity,
                     well=well_key,
@@ -1186,6 +1191,8 @@ def _ngff_image_candidates(
     image_index: int,
     image_count: int,
 ) -> tuple[tuple[SourceCandidate, ...], float]:
+    from ome_zarr.axes import Axes
+
     attrs = image_location.root_attrs
     multiscales = _required_sequence(attrs, "multiscales", "NGFF image")
     if len(multiscales) != 1:

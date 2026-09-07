@@ -1,4 +1,6 @@
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -46,6 +48,39 @@ from openhcs.microscopes.bioformats_adapter import (
 from openhcs.microscopes.microscope_base import create_microscope_handler
 from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
 from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
+
+
+@pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
+def test_ngff_runtime_loads_on_discovery_not_adapter_registration(
+    tmp_path: Path, fmt: Format
+) -> None:
+    store = tmp_path / "plate"
+    pixels = np.arange(2 * 2 * 3 * 4 * 5, dtype=np.uint16).reshape(2, 2, 3, 4, 5)
+    write_ngff_plate(store, pixels, fmt=fmt)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+import sys
+from pathlib import Path
+from openhcs.microscopes.bioformats_adapter import OmeZarrStoreAdapter
+
+assert 'ome_zarr' not in sys.modules, 'NGFF runtime loaded during registration'
+assert OmeZarrStoreAdapter.declares_store(Path(sys.argv[1]))
+(dataset,) = OmeZarrStoreAdapter().discover_stores(Path(sys.argv[1]))
+assert 'ome_zarr' in sys.modules
+assert len(dataset.candidates) == 12
+assert dataset.pixel_size == 1.0
+""",
+            str(store),
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 @pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)

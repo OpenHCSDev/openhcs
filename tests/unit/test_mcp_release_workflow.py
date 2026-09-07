@@ -313,6 +313,22 @@ def test_tag_workflow_installs_linux_pyqt_runtime_before_wheel_smoke():
     assert smoke.index("WHEEL=") < smoke.index("python -m venv")
 
 
+def test_pypi_gui_retains_native_evidence_even_after_a_process_crash():
+    workflow = yaml.safe_load(INTEGRATION_WORKFLOW_PATH.read_text(encoding="utf-8"))
+    steps = workflow["jobs"]["pypi-installation-test"]["steps"]
+    evidence = next(
+        step for step in steps if _uses_action(step, "actions/upload-artifact")
+    )
+
+    assert evidence["if"] == "always()"
+    assert "${{ matrix.python-version }}" in evidence["with"]["name"]
+    assert "${{ matrix.os }}" in evidence["with"]["name"]
+    paths = evidence["with"]["path"].splitlines()
+    assert "${{ runner.temp }}/openhcs-pypi-gui-evidence" in paths
+    assert "${{ runner.temp }}/openhcs-gui-data/openhcs/logs" in paths
+    assert "~/Library/Logs/DiagnosticReports" in paths
+
+
 def test_pypi_wheel_smoke_uses_the_canonical_pipeline_document_boundary():
     workflow_text = INTEGRATION_WORKFLOW_PATH.read_text(encoding="utf-8")
     assert "from openhcs.core.pipeline import Pipeline" not in workflow_text

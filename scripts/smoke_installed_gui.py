@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import faulthandler
 import hashlib
 import json
 import os
@@ -1029,6 +1030,7 @@ def run_installed_gui_smoke(
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    faulthandler.enable()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--forbid-import-root",

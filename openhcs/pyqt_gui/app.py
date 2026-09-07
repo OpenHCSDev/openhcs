@@ -413,8 +413,9 @@ class OpenHCSPyQtApp(QApplication):
 
             self.function_catalog_service.close()
 
-            # Process events again to handle deleteLater
-            self.processEvents()
+            # exec() has returned, so processEvents() cannot deliver deleteLater.
+            # Retire the native window tree while QApplication is still alive.
+            self.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
 
             # Force garbage collection
             import gc

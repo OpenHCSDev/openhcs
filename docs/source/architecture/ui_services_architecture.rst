@@ -80,6 +80,12 @@ See :external+pyqt-reactive:doc:`window manager usage
 :external+pyqt-reactive:doc:`responsive layout widgets
 <responsive_layout_widgets>`.
 
+``OpenHCSPyQtApp`` owns the application shutdown boundary. After the event loop
+returns, it closes the main window and function-catalogue service and explicitly
+delivers Qt's deferred-deletion events. This destroys the native main-window
+tree while ``QApplication`` is still alive; ordinary ``processEvents()`` does
+not deliver those deletions after the event loop has stopped.
+
 Table-browser composition
 -------------------------
 

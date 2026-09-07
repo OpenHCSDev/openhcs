@@ -163,7 +163,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
+        "sha256": "1ba33107a1619a508f87ffc7d783cf4a24be101aad614e5ea2e4766e9d1a3e7e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
@@ -182,7 +182,8 @@
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
       "On 2026-08-25, re-read the complete page against the package manifest after removing stale OMERO shell and Dockerfile package-data globs; all remaining installation, package-floor, entry-point, and optional-dependency claims remain accurate.",
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
-      "On 2026-09-07, re-read the complete explanation page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete explanation page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
     ]
   },
   {
@@ -653,7 +654,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
+        "sha256": "1ba33107a1619a508f87ffc7d783cf4a24be101aad614e5ea2e4766e9d1a3e7e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -736,7 +737,8 @@
       "On 2026-08-26, re-read the complete explanation after ZMQRuntime endpoint attempts gained caller-owned cancellation; the generic transport versus OpenHCS adapter ownership remains accurate.",
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-08-27, re-read the complete ownership reference after library registries gained declaration-owned runtime-parameter exclusions; the OpenHCS processing boundary remains accurate.",
-      "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
     ]
   },
   {
@@ -843,7 +845,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
+        "sha256": "1ba33107a1619a508f87ffc7d783cf4a24be101aad614e5ea2e4766e9d1a3e7e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -928,7 +930,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "1b7d7a232bad4f44dd71d9db2f7c994dfdcae6df1b5f99e6520002bd88263948",
+        "sha256": "5c18de1d82405d5f6c56720ab73ed6e649f48164953cd706033d57a5183cc621",
         "role": "Exercises Windows and macOS native installers and their staged-update transition in installed environments."
       },
       {
@@ -995,7 +997,9 @@
       "On 2026-08-27, rechecked the complete installation how-to after the Windows launcher probe began treating an empty comparison as an empty collection; installer behavior and user instructions are unchanged.",
       "On 2026-08-27, applied the Diataxis installation how-to boundary and re-read the complete page against the Intel wheel-backed dependency policy and shared staged-update projection; the user installation and update procedure remains accurate.",
       "On 2026-08-27, re-read the complete installation how-to against the integration workflow's exact-head concurrency declaration; installation, launch, verification, and update guidance remain unchanged.",
-      "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml; and the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml; and the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read the complete installation how-to against the current native-installation workflow; adding failure evidence retention does not change the installation requirements or steps.",
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
     ]
   },
   {
@@ -1331,7 +1335,7 @@
       },
       {
         "path": "openhcs/microscopes/bioformats_adapter.py",
-        "sha256": "b0656b8f145b852cd43bf40b3f97f05c5e12417c955fe7f42dff618ac8b64c1a",
+        "sha256": "79175408584e6a2d1fbb377f8f665f20dd24b977f9de900c6cae467f2685d752",
         "role": "Projects native OME-Zarr metadata into source planes, validates named axes and single-resolution images, and keeps Java-backed CZI and OME-TIFF decoding separate."
       },
       {
@@ -1351,12 +1355,12 @@
       },
       {
         "path": "external/PolyStore/src/polystore/ome_zarr_storage.py",
-        "sha256": "6b18ced89db19725ba7818b68999fc6631f75493ac84294af011c069b4841f4e",
+        "sha256": "005bdd6ce615ff115050e1853aab0c56c50c65d1361c31ef6219bb0d6c4852b7",
         "role": "Reads an opaque OME-Zarr array reference without converting the underlying storage format or invoking Java."
       },
       {
         "path": "tests/unit/test_plane_store_sources.py",
-        "sha256": "b0eadbdf29fc19e154aa5a48132be831a8178baa22b074fde2747aecddb8b931",
+        "sha256": "792a832934e9e25ddccf08796bab4ed5c519212f158af9915226f84cea08120c",
         "role": "Proves both physical NGFF formats retain axis cardinalities, pixels, source identities, bindings, materialisation, and reinitialisation through OpenHCS."
       },
       {
@@ -1390,7 +1394,8 @@
       "On 2026-08-28, re-read the complete how-to and inspected the live Image Browser capture at full resolution; it shows the initialized synthetic plate's 216-file source inventory without adding another source-model authority.",
       "On 2026-08-28, re-read the complete how-to after gallery dimensions and source evidence became generated projections; the Image Browser scenario and source-binding procedure remain unchanged and accurate.",
       "On 2026-09-07, re-read the complete source-loading how-to against OmeZarrStoreAdapter, OmeZarrLocation, the PolyStore writer and codec declarations, and the physical-store and code-mode/ZMQ regressions. Verified native Zarr 2/NGFF 0.4 and Zarr 3/NGFF 0.5 inputs, the single-resolution input boundary, unchanged FormatV04 output, coordinate preservation, and the separate Java decoding boundary without duplicating implementation policy in the how-to.",
-      "On 2026-09-07, the minimum-stack PolyStore environment resolved the declared development install on Python 3.11 with Zarr 3.0.10 and ome-zarr 0.12.2 and passed dependency compatibility checks; the frozen bd5a616 candidate passed 486 tests with two deliberate skips. Physical-store tests also exercised the current Zarr 3.3.0 and ome-zarr 0.19.1 stack."
+      "On 2026-09-07, the minimum-stack PolyStore environment resolved the declared development install on Python 3.11 with Zarr 3.0.10 and ome-zarr 0.12.2 and passed dependency compatibility checks; the frozen bd5a616 candidate passed 486 tests with two deliberate skips. Physical-store tests also exercised the current Zarr 3.3.0 and ome-zarr 0.19.1 stack.",
+      "On 2026-09-07, re-read the complete source-loading how-to after moving NGFF runtime imports from adapter/backend registration to actual discovery and read-only store opening. The documented formats, source identities, and separate native/Java decoding boundaries remain unchanged. Upstream location.create preserves subclass, mode, and format for nested wells and images. The unchanged declaration-import regression and real fresh-process discovery across both formats passed in the 27-test OpenHCS source suite; PolyStore passed 487 tests with two skips on the minimum runtime and 488 with one skip on the latest GPU-enabled runtime. Only the three directly reviewed changed authority hashes were refreshed."
     ]
   },
   {
@@ -1439,7 +1444,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
+        "sha256": "1ba33107a1619a508f87ffc7d783cf4a24be101aad614e5ea2e4766e9d1a3e7e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1481,7 +1486,8 @@
       "On 2026-08-27, rechecked the complete installation redirect after Windows background launch and destination acceptance changed; its destination and scope remain accurate.",
       "On 2026-08-27, rechecked the complete compatibility page after the Windows wizard began deriving its initial destination from the declared installer input; retaining one redirect to the canonical procedure remains accurate.",
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
-      "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
     ]
   },
   {
@@ -2079,7 +2085,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
+        "sha256": "1ba33107a1619a508f87ffc7d783cf4a24be101aad614e5ea2e4766e9d1a3e7e",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2145,7 +2151,8 @@
       "On 2026-08-26, re-read and revised the explanation after Python 3.12 CI exposed repository and Tables-0 startup ordering; only a stack started by the manager receives component recovery.",
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-08-28, re-read the complete explanation against the registered stable-window inventory; the added statement accurately distinguishes packaged OMERO deployment and testing from the absence of a supported desktop management or credential window.",
-      "On 2026-09-07, re-read the complete explanation page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete explanation page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
     ]
   },
   {
@@ -2201,7 +2208,7 @@
   },
   {
     "path": "docs/source/guides/testing_guide.rst",
-    "source_sha256": "07b35a304c31b367e802b1a15a49a40e99f8c75e38810bad333af1240aae8b70",
+    "source_sha256": "112b0f41e519c4f71896e8131efdbcf626e70a2cd4b9410087b4cffe24e97b16",
     "audience": [
       "contributors",
       "integration-test operators"
@@ -2221,7 +2228,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "1b7d7a232bad4f44dd71d9db2f7c994dfdcae6df1b5f99e6520002bd88263948",
+        "sha256": "5c18de1d82405d5f6c56720ab73ed6e649f48164953cd706033d57a5183cc621",
         "role": "Defines the operating-system integration matrix, dependency setup, installed-wheel live GUI/MCP operation, retained application and three-stage installer screenshot artifacts, pytest commands, and source-gate coverage artifacts used by CI."
       },
       {
@@ -2306,7 +2313,7 @@
       },
       {
         "path": "scripts/smoke_installed_gui.py",
-        "sha256": "900476e27ff425f7ceb46113f1495c5f6b236704fd3db9d077ab44c02d71e101",
+        "sha256": "e0dda6545e80370166982ec35c188d2e54aca90f44634f3b2501528ffa46ee37",
         "role": "Owns the installed-GUI acceptance timing and single terminal completion, applies the declared logging configuration, constructs the application on declaration-allocated endpoints, proves the background function catalogue and advertised endpoint log are usable, drives the GUI through packaged MCP, validates retained window snapshots, and cleans up exact owned resources outside the checkout."
       },
       {
@@ -2421,7 +2428,8 @@
       "On 2026-08-27, applied the Diataxis testing how-to boundary and re-read the complete guide after exact-head evidence exposed a stale inline resolver assertion and an unpainted Windows welcome capture; the guide remains task-focused, and 48 focused CI and installer regressions passed.",
       "On 2026-08-27, applied the Diataxis testing how-to boundary and re-read and revised the complete guide after the Website source-validation lane tried to resolve an unpublished first-party floor from PyPI; the page now distinguishes metadata-resolved source validation from dependency-free deployment, 25 CI-boundary tests passed, and a fresh Bash environment passed the catalogue, 19 website tests, and site build.",
       "On 2026-08-27, re-read and revised the complete testing how-to against event-and-ref workflow concurrency; the newest exact-commit run remains authoritative and cancelled predecessors are neither success evidence nor product defects.",
-      "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read the complete testing how-to against installed GUI smoke and CI ownership. Added fault-handler and pypi-gui artifact diagnosis, explicitly separating ready-window evidence from process exit; native Qt cleanup regression failed before the fix and 16 focused tests passed after it."
     ]
   },
   {
@@ -2565,7 +2573,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
+        "sha256": "1ba33107a1619a508f87ffc7d783cf4a24be101aad614e5ea2e4766e9d1a3e7e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2607,7 +2615,8 @@
       "On 2026-08-27, rechecked the complete installation redirect after Windows background launch and destination acceptance changed; its destination and scope remain accurate.",
       "On 2026-08-27, rechecked the complete compatibility redirect after the Windows wizard began deriving its initial destination from the declared installer input; its canonical destination and scope remain accurate.",
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
-      "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
     ]
   },
   {
@@ -3109,7 +3118,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
+        "sha256": "1ba33107a1619a508f87ffc7d783cf4a24be101aad614e5ea2e4766e9d1a3e7e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
@@ -3129,7 +3138,8 @@
       "On 2026-08-27, re-read the complete CPU-only guide after the process-environment authority began deriving its compiled-code cache from the registered host-platform data root; CPU selection and backend admission behavior remain unchanged.",
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-08-27, re-read the complete CPU-only how-to against the cancellable registry preparation path; CPU admission and backend exclusion semantics remain declaration-owned and unchanged.",
-      "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
+      "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
+      "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash."
     ]
   },
   {

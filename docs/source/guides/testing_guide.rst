@@ -195,6 +195,13 @@ Keep credentials in the environment and close connections owned by a test. See
 Failure diagnosis
 -----------------
 
+The installed GUI probe enables Python's fault handler before loading Qt. The
+PyPI installation jobs retain their GUI phase journal, snapshots, OpenHCS logs,
+and available macOS crash reports as ``pypi-gui-*`` artifacts, including
+failed runs. A ready-window result does not replace a successful process exit;
+use the phase journal and crash report to distinguish startup from teardown
+failures.
+
 Start with the smallest failing variant and add ``-v --tb=short -s``. For ZMQ
 failures, begin with the client, server, or viewer log path reported by the
 failing launch. With the default ``LoggingConfig`` and no explicit override,

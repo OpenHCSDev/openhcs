@@ -271,11 +271,16 @@ def test_macos_disk_image_cleanup_retains_exact_device_authority() -> None:
     assert "openhcs_attach_readonly_disk_image" in integration
     assert "/usr/bin/hdiutil attach" in lifecycle
     assert "-plist" in lifecycle
-    assert "system-entities.0.dev-entry" in lifecycle
+    assert "system-entities.0.dev-entry" not in lifecycle
+    assert "-extract ParentWholeDisk raw" in lifecycle
+    assert "-extract MountPoint raw" in lifecycle
+    assert '[[ "$reported_mount_point" != "$owned_mount_point" ]]' in lifecycle
     assert "DeviceIdentifier" not in lifecycle
     assert "/bin/sync" in lifecycle
     assert '/usr/bin/hdiutil detach "$mounted_device"' in lifecycle
-    assert '/usr/sbin/diskutil info "$mounted_device"' in lifecycle
+    assert 'test ! -e "$mounted_device"' in lifecycle
+    assert 'test -e "$mounted_device"' in lifecycle
+    assert '/usr/sbin/diskutil info "$mounted_device"' not in lifecycle
     assert '/usr/bin/hdiutil detach -force "$mounted_device"' in lifecycle
     assert "detach_attempt_limit" not in lifecycle
     assert "/bin/sleep" not in lifecycle
