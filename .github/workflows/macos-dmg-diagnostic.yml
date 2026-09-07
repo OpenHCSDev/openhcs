@@ -28,7 +28,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.12"
-      - run: python -m pip install numpy scipy mcp pytest
+      - run: python -m pip install pytest packaging
+      - run: python -c "import subprocess, sys, tomllib; from packaging.requirements import Requirement; dependencies = tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']; subprocess.check_call([sys.executable, '-m', 'pip', 'install', *[value for value in dependencies if Requirement(value).name in {'numpy', 'scipy', 'mcp'}]])"
       - run: python -m pip install --no-deps .
       - run: python -m pytest -q -c tests/installer/pytest.ini --confcutdir tests/unit/agent tests/unit/agent/test_mcp_stdio_transport.py
       - if: ${{ failure() }}
