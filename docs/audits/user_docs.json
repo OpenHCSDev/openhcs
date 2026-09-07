@@ -930,7 +930,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "8939e52e20b2f9adb009107910fc691725b85d58da9949934a8554d8c17a5cec",
+        "sha256": "deda3568af12085b7d8b4bb014dd9f00d15a1db661449351c43dfe30f9e7d298",
         "role": "Exercises Windows and macOS native installers and their staged-update transition in installed environments."
       },
       {
@@ -1000,7 +1000,8 @@
       "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml; and the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read the complete installation how-to against the current native-installation workflow; adding failure evidence retention does not change the installation requirements or steps.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
+      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
+      "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation."
     ]
   },
   {
@@ -2211,7 +2212,7 @@
   },
   {
     "path": "docs/source/guides/testing_guide.rst",
-    "source_sha256": "45a5ae5979a157265feef625076014ee59e9c6a8b4f8b798fba7a061ebe01a66",
+    "source_sha256": "cc2333ce3a5ed32da3a5eb9e4a9f762eaf1237d7659caa9cdf06b0931170e540",
     "audience": [
       "contributors",
       "integration-test operators"
@@ -2231,7 +2232,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "8939e52e20b2f9adb009107910fc691725b85d58da9949934a8554d8c17a5cec",
+        "sha256": "deda3568af12085b7d8b4bb014dd9f00d15a1db661449351c43dfe30f9e7d298",
         "role": "Defines the operating-system integration matrix, dependency setup, installed-wheel live GUI/MCP operation, retained application and three-stage installer screenshot artifacts, pytest commands, and source-gate coverage artifacts used by CI."
       },
       {
@@ -2433,7 +2434,8 @@
       "On 2026-08-27, re-read and revised the complete testing how-to against event-and-ref workflow concurrency; the newest exact-commit run remains authoritative and cancelled predecessors are neither success evidence nor product defects.",
       "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read the complete testing how-to against installed GUI smoke and CI ownership. Added fault-handler and pypi-gui artifact diagnosis, explicitly separating ready-window evidence from process exit; native Qt cleanup regression failed before the fix and 16 focused tests passed after it.",
-      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
+      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
+      "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation."
     ]
   },
   {

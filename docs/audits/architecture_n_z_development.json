@@ -2933,7 +2933,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "8939e52e20b2f9adb009107910fc691725b85d58da9949934a8554d8c17a5cec",
+        "sha256": "deda3568af12085b7d8b4bb014dd9f00d15a1db661449351c43dfe30f9e7d298",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3106,7 +3106,8 @@
       "On 2026-08-27, applied the Diataxis release how-to boundary and re-read the complete page after the 0.8.0 recovery exposed byte-distinct rebuilt archives; 47 focused release-policy tests, 77 installer tests, Ruff, Black, live PyPI materialization, and matching PyPI and GitHub SHA-256 values validate the revised single-artifact-authority path.",
       "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read the complete release how-to against installed GUI smoke and the failure-retention workflow. Publication still requires successful exact-commit runs; no readiness result or retry bypasses process failure.",
-      "On 2026-09-07, re-read the complete page and checked its affected claims against the regression enforcing separate native-crash and common GUI evidence artifact boundaries; separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the regression enforcing separate native-crash and common GUI evidence artifact boundaries; separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
+      "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation."
     ]
   },
   {
@@ -3165,7 +3166,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "8939e52e20b2f9adb009107910fc691725b85d58da9949934a8554d8c17a5cec",
+        "sha256": "deda3568af12085b7d8b4bb014dd9f00d15a1db661449351c43dfe30f9e7d298",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],
@@ -3211,7 +3212,8 @@
       "On 2026-08-27, re-read the complete OMERO testing how-to against exact-head workflow concurrency; OMERO selection, diagnostics, and ownership remain unchanged while superseded same-ref runs are retired.",
       "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read the complete OMERO testing how-to against the changed CI workflow; added PyPI GUI crash artifacts do not change OMERO lifecycle, readiness, storage or publication ownership.",
-      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
+      "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
+      "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation."
     ]
   },
   {

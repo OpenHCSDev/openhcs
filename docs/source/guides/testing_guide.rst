@@ -58,6 +58,11 @@ and wheel integration. A dedicated source job runs ``tests/pyqt_gui`` with
 offscreen Qt against the exact pinned pyqt-reactive wheel. Dedicated Linux jobs
 run OMERO on supported Python versions with an explicit ZeroC Ice wheel.
 
+The Python/OS boundary matrix also opens fresh MCP stdio sessions before
+importing NumPy and SciPy inside a tool. These tests exercise cold native-library
+loading while the protocol reader is active, plus protocol-channel isolation
+and restoration when the transport exits.
+
 Integration and Documentation runs use event-and-ref concurrency. Pushing a
 new commit to the same branch or updating the same pull request cancels its
 superseded run so hosted capacity is spent on the only commit that can become
