@@ -198,4 +198,6 @@ contain delayed imports or background work and would duplicate transport
 ownership.
 The installed stdio entrypoint suppresses routine INFO logging so client logs
 stay readable; set ``OPENHCS_MCP_VERBOSE=1`` while diagnosing server startup to
-restore it.
+restore it. For declared long-running tools, verbose mode also writes a delayed
+thread-stack diagnostic to stderr if the invocation remains active. Check that
+diagnostic when progress continues but the tool does not return.

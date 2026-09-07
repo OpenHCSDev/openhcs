@@ -491,7 +491,7 @@ async def _report_progress_if_available(
 
 @contextmanager
 def _verbose_blocking_operation_diagnostics(capability: AgentCapabilitySpec):
-    """Dump a blocked main-thread operation without affecting normal MCP output."""
+    """Dump a blocked invocation without affecting normal MCP output."""
 
     heartbeat_seconds = capability.progress_heartbeat_seconds
     if heartbeat_seconds is None or os.getenv(MCP_VERBOSE_ENVIRONMENT_VARIABLE) is None:
@@ -2231,15 +2231,15 @@ def build_server(
                             return await fn(*args, **kwargs)
                         if capability.progress_worker_thread_safe:
                             return await asyncio.to_thread(fn, *args, **kwargs)
-                        with _verbose_blocking_operation_diagnostics(capability):
-                            return fn(*args, **kwargs)
+                        return fn(*args, **kwargs)
 
                     try:
-                        result = await _await_with_declared_progress(
-                            capability,
-                            mcp_context,
-                            invoke(),
-                        )
+                        with _verbose_blocking_operation_diagnostics(capability):
+                            result = await _await_with_declared_progress(
+                                capability,
+                                mcp_context,
+                                invoke(),
+                            )
                         return project_success(result)
                     except Exception as exc:
                         return project_failure(exc)

@@ -3550,7 +3550,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "34ad08a4e5059efe1bd00d6b8030ed7b65a6a572a1ecdc2ba153675b8bb4ffbe",
+        "sha256": "d551e4139623fe7e94096e5cf831b933b01d532138ffc674caffeb7b8b005188",
         "role": "Proves MCP server tool registration, request handling, and lifecycle behaviour."
       },
       {
@@ -3584,7 +3584,8 @@
       "On 2026-08-26, re-read the complete client how-to after the shared MCP regression began proving the declaration-owned submission default; installation, registration, reconnect, and GUI attachment guidance remain accurate.",
       "On 2026-08-27, re-read the complete client how-to after adding the declaration-projected endpoint-startup poster beside the selected-surface procedure; the visual and accessibility copy remain owned by its gallery scenario.",
       "On 2026-08-28, re-read the complete client how-to after gallery dimensions and source evidence became generated projections; installation, capability surfaces, reconnect ownership, path policy, and GUI attachment guidance remain accurate.",
-      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
+      "Re-read the complete client how-to on 2026-09-07 after invocation-wide verbose stack diagnostics and thread-policy regressions changed. User installation, registration, surfaces, path policy and reconnect guidance remain accurate; developer diagnostics stay in the linked development how-to."
     ]
   },
   {

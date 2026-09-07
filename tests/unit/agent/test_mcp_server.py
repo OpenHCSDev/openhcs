@@ -15011,8 +15011,10 @@ def test_mcp_server_exposes_execution_session_tools():
     assert "openhcs_ui_get_object_state_fields" in tool_names
 
 
-def test_source_session_progress_adapter_keeps_imports_on_event_loop_thread(
+@pytest.mark.parametrize("worker_thread_safe", [False, True])
+def test_source_session_progress_adapter_preserves_thread_policy_and_diagnostics(
     monkeypatch,
+    worker_thread_safe,
 ):
     if importlib.util.find_spec("mcp") is None:
         return
@@ -15020,6 +15022,7 @@ def test_source_session_progress_adapter_keeps_imports_on_event_loop_thread(
     class SlowExecutionService:
         def create_session_from_pipeline_source_request(self, request):
             del request
+            diagnostic_events.append("operation")
             observed_thread_ids.append(threading.get_ident())
             return OrchestratorSessionRef(
                 schema_version=SCHEMA_VERSION,
@@ -15027,6 +15030,23 @@ def test_source_session_progress_adapter_keeps_imports_on_event_loop_thread(
                 uri="openhcs://execution/sessions/session-1",
             )
 
+    monkeypatch.setenv(server.MCP_VERBOSE_ENVIRONMENT_VARIABLE, "1")
+    monkeypatch.setattr(
+        CreateOrchestratorSessionFromPipelineSourceCapability,
+        "progress_worker_thread_safe",
+        worker_thread_safe,
+    )
+    diagnostic_events = []
+    monkeypatch.setattr(
+        server.faulthandler,
+        "dump_traceback_later",
+        lambda *args, **kwargs: diagnostic_events.append("arm"),
+    )
+    monkeypatch.setattr(
+        server.faulthandler,
+        "cancel_dump_traceback_later",
+        lambda: diagnostic_events.append("cancel"),
+    )
     observed_thread_ids: list[int] = []
     event_loop_thread_id = threading.get_ident()
     built = server.build_server(
@@ -15046,7 +15066,9 @@ def test_source_session_progress_adapter_keeps_imports_on_event_loop_thread(
     payload = json.loads(_direct_tool_text(result))
 
     assert payload["session_id"] == "session-1"
-    assert observed_thread_ids == [event_loop_thread_id]
+    assert len(observed_thread_ids) == 1
+    assert (observed_thread_ids[0] != event_loop_thread_id) is worker_thread_safe
+    assert diagnostic_events == ["arm", "operation", "cancel"]
 
 
 def test_declared_progress_helper_emits_heartbeats_while_work_runs(monkeypatch):

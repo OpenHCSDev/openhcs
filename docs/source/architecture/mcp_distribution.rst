@@ -247,14 +247,17 @@ generator owns a separate random state, so concurrent requests preserve seeded
 pixels without changing the caller's random sequence. Progress remains active
 until inspection and the typed result are complete.
 
+In verbose mode, a bounded ``faulthandler`` timer covers the entire declared
+invocation and writes a delayed stack diagnostic to stderr. This exposes a
+blocked worker even when the event loop continues emitting liveness updates.
+The diagnostic does not alter the operation's result or execution context.
+
 Source-backed orchestrator-session creation remains on the MCP process's main
 thread because its import and compiler-facing setup is thread-sensitive. The
 binder emits the standard ``started`` progress event before entering that
 synchronous section, and the service logs its source-parse start and
 completion. The event loop cannot emit periodic progress while the synchronous
-main-thread operation is blocked. In verbose mode a separate bounded
-``faulthandler`` timer writes a delayed stack diagnostic to stderr without
-altering the MCP result. None of those signals is scientific percent
+main-thread operation is blocked. None of those signals is scientific percent
 completion or success; the client must still wait for the actual typed result.
 
 Session creation and submitted execution are separate phases. The development

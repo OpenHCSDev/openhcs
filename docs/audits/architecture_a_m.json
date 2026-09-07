@@ -1679,7 +1679,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "f05c3ac0242490addbc354a06cd3ea4c11b86693305f0caa33e3c777c5deb96b",
+    "source_sha256": "60199e01ab6f91d79722b71349d84120357d61a2c11592e13624bb868a7dc8e5",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -1709,7 +1709,7 @@
       },
       {
         "path": "openhcs/mcp/server.py",
-        "sha256": "ebe4be2fb6442d41c57a46276e973678cdb53dd2aed6e415e12cd5e727915419",
+        "sha256": "56f17a67d06fbfcb360eced05b21838b7ad0f5a10df6944441b00bfe317cf892",
         "role": "Binds the selected declaration registry into the local stdio MCP server."
       },
       {
@@ -1814,7 +1814,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "34ad08a4e5059efe1bd00d6b8030ed7b65a6a572a1ecdc2ba153675b8bb4ffbe",
+        "sha256": "d551e4139623fe7e94096e5cf831b933b01d532138ffc674caffeb7b8b005188",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -1886,7 +1886,8 @@
       "On 2026-08-27, rechecked the complete distribution explanation after the pinned formatter normalized its desktop-deployment authority; the change is mechanical and all ownership and launcher projections remain unchanged.",
       "On 2026-08-27, re-read and revised the complete distribution explanation after Intel native acceptance exposed an upstream wheel-availability boundary; one desktop profile now projects its binary-wheel policy into both initial installation and staged update.",
       "On 2026-08-27, applied the Diataxis explanation boundary and re-read the complete page against the MCP wire session and progress binder; revised it to name progress-aware transport inactivity and the absence of a duplicate absolute client ceiling.",
-      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed."
+      "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
+      "Re-read the complete explanation on 2026-09-07 against the invocation-wide verbose stack diagnostic and both declared thread-policy regressions. Clarified that liveness can continue while a worker is blocked; diagnostic scope changes neither execution context nor completion semantics."
     ]
   },
   {
