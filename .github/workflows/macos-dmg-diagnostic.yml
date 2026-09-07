@@ -25,6 +25,7 @@ jobs:
           python -m pip install packaging pytest
           python -m pytest -q -c tests/installer/pytest.ini tests/installer/test_macos_dmg_lifecycle.py
       - name: Exercise the maintained installer app and disk-image builders
+        if: ${{ !cancelled() }}
         run: |
           version=$(python -c 'from scripts.sync_mcp_release_metadata import read_package_version; print(read_package_version())')
           python -m scripts.render_installer_contract --version "$version" --output "$RUNNER_TEMP/installer_contract.json"
