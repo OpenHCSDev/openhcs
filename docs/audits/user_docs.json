@@ -2545,7 +2545,7 @@
       },
       {
         "path": "openhcs/mcp/bootstrap.py",
-        "sha256": "c95514b556993d5c49927e40ab4438a365a2ec7ceafe07155770eaa4d206193a",
+        "sha256": "b61f7f806c956f2155f6d220dbcde486fcd658122ac163526c694505a9b8f18b",
         "role": "Builds the installed MCP server, registers its tools and resources, and starts the selected transport."
       },
       {
@@ -3520,7 +3520,7 @@
     "authority": [
       {
         "path": "openhcs/mcp/bootstrap.py",
-        "sha256": "c95514b556993d5c49927e40ab4438a365a2ec7ceafe07155770eaa4d206193a",
+        "sha256": "b61f7f806c956f2155f6d220dbcde486fcd658122ac163526c694505a9b8f18b",
         "role": "Builds the installed MCP server, registers its tools and resources, and starts the selected transport."
       },
       {
@@ -3550,7 +3550,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "d551e4139623fe7e94096e5cf831b933b01d532138ffc674caffeb7b8b005188",
+        "sha256": "551c4362e863b0802f98565ec1e2fc55a4327e887625ecb73cbb3a66c065bc71",
         "role": "Proves MCP server tool registration, request handling, and lifecycle behaviour."
       },
       {

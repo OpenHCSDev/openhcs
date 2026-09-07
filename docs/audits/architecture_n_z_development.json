@@ -2700,23 +2700,23 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "d551e4139623fe7e94096e5cf831b933b01d532138ffc674caffeb7b8b005188",
+        "sha256": "551c4362e863b0802f98565ec1e2fc55a4327e887625ecb73cbb3a66c065bc71",
         "role": "Regression proof for selected-surface preflight, stale-row rejection, idempotent initialization, and every declared or malformed bridge-receipt continuation outcome."
       },
       {
         "path": "openhcs/mcp/bootstrap.py",
-        "sha256": "c95514b556993d5c49927e40ab4438a365a2ec7ceafe07155770eaa4d206193a",
+        "sha256": "b61f7f806c956f2155f6d220dbcde486fcd658122ac163526c694505a9b8f18b",
         "role": "Installed stdio bootstrap, surface selection, and stale-process boundary."
       },
       {
         "path": "openhcs/mcp/stdio.py",
-        "sha256": "adc002730f0552d5a5a76c3b04de1d764e194632cf86c1754b659479a53b6257",
-        "role": "Reserves protocol stdout before server construction and owns process-lifetime output routing."
+        "sha256": "9dadd1c7d46727688315cc51e8d5dcb8b9f8148522b441eabdf2400cebdbc56f",
+        "role": "Reserves protocol stdin and stdout before server construction and owns process-lifetime application I/O isolation."
       },
       {
         "path": "tests/unit/agent/test_mcp_stdio_transport.py",
-        "sha256": "cb7076c2520b4ed3d3a35a3ac5a30545494d3af213437e18becc7753c33f742b",
-        "role": "Exercises two tools in one persistent session after Python and native stdout noise."
+        "sha256": "4aabb6bb92b748992678c07d563512cd2a9d0b8395fa6402c381ed2394339af4",
+        "role": "Exercises persistent sessions after application output, cold native imports after handshake, and process-handle restoration."
       },
       {
         "path": "tests/unit/test_mcp_dev_client_persistent_session.py",

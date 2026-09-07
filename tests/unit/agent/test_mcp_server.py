@@ -14914,7 +14914,7 @@ def test_mcp_bootstrap_wraps_server_run_failure(monkeypatch):
     )
     monkeypatch.setattr(
         mcp_stdio.McpStdioTransport,
-        "reserve_process_stdout",
+        "reserve_process_stdio",
         classmethod(lambda cls: nullcontext(recording_transport)),
     )
 

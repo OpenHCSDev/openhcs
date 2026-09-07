@@ -1,5 +1,6 @@
 import asyncio
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -36,7 +37,7 @@ def health() -> dict[str, bool]:
     return {"ok": True}
 
 
-with McpStdioTransport.reserve_process_stdout() as transport:
+with McpStdioTransport.reserve_process_stdio() as transport:
     transport.run(server)
 """,
         encoding="utf-8",
@@ -103,7 +104,7 @@ async def import_native(module_name: str) -> dict[str, bool]:
     module = await asyncio.to_thread(importlib.import_module, module_name)
     return {"imported": module.__name__ == module_name}
 
-with McpStdioTransport.reserve_process_stdout() as transport:
+with McpStdioTransport.reserve_process_stdio() as transport:
     transport.run(server)
 """,
         encoding="utf-8",
@@ -126,3 +127,43 @@ with McpStdioTransport.reserve_process_stdout() as transport:
     result = asyncio.run(import_after_handshake())
     assert not result.isError
     assert result.structuredContent == {"imported": True}
+
+
+@pytest.mark.parametrize("fail_inside", [False, True])
+def test_stdio_channel_reservation_restores_process_handles(fail_inside: bool) -> None:
+    script = """\
+import os
+import sys
+from openhcs.mcp.stdio import McpStdioTransport
+
+original_streams = (sys.stdin, sys.stdout)
+original_files = (os.fstat(0), os.fstat(1))
+try:
+    with McpStdioTransport.reserve_process_stdio() as transport:
+        assert sys.stdin.read() == ""
+        assert os.read(0, 1) == b""
+        assert transport._protocol_stdin.readline() == "protocol input\\n"
+        if sys.platform == "win32":
+            import ctypes
+            import msvcrt
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel32.GetStdHandle.argtypes = (ctypes.c_uint32,)
+            kernel32.GetStdHandle.restype = ctypes.c_void_p
+            assert kernel32.GetStdHandle(-10) == msvcrt.get_osfhandle(0)
+        print("application diagnostic", flush=True)
+        transport._protocol_stdout.write("protocol output\\n")
+        if sys.argv[1] == "True":
+            raise ValueError("expected failure")
+except ValueError as exc:
+    assert str(exc) == "expected failure"
+assert (sys.stdin, sys.stdout) == original_streams
+assert (os.fstat(0), os.fstat(1)) == original_files
+print("restored", flush=True)
+"""
+    completed = subprocess.run(
+        [sys.executable, "-c", script, str(fail_inside)],
+        input="protocol input\n", capture_output=True, text=True, timeout=10,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout == "protocol output\nrestored\n"
+    assert completed.stderr == "application diagnostic\n"
