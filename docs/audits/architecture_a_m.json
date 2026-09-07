@@ -1754,7 +1754,7 @@
       },
       {
         "path": "openhcs/mcp/stdio.py",
-        "sha256": "c2148f40a95ec85549f39fbb47262769fbaf70cdf76f1a8222325850536417ea",
+        "sha256": "4a5299915413293e5c2492d4e3889614231a1286f93a976094e4d2eba77ea9c0",
         "role": "Owns protocol stdin and stdout reservation, isolates application input and native-library probes, and routes application output to stderr."
       },
       {

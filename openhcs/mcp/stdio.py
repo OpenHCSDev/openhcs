@@ -31,7 +31,9 @@ class McpStdioTransport:
     """
 
     def __init__(
-        self, protocol_stdin: TextIOWrapper, protocol_stdout: TextIOWrapper,
+        self,
+        protocol_stdin: TextIOWrapper,
+        protocol_stdout: TextIOWrapper,
     ) -> None:
         self._protocol_stdin = protocol_stdin
         self._protocol_stdout = protocol_stdout
@@ -54,10 +56,15 @@ class McpStdioTransport:
             os.fdopen(os.dup(stdout_fd), "wb", buffering=0) as protocol_output,
             open(os.devnull, "r", encoding="utf-8") as application_stdin,
             TextIOWrapper(
-                protocol_input, encoding="utf-8", errors="replace",
+                protocol_input,
+                encoding="utf-8",
+                errors="replace",
             ) as protocol_stdin,
             TextIOWrapper(
-                protocol_output, encoding="utf-8", errors="strict", write_through=True,
+                protocol_output,
+                encoding="utf-8",
+                errors="strict",
+                write_through=True,
             ) as protocol_stdout,
         ):
             try:
@@ -86,7 +93,10 @@ class McpStdioTransport:
     async def _run(self, server: FastMCP) -> None:
         async_stdin = anyio.wrap_file(self._protocol_stdin)
         async_stdout = anyio.wrap_file(self._protocol_stdout)
-        async with stdio_server(stdin=async_stdin, stdout=async_stdout) as (read_stream, write_stream):
+        async with stdio_server(stdin=async_stdin, stdout=async_stdout) as (
+            read_stream,
+            write_stream,
+        ):
             await server._mcp_server.run(
                 read_stream,
                 write_stream,
