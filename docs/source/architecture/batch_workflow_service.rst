@@ -74,7 +74,7 @@ admission, so an in-progress startup attempt is cancelled and its exact child
 processes are reaped. ZMQRuntime reports that owner-requested path through its
 typed connection-cancellation result rather than an endpoint-failure string.
 The server browser's immutable endpoint snapshot is the
-single input for the configured endpoint's browser row, status text, and
+single input for the configured endpoint's browser row and dedicated status
 indicator. ZMQRuntime's ``EndpointClientSession`` owns client admission and
 connection state; browser-driven endpoint termination explicitly retires that
 session. Startup events update the browser snapshot rather than writing a

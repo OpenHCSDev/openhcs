@@ -392,10 +392,7 @@ STRUCTURED_SELECTOR_EDITOR_SPECS: Mapping[
     FreeFormCellEditorKind,
     StructuredSelectorEditorSpec,
 ] = MappingProxyType(
-    {
-        spec.editor_kind: spec
-        for spec in STRUCTURED_SELECTOR_EDITOR_SPEC_ITEMS
-    }
+    {spec.editor_kind: spec for spec in STRUCTURED_SELECTOR_EDITOR_SPEC_ITEMS}
 )
 
 
@@ -499,10 +496,11 @@ class StructuredSelectorDialog(QDialog):
         add_button = QPushButton("Add selected", self)
         add_button.clicked.connect(self._append_selected)
         add_row_button = QPushButton("Add row", self)
-        add_row_button.clicked.connect(lambda: self._append_row(("",) * self.table.columnCount()))
+        add_row_button.clicked.connect(
+            lambda: self._append_row(("",) * self.table.columnCount())
+        )
         buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok
-            | QDialogButtonBox.StandardButton.Cancel,
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             self,
         )
         buttons.accepted.connect(self.accept)
@@ -521,8 +519,7 @@ class StructuredSelectorDialog(QDialog):
 
     def value(self) -> str:
         items = tuple(
-            self._item_from_row(row_index)
-            for row_index in range(self.table.rowCount())
+            self._item_from_row(row_index) for row_index in range(self.table.rowCount())
         )
         return SelectorListCodec.ITEM_SEPARATOR.join(item for item in items if item)
 
@@ -547,7 +544,9 @@ class StructuredSelectorDialog(QDialog):
                 combo.setEditable(True)
                 combo.addItems(list(options))
                 combo.setCurrentText(value)
-                combo.currentTextChanged.connect(lambda _text: self._update_validation_hint())
+                combo.currentTextChanged.connect(
+                    lambda _text: self._update_validation_hint()
+                )
                 self.table.setCellWidget(row_index, column_index, combo)
                 continue
             self.table.setItem(row_index, column_index, QTableWidgetItem(value))
@@ -608,11 +607,12 @@ class SourceBindingSuggestionSet:
             source_bindings=source_bindings,
             inventory=inventory,
         )
-        aliases = tuple(sorted(binding.alias for binding in source_bindings.binding_declarations))
+        aliases = tuple(
+            sorted(binding.alias for binding in source_bindings.binding_declarations)
+        )
         return cls(
             component_selectors=tuple(
-                f"{component.value}="
-                for component in AllComponents
+                f"{component.value}=" for component in AllComponents
             ),
             metadata_selectors=tuple(f"{field}=" for field in metadata_fields)
             + cls.inventory_metadata_selectors(inventory),
@@ -864,7 +864,10 @@ class EditableTableController(Generic[EditableRowT]):
         """Whether any non-empty row is not yet valid for the row model."""
 
         for values in self.row_values():
-            if any(value.strip() for value in values) and self.row_from_cells(values) is None:
+            if (
+                any(value.strip() for value in values)
+                and self.row_from_cells(values) is None
+            ):
                 return True
         return False
 
@@ -1077,7 +1080,10 @@ class EditableTableController(Generic[EditableRowT]):
             with self.update_guard:
                 table_signals_blocked = self.table.blockSignals(True)
                 try:
-                    for (row_index, column_index), relative_path in self.semantic_paths().items():
+                    for (
+                        row_index,
+                        column_index,
+                    ), relative_path in self.semantic_paths().items():
                         semantic = semantic_index.leaf_for(relative_path)
                         if semantic is None:
                             continue
@@ -1285,9 +1291,7 @@ class EditableTableController(Generic[EditableRowT]):
         font.setItalic(active)
         item.setFont(font)
         item.setForeground(
-            QBrush(QColor(PlaceholderConfig.text_color_name()))
-            if active
-            else QBrush()
+            QBrush(QColor(PlaceholderConfig.text_color_name())) if active else QBrush()
         )
 
     @classmethod
@@ -1445,10 +1449,7 @@ class StepBindingsTableEditor(QWidget):
         bindings: list[NamedSourceBinding] = []
         for binding_index in range(self.table.columnCount()):
             row = EditableSourceBindingRow.from_cells(
-                tuple(
-                    self._cell_text(binding_index, column)
-                    for column in self.columns
-                )
+                tuple(self._cell_text(binding_index, column) for column in self.columns)
             )
             if row is not None:
                 bindings.append(row.binding)
@@ -1581,8 +1582,7 @@ class StepBindingsDialog(QDialog):
             parent=self,
         )
         buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok
-            | QDialogButtonBox.StandardButton.Cancel,
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             self,
         )
         buttons.accepted.connect(self.accept)
@@ -1700,9 +1700,7 @@ class SelectorListCodec:
     @classmethod
     def items(cls, text: str) -> tuple[str, ...]:
         return tuple(
-            item.strip()
-            for item in text.split(cls.ITEM_SEPARATOR)
-            if item.strip()
+            item.strip() for item in text.split(cls.ITEM_SEPARATOR) if item.strip()
         )
 
     @classmethod
@@ -1717,8 +1715,7 @@ class SelectorListCodec:
         parts = tuple(part.strip() for part in item.split(cls.FILTER_SEPARATOR, 2))
         if len(parts) < 2 or not parts[0] or not parts[1]:
             raise ValueError(
-                "Expected filter item as subject:match_type[:value], "
-                f"got {item!r}."
+                "Expected filter item as subject:match_type[:value], " f"got {item!r}."
             )
         return parts[0], parts[1], parts[2] if len(parts) == 3 else None
 
@@ -1743,9 +1740,7 @@ class EditableSourceBindingRow:
             identity,
             source_set_role,
             projection_role,
-        ) = (
-            value.strip() for value in values
-        )
+        ) = (value.strip() for value in values)
         if not alias:
             return None
         selector = SourceSelector(
@@ -1758,9 +1753,13 @@ class EditableSourceBindingRow:
         return cls(
             binding=NamedSourceBinding(
                 alias=alias,
-                artifact_kind=ArtifactType.coerce(artifact_kind or ImageArtifactType.value),
+                artifact_kind=ArtifactType.coerce(
+                    artifact_kind or ImageArtifactType.value
+                ),
                 selector=selector,
-                origin=SourceBindingOrigin(origin or SourceBindingOrigin.STEP_INPUT.value),
+                origin=SourceBindingOrigin(
+                    origin or SourceBindingOrigin.STEP_INPUT.value
+                ),
                 component_identity=SelectorListCodec.parse_components(identity),
                 required=required.lower() not in {"false", "0", "no", "n"},
                 source_set_role=SourceSetRole(
@@ -1881,11 +1880,13 @@ class EditableMatchPlanRow:
             method=SourceBindingMatchMethod(
                 method or SourceBindingMatchMethod.ORDER.value
             ),
-            dimension=SourceBindingMatchDimension(
-                fields=SelectorListCodec.parse_match_fields(fields),
-            )
-            if fields
-            else None,
+            dimension=(
+                SourceBindingMatchDimension(
+                    fields=SelectorListCodec.parse_match_fields(fields),
+                )
+                if fields
+                else None
+            ),
         )
 
     @classmethod
@@ -1905,9 +1906,11 @@ class EditableMatchPlanRow:
     def cells(self) -> tuple[str, ...]:
         return (
             self.method.value,
-            ""
-            if self.dimension is None
-            else SelectorListCodec.match_field_cells(self.dimension),
+            (
+                ""
+                if self.dimension is None
+                else SelectorListCodec.match_field_cells(self.dimension)
+            ),
         )
 
 
@@ -2178,14 +2181,18 @@ class SourceBindingsEditorWidget(
     ) -> None:
         """Update raw edit value and resolved display in one render pass."""
 
-        raw_bindings = (
-            raw_value if raw_value is not None else type(self._bindings)()
-        )
+        raw_bindings = raw_value if raw_value is not None else type(self._bindings)()
         display_bindings = (
             resolved_value if resolved_value is not None else raw_bindings
         )
         SourceBindingsEditorValue(raw_bindings)
         SourceBindingsEditorValue(display_bindings)
+
+        if (
+            raw_bindings == self._bindings
+            and display_bindings == self._display_bindings
+        ):
+            return
 
         if self._refresh_enableable_only(raw_bindings, display_bindings):
             return
@@ -2239,7 +2246,9 @@ class SourceBindingsEditorWidget(
         if self._form_context is None:
             return
         for controller, binding in self._structural_table_controller_bindings():
-            if owner_field_path != self._form_context.child_path(binding.owner_field_name):
+            if owner_field_path != self._form_context.child_path(
+                binding.owner_field_name
+            ):
                 continue
             controller.apply_semantic_index(semantic_index)
             return
@@ -2272,7 +2281,8 @@ class SourceBindingsEditorWidget(
                 return False
             if (
                 current.binding_declarations != incoming.binding_declarations
-                or current.metadata_rule_declarations != incoming.metadata_rule_declarations
+                or current.metadata_rule_declarations
+                != incoming.metadata_rule_declarations
                 or current.match_plan != incoming.match_plan
             ):
                 return False
@@ -2405,7 +2415,9 @@ class SourceBindingsEditorWidget(
             label_widget=self.child_field_label(child_identity.field_name),
         )
 
-    def child_field_identity(self, field_name: str) -> InlineDataclassChildFieldIdentity:
+    def child_field_identity(
+        self, field_name: str
+    ) -> InlineDataclassChildFieldIdentity:
         """Return the nominal ObjectState identity for one source-binding child."""
 
         if self._child_chrome is None:
@@ -2423,7 +2435,9 @@ class SourceBindingsEditorWidget(
         """Return the rendered reset button for one source-binding child field."""
 
         if self._child_chrome is None:
-            raise RuntimeError("Source binding child reset button requires form context.")
+            raise RuntimeError(
+                "Source binding child reset button requires form context."
+            )
         return self._child_chrome.reset_buttons[self.child_field_identity(field_name)]
 
     def child_field_section_group(self, field_name: str) -> QWidget:
@@ -2431,7 +2445,9 @@ class SourceBindingsEditorWidget(
 
         target = self.child_field_navigation_target(field_name)
         if target is None:
-            raise RuntimeError(f"Source binding child section {field_name!r} is not rendered.")
+            raise RuntimeError(
+                f"Source binding child section {field_name!r} is not rendered."
+            )
         return target
 
     def _enabled_structural_target(self) -> StructuralFlashTarget | None:
@@ -2569,12 +2585,10 @@ class SourceBindingsEditorWidget(
                         (
                             str(row.index),
                             ", ".join(
-                                f"{alias}:{path}"
-                                for alias, path in row.paths_by_alias
+                                f"{alias}:{path}" for alias, path in row.paths_by_alias
                             ),
                             ", ".join(
-                                f"{field}={value}"
-                                for field, value in row.metadata
+                                f"{field}={value}" for field, value in row.metadata
                             ),
                         )
                         for row in preview.source_set_rows
@@ -2587,7 +2601,9 @@ class SourceBindingsEditorWidget(
             controller.suppress_current_rows_until_idle()
         self._updating_ui = False
 
-    def connect_change_signal(self, callback: Callable[[SourceBindingsEditorRawValue], None]) -> None:
+    def connect_change_signal(
+        self, callback: Callable[[SourceBindingsEditorRawValue], None]
+    ) -> None:
         """Implement ChangeSignalEmitter for pyqt-reactive inline dataclass forms."""
 
         def delegated_callback() -> None:
@@ -2596,7 +2612,9 @@ class SourceBindingsEditorWidget(
         self._change_signal_callbacks[callback] = delegated_callback
         self.changed.connect(delegated_callback)
 
-    def disconnect_change_signal(self, callback: Callable[[SourceBindingsEditorRawValue], None]) -> None:
+    def disconnect_change_signal(
+        self, callback: Callable[[SourceBindingsEditorRawValue], None]
+    ) -> None:
         """Disconnect a previously registered change callback."""
 
         delegated_callback = self._change_signal_callbacks.pop(callback, None)
@@ -2647,10 +2665,14 @@ class SourceBindingsEditorWidget(
 
         provenance_button = None
         if self._form_context is not None:
-            provenance_button = enableable_title_authority.create_title_provenance_button(
-                state=self._form_context.state,
-                dotted_path=self._form_context.child_path(self._enabled_field_name()).value,
-                color_scheme=groupbox.color_scheme,
+            provenance_button = (
+                enableable_title_authority.create_title_provenance_button(
+                    state=self._form_context.state,
+                    dotted_path=self._form_context.child_path(
+                        self._enabled_field_name()
+                    ).value,
+                    color_scheme=groupbox.color_scheme,
+                )
             )
 
         self._enabled_checkbox = checkbox
@@ -2842,8 +2864,7 @@ class SourceBindingsEditorWidget(
         self._updating_ui = True
         try:
             self.match_plan_controller.append(
-                row
-                or EditableMatchPlanRow(method=SourceBindingMatchMethod.METADATA)
+                row or EditableMatchPlanRow(method=SourceBindingMatchMethod.METADATA)
             )
         finally:
             self._updating_ui = False
@@ -2912,8 +2933,7 @@ class SourceBindingsEditorWidget(
         self,
     ) -> tuple[EditableTableSemanticBinding, ...]:
         return tuple(
-            binding
-            for _, binding in self._structural_table_controller_bindings()
+            binding for _, binding in self._structural_table_controller_bindings()
         )
 
     def _structural_table_controller_bindings(
@@ -3002,7 +3022,9 @@ class SourceBindingsEditorWidget(
 
     def _create_step_bindings_dialog(self) -> StepBindingsDialog:
         return StepBindingsDialog(
-            bindings=SourceBindingsEditorValue(self._display_bindings).binding_declarations,
+            bindings=SourceBindingsEditorValue(
+                self._display_bindings
+            ).binding_declarations,
             free_form_cell_specs=self._free_form_cell_specs(),
             scope_color_scheme=self._scope_color_scheme,
             parent=self,
@@ -3034,7 +3056,9 @@ class SourceBindingsEditorWidget(
             (
                 str(len(view_model.step_bindings)),
                 ", ".join(binding.alias for binding in view_model.step_bindings),
-                ", ".join(sorted({binding.origin for binding in view_model.step_bindings})),
+                ", ".join(
+                    sorted({binding.origin for binding in view_model.step_bindings})
+                ),
             ),
         )
 
@@ -3065,7 +3089,9 @@ class SourceBindingsEditorWidget(
         for clause in SourceBindingsEditorValue(
             self._display_bindings
         ).source_filter_declarations:
-            self.source_filters_controller.append(EditableSourceFilterRow.from_clause(clause))
+            self.source_filters_controller.append(
+                EditableSourceFilterRow.from_clause(clause)
+            )
         table.itemChanged.connect(
             lambda _: self.source_filters_controller.request_apply_changes()
         )
@@ -3114,7 +3140,9 @@ class SourceBindingsEditorWidget(
         for rule in SourceBindingsEditorValue(
             self._display_bindings
         ).metadata_rule_declarations:
-            self.metadata_rules_controller.append(EditableMetadataRuleRow.from_rule(rule))
+            self.metadata_rules_controller.append(
+                EditableMetadataRuleRow.from_rule(rule)
+            )
         table.itemChanged.connect(
             lambda _: self.metadata_rules_controller.request_apply_changes()
         )
@@ -3274,9 +3302,7 @@ class SourceBindingsEditorWidget(
         if not rows:
             return None
         method = rows[0].method
-        dimensions = tuple(
-            row.dimension for row in rows if row.dimension is not None
-        )
+        dimensions = tuple(row.dimension for row in rows if row.dimension is not None)
         return SourceBindingMatchPlan(method=method, dimensions=dimensions)
 
     def _table_group(
@@ -3308,13 +3334,11 @@ class SourceBindingsEditorWidget(
         field_name: str | None = None,
     ) -> tuple[QGroupBox, QVBoxLayout]:
         group = QGroupBox("")
-        group.setStyleSheet(
-            """
+        group.setStyleSheet("""
             QGroupBox {
                 margin-top: 6px;
             }
-            """
-        )
+            """)
         layout = QVBoxLayout(group)
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(3)
@@ -3330,7 +3354,9 @@ class SourceBindingsEditorWidget(
             font = label.font()
             font.setBold(True)
             label.setFont(font)
-            label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            label.setAlignment(
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+            )
             label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
             layout.addWidget(label)
         return group, layout
@@ -3341,7 +3367,9 @@ class SourceBindingsEditorWidget(
     ) -> None:
         from objectstate.time_travel_profile import TimeTravelProfiler
 
-        with TimeTravelProfiler.phase("openhcs.source_bindings.refresh_section_label_markers"):
+        with TimeTravelProfiler.phase(
+            "openhcs.source_bindings.refresh_section_label_markers"
+        ):
             field_names = self._field_names_for_owner_paths(owner_field_paths)
             if self._child_chrome is not None:
                 self._child_chrome.refresh_markers(field_names)
@@ -3408,7 +3436,9 @@ class SourceBindingsEditorWidget(
             and self._form_context.child_has_inherited_preview(field_name)
         ):
             return True
-        raw_value = SourceBindingsEditorValue(self._bindings).raw_field_value(field_name)
+        raw_value = SourceBindingsEditorValue(self._bindings).raw_field_value(
+            field_name
+        )
         display_value = SourceBindingsEditorValue(
             self._display_bindings
         ).raw_field_value(field_name)
@@ -3500,7 +3530,9 @@ def resolved_source_bindings_value(
 def register_source_bindings_editor_widget() -> None:
     """Register the typed source-binding editor with pyqt-reactive forms."""
 
-    from pyqt_reactive.forms.parameter_info_types import register_inline_dataclass_widget
+    from pyqt_reactive.forms.parameter_info_types import (
+        register_inline_dataclass_widget,
+    )
 
     for config_type in SourceBindingsConfig.registered_plan_types():
         if issubclass(config_type, SourceBindingsConfig):

@@ -15,7 +15,7 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_widgets.py",
-        "sha256": "161ff2e4770e9862603337987f66e3795369ddcc63d8c3607b49159c00b5b33e",
+        "sha256": "89fdb07d734c4b70bc522312612cd7fd33386b505af4650a468ea46b5bd701e4",
         "role": "Exercises the reusable pyqt-reactive widget behaviours referenced by the transition page."
       }
     ],
@@ -44,7 +44,7 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_widgets.py",
-        "sha256": "161ff2e4770e9862603337987f66e3795369ddcc63d8c3607b49159c00b5b33e",
+        "sha256": "89fdb07d734c4b70bc522312612cd7fd33386b505af4650a468ea46b5bd701e4",
         "role": "Covers the generic widget behaviour supplied by pyqt-reactive."
       }
     ],
@@ -236,7 +236,7 @@
   },
   {
     "path": "docs/source/architecture/batch_workflow_service.rst",
-    "source_sha256": "8a393faab42b66a067b262d5f4972268426df365fbf4e52ef4b75c18d96bf259",
+    "source_sha256": "df53f8d5d947976bb89746261f54f2f6bbe9451981929fda214d4614453dbcbe",
     "audience": [
       "OpenHCS desktop and execution-service maintainers"
     ],
@@ -265,7 +265,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Coordinates post-paint endpoint preparation, projects the browser-owned endpoint snapshot into both status-bar surfaces, and routes endpoint termination to the client lifecycle owner."
       },
       {
@@ -275,7 +275,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_main_zmq_window_routing.py",
-        "sha256": "b4883b8ed1df0977c8048e988549104e425784efc2a304184bc09d4d38d6c5cc",
+        "sha256": "a6561e07d7fb5f33450c4198d5d4412939509d36f670ca0a64d47414feed5e99",
         "role": "Proves startup callbacks only commit observations, one snapshot drives status text and the indicator, and endpoint termination descends to the client lifecycle owner."
       },
       {
@@ -853,7 +853,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/field_change_dispatcher.py",
-        "sha256": "c2691e447c4cd5dc77d2a2ffb178c1e350a9c91ec43502f23120f2b373b9ba47",
+        "sha256": "631a3b54f629b89fb8738d0e05e6216b4e0ec17de8844dc5af2e4f93ece735c2",
         "role": "Implements generic change dispatch and subscription mechanics."
       }
     ],
@@ -1033,7 +1033,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Routes the desktop analysis action through ExperimentalAnalysisEngine rather than the deprecated wrapper."
       },
       {
@@ -1070,7 +1070,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1274,7 +1274,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/field_change_dispatcher.py",
-        "sha256": "c2691e447c4cd5dc77d2a2ffb178c1e350a9c91ec43502f23120f2b373b9ba47",
+        "sha256": "631a3b54f629b89fb8738d0e05e6216b4e0ec17de8844dc5af2e4f93ece735c2",
         "role": "Implements generic field-change subscription, dispatch, and cleanup."
       },
       {
@@ -1572,7 +1572,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/field_change_dispatcher.py",
-        "sha256": "c2691e447c4cd5dc77d2a2ffb178c1e350a9c91ec43502f23120f2b373b9ba47",
+        "sha256": "631a3b54f629b89fb8738d0e05e6216b4e0ec17de8844dc5af2e4f93ece735c2",
         "role": "Implements coalesced generic update dispatch used by reactive forms."
       }
     ],

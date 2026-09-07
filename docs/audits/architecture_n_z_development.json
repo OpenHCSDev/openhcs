@@ -285,7 +285,7 @@
       },
       {
         "path": "external/ObjectState/src/objectstate/object_state.py",
-        "sha256": "44b0f40ee8cd11ce0bd06807d8923a4c8b2206efe081ebd96f145cb146d7cc32",
+        "sha256": "1d8313d95ed3962a7d4b9c0bdc7b6fa45bb4a16f48f0f454e5fcd3e588836630",
         "role": "Generic editable ObjectState and snapshot boundary."
       }
     ],
@@ -310,7 +310,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "1921d08abaed67203ec1a4f7bffb0fe1c8e4ee1a635ffa565ac8d827723f8d91",
+        "sha256": "b7b41d540431da2a79957a496fcc97687098a17493a9e29abd8f3456c6d46498",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -369,7 +369,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "1921d08abaed67203ec1a4f7bffb0fe1c8e4ee1a635ffa565ac8d827723f8d91",
+        "sha256": "b7b41d540431da2a79957a496fcc97687098a17493a9e29abd8f3456c6d46498",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -626,7 +626,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_plate_manager_widget.py",
-        "sha256": "b2a5306e87547da3fdb7e1c14aa69dca0b5079da41aa2e30fc7fc64c2b213263",
+        "sha256": "e0d37d8dbb50f0c96ced818f1147e8a8b3ef399dbc5f015e813f4c2a4cdd0f1b",
         "role": "Regression evidence for Plate Manager service composition and UI delegation."
       },
       {
@@ -656,7 +656,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Coordinates post-paint endpoint preparation and callable-catalogue prewarming."
       },
       {
@@ -1049,7 +1049,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "1921d08abaed67203ec1a4f7bffb0fe1c8e4ee1a635ffa565ac8d827723f8d91",
+        "sha256": "b7b41d540431da2a79957a496fcc97687098a17493a9e29abd8f3456c6d46498",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -1281,7 +1281,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "1921d08abaed67203ec1a4f7bffb0fe1c8e4ee1a635ffa565ac8d827723f8d91",
+        "sha256": "b7b41d540431da2a79957a496fcc97687098a17493a9e29abd8f3456c6d46498",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -1326,7 +1326,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1536,7 +1536,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1599,12 +1599,12 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Desktop composition and live UIConfig application boundary."
       },
       {
@@ -1705,7 +1705,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "1921d08abaed67203ec1a4f7bffb0fe1c8e4ee1a635ffa565ac8d827723f8d91",
+        "sha256": "b7b41d540431da2a79957a496fcc97687098a17493a9e29abd8f3456c6d46498",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -1969,7 +1969,7 @@
   },
   {
     "path": "docs/source/architecture/zmq_server_browser_system.rst",
-    "source_sha256": "8e559c731c19c875e6607832559de7d09a04623326a57f1993bb402504ee447c",
+    "source_sha256": "3991ae2a3cfad47c41216eb595d9dd9c88666ec92f909a8df68db3482406a7c7",
     "audience": [
       "OpenHCS server-browser and progress UI maintainers"
     ],
@@ -2003,13 +2003,13 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
-        "role": "Projects the configured endpoint snapshot into central status text and the right-hand indicator, and routes endpoint termination to the client lifecycle owner."
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
+        "role": "Projects the configured endpoint snapshot into its dedicated right-hand indicator, and routes endpoint termination to the client lifecycle owner."
       },
       {
         "path": "tests/unit/pyqt_gui/test_main_zmq_window_routing.py",
-        "sha256": "b4883b8ed1df0977c8048e988549104e425784efc2a304184bc09d4d38d6c5cc",
-        "role": "Proves startup callbacks do not write presentation directly, one snapshot drives every status-bar projection, and endpoint termination descends to the client lifecycle owner."
+        "sha256": "a6561e07d7fb5f33450c4198d5d4412939509d36f670ca0a64d47414feed5e99",
+        "role": "Proves startup callbacks do not write presentation directly, endpoint snapshots leave workflow messages untouched, and endpoint termination descends to the client lifecycle owner."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/coalesced_scan_requests.py",
@@ -2410,7 +2410,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2487,7 +2487,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2525,7 +2525,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2833,7 +2833,7 @@
     "authority": [
       {
         "path": "openhcs/__init__.py",
-        "sha256": "1f9deac468df264334ef7b542bb8ed5ac31c48006e1505a815904a1efb7e0785",
+        "sha256": "693c9eca7208693372301b51da7d220cdef9cfc6df0a92a6796049500144c4ff",
         "role": "Single OpenHCS package version authority."
       },
       {
@@ -3184,7 +3184,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3199,7 +3199,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "1921d08abaed67203ec1a4f7bffb0fe1c8e4ee1a635ffa565ac8d827723f8d91",
+        "sha256": "b7b41d540431da2a79957a496fcc97687098a17493a9e29abd8f3456c6d46498",
         "role": "Reusable parameter-form lifecycle and value projection."
       }
     ],
@@ -3360,7 +3360,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],

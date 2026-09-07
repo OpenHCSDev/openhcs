@@ -163,7 +163,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
@@ -652,7 +652,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -841,7 +841,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1007,7 +1007,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -1111,7 +1111,7 @@
       },
       {
         "path": "external/ObjectState/src/objectstate/object_state.py",
-        "sha256": "44b0f40ee8cd11ce0bd06807d8923a4c8b2206efe081ebd96f145cb146d7cc32",
+        "sha256": "1d8313d95ed3962a7d4b9c0bdc7b6fa45bb4a16f48f0f454e5fcd3e588836630",
         "role": "Implements ObjectState provenance, inheritance resolution, and field-change propagation used by nested configuration objects."
       },
       {
@@ -1353,7 +1353,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -1388,7 +1388,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1566,7 +1566,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Wires the endpoint compatibility observation to the owning version-restart workflow."
       },
       {
@@ -2027,7 +2027,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2469,7 +2469,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -2511,7 +2511,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2827,7 +2827,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Composes the main desktop window and its stable docked surfaces from the registered identities."
       },
       {
@@ -2877,7 +2877,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -2977,7 +2977,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_plate_manager_widget.py",
-        "sha256": "b2a5306e87547da3fdb7e1c14aa69dca0b5079da41aa2e30fc7fc64c2b213263",
+        "sha256": "e0d37d8dbb50f0c96ced818f1147e8a8b3ef399dbc5f015e813f4c2a4cdd0f1b",
         "role": "Proves selected code-document application preserves unselected plate graphs."
       },
       {
@@ -3054,7 +3054,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "2e3262f142e32fa4d1a4373dfb208685b7b411d8f228bcb80f44ab7d618ee2a6",
+        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
@@ -3112,7 +3112,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -3291,7 +3291,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -3345,7 +3345,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00040f2ad496ccb4dcf118801a0fe487a3528517536c82b8066e9227d98faf1a",
+        "sha256": "d37061c576d1575af8415876aa73f4100945747f941f56ed31a11905c7559cac",
         "role": "Composes the main desktop window, menus, task windows, and registered UI services."
       },
       {
@@ -3470,7 +3470,7 @@
       },
       {
         "path": "packaging/mcpb/openhcs/manifest.json",
-        "sha256": "b887c42bca9c5fc346c208364ec17eeb7534f2ecb893d42368fb92bfb83ca3e6",
+        "sha256": "6a4325cb5fd5744493595f3021998e9a46e6d6f87e520a4a4ee5e58f41a754a7",
         "role": "Declares the packaged MCP server command, arguments, compatibility, and client-visible metadata."
       },
       {

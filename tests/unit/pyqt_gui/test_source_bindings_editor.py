@@ -1710,7 +1710,7 @@ def test_source_bindings_inherited_table_value_edit_undo_restores_lazy_child() -
         ObjectStateRegistry.clear()
 
 
-def test_source_bindings_inherited_table_edits_do_not_flash_source_cell() -> None:
+def test_source_bindings_inherited_table_edits_flash_only_changed_cell() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
     ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
@@ -1822,6 +1822,19 @@ def test_source_bindings_inherited_table_edits_do_not_flash_source_cell() -> Non
         assert value_item.data(Qt.ItemDataRole.EditRole) == "RNA2"
         assert value_item.text() == "*_RNA2"
 
+        expected_path = "step_source_bindings_config.source_filters[0].value"
+        assert queued == [expected_path]
+        assert [entry[0] for entry in registered] == [expected_path]
+        queued.clear()
+        registered.clear()
+        set_editable_cell_text(
+            step_widget.source_filters_table,
+            0,
+            int(SourceFilterColumn.VALUE),
+            "RNA2",
+        )
+        for _ in range(10):
+            QApplication.processEvents()
         assert queued == []
         assert registered == []
     finally:
@@ -3187,7 +3200,7 @@ def test_inline_step_source_bindings_undo_one_of_two_cell_edits_keeps_owner_dirt
         ObjectStateRegistry.clear()
 
 
-def test_inline_source_bindings_edit_does_not_self_flash() -> None:
+def test_inline_source_bindings_edit_flashes_changed_collection() -> None:
     QtApplicationHarness.app()
     step = FunctionStep(func=lambda image: image)
     state = ObjectState(step)
@@ -3213,10 +3226,11 @@ def test_inline_source_bindings_edit_does_not_self_flash() -> None:
     widget.add_binding_row(NamedSourceBinding(alias="DNA"))
     QApplication.processEvents()
 
-    assert queued == []
+    assert queued == ["source_bindings.bindings"]
+    manager.deleteLater()
 
 
-def test_inline_source_bindings_dropdown_edit_does_not_self_flash() -> None:
+def test_inline_source_bindings_dropdown_edit_flashes_only_changed_cell() -> None:
     QtApplicationHarness.app()
     state = ObjectState(PipelineConfig())
     manager = ParameterFormManager(
@@ -3262,8 +3276,9 @@ def test_inline_source_bindings_dropdown_edit_does_not_self_flash() -> None:
         )
         QApplication.processEvents()
 
-        assert registered == []
-        assert queued == []
+        expected_path = "source_bindings_config.source_filters[0].match_type"
+        assert [entry[0] for entry in registered] == [expected_path]
+        assert queued == [expected_path]
         assert state.parameters["source_bindings_config.source_filters"] == (
             SourceFilterClause(
                 SourceFilterSubject.FILE,
@@ -3271,6 +3286,17 @@ def test_inline_source_bindings_dropdown_edit_does_not_self_flash() -> None:
                 "DNA",
             ),
         )
+        queued.clear()
+        registered.clear()
+        combo = widget.source_filters_table.cellWidget(
+            0, int(SourceFilterColumn.MATCH_TYPE)
+        )
+        assert isinstance(combo, QComboBox)
+        assert combo.currentData() is SourceFilterMatchType.CONTAINS
+        combo.setCurrentIndex(combo.currentIndex())
+        QApplication.processEvents()
+        assert queued == []
+        assert registered == []
     finally:
         manager.deleteLater()
 
@@ -3697,7 +3723,9 @@ def test_source_bindings_cell_flash_element_masks_cell_and_child_label() -> None
         )
         expected_cell_rect = cell_rect.translated(cell_window_pos - cell_rect.topLeft())
         label_widget = widget.child_field_label("source_filters")
-        assert expected_cell_rect in [path.boundingRect().toAlignedRect() for path in mask_paths]
+        assert expected_cell_rect in [
+            path.boundingRect().toAlignedRect() for path in mask_paths
+        ]
         assert_label_masked(label_widget, manager, mask_paths)
     finally:
         manager.deleteLater()

@@ -91,11 +91,12 @@ delegated to the generic browser base.
 
 Server scans and startup events both produce a new
 ``EndpointObservationSnapshot`` through the generic browser's single commit
-boundary. One snapshot emission updates the server tree, the central status
-text, and the right-hand status indicator. Startup callbacks only commit
+boundary. One snapshot emission updates the server tree and the dedicated
+right-hand endpoint indicator. The central status text remains available for
+workflow messages. Startup callbacks only commit
 observations and request a scan; they do not update any of those projections
 directly. When the configured endpoint is absent from the snapshot, its browser
-row disappears and both status projections report that it is not connected.
+row disappears and the endpoint indicator reports that it is not connected.
 
 Primary Modules
 ---------------
