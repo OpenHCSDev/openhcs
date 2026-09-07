@@ -2,9 +2,22 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 import zarr
-
 from objectstate.lazy_factory import ensure_global_config_context
+from ome_zarr.format import Format
+from polystore.base import ensure_storage_registry, storage_registry
+from polystore.bioformats_java import BioFormatsJavaContext
+from polystore.filemanager import FileManager
+from polystore.ome_zarr_metadata import OmeZarrLocation
+from polystore.ome_zarr_storage import OmeZarrStorageBackend
+from polystore.zarr import ZarrStorageBackend
+from polystore.zarr_batch import (
+    ZarrBatchAxis,
+    ZarrBatchAxisRole,
+    ZarrBatchLayout,
+)
+
 from openhcs.constants.constants import AllComponents, Backend, OrchestratorState
 from openhcs.core.config import (
     GlobalPipelineConfig,
@@ -13,10 +26,6 @@ from openhcs.core.config import (
 )
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.steps.function_io import (
-    save_materialized_data,
-    update_metadata_for_zarr_conversion,
-)
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingsConfig,
@@ -25,19 +34,116 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
+from openhcs.core.steps.function_io import (
+    save_materialized_data,
+    update_metadata_for_zarr_conversion,
+)
 from openhcs.microscopes.bioformats import BioFormatsHandler
-from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
+from openhcs.microscopes.bioformats_adapter import (
+    OmeZarrStoreAdapter,
+    SourcePlaneStoreAdapter,
+)
 from openhcs.microscopes.microscope_base import create_microscope_handler
 from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
-from polystore.base import ensure_storage_registry, storage_registry
-from polystore.bioformats_java import BioFormatsJavaContext
-from polystore.filemanager import FileManager
-from polystore.zarr import ZarrStorageBackend
-from polystore.zarr_batch import (
-    ZarrBatchAxis,
-    ZarrBatchAxisRole,
-    ZarrBatchLayout,
-)
+from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
+
+
+@pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
+def test_ngff_axis_cardinalities_and_plane_pixels_survive_discovery(
+    tmp_path: Path,
+    fmt: Format,
+) -> None:
+    pixels = np.arange(2 * 2 * 3 * 4 * 5, dtype=np.uint16).reshape(2, 2, 3, 4, 5)
+    store = tmp_path / "nested" / "plate"
+    write_ngff_plate(store, pixels, fmt=fmt)
+    adapter = OmeZarrStoreAdapter()
+
+    (direct,) = adapter.discover_stores(store)
+    (nested,) = adapter.discover_stores(tmp_path)
+
+    assert len(direct.candidates) == len(nested.candidates) == 12
+    assert direct.identity == nested.identity
+    assert direct.pixel_size == nested.pixel_size == 1.0
+    expected_components = {
+        AllComponents.WELL: {"A01"},
+        AllComponents.SITE: {"1"},
+        AllComponents.CHANNEL: {"1", "2"},
+        AllComponents.Z_INDEX: {"1", "2", "3"},
+        AllComponents.TIMEPOINT: {"1", "2"},
+    }
+    for component, expected in expected_components.items():
+        assert {
+            candidate.declared_address.value_for(component)
+            for candidate in nested.candidates
+        } == expected
+    assert {
+        candidate.component_labels[AllComponents.CHANNEL.value]
+        for candidate in nested.candidates
+    } == {"NGFF", "NGFF-2"}
+    backend = OmeZarrStorageBackend()
+    for candidate in nested.candidates:
+        assert candidate.source_axis_shape == (2, 2, 3)
+        address = candidate.declared_address
+        expected_indices = tuple(
+            int(address.value_for(component)) - 1
+            for component in (
+                AllComponents.TIMEPOINT,
+                AllComponents.CHANNEL,
+                AllComponents.Z_INDEX,
+            )
+        )
+        assert candidate.source_ref.source_axis_indices == expected_indices
+        loaded = backend.load(candidate.source_ref.backend_address)
+        np.testing.assert_array_equal(
+            loaded[expected_indices], pixels[expected_indices]
+        )
+    array = OmeZarrLocation(store).group["A/01/0/0"]
+    assert array.shape == pixels.shape
+    assert array.chunks == (1, 1, 1, 4, 5)
+    assert array.dtype == pixels.dtype
+    if fmt.zarr_format == 3:
+        assert array.metadata.dimension_names == ("t", "c", "z", "y", "x")
+
+
+def test_legacy_polystore_namespace_does_not_override_declared_source_identity(
+    tmp_path: Path,
+) -> None:
+    pixels = np.arange(12, dtype=np.uint16).reshape(3, 4)
+    write_ngff_plate(tmp_path, pixels)
+    group = zarr.open_group(tmp_path, mode="a")
+    group.attrs["ome"] = {"version": "0.4"}
+    well = group["A/01"]
+    well.attrs["ome"] = {
+        "well": {"version": "0.5", "images": [{"path": "missing", "acquisition": 0}]}
+    }
+
+    (dataset,) = OmeZarrStoreAdapter().discover_stores(tmp_path)
+
+    assert dataset.identity.value == "Plate:mixed"
+    assert len(dataset.candidates) == 1
+    candidate = dataset.candidates[0]
+    assert candidate.declared_address.value_for(AllComponents.WELL) == "A01"
+    loaded = OmeZarrStorageBackend().load(candidate.source_ref.backend_address)
+    np.testing.assert_array_equal(loaded[0, 0, 0], pixels)
+
+
+@pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
+def test_ngff_image_can_be_submitted_without_its_plate(
+    tmp_path: Path,
+    fmt: Format,
+) -> None:
+    pixels = np.arange(12, dtype=np.uint16).reshape(3, 4)
+    write_ngff_plate(tmp_path, pixels, fmt=fmt)
+    image_path = tmp_path / "A" / "01" / "0"
+
+    (dataset,) = OmeZarrStoreAdapter().discover_stores(image_path)
+
+    assert len(dataset.candidates) == 1
+    candidate = dataset.candidates[0]
+    assert candidate.source_axis_shape == (1, 1, 1)
+    assert candidate.component_labels[AllComponents.CHANNEL.value] == "NGFF"
+    loaded = OmeZarrStorageBackend().load(candidate.source_ref.backend_address)
+    np.testing.assert_array_equal(loaded[0, 0, 0], pixels)
 
 
 class _NoJavaStores:
@@ -66,52 +172,16 @@ def _binding(alias: str, file_name: str) -> NamedSourceBinding:
     )
 
 
-def _write_ngff_plate(path: Path, pixels: np.ndarray) -> None:
-    root = zarr.open_group(str(path), mode="w")
-    root.attrs["plate"] = {
-        "columns": [{"name": "01"}],
-        "name": "Plate:mixed",
-        "rows": [{"name": "A"}],
-        "version": "0.4",
-        "wells": [{"columnIndex": 0, "path": "A/01", "rowIndex": 0}],
-    }
-    well = root.require_group("A/01")
-    well.attrs["well"] = {"images": [{"path": "0"}], "version": "0.4"}
-    image = well.require_group("0")
-    image.attrs["multiscales"] = [
-        {
-            "axes": [
-                {"name": "field", "type": "field"},
-                {"name": "c", "type": "channel"},
-                {"name": "z", "type": "space"},
-                {"name": "y", "type": "space"},
-                {"name": "x", "type": "space"},
-            ],
-            "datasets": [
-                {
-                    "coordinateTransformations": [
-                        {"scale": [1.0] * 5, "type": "scale"}
-                    ],
-                    "path": "0",
-                }
-            ],
-            "name": "Image:ngff",
-            "version": "0.4",
-        }
-    ]
-    image.attrs["omero"] = {"channels": [{"label": "NGFF"}]}
-    image.create_dataset("0", data=pixels[None, None, None])
-
-
 def _write_mixed_stores(
     root: Path,
+    fmt: Format,
 ) -> dict[str, tuple[Path, np.ndarray]]:
     stores = {
         "NGFF": (root / "plate.zarr", np.full((3, 4), 7, dtype=np.uint16)),
         "TIFF": (root / "plain.tif", np.full((3, 4), 11, dtype=np.uint16)),
         "PNG": (root / "mask.png", np.full((3, 4), 13, dtype=np.uint16)),
     }
-    _write_ngff_plate(*stores["NGFF"])
+    write_ngff_plate(*stores["NGFF"], fmt=fmt)
     for alias in ("TIFF", "PNG"):
         path, pixels = stores[alias]
         ImageFileFormat.require_path(path).write(path, pixels)
@@ -181,11 +251,13 @@ def test_polystore_zarr_semantic_coordinates_round_trip_through_store_discovery(
     }
 
 
+@pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
 def test_mixed_plane_stores_bind_and_load_through_virtual_workspace(
     monkeypatch,
     tmp_path: Path,
+    fmt: Format,
 ) -> None:
-    stores = _write_mixed_stores(tmp_path)
+    stores = _write_mixed_stores(tmp_path, fmt)
     monkeypatch.setattr(
         BioFormatsJavaContext,
         "instance",
@@ -243,11 +315,13 @@ def test_mixed_plane_stores_bind_and_load_through_virtual_workspace(
         np.testing.assert_array_equal(loaded, pixels)
 
 
+@pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
 def test_saved_source_bindings_rebuild_canonical_store_projection(
     monkeypatch,
     tmp_path: Path,
+    fmt: Format,
 ) -> None:
-    stores = _write_mixed_stores(tmp_path)
+    stores = _write_mixed_stores(tmp_path, fmt)
     monkeypatch.setattr(
         BioFormatsJavaContext,
         "instance",
@@ -336,11 +410,13 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
     } == expected_components
 
 
+@pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
 def test_mixed_plane_stores_materialize_and_reopen_with_source_identity(
     monkeypatch,
     tmp_path: Path,
+    fmt: Format,
 ) -> None:
-    stores = _write_mixed_stores(tmp_path)
+    stores = _write_mixed_stores(tmp_path, fmt)
     monkeypatch.setattr(
         BioFormatsJavaContext,
         "instance",

@@ -1070,7 +1070,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "6bb505f9e1c190511f9efd77a090a5da639f79274b7ab1b53fbdece0818d0bf4",
+        "sha256": "031335d5763ffd2b8d972326b01e40d29b1e12f72b6b581dcf3795f1e02ab288",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1184,7 +1184,8 @@
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-08-27, re-read the complete reference after the python-introspect floor moved to 0.1.12 and inspected its current callable-analysis owner and tests; the package ownership catalogue remains accurate.",
       "Focused python-introspect signature-analysis and callable-declaration tests passed: 37 tests.",
-      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files."
+      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
+      "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added."
     ]
   },
   {

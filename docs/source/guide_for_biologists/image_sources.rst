@@ -34,6 +34,21 @@ CZI after Bio-Formats has decoded it. In that case the Bio-Formats handler remai
 the ingestion owner; the binding is semantic selection, not a replacement CZI
 loader.
 
+OME-Zarr input and output
+-------------------------
+
+OpenHCS reads OME-Zarr single-resolution images and plates stored as Zarr 2 /
+NGFF 0.4 or Zarr 3 / NGFF 0.5. Discovery uses the declared image hierarchy and axes,
+including time, channel and Z dimensions. Add the directory containing the
+store to the Plate Manager as for other rich image containers.
+
+Selecting Zarr for pipeline output continues to produce Zarr 2 / NGFF 0.4
+stores. Updating the installed Zarr library does not change that output format.
+Stored results retain their declared axes, coordinates and configured chunks;
+Fiji and napari receive the same processed arrays through viewer streaming.
+The format and codec policy is owned by
+`PolyStore's Zarr backend <https://polystore.readthedocs.io/en/latest/api/backends.html#zarr-storage-formats>`_.
+
 Native layout versus complete metadata
 ----------------------------------------
 
@@ -288,9 +303,10 @@ directly under the selected plate directory.
 After applying the code, initialize the selected plate normally with auto-
 detection. OpenHCS first chooses the native, Bio-Formats/store, or arbitrary-
 folder ingestion owner, then resolves every binding over the planes that owner
-published. CZI and embedded OME metadata require the Bio-Formats runtime included
-by an OpenHCS installation that enables those formats. Do not force a CZI or OME
-container through ``SourceBindingsHandler`` when its structured decoder is
+published. CZI and OME-TIFF inputs use the Bio-Formats runtime included by an
+OpenHCS installation that enables those formats; OME-Zarr uses PolyStore
+directly. Do not force a rich image container through ``SourceBindingsHandler``
+when its structured decoder is
 missing or unhealthy; repair that decoder instead.
 
 Selecting channels and samples

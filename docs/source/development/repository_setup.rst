@@ -68,6 +68,7 @@ installation step.
 Packaging
 ---------
 
-``python -m build`` resolves the published first-party dependency requirements
-from ``pyproject.toml``. Test the resulting wheel in a clean environment before
+``python -m build`` records the first-party dependency requirements from
+``pyproject.toml`` in the wheel; installation resolves those requirements.
+Test the resulting wheel in a clean environment before
 release instead of relying on editable submodule installs.

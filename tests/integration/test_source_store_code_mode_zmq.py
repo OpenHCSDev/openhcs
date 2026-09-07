@@ -1,7 +1,6 @@
 """Code-mode source-store acceptance through the canonical ZMQ boundary."""
 
 from __future__ import annotations
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
 
 import os
 import shutil
@@ -9,14 +8,15 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import zarr
+from objectstate.lazy_factory import ensure_global_config_context
+from ome_zarr.format import Format
+from polystore.bioformats_java import BioFormatsJavaContext
 from zmqruntime.execution.responses import (
     ExecutionSubmissionResponse,
     ExecutionWaitResult,
 )
 from zmqruntime.messages import MessageFields
 
-from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants import Microscope
 from openhcs.constants.constants import AllComponents, Backend
 from openhcs.constants.input_source import InputSource
@@ -32,6 +32,7 @@ from openhcs.core.config import (
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
@@ -51,10 +52,6 @@ from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
 from openhcs.pyqt_gui.widgets.source_bindings_editor import SourceBindingsEditorValue
-from openhcs.ui.shared.plate_manager_code_document import (
-    PlateManagerCodeDocumentAuthority,
-    PlateManagerOrchestratorCodePayload,
-)
 from openhcs.runtime.zmq_execution_client import (
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -62,7 +59,11 @@ from openhcs.runtime.zmq_execution_client import (
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
-from polystore.bioformats_java import BioFormatsJavaContext
+from openhcs.ui.shared.plate_manager_code_document import (
+    PlateManagerCodeDocumentAuthority,
+    PlateManagerOrchestratorCodePayload,
+)
+from tests.ome_zarr_fixture import NGFF_FORMATS, write_ngff_plate
 
 LIVE_ZMQ_ENV = "OPENHCS_RUN_SOURCE_STORE_ZMQ_ACCEPTANCE"
 REQUIRE_FORMAT_FIXTURES_ENV = "OPENHCS_REQUIRE_SOURCE_STORE_FORMAT_FIXTURES"
@@ -97,45 +98,9 @@ def _binding(alias: str, file_name: str | None = None) -> NamedSourceBinding:
     return NamedSourceBinding(alias=alias, selector=selector)
 
 
-def _write_ngff_plate(path: Path, pixels: np.ndarray) -> None:
-    root = zarr.open_group(str(path), mode="w")
-    root.attrs["plate"] = {
-        "columns": [{"name": "01"}],
-        "name": "Plate:code-mode-zmq",
-        "rows": [{"name": "A"}],
-        "version": "0.4",
-        "wells": [{"columnIndex": 0, "path": "A/01", "rowIndex": 0}],
-    }
-    well = root.require_group("A/01")
-    well.attrs["well"] = {"images": [{"path": "0"}], "version": "0.4"}
-    image = well.require_group("0")
-    image.attrs["multiscales"] = [
-        {
-            "axes": [
-                {"name": "field", "type": "field"},
-                {"name": "c", "type": "channel"},
-                {"name": "z", "type": "space"},
-                {"name": "y", "type": "space"},
-                {"name": "x", "type": "space"},
-            ],
-            "datasets": [
-                {
-                    "coordinateTransformations": [
-                        {"scale": [1.0] * 5, "type": "scale"}
-                    ],
-                    "path": "0",
-                },
-            ],
-            "name": "Image:code-mode-zmq",
-            "version": "0.4",
-        },
-    ]
-    image.attrs["omero"] = {"channels": [{"label": "NGFF"}]}
-    image.create_dataset("0", data=pixels[None, None, None])
-
-
 def _write_mixed_stores(
     root: Path,
+    fmt: Format = NGFF_FORMATS[0],
 ) -> dict[str, tuple[Path, np.ndarray]]:
     base = np.arange(12, dtype=np.uint16).reshape(3, 4)
     stores = {
@@ -143,7 +108,7 @@ def _write_mixed_stores(
         "TIFF": (root / "plain.tif", base + 17),
         "PNG": (root / "mask.png", base + 27),
     }
-    _write_ngff_plate(*stores["NGFF"])
+    write_ngff_plate(*stores["NGFF"], fmt=fmt, plate_name="Plate:code-mode-zmq")
     for alias in ("TIFF", "PNG"):
         path, pixels = stores[alias]
         ImageFileFormat.require_path(path).write(path, pixels)
@@ -238,11 +203,13 @@ def _submission(
     )
 
 
+@pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
 def test_code_mode_and_zmq_wire_preserve_mixed_store_sources(
     monkeypatch,
     tmp_path: Path,
+    fmt: Format,
 ) -> None:
-    stores = _write_mixed_stores(tmp_path)
+    stores = _write_mixed_stores(tmp_path, fmt)
     monkeypatch.setattr(
         BioFormatsJavaContext,
         "instance",
@@ -388,8 +355,8 @@ def test_exact_coordinate_collision_fails_in_aggregate_store(
         classmethod(lambda cls: _NoJavaStores()),
     )
     pixels = np.arange(12, dtype=np.uint16).reshape(3, 4)
-    _write_ngff_plate(tmp_path / "first.zarr", pixels)
-    _write_ngff_plate(tmp_path / "second.zarr", pixels + 1)
+    write_ngff_plate(tmp_path / "first.zarr", pixels)
+    write_ngff_plate(tmp_path / "second.zarr", pixels + 1)
 
     with pytest.raises(
         BioFormatsAdapterUnavailableError,
@@ -446,13 +413,15 @@ def _copy_available_format_worker_fixtures(
     os.environ.get(LIVE_ZMQ_ENV) != "1",
     reason=f"set {LIVE_ZMQ_ENV}=1 under the official30 runtime lock",
 )
+@pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
 def test_code_mode_source_stores_compile_then_execute_over_one_zmq_session(
     tmp_path: Path,
+    fmt: Format,
 ) -> None:
     cases: dict[str, tuple[Path, tuple[NamedSourceBinding, ...]]] = {}
     mixed_root = tmp_path / "mixed"
     mixed_root.mkdir()
-    stores = _write_mixed_stores(mixed_root)
+    stores = _write_mixed_stores(mixed_root, fmt)
     cases["mixed"] = (
         mixed_root,
         tuple(_binding(alias, path.name) for alias, (path, _pixels) in stores.items()),

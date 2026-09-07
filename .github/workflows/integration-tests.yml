@@ -2225,6 +2225,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     env:
       OPENHCS_CPU_ONLY: true
+      OPENHCS_RUN_SOURCE_STORE_ZMQ_ACCEPTANCE: "1"
       QT_QPA_PLATFORM: offscreen
       MPLBACKEND: Agg
 

@@ -13,8 +13,7 @@ from typing import Any, ClassVar, Mapping
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from ome_zarr.axes import Axes
-from ome_zarr.format import format_from_version
-import zarr
+from ome_zarr.format import Format
 from polystore.bioformats_java import (
     BioFormatsJavaContext,
     BioFormatsJavaUnavailableError,
@@ -23,6 +22,7 @@ from polystore.bioformats_java import (
     java_str,
 )
 from polystore.bioformats_storage import BioFormatsPlaneRef
+from polystore.ome_zarr_metadata import OmeZarrLocation
 from polystore.ome_zarr_storage import OmeZarrArrayRef
 from polystore.virtual_workspace import SourcePixelRef
 from polystore.zarr_batch import ZarrStoredBatchSemantics
@@ -585,59 +585,39 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
     @classmethod
     def declares_store(cls, path: Path) -> bool:
         """Return whether ``path`` is an explicit top-level NGFF image or plate."""
-        if not path.is_dir() or not (path / ".zgroup").is_file():
+        if not path.is_dir():
             return False
-        attrs = dict(zarr.open_group(str(path), mode="r").attrs)
-        return "plate" in attrs or "multiscales" in attrs
+        location = OmeZarrLocation(path, mode="r")
+        return location.exists() and location.is_dataset
 
     def discover_stores(self, root: Path) -> tuple[SourcePlaneDataset, ...]:
         return tuple(
-            self._discover_store(root, store_root)
-            for store_root in self._store_roots(root)
-        )
-
-    @classmethod
-    def _store_roots(cls, root: Path) -> tuple[Path, ...]:
-        if root.is_file():
-            return ()
-        group_roots = {root} | {marker.parent for marker in root.rglob(".zgroup")}
-        declared = {
-            path.resolve(strict=False)
-            for path in group_roots
-            if cls.declares_store(path)
-        }
-        return tuple(
-            path
-            for path in sorted(declared, key=str)
-            if not any(parent in declared for parent in path.parents)
+            self._discover_store(root, location)
+            for location in OmeZarrLocation.discover(root)
         )
 
     def _discover_store(
         self,
         collection_root: Path,
-        store_root: Path,
+        location: OmeZarrLocation,
     ) -> SourcePlaneDataset:
-        group = zarr.open_group(str(store_root), mode="r")
-        attrs = dict(group.attrs)
+        attrs = location.root_attrs
         if "plate" in attrs:
             return self._plate_dataset(
                 collection_root,
-                store_root,
-                group,
+                location,
                 attrs["plate"],
             )
         return self._nonplate_dataset(
             collection_root,
-            store_root,
-            group,
+            location,
             attrs["multiscales"],
         )
 
     def _plate_dataset(
         self,
         collection_root: Path,
-        store_root: Path,
-        group: Any,
+        location: OmeZarrLocation,
         plate_payload: object,
     ) -> SourcePlaneDataset:
         plate = _required_mapping(plate_payload, "NGFF plate")
@@ -672,8 +652,8 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
                     f"NGFF well path {well_path!r} conflicts with row/column identity "
                     f"{expected_path!r}."
                 )
-            well_group = group[well_path]
-            well_attrs = dict(well_group.attrs)
+            well_location = OmeZarrLocation(location.subpath(well_path))
+            well_attrs = well_location.root_attrs
             well = _required_mapping(well_attrs["well"], "NGFF well")
             images = _required_sequence(well, "images", "NGFF well")
             well_key = f"{rows[row_index]}{columns[column_index]}"
@@ -682,8 +662,8 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
                 image_path = _required_text(image, "path", "NGFF well image")
                 image_candidates, pixel_size = _ngff_image_candidates(
                     collection_root=collection_root,
-                    store_root=store_root,
-                    image_group=well_group[image_path],
+                    store_root=Path(location.path),
+                    image_location=OmeZarrLocation(well_location.subpath(image_path)),
                     image_prefix=f"{well_path}/{image_path}",
                     dataset_identity=identity,
                     well=well_key,
@@ -706,8 +686,7 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
     def _nonplate_dataset(
         self,
         collection_root: Path,
-        store_root: Path,
-        group: Any,
+        location: OmeZarrLocation,
         multiscales_payload: object,
     ) -> SourcePlaneDataset:
         multiscales = _required_sequence_value(
@@ -723,12 +702,12 @@ class OmeZarrStoreAdapter(SourcePlaneStoreAdapter):
         identity = SourceDatasetIdentity.for_root(collection_root)
         candidates, pixel_size = _ngff_image_candidates(
             collection_root=collection_root,
-            store_root=store_root,
-            image_group=group,
+            store_root=Path(location.path),
+            image_location=location,
             image_prefix="",
             dataset_identity=identity,
             well=OpenHCSPlaneAddress.component_token(
-                _relative_path(collection_root, store_root)
+                _relative_path(collection_root, Path(location.path))
             ),
             image_index=0,
             image_count=1,
@@ -1200,14 +1179,14 @@ def _ngff_image_candidates(
     *,
     collection_root: Path,
     store_root: Path,
-    image_group: Any,
+    image_location: OmeZarrLocation,
     image_prefix: str,
     dataset_identity: SourceDatasetIdentity,
     well: str,
     image_index: int,
     image_count: int,
 ) -> tuple[tuple[SourceCandidate, ...], float]:
-    attrs = dict(image_group.attrs)
+    attrs = image_location.root_attrs
     multiscales = _required_sequence(attrs, "multiscales", "NGFF image")
     if len(multiscales) != 1:
         raise BioFormatsAdapterUnavailableError(
@@ -1225,9 +1204,6 @@ def _ngff_image_candidates(
     array_path = "/".join(
         part for part in (image_prefix.strip("/"), dataset_path) if part
     )
-    array = image_group[dataset_path]
-    stored_batch_semantics = ZarrStoredBatchSemantics.from_attrs(dict(array.attrs))
-    shape = tuple(int(size) for size in array.shape)
     axes_payload = _required_sequence(multiscale, "axes", "NGFF multiscale")
     axes = tuple(
         _required_text(
@@ -1237,12 +1213,13 @@ def _ngff_image_candidates(
         )
         for axis in axes_payload
     )
+    array = image_location.array(dataset_path, axes=axes)
+    stored_batch_semantics = ZarrStoredBatchSemantics.from_attrs(dict(array.attrs))
+    shape = tuple(int(size) for size in array.shape)
     try:
         Axes(
             [dict(_required_mapping(axis, "NGFF axis")) for axis in axes_payload],
-            format_from_version(
-                _required_text(multiscale, "version", "NGFF multiscale")
-            ),
+            fmt=image_location.fmt,
         )
     except ValueError as exc:
         raise BioFormatsAdapterUnavailableError(
@@ -1260,7 +1237,7 @@ def _ngff_image_candidates(
     source_axis_shape = shape[:-2]
     channel_count = shape[axes.index("c")] if "c" in axes else 1
     channel_labels = _ngff_channel_labels(attrs, channel_count)
-    pixel_size = _ngff_pixel_size(dataset, len(axes))
+    pixel_size = _ngff_pixel_size(dataset, len(axes), image_location.fmt)
     container_paths = (store_root.resolve(strict=False),)
     filter_paths = _physical_path_identities(collection_root, store_root)
     candidates: list[SourceCandidate] = []
@@ -1362,26 +1339,24 @@ def _ngff_channel_labels(
     )
 
 
-def _ngff_pixel_size(dataset: Mapping[str, object], axis_count: int) -> float:
-    transforms = _required_sequence(
-        dataset,
-        "coordinateTransformations",
-        "NGFF multiscale dataset",
-    )
-    if len(transforms) != 1:
-        raise BioFormatsAdapterUnavailableError(
-            "NGFF source projection requires one scale transformation."
+def _ngff_pixel_size(
+    dataset: Mapping[str, object], axis_count: int, fmt: Format
+) -> float:
+    transforms = [
+        dict(_required_mapping(transform, "NGFF coordinate transform"))
+        for transform in _required_sequence(
+            dataset,
+            "coordinateTransformations",
+            "NGFF multiscale dataset",
         )
-    transform = _required_mapping(transforms[0], "NGFF coordinate transform")
-    if _required_text(transform, "type", "NGFF coordinate transform") != "scale":
+    ]
+    try:
+        fmt.validate_coordinate_transformations(axis_count, 1, [transforms])
+    except (AssertionError, ValueError) as exc:
         raise BioFormatsAdapterUnavailableError(
-            "NGFF source projection requires a scale transformation."
-        )
-    scale = _required_sequence(transform, "scale", "NGFF coordinate transform")
-    if len(scale) != axis_count:
-        raise BioFormatsAdapterUnavailableError(
-            "NGFF scale vector must match the declared axes."
-        )
+            f"Invalid NGFF coordinate transformations: {exc}"
+        ) from exc
+    scale = _required_sequence(transforms[0], "scale", "NGFF coordinate transform")
     pixel_size = float(scale[-1])
     if float(scale[-2]) != pixel_size:
         raise BioFormatsAdapterUnavailableError(
