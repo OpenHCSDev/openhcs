@@ -161,7 +161,10 @@ try:
 except ValueError as exc:
     assert str(exc) == "expected failure"
 assert (sys.stdin, sys.stdout) == original_streams
-assert (os.fstat(0), os.fstat(1)) == original_files
+assert all(
+    os.path.samestat(os.fstat(fd), original)
+    for fd, original in enumerate(original_files)
+)
 print("restored", flush=True)
 """
     completed = subprocess.run(
@@ -207,7 +210,7 @@ else:
 
 assert restore_targets == [0, 1]
 assert (sys.stdin, sys.stdout) == original_streams
-assert os.fstat(1) == original_stdout
+assert os.path.samestat(os.fstat(1), original_stdout)
 print("stdout restored", flush=True)
 """
     completed = subprocess.run(

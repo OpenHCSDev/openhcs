@@ -1759,7 +1759,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_stdio_transport.py",
-        "sha256": "d4bd79011b679615195babee521e35e248cd06bf1b3998e20389d3601e8593e8",
+        "sha256": "4f7c439168dacc350d7fc31618f10dfd7ce7478d52bd5ba13ed54e720291aff2",
         "role": "Proves persistent protocol isolation, cold native imports after handshake, and process-handle restoration on normal and exceptional exits."
       },
       {
