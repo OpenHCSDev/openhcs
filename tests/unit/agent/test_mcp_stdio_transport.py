@@ -3,6 +3,7 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
@@ -75,3 +76,53 @@ with McpStdioTransport.reserve_process_stdout() as transport:
         line.startswith("{") and json.loads(line).get("jsonrpc") == "2.0"
         for line in stderr_text.splitlines()
     )
+
+
+@pytest.mark.parametrize("module_name", ["numpy", "scipy.linalg"])
+def test_stdio_transport_allows_cold_native_import_after_handshake(
+    tmp_path: Path, module_name: str,
+) -> None:
+    """Import while the real transport is already waiting for the next request."""
+    server_script = tmp_path / "cold_native_mcp_server.py"
+    server_script.write_text(
+        """\
+import asyncio
+import importlib
+import sys
+
+from mcp.server.fastmcp import FastMCP
+from openhcs.mcp.stdio import McpStdioTransport
+
+server = FastMCP("cold-native-test")
+
+@server.tool()
+async def import_native(module_name: str) -> dict[str, bool]:
+    assert module_name not in sys.modules, "Native import must actually be cold"
+    # Let the protocol reader begin its next blocking pipe read first.
+    await asyncio.sleep(0.2)
+    module = await asyncio.to_thread(importlib.import_module, module_name)
+    return {"imported": module.__name__ == module_name}
+
+with McpStdioTransport.reserve_process_stdout() as transport:
+    transport.run(server)
+""",
+        encoding="utf-8",
+    )
+
+    async def import_after_handshake():
+        parameters = StdioServerParameters(
+            command=sys.executable, args=(str(server_script),),
+        )
+        with (tmp_path / "native.stderr.log").open("w", encoding="utf-8") as stderr:
+            async with stdio_client(parameters, errlog=stderr) as (reader, writer):
+                async with ClientSession(reader, writer) as session:
+                    await asyncio.wait_for(session.initialize(), timeout=10)
+                    # No ping or second request may release a blocked native import.
+                    return await asyncio.wait_for(
+                        session.call_tool("import_native", {"module_name": module_name}),
+                        timeout=20,
+                    )
+
+    result = asyncio.run(import_after_handshake())
+    assert not result.isError
+    assert result.structuredContent == {"imported": True}
