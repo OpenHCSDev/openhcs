@@ -2710,12 +2710,12 @@
       },
       {
         "path": "openhcs/mcp/stdio.py",
-        "sha256": "9dadd1c7d46727688315cc51e8d5dcb8b9f8148522b441eabdf2400cebdbc56f",
+        "sha256": "c2148f40a95ec85549f39fbb47262769fbaf70cdf76f1a8222325850536417ea",
         "role": "Reserves protocol stdin and stdout before server construction and owns process-lifetime application I/O isolation."
       },
       {
         "path": "tests/unit/agent/test_mcp_stdio_transport.py",
-        "sha256": "4aabb6bb92b748992678c07d563512cd2a9d0b8395fa6402c381ed2394339af4",
+        "sha256": "d4bd79011b679615195babee521e35e248cd06bf1b3998e20389d3601e8593e8",
         "role": "Exercises persistent sessions after application output, cold native imports after handshake, and process-handle restoration."
       },
       {

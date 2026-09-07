@@ -73,8 +73,10 @@ class McpStdioTransport:
                 finally:
                     sys.stdin = process_stdin
                     sys.stdout = process_stdout
-                    os.dup2(protocol_stdin.fileno(), stdin_fd)
-                    os.dup2(protocol_stdout.fileno(), stdout_fd)
+                    try:
+                        os.dup2(protocol_stdin.fileno(), stdin_fd)
+                    finally:
+                        os.dup2(protocol_stdout.fileno(), stdout_fd)
 
     def run(self, server: FastMCP) -> None:
         """Run one FastMCP server against the reserved protocol channel."""

@@ -81,7 +81,8 @@ with McpStdioTransport.reserve_process_stdio() as transport:
 
 @pytest.mark.parametrize("module_name", ["numpy", "scipy.linalg"])
 def test_stdio_transport_allows_cold_native_import_after_handshake(
-    tmp_path: Path, module_name: str,
+    tmp_path: Path,
+    module_name: str,
 ) -> None:
     """Import while the real transport is already waiting for the next request."""
     server_script = tmp_path / "cold_native_mcp_server.py"
@@ -112,7 +113,8 @@ with McpStdioTransport.reserve_process_stdio() as transport:
 
     async def import_after_handshake():
         parameters = StdioServerParameters(
-            command=sys.executable, args=(str(server_script),),
+            command=sys.executable,
+            args=(str(server_script),),
         )
         with (tmp_path / "native.stderr.log").open("w", encoding="utf-8") as stderr:
             async with stdio_client(parameters, errlog=stderr) as (reader, writer):
@@ -120,7 +122,9 @@ with McpStdioTransport.reserve_process_stdio() as transport:
                     await asyncio.wait_for(session.initialize(), timeout=10)
                     # No ping or second request may release a blocked native import.
                     return await asyncio.wait_for(
-                        session.call_tool("import_native", {"module_name": module_name}),
+                        session.call_tool(
+                            "import_native", {"module_name": module_name}
+                        ),
                         timeout=20,
                     )
 
@@ -162,8 +166,57 @@ print("restored", flush=True)
 """
     completed = subprocess.run(
         [sys.executable, "-c", script, str(fail_inside)],
-        input="protocol input\n", capture_output=True, text=True, timeout=10,
+        input="protocol input\n",
+        capture_output=True,
+        text=True,
+        timeout=10,
     )
     assert completed.returncode == 0, completed.stderr
     assert completed.stdout == "protocol output\nrestored\n"
     assert completed.stderr == "application diagnostic\n"
+
+
+def test_stdio_stdout_restoration_survives_stdin_restoration_failure() -> None:
+    script = """\
+import os
+import sys
+from unittest.mock import patch
+from openhcs.mcp.stdio import McpStdioTransport
+
+original_streams = (sys.stdin, sys.stdout)
+original_stdout = os.fstat(1)
+restore_started = False
+restore_targets = []
+real_dup2 = os.dup2
+
+def fail_stdin_restoration(source, target):
+    if restore_started:
+        restore_targets.append(target)
+        if target == 0:
+            raise OSError("expected stdin restoration failure")
+    return real_dup2(source, target)
+
+try:
+    with patch("os.dup2", fail_stdin_restoration):
+        with McpStdioTransport.reserve_process_stdio():
+            restore_started = True
+except OSError as exc:
+    assert str(exc) == "expected stdin restoration failure"
+else:
+    raise AssertionError("The restoration failure must remain visible")
+
+assert restore_targets == [0, 1]
+assert (sys.stdin, sys.stdout) == original_streams
+assert os.fstat(1) == original_stdout
+print("stdout restored", flush=True)
+"""
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        input="",
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout == "stdout restored\n"
+    assert completed.stderr == ""
