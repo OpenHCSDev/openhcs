@@ -387,14 +387,23 @@ def test_native_busy_disk_image_detaches_and_retains_payload(tmp_path: Path):
     mount.mkdir()
     lifecycle_source = f"source {shlex.quote(str(LIFECYCLE))}; "
 
-    def command(*args):
-        return subprocess.run(
-            args, check=True, capture_output=True, text=True, timeout=120
+    def command(*args, check=True):
+        result = subprocess.run(
+            args, check=False, capture_output=True, text=True, timeout=120
         )
+        if check:
+            assert result.returncode == 0, (
+                f"Command {args!r} exited {result.returncode}\n"
+                f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+            )
+        return result
 
-    def lifecycle(expression):
+    def lifecycle(expression, *, check=True):
         return command(
-            "bash", "-c", "set -euo pipefail; " + lifecycle_source + expression
+            "bash",
+            "-c",
+            "set -euo pipefail; " + lifecycle_source + expression,
+            check=check,
         )
 
     command("/usr/bin/hdiutil", "create", "-size", "64m", "-fs", "HFS+", str(writable))
@@ -464,9 +473,15 @@ def test_native_busy_disk_image_detaches_and_retains_payload(tmp_path: Path):
                 assert select.select([raw_holder.stdout], [], [], 10)[0]
                 holder_pid = int(raw_holder.stdout.readline().strip())
                 diagnostics = lifecycle(
-                    f"_openhcs_disk_image_holders {shlex.quote(device)}"
+                    f"_openhcs_disk_image_holders {shlex.quote(device)}",
+                    check=False,
                 )
-                assert str(holder_pid) in diagnostics.stderr.split()
+                # Known-holder output is the proof; not every probed family
+                # member needs to have an open handle.
+                assert str(holder_pid) in diagnostics.stderr.split(), (
+                    f"Holder PID {holder_pid} absent; diagnostic exited {diagnostics.returncode}\n"
+                    f"stdout:\n{diagnostics.stdout}\nstderr:\n{diagnostics.stderr}"
+                )
             finally:
                 raw_holder.communicate(timeout=10)
         lifecycle(f"openhcs_detach_disk_image {shlex.quote(device)}")
