@@ -8,6 +8,19 @@ permissions:
   contents: read
 
 jobs:
+  windows-cold-native-mcp:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    env:
+      OPENHCS_CPU_ONLY: "true"
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+      - run: python -m pip install numpy scipy mcp pytest
+      - run: python -m pytest -q -c tests/installer/pytest.ini --confcutdir tests/unit/agent tests/unit/agent/test_mcp_stdio_transport.py
   maintained-dmg-lifecycle:
     strategy:
       fail-fast: false
