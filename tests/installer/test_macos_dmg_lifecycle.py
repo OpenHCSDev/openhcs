@@ -43,15 +43,25 @@ if tool == "hdiutil":
         assert args[0] == "detach"
         assert args[-1] == "/dev/disk4", "Detach must target the whole owned device"
         mode = "force" if "-force" in args else "normal"
-        if state[mode + "_removes_disk"]:
+        can_release = mode == "normal" or not state["volumes_mounted"]
+        if state[mode + "_removes_disk"] and can_release:
             state["attached"] = False
         state_path.write_text(json.dumps(state))
         if state[mode + "_status"]:
             print("hdiutil: couldn't eject disk4 - Resource busy", file=sys.stderr)
         raise SystemExit(state[mode + "_status"])
 elif tool == "diskutil":
-    assert args[0] == "info"
-    if "-plist" in args:
+    if args == ["unmountDisk", "force", "/dev/disk4"]:
+        if state["unmount_releases_volumes"]:
+            state["volumes_mounted"] = False
+        state_path.write_text(json.dumps(state))
+        print("Owned volume unmount diagnostic", file=sys.stderr)
+        raise SystemExit(state["unmount_status"])
+    elif args == ["info", "-plist", "/dev/disk4"]:
+        emit({"DeviceIdentifier": "disk4", "WholeDisk": True})
+    elif args == ["list", "-plist", "/dev/disk4"]:
+        emit({"AllDisks": ["disk4", "disk4s1"]})
+    elif args[:2] == ["info", "-plist"]:
         assert args[-1] == state["requested_mount"]
         emit(state["volume"])
     else:
@@ -62,6 +72,10 @@ elif tool == "test":
     # The partition is absent after partial detach; the whole device persists.
     exists = state["attached"]
     raise SystemExit(0 if (not exists if args[0] == "!" else exists) else 1)
+elif tool == "lsof":
+    assert args == ["-nP", "--", "/dev/disk4"]
+    print("Owned device holder diagnostic", file=sys.stderr)
+    raise SystemExit(1)
 elif tool == "plutil":
     payload = plistlib.loads(sys.stdin.buffer.read())
     try:
@@ -94,6 +108,9 @@ def lifecycle_harness(tmp_path: Path):
             "ParentWholeDisk": "disk4",
         },
         "attached": True,
+        "volumes_mounted": True,
+        "unmount_status": 0,
+        "unmount_releases_volumes": True,
         "attach_status": 0,
         "normal_status": 0,
         "normal_removes_disk": True,
@@ -112,6 +129,7 @@ def lifecycle_harness(tmp_path: Path):
                 ("/usr/bin/hdiutil", "hdiutil"),
                 ("/usr/sbin/diskutil", "diskutil"),
                 ("/usr/bin/plutil", "plutil"),
+                ("/usr/sbin/lsof", "lsof"),
                 ("/bin/sync", "sync"),
                 ("test", "test"),
             )
@@ -232,7 +250,18 @@ def test_detach_proves_backing_device_absence(
     assert detach_calls[0] == ["hdiutil", "detach", "/dev/disk4"]
     assert len(detach_calls) == (1 if normal_removes_disk else 2)
     if not normal_removes_disk:
-        assert detach_calls[1] == ["hdiutil", "detach", "-force", "/dev/disk4"]
+        assert detach_calls[1] == [
+            "hdiutil",
+            "detach",
+            "-verbose",
+            "-force",
+            "/dev/disk4",
+        ]
+        unmount = ["diskutil", "unmountDisk", "force", "/dev/disk4"]
+        assert calls.count(unmount) == 1
+        assert calls.index(unmount) < calls.index(detach_calls[1])
+        assert "Owned device holder diagnostic" in result.stderr
+        assert "Owned volume unmount diagnostic" in result.stderr
     if normal_status:
         assert "Resource busy" in result.stderr
     if not success:
@@ -243,6 +272,28 @@ def test_detach_proves_backing_device_absence(
         else ["test", "-e", "/dev/disk4"]
     )
     assert ["diskutil", "info", "/dev/disk4"] not in calls
+
+
+@pytest.mark.parametrize(
+    ("unmount_status", "unmount_releases_volumes", "success"),
+    [(0, True, True), (1, False, False), (0, False, False)],
+)
+def test_forced_detach_follows_explicit_volume_release(
+    lifecycle_harness, unmount_status, unmount_releases_volumes, success
+):
+    _state, run = lifecycle_harness
+    result, calls = run(
+        'openhcs_detach_disk_image "$mounted_device"',
+        normal_status=1,
+        normal_removes_disk=False,
+        unmount_status=unmount_status,
+        unmount_releases_volumes=unmount_releases_volumes,
+    )
+    assert (result.returncode == 0) is success, result.stderr
+    assert calls.count(["diskutil", "unmountDisk", "force", "/dev/disk4"]) == 1
+    assert "Owned volume unmount diagnostic" in result.stderr
+    if not success:
+        assert "Owned disk image remains attached" in result.stderr
 
 
 @pytest.mark.skipif(
