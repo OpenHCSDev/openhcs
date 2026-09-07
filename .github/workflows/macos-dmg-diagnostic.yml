@@ -1,4 +1,4 @@
-name: Owned macOS disk-image diagnostics
+name: Native protocol channel diagnostics
 
 on:
   push:
@@ -8,53 +8,28 @@ permissions:
   contents: read
 
 jobs:
-  windows-cold-native-mcp:
-    runs-on: windows-latest
+  native-cold-imports:
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        revision:
-          - 764ca9685ac2bd68985659d387aba6f1a46073bf
-          - 7e6ea33a8c27b312b8338f071c816e28fcd4c8e9
+        os: [windows-latest, macos-latest]
+        python-version: ["3.11", "3.13"]
     timeout-minutes: 5
     env:
       OPENHCS_CPU_ONLY: "true"
       PYTHONPATH: ${{ github.workspace }}
     steps:
-      - run: git config --global core.longpaths true
+      - if: ${{ runner.os == 'Windows' }}
+        run: git config --global core.longpaths true
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ matrix.revision }}
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       - run: python -m pip install pytest packaging
       - run: python -c "import subprocess, sys, tomllib; from packaging.requirements import Requirement; project = tomllib.load(open('pyproject.toml', 'rb'))['project']; dependencies = project['dependencies'] + project['optional-dependencies']['mcp']; subprocess.check_call([sys.executable, '-m', 'pip', 'install', *[value for value in dependencies if Requirement(value).name in {'numpy', 'scipy', 'mcp'}]])"
       - run: python -m pip install --no-deps .
       - run: python -m pytest -q -c tests/installer/pytest.ini --confcutdir tests/unit/agent tests/unit/agent/test_mcp_stdio_transport.py
-      - if: ${{ failure() }}
+      - if: ${{ failure() && runner.os == 'Windows' }}
         shell: pwsh
         run: Get-ChildItem "$env:TEMP/pytest-of-*" -Recurse -Filter '*.log' | ForEach-Object { Write-Output $_.FullName; Get-Content $_.FullName }
-  maintained-dmg-lifecycle:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-15-intel, macos-latest]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: "3.12"
-      - name: Validate the native lifecycle and raw-holder diagnostics
-        run: |
-          python -m pip install packaging pytest
-          python -m pytest -q -c tests/installer/pytest.ini tests/installer/test_macos_dmg_lifecycle.py
-      - name: Exercise the maintained installer app and disk-image builders
-        if: ${{ !cancelled() }}
-        run: |
-          version=$(python -c 'from scripts.sync_mcp_release_metadata import read_package_version; print(read_package_version())')
-          python -m scripts.render_installer_contract --version "$version" --output "$RUNNER_TEMP/installer_contract.json"
-          packaging/installers/macos/build-installer.sh "$RUNNER_TEMP/installer_contract.json" "$RUNNER_TEMP/OpenHCS Diagnostic Installer.app"
-          packaging/installers/macos/build-dmg.sh "$RUNNER_TEMP/OpenHCS Diagnostic Installer.app" "$RUNNER_TEMP/OpenHCS-Diagnostic.dmg"
