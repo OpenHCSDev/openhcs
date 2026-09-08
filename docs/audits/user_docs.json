@@ -2287,7 +2287,7 @@
       },
       {
         "path": ".github/workflows/website-pages.yml",
-        "sha256": "a8dc30197730575b6e96f85b570df70646a29309c1bb7355cbd0f716cc63f865",
+        "sha256": "df09fe90bf2f57100c4381ae46b66aa68a70aedba0eccaea6f24c61ec9ffba60",
         "role": "Validates gallery generation against metadata-resolved source candidates before deploying the checked-in dependency-free website projection."
       },
       {
@@ -2450,7 +2450,8 @@
       "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read the complete testing how-to against installed GUI smoke and CI ownership. Added fault-handler and pypi-gui artifact diagnosis, explicitly separating ready-window evidence from process exit; native Qt cleanup regression failed before the fix and 16 focused tests passed after it.",
       "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
-      "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation."
+      "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation.",
+      "2026-09-08: checked the Website workflow description against the added recorded zmqruntime dependency needed by the contextual PlateManagerAction declaration. The existing source-candidate installation policy remains unchanged; gallery validation and 23 website tests passed locally."
     ]
   },
   {

@@ -75,7 +75,7 @@ jobs:
           project = read_project(Path("pyproject.toml"))
           required_names = {
               canonicalize_name(name)
-              for name in ("python-introspect", "metaclass-registry")
+              for name in ("python-introspect", "metaclass-registry", "zmqruntime")
           }
           declared_names = {
               canonicalize_name(requirement.name)

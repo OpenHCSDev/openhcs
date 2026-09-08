@@ -7,22 +7,26 @@ to detect and crop regions of interest in image stacks.
 
 from __future__ import annotations
 
-import numpy as np
-import cv2
-from enum import Enum, IntEnum
-from typing import Tuple, List, Dict, Any, Optional
-from dataclasses import asdict, dataclass, fields
 import logging
+from dataclasses import asdict, dataclass, fields
+from enum import Enum, IntEnum
+from typing import Any, Dict, List, Optional, Tuple
+
+import cv2
+import MTM
+import numpy as np
 from python_introspect import set_signature_analysis_target
 
-import MTM
-
+from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType, SpecialArtifactType
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.vfs_protocol import PlateInputFile
-from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.processing.materialization import (
+    CsvOptions,
+    MaterializationSpec,
+    TiffStackOptions,
+)
 from openhcs.processing.materialization.options import MaterializedFilenameIdentity
-
 
 logger = logging.getLogger(__name__)
 
@@ -104,9 +108,11 @@ def _mtm_row_unpacker(result: TemplateMatchResult) -> List[Dict[str, Any]]:
         for index, match in enumerate(result.matches or [])
     ]
 
+
 @dataclass
 class TemplateMatchResult:
     """Results for a single slice template matching operation."""
+
     slice_index: int
     matches: List[Dict[str, Any]]  # List of hits from MTM.matchTemplates
     best_match: Optional[Dict[str, Any]]  # Best scoring match
@@ -117,20 +123,33 @@ class TemplateMatchResult:
     error_message: Optional[str] = None
 
 
-_TEMPLATE_MATCH_RESULT_MATERIALIZATION = MaterializationSpec(
-    CsvOptions(
-        filename_suffix="_mtm_matches.csv",
-        filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
-        fields=[field.name for field in fields(TemplateMatchCsvRow)],
-        row_unpacker=_mtm_row_unpacker,
-    )
+_TEMPLATE_MATCH_OUTPUTS = (
+    ArtifactSpec.output(
+        "cropped_stack",
+        ImageArtifactType,
+        materialization=MaterializationSpec(
+            TiffStackOptions(
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME
+            )
+        ),
+    ),
+    ArtifactSpec.output(
+        "match_results",
+        SpecialArtifactType,
+        materialization=MaterializationSpec(
+            CsvOptions(
+                filename_suffix="_mtm_matches.csv",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+                fields=[field.name for field in fields(TemplateMatchCsvRow)],
+                row_unpacker=_mtm_row_unpacker,
+            )
+        ),
+    ),
 )
 
+
 @numpy_func
-@artifact_outputs((
-    "match_results",
-    _TEMPLATE_MATCH_RESULT_MATERIALIZATION,
-))
+@artifact_outputs(*_TEMPLATE_MATCH_OUTPUTS)
 def multi_template_crop_reference_channel(
     image_stack: np.ndarray,
     template_path: PlateInputFile,
@@ -145,7 +164,7 @@ def multi_template_crop_reference_channel(
     rotation_range: float = 0.0,
     rotation_step: float = 45.0,
     rotate_result: bool = True,
-    crop_enabled: bool = True
+    crop_enabled: bool = True,
 ) -> Tuple[np.ndarray, List[TemplateMatchResult]]:
     """
     Perform template matching on a reference channel and apply the same crop to all channels.
@@ -184,7 +203,9 @@ def multi_template_crop_reference_channel(
         raise ValueError(f"Expected 3D image stack, got {image_stack.ndim}D array")
 
     if reference_channel < 0 or reference_channel >= image_stack.shape[0]:
-        raise ValueError(f"reference_channel {reference_channel} is out of range for stack with {image_stack.shape[0]} channels")
+        raise ValueError(
+            f"reference_channel {reference_channel} is out of range for stack with {image_stack.shape[0]} channels"
+        )
 
     # Load template image
     template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
@@ -196,8 +217,12 @@ def multi_template_crop_reference_channel(
 
     # Generate rotated templates if rotation is enabled
     if rotation_range > 0:
-        template_list = _create_rotated_templates(template, rotation_range, rotation_step)
-        logger.info(f"Generated {len(template_list)} rotated templates (range: {rotation_range}°, step: {rotation_step}°)")
+        template_list = _create_rotated_templates(
+            template, rotation_range, rotation_step
+        )
+        logger.info(
+            f"Generated {len(template_list)} rotated templates (range: {rotation_range}°, step: {rotation_step}°)"
+        )
     else:
         template_list = [("template_0", template)]
 
@@ -215,8 +240,10 @@ def multi_template_crop_reference_channel(
         method=method,
     )
 
-    logger.info(f"Reference channel {reference_channel} matching: {reference_result.num_matches} matches, "
-                f"best score: {reference_result.match_score:.3f}")
+    logger.info(
+        f"Reference channel {reference_channel} matching: {reference_result.num_matches} matches, "
+        f"best score: {reference_result.match_score:.3f}"
+    )
 
     # Apply the reference channel's crop to ALL channels
     cropped_slices = []
@@ -238,18 +265,20 @@ def multi_template_crop_reference_channel(
                 match_score=reference_result.match_score,  # Copy reference score
                 num_matches=0,  # No matching performed
                 best_rotation_angle=reference_result.best_rotation_angle,  # Copy reference angle
-                error_message=f"Crop applied from reference channel {reference_channel}"
+                error_message=f"Crop applied from reference channel {reference_channel}",
             )
             match_results.append(applied_result)
 
         # Apply the same crop to all channels
         if crop_enabled and reference_result.crop_bbox is not None:
             x, y, w, h = reference_result.crop_bbox
-            cropped_slice = slice_img[y:y+h, x:x+w]
+            cropped_slice = slice_img[y : y + h, x : x + w]
 
             # Rotate cropped slice back to upright if rotation was used
             if rotate_result and reference_result.best_rotation_angle != 0:
-                cropped_slice = _rotate_image(cropped_slice, -reference_result.best_rotation_angle)
+                cropped_slice = _rotate_image(
+                    cropped_slice, -reference_result.best_rotation_angle
+                )
         else:
             # Use original slice (either cropping disabled or no match found)
             cropped_slice = slice_img
@@ -259,20 +288,21 @@ def multi_template_crop_reference_channel(
     # Stack slices with consistent dimensions (only pad if cropping was enabled)
     if crop_enabled:
         cropped_stack = _stack_with_padding(cropped_slices, pad_mode)
-        logger.info(f"Reference-based template matching complete. Cropped output shape: {cropped_stack.shape}")
+        logger.info(
+            f"Reference-based template matching complete. Cropped output shape: {cropped_stack.shape}"
+        )
     else:
         # Return original stack when cropping is disabled
         cropped_stack = image_stack
-        logger.info(f"Reference-based template matching complete. Original stack shape preserved: {cropped_stack.shape}")
+        logger.info(
+            f"Reference-based template matching complete. Original stack shape preserved: {cropped_stack.shape}"
+        )
 
     return cropped_stack, match_results
 
 
 @numpy_func
-@artifact_outputs((
-    "match_results",
-    _TEMPLATE_MATCH_RESULT_MATERIALIZATION,
-))
+@artifact_outputs(*_TEMPLATE_MATCH_OUTPUTS)
 def multi_template_crop_subset(
     image_stack: np.ndarray,
     template_path: PlateInputFile,
@@ -288,7 +318,7 @@ def multi_template_crop_subset(
     rotation_range: float = 0.0,
     rotation_step: float = 45.0,
     rotate_result: bool = True,
-    crop_enabled: bool = True
+    crop_enabled: bool = True,
 ) -> Tuple[np.ndarray, List[TemplateMatchResult]]:
     """
     Perform template matching on a reference channel and crop only specified target channels.
@@ -329,11 +359,15 @@ def multi_template_crop_subset(
     # Validate target channels
     for ch in target_channels:
         if ch < 0 or ch >= image_stack.shape[0]:
-            raise ValueError(f"target_channel {ch} is out of range for stack with {image_stack.shape[0]} channels")
+            raise ValueError(
+                f"target_channel {ch} is out of range for stack with {image_stack.shape[0]} channels"
+            )
 
     if reference_channel not in target_channels:
-        logger.warning(f"Reference channel {reference_channel} is not in target_channels {target_channels}. "
-                       f"Template matching will be performed but reference channel won't be in output.")
+        logger.warning(
+            f"Reference channel {reference_channel} is not in target_channels {target_channels}. "
+            f"Template matching will be performed but reference channel won't be in output."
+        )
 
     # Use the reference-channel function to get crop coordinates
     _, full_results = multi_template_crop_reference_channel(
@@ -365,11 +399,13 @@ def multi_template_crop_subset(
         # Apply the reference channel's crop
         if crop_enabled and reference_result.crop_bbox is not None:
             x, y, w, h = reference_result.crop_bbox
-            cropped_slice = slice_img[y:y+h, x:x+w]
+            cropped_slice = slice_img[y : y + h, x : x + w]
 
             # Rotate if needed
             if rotate_result and reference_result.best_rotation_angle != 0:
-                cropped_slice = _rotate_image(cropped_slice, -reference_result.best_rotation_angle)
+                cropped_slice = _rotate_image(
+                    cropped_slice, -reference_result.best_rotation_angle
+                )
         else:
             cropped_slice = slice_img
 
@@ -387,28 +423,29 @@ def multi_template_crop_subset(
                 match_score=reference_result.match_score,
                 num_matches=0,
                 best_rotation_angle=reference_result.best_rotation_angle,
-                error_message=f"Crop applied from reference channel {reference_channel}"
+                error_message=f"Crop applied from reference channel {reference_channel}",
             )
             target_results.append(applied_result)
 
     # Stack target slices
     if crop_enabled and target_slices:
         cropped_stack = _stack_with_padding(target_slices, pad_mode)
-        logger.info(f"Subset template matching complete. Output shape: {cropped_stack.shape} "
-                    f"(channels {target_channels})")
+        logger.info(
+            f"Subset template matching complete. Output shape: {cropped_stack.shape} "
+            f"(channels {target_channels})"
+        )
     else:
         # Return subset of original stack
         cropped_stack = image_stack[target_channels]
-        logger.info(f"Subset template matching complete. Original subset shape: {cropped_stack.shape}")
+        logger.info(
+            f"Subset template matching complete. Original subset shape: {cropped_stack.shape}"
+        )
 
     return cropped_stack, target_results
 
 
 @numpy_func
-@artifact_outputs((
-    "match_results",
-    _TEMPLATE_MATCH_RESULT_MATERIALIZATION,
-))
+@artifact_outputs(*_TEMPLATE_MATCH_OUTPUTS)
 def multi_template_crop(
     image_stack: np.ndarray,
     template_path: PlateInputFile,
@@ -422,15 +459,15 @@ def multi_template_crop(
     rotation_range: float = 0.0,
     rotation_step: float = 45.0,
     rotate_result: bool = True,
-    crop_enabled: bool = True
+    crop_enabled: bool = True,
 ) -> Tuple[np.ndarray, List[TemplateMatchResult]]:
     """
     Perform multi-template matching on each slice of a 3D image stack and return cropped regions.
-    
+
     This function applies template matching to each Z-slice independently, finds the best matches,
     and crops the regions around the matched templates. All cropped regions are stacked back into
     a 3D array with consistent dimensions.
-    
+
     Parameters
     ----------
     template_path : str
@@ -465,7 +502,7 @@ def multi_template_crop(
         or original image stack (if crop_enabled=False)
     match_results : List[TemplateMatchResult]
         Detailed results for each slice including match info and crop coordinates
-        
+
     Raises
     ------
     ImportError
@@ -473,36 +510,40 @@ def multi_template_crop(
     ValueError
         If template image cannot be loaded or input dimensions are invalid
     """
-    
+
     if image_stack.ndim != 3:
         raise ValueError(f"Expected 3D image stack, got {image_stack.ndim}D array")
-    
+
     # Load template image
     template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
     if template is None:
         raise ValueError(f"Could not load template image from {template_path}")
-    
+
     logger.info(f"Loaded template of size {template.shape} from {template_path}")
 
     # Generate rotated templates if rotation is enabled
     if rotation_range > 0:
-        template_list = _create_rotated_templates(template, rotation_range, rotation_step)
-        logger.info(f"Generated {len(template_list)} rotated templates (range: {rotation_range}°, step: {rotation_step}°)")
+        template_list = _create_rotated_templates(
+            template, rotation_range, rotation_step
+        )
+        logger.info(
+            f"Generated {len(template_list)} rotated templates (range: {rotation_range}°, step: {rotation_step}°)"
+        )
     else:
         template_list = [("template_0", template)]
-    
+
     # Results storage
     cropped_slices = []
     match_results = []
-    
+
     logger.info(f"Processing {image_stack.shape[0]} slices with template matching")
-    
+
     # Process each slice
     for z_idx in range(image_stack.shape[0]):
         slice_img = image_stack[z_idx]
         result = _process_single_slice(
-            slice_img, 
-            template_list, 
+            slice_img,
+            template_list,
             z_idx,
             score_threshold,
             max_matches,
@@ -511,31 +552,37 @@ def multi_template_crop(
             normalize_input,
             method=method,
         )
-        
+
         match_results.append(result)
 
         # Extract cropped slice from result or use original slice
         if crop_enabled and result.crop_bbox is not None:
             x, y, w, h = result.crop_bbox
-            cropped_slice = slice_img[y:y+h, x:x+w]
+            cropped_slice = slice_img[y : y + h, x : x + w]
 
             # Rotate cropped slice back to upright if rotation was used
             if rotate_result and result.best_rotation_angle != 0:
-                cropped_slice = _rotate_image(cropped_slice, -result.best_rotation_angle)
+                cropped_slice = _rotate_image(
+                    cropped_slice, -result.best_rotation_angle
+                )
         else:
             # Use original slice (either cropping disabled or no match found)
             cropped_slice = slice_img
 
         cropped_slices.append(cropped_slice)
-    
+
     # Stack slices with consistent dimensions (only pad if cropping was enabled)
     if crop_enabled:
         cropped_stack = _stack_with_padding(cropped_slices, pad_mode)
-        logger.info(f"Template matching complete. Cropped output shape: {cropped_stack.shape}")
+        logger.info(
+            f"Template matching complete. Cropped output shape: {cropped_stack.shape}"
+        )
     else:
         # Return original stack when cropping is disabled
         cropped_stack = image_stack
-        logger.info(f"Template matching complete. Original stack shape preserved: {cropped_stack.shape}")
+        logger.info(
+            f"Template matching complete. Original stack shape preserved: {cropped_stack.shape}"
+        )
 
     return cropped_stack, match_results
 
@@ -550,9 +597,9 @@ set_signature_analysis_target(
 )
 
 
-
-
-def _create_rotated_templates(template: np.ndarray, rotation_range: float, rotation_step: float) -> List[Tuple[str, np.ndarray]]:
+def _create_rotated_templates(
+    template: np.ndarray, rotation_range: float, rotation_step: float
+) -> List[Tuple[str, np.ndarray]]:
     """Create rotated versions of a template."""
     templates = []
 
@@ -594,8 +641,13 @@ def _rotate_image(image: np.ndarray, angle: float) -> np.ndarray:
     rotation_matrix[1, 2] += (new_height / 2) - center[1]
 
     # Perform rotation
-    rotated = cv2.warpAffine(image, rotation_matrix, (new_width, new_height),
-                           borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    rotated = cv2.warpAffine(
+        image,
+        rotation_matrix,
+        (new_width, new_height),
+        borderMode=cv2.BORDER_CONSTANT,
+        borderValue=0,
+    )
 
     return rotated
 
@@ -618,7 +670,9 @@ def _process_single_slice(
         # Normalize to 0-255 range
         slice_min, slice_max = slice_img.min(), slice_img.max()
         if slice_max > slice_min:
-            slice_normalized = ((slice_img - slice_min) / (slice_max - slice_min) * 255).astype(np.uint8)
+            slice_normalized = (
+                (slice_img - slice_min) / (slice_max - slice_min) * 255
+            ).astype(np.uint8)
         else:
             slice_normalized = np.zeros_like(slice_img, dtype=np.uint8)
     else:
@@ -626,10 +680,10 @@ def _process_single_slice(
 
     # Perform template matching - FIXED ARGUMENT ORDER
     hits = MTM.matchTemplates(
-        template_list,      # First parameter: listTemplates
-        slice_normalized,   # Second parameter: image
+        template_list,  # First parameter: listTemplates
+        slice_normalized,  # Second parameter: image
         score_threshold=score_threshold,
-        maxOverlap=0.25,    # Prevent overlapping matches
+        maxOverlap=0.25,  # Prevent overlapping matches
         N_object=max_matches,
         method=int(method),
     )
@@ -673,7 +727,7 @@ def _process_single_slice(
         crop_bbox=crop_bbox,
         match_score=best_match[2] if best_match else 0.0,
         num_matches=len(hits),
-        best_rotation_angle=best_rotation_angle
+        best_rotation_angle=best_rotation_angle,
     )
 
     # REMOVED: Exception handling - let errors fail loud instead of silent warnings
