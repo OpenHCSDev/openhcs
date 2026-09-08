@@ -133,6 +133,17 @@ deterministic compiler-only identity. The identity lets a later artifact-owned
 consumer inherit the exact producer and group scope without generated-name
 prefix matching or a CellProfiler-specific branch.
 
+The initial raw image flow has the compiler-owned ``PIPELINE_INPUT_ARTIFACT``
+identity. A first-step consumer or a step selecting ``PIPELINE_START`` can
+therefore inherit its actual source scope without referring to an earlier step.
+Explicit source bindings keep their own declared identities.
+
+``MainFlowStackOutputSpec`` declares that an image output retains its input's
+stack axes and source lineage. Its binding hook resolves the current main-flow
+source into the ordinary artifact relations. The generic invocation provider
+queries output declarations; it does not identify particular analysis functions.
+Template cropping and Skan visualization use this shared declaration.
+
 Satisfaction and exact selection
 --------------------------------
 
@@ -213,6 +224,12 @@ current binding explicitly while the observation stream retains history.
 
 Materialisation is a plan over an artifact declaration. It is not a side effect
 of naming a Python return value or applying ``@special_outputs``.
+
+When an image result selects source planes, ``SelectedPlaneImageOutput`` carries
+the resulting array and the ordered source indices. The runtime resolves this
+through ``SourceProjectedImageOutput`` before storage. Bounds, cardinality, and
+source provenance are checked together, so selecting channel 2 retains channel
+2 in output names rather than relabeling it as the first input plane.
 
 Runtime availability versus persistence
 ----------------------------------------

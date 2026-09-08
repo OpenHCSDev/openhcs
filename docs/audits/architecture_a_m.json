@@ -186,7 +186,7 @@
   },
   {
     "path": "docs/source/architecture/artifact_contract_system.rst",
-    "source_sha256": "260fec50f53cde46eb557a6a0b06a8ea1f39a31485babdfd4413c52d5c3b63c4",
+    "source_sha256": "c7d7c1227edb4c6733484b9cea3a8bc8fa4396bf1e9ae21ac19238ee87743b78",
     "audience": [
       "OpenHCS compiler maintainers",
       "callable and artifact extension authors"
@@ -196,7 +196,7 @@
     "authority": [
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "c9f6c88588c1467eaefae5a479241f6cc5360de617b03f8364a17c415486f532",
+        "sha256": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
         "role": "Defines artifact families, specifications, references, relations, and materialisation declarations."
       },
       {
@@ -206,7 +206,7 @@
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "0a68a578a8111aceb472b2b250cdc0aba5c910f437b867cbde93017f64401cf3",
+        "sha256": "3c09d26af82c8d0d126181fee3a3e234172d02798fd089d96dd627e56436ab23",
         "role": "Implements artifact satisfaction and exact compiled path planning."
       },
       {
@@ -234,7 +234,8 @@
       "On 2026-08-27, re-read the complete explanation against runtime-owned parameter projection in the callable contract and its focused test; the documented artifact ABI and planning claims remain accurate.",
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {

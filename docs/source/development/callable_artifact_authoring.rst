@@ -67,6 +67,15 @@ Callable names such as ``special_inputs`` and ``special_outputs`` describe ABI
 positions only. They are not a substitute for artifact types, producer edges,
 or materialization declarations.
 
+Image outputs that retain the current stack's axes should use
+``MainFlowStackOutputSpec.output(name, ImageArtifactType, ...)``. The compiler
+binds its lineage to the current image input. Declare the image before any
+trailing table outputs so the returned image participates in main flow.
+For a cropped subset, return ``SelectedPlaneImageOutput(array, source_indices)``
+in that image slot; the source indices must match the array's leading axis.
+It is an array-compatible runtime payload: ``numpy.asarray(result)`` exposes
+its pixels to code outside OpenHCS.
+
 Typed table and object-label outputs
 ------------------------------------
 
@@ -100,5 +109,8 @@ Verification
   assert the setting-resolved specs and relations.
 - Compile a minimal ``FunctionStep`` and inspect its artifact input/output plans.
 - Execute a focused case when runtime-bound parameters or an adapter changed.
+- For stack-transforming outputs, execute both first-step and chained cases;
+  inspect saved pixel values and source-coordinate filenames, including a
+  reordered or reduced plane selection.
 
 See :doc:`../architecture/artifact_contract_system`.

@@ -10,28 +10,21 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass, fields, replace
+from dataclasses import dataclass, fields
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Mapping, Optional, Tuple
+from typing import Mapping, Optional, Tuple
 import logging
 
 # OpenHCS imports
 from openhcs.core.artifacts import (
-    ArtifactInputPlan,
     ArtifactMeasurementSubjectRelation,
     ArtifactSpec,
     ImageArtifactType,
+    MainFlowStackOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectMeasurementSubjectRelation,
-)
-from openhcs.core.function_patterns import NormalizedFunctionItem
-from openhcs.core.invocation_artifacts import (
-    ArtifactDeclarationStepContext,
-    InvocationContractPlan,
-    InvocationContractProvider,
-    InvocationContractProviderFactory,
 )
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.measurement_row_materialization import (
@@ -46,9 +39,6 @@ from openhcs.processing.materialization import (
 )
 
 logger = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from openhcs.core.pipeline.compilation_session import CompilationSession
 
 
 class ThresholdMethod(Enum):
@@ -176,7 +166,7 @@ AXON_BRANCHES_OUTPUT = ArtifactSpec.output(
         ),
     ),
 )
-SKELETON_VISUALIZATIONS_OUTPUT = ArtifactSpec.output(
+SKELETON_VISUALIZATIONS_OUTPUT = MainFlowStackOutputSpec.output(
     "skeleton_visualizations",
     ImageArtifactType,
     materialization=MaterializationSpec(
@@ -354,70 +344,6 @@ def skan_axon_skeletonize_and_analyze(
         skeleton_visualization_output,
         skeleton_mask_output,
     )
-
-
-class SkanAxonInvocationContractProvider(InvocationContractProvider):
-    """Bind Skan visualization lineage to its exact compiled main-flow input."""
-
-    def __call__(
-        self,
-        invocation: NormalizedFunctionItem,
-        step_context: ArtifactDeclarationStepContext,
-    ) -> InvocationContractPlan | None:
-        if (
-            invocation.contract.resolve_canonical_raw_callable()
-            is not skan_axon_skeletonize_and_analyze
-        ):
-            return None
-
-        main_flow_inputs = step_context.main_flow_artifacts.for_plan_type(
-            ArtifactInputPlan
-        )
-        if not main_flow_inputs:
-            return None
-        if len(main_flow_inputs) != 1:
-            raise ValueError(
-                "Skan axon analysis requires exactly one compiled main-flow "
-                f"artifact, got {main_flow_inputs.names()!r}."
-            )
-        source = main_flow_inputs[0]
-        outputs = tuple(
-            (
-                ArtifactSpec.output_preserving_source_stack_scope(
-                    output.name,
-                    output.artifact_type,
-                    source,
-                    materialization=output.materialization,
-                    required=output.required,
-                    sidecar_role=output.sidecar_role,
-                    relations=output.relations,
-                )
-                if output.ref() == SKELETON_VISUALIZATIONS_OUTPUT.ref()
-                else output
-            )
-            for output in invocation.contract.artifact_outputs
-        )
-        contract = replace(
-            invocation.contract,
-            metadata=replace(
-                invocation.contract.metadata,
-                artifact_inputs=(*invocation.contract.metadata.artifact_inputs, source),
-                artifact_outputs=outputs,
-            ),
-        )
-        return InvocationContractPlan(contract=contract)
-
-
-class SkanAxonInvocationContractProviderFactory(InvocationContractProviderFactory):
-    """Register the Skan callable's compiler-owned main-flow lineage hook."""
-
-    @classmethod
-    def provider_for_session(
-        cls,
-        session: CompilationSession,
-    ) -> InvocationContractProvider | None:
-        del session
-        return SkanAxonInvocationContractProvider()
 
 
 # Helper functions for segmentation and preprocessing

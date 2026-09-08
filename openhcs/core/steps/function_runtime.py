@@ -51,6 +51,7 @@ from openhcs.core.component_group_scope import (
     RuntimeFixedComponentValues,
 )
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.projected_image_output import SourceProjectedImageOutput
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import (
     DebugCursor,
@@ -509,6 +510,8 @@ class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy)
         output_plan: ArtifactOutputPlan | None,
         plane_projection: RuntimePlaneAxisValueProjection | None,
     ) -> FunctionOutputContextualizedValue:
+        if isinstance(output_value, SourceProjectedImageOutput):
+            return output_value.resolve_source_context(source_payload, plane_projection)
         if isinstance(output_value, RuntimeSliceAlignedValueSet):
             if (
                 plane_projection is None

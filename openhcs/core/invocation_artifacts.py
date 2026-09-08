@@ -16,9 +16,14 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
     ArtifactSpecCollection,
+    ImageArtifactType,
 )
 from openhcs.core.config import StepSourceBindingsConfig
 from openhcs.core.source_bindings import EMPTY_SOURCE_BINDINGS
+
+PIPELINE_INPUT_ARTIFACT = ArtifactSpec.input(
+    "__openhcs_pipeline_input", ImageArtifactType
+)
 
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
@@ -136,32 +141,48 @@ class ArtifactDeclarationStepContext:
     def with_source_declarations(
         self,
         source_specs: Iterable[ArtifactSpec],
+        *,
+        source_groups: tuple[str | None, ...] = (),
     ) -> "ArtifactDeclarationStepContext":
         """Return this context after adding source declarations for the step."""
 
         declared_sources = ArtifactSpecCollection(source_specs)
-        source_refs = frozenset(
-            spec.ref().for_plan_type(ArtifactInputPlan)
-            for spec in declared_sources.specs
-        )
         main_flow_artifacts = self.main_flow_artifacts
+        source_producers = ()
         primary_source_refs = frozenset(
             binding.input_spec().ref()
             for binding in self.source_bindings.primary_plane_bindings
         )
-        if self.input_source is InputSource.PIPELINE_START:
+        if self.input_source is InputSource.PIPELINE_START or (
+            self.step_index == 0 and not main_flow_artifacts
+        ):
             main_flow_artifacts = ArtifactSpecCollection(
                 spec for spec in declared_sources if spec.ref() in primary_source_refs
             )
+            if not main_flow_artifacts:
+                from openhcs.core.pipeline.artifact_planning import ArtifactProducer
+
+                main_flow_artifacts = ArtifactSpecCollection((PIPELINE_INPUT_ARTIFACT,))
+                declared_sources = declared_sources.rebind(main_flow_artifacts.specs)
+                source_producers = (
+                    ArtifactProducer(PIPELINE_INPUT_ARTIFACT, source_groups, ()),
+                )
+        source_refs = frozenset(
+            spec.ref().for_plan_type(ArtifactInputPlan)
+            for spec in declared_sources.specs
+        )
         return replace(
             self,
             available_artifacts=self.available_artifacts.rebind(declared_sources.specs),
             main_flow_artifacts=main_flow_artifacts,
-            available_artifact_producers=tuple(
-                producer
-                for producer in self.available_artifact_producers
-                if producer.spec.ref().for_plan_type(ArtifactInputPlan)
-                not in source_refs
+            available_artifact_producers=(
+                *source_producers,
+                *(
+                    producer
+                    for producer in self.available_artifact_producers
+                    if producer.spec.ref().for_plan_type(ArtifactInputPlan)
+                    not in source_refs
+                ),
             ),
         )
 
@@ -195,6 +216,7 @@ class ArtifactDeclarationStepContext:
         source_bindings: StepSourceBindingsConfig,
         group_by: GroupBy,
         input_source: InputSource,
+        source_groups: tuple[str | None, ...] = (),
     ) -> "ArtifactDeclarationStepContext":
         """Apply one resolved step's source scope and declared source artifacts."""
 
@@ -205,7 +227,8 @@ class ArtifactDeclarationStepContext:
             input_source=input_source,
         )
         return scoped.with_source_declarations(
-            binding.input_spec() for binding in source_bindings.binding_declarations
+            (binding.input_spec() for binding in source_bindings.binding_declarations),
+            source_groups=source_groups,
         )
 
     def advance_artifact_graph(
@@ -334,6 +357,52 @@ class InvocationContractProviderFactory(ABC, metaclass=AutoRegisterMeta):
         session: "CompilationSession",
     ) -> InvocationContractProvider | None:
         """Return an invocation-contract provider for one compilation session."""
+
+
+class MainFlowArtifactContractProvider(
+    InvocationContractProviderFactory, InvocationContractProvider
+):
+    """Resolve stack lineage through output declarations, independently of callables."""
+
+    def __call__(
+        self,
+        invocation: "NormalizedFunctionItem",
+        step_context: ArtifactDeclarationStepContext,
+    ) -> InvocationContractPlan | None:
+        contract = invocation.contract
+        sources = step_context.main_flow_artifacts.for_plan_type(ArtifactInputPlan)
+        outputs = tuple(
+            output.bind_main_flow_source(sources)
+            for output in contract.artifact_outputs
+        )
+        if all(
+            bound is declared
+            for bound, declared in zip(outputs, contract.artifact_outputs, strict=True)
+        ):
+            return None
+        source_refs = frozenset(
+            ref for output in outputs for ref in output.source_stack_scope_sources()
+        )
+        inputs = ArtifactSpecCollection(
+            (
+                *contract.artifact_inputs,
+                *(source for source in sources if source.ref() in source_refs),
+            )
+        ).unique(conflict_context="main-flow artifact input")
+        return InvocationContractPlan(
+            contract=replace(
+                contract,
+                metadata=replace(
+                    contract.metadata, artifact_inputs=inputs, artifact_outputs=outputs
+                ),
+            )
+        )
+
+    @classmethod
+    def provider_for_session(
+        cls, session: "CompilationSession"
+    ) -> InvocationContractProvider:
+        return cls()
 
 
 @dataclass(frozen=True, slots=True)

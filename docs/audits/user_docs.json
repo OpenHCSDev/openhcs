@@ -60,7 +60,7 @@
   },
   {
     "path": "docs/source/appendices/glossary.rst",
-    "source_sha256": "da073f2a23ac9dfff6fcb9ec626ecc248b18ec64907af57fe2a1fa0aa2e47218",
+    "source_sha256": "0d2911da50a8546e893ffbf0091415ae995700bef3f271170cd8eafb7abffb85",
     "audience": [
       "OpenHCS users",
       "contributors"
@@ -70,7 +70,7 @@
     "authority": [
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "c9f6c88588c1467eaefae5a479241f6cc5360de617b03f8364a17c415486f532",
+        "sha256": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
         "role": "Declares the nominal artefact types exchanged by compiled steps and runtime consumers."
       },
       {
@@ -115,7 +115,8 @@
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-25, re-read the complete module-structure reference after the viewer protocol gained typed payload and isolation controls; package layout, submodule ownership, and contributor navigation remain unchanged.",
       "On 2026-08-27, re-read the complete glossary after library registries gained declaration-owned runtime-parameter exclusions; the callable-contract and runtime-adapter definitions remain accurate.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {
@@ -129,7 +130,7 @@
     "authority": [
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "c9f6c88588c1467eaefae5a479241f6cc5360de617b03f8364a17c415486f532",
+        "sha256": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
         "role": "Declares the nominal artefact types exchanged by compiled steps and runtime consumers."
       },
       {
@@ -144,7 +145,8 @@
       "Reviewed docs/source/appendices/index.rst in full; the recorded findings and disposition are the resulting page-specific editorial decision.",
       "Compared its factual claims directly with the hash-pinned files listed in authority: openhcs/core/artifacts.py; docs/source/conf.py.",
       "Passed `.venv/bin/python scripts/validate_docs.py docs/source/appendices`: documentation validation passed: 3 files, 0 Python blocks.",
-      "On 2026-08-25, re-read the complete reference after removing unreferenced legacy static media and duplicate Sphinx configuration; appendix navigation remains unchanged."
+      "On 2026-08-25, re-read the complete reference after removing unreferenced legacy static media and duplicate Sphinx configuration; appendix navigation remains unchanged.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {
@@ -210,7 +212,7 @@
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "c9f6c88588c1467eaefae5a479241f6cc5360de617b03f8364a17c415486f532",
+        "sha256": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
         "role": "Declares the nominal artefact types exchanged by compiled steps and runtime consumers."
       },
       {
@@ -235,7 +237,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "On 2026-08-27, re-read the complete explanation after library registries gained declaration-owned runtime-parameter exclusions; its declaration and ownership model remains accurate."
+      "On 2026-08-27, re-read the complete explanation after library registries gained declaration-owned runtime-parameter exclusions; its declaration and ownership model remains accurate.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {
@@ -1991,7 +1994,7 @@
       },
       {
         "path": "openhcs/core/steps/function_runtime.py",
-        "sha256": "d7de33cae49f2fc99ef916ed83fff300cbbf70c9b3b05b538265f026827be2b3",
+        "sha256": "b1449120bebe7cf4898c055d841dc258c7d91d976d9e5ff7396aed81ad5011e7",
         "role": "Scopes a callable body through its declared execution framework during worker invocation."
       },
       {
@@ -2023,7 +2026,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {
@@ -2882,7 +2886,7 @@
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "c9f6c88588c1467eaefae5a479241f6cc5360de617b03f8364a17c415486f532",
+        "sha256": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
         "role": "Declares the nominal artefact types exchanged by compiled steps and runtime consumers."
       }
     ],
@@ -2895,7 +2899,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "On 2026-08-28, re-read the complete reference index after adding the registered desktop-window reference; the navigation remains concise, factual, and separated from task guidance."
+      "On 2026-08-28, re-read the complete reference index after adding the registered desktop-window reference; the navigation remains concise, factual, and separated from task guidance.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {

@@ -17,9 +17,15 @@ import MTM
 import numpy as np
 from python_introspect import set_signature_analysis_target
 
-from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType, SpecialArtifactType
+from openhcs.core.artifacts import (
+    ArtifactSpec,
+    ImageArtifactType,
+    MainFlowStackOutputSpec,
+    SpecialArtifactType,
+)
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
+from openhcs.core.projected_image_output import SelectedPlaneImageOutput
 from openhcs.core.vfs_protocol import PlateInputFile
 from openhcs.processing.materialization import (
     CsvOptions,
@@ -124,7 +130,7 @@ class TemplateMatchResult:
 
 
 _TEMPLATE_MATCH_OUTPUTS = (
-    ArtifactSpec.output(
+    MainFlowStackOutputSpec.output(
         "cropped_stack",
         ImageArtifactType,
         materialization=MaterializationSpec(
@@ -319,7 +325,7 @@ def multi_template_crop_subset(
     rotation_step: float = 45.0,
     rotate_result: bool = True,
     crop_enabled: bool = True,
-) -> Tuple[np.ndarray, List[TemplateMatchResult]]:
+) -> Tuple[SelectedPlaneImageOutput, List[TemplateMatchResult]]:
     """
     Perform template matching on a reference channel and crop only specified target channels.
 
@@ -337,8 +343,9 @@ def multi_template_crop_subset(
 
     Returns
     -------
-    cropped_stack : np.ndarray
-        3D array containing only the specified target channels, cropped using reference channel
+    cropped_stack : SelectedPlaneImageOutput
+        Array-compatible 3D crop retaining the ordered source channel indices.
+        Use np.asarray(cropped_stack) to obtain a NumPy array outside a pipeline.
     match_results : List[TemplateMatchResult]
         Results for each target channel (reference channel gets actual results, others get "applied")
 
@@ -441,7 +448,10 @@ def multi_template_crop_subset(
             f"Subset template matching complete. Original subset shape: {cropped_stack.shape}"
         )
 
-    return cropped_stack, target_results
+    return (
+        SelectedPlaneImageOutput(cropped_stack, tuple(target_channels)),
+        target_results,
+    )
 
 
 @numpy_func

@@ -1506,6 +1506,9 @@ class PathPlannerArtifactStage:
             source_bindings=source_bindings,
             group_by=PathPlannerExecutionGroups.normalized_group_by(snapshot),
             input_source=snapshot.step.processing_config.input_source,
+            source_groups=self.planner.execution_groups.dynamic_execution_scope_for_group_by(
+                snapshot, PathPlannerExecutionGroups.normalized_group_by(snapshot)
+            ).keys,
         )
 
     def process_artifact_outputs(

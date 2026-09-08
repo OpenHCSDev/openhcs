@@ -1575,6 +1575,13 @@ class ArtifactSpec:
             ),
         )
 
+    def bind_main_flow_source(
+        self, sources: "ArtifactSpecCollection"
+    ) -> "ArtifactSpec":
+        """Resolve any declaration-owned dependency on the invocation's image flow."""
+
+        return self
+
     @classmethod
     def input(
         cls,
@@ -1762,6 +1769,22 @@ class ArtifactSpec:
                 for relation in self.relations
                 for dependency in relation.dependency_refs()
             )
+        )
+
+
+class MainFlowStackOutputSpec(ArtifactSpec):
+    """An output retaining the invocation's source-stack axes and provenance."""
+
+    def bind_main_flow_source(self, sources: "ArtifactSpecCollection") -> ArtifactSpec:
+        if not sources:
+            return self
+        if len(sources) != 1:
+            raise ValueError(
+                f"Output {self.name!r} requires one compiled main-flow source, "
+                f"got {sources.names()!r}."
+            )
+        return self.with_group_scope_relation(
+            SourceStackLineageSourceRelation(source=sources[0].ref())
         )
 
 

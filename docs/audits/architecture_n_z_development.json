@@ -979,7 +979,7 @@
   },
   {
     "path": "docs/source/architecture/runtime_value_system.rst",
-    "source_sha256": "49e5a2ae08a1439d4a548efbdd823027b4c54d92687c9dec060730fa4e204246",
+    "source_sha256": "685e26819a6c15194d729b18bf648cd1e91e8e698034041a33fe0da259b2b714",
     "audience": [
       "OpenHCS runtime and artifact maintainers"
     ],
@@ -1013,7 +1013,7 @@
       },
       {
         "path": "openhcs/core/steps/function_runtime.py",
-        "sha256": "d7de33cae49f2fc99ef916ed83fff300cbbf70c9b3b05b538265f026827be2b3",
+        "sha256": "b1449120bebe7cf4898c055d841dc258c7d91d976d9e5ff7396aed81ad5011e7",
         "role": "Runtime callable invocation and output-context strategy implementation."
       },
       {
@@ -1039,7 +1039,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-22, re-read the complete explanation against runtime image values, slice projection, ArrayBridge geometry, and the no-host-conversion regression; the OpenHCS and generic owner boundary remains explicit.",
-      "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate."
+      "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {
@@ -2175,7 +2176,7 @@
   },
   {
     "path": "docs/source/development/callable_artifact_authoring.rst",
-    "source_sha256": "14527bf167078bec8b3312507b9bffa8834508f0326479debb0aaefb595d5d3c",
+    "source_sha256": "77aa44504f5d5cfcf8d073f287bd4022fd085d0435633e55a53ad4eee422c2ea",
     "audience": [
       "OpenHCS callable and artifact extension authors"
     ],
@@ -2189,7 +2190,7 @@
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "c9f6c88588c1467eaefae5a479241f6cc5360de617b03f8364a17c415486f532",
+        "sha256": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
         "role": "Artifact type, specification, reference, relation, and plan declarations."
       },
       {
@@ -2234,7 +2235,8 @@
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
       "On 2026-08-27, re-read and revised the complete how-to after CallableContract began projecting runtime-owned parameters into the shared python-introspect exclusion boundary; the focused contract regression passed.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {
@@ -2321,7 +2323,7 @@
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "0a68a578a8111aceb472b2b250cdc0aba5c910f437b867cbde93017f64401cf3",
+        "sha256": "3c09d26af82c8d0d126181fee3a3e234172d02798fd089d96dd627e56436ab23",
         "role": "Compiled source satisfaction, artifact edge, path, grouping, and plan decisions."
       },
       {
@@ -2365,7 +2367,8 @@
       "Focused feature-lattice QA passed 159 tests covering the N-Z architecture and developer workflow authorities.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
-      "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests."
+      "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {
@@ -3377,7 +3380,7 @@
       },
       {
         "path": "openhcs/core/steps/function_runtime.py",
-        "sha256": "d7de33cae49f2fc99ef916ed83fff300cbbf70c9b3b05b538265f026827be2b3",
+        "sha256": "b1449120bebe7cf4898c055d841dc258c7d91d976d9e5ff7396aed81ad5011e7",
         "role": "Runtime conversion and invocation inside the compiled execution-framework device scope."
       },
       {
@@ -3404,7 +3407,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   },
   {
@@ -3612,7 +3616,7 @@
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "0a68a578a8111aceb472b2b250cdc0aba5c910f437b867cbde93017f64401cf3",
+        "sha256": "3c09d26af82c8d0d126181fee3a3e234172d02798fd089d96dd627e56436ab23",
         "role": "Compiled source satisfaction, artifact edge, path, grouping, and plan decisions."
       },
       {
@@ -3628,7 +3632,8 @@
     "validation": [
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "tests/unit/test_source_bindings.py and tests/unit/test_source_projection.py passed; source inspection confirmed both compiled source plan types",
-      "On 2026-08-22, re-read the complete how-to against the current source-binding and workspace owners; the focused OpenHCS documentation-drift suite passed 238 tests."
+      "On 2026-08-22, re-read the complete how-to against the current source-binding and workspace owners; the focused OpenHCS documentation-drift suite passed 238 tests.",
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
     ]
   }
 ]

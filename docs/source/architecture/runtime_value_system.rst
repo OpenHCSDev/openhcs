@@ -99,6 +99,12 @@ source strategy attaches context and validates the plane projection. Aligned
 value sets preserve per-slice context and require their count to match the
 declared runtime-slice axis.
 
+Image results that select or reorder source planes implement
+``SourceProjectedImageOutput``. Their leaf implementation validates the declared
+selection and projects source metadata before generic image contextualization.
+``SelectedPlaneImageOutput`` carries a cropped array and its ordered source
+indices, preserving channel identity even when only one channel remains.
+
 Object-label sources have a specialized image-output rule. A rendered label
 volume with no selected plane must acquire the invocation's declared plane axis,
 including when the volume depth is one. Its source-plane provenance count and

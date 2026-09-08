@@ -5,8 +5,9 @@ Glossary
    :sorted:
 
    Artifact
-      A typed non-main-flow result or dependency, such as measurements, object
-      labels, relationships, tables, positions, or files.
+      A typed result or dependency, such as an image, measurement, object label,
+      relationship, table, or spatial graph. Image artifacts can also carry
+      the main flow between steps.
 
    Artifact contract
       A callable or module declaration describing named artifact inputs and
@@ -47,7 +48,7 @@ Glossary
 
    Main flow
       The primary image/result stream passed from one pipeline step to the next.
-      Named artifacts are a separate dependency mechanism.
+      It can have a named artifact identity or a compiler-owned implicit identity.
 
    Materialization
       Persisting a declared result to a storage backend or streaming backend.

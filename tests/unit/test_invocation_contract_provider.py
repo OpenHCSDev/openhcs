@@ -25,6 +25,7 @@ from openhcs.core.function_patterns import (
     normalize_function_pattern,
 )
 from openhcs.core.invocation_artifacts import (
+    PIPELINE_INPUT_ARTIFACT,
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
     InvocationContractPlan,
@@ -151,7 +152,9 @@ def test_cellprofiler_invocation_provider_has_exact_immutable_shape() -> None:
     assert isinstance(provider.plans, MappingProxyType)
 
 
-def test_cellprofiler_declared_module_numbering_preserves_distinct_occurrences() -> None:
+def test_cellprofiler_declared_module_numbering_preserves_distinct_occurrences() -> (
+    None
+):
     from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
     from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 
@@ -1456,7 +1459,13 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
             ),
         )
     )
-    with pytest.raises(ValueError, match="cannot reconstruct an exact module block"):
+    pipeline_start_provider = (
         CellProfilerInvocationContractProviderFactory.provider_for_session(
             pipeline_start_session
         )
+    )
+    assert pipeline_start_provider is not None
+    pipeline_start_contract = pipeline_start_provider.plans[
+        (1, cp_invocation.key)
+    ].contract
+    assert pipeline_start_contract.artifact_inputs.specs == (PIPELINE_INPUT_ARTIFACT,)
