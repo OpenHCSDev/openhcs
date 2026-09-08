@@ -28,6 +28,7 @@ from openhcs.agent.services.function_catalog_service import FunctionCatalogServi
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 
 if TYPE_CHECKING:
+    from openhcs.core.function_reference import FunctionReference
     from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
 logger = logging.getLogger(__name__)
@@ -327,20 +328,23 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
         endpoint_revision = self._require_endpoint_revision()
         entry = self._entry(function_id)
         try:
-            reference = self._client_for(
-                endpoint_revision.endpoint
-            ).get_function_reference(
-                FunctionReferenceControlRequest(
-                    function_id=function_id,
-                    catalog_revision=endpoint_revision.revision,
-                )
-            )
-            return reference.resolve()
+            return self.reference(function_id).resolve()
         except (ImportError, RuntimeError, TypeError) as exc:
             raise EndpointFunctionUnavailableError(
                 entry,
                 endpoint_revision.endpoint,
             ) from exc
+
+    def reference(self, function_id: str) -> FunctionReference:
+        """Transport the endpoint-owned contract without loading its library here."""
+
+        endpoint_revision = self._require_endpoint_revision()
+        return self._client_for(endpoint_revision.endpoint).get_function_reference(
+            FunctionReferenceControlRequest(
+                function_id=function_id,
+                catalog_revision=endpoint_revision.revision,
+            )
+        )
 
     def register_custom_function(
         self,

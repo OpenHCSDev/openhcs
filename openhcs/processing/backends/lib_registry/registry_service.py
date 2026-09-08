@@ -21,6 +21,7 @@ from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.core.function_reference import ResolvedRegistryFunction
 
 from .unified_registry import (
     LIBRARY_REGISTRIES,
@@ -50,7 +51,7 @@ class RegistryService:
     _metadata_cache: Optional[Dict[str, FunctionMetadata]] = None
     _registry_instances: tuple[LibraryRegistryBase, ...] | None = None
     _resolved_reference_callables: Dict[
-        tuple[str, "CallableImportIdentity", str | None], Callable
+        tuple[str, "CallableImportIdentity", str | None], ResolvedRegistryFunction
     ] = {}
     _registry_inventory_lock = threading.RLock()
 
@@ -305,6 +306,8 @@ class RegistryService:
     def registered_callable(cls, func: Callable) -> Callable:
         """Project a declaration onto its registered runtime owner when present."""
 
+        if cls.resolved_reference_for_callable(func) is not None:
+            return func
         declared = inspect.unwrap(func)
         cached_metadata = cls._metadata_cache
         if cached_metadata is not None:
@@ -317,6 +320,22 @@ class RegistryService:
             return local_metadata.func
 
         return func
+
+    @classmethod
+    def resolved_reference_for_callable(
+        cls, func: Callable
+    ) -> "RegistryFunctionReference | None":
+        """Recover the exact owner of a locally reconstructed registry wrapper."""
+
+        with cls._registry_inventory_lock:
+            return next(
+                (
+                    projection.reference
+                    for projection in cls._resolved_reference_callables.values()
+                    if projection.func is func
+                ),
+                None,
+            )
 
     @classmethod
     def resolve_function_reference(
@@ -333,7 +352,7 @@ class RegistryService:
         with cls._registry_inventory_lock:
             cached = cls._resolved_reference_callables.get(cache_key)
             if cached is not None:
-                return cached
+                return cached.func
             catalog_metadata = (
                 None
                 if cls._metadata_cache is None
@@ -342,7 +361,9 @@ class RegistryService:
             if catalog_metadata is not None:
                 cls._validate_reference_metadata(reference, catalog_metadata)
                 resolved = reference.require_current_declaration(catalog_metadata.func)
-                cls._resolved_reference_callables[cache_key] = resolved
+                cls._resolved_reference_callables[cache_key] = ResolvedRegistryFunction(
+                    reference, resolved
+                )
                 return resolved
 
         try:
@@ -389,7 +410,9 @@ class RegistryService:
             resolved = registry.reconstruct_cached_callable(declared, contract)
 
         with cls._registry_inventory_lock:
-            cls._resolved_reference_callables[cache_key] = resolved
+            cls._resolved_reference_callables[cache_key] = ResolvedRegistryFunction(
+                reference, resolved
+            )
         return resolved
 
     @staticmethod

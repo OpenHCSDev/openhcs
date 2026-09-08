@@ -27,6 +27,7 @@ from polystore.base import _create_storage_registry
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QApplication
 from pyqt_reactive.theming import ColorScheme
+from pyqt_reactive.services.zmq_server_scan_service import EndpointObservationSnapshot
 from pyqt_reactive.widgets.editors.simple_code_editor import SimpleCodeEditorService
 from pyqt_reactive.widgets.shared.abstract_manager_widget import (
     AbstractManagerWidget,
@@ -38,7 +39,11 @@ from pyqt_reactive.widgets.shared.manager_selection_controller import (
 from typing_extensions import override
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
-from openhcs.agent.ui_bridge_actions import PlateManagerAction, PlateOperation
+from openhcs.agent.ui_bridge_actions import (
+    CompilationActionProjection,
+    PlateManagerAction,
+    PlateOperation,
+)
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerLiveMeasurementsStateSurfaceIdentityDeclaration,
     PlateManagerStateSurfaceIdentityDeclaration,
@@ -557,52 +562,14 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         section_id="plate-manager",
     )
     ENABLE_STATUS_SCROLLING = True  # Marquee animation for long status messages
-    BUTTON_CONFIGS = [action.button_config for action in PlateManagerAction]
+    BUTTON_CONFIGS = [
+        action.button_config for action in PlateManagerAction if action.has_button
+    ]
     ACTION_ROUTES = MappingProxyType(
         {
-            route.action: route
-            for route in (
-                WidgetActionRoute(
-                    PlateManagerAction.ADD_PLATE,
-                    lambda widget: widget.action_add,
-                ),
-                WidgetActionRoute(
-                    PlateManagerAction.DELETE_PLATE,
-                    lambda widget: widget.action_delete,
-                ),
-                WidgetActionRoute(
-                    PlateManagerAction.EDIT_CONFIG,
-                    lambda widget: widget.action_edit_config,
-                ),
-                WidgetActionRoute(
-                    PlateManagerAction.INIT_PLATE,
-                    lambda widget: widget.action_init_plate,
-                ),
-                WidgetActionRoute(
-                    PlateManagerAction.COMPILE_PLATE,
-                    lambda widget: widget.action_compile_plate,
-                ),
-                WidgetActionRoute(
-                    PlateManagerAction.RUN_PLATE,
-                    lambda widget: (
-                        widget.action_stop_execution
-                        if widget.is_any_plate_running()
-                        else widget.action_run_plate
-                    ),
-                ),
-                WidgetActionRoute(
-                    PlateManagerAction.CODE_PLATE,
-                    lambda widget: widget.action_code_plate,
-                ),
-                WidgetActionRoute(
-                    PlateManagerAction.VIEW_RESULTS,
-                    lambda widget: widget.action_view_live_results,
-                ),
-                WidgetActionRoute(
-                    PlateManagerAction.VIEW_METADATA,
-                    lambda widget: widget.action_view_metadata,
-                ),
-            )
+            action: WidgetActionRoute(action, action.resolve_callable)
+            for action in PlateManagerAction
+            if action.has_button
         }
     )
     ITEM_NAME_SINGULAR = "plate"
@@ -701,6 +668,9 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
             self.runtime_progress_projection
         )
         self._state_projection_service = PlateManagerStateProjectionService()
+        self._endpoint_observations: Callable[[], EndpointObservationSnapshot] = (
+            EndpointObservationSnapshot
+        )
 
         # Initialize base class (creates event bus, item list, buttons, and status label).
         super().__init__(service_adapter, color_scheme, parent=parent)
@@ -776,6 +746,20 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         """Attach to or start this manager's persistent execution server."""
 
         return await self._batch_workflow_service.ensure_server()
+
+    def bind_endpoint_observations(
+        self, provider: Callable[[], EndpointObservationSnapshot]
+    ) -> None:
+        """Read endpoint facts from the same authority as the server browser."""
+        self._endpoint_observations = provider
+        self.update_button_states()
+
+    @property
+    def compilation_action(self) -> PlateManagerAction:
+        status = self._endpoint_observations().status_for_port(
+            self._ui_config.zmq.default_port
+        )
+        return CompilationActionProjection.from_status(status)
 
     @property
     def execution_state(self) -> ManagerExecutionState:
@@ -2368,7 +2352,13 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         self.buttons["del_plate"].setEnabled(has_selection and not is_running)
         self.buttons["edit_config"].setEnabled(has_initialized and not is_running)
         self.buttons["init_plate"].setEnabled(has_selection and not is_running)
-        self.buttons["compile_plate"].setEnabled(has_initialized and not is_running)
+        compile_action = self.compilation_action
+        compile_button = self.buttons[PlateManagerAction.COMPILE_PLATE.value]
+        compile_button.setEnabled(
+            compile_action.selection_enabled(has_initialized) and not is_running
+        )
+        compile_button.setText(compile_action.label)
+        compile_button.setToolTip(compile_action.tooltip)
         # Code button available even without initialized plates so users can edit templates
         self.buttons["code_plate"].setEnabled(not is_running)
         self.buttons["view_metadata"].setEnabled(has_initialized and not is_running)

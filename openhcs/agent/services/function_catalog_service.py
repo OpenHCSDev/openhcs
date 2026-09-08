@@ -523,6 +523,10 @@ class FunctionCatalogServiceABC(ABC):
     def resolve(self, function_id: str) -> Callable:
         """Resolve one selected callable without materializing another catalog."""
 
+    @abstractmethod
+    def reference(self, function_id: str) -> "FunctionReference":
+        """Return a compiler reference without importing the callable locally."""
+
 
 class FunctionCatalogService(FunctionCatalogServiceABC):
     """Expose registered OpenHCS processing callables through stable IDs."""

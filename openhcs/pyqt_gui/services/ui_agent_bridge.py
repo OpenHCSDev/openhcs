@@ -22,6 +22,8 @@ from pyqt_reactive.services.ui_thread_dispatch import (
 )
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
+from openhcs.core.function_reference import FunctionReference
 from openhcs.agent.dto.ui_bridge import (
     UNKNOWN_UI_BRIDGE_OPERATION_ROUTE,
     UiActionCatalog,
@@ -195,11 +197,28 @@ class UiCodeDocumentSourcePolicy:
     allowed_import_roots = frozenset(("openhcs",))
     allowed_builtin_references = frozenset(("bool", "bytes", "float", "int", "str"))
 
+    def __init__(
+        self, function_catalog: FunctionCatalogServiceABC | None = None
+    ) -> None:
+        self._function_catalog = function_catalog
+
     def validate(self, source: str) -> tuple[AgentError, ...]:
+        try:
+            self.prepare(source)
+        except UiCodeDocumentValidationError as exc:
+            return exc.errors
+        return ()
+
+    def prepare(
+        self, source: str
+    ) -> tuple[ast.Module, DeclarativeCodeDocumentAstValidator]:
+        """Validate and retain the exact catalog references admitted by this read."""
         try:
             tree = ast.parse(source)
         except SyntaxError as exc:
-            return (AgentError.from_exception("invalid_python_source", exc),)
+            raise UiCodeDocumentValidationError(
+                (AgentError.from_exception("invalid_python_source", exc),)
+            ) from exc
 
         visitor = DeclarativeCodeDocumentAstValidator(
             allowed_import_roots=self.allowed_import_roots,
@@ -207,9 +226,12 @@ class UiCodeDocumentSourcePolicy:
                 PlateManagerCodeDocumentAuthority.declared_external_value_types()
             ),
             allowed_builtin_references=self.allowed_builtin_references,
+            function_catalog=self._function_catalog,
         )
         visitor.visit(tree)
-        return tuple(visitor.errors)
+        if visitor.errors:
+            raise UiCodeDocumentValidationError(tuple(visitor.errors))
+        return tree, visitor
 
 
 class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
@@ -221,10 +243,14 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
         allowed_import_roots: frozenset[str],
         allowed_external_value_types: frozenset[type[object]],
         allowed_builtin_references: frozenset[str],
+        function_catalog: FunctionCatalogServiceABC | None = None,
     ) -> None:
         self._allowed_import_roots = allowed_import_roots
         self._allowed_external_value_types = allowed_external_value_types
         self._allowed_builtin_references = allowed_builtin_references
+        self._function_catalog = function_catalog
+        self.catalog_bindings: dict[tuple[str, str], FunctionReference] = {}
+        self._function_names: set[str] = set()
         self._imported_names: set[str] = set()
         self._path_constructor_names: set[str] = set()
         self._helper_bindings: set[str] = set()
@@ -240,7 +266,7 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
             self._imported_names.add(alias.asname or root_name)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
-        if node.module is None:
+        if node.module is None or node.level:
             self._error("unsafe_import", "Relative imports are not allowed.")
             return
         module_name = node.module
@@ -267,6 +293,7 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
                     module_name,
                     alias.name,
                 )
+                and not self._bind_catalog_import(module_name, alias)
             ):
                 self._error(
                     "unsafe_import",
@@ -381,8 +408,29 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
 
     def _is_approved_constructor_call(self, func: ast.expr) -> bool:
         if isinstance(func, ast.Name):
-            return func.id in self._imported_names and func.id[:1].isupper()
+            return (
+                func.id in self._imported_names
+                and func.id not in self._function_names
+                and func.id[:1].isupper()
+            )
         return False
+
+    def _bind_catalog_import(self, module_name: str, alias: ast.alias) -> bool:
+        if self._function_catalog is None:
+            return False
+        identity = (module_name, alias.name)
+        if identity not in self.catalog_bindings:
+            detail = self._function_catalog.get_by_import_path(
+                f"{module_name}.{alias.name}", max_doc_chars=0
+            )
+            if detail is None:
+                return False
+            reference = self._function_catalog.reference(detail.entry.function_id)
+            if (reference.original_module, reference.function_name) != identity:
+                return False
+            self.catalog_bindings[identity] = reference
+        self._function_names.add(alias.asname or alias.name)
+        return True
 
     def _is_absolute_path_binding(self, node: ast.expr) -> bool:
         if not isinstance(node, ast.Call):
@@ -443,6 +491,38 @@ class DeclarativeCodeDocumentAstValidator(ast.NodeVisitor):
         )
 
 
+class CatalogFunctionImportProjection(ast.NodeTransformer):
+    """Bind approved pipeline imports through their registry compiler contracts."""
+
+    namespace_key = "__openhcs_catalog_references__"
+
+    def __init__(self, bindings: dict[tuple[str, str], FunctionReference]) -> None:
+        self.bindings = bindings
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> list[ast.stmt]:
+        statements: list[ast.stmt] = []
+        for alias in node.names:
+            identity = (node.module, alias.name)
+            if identity in self.bindings:
+                statement = ast.Assign(
+                    targets=[ast.Name(id=alias.asname or alias.name, ctx=ast.Store())],
+                    value=ast.Subscript(
+                        value=ast.Name(id=self.namespace_key, ctx=ast.Load()),
+                        slice=ast.Tuple(
+                            elts=[ast.Constant(value=part) for part in identity],
+                            ctx=ast.Load(),
+                        ),
+                        ctx=ast.Load(),
+                    ),
+                )
+            else:
+                statement = ast.ImportFrom(
+                    module=node.module, names=[alias], level=node.level
+                )
+            statements.append(ast.copy_location(statement, node))
+        return statements
+
+
 class UiCodeDocumentExecutionService:
     """Executes validated code-mode source through existing manager hooks."""
 
@@ -450,14 +530,21 @@ class UiCodeDocumentExecutionService:
         self._source_policy = source_policy or UiCodeDocumentSourcePolicy()
 
     def validate_source(self, source: str, operations) -> CodeDocumentExecutionResult:
-        errors = self._source_policy.validate(source)
-        if errors:
-            raise UiCodeDocumentValidationError(errors)
-
+        tree, validation = self._source_policy.prepare(source)
+        projection = CatalogFunctionImportProjection(validation.catalog_bindings)
+        executable = compile(
+            ast.fix_missing_locations(projection.visit(tree)),
+            "<plate-manager-code>",
+            "exec",
+        )
         namespace = PlateManagerCodeNamespace()
+        namespace[projection.namespace_key] = {
+            identity: reference.resolve()
+            for identity, reference in projection.bindings.items()
+        }
         try:
             with operations.patch_lazy_constructors():
-                exec(source, namespace)
+                exec(executable, namespace)
         except TypeError as exc:
             migrated_namespace = operations.migrate_code_namespace(
                 source,

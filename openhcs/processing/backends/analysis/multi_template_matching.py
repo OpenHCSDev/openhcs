@@ -21,6 +21,7 @@ from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.vfs_protocol import PlateInputFile
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+from openhcs.processing.materialization.options import MaterializedFilenameIdentity
 
 
 logger = logging.getLogger(__name__)
@@ -119,6 +120,7 @@ class TemplateMatchResult:
 _TEMPLATE_MATCH_RESULT_MATERIALIZATION = MaterializationSpec(
     CsvOptions(
         filename_suffix="_mtm_matches.csv",
+        filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
         fields=[field.name for field in fields(TemplateMatchCsvRow)],
         row_unpacker=_mtm_row_unpacker,
     )

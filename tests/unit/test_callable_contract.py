@@ -4,7 +4,7 @@ from enum import Enum
 from types import MappingProxyType, ModuleType
 
 import pytest
-from arraybridge import MemoryContractAttribute
+from arraybridge import MemoryContractAttribute, SliceBySliceRuntimeParameter
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import parameter_exclusions
 
@@ -147,6 +147,29 @@ def test_callable_contract_validates_nominal_enum_values_from_resolved_annotatio
     )
     with pytest.raises(TypeError, match="project.method must be ProjectionMethod"):
         contract.validate_public_kwargs({"method": "max"})
+
+
+@pytest.mark.parametrize("slice_by_slice", [False, True])
+def test_callable_contract_preserves_declared_semantic_controls(slice_by_slice) -> None:
+    @runtime_bound_parameters(SliceBySliceRuntimeParameter)
+    def process(image, *, slice_by_slice: bool = False):
+        return image
+
+    contract = CallableContract.from_callable(process)
+    assert contract.validate_public_kwargs({"slice_by_slice": slice_by_slice}) == (
+        ("slice_by_slice", slice_by_slice),
+    )
+    assert contract.validate_public_kwargs({}) == ()
+
+
+def test_callable_contract_still_rejects_injected_runtime_values() -> None:
+    @runtime_bound_parameters(SliceIndexRuntimeParameter)
+    def process(image, *, slice_index: int = 0):
+        return image
+
+    contract = CallableContract.from_callable(process)
+    with pytest.raises(TypeError, match="runtime-owned parameter 'slice_index'"):
+        contract.validate_public_kwargs({"slice_index": 3})
 
 
 def test_callable_contract_reads_wrapper_declared_config_parameters() -> None:

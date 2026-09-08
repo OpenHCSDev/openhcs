@@ -286,7 +286,11 @@ class ZMQClientService:
         """Invalidate this service's client when its exact endpoint terminates."""
 
         session = self._session
-        if session is None or session.client.endpoint != endpoint:
+        if (
+            session is None
+            or session.compatibility is None
+            or session.client.endpoint != endpoint
+        ):
             return False
         self._cancel_connection_attempt()
         with self._client_lock:

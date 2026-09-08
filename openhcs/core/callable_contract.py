@@ -963,6 +963,8 @@ class CallableContract(ArtifactPlanKeySelector):
         if runtime_adapter is not None:
             bind_runtime_owned(runtime_adapter.require_parameter_name())
         for parameter_type in self.runtime_bound_parameter_types:
+            if parameter_type.is_semantic_control:
+                continue
             bind_runtime_owned(parameter_type.require_parameter_name())
         for parameter_name in self.config_bound_parameter_names:
             bind_runtime_owned(parameter_name)

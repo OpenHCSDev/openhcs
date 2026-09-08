@@ -53,6 +53,7 @@ from openhcs.pyqt_gui.services.plate_manager_state_projection import (
 from openhcs.pyqt_gui.services.ui_agent_bridge import (
     UiCodeDocumentApplyLabel,
     UiCodeDocumentExecutionService,
+    UiCodeDocumentSourcePolicy,
     UiCodeDocumentValidationError,
 )
 from openhcs.pyqt_gui.services.ui_bridge_contracts import (
@@ -153,18 +154,25 @@ class PlateManagerBridgeProviderSet(UiBridgeProviderSetABC):
 
     registry_key = PlateManagerWidgetIdentity.require_value()
 
-    def __init__(self, manager) -> None:
+    def __init__(self, manager, *, execution_service=None) -> None:
         self._manager = manager
+        self._execution_service = execution_service
 
     @classmethod
     def for_main_window(cls, main_window) -> "PlateManagerBridgeProviderSet":
-        return cls(main_window.plate_manager_widget)
+        return cls(
+            main_window.plate_manager_widget,
+            execution_service=UiCodeDocumentExecutionService(
+                UiCodeDocumentSourcePolicy(main_window.function_catalog_service)
+            ),
+        )
 
     def register(self, context: UiBridgeRegistrationContext) -> None:
         context.registry.register_code_document_provider(
             PlateManagerOrchestratorCodeDocumentProvider(
                 self._manager,
                 snapshot_provider=context.snapshot_provider,
+                execution_service=self._execution_service,
             )
         )
         context.registry.register_state_surface_provider(
@@ -886,6 +894,7 @@ class PlateManagerActionProvider(
 
     def summary(self, action_id: str) -> UiActionSummary:
         action = self._action(action_id)
+        resolved_action = action.resolved(self._manager)
         selected_scope_ids = self._selected_scope_ids()
         availability_error = self._action_availability_error(action)
         return UiActionSummary(
@@ -898,8 +907,8 @@ class PlateManagerActionProvider(
             enabled=availability_error is None,
             disabled_error=availability_error,
             invocation_mode=self._invocation_mode(action),
-            side_effects=action.side_effects,
-            confirmation_required=action.confirmation_required,
+            side_effects=resolved_action.side_effects,
+            confirmation_required=resolved_action.confirmation_required,
             selection_mode="selected",
             current_selection_count=len(selected_scope_ids),
             target_scope_ids=selected_scope_ids,
@@ -989,7 +998,10 @@ class PlateManagerActionProvider(
         availability_error = self._action_availability_error(action)
         if availability_error is not None:
             return availability_error
-        if action.confirmation_required and request.confirmation_is_required():
+        if (
+            action.resolved(self._manager).confirmation_required
+            and request.confirmation_is_required()
+        ):
             return AgentError(
                 code="confirmation_required",
                 message=(
@@ -1016,6 +1028,7 @@ class PlateManagerActionProvider(
     def _operation_validation_error(
         self, action: PlateManagerAction
     ) -> AgentError | None:
+        action = action.resolved(self._manager)
         selected_rows = tuple(self._manager.get_selected_items())
         if action.plate_operation is not None:
             if not selected_rows:
@@ -1093,4 +1106,4 @@ class PlateManagerActionProvider(
         return hashlib.sha256(repr(parts).encode("utf-8")).hexdigest()
 
     def _action_title(self, action: PlateManagerAction) -> str:
-        return action.label
+        return action.resolved(self._manager).label

@@ -199,6 +199,7 @@ def test_zmq_endpoint_snapshot_only_updates_dedicated_indicator() -> None:
     indicator = _StatusIndicatorHarness()
     messages = []
     main_window = SimpleNamespace(
+        plate_manager_widget=SimpleNamespace(update_button_states=lambda: None),
         _zmq_status_indicator=indicator,
         status_message=SimpleNamespace(emit=messages.append),
         runtime_context=SimpleNamespace(

@@ -3,6 +3,16 @@
 from __future__ import annotations
 
 from enum import Enum
+from collections.abc import Callable
+from typing import TYPE_CHECKING
+
+from zmqruntime.startup import EndpointStartupPresentationTarget, EndpointStartupStatus
+
+if TYPE_CHECKING:
+    from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
+    from openhcs.pyqt_gui.widgets.shared.services.widget_action_dispatch import (
+        WidgetActionCallable,
+    )
 
 
 class PlateOperation(str, Enum):
@@ -69,6 +79,12 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         side_effects: tuple[str, ...],
         confirmation_required: bool,
         plate_operation: PlateOperation | None,
+        handler: Callable[[PlateManagerWidget], WidgetActionCallable],
+        has_button: bool = True,
+        resolver: Callable[
+            [PlateManagerAction, PlateManagerWidget], PlateManagerAction
+        ] = lambda action, manager: action,
+        selection_enabled: Callable[[bool], bool] = lambda initialized: initialized,
     ) -> "PlateManagerAction":
         member = str.__new__(cls, value)
         member._value_ = value
@@ -77,7 +93,17 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         member.side_effects = side_effects
         member.confirmation_required = confirmation_required
         member.plate_operation = plate_operation
+        member.handler = handler
+        member.has_button = has_button
+        member.resolver = resolver
+        member.selection_enabled = selection_enabled
         return member
+
+    def resolved(self, manager: "PlateManagerWidget") -> "PlateManagerAction":
+        return self.resolver(self, manager)
+
+    def resolve_callable(self, manager: "PlateManagerWidget") -> "WidgetActionCallable":
+        return self.resolved(manager).handler(manager)
 
     ADD_PLATE = (
         "add_plate",
@@ -86,6 +112,7 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("opens_file_dialog", "mutates_plate_collection"),
         True,
         None,
+        lambda widget: widget.action_add,
     )
     DELETE_PLATE = (
         "del_plate",
@@ -94,6 +121,7 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("mutates_plate_collection",),
         True,
         None,
+        lambda widget: widget.action_delete,
     )
     EDIT_CONFIG = (
         "edit_config",
@@ -102,6 +130,7 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("opens_config_window", "may_mutate_plate_config"),
         True,
         None,
+        lambda widget: widget.action_edit_config,
     )
     INIT_PLATE = (
         "init_plate",
@@ -110,6 +139,7 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("starts_initialization_workflow",),
         True,
         PlateOperation.INIT,
+        lambda widget: widget.action_init_plate,
     )
     COMPILE_PLATE = (
         "compile_plate",
@@ -118,6 +148,33 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("starts_compile_workflow",),
         True,
         PlateOperation.COMPILE,
+        lambda widget: widget.action_compile_plate,
+        True,
+        lambda action, widget: widget.compilation_action,
+    )
+    CONNECT_SERVER = (
+        "connect_server",
+        "Connect",
+        "Connect to the execution server, starting it if needed",
+        ("connects_or_starts_execution_server",),
+        True,
+        None,
+        lambda widget: widget.ensure_execution_server,
+        False,
+        lambda action, widget: action,
+        lambda initialized: True,
+    )
+    CONNECTING_SERVER = (
+        "connecting_server",
+        "Connecting…",
+        "Waiting for the execution server to become ready",
+        (),
+        False,
+        None,
+        lambda widget: widget.ensure_execution_server,
+        False,
+        lambda action, widget: action,
+        lambda initialized: False,
     )
     RUN_PLATE = (
         "run_plate",
@@ -126,6 +183,11 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("starts_or_stops_execution_workflow",),
         True,
         PlateOperation.RUN,
+        lambda widget: (
+            widget.action_stop_execution
+            if widget.is_any_plate_running()
+            else widget.action_run_plate
+        ),
     )
     CODE_PLATE = (
         "code_plate",
@@ -134,6 +196,7 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("opens_code_document_window",),
         False,
         None,
+        lambda widget: widget.action_code_plate,
     )
     VIEW_RESULTS = (
         "view_results",
@@ -142,6 +205,7 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("opens_results_window",),
         False,
         None,
+        lambda widget: widget.action_view_live_results,
     )
     VIEW_METADATA = (
         "view_metadata",
@@ -150,4 +214,32 @@ class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):
         ("opens_metadata_window",),
         False,
         None,
+        lambda widget: widget.action_view_metadata,
     )
+
+
+class CompilationActionProjection(EndpointStartupPresentationTarget):
+    """Ephemeral action projection through the endpoint phase's existing dispatch.
+
+    No connection state is retained here: each query projects the live browser
+    authority used by the status indicator.
+    """
+
+    action: PlateManagerAction
+
+    @classmethod
+    def from_status(cls, status: EndpointStartupStatus) -> PlateManagerAction:
+        projection = cls()
+        status.phase.present(projection, status.message)
+        return projection.action
+
+    def present_connected(self, message: str) -> None:
+        self.action = PlateManagerAction.COMPILE_PLATE
+
+    def present_disconnected(self, message: str) -> None:
+        self.action = PlateManagerAction.CONNECT_SERVER
+
+    def present_checking(self, message: str) -> None:
+        self.action = PlateManagerAction.CONNECTING_SERVER
+
+    present_warning = present_checking

@@ -41,6 +41,7 @@ def _configure_status_bar_harness(window) -> None:
         get_current_color_scheme=ColorScheme
     )
     window.plate_manager_widget = SimpleNamespace(
+        update_button_states=lambda: None,
         require_pipeline_definition_mutation_allowed=lambda: None
     )
     window.embedded_widgets = MainWindowEmbeddedWidgets()

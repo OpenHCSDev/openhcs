@@ -242,7 +242,7 @@ VALID_SOURCE = (
 
 def test_manager_button_presentations_derive_from_action_declarations() -> None:
     assert [
-        action.button_config for action in PlateManagerAction
+        action.button_config for action in PlateManagerAction if action.has_button
     ] == PlateManagerWidget.BUTTON_CONFIGS
     assert [
         action.button_config for action in PipelineEditorAction
@@ -568,6 +568,8 @@ class FakeEmbeddedWindowWidgets(MainWindowEmbeddedWidgets):
 
 
 class FakeMainWindow:
+    function_catalog_service = None
+
     def __init__(self, *, pipeline_editor: QWidget | None = None) -> None:
         self.embedded_widgets = FakeEmbeddedWindowWidgets(
             pipeline_editor=pipeline_editor
@@ -632,6 +634,7 @@ def test_ui_bridge_composition_discovers_new_provider_set_declarations() -> None
 
     class CompositionMainWindow:
         pipeline_editor_widget = object()
+        function_catalog_service = None
 
     main_window = CompositionMainWindow()
     main_window.plate_manager_widget = FakePlateManager()
@@ -748,6 +751,8 @@ class FakeManagedFormWindow(BaseFormDialog):
 
 
 class FakePlateManager:
+    # Existing workflow tests exercise an already connected execution endpoint.
+    compilation_action = PlateManagerAction.COMPILE_PLATE
     BUTTON_CONFIGS = [
         ("Code", PlateManagerAction.CODE_PLATE.value, "Generate Python code"),
     ]

@@ -112,6 +112,14 @@ class RegistryFunctionReference(FunctionReference):
         return RegistryService.resolve_function_reference(self)
 
 
+@dataclass(frozen=True)
+class ResolvedRegistryFunction:
+    """One local runtime projection paired with the reference that owns it."""
+
+    reference: RegistryFunctionReference
+    func: Callable
+
+
 class FunctionReferenceTransportAuthority:
     """Converts pipeline callables into picklable registry references."""
 
@@ -220,6 +228,10 @@ class FunctionReferenceTransportAuthority:
         from openhcs.processing.backends.lib_registry.registry_service import (
             RegistryService,
         )
+
+        resolved_reference = RegistryService.resolved_reference_for_callable(func)
+        if resolved_reference is not None:
+            return resolved_reference
 
         registry_match = RegistryService.declared_metadata_for_callable(func)
         if registry_match is not None:

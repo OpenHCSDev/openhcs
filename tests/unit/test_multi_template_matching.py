@@ -17,6 +17,7 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.processing.materialization import materialization_outputs
+from openhcs.processing.materialization.options import MaterializedFilenameIdentity
 
 
 @pytest.mark.parametrize(
@@ -63,6 +64,8 @@ def test_template_match_artifact_materializes_every_match_column() -> None:
     [artifact_spec] = vars(multi_template_crop_reference_channel)[
         FunctionContractAttribute.artifact_outputs
     ]
+    assert not artifact_spec.materialization.uses_source_identity_filename()
+    assert artifact_spec.materialization.outputs[0].filename_identity is MaterializedFilenameIdentity.ARTIFACT_NAME
     results = [
         TemplateMatchResult(
             slice_index=2,

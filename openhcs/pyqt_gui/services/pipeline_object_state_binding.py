@@ -530,20 +530,15 @@ class PipelineObjectStateBinding:
 
         if isinstance(func_value, dict):
             token_map = tokens if isinstance(tokens, dict) else {}
-            projected_by_key: dict[str, list[FunctionEntry]] = {}
-            for channel_key, channel_funcs in func_value.items():
-                projected = cls._function_pattern_from_child_states(
+            return {
+                group_key: cls._function_pattern_from_child_states(
                     parent_scope_id,
-                    channel_funcs,
-                    token_map.get(str(channel_key)),
+                    group_funcs,
+                    token_map.get(str(group_key)),
                     function_states=function_states,
                 )
-                if not isinstance(projected, list):
-                    raise RuntimeError(
-                        "Function-pattern channel projection must remain a list."
-                    )
-                projected_by_key[channel_key] = projected
-            return projected_by_key
+                for group_key, group_funcs in func_value.items()
+            }
         if isinstance(func_value, list):
             token_list = tokens if isinstance(tokens, list) else []
             return [

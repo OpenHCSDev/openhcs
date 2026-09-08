@@ -490,6 +490,9 @@ class OpenHCSMainWindow(QMainWindow):
             ports_to_scan
         )
         self.zmq_manager_widget.log_file_opened.connect(self._open_log_file_in_viewer)
+        self.plate_manager_widget.bind_endpoint_observations(
+            lambda: self.zmq_manager_widget.endpoint_snapshot
+        )
         zmq_manager_pane = MainWindowDockPane.create(
             main_window=self,
             window_id=ZmqServerManagerWindowIdentity.require_value(),
@@ -988,6 +991,7 @@ class OpenHCSMainWindow(QMainWindow):
         port = self.runtime_context.ui_config.zmq.default_port
         status = snapshot.status_for_port(port)
         status.present(self._zmq_status_indicator, "ZMQ")
+        self.plate_manager_widget.update_button_states()
         self._zmq_status_indicator.setToolTip(
             f"Execution endpoint {port}: {status.message}"
         )
