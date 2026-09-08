@@ -496,7 +496,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Processing-contract execution, registry-owned catalogue admission and cache semantics, and external-signature authoring exclusions."
       }
     ],
@@ -565,7 +565,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Callable-declared input, output, and execution framework roles consumed by compilation."
       },
       {
@@ -768,7 +768,7 @@
   },
   {
     "path": "docs/source/architecture/processing_semantics.rst",
-    "source_sha256": "51d40064f8a5617b19e76d6df5fd3ccf6e69a4728130e3c197e29e3c652cb2bb",
+    "source_sha256": "9d1a0203f2a4236ea102cacd8e48735a24d93d55d3d5c807ed69a2f30d451278",
     "audience": [
       "Pipeline authors and OpenHCS processing maintainers"
     ],
@@ -782,12 +782,12 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Processing-contract execution, registry-owned catalogue admission and cache semantics, and external-signature authoring exclusions."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Callable ABI including input/output/execution memory roles, runtime-owned parameter projection, and artifact contracts."
       },
       {
@@ -1243,7 +1243,7 @@
     "authority": [
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Callable ABI including input/output/execution memory roles, runtime-owned parameter projection, and artifact contracts."
       },
       {
@@ -1851,7 +1851,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Processing-contract execution, registry-owned catalogue admission and cache semantics, and external-signature authoring exclusions."
       },
       {
@@ -2185,7 +2185,7 @@
     "authority": [
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Callable ABI including input/output/execution memory roles, runtime-owned parameter projection, and artifact contracts."
       },
       {
@@ -2323,7 +2323,7 @@
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "3c09d26af82c8d0d126181fee3a3e234172d02798fd089d96dd627e56436ab23",
+        "sha256": "90a4991b326c37f86fa1bbcacb5b5cfecc40147ab86f3bcd3ba973c7003bd867",
         "role": "Compiled source satisfaction, artifact edge, path, grouping, and plan decisions."
       },
       {
@@ -2472,7 +2472,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "OpenHCS callable declaration projection for input, output, and execution frameworks."
       },
       {
@@ -3370,7 +3370,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Compiler-visible projection of all declared callable memory roles."
       },
       {
@@ -3529,7 +3529,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Callable ABI and input/output/execution framework declaration authority."
       },
       {
@@ -3616,7 +3616,7 @@
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "3c09d26af82c8d0d126181fee3a3e234172d02798fd089d96dd627e56436ab23",
+        "sha256": "90a4991b326c37f86fa1bbcacb5b5cfecc40147ab86f3bcd3ba973c7003bd867",
         "role": "Compiled source satisfaction, artifact edge, path, grouping, and plan decisions."
       },
       {

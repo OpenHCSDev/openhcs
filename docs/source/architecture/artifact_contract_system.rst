@@ -144,6 +144,14 @@ source into the ordinary artifact relations. The generic invocation provider
 queries output declarations; it does not identify particular analysis functions.
 Template cropping and Skan visualization use this shared declaration.
 
+A known collapsed component scope is distinct from an unknown scope. The
+processing declaration owns whether a stack axis is reduced. After a
+channel composite, an artifact such as tile positions belongs to the shared
+output; the planner keeps that scope ungrouped. A representative channel in the
+image's storage filename does not create a new execution group. Runtime pattern
+discovery uses the selected producer's output manifest, which excludes earlier
+inputs still present in the shared storage directory.
+
 Satisfaction and exact selection
 --------------------------------
 

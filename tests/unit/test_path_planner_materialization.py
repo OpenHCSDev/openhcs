@@ -928,6 +928,13 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         ("1", "2", "4"),
         component=AllComponents.CHANNEL,
     )
+    planner.plans[0] = CompiledStepPlan(
+        step_index=0,
+        step_name="percentile_normalize",
+        step_type="FunctionStep",
+        axis_id="A01",
+        execution_group_scope=channel_scope,
+    )
     native_pattern = compile_function_pattern(percentile_normalize, {}, {})
     native_invocation = next(native_pattern.iter_invocations())
     planner.artifact_context = (
@@ -3425,7 +3432,7 @@ def test_execution_groups_reject_grouped_group_by_axis_conflict():
         )
 
 
-def test_non_dict_group_by_declares_dynamic_scope_when_input_axis_is_collapsed():
+def test_non_dict_group_by_preserves_explicitly_collapsed_input_axis():
     planner = _artifact_planner_stub()
     input_scopes = PathPlannerComponentScopes(
         {
@@ -3448,7 +3455,7 @@ def test_non_dict_group_by_declares_dynamic_scope_when_input_axis_is_collapsed()
 
     scope = planner.execution_groups.get_execution_groups(snapshot, input_scopes)
 
-    assert scope == PathPlannerGroupScope.dynamic(AllComponents.CHANNEL)
+    assert scope == PathPlannerGroupScope.ungrouped()
 
 
 def test_module_special_outputs_preserve_existing_main_flow_component_scopes():
@@ -3558,7 +3565,6 @@ def test_module_canonical_output_applies_functionstep_component_transformation()
 
     assert output_scopes == PathPlannerComponentScopes(
         {
-            VariableComponents.CHANNEL: PathPlannerGroupScope.ungrouped(),
             VariableComponents.SITE: PathPlannerGroupScope.dynamic(AllComponents.SITE),
         }
     )

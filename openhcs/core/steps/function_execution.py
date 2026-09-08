@@ -56,6 +56,7 @@ from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
     _process_single_pattern_group,
 )
+from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 
 if TYPE_CHECKING:
     from openhcs.microscopes.microscope_interfaces import FilenameParser
@@ -806,45 +807,47 @@ class FunctionStepExecutor:
         plan = self.plan
         axis_name = MULTIPROCESSING_AXIS.value
         axis_filter = {f"{axis_name}_filter": [plan.axis_id]}
-        source_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.context,
-            cache=self.context.runtime_source_workspace_projection_cache,
-        ).projection_if_available()
-        if (
-            plan.main_input_dependency.kind is StepInputDependencyKind.PIPELINE_START
-            and source_projection is not None
-        ):
-            source_files = source_projection.pipeline_start_files(axis_id=plan.axis_id)
-            if source_files:
-                cache_key = RuntimePatternDiscoveryCacheKey.from_source_files(
-                    axis_id=plan.axis_id,
-                    source_files=source_files,
-                    group_by=plan.group_by_value,
-                    variable_components=plan.variable_component_values,
+        source_files = step_output_manifest(self.context).producer_paths_for(plan)
+        if source_files is None:
+            source_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+                self.context,
+                cache=self.context.runtime_source_workspace_projection_cache,
+            ).projection_if_available()
+            if (
+                plan.main_input_dependency.kind
+                is StepInputDependencyKind.PIPELINE_START
+                and source_projection is not None
+            ):
+                source_files = source_projection.pipeline_start_files(
+                    axis_id=plan.axis_id
                 )
-                cached_patterns = self.context.runtime_pattern_discovery_cache.get(
-                    cache_key
-                )
-                if cached_patterns is not None:
-                    return cached_patterns
-                from openhcs.formats.pattern.pattern_discovery import (
-                    PatternDiscoveryEngine,
-                )
-
-                patterns_by_axis = PatternDiscoveryEngine(
-                    self.context.microscope_handler.parser,
-                    self.context.filemanager,
-                ).auto_detect_patterns_from_axis_files(
-                    list(source_files),
-                    axis_id=plan.axis_id,
-                    variable_components=plan.variable_component_values,
-                    group_by=plan.group_by,
-                )
-                self.context.runtime_pattern_discovery_cache.store(
-                    cache_key,
-                    patterns_by_axis,
-                )
-                return patterns_by_axis
+        if source_files is not None:
+            if not source_files:
+                return {}
+            cache_key = RuntimePatternDiscoveryCacheKey.from_source_files(
+                axis_id=plan.axis_id,
+                source_files=source_files,
+                group_by=plan.group_by_value,
+                variable_components=plan.variable_component_values,
+            )
+            cached_patterns = self.context.runtime_pattern_discovery_cache.get(
+                cache_key
+            )
+            if cached_patterns is not None:
+                return cached_patterns
+            patterns_by_axis = PatternDiscoveryEngine(
+                self.context.microscope_handler.parser,
+                self.context.filemanager,
+            ).auto_detect_patterns_from_axis_files(
+                list(source_files),
+                axis_id=plan.axis_id,
+                variable_components=plan.variable_component_values,
+                group_by=plan.group_by,
+            )
+            self.context.runtime_pattern_discovery_cache.store(
+                cache_key, patterns_by_axis
+            )
+            return patterns_by_axis
         return self.context.microscope_handler.auto_detect_patterns(
             str(plan.input_dir),
             self.context.filemanager,

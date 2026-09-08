@@ -784,6 +784,16 @@ class CompiledFunctionPattern:
             group.preserves_input_main_flow() for group in self.groups
         )
 
+    def collapses_input_plane_axis(self) -> bool:
+        """Whether every invocation chain declares a reduction of its stack axis."""
+        return bool(self.groups) and all(
+            any(
+                invocation.contract.collapses_input_plane_axis
+                for invocation in group.invocations
+            )
+            for group in self.groups
+        )
+
     def group_for_component(
         self,
         component_value: FunctionGroupKey,

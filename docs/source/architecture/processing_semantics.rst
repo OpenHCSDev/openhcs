@@ -76,6 +76,11 @@ Processing contracts
   The callable consumes a real stack and produces a collapsed plane domain. The
   contract updates payload provenance to reflect the consumed leading axis.
 
+The processing declaration also owns whether that leading axis is collapsed
+for downstream grouping. A composite reduces its input components; ordinary
+stack processing does not. The compiler derives this distinction across each
+callable chain rather than treating every variable component as consumed.
+
 Callable ownership
 ------------------
 

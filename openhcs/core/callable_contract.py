@@ -801,6 +801,13 @@ class CallableContract(ArtifactPlanKeySelector):
         return processing_contract
 
     @property
+    def collapses_input_plane_axis(self) -> bool:
+        """Whether the nominal processing declaration reduces the stack axis."""
+        return self.processing_contract is not None and (
+            self.require_processing_contract().declaration.collapses_input_plane_axis
+        )
+
+    @property
     def declared_processing_contract(self) -> str | None:
         """Declared processing contract name."""
         return self.metadata.declared_processing_contract

@@ -207,13 +207,11 @@ class PathPlannerComponentScopes:
     def scope_for_group_by(
         self,
         group_by: GroupBy | None,
-    ) -> PathPlannerGroupScope:
+    ) -> PathPlannerGroupScope | None:
         group_by_component = self.component_from_group_by(group_by)
         if group_by_component is None:
             return PathPlannerGroupScope.ungrouped()
-        if group_by_component in self.scopes:
-            return self.scopes[group_by_component]
-        return PathPlannerGroupScope.ungrouped()
+        return self.scopes.get(group_by_component)
 
     def output_after(
         self,
@@ -236,7 +234,9 @@ class PathPlannerComponentScopes:
             snapshot.step.processing_config.variable_components or ()
         )
         for component in variable_components:
-            scopes[component] = PathPlannerGroupScope.ungrouped()
+            scopes.pop(component, None)
+            if compiled_pattern.collapses_input_plane_axis():
+                scopes[component] = PathPlannerGroupScope.ungrouped()
 
         group_by = PathPlannerExecutionGroups.normalized_group_by(snapshot)
         group_by_component = self.component_from_group_by(group_by)
@@ -279,6 +279,21 @@ class PathPlannerExecutionGroups:
     def normalize_group_key(key: Hashable | None) -> PlannerGroupKey:
         return PathPlannerGroupScope.normalize_key(key)
 
+    def context_producer_scope(
+        self,
+        producer: ArtifactProducer,
+        *,
+        source_component: AllComponents | None,
+    ) -> PathPlannerGroupScope:
+        """Resolve producer groups against their own compiled axis authority."""
+
+        component = source_component
+        if producer.producer_step_index is not None:
+            component = self.planner.plans[
+                producer.producer_step_index
+            ].execution_group_scope.component
+        return PathPlannerGroupScope.from_raw(producer.groups, component=component)
+
     def get_execution_groups(
         self,
         snapshot: StepSnapshot,
@@ -312,16 +327,17 @@ class PathPlannerExecutionGroups:
         scope = component_scopes.scope_for_group_by(
             group_by,
         )
-        if scope.is_ungrouped:
+        if scope is None:
             source_scope = self.source_binding_scope_for_group_by(
                 snapshot,
                 group_by,
                 source_bindings=source_bindings,
             )
-            if not source_scope.is_ungrouped:
-                scope = source_scope
-        if scope.is_ungrouped:
-            scope = self.dynamic_execution_scope_for_group_by(snapshot, group_by)
+            scope = (
+                self.dynamic_execution_scope_for_group_by(snapshot, group_by)
+                if source_scope.is_ungrouped
+                else source_scope
+            )
         if contracts and all(contract.group_scope_inputs for contract in contracts):
             scope = self.artifact_owned_execution_scope(
                 snapshot,
@@ -384,9 +400,9 @@ class PathPlannerExecutionGroups:
             )
             if context_producer is not None:
                 scopes.append(
-                    PathPlannerGroupScope.from_raw(
-                        context_producer.groups,
-                        component=normalized_group_component,
+                    self.context_producer_scope(
+                        context_producer,
+                        source_component=normalized_group_component,
                     )
                 )
                 continue
@@ -1001,9 +1017,11 @@ class PathPlannerArtifactStage:
                     self.planner.artifact_context.available_artifact_producer_for(spec)
                 )
                 if context_producer is not None:
-                    source_scopes_by_ref[spec.ref()] = PathPlannerGroupScope.from_raw(
-                        context_producer.groups,
-                        component=component,
+                    source_scopes_by_ref[spec.ref()] = (
+                        self.planner.execution_groups.context_producer_scope(
+                            context_producer,
+                            source_component=component,
+                        )
                     )
                 continue
             source_scopes_by_ref[spec.ref()] = (

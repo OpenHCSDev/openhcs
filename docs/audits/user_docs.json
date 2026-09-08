@@ -95,12 +95,12 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Declares the compiler-visible callable metadata and contract terms defined by the glossary."
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Declares the nominal processing-contract members defined by the glossary."
       }
     ],
@@ -217,7 +217,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Defines canonical callable metadata and derives the unified catalogue from registry declarations."
       },
       {
@@ -358,7 +358,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Defines canonical callable metadata and derives the unified catalogue from registry declarations."
       },
       {
@@ -497,7 +497,7 @@
     "authority": [
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Defines canonical callable metadata and derives the unified catalogue from registry declarations."
       },
       {
@@ -507,7 +507,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Derives callable input, output, execution-framework, dimensional, artifact, and runtime requirements from declarations."
       },
       {
@@ -687,7 +687,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Defines canonical callable metadata and derives the unified catalogue from registry declarations."
       },
       {
@@ -1272,7 +1272,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Defines canonical callable metadata and derives the unified catalogue from registry declarations."
       },
       {
@@ -1959,7 +1959,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Derives callable input, output, execution-framework, dimensional, artifact, and runtime requirements from declarations."
       },
       {
@@ -2722,7 +2722,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Defines canonical callable metadata and derives the unified catalogue from registry declarations."
       },
       {
@@ -3286,7 +3286,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/unified_registry.py",
-        "sha256": "632189f63da296dfc894c2cbf8b1d3fb4ee8cb44826a9e037149880b314543ae",
+        "sha256": "70462cddcad1bfee447ce0786a9e4a85abbd297726d59a1208156af0ef3a3743",
         "role": "Defines canonical callable metadata and derives the unified catalogue from registry declarations."
       },
       {

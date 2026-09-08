@@ -969,6 +969,8 @@ class ModuleFilterComponents(Enum):
 class ProcessingContractDeclaration(ABC):
     """Nominal execution contract owned by a ProcessingContract member."""
 
+    collapses_input_plane_axis = False
+
     def runtime_parameter_types(
         self,
     ) -> tuple[type[RuntimeParameterDeclarationABC], ...]:
@@ -1124,6 +1126,8 @@ class FlexibleProcessingContract(
 
 class VolumetricToSliceProcessingContract(VariableComponentStackProcessingContract):
     """Execute a volumetric-to-slice callable through its declared hook."""
+
+    collapses_input_plane_axis = True
 
     def main_flow_output_source_payload(self, source_payload: Any) -> Any:
         """Consume the declared leading plane axis while preserving provenance."""

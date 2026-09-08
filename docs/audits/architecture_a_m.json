@@ -85,7 +85,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Projects declaration-owned callable metadata, including memory contracts and artifact relations, at the nominal boundary."
       },
       {
@@ -186,7 +186,7 @@
   },
   {
     "path": "docs/source/architecture/artifact_contract_system.rst",
-    "source_sha256": "c7d7c1227edb4c6733484b9cea3a8bc8fa4396bf1e9ae21ac19238ee87743b78",
+    "source_sha256": "eb9380b348a7fccfb4385956bc1997b4dc4bf23aaf1f45abe2fd2fd8c1342d83",
     "audience": [
       "OpenHCS compiler maintainers",
       "callable and artifact extension authors"
@@ -201,12 +201,12 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Defines callable artifact input and output ABI ownership and relation validation."
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "3c09d26af82c8d0d126181fee3a3e234172d02798fd089d96dd627e56436ab23",
+        "sha256": "90a4991b326c37f86fa1bbcacb5b5cfecc40147ab86f3bcd3ba973c7003bd867",
         "role": "Implements artifact satisfaction and exact compiled path planning."
       },
       {
@@ -962,7 +962,7 @@
     "authority": [
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "0b83ad1dc1612e25083544f90658e81a92d1404fdb9c14c30fc8a30c0d1180d4",
+        "sha256": "d20fe8d1614210e50bf804a6cea3ce4cc4fd3ce0459b153c1cf81e214e628d3e",
         "role": "Defines callable, sequential-chain, and dictionary-fan-out patterns and derives execution memory through nested declarations."
       },
       {
@@ -1377,7 +1377,7 @@
     "authority": [
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "0b83ad1dc1612e25083544f90658e81a92d1404fdb9c14c30fc8a30c0d1180d4",
+        "sha256": "d20fe8d1614210e50bf804a6cea3ce4cc4fd3ce0459b153c1cf81e214e628d3e",
         "role": "Defines callable, sequential-chain, and dictionary-fan-out patterns and derives execution memory through nested declarations."
       },
       {
@@ -1419,7 +1419,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Adds OpenHCS processing, runtime, artifact, scope, and ArrayBridge memory semantics to analysed callables."
       },
       {
@@ -1499,7 +1499,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Projects declaration-owned input, output, and execution memory into immutable callable contracts."
       },
       {
@@ -1978,7 +1978,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "561e0431ba34c6a5661fea9d7fde17b921d59ffcc34ecce351c29dbbaa2032a0",
+        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
         "role": "Projects ArrayBridge metadata into immutable callable input, output, and execution memory contracts."
       },
       {
