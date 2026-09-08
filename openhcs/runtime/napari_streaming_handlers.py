@@ -1243,9 +1243,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         viewer_axis_origin: int = 0,
     ) -> int:
         """Project one route-local label index into the shared viewer axis."""
-        return (
-            label_index + self.axis_offset(display_axis_index) - viewer_axis_origin
-        )
+        return label_index + self.axis_offset(display_axis_index) - viewer_axis_origin
 
 
 @dataclass(slots=True)

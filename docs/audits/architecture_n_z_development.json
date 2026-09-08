@@ -15,7 +15,7 @@
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "f41230fb595a4706c1e3fc650c793ca4ceaf85c11043ba9c8f4df28aa833aaa4",
+        "sha256": "638aa5780c859c195922aee9818bbcf683551dca0bae7b8217f00adad36174cd",
         "role": "Napari route handlers that project typed received batches onto native viewer state."
       },
       {
