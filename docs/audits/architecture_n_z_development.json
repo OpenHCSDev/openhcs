@@ -2767,7 +2767,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "77fd6c8bd8eaa4ec76e2af888e4385cb7e14975564f60110d18ed0733a110829",
+        "sha256": "7c989e6039f05a72270acdb24e7147985fbcb197b56b0f7abd44ce1f427e9b55",
         "role": "Proves stale protocol and application versions fail before UI operation dispatch."
       },
       {

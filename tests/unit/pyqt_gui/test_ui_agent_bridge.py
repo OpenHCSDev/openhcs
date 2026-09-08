@@ -3396,7 +3396,10 @@ def test_plate_manager_state_surface_links_source_and_output_plate_rows() -> Non
     assert source_payload["source_plate_scope_id"] is None
     assert output_payload["source_plate_scope_id"] == source_row.scope_id
     assert output_payload["source_plate_root"] == source_row.plate_root
-    assert output_payload["output_plate_scope_id"] is None
+    assert (
+        output_payload["output_plate_scope_id"] == "/tmp/source-plate_openhcs_openhcs"
+    )
+    assert output_payload["output_plate_root"] == "/tmp/source-plate_openhcs_openhcs"
 
 
 def test_plate_manager_state_surface_uses_row_effective_path_config(
@@ -3446,6 +3449,48 @@ def test_plate_manager_state_surface_uses_row_effective_path_config(
     assert source_payload["output_plate_root"] == output_row.plate_root
     assert output_payload["source_plate_scope_id"] == source_row.scope_id
     assert output_payload["source_plate_root"] == source_row.plate_root
+
+
+@pytest.mark.parametrize("reverse_rows", [False, True])
+def test_plate_manager_intermediate_plate_keeps_both_path_relations(
+    tmp_path: Path, reverse_rows: bool
+) -> None:
+    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    roots = (
+        tmp_path / "raw",
+        tmp_path / "raw_stitched",
+        tmp_path / "raw_stitched_analysis",
+    )
+    rows = tuple(FakeRow(str(root), root.name, plate_root=str(root)) for root in roots)
+    for row, suffix in zip(rows, ("_stitched", "_analysis")):
+        orchestrator = PipelineOrchestrator(
+            Path(row.plate_root),
+            pipeline_config=PipelineConfig(
+                path_planning_config=LazyPathPlanningConfig(output_dir_suffix=suffix)
+            ),
+        )
+        ObjectStateRegistry.register(
+            ObjectState(orchestrator, scope_id=row.scope_id), _skip_snapshot=True
+        )
+    manager = FakePlateManager(
+        selected=(rows[1],), plates=rows[::-1] if reverse_rows else rows
+    )
+    bridge = UiAgentBridgeService(provider_set=PlateManagerBridgeProviderSet(manager))
+    state = bridge.get_state_surface(
+        UiStateSurfaceRequest(
+            surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
+            selection_mode=ALL_SELECTION_MODE,
+        )
+    )
+    middle = next(
+        row
+        for row in state.payload["rows"]
+        if row["plate_scope_id"] == rows[1].scope_id
+    )
+    assert middle["source_plate_root"] == rows[0].plate_root
+    assert middle["source_plate_scope_id"] == rows[0].scope_id
+    assert middle["output_plate_root"] == rows[2].plate_root
+    assert middle["output_plate_scope_id"] == rows[2].scope_id
 
 
 def test_plate_manager_state_ignores_stale_runtime_without_current_execution_id() -> (

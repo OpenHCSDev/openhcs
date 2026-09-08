@@ -89,24 +89,19 @@ class PlateManagerOutputPlateRelationAuthority:
         relations: dict[str, PlateManagerOutputPlateRelation] = {}
         for row in rows:
             source_row = source_by_output_root.get(row.plate_root)
-            if source_row is not None:
-                relations[row.scope_id] = PlateManagerOutputPlateRelation(
-                    source_plate_scope_id=source_row.scope_id,
-                    source_plate_root=source_row.plate_root,
-                )
-                continue
-
             output_root = output_root_by_source.get(row.scope_id)
-            if output_root is None:
-                continue
-            output_row = row_by_root.get(output_root)
+            output_row = None if output_root is None else row_by_root.get(output_root)
             relations[row.scope_id] = PlateManagerOutputPlateRelation(
+                source_plate_scope_id=(
+                    None if source_row is None else source_row.scope_id
+                ),
+                source_plate_root=(
+                    None if source_row is None else source_row.plate_root
+                ),
                 output_plate_scope_id=(
                     output_root if output_row is None else output_row.scope_id
                 ),
-                output_plate_root=(
-                    output_root if output_row is None else output_row.plate_root
-                ),
+                output_plate_root=output_root,
             )
         return cls(relations=relations)
 

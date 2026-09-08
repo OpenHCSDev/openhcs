@@ -1051,7 +1051,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "77fd6c8bd8eaa4ec76e2af888e4385cb7e14975564f60110d18ed0733a110829",
+        "sha256": "7c989e6039f05a72270acdb24e7147985fbcb197b56b0f7abd44ce1f427e9b55",
         "role": "Proves bidirectional UI-bridge inspection and mutation of live declarations, plus truthful rejection of unsupported window-navigation targets."
       },
       {
@@ -1151,7 +1151,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "77fd6c8bd8eaa4ec76e2af888e4385cb7e14975564f60110d18ed0733a110829",
+        "sha256": "7c989e6039f05a72270acdb24e7147985fbcb197b56b0f7abd44ce1f427e9b55",
         "role": "Proves live field help reports the exact accepted inputs for enum-backed configuration fields."
       },
       {
@@ -1708,7 +1708,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "77fd6c8bd8eaa4ec76e2af888e4385cb7e14975564f60110d18ed0733a110829",
+        "sha256": "7c989e6039f05a72270acdb24e7147985fbcb197b56b0f7abd44ce1f427e9b55",
         "role": "Proves stale protocol and OpenHCS versions cannot reach running UI operations."
       }
     ],
@@ -3052,7 +3052,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "77fd6c8bd8eaa4ec76e2af888e4385cb7e14975564f60110d18ed0733a110829",
+        "sha256": "7c989e6039f05a72270acdb24e7147985fbcb197b56b0f7abd44ce1f427e9b55",
         "role": "Proves bidirectional UI-bridge inspection, capability enforcement, semantic no-op handling, and mutation of live declarations."
       },
       {
