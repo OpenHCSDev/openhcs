@@ -1238,13 +1238,13 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
     def viewer_step(
         self,
         label_index: int,
-        axis_index: int,
+        display_axis_index: int,
         *,
         viewer_axis_origin: int = 0,
     ) -> int:
         """Project one route-local label index into the shared viewer axis."""
         return (
-            label_index + self.projection.axis_offset(axis_index) - viewer_axis_origin
+            label_index + self.axis_offset(display_axis_index) - viewer_axis_origin
         )
 
 

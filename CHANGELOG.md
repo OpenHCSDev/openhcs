@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Channel-specific steps now use the preceding output's semantic channel identity.
+  Selecting a channel that is no longer present fails instead of relabelling
+  another channel's pixels.
+- Analysis steps with separate output folders now consolidate successfully,
+  retaining each folder's storage context and placing the merged summary beneath
+  the output plate root.
+- Napari image and ROI navigation now honours shared display-axis positions when
+  a layer has reduced axes, keeping selection on the corresponding image channel.
+
 ## [0.8.0] - 2026-08-26
 
 ### Changed

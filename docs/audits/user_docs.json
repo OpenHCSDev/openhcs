@@ -2515,7 +2515,7 @@
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "6808a9ee23c4312d9cb2a24777c1ca1106613cf0ac091b756050d6b139a88a1d",
+        "sha256": "f41230fb595a4706c1e3fc650c793ca4ceaf85c11043ba9c8f4df28aa833aaa4",
         "role": "Owns semantic display-axis alignment for images, points, shapes, translations, and exact-slice navigation."
       }
     ],
@@ -3683,7 +3683,7 @@
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "6808a9ee23c4312d9cb2a24777c1ca1106613cf0ac091b756050d6b139a88a1d",
+        "sha256": "f41230fb595a4706c1e3fc650c793ca4ceaf85c11043ba9c8f4df28aa833aaa4",
         "role": "Owns shared semantic axis slots and route-local singleton alignment for Napari layers."
       },
       {
