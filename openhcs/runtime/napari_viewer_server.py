@@ -564,6 +564,12 @@ class NapariImagePayload(NapariStreamLayerContext):
     raw: Mapping[str, NapariWireValue]
     image_id: str | None
 
+    def __post_init__(self) -> None:
+        if not self.address.components:
+            raise ValueError(
+                f"No component metadata available for path: {self.address.path}"
+            )
+
     @classmethod
     def from_payload(
         cls,
@@ -881,11 +887,6 @@ class NapariComponentAwareDisplayCoordinator:
         stream_layer_context: NapariStreamLayerContext,
         server: "NapariViewerServer",
     ) -> None:
-        if not stream_layer_context.address.components:
-            raise ValueError(
-                "No component metadata available for path: "
-                f"{stream_layer_context.address.path}"
-            )
         routed_data = data
         route = self._route(
             data=routed_data,

@@ -2470,7 +2470,7 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "b7356098c98044833af4c84691b80dd225dae993313c401d92e781b42c21951f",
+        "sha256": "c1120464ed17cab2c56c3bcb6ee139daa2f26bb0f10a060e9c154e19e2988d95",
         "role": "Implements Napari stream reception, layer updates, ROI navigation, and endpoint lifecycle."
       },
       {
@@ -3658,7 +3658,7 @@
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "b7356098c98044833af4c84691b80dd225dae993313c401d92e781b42c21951f",
+        "sha256": "c1120464ed17cab2c56c3bcb6ee139daa2f26bb0f10a060e9c154e19e2988d95",
         "role": "Implements Napari stream reception, layer updates, ROI navigation, and endpoint lifecycle."
       },
       {

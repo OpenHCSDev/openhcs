@@ -10,7 +10,7 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "b7356098c98044833af4c84691b80dd225dae993313c401d92e781b42c21951f",
+        "sha256": "c1120464ed17cab2c56c3bcb6ee139daa2f26bb0f10a060e9c154e19e2988d95",
         "role": "Detached Napari endpoint startup and application event-loop integration."
       },
       {
@@ -1360,7 +1360,7 @@
   },
   {
     "path": "docs/source/architecture/streaming_boundary_and_wrappers.rst",
-    "source_sha256": "51db1817e6f7c80cfcc15bb8a4c17211784d943b4bea42330da561b6e869a7e8",
+    "source_sha256": "cfcf24554b36fcb5e11c92fac2a726c4000e095b450c1ea4ebd73cf85ce7bcc9",
     "audience": [
       "OpenHCS streaming, viewer, and runtime maintainers"
     ],
@@ -1389,7 +1389,7 @@
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "b7356098c98044833af4c84691b80dd225dae993313c401d92e781b42c21951f",
+        "sha256": "c1120464ed17cab2c56c3bcb6ee139daa2f26bb0f10a060e9c154e19e2988d95",
         "role": "Applies bounded shape projection and preflighted layer isolation inside the owning Napari Qt process."
       },
       {

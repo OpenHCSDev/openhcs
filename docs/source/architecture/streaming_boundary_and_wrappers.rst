@@ -141,6 +141,9 @@ Settlement and transient viewer evidence
 ----------------------------------------
 
 Transport acceptance is not proof that a deferred Qt layer update succeeded.
+The incoming ``NapariImagePayload`` declaration requires component metadata
+before the receiver copies data or queues a batch. Missing coordinates produce
+an error reply on the data socket rather than a successful acknowledgement.
 Napari records an exception from a scheduled route update against that exact
 route while keeping the event loop alive. The ``settle`` control action starts
 or observes an incremental drain of the remaining debounced updates. Each

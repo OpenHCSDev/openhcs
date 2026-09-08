@@ -38,8 +38,10 @@ def test_napari_settlement_surfaces_terminal_transport_failure() -> None:
     )
 
 
+@pytest.mark.parametrize("metadata", [{"well": "A01"}, {}])
 def test_napari_transport_rep_follows_receiver_owned_shared_memory_copy(
     monkeypatch,
+    metadata,
 ) -> None:
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     port = 46000 + uuid.uuid4().int % 10000
@@ -71,7 +73,7 @@ def test_napari_transport_rep_follows_receiver_owned_shared_memory_copy(
                 "shm_name": shm.name,
                 "shape": list(source.shape),
                 "dtype": str(source.dtype),
-                "metadata": {"well": "A01"},
+                "metadata": metadata,
                 "data_type": "image",
                 "image_id": "transport-test-image",
                 "producer_identity": producer.to_payload(),
@@ -107,7 +109,16 @@ def test_napari_transport_rep_follows_receiver_owned_shared_memory_copy(
 
         monkeypatch.setattr(resource_tracker, "unregister", lambda *_args: None)
         socket.send_json(message)
-        assert socket.recv_json()["status"] == "success"
+        response = socket.recv_json()
+        if "well" not in metadata:
+            assert response["status"] == "error"
+            assert (
+                "No component metadata available for path: A01.tif"
+                in response["message"]
+            )
+            assert server.accepted_stream_batches.empty()
+            return
+        assert response["status"] == "success"
 
         # REP certifies that no later Qt work depends on the sender allocation.
         monkeypatch.undo()
