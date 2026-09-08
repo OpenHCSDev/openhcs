@@ -3191,18 +3191,18 @@
       },
       {
         "path": "openhcs/processing/custom_functions/events.py",
-        "sha256": "656aa22bea92ff306f121628dfe355426871d243cd38a5c2ab950a014436de77",
+        "sha256": "90f5c05c20eb4169f23da6760da830a6129d9cca16114f092bb282aec6b1bc88",
         "role": "Publishes process-local custom-function changes through weak identity-preserving subscriptions without importing a GUI runtime."
       },
       {
         "path": "openhcs/processing/custom_functions/signals.py",
-        "sha256": "39f0653402191b40e33c6c834b6f7945e46ecca1f2c69f558cbf405eb16a0f4b",
+        "sha256": "afc349d6ba9e25f59c002449dcec0f7304c829782bd298833906446dea8aa514",
         "role": "Adapts the headless domain event into Qt signal delivery for desktop consumers."
       },
       {
         "path": "tests/unit/test_custom_function_events.py",
-        "sha256": "38cab73a4dc16b21beed2fd109fd0ae9fc3efefe4ae391c0906bb3022404c8dc",
-        "role": "Proves weak subscriber lifetimes, exact callback identity, duplicate bound-method suppression, and safe Qt adapter collection."
+        "sha256": "1a674f82acc99ad8a239bf05b0aee2090cb4d71c880f813855bc985f4453bfbc",
+        "role": "Proves weak subscriber lifetimes, exact callback identity, duplicate bound-method suppression, and unsubscribe on Qt destruction even while its Python wrapper survives."
       },
       {
         "path": "openhcs/pyqt_gui/dialogs/custom_function_manager_dialog.py",

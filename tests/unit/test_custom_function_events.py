@@ -5,6 +5,8 @@ from __future__ import annotations
 import gc
 import weakref
 
+from PyQt6 import sip
+
 from openhcs.processing.custom_functions.events import (
     CustomFunctionChangedEvent,
     custom_function_changed,
@@ -75,6 +77,21 @@ def test_domain_event_preserves_distinct_equal_callable_identities() -> None:
     assert observations == ["first", "second"]
 
 
+def test_domain_event_unsubscribe_is_exact_and_idempotent() -> None:
+    event = CustomFunctionChangedEvent()
+    observations = []
+    first = _EquivalentSubscriber("first", observations)
+    second = _EquivalentSubscriber("second", observations)
+    event.subscribe(first)
+    event.subscribe(second)
+
+    event.unsubscribe(first)
+    event.unsubscribe(first)
+    event.emit()
+
+    assert observations == ["second"]
+
+
 def test_qt_adapter_is_not_retained_by_the_domain_event(qapp) -> None:
     del qapp
     adapter = CustomFunctionSignals()
@@ -85,3 +102,16 @@ def test_qt_adapter_is_not_retained_by_the_domain_event(qapp) -> None:
 
     assert adapter_reference() is None
     custom_function_changed.emit()
+
+
+def test_domain_event_releases_deleted_qt_adapter_with_live_python_wrapper(qapp):
+    adapter = CustomFunctionSignals()
+    live_adapter = CustomFunctionSignals()
+    observations = []
+    live_adapter.functions_changed.connect(lambda: observations.append("changed"))
+
+    sip.delete(adapter)
+    assert sip.isdeleted(adapter)
+    custom_function_changed.emit()
+
+    assert observations == ["changed"]

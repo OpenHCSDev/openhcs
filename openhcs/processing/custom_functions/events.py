@@ -47,6 +47,17 @@ class CustomFunctionChangedEvent:
                 )
             self._subscribers = live_subscriptions
 
+    def unsubscribe(self, callback: Callable[[], None]) -> None:
+        """Release a registration when its owner's lifetime ends."""
+
+        with self._lock:
+            self._subscribers = [
+                subscription
+                for subscription in self._subscribers
+                if (subscriber := subscription()) is not None
+                and not self._is_same_callback(subscriber, callback)
+            ]
+
     def emit(self) -> None:
         """Notify the subscriber snapshot owned at emission start."""
 
