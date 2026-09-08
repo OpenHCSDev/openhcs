@@ -76,8 +76,8 @@ from openhcs.core.context.processing_context import (
     RequiredVisualizer,
 )
 from openhcs.core.config import (
+    GlobalPipelineConfig,
     MaterializationBackend,
-    PipelineConfig,
     StreamingConfig,
     VFSConfig,
     WellFilterConfig,
@@ -135,7 +135,6 @@ from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
 from dataclasses import dataclass, replace
 
 if TYPE_CHECKING:
-    from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -184,7 +183,6 @@ class AxisCompilationRequest:
 
     orchestrator: "PipelineOrchestrator"
     global_config: "GlobalPipelineConfig"
-    pipeline_config: PipelineConfig
     pipeline: ResolvedPipelineDefinition
     path_resolver: CompilationPathResolver
     global_step_axis_filters: StepAxisFilterMap
@@ -194,7 +192,7 @@ class AxisCompilationRequest:
     def context_for(self, axis_id: str) -> ProcessingContext:
         context = self.orchestrator.create_context(axis_id)
         context.source_image_set_identity_policy = (
-            SourceImageSetIdentityPolicy.from_pipeline_config(self.pipeline_config)
+            SourceImageSetIdentityPolicy.from_pipeline_config(self.global_config)
         )
         context.step_axis_filters = self.global_step_axis_filters
         context.analysis_consolidation_config = (
@@ -1216,11 +1214,11 @@ class PipelineCompiler:
     @staticmethod
     def _capture_pipeline_config(
         pipeline_config_state: "ObjectState",
-    ) -> PipelineConfig:
-        pipeline_config = pipeline_config_state.to_object(update_delegate=False)
-        if not isinstance(pipeline_config, PipelineConfig):
+    ) -> GlobalPipelineConfig:
+        pipeline_config = pipeline_config_state.to_saved_resolved_object()
+        if not isinstance(pipeline_config, GlobalPipelineConfig):
             raise TypeError(
-                "Compiler pipeline ObjectState must reconstruct PipelineConfig; "
+                "Compiler pipeline ObjectState must resolve GlobalPipelineConfig; "
                 f"got {type(pipeline_config).__name__}."
             )
         return pipeline_config
@@ -1596,7 +1594,7 @@ class PipelineCompiler:
                         server_mode=is_zmq_execution,
                     ),
                 )
-            pipeline_config = PipelineCompiler._capture_pipeline_config(
+            effective_config = PipelineCompiler._capture_pipeline_config(
                 pipeline_config_state
             )
             path_resolver = CompilationPathResolver(
@@ -1604,18 +1602,13 @@ class PipelineCompiler:
                 filemanager=orchestrator.filemanager,
                 backend=Backend.DISK.value,
             )
-            pipeline_config = resolve_declared_dataclass_paths(
-                pipeline_config,
+            effective_config = resolve_declared_dataclass_paths(
+                effective_config,
                 path_resolver,
                 owner="PipelineConfig",
             )
-            num_workers = pipeline_config.num_workers
+            num_workers = effective_config.num_workers
             num_workers = debug_execution_policy.compile_worker_count(num_workers)
-            effective_config = resolve_declared_dataclass_paths(
-                orchestrator.get_effective_config(),
-                path_resolver,
-                owner="GlobalPipelineConfig",
-            )
             resolved_steps = tuple(
                 resolve_declared_dataclass_paths(
                     step,
@@ -1634,7 +1627,7 @@ class PipelineCompiler:
             )
             PipelineCompiler.validate_backend_compatibility(
                 orchestrator,
-                pipeline_config.vfs_config,
+                effective_config.vfs_config,
             )
             global_step_axis_filters = (
                 PipelineCompiler._resolve_global_step_axis_filters(
@@ -1646,7 +1639,6 @@ class PipelineCompiler:
             axis_request = AxisCompilationRequest(
                 orchestrator=orchestrator,
                 global_config=effective_config,
-                pipeline_config=pipeline_config,
                 pipeline=pipeline_inputs,
                 path_resolver=path_resolver,
                 global_step_axis_filters=global_step_axis_filters,
@@ -1686,7 +1678,7 @@ class PipelineCompiler:
                 runtime_environment=runtime_environment,
             )
             PipelineCompiler._write_compilation_debug_bundle_if_configured(
-                pipeline_config,
+                effective_config,
                 execution_bundle,
             )
             return execution_bundle
@@ -1702,7 +1694,7 @@ class PipelineCompiler:
 
     @staticmethod
     def _write_compilation_debug_bundle_if_configured(
-        pipeline_config: PipelineConfig,
+        pipeline_config: GlobalPipelineConfig,
         execution_bundle: CompiledExecutionBundle,
     ) -> None:
         compilation_debug_config = pipeline_config.compilation_debug_config

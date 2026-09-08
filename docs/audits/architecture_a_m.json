@@ -493,7 +493,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Lowers declarations into typed step plans, including declaration-derived framework-device assignments."
       },
       {
@@ -516,7 +516,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline/compiler.py; openhcs/core/pipeline/compilation_session.py; openhcs/core/compiled_execution.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -530,7 +531,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Implements the current compiler stages, including declaration-derived framework-device assignment."
       },
       {
@@ -553,7 +554,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline/compiler.py; openhcs/core/pipeline/step_snapshot.py; openhcs/core/compiled_step_plan.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -666,7 +668,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Consumes component declarations to construct execution axes, stacks, grouping, and typed plans."
       }
     ],
@@ -681,7 +683,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-25, re-read the complete explanation against the canonical component enum, complete value carrier, nominal filename result, component-set operations, and compiler consumer; revised it to make the declaration-to-boundary projection explicit.",
-      "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages."
+      "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -1520,7 +1523,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Invokes callable validation and framework-device assignment before assembling the execution bundle."
       },
       {
@@ -1571,7 +1574,8 @@
       "On 2026-08-27, re-read the complete explanation against the callable contract's runtime-owned parameter projection; the documented GPU declaration and planning boundary remains accurate.",
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -2092,7 +2096,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles source execution-axis and framework-device facts into frozen contexts and typed plans."
       },
       {
@@ -2125,7 +2129,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline/compiler.py; openhcs/core/compiled_execution.py; openhcs/core/orchestrator/worker_execution.py; openhcs/core/orchestrator/cancellation.py; openhcs/core/worker_start_policy.py.",
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   }
 ]

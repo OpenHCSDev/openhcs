@@ -202,7 +202,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -238,7 +238,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-27, re-read the complete explanation after library registries gained declaration-owned runtime-parameter exclusions; its declaration and ownership model remains accurate.",
-      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -296,7 +297,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -328,7 +329,8 @@
       "Focused cross-lattice QA passed 179 tests spanning callable contracts, framework-device scope, custom functions, catalogue discovery, installer/update policy, MCP release, and packaged OMERO deployment.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
-      "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate."
+      "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -423,7 +425,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -439,7 +441,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/microscopes/microscope_interfaces.py; openhcs/core/pipeline/compiler.py; openhcs/core/runtime_artifact_values.py.",
       "Focused cross-lattice QA passed 179 tests spanning callable contracts, framework-device scope, custom functions, catalogue discovery, installer/update policy, MCP release, and packaged OMERO deployment.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -592,7 +595,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -611,7 +614,8 @@
       "Focused cross-lattice QA passed 179 tests spanning callable contracts, framework-device scope, custom functions, catalogue discovery, installer/update policy, MCP release, and packaged OMERO deployment.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
-      "On 2026-08-21, re-read the explanation against FunctionStep.same_declaration and the python-introspect declaration helper."
+      "On 2026-08-21, re-read the explanation against FunctionStep.same_declaration and the python-introspect declaration helper.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -636,7 +640,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       }
     ],
@@ -647,7 +651,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline_document.py; openhcs/core/config.py; openhcs/core/pipeline/compiler.py.",
       "Focused cross-lattice QA passed 179 tests spanning callable contracts, framework-device scope, custom functions, catalogue discovery, installer/update policy, MCP release, and packaged OMERO deployment.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -776,7 +781,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -792,7 +797,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline_document.py; openhcs/core/steps/function_step.py; openhcs/core/config.py; openhcs/core/pipeline/compiler.py; tests/unit/test_pipeline_document.py.",
       "Focused cross-lattice QA passed 179 tests spanning callable contracts, framework-device scope, custom functions, catalogue discovery, installer/update policy, MCP release, and packaged OMERO deployment.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -1325,7 +1331,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1410,7 +1416,8 @@
       "On 2026-08-28, re-read the complete how-to after gallery dimensions and source evidence became generated projections; the Image Browser scenario and source-binding procedure remain unchanged and accurate.",
       "On 2026-09-07, re-read the complete source-loading how-to against OmeZarrStoreAdapter, OmeZarrLocation, the PolyStore writer and codec declarations, and the physical-store and code-mode/ZMQ regressions. Verified native Zarr 2/NGFF 0.4 and Zarr 3/NGFF 0.5 inputs, the single-resolution input boundary, unchanged FormatV04 output, coordinate preservation, and the separate Java decoding boundary without duplicating implementation policy in the how-to.",
       "On 2026-09-07, the minimum-stack PolyStore environment resolved the declared development install on Python 3.11 with Zarr 3.0.10 and ome-zarr 0.12.2 and passed dependency compatibility checks; the frozen bd5a616 candidate passed 486 tests with two deliberate skips. Physical-store tests also exercised the current Zarr 3.3.0 and ome-zarr 0.19.1 stack.",
-      "On 2026-09-07, re-read the complete source-loading how-to after moving NGFF runtime imports from adapter/backend registration to actual discovery and read-only store opening. The documented formats, source identities, and separate native/Java decoding boundaries remain unchanged. Upstream location.create preserves subclass, mode, and format for nested wells and images. The unchanged declaration-import regression and real fresh-process discovery across both formats passed in the 27-test OpenHCS source suite; PolyStore passed 487 tests with two skips on the minimum runtime and 488 with one skip on the latest GPU-enabled runtime. Only the three directly reviewed changed authority hashes were refreshed."
+      "On 2026-09-07, re-read the complete source-loading how-to after moving NGFF runtime imports from adapter/backend registration to actual discovery and read-only store opening. The documented formats, source identities, and separate native/Java decoding boundaries remain unchanged. Upstream location.create preserves subclass, mode, and format for nested wells and images. The unchanged declaration-import regression and real fresh-process discovery across both formats passed in the 27-test OpenHCS source suite; PolyStore passed 487 tests with two skips on the minimum runtime and 488 with one skip on the latest GPU-enabled runtime. Only the three directly reviewed changed authority hashes were refreshed.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -1518,7 +1525,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1548,7 +1555,8 @@
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
       "On 2026-08-27, re-read the complete explanation against the changed registry preparation lifecycle; supported callable discovery remains declaration-derived and no introductory claim changed.",
       "On 2026-08-28, re-read the complete explanation after Plate Manager adopted its registered stable-window title; the introductory source, pipeline, catalogue, and execution model remains accurate.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -1618,7 +1626,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1745,7 +1753,8 @@
       "On 2026-08-27, re-read the complete troubleshooting page after Windows native acceptance exposed an overlong Numba cache path; the structural path correction requires no new user recovery step, and the existing first-error and log guidance remains accurate.",
       "On 2026-08-27, applied the Diataxis how-to boundary and re-read the complete guide against the cold-cache rehearsal and cancellation tests; revised selector recovery to distinguish renewable inactivity from total duration and to name exact preparation cleanup.",
       "On 2026-08-28, re-read the complete how-to after Plate Manager and main-window titles moved to registered identities; its startup, catalogue, version-restart, compilation, viewer, and recovery guidance remains accurate.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -1888,7 +1897,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -1924,7 +1933,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, rechecked the guide index after PolyStore moved OMERO table-column construction into its declaration owner; the integration routes remain accurate.",
       "On 2026-08-25, re-read the complete guide index after the viewer protocol gained bounded payload and isolation controls; the compiler, memory, viewer, and OMERO routes remain accurate.",
-      "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests."
+      "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -2190,7 +2200,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       },
       {
@@ -2226,7 +2236,8 @@
       "Compared every factual claim directly with the current hash-pinned authorities: openhcs/core/pipeline/compiler.py; openhcs/core/pipeline/compilation_session.py; openhcs/core/compiled_step_plan.py; openhcs/core/compiled_execution.py; tests/unit/test_compiled_execution.py; openhcs/core/pipeline/framework_device_assignment.py.",
       "Focused cross-lattice QA passed 179 tests spanning callable contracts, framework-device scope, custom functions, catalogue discovery, installer/update policy, MCP release, and packaged OMERO deployment.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
-      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings."
+      "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {
@@ -3467,7 +3478,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "82f92cd02644367de7b158dad71b0a9165d7af641e001fd31c7660fd8373bc9a",
+        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
         "role": "Compiles pipeline declarations into validated step plans and execution bundles."
       }
     ],
@@ -3485,7 +3496,8 @@
       "On 2026-08-24, removed the retired embedded LLM how-to from the task index; MCP client setup remains the supported agent-assisted entry point.",
       "On 2026-08-25, re-read the complete page against the painted-ready background-service startup boundary and producer-before-executor shutdown order; its documented ownership and user guidance remain accurate.",
       "On 2026-08-28, re-read the complete task index after desktop presentation moved to registered identities; PyQt remains the supported interactive interface and the declaration-model routing remains accurate.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
     ]
   },
   {

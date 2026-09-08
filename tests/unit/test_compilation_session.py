@@ -56,6 +56,37 @@ def _identity(image):
     return image
 
 
+@pytest.mark.parametrize("pipeline_workers, expected_workers", [(None, 2), (3, 3)])
+def test_compiler_captures_scoped_worker_count(pipeline_workers, expected_workers):
+    ObjectStateRegistry.clear()
+    global_config = GlobalPipelineConfig(num_workers=2)
+    ensure_global_config_context(GlobalPipelineConfig, global_config)
+    global_state = ObjectState(global_config, scope_id="")
+    pipeline_state = ObjectState(
+        PipelineConfig(num_workers=pipeline_workers),
+        scope_id="plate",
+        parent_state=global_state,
+    )
+    try:
+        ObjectStateRegistry.register(global_state, _skip_snapshot=True)
+        ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
+        captured = PipelineCompiler._capture_pipeline_config(pipeline_state)
+        assert captured.num_workers == expected_workers
+        assignments = PipelineCompiler._calculate_worker_assignments(
+            ["A", "B", "C", "D"], captured.num_workers
+        )
+        assert len(assignments) == expected_workers
+
+        # The compiled snapshot must not resolve again in a different context.
+        ensure_global_config_context(
+            GlobalPipelineConfig, GlobalPipelineConfig(num_workers=4)
+        )
+        assert captured.num_workers == expected_workers
+    finally:
+        ObjectStateRegistry.clear()
+        ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+
+
 def test_axis_session_initialization_requires_pipeline_resolved_state() -> None:
     parameters = signature(
         PipelineCompiler.initialize_step_plans_for_context
@@ -165,7 +196,6 @@ def test_axis_compilation_request_preserves_effective_auto_add_flag():
     request = AxisCompilationRequest(
         orchestrator=_EffectiveConfigContextOrchestrator(),
         global_config=GlobalPipelineConfig(auto_add_output_plate_to_plate_manager=True),
-        pipeline_config=PipelineConfig(),
         pipeline=SimpleNamespace(),
         path_resolver=SimpleNamespace(),
         global_step_axis_filters={},

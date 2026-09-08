@@ -69,7 +69,12 @@ or maintain a second source-only callable registry.
 Compilation sessions
 --------------------
 
-``AxisCompilationRequest`` carries the resolved ``PipelineConfig`` into axis
+ObjectState resolves the saved pipeline scope and its inherited defaults into
+one concrete ``GlobalPipelineConfig`` snapshot. Worker assignment, the runtime
+environment and ``AxisCompilationRequest`` consume that same snapshot; none
+reconstructs a separate lazy configuration to read effective values.
+
+``AxisCompilationRequest`` carries this resolved configuration into axis
 fanout. It projects the pipeline's source-image-set identity policy onto each
 new ``ProcessingContext`` before constructing the narrower session boundary.
 ``CompilationSession`` does not retain a second pipeline-configuration owner.
