@@ -231,7 +231,12 @@ class FunctionReferenceTransportAuthority:
 
         resolved_reference = RegistryService.resolved_reference_for_callable(func)
         if resolved_reference is not None:
-            return resolved_reference
+            # Resolution retains nominal identity, including for raw references.
+            # Compiler metadata belongs to the decorated callable, not whichever
+            # reference happened to populate the runtime cache first.
+            return dataclasses.replace(
+                resolved_reference, metadata=cls.callable_metadata(func)
+            )
 
         registry_match = RegistryService.declared_metadata_for_callable(func)
         if registry_match is not None:

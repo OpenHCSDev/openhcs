@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
+from skimage.filters.edges import sobel
 
 from openhcs.core.callable_contract import (
     CallableContract,
@@ -15,7 +18,13 @@ from openhcs.core.function_reference import (
 )
 from openhcs.processing.backends import cellprofiler as cellprofiler_backend
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
-from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.backends.lib_registry.scikit_image_registry import (
+    SkimageRegistry,
+)
+from openhcs.processing.backends.lib_registry.unified_registry import (
+    FunctionMetadata,
+    ProcessingContract,
+)
 
 
 def test_registry_reference_derives_owner_from_canonical_key() -> None:
@@ -90,3 +99,37 @@ def test_cold_external_resolution_retains_registry_classified_contract(
         CallableContract.from_callable(resolved).processing_contract
         is ProcessingContract.FLEXIBLE
     )
+
+
+@pytest.mark.parametrize("raw_first", [True, False])
+def test_raw_resolution_cannot_replace_processing_reference_metadata(
+    monkeypatch, raw_first
+) -> None:
+    registry = SkimageRegistry()
+    wrapped = registry.reconstruct_cached_callable(sobel, ProcessingContract.FLEXIBLE)
+    metadata = FunctionMetadata(
+        name="filters.sobel",
+        func=wrapped,
+        contract=ProcessingContract.FLEXIBLE,
+        registry=registry,
+        module="skimage.filters.edges",
+        original_name="sobel",
+    )
+    monkeypatch.setattr(
+        RegistryService, "_metadata_cache", {metadata.composite_key: metadata}
+    )
+    monkeypatch.setattr(RegistryService, "_resolved_reference_callables", {})
+    reference = FunctionReferenceTransportAuthority.function_reference(wrapped)
+    raw_reference = replace(reference, metadata=CallableMetadata())
+    first, second = (
+        (raw_reference, reference) if raw_first else (reference, raw_reference)
+    )
+    assert first.resolve() is wrapped
+    assert second.resolve() is wrapped
+
+    for _ in range(3):
+        transported = FunctionReferenceTransportAuthority.function_reference(wrapped)
+        assert transported.composite_key == reference.composite_key
+        assert transported.metadata == reference.metadata
+        assert CallableContract.from_callable(transported).input_memory_type == "numpy"
+        assert transported.resolve() is wrapped
