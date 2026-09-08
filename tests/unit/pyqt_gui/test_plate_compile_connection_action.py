@@ -10,6 +10,34 @@ from openhcs.agent.ui_bridge_actions import (
 from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.services.ui_bridge_plate_manager import PlateManagerActionProvider
 from PyQt6.QtWidgets import QPushButton
+from openhcs.core.execution_state import ManagerExecutionState
+
+
+@pytest.mark.parametrize("phase", EndpointStartupPhase)
+@pytest.mark.parametrize("compiled", [False, True])
+@pytest.mark.parametrize("execution_state", ManagerExecutionState)
+def test_run_control_uses_endpoint_readiness_without_disabling_stop(
+    qapp, phase, compiled, execution_state
+):
+    manager = SimpleNamespace(
+        get_selected_items=lambda: [SimpleNamespace(scope_id="/compiled-plate")],
+        plate_compiled_data={"/compiled-plate": object()} if compiled else {},
+        is_any_plate_running=lambda: execution_state.busy,
+        execution_endpoint_status=EndpointStartupStatus(phase, "test"),
+        execution_state=execution_state,
+        buttons={action.value: QPushButton() for action in PlateManagerAction},
+    )
+    PlateManagerWidget.update_button_states(manager)
+    expected = {
+        ManagerExecutionState.IDLE: compiled
+        and phase is EndpointStartupPhase.CONNECTED,
+        ManagerExecutionState.RUNNING: True,
+        ManagerExecutionState.STOPPING: False,
+        ManagerExecutionState.FORCE_KILL_READY: True,
+    }[execution_state]
+    run_button = manager.buttons[PlateManagerAction.RUN_PLATE.value]
+    assert run_button.isEnabled() is expected
+    assert run_button.text() == execution_state.run_button_text
 
 
 @pytest.mark.parametrize(

@@ -1022,7 +1022,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/basic_interface.rst",
-    "source_sha256": "0475737ec5854c8d9149323101bd48b7dffcdd0d89e9be403d1f4186110c418d",
+    "source_sha256": "d22b60f98b69e66e97af93fe9980199365e696e510e429496654106f982a952c",
     "audience": [
       "desktop users",
       "MCP-assisted operators"
@@ -1042,7 +1042,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/widgets/plate_manager.py",
-        "sha256": "acb203aafb8f14da4bd6cca5596383b7a4b7938d9f6602dd9c8c1f362fbbbe1c",
+        "sha256": "31da2899f79342921321a8c5e69d91d69d28e63f66341c0ab6753fd16e6c87e3",
         "role": "Implements plate import, selection, pipeline assignment, and execution controls."
       },
       {
@@ -1540,7 +1540,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/widgets/plate_manager.py",
-        "sha256": "acb203aafb8f14da4bd6cca5596383b7a4b7938d9f6602dd9c8c1f362fbbbe1c",
+        "sha256": "31da2899f79342921321a8c5e69d91d69d28e63f66341c0ab6753fd16e6c87e3",
         "role": "Implements plate import, selection, pipeline assignment, and execution controls."
       }
     ],
@@ -1612,7 +1612,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/troubleshooting_FAQ.rst",
-    "source_sha256": "ca25708bee823fff6dff7da5160b092e01c65e1156a2045dd20fadcd22cf9afa",
+    "source_sha256": "b31842c9c1a2a8629a72520b084246b88bcc7ff7a8ee5df49e325a83c871b688",
     "audience": [
       "desktop operators diagnosing a failed workflow"
     ],
@@ -1621,7 +1621,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/widgets/plate_manager.py",
-        "sha256": "acb203aafb8f14da4bd6cca5596383b7a4b7938d9f6602dd9c8c1f362fbbbe1c",
+        "sha256": "31da2899f79342921321a8c5e69d91d69d28e63f66341c0ab6753fd16e6c87e3",
         "role": "Implements plate import, selection, pipeline assignment, and execution controls."
       },
       {

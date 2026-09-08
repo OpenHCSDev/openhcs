@@ -37,6 +37,7 @@ from pyqt_reactive.widgets.shared.manager_selection_controller import (
     ItemIdSelectionPayloadProjection,
 )
 from typing_extensions import override
+from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentTarget
 from openhcs.agent.ui_bridge_actions import (
@@ -755,11 +756,15 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         self.update_button_states()
 
     @property
-    def compilation_action(self) -> PlateManagerAction:
-        status = self._endpoint_observations().status_for_port(
+    def execution_endpoint_status(self) -> EndpointStartupStatus:
+        """Read current endpoint readiness from the browser's shared authority."""
+        return self._endpoint_observations().status_for_port(
             self._ui_config.zmq.default_port
         )
-        return CompilationActionProjection.from_status(status)
+
+    @property
+    def compilation_action(self) -> PlateManagerAction:
+        return CompilationActionProjection.from_status(self.execution_endpoint_status)
 
     @property
     def execution_state(self) -> ManagerExecutionState:
@@ -2352,7 +2357,8 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         self.buttons["del_plate"].setEnabled(has_selection and not is_running)
         self.buttons["edit_config"].setEnabled(has_initialized and not is_running)
         self.buttons["init_plate"].setEnabled(has_selection and not is_running)
-        compile_action = self.compilation_action
+        endpoint_status = self.execution_endpoint_status
+        compile_action = CompilationActionProjection.from_status(endpoint_status)
         compile_button = self.buttons[PlateManagerAction.COMPILE_PLATE.value]
         compile_button.setEnabled(
             compile_action.selection_enabled(has_initialized) and not is_running
@@ -2364,7 +2370,9 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         self.buttons["view_metadata"].setEnabled(has_initialized and not is_running)
 
         self.buttons["run_plate"].setEnabled(
-            self.execution_state.run_button_enabled(has_compiled)
+            self.execution_state.run_button_enabled(
+                has_compiled and endpoint_status.phase.accepts_requests
+            )
         )
         self.buttons["run_plate"].setText(self.execution_state.run_button_text)
 

@@ -44,6 +44,11 @@ When the execution endpoint is disconnected, the Compile button becomes
 startup is in progress and returns to **Compile** once connected. You can
 connect before adding or initialising a plate.
 
+**Run** requires both a compiled selection and a connected execution endpoint.
+It is disabled during startup or disconnection, even if a compiled plate remains
+selected. During execution, the same control provides **Stop**; stopping controls
+remain available if the endpoint becomes unavailable.
+
 Plate Manager code mode records whether its document represents all plates or
 only the current selection. Applying a selected document changes only those
 plates and preserves every unselected plate. Read a new document if you need to

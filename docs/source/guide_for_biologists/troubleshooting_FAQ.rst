@@ -32,6 +32,10 @@ dependency, port/readiness, Java/ImageJ, or Qt errors.
 Execution server is unavailable
 -------------------------------
 
+If **Run** is greyed out and the status bar reports **Not connected**, click
+**Connect** in Plate Manager. Once connected, compile the selected plate if it
+has not yet been compiled.
+
 Use the server browser/status surface to distinguish connection, readiness, and
 execution failure. Record the server endpoint and execution identifier, then
 inspect both client and server logs. Restarting may restore availability but
