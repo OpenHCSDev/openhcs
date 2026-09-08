@@ -27,6 +27,7 @@ from openhcs.processing.backends.pos_gen.ashlar_main_cpu import (
 )
 from openhcs.processing.backends.processors.numpy_processor import (
     create_composite,
+    create_projection,
     crop,
     tophat,
 )
@@ -38,18 +39,28 @@ from openhcs.processing.backends.processors.numpy_processor import (
     "stitch,reduce_channels", [(False, False), (False, True), (True, True)]
 )
 @pytest.mark.parametrize("finish_with_crop", [False, True])
+@pytest.mark.parametrize("project_z", [False, True])
+@pytest.mark.parametrize("z_planes", [1, 2])
 def test_reduced_channel_stack_is_the_next_steps_only_input(
-    tmp_path, channels, preprocess, stitch, reduce_channels, finish_with_crop
+    tmp_path,
+    channels,
+    preprocess,
+    stitch,
+    reduce_channels,
+    finish_with_crop,
+    project_z,
+    z_planes,
 ):
     plate = tmp_path / "plate"
     images = plate / "TimePoint_1"
     images.mkdir(parents=True)
     (plate / "plate.HTD").write_text('"XSites", 1\n"YSites", 1\n"PixelSizeUM", 1.0\n')
     for channel in range(1, 5):
-        tifffile.imwrite(
-            images / f"A01_s001_w{channel}_z001_t001.tif",
-            np.full((16, 18), channel * 10, dtype=np.uint16),
-        )
+        for z_index in range(1, z_planes + 1):
+            tifffile.imwrite(
+                images / f"A01_s001_w{channel}_z{z_index:03d}_t001.tif",
+                np.full((16, 18), channel * 10 + z_index - 1, dtype=np.uint16),
+            )
     identity = (crop, {"width": 18, "height": 16, "depth": 1})
     stack_function = (
         create_composite
@@ -77,6 +88,16 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
             ),
             FunctionStep(func=assemble_stack_cpu),
         ]
+    if project_z:
+        steps.insert(
+            2,
+            FunctionStep(
+                func=create_projection,
+                processing_config=LazyProcessingConfig(
+                    variable_components=[VariableComponents.Z_INDEX]
+                ),
+            ),
+        )
     if finish_with_crop:
         template = tmp_path / "template.tif"
         tifffile.imwrite(template, np.ones((8, 8), dtype=np.uint8))
@@ -119,8 +140,16 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
             assert not context.step_plans[2].execution_group_scope.is_ungrouped
         if stitch:
             context = compiled.runtime_contexts["A01"]
-            assert context.step_plans[2].main_input_dependency.source_step_index == 1
-            assert context.step_plans[2].execution_group_scope.is_ungrouped
+            position_step_index = 2 + project_z
+            assert (
+                context.step_plans[
+                    position_step_index
+                ].main_input_dependency.source_step_index
+                == position_step_index - 1
+            )
+            assert context.step_plans[
+                position_step_index
+            ].execution_group_scope.is_ungrouped
         result = orchestrator.execute_compiled_plate(
             execution_bundle=compiled,
             max_workers=1,
@@ -135,11 +164,12 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
         set_progress_queue(None)
     assert result["A01"].is_success(), result["A01"].error_message
     outputs = list((tmp_path / "output/plate_openhcs/images").glob("*.tif*"))
-    assert len(outputs) == (
-        4 if stitch else 1 if reduce_channels else len(channels)
-    ), outputs
+    output_channels = 4 if stitch else 1 if reduce_channels else len(channels)
+    output_z_planes = z_planes if stitch or not project_z else 1
+    assert len(outputs) == output_channels * output_z_planes, outputs
     for output in outputs:
         channel = int(output.name.split("_w")[1].split("_")[0])
+        z_index = int(output.name.split("_z")[1].split("_")[0])
         expected = (
             channel * 10
             if stitch
@@ -149,6 +179,8 @@ def test_reduced_channel_stack_is_the_next_steps_only_input(
                 else (np.mean(channels) if reduce_channels else channel) * 10
             )
         )
+        if stitch or not preprocess:
+            expected += (z_planes if project_z and not stitch else z_index) - 1
         # Assembly blends in float32 before converting back to integer pixels.
         np.testing.assert_allclose(
             tifffile.imread(output),

@@ -1031,11 +1031,18 @@ class FunctionOutputIdentityAuthority:
             request.variable_components,
         )
         if identity.filename_component_values is not None:
+            component_values = dict(identity.component_values)
             if request.input_aligned_output:
-                component_values = dict(parsed_identity.component_values)
-                component_values.update(identity.component_values)
+                # Alignment resolves this step's split axes, not coordinates
+                # collapsed upstream and retained only in a storage filename.
+                for component_name in (
+                    split_component_values & parsed_identity.component_values.keys()
+                ):
+                    component_values.setdefault(
+                        component_name,
+                        parsed_identity.component_values[component_name],
+                    )
             else:
-                component_values = dict(identity.component_values)
                 for component_name in split_component_values:
                     component_values.pop(component_name, None)
             filename_component_values = dict(parsed_identity.component_values)
