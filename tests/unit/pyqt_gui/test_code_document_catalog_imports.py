@@ -5,15 +5,27 @@ from contextlib import nullcontext
 from unittest.mock import Mock
 
 import pytest
+from arraybridge import DtypeConversion
+from arraybridge.decorators import SliceBySliceRuntimeParameter
+from objectstate.object_state import ObjectStateRegistry
 
 from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
 from openhcs.core.callable_contract import CallableImportIdentity, CallableMetadata
+from openhcs.core.config import LazyDtypeConfig
 from openhcs.core.function_reference import (
-    RegistryFunctionReference,
     FunctionReferenceTransportAuthority,
+    RegistryFunctionReference,
 )
+from openhcs.core.function_step_document import FunctionStepDocumentAuthority
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
-from arraybridge.decorators import SliceBySliceRuntimeParameter
+from openhcs.processing.backends.processors.numpy_processor import (
+    stack_percentile_normalize,
+    tophat,
+)
+from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+    PipelineObjectStateBinding,
+)
 from openhcs.pyqt_gui.services.ui_agent_bridge import (
     UiCodeDocumentExecutionService,
     UiCodeDocumentSourcePolicy,
@@ -22,12 +34,6 @@ from openhcs.pyqt_gui.services.ui_agent_bridge import (
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
-from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
-    PipelineObjectStateBinding,
-)
-from openhcs.core.steps.function_step import FunctionStep
-from objectstate.object_state import ObjectStateRegistry
-from openhcs.processing.backends.processors.numpy_processor import tophat
 
 
 @pytest.fixture
@@ -140,5 +146,32 @@ def test_grouped_single_and_chained_functions_survive_object_state_round_trip(en
         PipelineObjectStateBinding.update_plate_steps("/tmp/grouped-plate", [step])
         reconstructed = PipelineObjectStateBinding.steps_for_plate("/tmp/grouped-plate")
         assert reconstructed[0].same_declaration(step)
+    finally:
+        ObjectStateRegistry.clear()
+
+
+def test_explicit_function_dtype_override_survives_object_state_round_trip():
+    ObjectStateRegistry.clear()
+    try:
+        dtype_config = LazyDtypeConfig(default_dtype_conversion=DtypeConversion.UINT16)
+        step = FunctionStep(
+            func=(stack_percentile_normalize, {"dtype_config": dtype_config})
+        )
+        PipelineObjectStateBinding.update_plate_steps("/tmp/dtype-plate", [step])
+        reconstructed = PipelineObjectStateBinding.steps_for_plate("/tmp/dtype-plate")[
+            0
+        ]
+        assert (
+            reconstructed.func[1]["dtype_config"].default_dtype_conversion
+            is DtypeConversion.UINT16
+        )
+        rendered = FunctionStepDocumentAuthority.render(
+            FunctionStepDocumentAuthority.from_value(reconstructed)
+        )
+        reparsed = FunctionStepDocumentAuthority.from_source(rendered).step
+        assert (
+            reparsed.func[1]["dtype_config"].default_dtype_conversion
+            is DtypeConversion.UINT16
+        )
     finally:
         ObjectStateRegistry.clear()

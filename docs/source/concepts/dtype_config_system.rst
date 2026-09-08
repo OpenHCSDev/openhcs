@@ -42,8 +42,10 @@ Callable boundary
 
 ArrayBridge memory decorators expose a runtime-bound ``dtype_config`` parameter
 through the callable contract. OpenHCS resolves the inherited configuration and
-the compiler plans any memory conversion. User function kwargs should not supply
-or shadow runtime-bound parameters.
+the compiler plans any memory conversion. A function occurrence may supply an
+explicit ``dtype_config`` override; the compiler consumes it into that
+invocation's configuration binding before validating ordinary function kwargs.
+Injected runtime objects remain owned by their runtime declarations.
 
 Ownership
 ---------

@@ -39,6 +39,11 @@ pipeline. Initialization discovers the microscope/source format and component
 metadata. Compile and run actions are disabled until their prerequisites are
 met.
 
+When the execution endpoint is disconnected, the Compile button becomes
+**Connect**. Click it to prepare the endpoint; it shows **Connecting...** while
+startup is in progress and returns to **Compile** once connected. You can
+connect before adding or initialising a plate.
+
 Plate Manager code mode records whether its document represents all plates or
 only the current selection. Applying a selected document changes only those
 plates and preserves every unselected plate. Read a new document if you need to

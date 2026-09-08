@@ -76,6 +76,13 @@ is useful when structured Python is clearer than clicking through nested forms,
 but it still participates in ObjectState revision checks, validation,
 snapshots, and UI status updates.
 
+Plate Manager's source policy validates external processing imports against the
+execution endpoint's exact catalogue entries. Validation retains their typed
+references without importing processing libraries. Evaluation resolves only the
+selected wrappers, preserving their registered identities and execution
+contracts. The existing resolved-reference cache retains that ownership when
+the UI later exports the callable; it does not register a second native function.
+
 The generic window driver owns dynamic writability and declaration-normalised
 source comparison. Catalogues project that capability, and apply providers
 enforce it before mutation. OpenHCS declarations supply the normaliser and any

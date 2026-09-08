@@ -19,6 +19,10 @@ Conversion** to choose the application default. To override one pipeline or
 step, open its configuration, expand **Dtype Config**, and set the same field at
 that narrower scope. Leave the lazy field unset to inherit the broader value.
 
+To change one callable within a chained or channel-grouped step, include its
+``dtype_config`` in that callable's kwargs using code mode. That explicit
+override is retained when switching between the code and form views.
+
 The equivalent step declaration is:
 
 .. code-block:: python

@@ -59,6 +59,10 @@ into the shared form exclusions. Runtime context, artifact inputs, output
 buffers, device selectors, callbacks, opaque values, and callable deprecation
 sentinels remain runtime-supplied or at their declared defaults; algorithm
 parameters such as a filter radius or sigma remain authored values.
+Function-level configuration overrides and execution controls are editable
+settings rather than injected objects. Explicit values in a function pattern,
+such as dtype conversion or slice-by-slice processing, survive form and code
+editing.
 
 Finding functions
 -----------------

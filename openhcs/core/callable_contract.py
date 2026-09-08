@@ -664,6 +664,20 @@ class CallableContract(ArtifactPlanKeySelector):
         return tuple(parameter.name for parameter in self.config_bound_parameters)
 
     @property
+    def overridable_runtime_parameter_names(self) -> frozenset[str]:
+        """Runtime settings that authoring may override on a function occurrence.
+
+        Config bindings consume explicit values before public-ABI validation;
+        semantic controls remain executable kwargs. Neither is an injected
+        runtime object, even when the default form hides its parameter.
+        """
+        return frozenset(self.config_bound_parameter_names).union(
+            parameter.require_parameter_name()
+            for parameter in self.runtime_bound_parameter_types
+            if parameter.is_semantic_control
+        )
+
+    @property
     def runtime_owned_parameter_names(self) -> frozenset[str]:
         """Parameters supplied by compiled artifact, config, or runtime state."""
 

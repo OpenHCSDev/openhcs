@@ -37,6 +37,16 @@ generated code includes the explicit assignment again. Provide
 ``pipeline_config`` when the pipeline needs non-default source, processing,
 viewer, or materialisation settings.
 
+Reuse the exact imports shown in generated code. Plate Manager accepts external
+processing functions listed in the execution endpoint's catalogue, including
+``skimage.filters.edges.sobel``. Applying the document resolves the selected
+catalogue wrapper, preserving its processing contract and runtime controls.
+Wildcard imports and functions absent from that catalogue are rejected.
+
+Channel-grouped patterns may combine individual functions, ``(function, kwargs)``
+pairs, and lists of functions. Explicit per-function settings, including dtype
+conversion and slice-by-slice execution, remain part of the code/UI round trip.
+
 Applying a complete Pipeline Editor or Plate Manager code document reconciles
 the submitted declaration with the live ObjectState graph. Unchanged and
 unambiguously edited occurrences retain their history across reordering; added

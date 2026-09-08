@@ -273,7 +273,7 @@ def _exported_callable_parameter_exclusions(func) -> set[str]:
     raw_func = contract.raw_processing_function
     if callable(raw_func):
         excluded.update(parameter_exclusions(raw_func))
-    return excluded
+    return excluded.difference(contract.overridable_runtime_parameter_names)
 
 
 class FunctionPatternTupleFormatter(SourceFormatter):

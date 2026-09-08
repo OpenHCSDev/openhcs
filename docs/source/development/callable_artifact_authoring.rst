@@ -24,6 +24,11 @@ names into the shared python-introspect exclusion set used by catalogue and form
 consumers. Declare the owning contract term; do not hide the parameter again in
 a UI- or agent-owned list.
 
+Configuration parameters can still receive an explicit per-function override;
+semantic controls can select execution behaviour. The contract derives these
+overridable names from configuration bindings and runtime parameter declarations.
+Code generation preserves explicit settings while omitting injected objects.
+
 Public keyword validation uses the canonical raw callable signature. When a
 parameter annotation declares an enum, callers must provide a member of that
 exact enum type. A string equal to the member's value is not the same nominal

@@ -5,12 +5,14 @@ import inspect
 
 import pytest
 from arraybridge.decorators import DtypeConversion
+from objectstate import semantic_values_equal
+from objectstate.object_state import ObjectState
 from pycodify import Assignment, generate_python_source
 
 import openhcs.serialization.pycodify_formatters  # noqa: F401
-from objectstate.object_state import ObjectState
 from openhcs.constants import InputSource
 from openhcs.constants.constants import GroupBy
+from openhcs.core.callable_contract import CallableContract, CallableImportIdentity
 from openhcs.core.config import (
     DtypeConfig,
     LazyDtypeConfig,
@@ -19,16 +21,14 @@ from openhcs.core.config import (
     LazyWellFilterConfig,
     PipelineConfig,
 )
-from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_step_document import FunctionStepDocumentAuthority
 from openhcs.core.function_reference import RegistryFunctionReference
-from openhcs.core.callable_contract import CallableImportIdentity
+from openhcs.core.function_step_document import FunctionStepDocumentAuthority
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
 from openhcs.processing.backends.cellprofiler.colocalization import (
     measure_colocalization_objects,
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
-from openhcs.processing.backends.analysis.count_cells_simple import count_cells_simple
 
 
 def configurable_test_function(image, threshold: int = 3, enabled: bool = True):
@@ -252,11 +252,13 @@ def test_function_pattern_source_does_not_emit_declared_hidden_parameters():
             {
                 "calculate_advanced": True,
                 "calculate_zernikes": False,
+                "dtype_config": LazyDtypeConfig(),
+                "slice_by_slice": False,
             },
         ),
     ),
 )
-def test_function_step_round_trip_omits_runtime_owned_callable_kwargs(
+def test_function_step_round_trip_omits_injected_values_but_keeps_runtime_settings(
     clean_mode,
     expected_kwargs,
 ):
@@ -282,16 +284,10 @@ def test_function_step_round_trip_omits_runtime_owned_callable_kwargs(
     reconstructed_kwargs = reconstructed.func[1]
     reconstructed_contract = CallableContract.from_callable(reconstructed.func[0])
 
-    assert reconstructed_contract.runtime_owned_parameter_names.isdisjoint(
-        reconstructed_kwargs
-    )
-    assert reconstructed_kwargs == expected_kwargs
-    reconstructed_contract.validate_public_kwargs(
-        reconstructed_kwargs,
-        runtime_loaded_artifact_parameter_names=(
-            reconstructed_contract.artifact_input_parameter_names
-        ),
-    )
+    assert reconstructed_contract.runtime_owned_parameter_names.difference(
+        reconstructed_contract.overridable_runtime_parameter_names
+    ).isdisjoint(reconstructed_kwargs)
+    assert semantic_values_equal(reconstructed_kwargs, expected_kwargs)
 
 
 def test_cellprofiler_public_callable_source_keeps_hidden_parameters_hidden():

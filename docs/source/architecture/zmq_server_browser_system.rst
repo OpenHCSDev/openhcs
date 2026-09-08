@@ -14,7 +14,8 @@ progress semantics and topology validation. For execution progress, the browser
 is a projection consumer and does not own a second subscriber. For endpoint
 observation, the generic browser owns one immutable
 ``EndpointObservationSnapshot``. The OpenHCS main window derives the configured
-endpoint's status-bar presentation from that snapshot. Client connection
+endpoint's status-bar presentation and Plate Manager's contextual Connect/Compile
+action from that snapshot. Client connection
 ownership remains with ZMQRuntime's ``EndpointClientSession`` rather than being
 inferred from browser rows.
 
@@ -92,7 +93,9 @@ delegated to the generic browser base.
 Server scans and startup events both produce a new
 ``EndpointObservationSnapshot`` through the generic browser's single commit
 boundary. One snapshot emission updates the server tree and the dedicated
-right-hand endpoint indicator. The central status text remains available for
+right-hand endpoint indicator and refreshes the contextual compile action. The
+action projects the current endpoint phase without retaining a connection flag.
+The central status text remains available for
 workflow messages. Startup callbacks only commit
 observations and request a scan; they do not update any of those projections
 directly. When the configured endpoint is absent from the snapshot, its browser
