@@ -242,7 +242,7 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "fcf8dd3ae582e2deadc69228a9e5ce00e72c34996cc94a0259ce6130849c801b",
+        "sha256": "4148ccb3e51d21c26f8126d19dd811c84b44f754f857d995889d9d1d24c135f9",
         "role": "Proves partial viewer acquisition and readiness failures roll back every acquired viewer."
       }
     ],
@@ -1444,7 +1444,7 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "fcf8dd3ae582e2deadc69228a9e5ce00e72c34996cc94a0259ce6130849c801b",
+        "sha256": "4148ccb3e51d21c26f8126d19dd811c84b44f754f857d995889d9d1d24c135f9",
         "role": "Proves multi-viewer bootstrap rollback after partial acquisition and readiness failure."
       }
     ],

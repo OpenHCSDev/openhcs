@@ -285,10 +285,12 @@ def test_analysis_summary_writer_uses_compiled_filemanager_destination():
 
     FileManagerAnalysisSummaryWriter(
         filemanager=filemanager,
-        destination=RuntimeAnalysisSummaryDestination(
-            backend="memory",
-            images_dir="/plate/images",
-        ),
+        destinations={
+            output_path.parent: RuntimeAnalysisSummaryDestination(
+                backend="memory",
+                images_dir="/plate/images",
+            )
+        },
     ).write(
         pd.DataFrame(({"Well": "A01", "Total Cell Count": 7},)),
         output_path=output_path,

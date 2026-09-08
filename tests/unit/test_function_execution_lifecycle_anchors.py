@@ -148,11 +148,16 @@ def test_source_anchored_group_uses_exact_main_flow_producer_manifest() -> None:
             assert selected_plan.main_input_dependency.source_step_index == 2
             return [path for path in paths if "producer" in path]
 
+        def producer_patterns_by_execution_group(
+            self, selected_plan, patterns, _parser
+        ):
+            assert selected_plan.main_input_dependency.source_step_index == 2
+            assert patterns == ("producer-anchor.tif",)
+            return {None: patterns}
+
     manifest = ExactProducerManifest()
     filtered = _anchor_filter(plan, manifest).filtered(
-        PatternGroups(
-            {None: ("unrelated-anchor.tif", "producer-anchor.tif")}
-        )
+        PatternGroups({None: ("unrelated-anchor.tif", "producer-anchor.tif")})
     )
 
     assert manifest.calls == 1

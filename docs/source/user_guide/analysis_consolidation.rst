@@ -26,6 +26,9 @@ materialized analysis artifacts; it is not an image-processing ``FunctionStep``
 and does not reconstruct compiler state.
 
 Keep artifact producers explicit. A callable or module declares its outputs,
-the compiler plans their materialization, and consolidation reads the resulting
-files after successful execution. See
+the compiler plans their materialization, and automatic consolidation consumes
+the tables recorded by the completed execution. Each step-specific results
+directory receives its own summary. When there are several, a merged summary is
+also written at the output plate root. Manual desktop consolidation reads the
+files in the directory you select. See
 :doc:`../architecture/analysis_consolidation_system`.

@@ -2067,7 +2067,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/analysis_consolidation.py",
-        "sha256": "e06ee89b5fb8057069db1c5cd9edafec8c0a5ced7deba0682acec278bf720753",
+        "sha256": "567bf7d912eb8ef2948c54e7ed52c37973180d0d5b4c6bc18ace12d82f11ae8c",
         "role": "Projects execution-ledger CSV content and writes summaries through the compiled persistent backend."
       },
       {
@@ -2962,7 +2962,7 @@
   },
   {
     "path": "docs/source/user_guide/analysis_consolidation.rst",
-    "source_sha256": "6cc615f0408e084ca501100a43e4db2a9bb548b22dcc475ee334f1924d771686",
+    "source_sha256": "ddb564adfdece91f7ea7223bbd8407b78492175b83fa500c2e4449ae82cfc50a",
     "audience": [
       "desktop operators with materialised analysis results"
     ],
@@ -2993,6 +2993,11 @@
         "path": "tests/unit/test_experimental_analysis_engine.py",
         "sha256": "23b5d73def871a4c1f1e60625faf56d4664a315f90ddbddff7fa1ceab2117c17",
         "role": "Proves the documented directory contract and three output files end to end."
+      },
+      {
+        "path": "openhcs/core/orchestrator/analysis_consolidation.py",
+        "sha256": "567bf7d912eb8ef2948c54e7ed52c37973180d0d5b4c6bc18ace12d82f11ae8c",
+        "role": "Owns automatic per-directory consolidation and the merged summary beneath the compiled output plate root."
       }
     ],
     "findings": [

@@ -877,10 +877,11 @@ def test_analysis_consolidation_propagates_runtime_failures(monkeypatch):
         analysis_consolidation_config=SimpleNamespace(enabled=True),
         plate_metadata_config=object(),
         plate_path="/plate",
+        output_plate_root="/output",
         filemanager=object(),
     )
     inputs = analysis_consolidation_module.RuntimeAnalysisConsolidationInputs(
-        outputs_by_directory={},
+        groups={},
         destination=analysis_consolidation_module.RuntimeAnalysisSummaryDestination(
             backend="memory",
             images_dir="/plate/images",

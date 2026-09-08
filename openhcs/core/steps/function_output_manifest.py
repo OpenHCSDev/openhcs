@@ -366,6 +366,40 @@ class StepOutputManifestStore:
         records = self._unique_output_path_records(records)
         return tuple(record.relative_output_path for record in records)
 
+    def producer_patterns_by_execution_group(
+        self,
+        plan: CompiledStepPlan,
+        patterns: Sequence[str],
+        parser: FilenameParser,
+    ) -> dict[str | None, tuple[str, ...]] | None:
+        """Group producer pixels by semantic coordinates, not storage filenames."""
+        records = self._selected_unique_producer_records_for(plan)
+        if records is None:
+            return None
+        component = plan.execution_group_scope.component
+        records_by_group: dict[str | None, list[ProducedOutputSemantics]] = {}
+        for record in records:
+            value = (
+                None
+                if component is None
+                else record.component_values.get(component.value)
+            )
+            key = plan.execution_group_scope.normalize_key(value)
+            if plan.execution_group_scope.contains_runtime_key(key):
+                records_by_group.setdefault(key, []).append(record)
+        selectors = tuple(
+            (pattern, ProducedPathPatternSelector.from_pattern(pattern))
+            for pattern in dict.fromkeys(patterns)
+        )
+        return {
+            key: tuple(
+                pattern
+                for pattern, selector in selectors
+                if selector.matches(ProducedPathSet.from_records(group_records, parser))
+            )
+            for key, group_records in records_by_group.items()
+        }
+
     def produced_records_for(
         self,
         plan: CompiledStepPlan,

@@ -106,6 +106,34 @@ from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
 
+def _source_manifest(plan, paths_and_components):
+    producer = SimpleNamespace(
+        step_scope_id=plan.main_input_dependency.source_step_scope_id,
+        step_name="producer",
+        pipeline_position=plan.main_input_dependency.source_step_index,
+        axis_id=plan.axis_id,
+        output_dir=Path("/memory"),
+    )
+    parser = SourceSchemaFilenameParser()
+    records = []
+    for path, overrides in paths_and_components:
+        components = dict(parser.parse_filename(path).component_wire_mapping())
+        components.update(overrides)
+        records.append(
+            ProducedOutputSemantics.from_output(
+                producer,
+                producer.output_dir / path,
+                FunctionOutputIdentity(
+                    component_values=components, extension=".tif", source="test"
+                ),
+            )
+        )
+    store = StepOutputManifestStore()
+    store.begin_step(producer)
+    store.record_outputs(producer, records)
+    return store
+
+
 @composed_image_payload
 def _compose_image_domain(image: object) -> object:
     return image
@@ -1145,7 +1173,7 @@ def test_step_output_anchor_filter_skips_source_binding_filter() -> None:
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=None,
-        output_manifest=None,
+        output_manifest=StepOutputManifestStore(),
         source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
@@ -1158,6 +1186,7 @@ def test_step_output_anchor_filter_skips_source_binding_filter() -> None:
 
 def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
     plan = SimpleNamespace(
+        axis_id="A01",
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=4,
             source_step_scope_id="object_to_image",
@@ -1171,8 +1200,10 @@ def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
     grouped_patterns = PatternGroups({"2": ("A01_s{iii}_w2_z001_t001.tif",)})
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
-        parser=None,
-        output_manifest=None,
+        parser=SourceSchemaFilenameParser(),
+        output_manifest=_source_manifest(
+            plan, [("A01_s001_w2_z001_t001.tif", {"channel": 0})]
+        ),
         source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
@@ -1212,8 +1243,8 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
-        output_manifest=SimpleNamespace(
-            filter_to_producer_paths=lambda _plan, paths, _parser: tuple(paths)
+        output_manifest=_source_manifest(
+            plan, [("A01_s001_w1_z001_t001.tif", {"channel": 2})]
         ),
         source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
@@ -1352,6 +1383,7 @@ def test_artifact_managed_missing_output_context_is_an_error(
 
 def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> None:
     plan = SimpleNamespace(
+        axis_id="A01",
         main_input_dependency=StepInputDependency.step_output(
             source_step_index=4,
             source_step_scope_id="crop",
@@ -1371,8 +1403,14 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
     )
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
-        parser=None,
-        output_manifest=None,
+        parser=SourceSchemaFilenameParser(),
+        output_manifest=_source_manifest(
+            plan,
+            [
+                ("A01_s001_w1_z001_t001.tif", {}),
+                ("A01_s002_w1_z001_t001.tif", {}),
+            ],
+        ),
         source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
@@ -1406,7 +1444,7 @@ def test_source_anchor_uses_compiler_owned_static_component_scope() -> None:
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=None,
-        output_manifest=None,
+        output_manifest=StepOutputManifestStore(),
         source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
@@ -1483,7 +1521,7 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
-        output_manifest=None,
+        output_manifest=StepOutputManifestStore(),
         source_workspace_authority=SimpleNamespace(
             projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
         ),
@@ -1650,7 +1688,7 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
-        output_manifest=None,
+        output_manifest=StepOutputManifestStore(),
         source_workspace_authority=SimpleNamespace(
             projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
         ),
@@ -1713,7 +1751,7 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
-        output_manifest=None,
+        output_manifest=StepOutputManifestStore(),
         source_workspace_authority=SimpleNamespace(
             projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
         ),
@@ -1772,7 +1810,7 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
-        output_manifest=None,
+        output_manifest=StepOutputManifestStore(),
         source_workspace_authority=SimpleNamespace(
             projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
         ),
@@ -1830,7 +1868,7 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
-        output_manifest=None,
+        output_manifest=StepOutputManifestStore(),
         source_workspace_authority=SimpleNamespace(
             projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
         ),
@@ -1998,9 +2036,7 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
     pattern_filter = StepAnchorPatternFilter(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
-        output_manifest=SimpleNamespace(
-            filter_to_producer_paths=lambda _plan, paths, _parser: paths,
-        ),
+        output_manifest=StepOutputManifestStore(),
         source_workspace_authority=SimpleNamespace(
             projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
         ),

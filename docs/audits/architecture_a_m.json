@@ -134,7 +134,7 @@
   },
   {
     "path": "docs/source/architecture/analysis_consolidation_system.rst",
-    "source_sha256": "ac9414dfc2aab25e9b2992a596b9c824d6cb31266924fab677207bfc10131636",
+    "source_sha256": "58c4305248515b732c2d7deeb2571713aa460eb7b8a09e5e8c7e0095aeeddca2",
     "audience": [
       "OpenHCS runtime maintainers",
       "analysis-output integrators"
@@ -144,8 +144,8 @@
     "authority": [
       {
         "path": "openhcs/core/orchestrator/analysis_consolidation.py",
-        "sha256": "e06ee89b5fb8057069db1c5cd9edafec8c0a5ced7deba0682acec278bf720753",
-        "role": "Projects exact execution-ledger CSV content and the compiled persistent summary destination."
+        "sha256": "567bf7d912eb8ef2948c54e7ed52c37973180d0d5b4c6bc18ace12d82f11ae8c",
+        "role": "Projects execution-ledger CSV content with each result directory's compiled storage context and the global output-plate destination."
       },
       {
         "path": "openhcs/processing/backends/analysis/consolidate_analysis_results.py",
@@ -159,13 +159,18 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "fcf8dd3ae582e2deadc69228a9e5ce00e72c34996cc94a0259ce6130849c801b",
+        "sha256": "4148ccb3e51d21c26f8126d19dd811c84b44f754f857d995889d9d1d24c135f9",
         "role": "Exercises orchestrator lane planning and post-execution analysis boundaries used by consolidation."
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
         "sha256": "5a075a9785925abf518cab78577fe3c80579f4bd283ce361a9cd89b1e65ecd7f",
         "role": "Proves consolidation consumes runtime CSV values, uses the compiled backend destination, ignores non-table artifacts, and propagates failures."
+      },
+      {
+        "path": "tests/unit/test_routed_channel_selection.py",
+        "sha256": "f0f7e10c99f6568048817f38ee10f648bb0b6fb4945cc0fae0f988761557745f",
+        "role": "Executes a native plate with separate analysis destinations and verifies per-directory and merged output summaries without writing a summary into the input plate."
       }
     ],
     "findings": [
@@ -181,7 +186,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete explanation after the parent execution test gained completed-output metadata ordering; exact runtime-observation consolidation remains unchanged and 336 focused tests passed.",
       "On 2026-08-24, re-read the explanation against the execution-ledger table source, nominal summary-writer boundary, FileManager destination adapter, and regression coverage after removing backend path readback and swallowed failures.",
-      "On 2026-08-24, rechecked the complete explanation after consolidation began requesting text through the materialization output contract; the documented ledger and destination ownership remains accurate, and the full installed MCP neurite workflow completed."
+      "On 2026-08-24, rechecked the complete explanation after consolidation began requesting text through the materialization output contract; the documented ledger and destination ownership remains accurate, and the full installed MCP neurite workflow completed.",
+      "On 2026-09-08, re-read the full explanation and documented per-directory storage ownership and output-root global consolidation. The native multi-directory regression passes, and a GUI/MCP POST pilot consolidated all three analysis directories and their merged summary successfully."
     ]
   },
   {
@@ -739,7 +745,7 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "fcf8dd3ae582e2deadc69228a9e5ce00e72c34996cc94a0259ce6130849c801b",
+        "sha256": "4148ccb3e51d21c26f8126d19dd811c84b44f754f857d995889d9d1d24c135f9",
         "role": "Verifies that worker-lane grouping remains correct when context mapping keys do not encode axis identity."
       },
       {

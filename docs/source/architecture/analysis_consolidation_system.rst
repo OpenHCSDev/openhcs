@@ -10,16 +10,18 @@ After a compiled plate finishes successfully,
 ``consolidate_analysis_outputs`` reads the configuration from the compiled
 contexts, projects the exact CSV content recorded in that execution's runtime
 observations, groups it by materialisation directory, and delegates to the
-analysis consolidation functions. The compiled persistent target supplies one
-backend-owned summary destination. Consolidation therefore neither scans a
+analysis consolidation functions. Each directory retains its compiled persistent
+destination. Consolidation therefore neither scans a
 results directory nor treats a virtual backend address as a host file.
 
 The generic consolidation layer reads ``AnalysisTableSource`` values and writes
 through an ``AnalysisSummaryWriter`` ABC. Local desktop consolidation uses a
 filesystem writer. Compiled execution uses a FileManager writer bound to the
 exact persistent backend and obtains save context through that backend's
-``DataSink`` declaration. Per-result and global summaries share this destination;
-the global table is merged in memory rather than read back from storage.
+``DataSink`` declaration. Per-result summaries use their owning step's storage
+context, including step-specific output subdirectories. The global table is
+merged in memory and written beneath the compiled output plate root using the
+shared main-flow storage context. It does not write into the input plate.
 
 Ownership
 ---------

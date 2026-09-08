@@ -264,17 +264,24 @@ class StepAnchorPatternFilter:
 
         pattern = self.plan.compiled_function_pattern
         source_owns_groups = (
-            self.plan.main_input_dependency.kind
-            is not StepInputDependencyKind.STEP_OUTPUT
-            and RuntimeInvocationDomain.from_invocations(
-                tuple(pattern.iter_invocations())
-            )
+            RuntimeInvocationDomain.from_invocations(tuple(pattern.iter_invocations()))
             is RuntimeInvocationDomain.SOURCE_ANCHORED
         )
         if not grouped_patterns.groups:
             return grouped_patterns
 
         if source_owns_groups:
+            producer_groups = self.output_manifest.producer_patterns_by_execution_group(
+                self.plan,
+                tuple(
+                    pattern
+                    for patterns in grouped_patterns.values()
+                    for pattern in patterns
+                ),
+                self.parser,
+            )
+            if producer_groups is not None:
+                return PatternGroups.from_prepared(producer_groups)
             execution_scope = self.plan.execution_group_scope
             return PatternGroups.from_prepared(
                 {

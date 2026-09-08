@@ -45,11 +45,25 @@ class RuntimeAnalysisSummaryDestination:
 
 
 @dataclass(frozen=True, slots=True)
+class RuntimeAnalysisDirectoryInputs:
+    """One result directory's observed tables and compiled storage context."""
+
+    outputs: tuple[RuntimeAnalysisTableOutput, ...]
+    destination: RuntimeAnalysisSummaryDestination
+
+
+@dataclass(frozen=True, slots=True)
 class RuntimeAnalysisConsolidationInputs:
     """Execution-ledger tables and their compiled summary destination."""
 
-    outputs_by_directory: Mapping[Path, tuple[RuntimeAnalysisTableOutput, ...]]
+    groups: Mapping[Path, RuntimeAnalysisDirectoryInputs]
     destination: RuntimeAnalysisSummaryDestination
+
+    @property
+    def outputs_by_directory(
+        self,
+    ) -> Mapping[Path, tuple[RuntimeAnalysisTableOutput, ...]]:
+        return {directory: group.outputs for directory, group in self.groups.items()}
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,7 +71,7 @@ class FileManagerAnalysisSummaryWriter(AnalysisSummaryWriter):
     """Persist summaries through the compiled PolyStore destination."""
 
     filemanager: FileManager
-    destination: RuntimeAnalysisSummaryDestination
+    destinations: Mapping[Path, RuntimeAnalysisSummaryDestination]
 
     def write(
         self,
@@ -68,6 +82,7 @@ class FileManagerAnalysisSummaryWriter(AnalysisSummaryWriter):
         analysis_consolidation_config: AnalysisConsolidationConfig,
         plate_metadata_config: PlateMetadataConfig,
     ) -> None:
+        destination = self.destinations[results_dir]
         content = consolidated_analysis_summary_csv(
             summary_df,
             results_dir,
@@ -76,16 +91,16 @@ class FileManagerAnalysisSummaryWriter(AnalysisSummaryWriter):
         )
         self.filemanager.ensure_directory(
             output_path.parent,
-            self.destination.backend,
+            destination.backend,
         )
         save_kwargs = self.filemanager.contextual_save_kwargs(
-            self.destination.backend,
-            images_dir=self.destination.images_dir,
+            destination.backend,
+            images_dir=destination.images_dir,
         )
         self.filemanager.save(
             content,
             str(output_path),
-            self.destination.backend,
+            destination.backend,
             **save_kwargs,
         )
 
@@ -115,14 +130,26 @@ def consolidate_analysis_outputs(
     if consolidation_inputs is None:
         return
 
+    if first_context.output_plate_root is None:
+        raise ValueError(
+            "Analysis consolidation requires the compiled output plate root."
+        )
+    output_plate_root = Path(first_context.output_plate_root)
+
     successful_dirs, failed_dirs = consolidate_runtime_analysis_table_output_groups(
         analysis_outputs_by_directory=consolidation_inputs.outputs_by_directory,
-        plate_path=Path(first_context.plate_path),
+        plate_path=output_plate_root,
         analysis_consolidation_config=analysis_consolidation_config,
         plate_metadata_config=first_context.plate_metadata_config,
         summary_writer=FileManagerAnalysisSummaryWriter(
             filemanager=first_context.filemanager,
-            destination=consolidation_inputs.destination,
+            destinations={
+                **{
+                    directory: group.destination
+                    for directory, group in consolidation_inputs.groups.items()
+                },
+                output_plate_root: consolidation_inputs.destination,
+            },
         ),
     )
 
@@ -156,9 +183,11 @@ def execution_analysis_outputs(
                 [],
             ).extend(context_observation.records)
 
-    outputs_by_directory: dict[Path, list[RuntimeAnalysisTableOutput]] = {}
+    output_groups: dict[
+        tuple[Path, RuntimeAnalysisSummaryDestination], list[RuntimeAnalysisTableOutput]
+    ] = {}
     destinations: set[RuntimeAnalysisSummaryDestination] = set()
-    seen_paths: set[Path] = set()
+    seen_paths: set[tuple[str, Path]] = set()
     for context_key, records in records_by_context.items():
         context = compiled_contexts[context_key]
         current_records = tuple(records)
@@ -174,13 +203,12 @@ def execution_analysis_outputs(
                     not materialization.spec.participates_in_runtime_export_observation()
                 ):
                     continue
-                destinations.add(
-                    RuntimeAnalysisSummaryDestination(
-                        backend=(
-                            step_plan.runtime_artifact_materialization.require_persistent_backend()
-                        ),
-                        images_dir=str(step_plan.artifact_images_dir),
-                    )
+                backend = (
+                    step_plan.runtime_artifact_materialization.require_persistent_backend()
+                )
+                destination = RuntimeAnalysisSummaryDestination(
+                    backend=backend,
+                    images_dir=step_plan.artifact_images_dir,
                 )
                 for output in materialization.outputs(step_plan, context):
                     output_path = Path(output.path)
@@ -189,10 +217,18 @@ def execution_analysis_outputs(
                         context.analysis_consolidation_config,
                     ):
                         continue
-                    if output_path in seen_paths:
+                    if (backend, output_path) in seen_paths:
                         continue
-                    seen_paths.add(output_path)
-                    outputs_by_directory.setdefault(output_path.parent, []).append(
+                    seen_paths.add((backend, output_path))
+                    destinations.add(
+                        RuntimeAnalysisSummaryDestination(
+                            backend=backend,
+                            images_dir=str(step_plan.output_dir),
+                        )
+                    )
+                    output_groups.setdefault(
+                        (output_path.parent, destination), []
+                    ).append(
                         runtime_analysis_table_output(
                             materialization,
                             output_path=output_path,
@@ -201,17 +237,20 @@ def execution_analysis_outputs(
                         )
                     )
 
-    if not outputs_by_directory:
+    if not output_groups:
         return None
     if len(destinations) != 1:
         raise RuntimeError(
-            "Analysis outputs do not share one compiled persistent destination: "
+            "Analysis outputs do not share one compiled main-flow summary destination: "
             f"{sorted(destinations, key=lambda value: (value.backend, value.images_dir))!r}."
         )
     return RuntimeAnalysisConsolidationInputs(
-        outputs_by_directory={
-            results_directory: tuple(outputs)
-            for results_directory, outputs in outputs_by_directory.items()
+        groups={
+            results_directory: RuntimeAnalysisDirectoryInputs(
+                outputs=tuple(outputs),
+                destination=destination,
+            )
+            for (results_directory, destination), outputs in output_groups.items()
         },
         destination=destinations.pop(),
     )
