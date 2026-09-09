@@ -15,10 +15,14 @@ from openhcs.agent.dto.ui_bridge import (
     UiStateSurfaceSummary,
 )
 from openhcs.core.config import PathPlanningConfig
+from openhcs.core.debug_session_projection import DebugSessionPhase
 from openhcs.core.execution_state import (
     TerminalExecutionStatus,
 )
-from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+from openhcs.core.orchestrator.orchestrator import (
+    OrchestratorState,
+    PipelineOrchestrator,
+)
 from openhcs.core.pipeline.path_planner import PipelinePathPlanner
 from openhcs.core.progress.projection import PlateRuntimeProjection
 from openhcs.core.selection import SelectedAllSelectionMode
@@ -131,6 +135,100 @@ class PlateManagerOutputPlateRelationAuthority:
         return default_path_config
 
 
+@dataclass(frozen=True, slots=True)
+class PlateRowActivityProjection:
+    """Ephemeral view of existing work owners, independent of path planning."""
+
+    manager: "PlateManagerWidget"
+    row: PlateManagerRow
+
+    @property
+    def initialized(self) -> bool:
+        orchestrator = ObjectStateRegistry.get_object(self.row.scope_id)
+        return (
+            isinstance(orchestrator, PipelineOrchestrator)
+            and orchestrator.state.has_completed_initialization
+        )
+
+    @property
+    def orchestrator_state(self) -> OrchestratorState | None:
+        terminal = self.terminal_status
+        if terminal is not None:
+            return terminal.orchestrator_state
+        orchestrator = ObjectStateRegistry.get_object(self.row.scope_id)
+        return (
+            orchestrator.state
+            if isinstance(orchestrator, PipelineOrchestrator)
+            else None
+        )
+
+    @property
+    def execution_id(self) -> str | None:
+        return self.manager.plate_terminal_activity_status.execution_id(
+            self.row.scope_id
+        )
+
+    @property
+    def terminal_status(self) -> TerminalExecutionStatus | None:
+        return self.manager.plate_terminal_activity_status.terminal_status(
+            self.row.scope_id
+        )
+
+    @property
+    def runtime_projection(self) -> PlateRuntimeProjection | None:
+        execution_id = self.execution_id
+        if self.terminal_status is not None or execution_id is None:
+            return None
+        return self.manager.runtime_progress_projection.get_plate(
+            plate_id=self.row.scope_id, execution_id=execution_id
+        )
+
+    @property
+    def execution_active(self) -> bool:
+        runtime = self.runtime_projection
+        return self.terminal_status is None and (
+            self.manager.plate_terminal_activity_status.is_active(self.row.scope_id)
+            or (runtime is not None and not runtime.is_terminal)
+        )
+
+    @property
+    def debug_phase(self) -> DebugSessionPhase | None:
+        scope = self.row.scope_id
+        if (
+            self.manager.debug_session_for_plate(scope) is None
+            and self.manager.debug_terminal_summary_for_plate(scope) is None
+        ):
+            return None
+        return DebugToolbarActionProjector.phase(
+            self.manager.debug_session_context_for_plate(scope)
+        )
+
+    @property
+    def debug_session_id(self) -> str | None:
+        scope = self.row.scope_id
+        session = self.manager.debug_session_for_plate(scope)
+        if session is not None:
+            return session.debug_session_id
+        summary = self.manager.debug_terminal_summary_for_plate(scope)
+        return None if summary is None else summary.debug_session_id
+
+    @property
+    def status_prefix(self) -> str:
+        phase = self.debug_phase
+        if phase is not None:
+            prefix = PlateStatusPresenter.build_debug_status_prefix(debug_phase=phase)
+            if prefix:
+                return prefix
+        return PlateStatusPresenter.build_status_prefix(
+            orchestrator_state=self.orchestrator_state,
+            is_init_pending=self.row.scope_id in self.manager.plate_init_pending,
+            is_compile_pending=self.row.scope_id in self.manager.plate_compile_pending,
+            is_execution_active=self.execution_active,
+            terminal_status=self.terminal_status,
+            runtime_projection=self.runtime_projection,
+        )
+
+
 class PlateManagerStateProjectionService:
     """Build the single PlateManager state projection used by UI and bridge code."""
 
@@ -199,148 +297,42 @@ class PlateManagerStateProjectionService:
         selected_scope_ids: set[str],
         output_relation: PlateManagerOutputPlateRelation,
     ) -> UiPlateManagerRowState:
-        plate_key = row.scope_id
-        orchestrator = ObjectStateRegistry.get_object(plate_key)
-        orchestrator_state = None
-        initialized = False
-        if isinstance(orchestrator, PipelineOrchestrator):
-            orchestrator_state = orchestrator.state
-            initialized = orchestrator_state.has_completed_initialization
-
-        execution_id = manager.plate_terminal_activity_status.execution_id(plate_key)
-        runtime_projection = None
-        if execution_id is not None:
-            runtime_projection = manager.runtime_progress_projection.get_plate(
-                plate_id=plate_key,
-                execution_id=execution_id,
-            )
-        terminal_status = manager.plate_terminal_activity_status.terminal_status(
-            plate_key
-        )
-        effective_orchestrator_state = self._effective_orchestrator_state(
-            orchestrator_state,
-            terminal_status,
-        )
-        status_runtime_projection = self._status_runtime_projection(
-            runtime_projection,
-            terminal_status,
-        )
-        execution_active = terminal_status is None and (
-            manager.plate_terminal_activity_status.is_active(plate_key)
-            or self._is_active_runtime_projection(runtime_projection)
-        )
-        queue_position = (
-            None
-            if status_runtime_projection is None
-            else status_runtime_projection.queue_position
-        )
-        status_prefix = PlateStatusPresenter.build_status_prefix(
-            orchestrator_state=effective_orchestrator_state,
-            is_init_pending=plate_key in manager.plate_init_pending,
-            is_compile_pending=plate_key in manager.plate_compile_pending,
-            is_execution_active=execution_active,
-            terminal_status=terminal_status,
-            runtime_projection=status_runtime_projection,
-        )
-        debug_context = manager.debug_session_context_for_plate(plate_key)
-        debug_session = manager.debug_session_for_plate(plate_key)
-        terminal_summary = manager.debug_terminal_summary_for_plate(plate_key)
-        debug_phase = None
-        debug_session_id = None
-        if debug_session is not None or terminal_summary is not None:
-            projected_debug_phase = DebugToolbarActionProjector.phase(debug_context)
-            debug_prefix = PlateStatusPresenter.build_debug_status_prefix(
-                debug_phase=projected_debug_phase,
-            )
-            if debug_prefix:
-                status_prefix = debug_prefix
-            debug_phase = projected_debug_phase.value
-        if debug_session is not None:
-            debug_session_id = debug_session.debug_session_id
-        elif terminal_summary is not None:
-            debug_session_id = terminal_summary.debug_session_id
-
+        activity = self.activity_for(manager, row)
+        orchestrator_state = activity.orchestrator_state
+        terminal_status = activity.terminal_status
+        runtime = activity.runtime_projection
+        debug_phase = activity.debug_phase
         return UiPlateManagerRowState(
-            plate_scope_id=plate_key,
+            plate_scope_id=row.scope_id,
             name=row.name,
             plate_root=row.plate_root,
             cppipe_path=row.cppipe_path,
-            selected=plate_key in selected_scope_ids,
-            initialized=initialized,
-            compiled=plate_key in manager.plate_compiled_data,
-            init_pending=plate_key in manager.plate_init_pending,
-            compile_pending=plate_key in manager.plate_compile_pending,
-            execution_active=execution_active,
-            status_prefix=status_prefix,
-            orchestrator_state=self._orchestrator_state_value(
-                effective_orchestrator_state
+            selected=row.scope_id in selected_scope_ids,
+            initialized=activity.initialized,
+            compiled=row.scope_id in manager.plate_compiled_data,
+            init_pending=row.scope_id in manager.plate_init_pending,
+            compile_pending=row.scope_id in manager.plate_compile_pending,
+            execution_active=activity.execution_active,
+            status_prefix=activity.status_prefix,
+            orchestrator_state=(
+                None if orchestrator_state is None else orchestrator_state.value
             ),
-            execution_id=execution_id,
-            terminal_status=self._terminal_status_value(terminal_status),
-            runtime_state=self._runtime_state_value(status_runtime_projection),
-            runtime_percent=self._runtime_percent(status_runtime_projection),
-            queue_position=queue_position,
+            execution_id=activity.execution_id,
+            terminal_status=None if terminal_status is None else terminal_status.value,
+            runtime_state=None if runtime is None else runtime.state.value,
+            runtime_percent=None if runtime is None else runtime.percent,
+            queue_position=None if runtime is None else runtime.queue_position,
             output_plate_scope_id=output_relation.output_plate_scope_id,
             output_plate_root=output_relation.output_plate_root,
             source_plate_scope_id=output_relation.source_plate_scope_id,
             source_plate_root=output_relation.source_plate_root,
-            debug_phase=debug_phase,
-            debug_session_id=debug_session_id,
-            scope_accent_color=self.scope_accent_color(plate_key),
+            debug_phase=None if debug_phase is None else debug_phase.value,
+            debug_session_id=activity.debug_session_id,
+            scope_accent_color=self.scope_accent_color(row.scope_id),
         )
 
     @staticmethod
-    def _status_runtime_projection(
-        runtime_projection: PlateRuntimeProjection | None,
-        terminal_status: TerminalExecutionStatus | None,
-    ) -> PlateRuntimeProjection | None:
-        if terminal_status is not None:
-            return None
-        return runtime_projection
-
-    @staticmethod
-    def _is_active_runtime_projection(
-        runtime_projection: PlateRuntimeProjection | None,
-    ) -> bool:
-        if runtime_projection is None:
-            return False
-        return not runtime_projection.is_terminal
-
-    @staticmethod
-    def _effective_orchestrator_state(
-        orchestrator_state,
-        terminal_status: TerminalExecutionStatus | None,
-    ):
-        if terminal_status is None:
-            return orchestrator_state
-        return terminal_status.orchestrator_state
-
-    @staticmethod
-    def _orchestrator_state_value(orchestrator_state) -> str | None:
-        if orchestrator_state is None:
-            return None
-        return orchestrator_state.value
-
-    @staticmethod
-    def _terminal_status_value(
-        terminal_status: TerminalExecutionStatus | None,
-    ) -> str | None:
-        if terminal_status is None:
-            return None
-        return terminal_status.value
-
-    @staticmethod
-    def _runtime_state_value(
-        runtime_projection: PlateRuntimeProjection | None,
-    ) -> str | None:
-        if runtime_projection is None:
-            return None
-        return runtime_projection.state.value
-
-    @staticmethod
-    def _runtime_percent(
-        runtime_projection: PlateRuntimeProjection | None,
-    ) -> float | None:
-        if runtime_projection is None:
-            return None
-        return runtime_projection.percent
+    def activity_for(
+        manager: "PlateManagerWidget", row: PlateManagerRow
+    ) -> PlateRowActivityProjection:
+        return PlateRowActivityProjection(manager, row)

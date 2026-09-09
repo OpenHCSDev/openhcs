@@ -28,6 +28,7 @@ from openhcs.core.progress import (
     ProgressIdentity,
     ProgressPhase,
     ProgressStatus,
+    registry,
 )
 from openhcs.core.progress.live_measurements import (
     LiveMeasurementProgressPayload,
@@ -42,8 +43,10 @@ from openhcs.core.runtime_stores import RuntimeArtifactAddress, RuntimeArtifactL
 from openhcs.pyqt_gui.config import ProgressUIConfig
 from openhcs.pyqt_gui.services.plate_manager_batch_workflow import (
     DebugSnapshotAvailableNotification,
+    PlateManagerBatchWorkflow,
 )
 from openhcs.pyqt_gui.services.plate_manager_row import PlateManagerRow
+from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.widgets.shared.services import execution_submission_service
 from openhcs.pyqt_gui.widgets.shared.services.batch_context import (
     BatchWorkflowContext,
@@ -580,6 +583,8 @@ class CompilePlateRowHostHarness:
     def __init__(self) -> None:
         self.execution_state = ManagerExecutionState.IDLE
         self.plate_compile_pending = set()
+        self.plate_init_pending = set()
+        self._progress_tracker = registry()
         self.plate_compiled_data = {}
         self.plate_terminal_activity_status = ExecutionBatchRuntime()
         self.cleared_tracking = []
@@ -592,6 +597,11 @@ class CompilePlateRowHostHarness:
         self.compilation_errors = []
         self.orchestrator_states = []
         self.compiled_states = []
+
+    require_pipeline_definition_mutation_allowed = (
+        PlateManagerWidget.require_pipeline_definition_mutation_allowed
+    )
+    plate_has_active_work = PlateManagerWidget.plate_has_active_work
 
     def emit_progress_started(self, total: int) -> None:
         self.progress_started.append(total)
@@ -636,6 +646,123 @@ class CompilePlateRowHostHarness:
         self.compiled_states.append((plate_path, compiled_state))
 
 
+class ExecutionAdmissionHost(CompilePlateRowHostHarness):
+    def __init__(self):
+        super().__init__()
+        self.errors = []
+        self.resets = []
+
+    def reset_live_measurements(self):
+        self.resets.append("measurements")
+
+    def emit_clear_logs(self):
+        self.resets.append("logs")
+
+    def emit_error(self, message):
+        self.errors.append(message)
+
+    def refresh_execution_ui(self):
+        self.update_button_states()
+
+
+def admission_workflow(host, connect):
+    workflow = object.__new__(PlateManagerBatchWorkflow)
+    workflow.host = host
+    workflow._connect_progress_client = connect
+    workflow.components = SimpleNamespace(
+        progress_workflow=SimpleNamespace(
+            reset_for_new_batch=lambda: host.resets.append("progress")
+        ),
+        execution_control=ExecutionControlService(
+            host=host,
+            context=_context(ClientServiceHarness()),
+            port=7777,
+            endpoint_shutdown_service=None,
+        ),
+    )
+    return workflow
+
+
+async def invoke_admission_workflow(workflow, debug, plate="/target"):
+    if debug:
+        await workflow.run_debug_plate(
+            plate_path=plate,
+            debug_session_id="test-session",
+            snapshot_store_ref="/unused",
+            command_type=DebugCommandType.RUN,
+        )
+    else:
+        await workflow.run_plates([PlateManagerRow.from_scope(plate)])
+
+
+@pytest.mark.parametrize("debug", (False, True))
+@pytest.mark.parametrize(
+    "pending_owner", ("plate_compile_pending", "plate_init_pending")
+)
+def test_run_and_debug_reject_pending_target_before_any_mutation(debug, pending_owner):
+    host = ExecutionAdmissionHost()
+    getattr(host, pending_owner).add("/target")
+
+    async def must_not_connect():
+        pytest.fail("Rejected execution must not connect")
+
+    workflow = admission_workflow(host, must_not_connect)
+    with pytest.raises(RuntimeError, match="affected plate"):
+        asyncio.run(invoke_admission_workflow(workflow, debug))
+    assert host.execution_state is ManagerExecutionState.IDLE
+    assert not host.plate_terminal_activity_status.active_plates
+    assert not host.resets
+    assert not host.errors
+
+
+@pytest.mark.parametrize("debug", (False, True))
+def test_run_and_debug_cannot_replace_unrelated_active_execution_batch(debug):
+    host = ExecutionAdmissionHost()
+    host.execution_state = ManagerExecutionState.RUNNING
+    host.plate_terminal_activity_status.begin_batch(["/running"])
+    host.plate_terminal_activity_status.record_execution("/running", "original-run")
+
+    async def must_not_connect():
+        pytest.fail("Rejected execution must not connect")
+
+    with pytest.raises(RuntimeError, match="already active"):
+        asyncio.run(
+            invoke_admission_workflow(admission_workflow(host, must_not_connect), debug)
+        )
+    assert host.plate_terminal_activity_status.active_plates == ("/running",)
+    assert (
+        host.plate_terminal_activity_status.execution_id("/running") == "original-run"
+    )
+    assert host.execution_state is ManagerExecutionState.RUNNING
+    assert not host.resets
+
+
+@pytest.mark.parametrize("debug", (False, True))
+def test_run_and_debug_reserve_before_connect_and_release_on_connection_failure(debug):
+    host = ExecutionAdmissionHost()
+    host.plate_compile_pending.add("/unrelated")
+
+    async def connect():
+        assert host.execution_state is ManagerExecutionState.RUNNING
+        assert host.plate_terminal_activity_status.active_plates == ("/target",)
+        with pytest.raises(RuntimeError, match="affected plate"):
+            host.require_pipeline_definition_mutation_allowed("/target")
+        with pytest.raises(RuntimeError, match="already active"):
+            workflow.require_execution_admission(["/another"])
+        raise RuntimeError("controlled connection failure")
+
+    workflow = admission_workflow(host, connect)
+    asyncio.run(invoke_admission_workflow(workflow, debug))
+    assert host.execution_state is ManagerExecutionState.IDLE
+    assert not host.plate_terminal_activity_status.active_plates
+    assert (
+        host.plate_terminal_activity_status.terminal_status("/target")
+        is TerminalExecutionStatus.FAILED
+    )
+    assert host.plate_compile_pending == {"/unrelated"}
+    assert len(host.errors) == 1
+
+
 class RecordingPlateRequestBuilder:
     """Compile-job builder that records the row contract it receives."""
 
@@ -666,11 +793,95 @@ class RecordingCompileBatchEngine:
         return {}
 
 
+@pytest.mark.parametrize("fails", (False, True))
+def test_compile_other_plate_preserves_active_execution_authority_and_reserves_before_connect(
+    fails,
+):
+    host = CompilePlateRowHostHarness()
+    host.execution_state = ManagerExecutionState.RUNNING
+    host.plate_terminal_activity_status.begin_batch(("/running",))
+    host.plate_terminal_activity_status.record_execution("/running", "original-run")
+    row = PlateManagerRow.from_scope("/other")
+    client_service = ClientServiceHarness()
+
+    async def connect():
+        assert host.plate_compile_pending == {"/other"}
+        with pytest.raises(RuntimeError, match="affected plate"):
+            host.require_pipeline_definition_mutation_allowed("/other")
+        assert host.plate_terminal_activity_status.active_plates == ("/running",)
+        assert (
+            host.plate_terminal_activity_status.execution_id("/running")
+            == "original-run"
+        )
+        return object()
+
+    class ControlledCompile:
+        async def submit_compile_job(self, **kwargs):
+            assert kwargs["job"].plate_path == "/other"
+            return "other-compile"
+
+        async def wait_compile_job(self, **kwargs):
+            assert (
+                host.plate_terminal_activity_status.execution_id("/running")
+                == "original-run"
+            )
+            assert host.plate_terminal_activity_status.active_plates == ("/running",)
+            assert host.plate_terminal_activity_status.execution_id("/other") is None
+            if fails:
+                raise RuntimeError("controlled compile failure")
+            return CompiledArtifactInspection(
+                compile_artifact_id="other-compile", plate_id="/other", steps=()
+            )
+
+    service = CompileBatchWorkflowService(
+        host=host,
+        context=_context(client_service, connect_progress_client=connect),
+        plate_request_builder=RecordingPlateRequestBuilder(),
+        compile_workflow=ControlledCompile(),
+    )
+    asyncio.run(service.compile_plates([row]))
+    assert not host.plate_compile_pending
+    assert host.plate_terminal_activity_status.active_plates == ("/running",)
+    assert (
+        host.plate_terminal_activity_status.execution_id("/running") == "original-run"
+    )
+    assert host.execution_state is ManagerExecutionState.RUNNING
+    assert host.plate_terminal_activity_status.terminal_counts() == (0, 0)
+    assert client_service.disconnect_calls == 0
+    assert bool(host.compilation_errors) is fails
+    assert ("/other" in host.plate_compiled_data) is not fails
+    host.plate_terminal_activity_status.mark_terminal(
+        "/running", TerminalExecutionStatus.COMPLETE
+    )
+    assert host.plate_terminal_activity_status.all_batch_terminal()
+    assert host.plate_terminal_activity_status.terminal_counts() == (1, 0)
+
+
+def test_compile_connection_failure_releases_only_its_reserved_plate():
+    host = CompilePlateRowHostHarness()
+    host.plate_terminal_activity_status.begin_batch(("/running",))
+    host.plate_terminal_activity_status.record_execution("/running", "original-run")
+
+    async def connect():
+        raise RuntimeError("controlled connection failure")
+
+    service = CompileBatchWorkflowService(
+        host=host,
+        context=_context(ClientServiceHarness(), connect_progress_client=connect),
+    )
+    with pytest.raises(RuntimeError, match="controlled connection failure"):
+        asyncio.run(service.compile_plates([PlateManagerRow.from_scope("/other")]))
+    assert not host.plate_compile_pending
+    assert (
+        host.plate_terminal_activity_status.execution_id("/running") == "original-run"
+    )
+
+
 @pytest.mark.parametrize(
     ("execution_state", "expected_disconnect_calls"),
     (
         (ManagerExecutionState.IDLE, 0),
-        (ManagerExecutionState.STOPPING, 1),
+        (ManagerExecutionState.STOPPING, 0),
     ),
 )
 def test_compile_plates_obeys_gui_client_lifecycle_policy(
@@ -701,7 +912,7 @@ def test_compile_plates_obeys_gui_client_lifecycle_policy(
 
     assert builder.rows == [row]
     assert [job.plate_path for job in engine.jobs] == [row.scope_id]
-    assert host.cleared_tracking == [row.scope_id]
+    assert host.cleared_tracking == []
     assert host.progress_started == []
     assert host.progress_updated == []
     assert host.progress_finished == 0

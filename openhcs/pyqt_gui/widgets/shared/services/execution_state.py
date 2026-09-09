@@ -17,6 +17,12 @@ class ExecutionBatchMember:
 
     execution_id: str | None = None
     terminal_status: TerminalExecutionStatus | None = None
+    superseded: bool = False
+
+    @property
+    def current_terminal_status(self) -> TerminalExecutionStatus | None:
+        """Current row activity, distinct from this member's batch outcome."""
+        return None if self.superseded else self.terminal_status
 
     @property
     def active(self) -> bool:
@@ -81,7 +87,19 @@ class ExecutionBatchRuntime:
 
     def terminal_status(self, plate_path: str) -> TerminalExecutionStatus | None:
         member = self._members_by_plate.get(plate_path)
-        return None if member is None else member.terminal_status
+        return None if member is None else member.current_terminal_status
+
+    def supersede_terminal(self, plate_path: str) -> str | None:
+        """End terminal row activity while retaining the completed batch outcome."""
+        member = self._members_by_plate.get(plate_path)
+        if member is None:
+            return None
+        if member.active:
+            raise RuntimeError("Cannot supersede an active execution batch member.")
+        self._members_by_plate[plate_path] = replace(
+            member, execution_id=None, superseded=True
+        )
+        return member.execution_id
 
     def terminal_items(self) -> tuple[tuple[str, TerminalExecutionStatus], ...]:
         """Project terminal outcomes in stable batch order."""

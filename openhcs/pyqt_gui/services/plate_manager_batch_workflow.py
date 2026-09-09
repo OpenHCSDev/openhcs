@@ -96,7 +96,6 @@ class PlateManagerBatchWorkflow:
 
     async def compile_plates(self, selected_items: list[PlateManagerRow]) -> None:
         """Compile pipelines for selected plates."""
-        self.components.progress_workflow.reset_for_new_batch()
         await self.components.compile_batch.compile_plates(selected_items)
 
     def add_debug_snapshot_listener(
@@ -123,11 +122,29 @@ class PlateManagerBatchWorkflow:
 
         self.components.runtime_artifacts.add_listener(listener)
 
+    def require_execution_admission(self, plate_paths: list[str]) -> None:
+        """Protect the single execution batch and each requested plate scope."""
+        if (
+            self.host.execution_state.busy
+            or self.host.plate_terminal_activity_status.active_plates
+        ):
+            raise RuntimeError("An execution batch is already active.")
+        for plate_path in plate_paths:
+            self.host.require_pipeline_definition_mutation_allowed(plate_path)
+
+    def _begin_execution_batch(self, plate_paths: list[str]) -> None:
+        """Reserve the existing batch owner before any connection await."""
+        self.require_execution_admission(plate_paths)
+        self.host.plate_terminal_activity_status.begin_batch(plate_paths)
+        self.host.execution_state = ManagerExecutionState.RUNNING
+        self.host.update_button_states()
+
     async def run_plates(self, ready_items: list[PlateManagerRow]) -> None:
         """Run selected plates using compile-all then execute-all workflow."""
         loop = asyncio.get_event_loop()
+        plate_paths = [row.scope_id for row in ready_items]
+        self._begin_execution_batch(plate_paths)
         try:
-            plate_paths = [row.scope_id for row in ready_items]
             logger.info("Starting ZMQ execution for %d plates", len(plate_paths))
 
             self.components.progress_workflow.reset_for_new_batch()
@@ -137,7 +154,6 @@ class PlateManagerBatchWorkflow:
             await self._connect_progress_client()
 
             self.host.supersede_debug_terminal_summaries_for_standard_run(plate_paths)
-            self.host.plate_terminal_activity_status.begin_batch(plate_paths)
 
             from objectstate import ObjectStateRegistry
 
@@ -151,7 +167,6 @@ class PlateManagerBatchWorkflow:
                         OrchestratorState.EXECUTING,
                     )
 
-            self.host.execution_state = ManagerExecutionState.RUNNING
             self.host.emit_status(
                 f"Compiling {len(ready_items)} plate(s) before execution..."
             )
@@ -200,11 +215,10 @@ class PlateManagerBatchWorkflow:
         """Compile one plate and submit a bounded debug execution."""
 
         loop = asyncio.get_event_loop()
+        self._begin_execution_batch([plate_path])
         try:
             await self._connect_progress_client()
             self.components.progress_workflow.reset_for_new_batch()
-            self.host.plate_terminal_activity_status.begin_batch([plate_path])
-            self.host.execution_state = ManagerExecutionState.RUNNING
             self.host.emit_status(f"Compiling debug run for {plate_path}...")
             self.host.update_button_states()
             self.host.update_item_list()

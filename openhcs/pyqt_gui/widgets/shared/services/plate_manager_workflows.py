@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 from objectstate.object_state import ObjectState, ObjectStateRegistry
+from objectstate.value_semantics import semantic_values_equal
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.orchestrator import OrchestratorState
 from openhcs.core.selection import (
@@ -16,7 +17,10 @@ from openhcs.core.selection import (
     SelectedScopeIdsCarrier,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
+from openhcs.ui.shared.plate_scope_identity import (
+    PipelineScopeIdentity,
+    PlateScopeIdentity,
+)
 from openhcs.pyqt_gui.services.plate_manager_root_state import (
     root_orchestrator_scope_ids,
 )
@@ -83,6 +87,10 @@ class PlateManagerCodeMutationScope(
             )
 
     @abstractmethod
+    def commits_global_draft(self, state: ObjectState | None) -> bool:
+        """Whether this document scope also commits an unchanged global draft."""
+
+    @abstractmethod
     def synchronize(
         self,
         workflow: "PlateManagerCodeWorkflow",
@@ -95,6 +103,9 @@ class SelectedPlateManagerCodeMutationScope(PlateManagerCodeMutationScope):
     """Upsert selected rows while preserving every unmentioned plate."""
 
     mode = SelectedAllSelectionMode.SELECTED
+
+    def commits_global_draft(self, state: ObjectState | None) -> bool:
+        return False
 
     def synchronize(
         self,
@@ -109,6 +120,9 @@ class AllPlateManagerCodeMutationScope(PlateManagerCodeMutationScope):
     """Make the complete visible collection match an all-scope document."""
 
     mode = SelectedAllSelectionMode.ALL
+
+    def commits_global_draft(self, state: ObjectState | None) -> bool:
+        return bool(state and state.dirty_fields)
 
     def synchronize(
         self,
@@ -142,13 +156,47 @@ class PlateManagerCodeWorkflow(ManagerCodeExecutionWorkflow):
     ) -> bool:
         """Apply one already validated canonical plate-manager payload."""
 
-        self.manager.require_pipeline_definition_mutation_allowed()
-
+        self.mutation_scope.require_payload_scope(payload.plate_paths)
+        global_state = ObjectStateRegistry.get_by_scope("")
+        global_changed = self.mutation_scope.commits_global_draft(
+            global_state
+        ) or not semantic_values_equal(
+            self.manager._current_global_config_for_code_document(),
+            payload.global_pipeline_config,
+        )
+        changed_configs = {
+            path: config
+            for path, config in payload.per_plate_configs.items()
+            if ObjectStateRegistry.get_by_scope(path) is None
+            or ObjectStateRegistry.get_by_scope(path).dirty_fields
+            or not semantic_values_equal(
+                self.manager.authored_pipeline_config_for_code_document(path), config
+            )
+        }
+        changed_pipelines = {}
+        for path, submitted_steps in payload.pipeline_data.items():
+            pipeline_state = ObjectStateRegistry.get_by_scope(
+                PipelineScopeIdentity.from_plate_scope(path).scope_id
+            )
+            current_steps = (
+                PipelineObjectStateBinding.steps_for_plate(path)
+                if pipeline_state is not None
+                else []
+            )
+            if len(current_steps) != len(submitted_steps) or not all(
+                current.same_declaration(submitted)
+                for current, submitted in zip(current_steps, submitted_steps)
+            ):
+                changed_pipelines[path] = submitted_steps
+        if global_changed:
+            self.manager.require_pipeline_definition_mutation_allowed()
+        for path in changed_configs.keys() | changed_pipelines.keys():
+            self.manager.require_pipeline_definition_mutation_allowed(path)
         self.mutation_scope.synchronize(self, payload)
-
-        self.apply_global_config(payload.global_pipeline_config)
-        self.apply_per_plate_configs(payload.per_plate_configs)
-        self.apply_pipeline_data(payload.pipeline_data)
+        if global_changed:
+            self.apply_global_config(payload.global_pipeline_config)
+        self.apply_per_plate_configs(changed_configs)
+        self.apply_pipeline_data(changed_pipelines)
         return True
 
     def validate_namespace(self, namespace) -> bool:
@@ -260,8 +308,9 @@ class PlateManagerCodeWorkflow(ManagerCodeExecutionWorkflow):
         self,
         per_plate_configs: dict[str, PipelineConfig],
     ) -> None:
-        self.manager.require_pipeline_definition_mutation_allowed()
         last_pipeline_config = None
+        for plate_path in per_plate_configs:
+            self.manager.require_pipeline_definition_mutation_allowed(str(plate_path))
         for plate_path, pipeline_config in per_plate_configs.items():
             plate_key = str(plate_path)
             self.manager.plate_configs[plate_key] = pipeline_config
@@ -326,7 +375,8 @@ class PlateManagerCodeWorkflow(ManagerCodeExecutionWorkflow):
         )
 
     def apply_pipeline_data(self, pipeline_data: dict[str, list[FunctionStep]]) -> None:
-        self.manager.require_pipeline_definition_mutation_allowed()
+        for plate_path in pipeline_data:
+            self.manager.require_pipeline_definition_mutation_allowed(plate_path)
         for plate_path, submitted_steps in pipeline_data.items():
             pipeline_steps = list(submitted_steps)
             PipelineObjectStateBinding.update_plate_steps(plate_path, pipeline_steps)
@@ -373,11 +423,11 @@ class PlateManagerDeletionWorkflow(ManagerDeletionWorkflow):
     manager: "PlateManagerWidget"
 
     def validate(self, items: list[PlateManagerRow]) -> bool:
-        if not self.manager.is_any_plate_running():
+        if not any(self.manager.plate_has_active_work(row.scope_id) for row in items):
             return True
         self.manager.service_adapter.show_error_dialog(
-            "Cannot delete plates while execution is in progress.\n"
-            "Please stop execution first."
+            "Cannot delete a plate with active initialization, compilation, or execution.\n"
+            "Other plates remain available."
         )
         return False
 

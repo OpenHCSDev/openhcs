@@ -72,6 +72,7 @@ from openhcs.pyqt_gui.services.desktop_update import (
     DesktopRestartSession,
     DesktopRestartSucceeded,
 )
+from openhcs.pyqt_gui.services.main_window_workflows import MainWindowPipelineActions
 from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
     PipelineObjectStateBinding,
 )
@@ -79,6 +80,9 @@ from openhcs.pyqt_gui.services.plate_manager_root_state import (
     root_orchestrator_scope_ids,
 )
 from openhcs.pyqt_gui.services.plate_manager_row import PlateManagerRow
+from openhcs.pyqt_gui.services.plate_manager_state_projection import (
+    PlateManagerOutputPlateRelationAuthority,
+)
 from openhcs.pyqt_gui.services.service_adapter import GlobalEventBus
 from openhcs.pyqt_gui.services.ui_agent_bridge import UiAgentBridgeService
 from openhcs.pyqt_gui.services.ui_bridge_object_state import (
@@ -101,6 +105,7 @@ from openhcs.pyqt_gui.widgets.shared.services.execution_submission_service impor
     ExecutionSubmissionService,
 )
 from openhcs.pyqt_gui.widgets.shared.services.plate_manager_workflows import (
+    SelectedPlateManagerCodeMutationScope,
     PlateManagerCodeWorkflow,
 )
 from openhcs.ui.shared.plate_manager_code_document import (
@@ -145,6 +150,91 @@ def test_scope_mutation_authorization_uses_plate_identity_ownership() -> None:
     assert calls == ["/plate", None]
 
 
+@pytest.mark.parametrize("work", ("run", "compile", "init"))
+def test_plate_work_guards_are_scope_local_and_views_remain_available(
+    monkeypatch, tmp_path, work
+):
+    update_buttons = PlateManagerWidget.update_button_states
+    manager = PlateManagerWidgetTestHarness.widget(monkeypatch)
+    monkeypatch.setattr(manager, "update_item_list", lambda: None)
+    manager.buttons = {
+        action: QPushButton()
+        for action in (
+            "del_plate",
+            "edit_config",
+            "init_plate",
+            "compile_plate",
+            "code_plate",
+            "view_metadata",
+            "run_plate",
+        )
+    }
+    ObjectStateRegistry.clear()
+    ensure_global_config_context(GlobalPipelineConfig, manager.global_config)
+    rows = []
+    for name in ("active", "other"):
+        path = tmp_path / name
+        path.mkdir()
+        manager._create_orchestrator_for_plate(str(path))
+        ObjectStateRegistry.get_object(str(path))._state = OrchestratorState.READY
+        rows.append(PlateManagerRow.from_scope(str(path)))
+    active, other = rows
+    if work == "run":
+        manager.plate_terminal_activity_status.begin_batch((active.scope_id,))
+        manager.plate_terminal_activity_status.record_execution(
+            active.scope_id, "owned-run"
+        )
+        manager.execution_state = ManagerExecutionState.RUNNING
+    elif work == "compile":
+        manager.plate_compile_pending.add(active.scope_id)
+    else:
+        manager.plate_init_pending.add(active.scope_id)
+    editor = PipelineEditorWidget(manager.service_adapter)
+    editor.plate_manager = manager
+    manager.action_availability_changed.connect(editor.update_button_states)
+    step = FunctionStep(name="Editable other-plate step")
+    editor.pipeline_steps = [step]
+    monkeypatch.setattr(editor, "get_selected_items", lambda: [step])
+    try:
+        manager.require_pipeline_definition_mutation_allowed(other.scope_id)
+        for scope in (None, active.scope_id):
+            with pytest.raises(RuntimeError, match="affected plate"):
+                manager.require_pipeline_definition_mutation_allowed(scope)
+        for row, allowed in ((active, False), (other, True)):
+            monkeypatch.setattr(manager, "get_selected_items", lambda row=row: [row])
+            editor.current_plate = row.scope_id
+            update_buttons(manager)
+            for action in ("del_plate", "edit_config", "init_plate", "compile_plate"):
+                assert manager.buttons[action].isEnabled() is allowed
+            assert manager.buttons["code_plate"].isEnabled()
+            assert manager.buttons["view_metadata"].isEnabled()
+            for action in ("add_step", "auto_load_pipeline", "del_step", "edit_step"):
+                assert editor.buttons[action].isEnabled() is allowed
+            assert editor.buttons["code_pipeline"].isEnabled()
+        editor.current_plate = active.scope_id
+        with pytest.raises(RuntimeError, match="affected plate"):
+            MainWindowPipelineActions(manager, editor).new_pipeline()
+        assert editor.pipeline_steps == [step]
+        editor.current_plate = other.scope_id
+        MainWindowPipelineActions(manager, editor).new_pipeline()
+        assert editor.pipeline_steps == []
+        if work == "run":
+            PlateManagerCodeWorkflow(manager).invalidate_orchestrator_compilation_state(
+                other.scope_id
+            )
+            assert (
+                manager.plate_terminal_activity_status.execution_id(active.scope_id)
+                == "owned-run"
+            )
+            assert manager.plate_terminal_activity_status.active_plates == (
+                active.scope_id,
+            )
+    finally:
+        editor.close()
+        close_widget(manager)
+        ObjectStateRegistry.clear()
+
+
 def close_widget(widget) -> None:
     """Drain queued GUI updates from smoke widgets with monkeypatched setup."""
 
@@ -166,6 +256,71 @@ def close_widget(widget) -> None:
     widget.cleanup()
     widget.close()
     QApplication.processEvents()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("already_initialized", (False, True))
+async def test_cellprofiler_init_publishes_its_completed_config_while_other_plate_runs(
+    monkeypatch, tmp_path, already_initialized
+):
+    from openhcs.pyqt_gui.widgets import plate_manager as plate_manager_module
+
+    manager = PlateManagerWidgetTestHarness.widget(monkeypatch)
+    monkeypatch.setattr(manager, "update_item_list", lambda: None)
+    ensure_global_config_context(GlobalPipelineConfig, manager.global_config)
+    plate_root = tmp_path / "import"
+    plate_root.mkdir()
+    plate_scope = str(plate_root)
+    pipeline_path = plate_root / "pipeline.cppipe"
+    manager._create_orchestrator_for_plate(plate_scope)
+    row = PlateManagerRow.from_scope(plate_scope, cppipe_path=str(pipeline_path))
+    monkeypatch.setattr(manager, "get_selected_items", lambda: [row])
+    workspace = InputWorkspacePreparationResult(
+        original_source_root=plate_root,
+        execution_plate_path=plate_root,
+        pipeline_path=pipeline_path,
+        pipeline_steps=[FunctionStep(func=percentile_normalize, name="Imported")],
+        pipeline_config=PipelineConfig(num_workers=3),
+    )
+    monkeypatch.setattr(
+        plate_manager_module,
+        "prepare_cellprofiler_input_workspace",
+        lambda request: workspace,
+    )
+    orchestrator = ObjectStateRegistry.get_object(plate_scope)
+
+    def complete_initialization():
+        assert plate_scope in manager.plate_init_pending
+        orchestrator._state = OrchestratorState.READY
+
+    monkeypatch.setattr(orchestrator, "initialize", complete_initialization)
+    if already_initialized:
+        orchestrator.bind_input_workspace(workspace)
+        orchestrator._state = OrchestratorState.READY
+    manager.plate_terminal_activity_status.begin_batch(("/other-running",))
+    manager.plate_terminal_activity_status.record_execution("/other-running", "owned")
+    manager.execution_state = ManagerExecutionState.RUNNING
+    try:
+        await manager.action_init_plate()
+        assert not manager.plate_init_pending
+        assert orchestrator.state is OrchestratorState.READY
+        assert (
+            ObjectStateRegistry.get_by_scope(plate_scope).get_saved_resolved_value(
+                "num_workers"
+            )
+            == 3
+        )
+        assert [
+            step.name
+            for step in PipelineObjectStateBinding.steps_for_plate(plate_scope)
+        ] == ["Imported"]
+        assert (
+            manager.plate_terminal_activity_status.execution_id("/other-running")
+            == "owned"
+        )
+    finally:
+        close_widget(manager)
+        ObjectStateRegistry.clear()
 
 
 class PlateManagerServiceStub:
@@ -412,6 +567,51 @@ class TestPlateManagerWidget:
                 widget.item_list.item(index).data(Qt.ItemDataRole.UserRole)
                 for index in range(widget.item_list.count())
             ] == list(reversed(scope_ids))
+        finally:
+            close_widget(widget)
+            ObjectStateRegistry.clear()
+
+    def test_eighteen_plate_status_refresh_does_not_resolve_path_configs(
+        self, monkeypatch, tmp_path
+    ):
+        ObjectStateRegistry.clear()
+        widget = PlateManagerWidgetTestHarness.widget(monkeypatch)
+        widget.item_list = QListWidget()
+        try:
+            paths = [str(tmp_path / f"plate-{index}") for index in range(18)]
+            for path in paths:
+                widget._create_orchestrator_for_plate(path)
+            widget._ensure_root_state().update_parameter(
+                "orchestrator_scope_ids", paths
+            )
+            original = PipelineOrchestrator.get_effective_config
+            resolutions = []
+
+            def counted(orchestrator, **kwargs):
+                resolutions.append(orchestrator.plate_path)
+                return original(orchestrator, **kwargs)
+
+            monkeypatch.setattr(PipelineOrchestrator, "get_effective_config", counted)
+            widget.update_item_list()
+            assert widget.item_list.count() == 18
+            assert resolutions == []
+
+            # Full relationship consumers still resolve every actual config once.
+            relations = PlateManagerOutputPlateRelationAuthority.from_rows(
+                tuple(widget.plates), widget.global_config.path_planning_config
+            )
+            assert len(resolutions) == 18
+            for row in widget.plates:
+                rich = widget._state_projection_service.project_row(
+                    widget,
+                    row,
+                    selected_scope_ids=set(),
+                    output_relation=relations.relation_for(row),
+                )
+                rendered = widget._format_plate_item_with_preview_text(row)
+                assert rendered.layout.status_prefix == rich.status_prefix
+                assert rich.output_plate_root is not None
+            assert len(resolutions) == 18
         finally:
             close_widget(widget)
             ObjectStateRegistry.clear()
@@ -875,16 +1075,26 @@ class TestPlateManagerWidget:
             close_widget(widget)
             ObjectStateRegistry.clear()
 
+    @pytest.mark.parametrize(
+        "other_running,global_draft", ((False, False), (True, False), (True, True))
+    )
     def test_selected_code_document_replaces_only_selected_pipeline_graph(
         self,
         monkeypatch,
         tmp_path: Path,
+        other_running: bool,
+        global_draft: bool,
     ) -> None:
         QtApplicationHarness.app()
         ObjectStateRegistry.clear()
         widget = PlateManagerWidgetTestHarness.widget(monkeypatch)
         widget.item_list = QListWidget()
         ensure_global_config_context(GlobalPipelineConfig, widget.global_config)
+        global_state = ObjectState(widget.global_config, scope_id="")
+        ObjectStateRegistry.register(global_state)
+        saved_global_workers = global_state.get_saved_resolved_value("num_workers")
+        if global_draft:
+            global_state.update_parameter("num_workers", 37)
         selected_root = tmp_path / "selected"
         unselected_root = tmp_path / "unselected"
         selected_root.mkdir()
@@ -915,6 +1125,12 @@ class TestPlateManagerWidget:
             unselected_editor_state = PipelineObjectStateBinding.editor_state_for_plate(
                 unselected_scope
             )
+            if other_running:
+                widget.plate_terminal_activity_status.begin_batch((unselected_scope,))
+                widget.plate_terminal_activity_status.record_execution(
+                    unselected_scope, "untouched-run"
+                )
+                widget.execution_state = ManagerExecutionState.RUNNING
 
             bridge = UiAgentBridgeService(
                 provider_set=PlateManagerBridgeProviderSet(widget),
@@ -929,7 +1145,7 @@ class TestPlateManagerWidget:
             replacement_source = PlateManagerCodeDocumentAuthority.render(
                 PlateManagerCodeDocumentAuthority.from_values(
                     plate_paths=[selected_scope],
-                    global_pipeline_config=widget.global_config,
+                    global_pipeline_config=widget._current_global_config_for_code_document(),
                     per_plate_configs={
                         selected_scope: widget.authored_pipeline_config_for_code_document(
                             selected_scope
@@ -960,6 +1176,13 @@ class TestPlateManagerWidget:
             )
 
             assert result.applied
+            if global_draft:
+                assert global_state.get_resolved_value("num_workers") == 37
+                assert (
+                    global_state.get_saved_resolved_value("num_workers")
+                    == saved_global_workers
+                )
+                assert global_state.dirty_fields == {"num_workers"}
             assert tuple(root_orchestrator_scope_ids(widget._ensure_root_state())) == (
                 selected_scope,
                 unselected_scope,
@@ -976,6 +1199,60 @@ class TestPlateManagerWidget:
                 PipelineObjectStateBinding.editor_state_for_plate(unselected_scope)
                 == unselected_editor_state
             )
+            if other_running:
+                assert widget.plate_terminal_activity_status.active_plates == (
+                    unselected_scope,
+                )
+                assert (
+                    widget.plate_terminal_activity_status.execution_id(unselected_scope)
+                    == "untouched-run"
+                )
+                with pytest.raises(RuntimeError, match="affected plate"):
+                    PlateManagerCodeWorkflow(
+                        widget,
+                        mutation_scope=SelectedPlateManagerCodeMutationScope(
+                            selected_scope_ids=(selected_scope,)
+                        ),
+                    ).apply_payload(
+                        PlateManagerCodeDocumentAuthority.from_values(
+                            plate_paths=[selected_scope],
+                            global_pipeline_config=GlobalPipelineConfig(num_workers=47),
+                            per_plate_configs={
+                                scope: widget.authored_pipeline_config_for_code_document(
+                                    scope
+                                )
+                                for scope in (selected_scope,)
+                            },
+                            pipeline_data={
+                                scope: PipelineObjectStateBinding.steps_for_plate(scope)
+                                for scope in (selected_scope,)
+                            },
+                        )
+                    )
+        finally:
+            close_widget(widget)
+            ObjectStateRegistry.clear()
+
+    def test_all_scope_code_document_commits_unchanged_global_draft(self, monkeypatch):
+        ObjectStateRegistry.clear()
+        widget = PlateManagerWidgetTestHarness.widget(monkeypatch)
+        monkeypatch.setattr(widget, "update_item_list", lambda: None)
+        ensure_global_config_context(GlobalPipelineConfig, widget.global_config)
+        global_state = ObjectState(widget.global_config, scope_id="")
+        ObjectStateRegistry.register(global_state)
+        global_state.update_parameter("num_workers", 37)
+        try:
+            assert PlateManagerCodeWorkflow(widget).apply_payload(
+                PlateManagerCodeDocumentAuthority.from_values(
+                    plate_paths=[],
+                    global_pipeline_config=widget._current_global_config_for_code_document(),
+                    per_plate_configs={},
+                    pipeline_data={},
+                )
+            )
+            assert global_state.get_saved_resolved_value("num_workers") == 37
+            assert not global_state.dirty_fields
+            assert widget.global_config.num_workers == 37
         finally:
             close_widget(widget)
             ObjectStateRegistry.clear()

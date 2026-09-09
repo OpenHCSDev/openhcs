@@ -77,6 +77,12 @@ class PipelineEditorWorkflowSurface(ConfigChangeSurface):
     plate_manager: "PlateManagerWorkflowSurface"
 
     @abstractmethod
+    def require_pipeline_definition_mutation_allowed(
+        self, plate_path: str | None = None
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
     def set_current_plate(self, plate_path: str) -> None:
         raise NotImplementedError
 
@@ -129,6 +135,7 @@ class PlateManagerWorkflowSurface(ConfigChangeSurface):
     orchestrator_config_changed: SignalConnectionSurface
     orchestrator_state_changed: SignalConnectionSurface
     manager_execution_state_changed: SignalConnectionSurface
+    action_availability_changed: SignalConnectionSurface
     pipeline_data_changed: SignalConnectionSurface
     cellprofiler_pipeline_imported: SignalConnectionSurface
     debug_snapshot_available: SignalConnectionSurface
@@ -725,6 +732,9 @@ class MainWindowWidgetConnector:
         plate_manager.manager_execution_state_changed.connect(
             pipeline_editor.on_manager_execution_state_changed
         )
+        plate_manager.action_availability_changed.connect(
+            pipeline_editor.update_button_states
+        )
         plate_manager.pipeline_data_changed.connect(
             pipeline_editor.on_pipeline_data_changed
         )
@@ -752,6 +762,7 @@ class MainWindowPipelineActions:
     pipeline_editor: PipelineEditorWorkflowSurface
 
     def new_pipeline(self) -> None:
+        self.pipeline_editor.require_pipeline_definition_mutation_allowed()
         self.pipeline_editor.pipeline_steps = []
         self.pipeline_editor.update_item_list()
         self.pipeline_editor.update_button_states()
@@ -810,15 +821,21 @@ class MainWindowLifecycleWorkflow:
         self.embedded_widgets.require_pipeline_editor().on_config_changed(new_config)
 
     def progress_started(self, max_value: int) -> None:
-        self.status_progress_bar.setMaximum(max_value)
-        self.status_progress_bar.setValue(0)
-        self.status_progress_bar.setVisible(True)
+        del max_value
+        self.refresh_progress()
 
     def progress_updated(self, value: int) -> None:
-        self.status_progress_bar.setValue(value)
+        del value
+        self.refresh_progress()
 
     def progress_finished(self) -> None:
-        self.status_progress_bar.setVisible(False)
+        self.refresh_progress()
+
+    def refresh_progress(self) -> None:
+        """Reproject the existing work owners after local initialization changes."""
+        self.runtime_progress_changed(
+            self.embedded_widgets.require_plate_manager().runtime_progress_projection
+        )
 
     def runtime_progress_changed(
         self,
@@ -826,9 +843,14 @@ class MainWindowLifecycleWorkflow:
     ) -> None:
         """Render the progress registry's current projection without retaining it."""
 
-        self.status_progress_bar.setRange(0, 100)
+        initializing = bool(
+            self.embedded_widgets.require_plate_manager().plate_init_pending
+        )
+        self.status_progress_bar.setRange(
+            0, 100 if projection.has_active_work or not initializing else 0
+        )
         self.status_progress_bar.setValue(round(projection.overall_percent))
-        self.status_progress_bar.setVisible(projection.has_active_work)
+        self.status_progress_bar.setVisible(projection.has_active_work or initializing)
 
     def close(self) -> None:
         failures: list[Exception] = []

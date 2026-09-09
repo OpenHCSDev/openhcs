@@ -1260,7 +1260,9 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         has_steps = len(self.pipeline_steps) > 0
         has_selection = len(self.get_selected_items()) > 0
         mutation_allowed = (
-            self.plate_manager is None or not self.plate_manager.execution_state.busy
+            self.plate_manager is None
+            or not has_plate
+            or not self.plate_manager.plate_has_active_work(self.current_plate)
         )
 
         # Mathematical constraints (mirrors Textual TUI logic):
@@ -1280,7 +1282,7 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
             has_steps and has_selection and mutation_allowed
         )
         self.buttons["code_pipeline"].setEnabled(
-            has_plate and is_initialized and mutation_allowed
+            has_plate and is_initialized
         )  # Same as add button - orchestrator init is sufficient
         if self.debug_toolbar is not None:
             self.debug_toolbar.set_debug_session_context(self.debug_session_context())

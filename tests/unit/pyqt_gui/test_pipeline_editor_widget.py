@@ -149,6 +149,10 @@ class PlateManagerDefinitionChangeRecorder:
     def notify_pipeline_definition_changed(self, plate_path: str) -> None:
         self.changed_plates.append(plate_path)
 
+    def plate_has_active_work(self, plate_path: str) -> bool:
+        del plate_path
+        return self.execution_state.busy
+
     def require_pipeline_definition_mutation_allowed(
         self,
         plate_path: str | None = None,
@@ -196,6 +200,10 @@ class PlateManagerCompiledStateRecorder:
         self.plate_compiled_data: dict[str, object] = {}
         self.plate_terminal_activity_status = PlateTerminalStatusRecorder()
         self.execution_state = ManagerExecutionState.IDLE
+
+    def plate_has_active_work(self, plate_path: str) -> bool:
+        del plate_path
+        return self.execution_state.busy
 
     def debug_session_context_for_plate(
         self,

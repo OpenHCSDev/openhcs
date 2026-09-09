@@ -104,14 +104,19 @@ class CompileBatchWorkflowService:
         import asyncio
 
         loop = asyncio.get_event_loop()
-
+        plate_paths = [row.scope_id for row in selected_items]
+        for plate_path in plate_paths:
+            self.host.require_pipeline_definition_mutation_allowed(plate_path)
+        for plate_path in plate_paths:
+            previous_execution_id = (
+                self.host.plate_terminal_activity_status.supersede_terminal(plate_path)
+            )
+            if previous_execution_id is not None:
+                self.host._progress_tracker.clear_execution(previous_execution_id)
+        self.host.plate_compile_pending.update(plate_paths)
+        self.host.update_button_states()
         try:
             zmq_client = await self._context.connect_progress_client()
-            plate_paths = [row.scope_id for row in selected_items]
-            for plate_path in plate_paths:
-                self.host.clear_plate_execution_tracking(plate_path)
-            self.host.plate_terminal_activity_status.begin_batch(plate_paths)
-            self.host.plate_compile_pending.update(plate_paths)
             self.host.update_item_list()
             self.host.emit_status(
                 f"Queueing compilation for {len(selected_items)} plate(s)..."
@@ -134,7 +139,6 @@ class CompileBatchWorkflowService:
             def _on_wait_success(
                 job: CompileJob, _execution_id: str, _idx: int, _total: int
             ) -> None:
-                self.host.clear_plate_execution_tracking(job.plate_path)
                 self._set_orchestrator_state(job.plate_path, OrchestratorState.COMPILED)
                 self.host.emit_orchestrator_state(
                     job.plate_path,
@@ -178,8 +182,8 @@ class CompileBatchWorkflowService:
             )
             await self._compile_batch_engine.run(compile_jobs, compile_policy)
         finally:
-            if self.host.execution_state.stop_pending:
-                await self._context.zmq.disconnect()
+            self.host.plate_compile_pending.difference_update(plate_paths)
+            self.host.update_button_states()
 
         self.host.emit_status(
             f"Compilation completed for {len(selected_items)} plate(s)"
@@ -232,6 +236,11 @@ class CompileBatchWorkflowService:
             loop=loop,
             fail_fast_submit=True,
             fail_fast_wait=True,
+            on_submit_success=lambda job, execution_id, _idx, _total: (
+                self.host.plate_terminal_activity_status.record_execution(
+                    job.plate_path, execution_id
+                )
+            ),
             on_submit_error=lambda job, error, _idx, _total: (
                 self._mark_execution_compile_failed(job.plate_path, error)
             ),
@@ -249,6 +258,7 @@ class CompileBatchWorkflowService:
         fail_fast_submit: bool,
         fail_fast_wait: bool,
         on_submit_error: CompileJobErrorCallback = None,
+        on_submit_success: CompileJobStatusCallback = None,
         on_wait_start: CompileJobCallback = None,
         on_wait_success: CompileJobStatusCallback = None,
         on_wait_error: CompileJobErrorCallback = None,
@@ -270,6 +280,7 @@ class CompileBatchWorkflowService:
             fail_fast_submit_value=fail_fast_submit,
             fail_fast_wait_value=fail_fast_wait,
             on_submit_error_fn=on_submit_error,
+            on_submit_success_fn=on_submit_success,
             on_wait_start_fn=on_wait_start,
             on_wait_success_fn=on_wait_success,
             on_wait_error_fn=on_wait_error,
@@ -283,21 +294,20 @@ class CompileBatchWorkflowService:
             zmq_client=zmq_client,
             loop=loop,
         )
-        self.host.plate_terminal_activity_status.record_execution(
-            job.plate_path,
-            execution_id,
-        )
         return execution_id
 
     async def _wait_compile_job(
         self, *, submission_id: str, job: CompileJob, zmq_client, loop
     ) -> None:
-        inspection = await self._compile_workflow.wait_compile_job(
-            submission_id=submission_id,
-            job=job,
-            zmq_client=zmq_client,
-            loop=loop,
-        )
+        try:
+            inspection = await self._compile_workflow.wait_compile_job(
+                submission_id=submission_id,
+                job=job,
+                zmq_client=zmq_client,
+                loop=loop,
+            )
+        finally:
+            self.host._progress_tracker.clear_execution(submission_id)
         compiled_state = PlateCompiledState(
             compile_artifact_id=submission_id,
             definition_pipeline=tuple(job.definition_pipeline),
@@ -330,7 +340,6 @@ class CompileBatchWorkflowService:
         self, plate_name: str, plate_path: str, error: Exception
     ) -> None:
         logger.error("COMPILATION ERROR: %s: %s", plate_path, error, exc_info=True)
-        self.host.clear_plate_execution_tracking(plate_path)
         self._set_orchestrator_state(plate_path, OrchestratorState.COMPILE_FAILED)
         self.host.plate_compile_pending.discard(plate_path)
         self.host.update_item_list()

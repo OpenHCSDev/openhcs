@@ -191,7 +191,9 @@ class OpenHCSWindowCreationAuthority:
                 ConfigWindowTabSpec(
                     state=state,
                     before_mutation=(
-                        plate_manager.require_pipeline_definition_mutation_allowed
+                        lambda: plate_manager.require_pipeline_definition_mutation_allowed(
+                            scope_id
+                        )
                     ),
                 ),
             ),
@@ -242,7 +244,9 @@ class OpenHCSWindowCreationAuthority:
                 plate_manager.compiled_artifact_inspection_for_plate
             ),
             before_mutation=(
-                plate_manager.require_pipeline_definition_mutation_allowed
+                lambda: plate_manager.require_pipeline_definition_mutation_allowed(
+                    editor_scope.plate_scope
+                )
             ),
             parent=None,
         )

@@ -595,6 +595,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
     orchestrator_state_changed = pyqtSignal(str, OrchestratorState)
     orchestrator_config_changed = pyqtSignal(str, object)
     manager_execution_state_changed = pyqtSignal(ManagerExecutionState)
+    action_availability_changed = pyqtSignal()
     global_config_changed = pyqtSignal()
     pipeline_data_changed = pyqtSignal()
     cellprofiler_pipeline_imported = pyqtSignal(str)
@@ -1081,15 +1082,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
 
         Uses declarative LIST_ITEM_FORMAT with orchestrator.pipeline_config as config source.
         """
-        row_state = self._state_projection_service.project_row(
-            self,
-            row,
-            selected_scope_ids=set(),
-            output_relation=self._state_projection_service.output_relation_for(
-                self,
-                row,
-            ),
-        )
+        activity = self._state_projection_service.activity_for(self, row)
 
         # Preview resolution is keyed by the visible row scope. For CellProfiler
         # pipeline rows, orchestrator.plate_path is the physical plate root while
@@ -1097,7 +1090,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         return self.build_item_display_from_format(
             item=row,
             item_name=row.name,
-            status_prefix=row_state.status_prefix,
+            status_prefix=activity.status_prefix,
             detail_line=row.scope_id,
         )
 
@@ -1312,7 +1305,12 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         """
         self._ensure_context()
         selected_items = self.get_selected_items()
+        for row in selected_items:
+            self.require_pipeline_definition_mutation_allowed(row.scope_id)
         self._validate_plates_for_operation(selected_items, PlateOperation.INIT)
+        plate_paths = tuple(row.scope_id for row in selected_items)
+        self.plate_init_pending.update(plate_paths)
+        self.update_button_states()
         self.progress_started.emit(len(selected_items))
 
         async def init_single_plate(i, row: PlateManagerRow):
@@ -1338,11 +1336,11 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
                 logger.info(
                     f"Orchestrator already initialized for {plate_path}, skipping"
                 )
+                self.plate_init_pending.discard(plate_path)
                 self._load_cellprofiler_pipeline_from_orchestrator(plate_path)
                 self.progress_updated.emit(i + 1)
                 return
 
-            self.plate_init_pending.add(plate_path)
             self.update_item_list()
 
             def do_init():
@@ -1364,11 +1362,11 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
                     None,
                     do_init,
                 )
+                self.plate_init_pending.discard(plate_path)
                 self._load_cellprofiler_pipeline_from_workspace(
                     plate_path,
                     input_workspace,
                 )
-                self.plate_init_pending.remove(plate_path)
                 self.update_item_list()
                 self.orchestrator_state_changed.emit(
                     plate_path,
@@ -1394,7 +1392,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
                     f"Failed to initialize plate {plate_path}: {e}", exc_info=True
                 )
                 orchestrator._state = OrchestratorState.INIT_FAILED
-                self.plate_init_pending.remove(plate_path)
+                self.plate_init_pending.discard(plate_path)
                 self.update_item_list()
                 self.orchestrator_state_changed.emit(
                     plate_path,
@@ -1404,11 +1402,14 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
 
             self.progress_updated.emit(i + 1)
 
-        await asyncio.gather(
-            *[init_single_plate(i, p) for i, p in enumerate(selected_items)]
-        )
-
-        self.progress_finished.emit()
+        try:
+            await asyncio.gather(
+                *[init_single_plate(i, p) for i, p in enumerate(selected_items)]
+            )
+        finally:
+            self.plate_init_pending.difference_update(plate_paths)
+            self.update_button_states()
+            self.progress_finished.emit()
 
         # Count successes and failures
         selected_orchestrators = [
@@ -1491,12 +1492,16 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         self._open_config_window(
             state=representative_state,
             on_save_callback=handle_config_save,
+            mutation_scope_ids=tuple(
+                scope_id for scope_id, _, _ in selected_orchestrator_entries
+            ),
         )
 
     def _open_config_window(
         self,
         state: ObjectState,
         on_save_callback,
+        mutation_scope_ids: tuple[str, ...],
     ):
         """Open a configuration window for one authoritative config object.
 
@@ -1507,6 +1512,10 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
             ConfigWindowTabSpec,
         )
 
+        def require_mutation_allowed() -> None:
+            for scope_id in mutation_scope_ids:
+                self.require_pipeline_definition_mutation_allowed(scope_id)
+
         config_window = ConfigWindow(
             tabs=(
                 ConfigWindowTabSpec(
@@ -1515,7 +1524,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
                         apply=on_save_callback,
                         rollback=on_save_callback,
                     ),
-                    before_mutation=(self.require_pipeline_definition_mutation_allowed),
+                    before_mutation=require_mutation_allowed,
                 ),
             ),
             color_scheme=self.color_scheme,
@@ -1612,6 +1621,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
                 self._active_debug_sessions.pop(target_plate_path, None)
             return
 
+        self._batch_workflow_service.require_execution_admission((target_plate_path,))
         session = DebugSession.create(
             plate_id=target_plate_path,
             command_type=command_type,
@@ -2351,30 +2361,35 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         has_compiled = any(
             plate.scope_id in self.plate_compiled_data for plate in selected_plates
         )
-        is_running = self.is_any_plate_running()
+        selection_available = all(
+            not self.plate_has_active_work(plate.scope_id) for plate in selected_plates
+        )
 
         # Update button states (logic extracted from Textual version)
-        self.buttons["del_plate"].setEnabled(has_selection and not is_running)
-        self.buttons["edit_config"].setEnabled(has_initialized and not is_running)
-        self.buttons["init_plate"].setEnabled(has_selection and not is_running)
+        self.buttons["del_plate"].setEnabled(has_selection and selection_available)
+        self.buttons["edit_config"].setEnabled(has_initialized and selection_available)
+        self.buttons["init_plate"].setEnabled(has_selection and selection_available)
         endpoint_status = self.execution_endpoint_status
         compile_action = CompilationActionProjection.from_status(endpoint_status)
         compile_button = self.buttons[PlateManagerAction.COMPILE_PLATE.value]
         compile_button.setEnabled(
-            compile_action.selection_enabled(has_initialized) and not is_running
+            compile_action.selection_enabled(has_initialized) and selection_available
         )
         compile_button.setText(compile_action.label)
         compile_button.setToolTip(compile_action.tooltip)
         # Code button available even without initialized plates so users can edit templates
-        self.buttons["code_plate"].setEnabled(not is_running)
-        self.buttons["view_metadata"].setEnabled(has_initialized and not is_running)
+        self.buttons["code_plate"].setEnabled(True)
+        self.buttons["view_metadata"].setEnabled(has_initialized)
 
         self.buttons["run_plate"].setEnabled(
             self.execution_state.run_button_enabled(
-                has_compiled and endpoint_status.phase.accepts_requests
+                has_compiled
+                and endpoint_status.phase.accepts_requests
+                and selection_available
             )
         )
         self.buttons["run_plate"].setText(self.execution_state.run_button_text)
+        self.action_availability_changed.emit()
 
     def refresh_execution_ui(self) -> None:
         """Refresh list row statuses and action buttons after execution state changes."""
@@ -2418,13 +2433,30 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         self,
         plate_path: str | None = None,
     ) -> None:
-        """Reject a pipeline/config mutation while execution owns the manager."""
+        """Protect only scopes owned by outstanding initialization/compile/run work."""
 
-        del plate_path
-        if self.is_any_plate_running():
-            raise RuntimeError(
-                "Pipeline definitions cannot change while plate execution is active."
+        conflicts = (
+            self.plate_has_active_work(plate_path)
+            if plate_path is not None
+            else bool(
+                self.plate_terminal_activity_status.active_plates
+                or self.plate_init_pending
+                or self.plate_compile_pending
             )
+        )
+        if conflicts:
+            raise RuntimeError(
+                "Pipeline definitions cannot change while the affected plate has "
+                "active initialization, compilation, or execution. Other plates remain editable."
+            )
+
+    def plate_has_active_work(self, plate_path: str) -> bool:
+        """Project outstanding work from its existing lifecycle owners."""
+        return (
+            self.plate_terminal_activity_status.is_active(plate_path)
+            or plate_path in self.plate_init_pending
+            or plate_path in self.plate_compile_pending
+        )
 
     def require_pipeline_definition_mutation_allowed_for_scope(
         self,
