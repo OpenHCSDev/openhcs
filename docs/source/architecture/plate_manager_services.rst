@@ -75,6 +75,16 @@ Invariants
 - Code-document selection is proof-bearing apply authority. Applying a selected
   Plate Manager document preserves every unselected plate and rejects a payload
   whose plate IDs differ from the scope that was read.
+- A selected code document preserves an unchanged exported global declaration,
+  including its live/saved draft split. A submitted global change still requires
+  global mutation admission; an all-plates document retains its complete commit
+  semantics. The mutation-scope declaration owns this distinction.
+- Initialisation and compilation reserve the affected plate before asynchronous
+  work. Execution admission reserves the existing batch before connection;
+  editing another plate neither replaces that batch nor clears its progress.
+- Lightweight row activity projects current lifecycle state without resolving
+  every plate's effective configuration or output relations. Rich result and MCP
+  state projections retain those relations when requested.
 - After the initialized desktop first paints, background startup uses the batch
   workflow's persistent endpoint policy and then prewarms the endpoint-owned
   callable catalogue without blocking Qt. Desktop and local MCP consumers share

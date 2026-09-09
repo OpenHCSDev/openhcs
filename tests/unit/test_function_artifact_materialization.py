@@ -1716,23 +1716,27 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
     )
     plan = _plan(output_plan)
     plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
-        persistent_enabled=True, persistent_backend="disk",
+        persistent_enabled=True,
+        persistent_backend="disk",
     )
     context.step_plans = {plan.step_index: plan}
     consolidation = execution_analysis_outputs(
         {"A01": context},
         (
             RuntimeExecutionObservation(
-                contexts=(RuntimeContextObservation(
-                    context_key="A01",
-                    records=context.runtime_value_store.observed_values,
-                ),),
+                contexts=(
+                    RuntimeContextObservation(
+                        context_key="A01",
+                        records=context.runtime_value_store.observed_values,
+                    ),
+                ),
             ),
         ),
     )
     assert consolidation is not None
     outputs = tuple(
-        output for group in consolidation.outputs_by_directory.values()
+        output
+        for group in consolidation.outputs_by_directory.values()
         for output in group
     )
     assert len(outputs) == 1

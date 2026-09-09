@@ -56,6 +56,13 @@ client and OpenHCS from the same installed OpenHCS environment; descriptors from
 another checkout or version are intentionally rejected before they can change
 the running UI.
 
+An attached MCP client can request the main window's **Restart OpenHCS and
+restore session** action once initialisation, compilation and execution have
+finished. It saves the plate declarations and edit history before relaunching.
+The accepted action receipt precedes shutdown: rediscover the new UI bridge and
+check the restored session after restart. The old process's operation receipt
+does not persist across that boundary.
+
 If a restored session refers to a local plate directory that is unavailable,
 OpenHCS restores the plate and edit history but leaves that plate uninitialized.
 Use Plate Manager code mode to correct the retained path, then initialize the

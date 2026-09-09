@@ -61,10 +61,14 @@ def wire_receiver(receiver):
     socket.setsockopt(zmq.RCVTIMEO, 5000)
     receiver._running = True
     receiver.data_transport_pump.start()
-    socket.connect(get_zmq_transport_url(
-        receiver.port, host="localhost", mode=receiver.transport_mode,
-        config=receiver.config,
-    ))
+    socket.connect(
+        get_zmq_transport_url(
+            receiver.port,
+            host="localhost",
+            mode=receiver.transport_mode,
+            config=receiver.config,
+        )
+    )
 
     def send(item):
         socket.send(wire_batch(item))
@@ -83,31 +87,48 @@ def wire_receiver(receiver):
 def wire_batch(item):
     config = NapariDisplayConfig(channel_mode=NapariDimensionMode.LAYER)
     producer = StreamProducerIdentity.pipeline_output(
-        output_kind="artifact", output_key="test", projection_key="test",
-        step_name="saved ROI reopen", pipeline_position=0,
+        output_kind="artifact",
+        output_key="test",
+        projection_key="test",
+        step_name="saved ROI reopen",
+        pipeline_position=0,
     )
-    return json.dumps({
-        "type": "batch",
-        "images": [{**item, "producer_identity": producer.to_payload()}],
-        "display_config": ViewerBatchDisplayPayload(
-            component_modes=config.component_modes(),
-            component_order=config.COMPONENT_ORDER,
-            extra=config.display_payload_extra(),
-        ).to_wire_mapping(),
-        "component_value_domain": {
-            "well": ["A01"], "site": [1], "channel": [1],
-            "z_index": [1], "timepoint": [1],
+    return json.dumps(
+        {
+            "type": "batch",
+            "images": [{**item, "producer_identity": producer.to_payload()}],
+            "display_config": ViewerBatchDisplayPayload(
+                component_modes=config.component_modes(),
+                component_order=config.COMPONENT_ORDER,
+                extra=config.display_payload_extra(),
+            ).to_wire_mapping(),
+            "component_value_domain": {
+                "well": ["A01"],
+                "site": [1],
+                "channel": [1],
+                "z_index": [1],
+                "timepoint": [1],
+            },
+            "component_names_metadata": {},
         },
-        "component_names_metadata": {},
-    }, default=lambda value: value.tolist()).encode()
+        default=lambda value: value.tolist(),
+    ).encode()
 
 
 def image_item():
     return {
-        "path": "A01.tif", "data_type": "image",
-        "data": [[1, 2], [3, 4]], "dtype": "uint16", "shape": [2, 2],
-        "metadata": {"well": "A01", "site": 1, "channel": 1,
-                     "z_index": 1, "timepoint": 1},
+        "path": "A01.tif",
+        "data_type": "image",
+        "data": [[1, 2], [3, 4]],
+        "dtype": "uint16",
+        "shape": [2, 2],
+        "metadata": {
+            "well": "A01",
+            "site": 1,
+            "channel": 1,
+            "z_index": 1,
+            "timepoint": 1,
+        },
     }
 
 
@@ -118,19 +139,29 @@ def settle(receiver):
 
 def saved_roi_item(tmp_path):
     archive = tmp_path / "aggregate_segmentation_masks_step1_rois.roi.zip"
-    DiskStorageBackend()._save_rois([
-        ROI([PolygonShape(np.array([[1, 1], [1, 4], [4, 4], [4, 1]]))],
-            {"label": 1, "area": 9, "source_spatial_shape_yx": (6, 6)}),
-    ], archive)
+    DiskStorageBackend()._save_rois(
+        [
+            ROI(
+                [PolygonShape(np.array([[1, 1], [1, 4], [4, 4], [4, 1]]))],
+                {"label": 1, "area": 9, "source_spatial_shape_yx": (6, 6)},
+            ),
+        ],
+        archive,
+    )
     shapes = NapariROIConverter.rois_to_shapes(load_rois_from_zip(archive))
     return {
-        "path": str(archive), "data_type": "shapes", "shapes": shapes,
+        "path": str(archive),
+        "data_type": "shapes",
+        "shapes": shapes,
         "metadata": {"well": "A01"},
     }
 
 
 def test_saved_roi_reopen_reports_pre_route_failure_and_recovers(
-    receiver, wire_receiver, qtbot, tmp_path,
+    receiver,
+    wire_receiver,
+    qtbot,
+    tmp_path,
 ):
     assert wire_receiver(saved_roi_item(tmp_path))["status"] == "success"
     assert receiver.process_accepted_stream_messages() == 1
@@ -144,20 +175,32 @@ def test_saved_roi_reopen_reports_pre_route_failure_and_recovers(
     # A new accepted batch starts the next existing settlement cycle. The
     # previous failed cycle must not become a permanent unrelated failure.
     assert wire_receiver(image_item())["status"] == "success"
-    assert NapariSettleControlMessageAction().transport_thread_response(receiver, {}) is None
+    assert (
+        NapariSettleControlMessageAction().transport_thread_response(receiver, {})
+        is None
+    )
     receiver.process_accepted_stream_messages()
     settle(receiver)
-    qtbot.waitUntil(lambda: settle(receiver)[1].phase is not ViewerSettlePhase.RUNNING,
-                    timeout=5000)
+    qtbot.waitUntil(
+        lambda: settle(receiver)[1].phase is not ViewerSettlePhase.RUNNING, timeout=5000
+    )
     assert settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE
     assert len(receiver.viewer.layers) == 1
 
 
 def test_previous_complete_cannot_settle_new_accepted_work(receiver):
     assert settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE
-    assert receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()["status"] == "success"
+    assert (
+        receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()[
+            "status"
+        ]
+        == "success"
+    )
     assert not receiver.accepted_stream_batches.empty()
-    assert NapariSettleControlMessageAction().transport_thread_response(receiver, {}) is None
+    assert (
+        NapariSettleControlMessageAction().transport_thread_response(receiver, {})
+        is None
+    )
 
 
 def test_payload_load_failure_is_rejected_before_route_creation(receiver):
@@ -171,16 +214,29 @@ def test_payload_load_failure_is_rejected_before_route_creation(receiver):
     assert not receiver.layer_route_state.layers
 
 
-def test_pre_route_failure_survives_later_batch_before_settlement(receiver, qtbot, tmp_path):
-    assert receiver.accept_stream_message(wire_batch(saved_roi_item(tmp_path))).to_wire_mapping()["status"] == "success"
+def test_pre_route_failure_survives_later_batch_before_settlement(
+    receiver, qtbot, tmp_path
+):
+    assert (
+        receiver.accept_stream_message(
+            wire_batch(saved_roi_item(tmp_path))
+        ).to_wire_mapping()["status"]
+        == "success"
+    )
     receiver.process_accepted_stream_messages()
     # No settlement has yet exposed the first failure. An additional accepted
     # batch cannot erase it even though its own native image mounts correctly.
-    assert receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()["status"] == "success"
+    assert (
+        receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()[
+            "status"
+        ]
+        == "success"
+    )
     receiver.process_accepted_stream_messages()
     settle(receiver)
-    qtbot.waitUntil(lambda: settle(receiver)[1].phase is not ViewerSettlePhase.RUNNING,
-                    timeout=5000)
+    qtbot.waitUntil(
+        lambda: settle(receiver)[1].phase is not ViewerSettlePhase.RUNNING, timeout=5000
+    )
     response, progress = settle(receiver)
     assert progress.phase is ViewerSettlePhase.FAILED
     assert "channel" in response["message"]
@@ -188,7 +244,12 @@ def test_pre_route_failure_survives_later_batch_before_settlement(receiver, qtbo
 
 
 def test_clear_state_discards_pre_route_failure(receiver, tmp_path):
-    assert receiver.accept_stream_message(wire_batch(saved_roi_item(tmp_path))).to_wire_mapping()["status"] == "success"
+    assert (
+        receiver.accept_stream_message(
+            wire_batch(saved_roi_item(tmp_path))
+        ).to_wire_mapping()["status"]
+        == "success"
+    )
     receiver.process_accepted_stream_messages()
     receiver.clear_accumulated_stream_state()
     assert settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE
@@ -196,9 +257,15 @@ def test_clear_state_discards_pre_route_failure(receiver, tmp_path):
 
 
 def test_active_settlement_rejects_admission_without_retaining_copies(
-    receiver, monkeypatch,
+    receiver,
+    monkeypatch,
 ):
-    assert receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()["status"] == "success"
+    assert (
+        receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()[
+            "status"
+        ]
+        == "success"
+    )
     receiver.process_accepted_stream_messages()
     assert settle(receiver)[1].phase is ViewerSettlePhase.RUNNING
     settlement = receiver.layer_route_state.layer_settlement
@@ -214,7 +281,9 @@ def test_active_settlement_rejects_admission_without_retaining_copies(
     # pytest's capture/report handlers retain exception traceback frames.
     # Exclude those test-owned references from this receiver-lifetime check.
     monkeypatch.setattr(logging.getLogger(type(receiver).__module__), "disabled", True)
-    response = receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()
+    response = receiver.accept_stream_message(
+        wire_batch(image_item())
+    ).to_wire_mapping()
     assert response["status"] == "error"
     assert "active Napari layer settlement" in response["message"]
     assert receiver.accepted_stream_batches.empty()

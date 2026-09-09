@@ -54,6 +54,12 @@ only the current selection. Applying a selected document changes only those
 plates and preserves every unselected plate. Read a new document if you need to
 change which plates the edit covers.
 
+While one plate runs, you can initialise another plate, edit its configuration
+or pipeline, and submit it for compilation. Compilation can wait in the server's
+queue until the running job finishes. The active plate's declaration stays
+protected until its work completes; its progress remains visible while you work
+on another plate.
+
 Pipeline Editor
 ---------------
 

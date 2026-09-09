@@ -131,7 +131,8 @@ def test_declared_path_selection_preserves_outputs_without_rendering_rois(monkey
         output_path_filter=partial(
             analysis_file_path_is_included,
             analysis_consolidation_config=AnalysisConsolidationConfig(
-                file_extensions=(".csv", ".json"), exclude_patterns=(),
+                file_extensions=(".csv", ".json"),
+                exclude_patterns=(),
             ),
         ),
     )
@@ -146,14 +147,20 @@ def test_roi_output_projection_preserves_requested_summary_content():
     filemanager = FileManager({"memory": MemoryStorageBackend()})
     spec = MaterializationSpec(ROIOptions(min_area=0))
     data = np.ones((8, 8), dtype=np.int32)
-    all_outputs = materialization_outputs(spec, data, "/analysis/A01_labels", filemanager)
+    all_outputs = materialization_outputs(
+        spec, data, "/analysis/A01_labels", filemanager
+    )
     summaries = materialization_outputs(
-        spec, data, "/analysis/A01_labels", filemanager,
+        spec,
+        data,
+        "/analysis/A01_labels",
+        filemanager,
         output_path_filter=lambda path: path.suffix == ".txt",
     )
     assert len(summaries) == 1
     assert [(output.path, output.content) for output in summaries] == [
-        (output.path, output.content) for output in all_outputs
+        (output.path, output.content)
+        for output in all_outputs
         if output.path.endswith(".txt")
     ]
 

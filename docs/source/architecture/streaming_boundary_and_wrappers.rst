@@ -145,16 +145,24 @@ The incoming ``NapariImagePayload`` declaration requires component metadata
 before the receiver copies data or queues a batch. Missing coordinates produce
 an error reply on the data socket rather than a successful acknowledgement.
 Napari records an exception from a scheduled route update against that exact
-route while keeping the event loop alive. The ``settle`` control action starts
+route while keeping the event loop alive. Accepted work that fails before a
+route can be resolved remains attached to the intake cycle until settlement
+reports it. A later accepted batch cannot erase that failure. A new intake cycle
+after terminal settlement can recover; route-specific failures clear only when
+that route updates successfully or the viewer state is cleared.
+The ``settle`` control action starts
 or observes an incremental drain of the remaining debounced updates. Each
 control reply carries a typed ``ViewerSettleProgress`` record with a phase,
 completed and total update counts, and the currently active route. Napari
-schedules only one route per Qt callback so the event loop remains available to
-answer control traffic while a large viewer state is settling.
+schedules bounded native work on the Qt thread. Control transport owns its
+socket independently, keeping settlement observable during a native layer
+mutation. Replies also report work-unit progress and whether a native work unit
+is active.
 
 The caller polls that progress until it reaches ``complete`` or ``failed``. Its
 timeout is a **no-progress deadline**, not a cap on total settlement time:
-advancing the completed count renews the deadline. A large legitimate transfer
+advancing the completed route or work-unit count renews the deadline. A declared
+active native mutation is not treated as an idle viewer. A large legitimate transfer
 can therefore take longer than the configured interval while still failing a
 viewer that is genuinely stalled. Fiji uses the same wire contract and reports
 terminal progress for its synchronous update path. Every recorded route must

@@ -4,7 +4,7 @@
 #
 # Foundational source gates (2 jobs)
 #   - Python 3.12 on Linux
-#   - Runs unit and core tests serially with offscreen Qt
+#   - Runs unit and core tests with native Qt and software OpenGL under Xvfb
 #   - Runs the maintained PyQt GUI suite against the recursively pinned
 #     pyqt-reactive candidate
 #
@@ -107,10 +107,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install headless Qt runtime
+      - name: Install native Qt and software OpenGL test runtime
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libegl1
+          sudo apt-get install -y \
+            libgl1 libegl1 libgl1-mesa-dri libglx-mesa0 libopengl0 \
+            libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 \
+            libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
+            libxcb-xfixes0 xauth xvfb
 
       - name: Seed ignored and stale nested package build output
         run: |
@@ -148,8 +152,11 @@ jobs:
 
       - name: Run unit tests
         env:
-          QT_QPA_PLATFORM: offscreen
+          QT_QPA_PLATFORM: xcb
+          QT_XCB_GL_INTEGRATION: xcb_glx
+          LIBGL_ALWAYS_SOFTWARE: "1"
         run: >-
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24 +extension GLX"
           python -m pytest tests/unit tests/core -p no:randomly -q
           --cov=openhcs --cov-report=
 

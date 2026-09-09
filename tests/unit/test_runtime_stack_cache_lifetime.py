@@ -41,7 +41,9 @@ def test_release_drops_all_cached_views_and_allows_reuse(context_owned: bool) ->
     assert cache.get(paths[0], memory_type="numpy").stack is replacement
 
 
-def test_context_image_cache_release_preserves_runtime_artifacts_and_observations() -> None:
+def test_context_image_cache_release_preserves_runtime_artifacts_and_observations() -> (
+    None
+):
     context = ProcessingContext(axis_id="A01")
     output_plan = ArtifactOutputPlan(
         name="retained_image",

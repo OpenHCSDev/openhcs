@@ -30,6 +30,11 @@ defer both operations to the parent boundary because sibling lanes share the
 same process. Worker failures are returned as typed execution results when
 possible; pool failure still enters the parent cleanup path.
 
+Every completed or failed axis also clears its context-local image-stack reuse
+cache, including in thread-backed lanes. That cache is independent of shared
+allocator cleanup. Typed runtime observations remain available for parent-owned
+plate steps and analysis consolidation.
+
 Ordering
 --------
 

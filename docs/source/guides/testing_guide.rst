@@ -32,6 +32,11 @@ Run unit tests in CPU-only mode:
 
    OPENHCS_CPU_ONLY=1 python -m pytest tests/unit -q
 
+The unit suite includes native Napari layer rendering and needs a working OpenGL
+context. On a headless Linux host with Xvfb and Mesa installed, run it with
+``QT_QPA_PLATFORM=xcb LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a`` before the Python
+command. Qt's ``offscreen`` plugin alone does not supply that renderer context.
+
 Run one integration boundary explicitly:
 
 .. code-block:: console
@@ -57,6 +62,8 @@ ImageXpress and OperaPhenix, submodule and published-dependency installation,
 and wheel integration. A dedicated source job runs ``tests/pyqt_gui`` with
 offscreen Qt against the exact pinned pyqt-reactive wheel. Dedicated Linux jobs
 run OMERO on supported Python versions with an explicit ZeroC Ice wheel.
+The unit/core job uses Xvfb, the XCB Qt backend and Mesa software OpenGL so native
+Napari image and ROI settlement tests exercise a real rendering context.
 
 The Python/OS boundary matrix also opens fresh MCP stdio sessions before
 importing NumPy and SciPy inside a tool. These tests exercise cold native-library

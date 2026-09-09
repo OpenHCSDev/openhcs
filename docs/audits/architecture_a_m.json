@@ -134,7 +134,7 @@
   },
   {
     "path": "docs/source/architecture/analysis_consolidation_system.rst",
-    "source_sha256": "58c4305248515b732c2d7deeb2571713aa460eb7b8a09e5e8c7e0095aeeddca2",
+    "source_sha256": "3f3fa8f3f0ee441d4c2aa42bd79c2da3dc04635f4958b64ce49bcbfc25a618db",
     "audience": [
       "OpenHCS runtime maintainers",
       "analysis-output integrators"
@@ -144,7 +144,7 @@
     "authority": [
       {
         "path": "openhcs/core/orchestrator/analysis_consolidation.py",
-        "sha256": "567bf7d912eb8ef2948c54e7ed52c37973180d0d5b4c6bc18ace12d82f11ae8c",
+        "sha256": "3ef9c20c347c1ac724353c84b24f9d7e13513aba7b9c5c01e194171b7e72bb52",
         "role": "Projects execution-ledger CSV content with each result directory's compiled storage context and the global output-plate destination."
       },
       {
@@ -164,13 +164,18 @@
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
-        "sha256": "d05d01a5b22909f85d4d2fba9d397337cb5552cb706cf2520f5591a62a913c8f",
+        "sha256": "0cbf6590f3f5a23a42bedef65f23c075e76e8cfa718985465d5e3e2dc4889625",
         "role": "Proves consolidation consumes runtime CSV values, uses the compiled backend destination, ignores non-table artifacts, and propagates failures."
       },
       {
         "path": "tests/unit/test_routed_channel_selection.py",
         "sha256": "f0f7e10c99f6568048817f38ee10f648bb0b6fb4945cc0fae0f988761557745f",
         "role": "Executes a native plate with separate analysis destinations and verifies per-directory and merged output summaries without writing a summary into the input plate."
+      },
+      {
+        "path": "openhcs/processing/materialization/core.py",
+        "sha256": "0d752a149c02d8088a9686aae16e4d942c2c4266c80548745d5b8d265ccd0db1",
+        "role": "Owns writer runtime-path selection before rendering and the shared ROI target request."
       }
     ],
     "findings": [
@@ -187,7 +192,8 @@
       "On 2026-08-24, re-read the complete explanation after the parent execution test gained completed-output metadata ordering; exact runtime-observation consolidation remains unchanged and 336 focused tests passed.",
       "On 2026-08-24, re-read the explanation against the execution-ledger table source, nominal summary-writer boundary, FileManager destination adapter, and regression coverage after removing backend path readback and swallowed failures.",
       "On 2026-08-24, rechecked the complete explanation after consolidation began requesting text through the materialization output contract; the documented ledger and destination ownership remains accurate, and the full installed MCP neurite workflow completed.",
-      "On 2026-09-08, re-read the full explanation and documented per-directory storage ownership and output-root global consolidation. The native multi-directory regression passes, and a GUI/MCP POST pilot consolidated all three analysis directories and their merged summary successfully."
+      "On 2026-09-08, re-read the full explanation and documented per-directory storage ownership and output-root global consolidation. The native multi-directory regression passes, and a GUI/MCP POST pilot consolidated all three analysis directories and their merged summary successfully.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -246,7 +252,7 @@
   },
   {
     "path": "docs/source/architecture/batch_workflow_service.rst",
-    "source_sha256": "df53f8d5d947976bb89746261f54f2f6bbe9451981929fda214d4614453dbcbe",
+    "source_sha256": "c56c5c87b4cf844d47924ad9240679026b0645a17a106f58303869b0f5d90933",
     "audience": [
       "OpenHCS desktop and execution-service maintainers"
     ],
@@ -255,12 +261,12 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/services/plate_manager_batch_workflow.py",
-        "sha256": "ddfa67ad59056cb925bc4e0e78fe85f7228c9022a07d8ff02d217725de82d0d0",
+        "sha256": "974aebec62dc0f283f92d8153594771d1206f02decdfd8ea5faae0a563676699",
         "role": "Implements the Plate Manager batch facade and compile-before-execute lifecycle."
       },
       {
         "path": "openhcs/pyqt_gui/widgets/shared/services/compile_batch_workflow_service.py",
-        "sha256": "4cf90a01e580f486db785ee21720aaff083ed4f4d1e7599d54402be2dab32003",
+        "sha256": "d74e686a6bef9eb17efbd627962c4452d983f2e127cdf946f42de0a52a6e86ef",
         "role": "Implements compile-only batch submission and result collection."
       },
       {
@@ -270,12 +276,12 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_batch_workflow_compile_engine.py",
-        "sha256": "22d71255224924ba3a4262d49639d8cddf51b69a0941f40e0109fcc00658221e",
+        "sha256": "a57a55bd6bfa80937875dcdab8d467dd2e52f51e21da4445b826bc6b9030ec77",
         "role": "Verifies batch compilation, artifact retention, status, and failure convergence."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "14d2c4c04ea150d53d83e95ba51762aef0d468b8680fb8715e6dc0401e5a01bf",
+        "sha256": "00cacb7b518ab31c72e8c210a0d0e1e535a71fcd0d4403b7593bd055b4b5def0",
         "role": "Coordinates post-paint endpoint preparation, projects the browser-owned endpoint snapshot into both status-bar surfaces, and routes endpoint termination to the client lifecycle owner."
       },
       {
@@ -302,6 +308,21 @@
         "path": "external/zmqruntime/src/zmqruntime/client.py",
         "sha256": "fc8bdf68455673921d79742204bf6c88e42b52bbe407d10ef4a831e084ca86a8",
         "role": "Declares EndpointClientSession as the authoritative transport-client and application-admission proof."
+      },
+      {
+        "path": "openhcs/pyqt_gui/widgets/shared/services/execution_state.py",
+        "sha256": "73d03020ffe437d8aaf4b6a5eeb4f43b91130de747d411648cb7fa2e4df27777",
+        "role": "Owns active batch membership, terminal outcomes and terminal row supersession."
+      },
+      {
+        "path": "tests/unit/pyqt_gui/test_compile_terminal_supersession.py",
+        "sha256": "0b04d9c843ce2dcf16833b1c53b5853637802aa35c2d23de992c3db6c2bb2465",
+        "role": "Tests recompilation superseding row activity while retaining batch outcomes."
+      },
+      {
+        "path": "tests/unit/pyqt_gui/test_concurrent_initialization_progress.py",
+        "sha256": "c8e960fa83adb73f3533cf4c75acafd59249a1993f4e650733101fdd3d62ddb8",
+        "role": "Tests other-plate initialisation without replacing active execution progress."
       }
     ],
     "findings": [
@@ -327,7 +348,8 @@
       "On 2026-08-27, re-read the complete explanation against cancellation propagation through the endpoint catalogue projection; the documented asynchronous prewarm and unconditional cleanup ownership remain accurate.",
       "On 2026-08-28, re-read the complete explanation against the current desktop composition after dock identities and titles began descending from nominal window declarations; the batch, endpoint snapshot, asynchronous catalogue, and cleanup ownership claims remain accurate.",
       "Focused batch compilation, endpoint routing, and experimental-analysis tests passed: 53 tests.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -446,7 +468,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "7c989e6039f05a72270acdb24e7147985fbcb197b56b0f7abd44ce1f427e9b55",
+        "sha256": "d79a413d50f7911064cfb83fc34191bf77bb4f638ce28a72f0b54666bc377d88",
         "role": "Verifies read-only rejection, semantic no-op application, and branch restoration through the UI bridge."
       },
       {
@@ -479,7 +501,8 @@
       "A fresh current-source desktop launched offscreen, published a versioned bridge descriptor, passed the four-operation MCP UI smoke with zero MCP errors, and produced a native 1024x772 main-window capture through that bridge.",
       "On 2026-08-24, re-read the complete explanation after UI request DTOs began owning their MCP argument projections; ObjectState remains the semantic authority and no code/UI claim required revision.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -738,7 +761,7 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "145c0334be395ff89f447b64016099c0aa1a36279024bef28edfbb06e40ef349",
+        "sha256": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
         "role": "Owns the compiled multiprocessing-axis identity for one processing context."
       },
       {
@@ -753,7 +776,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "f361aad7b942e4118e2ec3ca5c5efc6cd543d7da495d3ec724d277d362cc802c",
+        "sha256": "d2ac66e753239cf4185eb3db4db1aca2a8a55a49f92ee58f30c2ab5fe47732ef",
         "role": "Owns executor construction, submission, result collection, cancellation, and footprint-aware cleanup."
       },
       {
@@ -783,7 +806,8 @@
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
-      "On 2026-08-26, re-read the complete page against ProcessingContext, CompiledExecutionBundle, worker-lane planning, and opaque-key regression evidence; revised it to identify the nominal axis owner."
+      "On 2026-08-26, re-read the complete page against ProcessingContext, CompiledExecutionBundle, worker-lane planning, and opaque-key regression evidence; revised it to identify the nominal axis owner.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1048,7 +1072,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "14d2c4c04ea150d53d83e95ba51762aef0d468b8680fb8715e6dc0401e5a01bf",
+        "sha256": "00cacb7b518ab31c72e8c210a0d0e1e535a71fcd0d4403b7593bd055b4b5def0",
         "role": "Routes the desktop analysis action through ExperimentalAnalysisEngine rather than the deprecated wrapper."
       },
       {
@@ -1071,7 +1095,8 @@
       "On 2026-08-25, re-read the complete page against the painted-ready background-service startup boundary and producer-before-executor shutdown order; its documented ownership and user guidance remain accurate.",
       "On 2026-08-28, re-read the complete explanation and current desktop action after unrelated dock titles began descending from nominal identity declarations; the action still constructs ExperimentalAnalysisConfig and calls ExperimentalAnalysisEngine.run_directory without restating filename values.",
       "Focused batch compilation, endpoint routing, and experimental-analysis tests passed: 53 tests.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1086,7 +1111,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1203,7 +1228,8 @@
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
       "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1533,7 +1559,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "f361aad7b942e4118e2ec3ca5c5efc6cd543d7da495d3ec724d277d362cc802c",
+        "sha256": "d2ac66e753239cf4185eb3db4db1aca2a8a55a49f92ee58f30c2ab5fe47732ef",
         "role": "Consumes compiled footprints for worker execution and lane-appropriate framework cleanup."
       },
       {
@@ -1575,7 +1601,8 @@
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1828,7 +1855,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_windows.py",
-        "sha256": "82abc5f6f24a839ad169c50f386258c4bf791fcf083a04a86f1bf99f4d95a4b2",
+        "sha256": "34fc56c080b58c3d5a0d147d53a1dd157314492d6d29dee1662c0007b400612c",
         "role": "Resolves authorised OpenHCS windows, projects generic snapshot results, and distinguishes focus from accepted target navigation in application DTOs."
       },
       {
@@ -1907,7 +1934,8 @@
       "On 2026-08-27, applied the Diataxis explanation boundary and re-read the complete page against the MCP wire session and progress binder; revised it to name progress-aware transport inactivity and the absence of a duplicate absolute client ceiling.",
       "On 2026-09-07, re-read the complete page and checked its affected claims against the single synthetic-generation capability opting into its existing worker-safe MCP heartbeat; tool identity, contracts, effects and profile membership remain unchanged. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
       "Re-read the complete explanation on 2026-09-07 against the invocation-wide verbose stack diagnostic and both declared thread-policy regressions. Clarified that liveness can continue while a worker is blocked; diagnostic scope changes neither execution context nor completion semantics.",
-      "On 2026-09-07, reviewed the channel-ownership explanation against real persistent MCP cold-import and descriptor-restoration tests. The transport now reserves stdin as well as stdout through existing SDK hooks; native-library initialisation sees empty application stdin, with no capability-local preload list. Bootstrap changes only the reservation entry point."
+      "On 2026-09-07, reviewed the channel-ownership explanation against real persistent MCP cold-import and descriptor-restoration tests. The transport now reserves stdin as well as stdout through existing SDK hooks; native-library initialisation sees empty application stdin, with no capability-local preload list. Bootstrap changes only the reservation entry point.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -2106,7 +2134,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "f361aad7b942e4118e2ec3ca5c5efc6cd543d7da495d3ec724d277d362cc802c",
+        "sha256": "d2ac66e753239cf4185eb3db4db1aca2a8a55a49f92ee58f30c2ab5fe47732ef",
         "role": "Installs the bundle, submits one task per compiled axis, collects typed results, and performs footprint-aware cleanup."
       },
       {
@@ -2130,7 +2158,8 @@
       "Focused feature-lattice QA passed 65 tests covering framework resolution, execution scope, callable contracts, compiled execution, validation, and worker policy.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
-      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   }
 ]

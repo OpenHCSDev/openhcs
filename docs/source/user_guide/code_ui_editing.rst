@@ -31,6 +31,12 @@ plates and leaves every unselected plate unchanged. Its payload must contain the
 same plate scope IDs that were read; read a fresh document to choose a different
 scope.
 
+You can apply a selected document for an idle plate while another plate runs.
+Keep the exported global declaration unchanged to preserve any existing global
+draft. A submitted global change affects shared defaults and is protected while
+plate work is active. An all-plates document keeps its whole-collection commit
+semantics.
+
 Pipeline Editor code must define ``pipeline_steps``. You may omit
 ``pipeline_config`` when the pipeline uses the default ``PipelineConfig()``;
 generated code includes the explicit assignment again. Provide

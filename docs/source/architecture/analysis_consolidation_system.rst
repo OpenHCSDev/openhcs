@@ -14,6 +14,12 @@ analysis consolidation functions. Each directory retains its compiled persistent
 destination. Consolidation therefore neither scans a
 results directory nor treats a virtual backend address as a host file.
 
+Output selection is passed into runtime materialisation. A writer with a declared
+runtime-path projection can skip rendering when none of its outputs match the
+consolidation selection. ROI paths derive from the same target request used by
+the ROI writer, so consolidating tables does not regenerate unrelated contours.
+Writers without that projection filter their actual rendered outputs.
+
 The generic consolidation layer reads ``AnalysisTableSource`` values and writes
 through an ``AnalysisSummaryWriter`` ABC. Local desktop consolidation uses a
 filesystem writer. Compiled execution uses a FileManager writer bound to the

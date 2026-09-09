@@ -246,7 +246,9 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
     )
     pixels = np.zeros((16, 16), dtype=np.uint16)
     pixel_reference = weakref.ref(pixels)
-    context.runtime_image_stack_cache.store(('image',), memory_type='numpy', stack=pixels)
+    context.runtime_image_stack_cache.store(
+        ("image",), memory_type="numpy", stack=pixels
+    )
     del pixels
     monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
     monkeypatch.setattr(
@@ -282,32 +284,40 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
     assert pixel_reference() is None
 
 
-@pytest.mark.parametrize('observation_mode', tuple(RuntimeObservationMode))
-@pytest.mark.parametrize('release_process_resources', (True, False))
+@pytest.mark.parametrize("observation_mode", tuple(RuntimeObservationMode))
+@pytest.mark.parametrize("release_process_resources", (True, False))
 def test_worker_lane_releases_previous_axis_stack_before_next_axis(
-    monkeypatch, observation_mode, release_process_resources,
+    monkeypatch,
+    observation_mode,
+    release_process_resources,
 ):
     references = []
-    contexts = [ProcessingContext(axis_id=axis) for axis in ('A01', 'A02', 'A03')]
+    contexts = [ProcessingContext(axis_id=axis) for axis in ("A01", "A02", "A03")]
 
     def execute_axis(_pipeline, context, _lane, **_kwargs):
         assert all(reference() is None for reference in references)
         pixels = np.ones((16, 16), dtype=np.uint16)
         references.append(weakref.ref(pixels))
         context.runtime_image_stack_cache.store(
-            ('image',), memory_type='numpy', stack=pixels,
+            ("image",),
+            memory_type="numpy",
+            stack=pixels,
         )
         return ExecutionResult.success(context.axis_id)
 
-    monkeypatch.setattr(worker_execution, '_execute_single_axis_static', execute_axis)
-    monkeypatch.setattr(worker_execution, 'emit', lambda **_kwargs: None)
+    monkeypatch.setattr(worker_execution, "_execute_single_axis_static", execute_axis)
+    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
     results = worker_execution.execute_worker_lane(
         pipeline_definition=[object()],
-        lane_axis_contexts=[(context.axis_id, [(context.axis_id, context)]) for context in contexts],
+        lane_axis_contexts=[
+            (context.axis_id, [(context.axis_id, context)]) for context in contexts
+        ],
         lane_context=WorkerLaneExecutionContext(
-            execution_id='execution', plate_id='plate',
-            debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot='worker',
-            worker_assignments={'worker': [context.axis_id for context in contexts]},
+            execution_id="execution",
+            plate_id="plate",
+            debug_execution_policy=NoOpDebugExecutionPolicy(),
+            worker_slot="worker",
+            worker_assignments={"worker": [context.axis_id for context in contexts]},
         ),
         runtime_observation_mode=observation_mode,
         release_axis_resources=release_process_resources,

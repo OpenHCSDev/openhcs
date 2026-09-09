@@ -10,12 +10,12 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "c1120464ed17cab2c56c3bcb6ee139daa2f26bb0f10a060e9c154e19e2988d95",
+        "sha256": "a869e0224a0c8c2c96a92a70ef6061292355790205162b0d1c5beac7f64c1560",
         "role": "Detached Napari endpoint startup and application event-loop integration."
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "638aa5780c859c195922aee9818bbcf683551dca0bae7b8217f00adad36174cd",
+        "sha256": "7b9c99e9f30233986c9bde55fb38d797be0a6989ad5b0e309a6be78e2df0b0bd",
         "role": "Napari route handlers that project typed received batches onto native viewer state."
       },
       {
@@ -31,7 +31,8 @@
     "validation": [
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "tests/unit/test_napari_streaming_handlers.py and tests/unit/test_viewer_protocol.py exercise the named OpenHCS and transport boundaries",
-      "On 2026-08-25, re-read the complete redirect against the changed Napari endpoint owner; bounded payload projection and atomic layer isolation do not change this legacy route's current-owner destination."
+      "On 2026-08-25, re-read the complete redirect against the changed Napari endpoint owner; bounded payload projection and atomic layer isolation do not change this legacy route's current-owner destination.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -198,7 +199,7 @@
   },
   {
     "path": "docs/source/architecture/orchestrator_cleanup_guarantees.rst",
-    "source_sha256": "37309668c73f07af13858e895cf8bb1545a44c3aa373b2c32a485d05f0728f2f",
+    "source_sha256": "1fabf4a602e5856b9ac754b390478f7c2859a6bc6e088e7c55a4e5901ccb54a7",
     "audience": [
       "OpenHCS runtime maintainers"
     ],
@@ -212,7 +213,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "f361aad7b942e4118e2ec3ca5c5efc6cd543d7da495d3ec724d277d362cc802c",
+        "sha256": "d2ac66e753239cf4185eb3db4db1aca2a8a55a49f92ee58f30c2ab5fe47732ef",
         "role": "Worker task execution and owner-bound runtime/framework cleanup for process, inline, and thread lanes."
       },
       {
@@ -244,6 +245,16 @@
         "path": "tests/unit/test_orchestrator_lane_planning.py",
         "sha256": "4148ccb3e51d21c26f8126d19dd811c84b44f754f857d995889d9d1d24c135f9",
         "role": "Proves partial viewer acquisition and readiness failures roll back every acquired viewer."
+      },
+      {
+        "path": "openhcs/core/context/processing_context.py",
+        "sha256": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
+        "role": "Owns explicit release of the context-local image-stack cache without discarding observations."
+      },
+      {
+        "path": "tests/unit/test_runtime_stack_cache_lifetime.py",
+        "sha256": "bfcfbfb485de0ccdc24251020db9cc66eba2b0f31d019553814b4e6f1fde48a2",
+        "role": "Tests context-local image-cache lifetime across success and failure."
       }
     ],
     "findings": [
@@ -261,7 +272,8 @@
       "On 2026-08-24, re-read the complete explanation after completed-plate metadata finalization was inserted before viewer settlement; the documented cleanup owners and terminal ordering remain accurate.",
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
       "On 2026-08-25, re-read the complete cleanup explanation against compiled viewer acquisition, lifecycle ownership, and rollback regressions; revised it to cover partial-bootstrap cleanup without claiming ownership of external endpoints.",
-      "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages."
+      "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -541,12 +553,12 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "145c0334be395ff89f447b64016099c0aa1a36279024bef28edfbb06e40ef349",
+        "sha256": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
         "role": "Owns the compiled multiprocessing-axis identity carried by each runtime context."
       },
       {
         "path": "tests/unit/test_compiled_execution.py",
-        "sha256": "feea4629d61f1def4f73c25c55c140869040884046a9ab83efb07c37e08f9044",
+        "sha256": "8457ca3d9b8d61996b20564df537f3b0a030704f07bfffe53f13ae04695e8e21",
         "role": "Verifies that bundle axis projection derives from context declarations rather than mapping-key syntax."
       },
       {
@@ -606,12 +618,13 @@
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-26, re-read the complete page against the compiled context and execution bundle owners; revised the execution boundary to make context-owned axis identity explicit.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
     "path": "docs/source/architecture/plate_manager_services.rst",
-    "source_sha256": "918ec1d6a1d2dc40f158361f8fd2e046f8a803d2b28bad2eb0dbfb9982ffc364",
+    "source_sha256": "06abc350333f3c0d51f3418db49de6c51d7eb3f5d27d523e1a113a5b2b2b943d",
     "audience": [
       "OpenHCS desktop workflow maintainers"
     ],
@@ -620,7 +633,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/services/plate_manager_batch_workflow.py",
-        "sha256": "ddfa67ad59056cb925bc4e0e78fe85f7228c9022a07d8ff02d217725de82d0d0",
+        "sha256": "974aebec62dc0f283f92d8153594771d1206f02decdfd8ea5faae0a563676699",
         "role": "Plate Manager compile-all-then-execute-all facade and lifecycle."
       },
       {
@@ -630,12 +643,12 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_plate_manager_widget.py",
-        "sha256": "e0d37d8dbb50f0c96ced818f1147e8a8b3ef399dbc5f015e813f4c2a4cdd0f1b",
+        "sha256": "32e0d51c003fb3f313359d9d3b38bab11a8d0cbf0d8637ee0be7190d72496d5e",
         "role": "Regression evidence for Plate Manager service composition and UI delegation."
       },
       {
         "path": "openhcs/pyqt_gui/widgets/shared/services/plate_manager_workflows.py",
-        "sha256": "7e9e785992fb5d7f77ddcd0efc1ea75982acf6c994c12fcfc7fb53deca8e675d",
+        "sha256": "95f604ad920834262d7827ea314f87c4e4273c5e0bdd60e0fa84dfb97a724040",
         "role": "Owns all-plates and selected-plates code-document mutation semantics."
       },
       {
@@ -660,18 +673,23 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "14d2c4c04ea150d53d83e95ba51762aef0d468b8680fb8715e6dc0401e5a01bf",
+        "sha256": "00cacb7b518ab31c72e8c210a0d0e1e535a71fcd0d4403b7593bd055b4b5def0",
         "role": "Coordinates post-paint endpoint preparation and callable-catalogue prewarming."
       },
       {
         "path": "tests/unit/pyqt_gui/test_pipeline_editor_widget.py",
-        "sha256": "41b66744f1f3d8bac87bd54ef03f80070f3f890bfb821f8f95f3feddc7421547",
+        "sha256": "11451fc9126b86c7afecbf3e297e37de9f58403ae097bbf72385e033d19a36da",
         "role": "Proves exact reconciled editor state using the installed synthetic demo pipeline declaration."
       },
       {
         "path": "openhcs/demo/synthetic_plate_pipeline.py",
         "sha256": "a08e4423973b32b42ac347baeb737ffb90c102f140d34b674349ce46cfe19820",
         "role": "Installed synthetic pipeline declaration used by the Pipeline Editor widget regression fixture."
+      },
+      {
+        "path": "openhcs/pyqt_gui/services/plate_manager_state_projection.py",
+        "sha256": "814651335543000eb3855975a80af311b6290926da233d02ab5e95ba0daa82ba",
+        "role": "Owns lightweight current row activity and the richer result relation projection."
       }
     ],
     "findings": [
@@ -695,7 +713,8 @@
       "On 2026-08-25, re-read the complete service reference against the endpoint-owned catalogue used by desktop and local MCP authoring; focused tests and a live Function Selector probe confirmed asynchronous preparation and exact selection.",
       "On 2026-08-27, re-read the complete service reference against the catalogue projection's propagated cancellation authority; the endpoint remains the single callable authority and cleanup still retires in-progress work through its owner.",
       "On 2026-08-28, re-read the complete reference after desktop pane titles began projecting from stable UI identity declarations; Plate Manager workflow, endpoint preparation, ObjectState, and cleanup ownership remain unchanged.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -956,7 +975,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "b4429937f8cf5a604369aae5da827995d8796befa5cd527d24c1288fda986a68",
+        "sha256": "0d752a149c02d8088a9686aae16e4d942c2c4266c80548745d5b8d265ccd0db1",
         "role": "Nominal artifact materialisation and ROI projection strategies."
       },
       {
@@ -976,7 +995,8 @@
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "Source inspection confirmed native Shapes ownership and nominal materialisation strategies; the Napari ROI integration test covers the UI seam",
       "On 2026-08-24, rechecked the complete explanation after materialization outputs gained nominal text behavior; no ROI ownership or projection claim changed.",
-      "On 2026-08-24, rechecked the explanation after every text-emitting writer adopted the nominal text output declaration; ROI ownership remains unchanged."
+      "On 2026-08-24, rechecked the explanation after every text-emitting writer adopted the nominal text output declaration; ROI ownership remains unchanged.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1299,7 +1319,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/window_handlers.py",
-        "sha256": "fc89ddca2e7d2f77d80588a36269848c88260e9c127618e2a39801276fb73867",
+        "sha256": "5080a81191a8cfc78ce826db7e241bd41d3df7607deea32128a06449e04a3aa8",
         "role": "OpenHCS domain window-route registration over pyqt-reactive, with configuration-window presentation derived from its stable UI identity."
       }
     ],
@@ -1310,7 +1330,8 @@
       "Current imports place generic form/window mechanics in pyqt-reactive and OpenHCS actions in the named adapters",
       "Re-reviewed the public form-build completion, failure, and signal lifecycle against the complete dependent page and the updated pyqt-reactive owner documentation.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "On 2026-08-28, re-read the complete explanation after the OpenHCS configuration route began deriving its title from GlobalConfigWindowIdentity; reusable form and window mechanics remain in pyqt-reactive and FunctionStep policy remains in OpenHCS."
+      "On 2026-08-28, re-read the complete explanation after the OpenHCS configuration route began deriving its title from GlobalConfigWindowIdentity; reusable form and window mechanics remain in pyqt-reactive and FunctionStep policy remains in OpenHCS.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1334,7 +1355,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1357,12 +1378,13 @@
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
     "path": "docs/source/architecture/streaming_boundary_and_wrappers.rst",
-    "source_sha256": "cfcf24554b36fcb5e11c92fac2a726c4000e095b450c1ea4ebd73cf85ce7bcc9",
+    "source_sha256": "b4943eeac6a59501b60ebfa16b0b093bc415b5bf8e4124409371b0d3641cbbfd",
     "audience": [
       "OpenHCS streaming, viewer, and runtime maintainers"
     ],
@@ -1391,7 +1413,7 @@
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "c1120464ed17cab2c56c3bcb6ee139daa2f26bb0f10a060e9c154e19e2988d95",
+        "sha256": "a869e0224a0c8c2c96a92a70ef6061292355790205162b0d1c5beac7f64c1560",
         "role": "Applies bounded shape projection and preflighted layer isolation inside the owning Napari Qt process."
       },
       {
@@ -1448,6 +1470,16 @@
         "path": "tests/unit/test_orchestrator_lane_planning.py",
         "sha256": "4148ccb3e51d21c26f8126d19dd811c84b44f754f857d995889d9d1d24c135f9",
         "role": "Proves multi-viewer bootstrap rollback after partial acquisition and readiness failure."
+      },
+      {
+        "path": "openhcs/runtime/napari_streaming_handlers.py",
+        "sha256": "7b9c99e9f30233986c9bde55fb38d797be0a6989ad5b0e309a6be78e2df0b0bd",
+        "role": "Owns accepted intake-cycle and route error retention through settlement."
+      },
+      {
+        "path": "tests/unit/test_napari_accepted_work_settlement.py",
+        "sha256": "a6248305f0d4b27b92b3eb81fe5b75a31073695ad3b5ebfab1d76071d9d305e9",
+        "role": "Tests actual accepted display failures, settlement reporting and recovery."
       }
     ],
     "findings": [
@@ -1476,7 +1508,8 @@
       "On 2026-08-25, re-read the complete explanation against the visualizer contract, transactional acquisition path, lifecycle owner, and rollback regressions; revised it to distinguish owned-process cleanup from external-client release.",
       "On 2026-08-25, 162 focused component, microscope, source-binding, streaming, viewer-protocol, and rollback tests passed; documentation validation checked 154 files, 24 Python blocks, and 153 audited sources, and warning-free Sphinx rendered all 152 active pages.",
       "On 2026-08-26, re-read the complete page after the generic endpoint connection lifecycle gained shared cancellation authority; the viewer transport and lifecycle ownership claims remain accurate.",
-      "On 2026-08-27, re-read the complete explanation against execution-server catalogue shutdown; the changed preparation process does not alter the documented viewer acquisition, settlement, or exact process-group ownership."
+      "On 2026-08-27, re-read the complete explanation against execution-server catalogue shutdown; the changed preparation process does not alter the documented viewer acquisition, settlement, or exact process-group ownership.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1548,7 +1581,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1600,7 +1633,8 @@
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-09-07, re-read the complete explanation page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1614,12 +1648,12 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "14d2c4c04ea150d53d83e95ba51762aef0d468b8680fb8715e6dc0401e5a01bf",
+        "sha256": "00cacb7b518ab31c72e8c210a0d0e1e535a71fcd0d4403b7593bd055b4b5def0",
         "role": "Desktop composition and live UIConfig application boundary."
       },
       {
@@ -1649,12 +1683,13 @@
       "On 2026-08-28, re-read the complete transition reference after desktop window titles began projecting from stable UI identity declarations; the supported application remains PyQt and no Textual source, dependency, package, or entry point returned.",
       "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
     "path": "docs/source/architecture/ui_services_architecture.rst",
-    "source_sha256": "1ca20d11f24e53dbd2f7cd1fb24e53ff8a535165722e0cc77e7208b96a96168d",
+    "source_sha256": "dfd279a55ffc77a87e2154d92ce508ed674e9cc303e669974ee1922574f57766",
     "audience": [
       "OpenHCS desktop, ObjectState, and UI-service maintainers"
     ],
@@ -1673,7 +1708,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/window_handlers.py",
-        "sha256": "fc89ddca2e7d2f77d80588a36269848c88260e9c127618e2a39801276fb73867",
+        "sha256": "5080a81191a8cfc78ce826db7e241bd41d3df7607deea32128a06449e04a3aa8",
         "role": "Registers OpenHCS domain window routes, including declaration-owned config ObjectState scopes and stable configuration-window presentation, over pyqt-reactive."
       },
       {
@@ -1705,6 +1740,16 @@
         "path": "tests/unit/pyqt_gui/test_application_cleanup.py",
         "sha256": "c5766b1f4e98db7d63da72ec88c911a67087aa0460503949bfb06f7f424d1669",
         "role": "Exercises real QApplication shutdown in a subprocess and asserts native parent and child destruction while Python references remain alive."
+      },
+      {
+        "path": "openhcs/agent/ui_bridge_actions.py",
+        "sha256": "4ad2f1e61d825907f5b362d9360606f04ebf05181c0bd21d64e74262a019e306",
+        "role": "Owns main-window action behaviour, admission, effects and recovery warnings."
+      },
+      {
+        "path": "openhcs/pyqt_gui/services/desktop_restart.py",
+        "sha256": "24ca24c3afc0038a268280a73ae7615045eb107ee541a59c13fcdf07005603a2",
+        "role": "Owns explicit session-preserving restart admission and detached relaunch."
       }
     ],
     "findings": [
@@ -1720,7 +1765,8 @@
       "On 2026-08-25, re-read the complete explanation against OpenHCS config route registration and pyqt-reactive navigation ownership; focused config-window tests and live UI navigation proved declared scope routing, tab selection, and rejection of ambiguous fields.",
       "On 2026-08-26, re-read the complete explanation after OpenHCSZMQConfig separated execution submission from short control deadlines; the field remains declaration-owned and 36 configuration, schema, and help-projection tests passed.",
       "On 2026-08-28, re-read the complete explanation after OpenHCS window composition began deriving configuration and dock titles from stable UI identity declarations; ScopeWindowRegistry still owns generic routing and OpenHCS still owns domain scopes and actions.",
-      "On 2026-09-07, re-read the complete UI services explanation against application cleanup and window lifecycle ownership. Documented explicit DeferredDelete delivery after exec returns; a real OpenHCSPyQtApp subprocess proved native window and child retention before the fix and destruction after it, without replacing Qt with mocks. This ownership proof does not establish the cause of the macOS SIGSEGV."
+      "On 2026-09-07, re-read the complete UI services explanation against application cleanup and window lifecycle ownership. Documented explicit DeferredDelete delivery after exec returns; a real OpenHCSPyQtApp subprocess proved native window and child retention before the fix and destruction after it, without replacing Qt with mocks. This ownership proof does not establish the cause of the macOS SIGSEGV.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -1874,7 +1920,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/desktop_restart.py",
-        "sha256": "63192c2921db32357ffc181eb05793c5ff965f620a91582fd2ac29d9d732bdd5",
+        "sha256": "24ca24c3afc0038a268280a73ae7615045eb107ee541a59c13fcdf07005603a2",
         "role": "Carries the saved desktop session and ObjectState history across a detached process restart."
       },
       {
@@ -1894,7 +1940,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_desktop_restart.py",
-        "sha256": "af7636a70e93b3f4e00bc4f58550dffcab6759ffb62adfcc48989f428e93db8e",
+        "sha256": "68e541045bb9672ccdc4450c72fd2bc6d89e2281cec1259c0ef04320b65e3576",
         "role": "Proves the themed mismatch decision and state-preserving version-restart transaction."
       },
       {
@@ -1994,7 +2040,8 @@
       "On 2026-08-27, re-read the complete transition explanation after Windows installed-demo execution exposed the Numba cache path budget; the execution and catalogue ownership claims remain unchanged, and the native harness now consumes the declaration-owned current-platform cache path.",
       "On 2026-08-27, re-read the complete transition explanation after library registries gained declaration-owned runtime-parameter exclusions; endpoint catalogue ownership and transport claims remain unchanged.",
       "On 2026-08-27, applied the Diataxis reference boundary and re-read the complete page against the server, preparation, registry, and cancellation tests; revised the cold-cache lifecycle to identify its exact child-process and joined-shutdown owners.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -2033,7 +2080,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "14d2c4c04ea150d53d83e95ba51762aef0d468b8680fb8715e6dc0401e5a01bf",
+        "sha256": "00cacb7b518ab31c72e8c210a0d0e1e535a71fcd0d4403b7593bd055b4b5def0",
         "role": "Projects the configured endpoint snapshot into its dedicated right-hand indicator, and routes endpoint termination to the client lifecycle owner."
       },
       {
@@ -2080,7 +2127,8 @@
       "On 2026-08-26, re-read the complete page after endpoint attempts gained caller-owned cancellation; browser observation remains a projection over ZMQRuntime-owned connection lifecycle.",
       "On 2026-08-27, re-read the complete reference and all three changed browser authorities after startup observations began projecting their typed lifecycle phase into both generic and OpenHCS rows; the documented snapshot boundary and nominal presentation ownership remain accurate.",
       "On 2026-08-28, re-read the complete reference after the browser section and dock title began projecting from ZmqServerManagerWindowIdentity; endpoint snapshots, progress topology, status-bar projection, and client-session ownership remain unchanged.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -2452,7 +2500,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2513,7 +2561,8 @@
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -2532,7 +2581,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2559,7 +2608,8 @@
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-09-07, re-read the complete how-to page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -2573,7 +2623,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2605,7 +2655,8 @@
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -2772,7 +2823,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "7c989e6039f05a72270acdb24e7147985fbcb197b56b0f7abd44ce1f427e9b55",
+        "sha256": "d79a413d50f7911064cfb83fc34191bf77bb4f638ce28a72f0b54666bc377d88",
         "role": "Proves stale protocol and application versions fail before UI operation dispatch."
       },
       {
@@ -2839,7 +2890,8 @@
       "On 2026-08-26, re-read the complete development how-to after function-catalog endpoint startup joined the request cancellation authority; the documented MCP and submission timeout boundaries remain accurate.",
       "On 2026-08-27, applied the Diataxis how-to boundary and re-read the complete page against persistent-session progress tests; revised --timeout-seconds as a renewable inactivity deadline while keeping operation maxima separate.",
       "Re-read the complete how-to on 2026-09-07 against the verbose invocation diagnostic and thread-policy regressions. Added the diagnostic step for a tool that continues reporting activity without returning; client deadlines and restart procedures are unchanged.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -2956,7 +3008,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "deda3568af12085b7d8b4bb014dd9f00d15a1db661449351c43dfe30f9e7d298",
+        "sha256": "d128abd5a36de5a844ccd733388459f054699605f9623e9e5a75dc8bcfea2ae6",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3041,7 +3093,7 @@
       },
       {
         "path": "tests/unit/test_ci_package_boundaries.py",
-        "sha256": "d252ee5bee9bc136585d46ccf634577869fdf335c238fa004b2586eb4c4b27b7",
+        "sha256": "ddd173fc69fe79d9fb862fbb53f828d264e4fab99098bb9a7363b8c9f54ac9c5",
         "role": "Proves publication consumes central release requirements and that candidate and published GUI matrices retain their typed screenshot evidence."
       }
     ],
@@ -3131,7 +3183,8 @@
       "On 2026-09-07, re-read the complete release how-to against installed GUI smoke and the failure-retention workflow. Publication still requires successful exact-commit runs; no readiness result or retry bypasses process failure.",
       "On 2026-09-07, re-read the complete page and checked its affected claims against the regression enforcing separate native-crash and common GUI evidence artifact boundaries; separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
       "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -3190,7 +3243,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "deda3568af12085b7d8b4bb014dd9f00d15a1db661449351c43dfe30f9e7d298",
+        "sha256": "d128abd5a36de5a844ccd733388459f054699605f9623e9e5a75dc8bcfea2ae6",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],
@@ -3237,7 +3290,8 @@
       "On 2026-09-07, re-read the complete how-to page against the wheel integration job enabling the existing live source-store code-mode/ZMQ acceptance gate without changing the documented release, installer or OMERO boundaries. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read the complete OMERO testing how-to against the changed CI workflow; added PyPI GUI crash artifacts do not change OMERO lifecycle, readiness, storage or publication ownership.",
       "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
-      "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation."
+      "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -3251,7 +3305,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3291,7 +3345,8 @@
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-09-07, re-read the complete reference page against the Zarr 3 and ome-zarr dependency floors, PolyStore 0.2.10 requirement, and unchanged Python support, optional extras, entry points and package ownership in pyproject.toml. Its existing user need, product claims and navigation remain accurate; no implementation-specific version table or duplicate procedure was added.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {
@@ -3433,7 +3488,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "7d5041f57295c2703a70da867e28396775baa3ca894119f875b5af627d65960f",
+        "sha256": "01d712f691f3eea973c3199334f9924fedc424fc273a86579b94e37d0c9fd31d",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -3455,7 +3510,8 @@
       "On 2026-08-27, re-read the complete page after the Intel macOS desktop dependency boundary retained the final cryptography release line with universal2 wheels; the existing product claims and ownership boundaries remain accurate.",
       "On 2026-09-07, re-read the complete repository setup how-to against pyproject.toml after the Zarr 3 migration and PolyStore 0.2.10 floor. Confirmed the unchanged Python range, extras, submodule installation order and clean-environment workflow, and corrected the build-versus-install dependency distinction.",
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
     ]
   },
   {

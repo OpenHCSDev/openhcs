@@ -1120,8 +1120,12 @@ class ROIMaterializationTargetRequest(ROIRequestBase):
         return cls(
             paths=context.paths(options),
             options=options,
-            source_stem_authority=SourceStemAuthority.from_processing_context(context.context),
-            materialization_input=MaterializationInput.from_runtime_slice_projected_value(data, options),
+            source_stem_authority=SourceStemAuthority.from_processing_context(
+                context.context
+            ),
+            materialization_input=MaterializationInput.from_runtime_slice_projected_value(
+                data, options
+            ),
             artifact_source_identity=context.artifact_source_identity,
             output_plan=context.output_plan,
             pipeline_position=context.pipeline_position,
@@ -1733,7 +1737,8 @@ class WriterSpec:
         ):
             return ()
         return tuple(
-            output for output in self.write(data, options, context)
+            output
+            for output in self.write(data, options, context)
             if output_path_filter is None or output_path_filter(Path(output.path))
         )
 
@@ -2867,7 +2872,10 @@ def _roi_output_path_projection(
     if materialization_is_empty(request.materialization_input.data):
         return (request.summary_path,)
     return (
-        *(target.archive.path for target in _ROI_MATERIALIZATION_TARGETS.targets(request)),
+        *(
+            target.archive.path
+            for target in _ROI_MATERIALIZATION_TARGETS.targets(request)
+        ),
         request.summary_path,
     )
 

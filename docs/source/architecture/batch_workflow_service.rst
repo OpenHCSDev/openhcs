@@ -32,19 +32,28 @@ This is composition of nominal services, not one monolithic
 Compile-only flow
 -----------------
 
-1. ``PlateManagerBatchWorkflow.compile_plates`` resets the progress projection.
-2. ``CompileBatchWorkflowService`` builds ``CompileJob`` values through the
-   request builder.
+1. ``CompileBatchWorkflowService`` admits and reserves only the selected plates.
+2. The request builder projects their saved declarations into ``CompileJob``
+   values without replacing an active execution batch.
 3. ZMQRuntime's ``BatchSubmitWaitEngine`` submits all compile jobs and waits for
    their results.
-4. Successful compile artifacts are stored by plate and the host projection is
-   updated.
+4. Successful compile artifacts are stored by plate and exact execution ID;
+   completion releases only that compile request's reservation. Progress is
+   reprojected from the current runtime owner.
+
+Other plates remain available for initialisation, configuration and code editing
+while a plate runs. A compile request may queue behind the active server job;
+admission does not promise simultaneous server execution. Mutation guards protect
+the exact plate whose initialisation, compilation or execution owns its live
+orchestrator. Shared global changes and collection-wide replacement are guarded
+when they would affect that work.
 
 Run flow
 --------
 
-1. Reset progress, terminal activity, execution IDs, and live measurements.
-2. Build a ``RunSpec`` for every selected plate.
+1. Admit the selected plates and reserve the execution batch before awaiting
+   endpoint connection.
+2. Reset that run's progress and build a ``RunSpec`` for every selected plate.
 3. Compile every run spec before submitting any execution.
 4. Submit each execution with its exact ``compile_artifact_id``.
 5. Start completion polling and converge completed, failed, or cancelled state
@@ -52,6 +61,10 @@ Run flow
 
 The compile-all-before-execute invariant prevents a partially started batch
 when a later plate cannot compile.
+
+A later standalone compilation supersedes the selected member's terminal row
+activity through the existing batch-member lifecycle. The batch's historical
+success/failure counts remain intact, including while a sibling is still running.
 
 Lifecycle
 ---------

@@ -45,6 +45,12 @@ generic registration, focus/reuse, parentage, navigation, and close cleanup.
 Reopening a scoped editor therefore focuses the existing window; it does not
 create a second domain state or a second window registry.
 
+``MainWindowAction`` members own their enablement, invocation, side effects and
+recovery warnings. The UI bridge projects those members directly. Session restart
+uses the same ``DesktopRestartSession`` capture and history restoration boundary
+as updates and version-mismatch recovery; its accepted receipt precedes old-UI
+shutdown and requires discovery of the new bridge afterwards.
+
 The process configuration ObjectState scopes share one stable configuration
 window. OpenHCS registers those declared scopes as routes to that window, while
 its navigation driver derives the owning tab from the requested ObjectState

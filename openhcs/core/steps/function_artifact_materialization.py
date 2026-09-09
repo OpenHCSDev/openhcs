@@ -76,6 +76,7 @@ if TYPE_CHECKING:
     from polystore.filemanager import FileManager
     from openhcs.core.context.processing_context import ProcessingContext
 
+
 class ArtifactMaterializationRecordReducer(
     ArtifactTypeStrategyMatchMixin,
     MostDerivedContextStrategyMixin[type[ArtifactType]],
@@ -340,9 +341,11 @@ class ArtifactStreamSourceMetadataAuthority:
             )
         return StreamSourceComponentMetadataItems.from_values(
             (
-                fallback_source_identity.component_metadata
-                if fallback_source_identity is not None
-                else None,
+                (
+                    fallback_source_identity.component_metadata
+                    if fallback_source_identity is not None
+                    else None
+                ),
             )
         )
 
@@ -370,9 +373,11 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         context: "ProcessingContext",
         materialization: "RuntimeArtifactMaterialization",
     ) -> ArtifactMaterializationBackendPlan:
-        streams_artifact = not plan.compiled_function_pattern.publishes_output_to_main_flow(
-            materialization.output_plan,
-            materialization.record.key.scope.value_text,
+        streams_artifact = (
+            not plan.compiled_function_pattern.publishes_output_to_main_flow(
+                materialization.output_plan,
+                materialization.record.key.scope.value_text,
+            )
         )
         return ArtifactMaterializationBackendPlan(
             persistent_backend_kwargs=self.persistent_backend_kwargs(),
@@ -474,10 +479,7 @@ class AnalysisOutputDescriptorAuthority:
             ""
             if scope is None
             else "".join(
-                (
-                    f"_{component.value}-"
-                    f"{OpenHCSPlaneAddress.component_token(value)}"
-                )
+                (f"_{component.value}-" f"{OpenHCSPlaneAddress.component_token(value)}")
                 for component, value in scope.source_component_values
                 if not component.is_multiprocessing_axis()
             )
@@ -540,13 +542,10 @@ class AnalysisOutputDescriptorAuthority:
                     output_plan=output_plan,
                 )
             except IncompleteFunctionOutputFilenameIdentityError as exc:
-                if (
-                    output_plan is None
-                    or not cls.missing_component_is_aggregated(
-                        exc.component_name,
-                        record.key.scope,
-                        tuple(plan.variable_components or ()),
-                    )
+                if output_plan is None or not cls.missing_component_is_aggregated(
+                    exc.component_name,
+                    record.key.scope,
+                    tuple(plan.variable_components or ()),
                 ):
                     raise
                 return cls.aggregate_descriptor(
@@ -705,21 +704,15 @@ class AnalysisOutputDescriptorAuthority:
                     tuple(plan.variable_components or ()),
                 ):
                     raise
-                if (
-                    exact_fixed_scope
-                    or (
-                        output_plan is not None
-                        and output_plan.materialization_source() is not None
-                    )
+                if exact_fixed_scope or (
+                    output_plan is not None
+                    and output_plan.materialization_source() is not None
                 ):
                     raise
             except ValueError:
-                if (
-                    exact_fixed_scope
-                    or (
-                        output_plan is not None
-                        and output_plan.materialization_source() is not None
-                    )
+                if exact_fixed_scope or (
+                    output_plan is not None
+                    and output_plan.materialization_source() is not None
                 ):
                     raise
             else:
@@ -930,6 +923,8 @@ def actual_materialization_records(
     return tuple(
         record for _, record in sorted(record_sort_items, key=lambda item: item[0])
     )
+
+
 @dataclass(frozen=True, slots=True)
 class RuntimeArtifactMaterialization:
     """One exact compiled artifact value and its generic materialization target."""
@@ -966,11 +961,13 @@ class RuntimeArtifactMaterialization:
             source_identity = (
                 ArtifactStreamSourceMetadataAuthority.payload_source_identity(data)
             )
-            aggregate_descriptor = AnalysisOutputDescriptorAuthority.aggregate_descriptor(
-                output_plan.name,
-                plan,
-                scope=record.key.scope,
-                source_identity=source_identity,
+            aggregate_descriptor = (
+                AnalysisOutputDescriptorAuthority.aggregate_descriptor(
+                    output_plan.name,
+                    plan,
+                    scope=record.key.scope,
+                    source_identity=source_identity,
+                )
             )
             base_path = output_plan.artifact_type.projected_materialization_base_path(
                 artifact_name=output_plan.name,
