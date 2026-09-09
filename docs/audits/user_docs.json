@@ -3648,7 +3648,7 @@
       },
       {
         "path": "packaging/mcpb/openhcs/manifest.json",
-        "sha256": "f9454dfdaad0adf5bf848713acaedec1191397f0e4394f0177858113430eb723",
+        "sha256": "a1a96e22d023a49fff213b04f093d83b07929b5ea4bace78808e8129e5423889",
         "role": "Declares the packaged MCP server command, arguments, compatibility, and client-visible metadata."
       },
       {
@@ -3678,6 +3678,7 @@
       "On 2026-08-23, re-reviewed the capability declaration after execution status began exposing the retained generic progress observation; the documented registry, surface, and safety ownership claims remain accurate.",
       "On 2026-08-24, re-read the complete client how-to against the regenerated 0.7.25 MCPB manifest; commands, capability surfaces, path policy, and client registration guidance remain accurate.",
       "On 2026-08-24, re-read the complete client how-to against the regenerated 0.7.26 MCPB manifest; its commands, capability surfaces, path policy, and client-registration guidance remain accurate.",
+      "On 2026-09-09, re-read the complete client how-to against the generated 0.8.4 MCPB manifest. Only the version changed; installation, server launch, GUI attachment and path-policy claims remain unchanged. Refreshed only the reviewed manifest digest; this is not publication evidence.",
       "On 2026-08-24, re-read the complete client how-to after selected-workflow receipt and revision regressions were added to the shared MCP server test module; installation, registration, path-policy, and reconnect guidance remain accurate.",
       "On 2026-08-24, re-read the complete client how-to after idempotent initialization polling gained a shared MCP regression; installation, registration, path-policy, and reconnect guidance remain accurate.",
       "On 2026-08-24, re-read the complete client how-to after dev-client UI request projections were consolidated behind their DTO authorities; no installation or client-facing guidance changed.",
