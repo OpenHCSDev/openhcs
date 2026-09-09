@@ -33,6 +33,10 @@ from openhcs.core.progress import (
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.pyqt_gui.services.plate_manager_batch_workflow import (
     DebugSnapshotAvailableNotification,
+    PlateManagerBatchWorkflow,
+)
+from openhcs.pyqt_gui.widgets.shared.services.execution_state import (
+    ExecutionBatchRuntime,
 )
 from openhcs.pyqt_gui.widgets.debug_toolbar import DebugToolbarWidget
 from openhcs.pyqt_gui.widgets.pipeline_editor import PipelineEditorWidget
@@ -346,7 +350,10 @@ class PlateManagerRunRecorder:
 class DebugBatchWorkflowRecorder:
     """Batch workflow seam for paused-worker GUI command routing tests."""
 
-    def __init__(self) -> None:
+    require_execution_admission = PlateManagerBatchWorkflow.require_execution_admission
+
+    def __init__(self, host) -> None:
+        self.host = host
         self.run_calls = []
         self.worker_commands = []
 
@@ -365,19 +372,24 @@ class DebugBatchWorkflowRecorder:
 class PlateManagerDebugHarness:
     """Minimal plate-manager state used by paused-worker UX tests."""
 
+    plate_has_active_work = PlateManagerWidget.plate_has_active_work
+    require_pipeline_definition_mutation_allowed = (
+        PlateManagerWidget.require_pipeline_definition_mutation_allowed
+    )
+
     def __init__(self) -> None:
         self._active_debug_sessions = {}
         self._debug_terminal_summaries_by_plate = {}
         self.manager_execution_state_changed = StatusSignalRecorder()
         self.execution_state = ManagerExecutionState.IDLE
-        self._batch_workflow_service = DebugBatchWorkflowRecorder()
+        self._batch_workflow_service = DebugBatchWorkflowRecorder(self)
         self.execution_error = StatusSignalRecorder()
         self.export_calls = []
         self.item_updates = 0
         self.button_updates = 0
-        self.plate_terminal_activity_status = SimpleNamespace(
-            terminal_status=lambda plate_path: None
-        )
+        self.plate_terminal_activity_status = ExecutionBatchRuntime()
+        self.plate_init_pending = set()
+        self.plate_compile_pending = set()
 
     def get_selected_items(self) -> list[dict[str, str]]:
         return []

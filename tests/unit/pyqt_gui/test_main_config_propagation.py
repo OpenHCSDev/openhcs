@@ -401,9 +401,10 @@ def test_lifecycle_workflow_projects_runtime_progress_without_retaining_state(
     from PyQt6.QtWidgets import QProgressBar
 
     progress_bar = QProgressBar()
+    plate_manager = SimpleNamespace(plate_init_pending=set())
     workflow = MainWindowLifecycleWorkflow(
         main_window=QWidget(),
-        embedded_widgets=SimpleNamespace(),
+        embedded_widgets=SimpleNamespace(require_plate_manager=lambda: plate_manager),
         floating_windows={},
         status_progress_bar=progress_bar,
         ui_bridge_lifecycle=MainWindowUiBridgeLifecycle(),
@@ -425,6 +426,26 @@ def test_lifecycle_workflow_projects_runtime_progress_without_retaining_state(
 
     assert progress_bar.value() == 100
     assert not progress_bar.isVisible()
+
+    plate_manager.plate_init_pending.add("/initializing-plate")
+    workflow.runtime_progress_changed(
+        SimpleNamespace(overall_percent=100.0, has_active_work=False)
+    )
+    assert progress_bar.maximum() == 0
+    assert not progress_bar.isHidden()
+
+    workflow.runtime_progress_changed(
+        SimpleNamespace(overall_percent=41.0, has_active_work=True)
+    )
+    assert progress_bar.maximum() == 100
+    assert progress_bar.value() == 41
+    assert not progress_bar.isHidden()
+
+    plate_manager.plate_init_pending.clear()
+    workflow.runtime_progress_changed(
+        SimpleNamespace(overall_percent=100.0, has_active_work=False)
+    )
+    assert progress_bar.isHidden()
 
 
 def test_lifecycle_workflow_cleans_embedded_resource_owners_before_qt_teardown(

@@ -1,4 +1,4 @@
-from types import SimpleNamespace
+from types import MethodType, SimpleNamespace
 
 import pytest
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
@@ -11,25 +11,40 @@ from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.pyqt_gui.services.ui_bridge_plate_manager import PlateManagerActionProvider
 from PyQt6.QtWidgets import QPushButton
 from openhcs.core.execution_state import ManagerExecutionState
+from openhcs.pyqt_gui.widgets.shared.services.execution_state import (
+    ExecutionBatchRuntime,
+)
 
 
 @pytest.mark.parametrize("phase", EndpointStartupPhase)
 @pytest.mark.parametrize("compiled", [False, True])
+@pytest.mark.parametrize("compile_pending", [False, True])
 @pytest.mark.parametrize("execution_state", ManagerExecutionState)
 def test_run_control_uses_endpoint_readiness_without_disabling_stop(
-    qapp, phase, compiled, execution_state
+    qapp, phase, compiled, compile_pending, execution_state
 ):
+    availability_notifications = []
     manager = SimpleNamespace(
         get_selected_items=lambda: [SimpleNamespace(scope_id="/compiled-plate")],
         plate_compiled_data={"/compiled-plate": object()} if compiled else {},
         is_any_plate_running=lambda: execution_state.busy,
         execution_endpoint_status=EndpointStartupStatus(phase, "test"),
         execution_state=execution_state,
+        plate_terminal_activity_status=ExecutionBatchRuntime(),
+        plate_init_pending=set(),
+        plate_compile_pending={"/compiled-plate"} if compile_pending else set(),
+        action_availability_changed=SimpleNamespace(
+            emit=lambda: availability_notifications.append(True)
+        ),
         buttons={action.value: QPushButton() for action in PlateManagerAction},
+    )
+    manager.plate_has_active_work = MethodType(
+        PlateManagerWidget.plate_has_active_work, manager
     )
     PlateManagerWidget.update_button_states(manager)
     expected = {
         ManagerExecutionState.IDLE: compiled
+        and not compile_pending
         and phase is EndpointStartupPhase.CONNECTED,
         ManagerExecutionState.RUNNING: True,
         ManagerExecutionState.STOPPING: False,
@@ -38,6 +53,7 @@ def test_run_control_uses_endpoint_readiness_without_disabling_stop(
     run_button = manager.buttons[PlateManagerAction.RUN_PLATE.value]
     assert run_button.isEnabled() is expected
     assert run_button.text() == execution_state.run_button_text
+    assert availability_notifications == [True]
 
 
 @pytest.mark.parametrize(
