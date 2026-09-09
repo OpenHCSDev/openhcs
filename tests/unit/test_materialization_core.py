@@ -1,4 +1,5 @@
 import json
+from functools import partial
 
 import numpy as np
 import pytest
@@ -33,6 +34,7 @@ from zmqruntime.viewer_protocol import ViewerTransportEndpoint
 import openhcs  # noqa: F401
 from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
+from openhcs.core.config import AnalysisConsolidationConfig
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
 )
@@ -62,6 +64,7 @@ from openhcs.core.source_metadata import (
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import (
+    CsvOptions,
     ImageFileOptions,
     JsonOptions,
     MaterializationSpec,
@@ -72,9 +75,13 @@ from openhcs.processing.materialization import (
     json_materializer,
     json_only,
     materialize,
+    materialization_outputs,
     tabular_field_names_from_materialization,
     text_only,
     tiff_stack,
+)
+from openhcs.processing.backends.analysis.consolidate_analysis_results import (
+    analysis_file_path_is_included,
 )
 from openhcs.processing.materialization.core import (
     MaterializationInputItem,
@@ -96,6 +103,59 @@ def _memory_materialize(spec, data, path, filemanager):
         backends=["memory"],
         backend_kwargs={},
     )
+
+
+def test_declared_path_selection_preserves_outputs_without_rendering_rois(monkeypatch):
+    data = {
+        "rows": [{"count": 2, "intensity": 1.25}],
+        "mask": np.ones((8, 8), dtype=np.int32),
+    }
+    csv_options = CsvOptions(source="rows")
+    json_options = JsonOptions(source="rows")
+    filemanager = FileManager({"memory": MemoryStorageBackend()})
+    expected = materialization_outputs(
+        MaterializationSpec(csv_options, json_options),
+        data,
+        "/analysis/A01_counts",
+        filemanager,
+    )
+    monkeypatch.setattr(
+        "polystore.roi.extract_rois_from_labeled_mask",
+        lambda *args, **kwargs: pytest.fail("Unselected ROI writer executed"),
+    )
+    actual = materialization_outputs(
+        MaterializationSpec(csv_options, ROIOptions(source="mask"), json_options),
+        data,
+        "/analysis/A01_counts",
+        filemanager,
+        output_path_filter=partial(
+            analysis_file_path_is_included,
+            analysis_consolidation_config=AnalysisConsolidationConfig(
+                file_extensions=(".csv", ".json"), exclude_patterns=(),
+            ),
+        ),
+    )
+    assert [(output.path, output.content) for output in actual] == [
+        (output.path, output.content) for output in expected
+    ]
+    assert len(actual) == 2
+    assert actual[0].require_text_content() == "count,intensity\r\n2,1.25\r\n"
+
+
+def test_roi_output_projection_preserves_requested_summary_content():
+    filemanager = FileManager({"memory": MemoryStorageBackend()})
+    spec = MaterializationSpec(ROIOptions(min_area=0))
+    data = np.ones((8, 8), dtype=np.int32)
+    all_outputs = materialization_outputs(spec, data, "/analysis/A01_labels", filemanager)
+    summaries = materialization_outputs(
+        spec, data, "/analysis/A01_labels", filemanager,
+        output_path_filter=lambda path: path.suffix == ".txt",
+    )
+    assert len(summaries) == 1
+    assert [(output.path, output.content) for output in summaries] == [
+        (output.path, output.content) for output in all_outputs
+        if output.path.endswith(".txt")
+    ]
 
 
 class _TestViewerDisplayConfig(ViewerDisplayConfigABC):

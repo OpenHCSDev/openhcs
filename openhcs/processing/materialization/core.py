@@ -1110,6 +1110,27 @@ class ROIMaterializationTargetRequest(ROIRequestBase):
     output_plan: ArtifactOutputPlan | None = None
     pipeline_position: int | None = None
 
+    @classmethod
+    def from_context(
+        cls,
+        data: MaterializationValue,
+        options: ROIOptions,
+        context: MaterializationContext,
+    ) -> ROIMaterializationTargetRequest:
+        return cls(
+            paths=context.paths(options),
+            options=options,
+            source_stem_authority=SourceStemAuthority.from_processing_context(context.context),
+            materialization_input=MaterializationInput.from_runtime_slice_projected_value(data, options),
+            artifact_source_identity=context.artifact_source_identity,
+            output_plan=context.output_plan,
+            pipeline_position=context.pipeline_position,
+        )
+
+    @property
+    def summary_path(self) -> str:
+        return self.paths.related_output_path(self.options, self.options.summary_suffix)
+
     def projected_path(
         self,
         *,
@@ -1680,6 +1701,11 @@ class MaterializationContext:
         )
 
 
+OutputPathProjection: TypeAlias = Callable[
+    [MaterializationValue, FileOutputOptions, MaterializationContext], tuple[str, ...]
+]
+
+
 @dataclass(frozen=True)
 class WriterSpec:
     format: MaterializationFormat
@@ -1687,6 +1713,29 @@ class WriterSpec:
     write: WriterFunction
     primary_path: PrimaryPathSelector
     candidate_paths: CandidatePathSelector
+    output_path_projection: OutputPathProjection | None = None
+
+    def outputs(
+        self,
+        data: MaterializationValue,
+        options: FileOutputOptions,
+        context: MaterializationContext,
+        output_path_filter: Callable[[Path], bool] | None,
+    ) -> tuple[Output, ...]:
+        """Skip rendering only when declared runtime paths prove it unnecessary."""
+        if (
+            output_path_filter is not None
+            and self.output_path_projection is not None
+            and not any(
+                output_path_filter(Path(path))
+                for path in self.output_path_projection(data, options, context)
+            )
+        ):
+            return ()
+        return tuple(
+            output for output in self.write(data, options, context)
+            if output_path_filter is None or output_path_filter(Path(output.path))
+        )
 
 
 WriterFunction = Callable
@@ -1734,6 +1783,7 @@ def writer_for(
     *,
     primary_path: PrimaryPathSelector | None = None,
     candidate_paths: CandidatePathSelector | None = None,
+    output_path_projection: OutputPathProjection | None = None,
 ):
     """Register a writer for a given options type.
 
@@ -1760,6 +1810,7 @@ def writer_for(
             write=fn,
             primary_path=selected_primary_path,
             candidate_paths=selected_candidate_paths,
+            output_path_projection=output_path_projection,
         )
         return fn
 
@@ -2806,11 +2857,27 @@ class ROIMaterializationPlaneMetadataAuthority:
         )
 
 
+def _roi_output_path_projection(
+    data: MaterializationValue,
+    options: ROIOptions,
+    context: MaterializationContext,
+) -> tuple[str, ...]:
+    """Derive possible runtime ROI outputs from the writer's target authority."""
+    request = ROIMaterializationTargetRequest.from_context(data, options, context)
+    if materialization_is_empty(request.materialization_input.data):
+        return (request.summary_path,)
+    return (
+        *(target.archive.path for target in _ROI_MATERIALIZATION_TARGETS.targets(request)),
+        request.summary_path,
+    )
+
+
 @writer_for(
     ROIOptions,
     MaterializationFormat.ROI_ZIP,
     primary_path=ROIPrimaryPathAuthority.primary_path,
     candidate_paths=ROICandidatePathAuthority.paths,
+    output_path_projection=_roi_output_path_projection,
 )
 def _write_roi_zip(
     data: MaterializationValue,
@@ -2819,13 +2886,10 @@ def _write_roi_zip(
 ) -> list[Output]:
     from polystore.roi import extract_rois_from_labeled_mask
 
-    materialization_input = MaterializationInput.from_runtime_slice_projected_value(
-        data,
-        options,
-    )
+    request = ROIMaterializationTargetRequest.from_context(data, options, ctx)
+    materialization_input = request.materialization_input
     payload = materialization_input.data
-    paths = ctx.paths(options)
-    summary_path = paths.related_output_path(options, options.summary_suffix)
+    summary_path = request.summary_path
 
     if materialization_is_empty(payload):
         return [
@@ -2835,19 +2899,7 @@ def _write_roi_zip(
             )
         ]
 
-    targets = _ROI_MATERIALIZATION_TARGETS.targets(
-        ROIMaterializationTargetRequest(
-            paths=paths,
-            options=options,
-            source_stem_authority=SourceStemAuthority.from_processing_context(
-                ctx.context
-            ),
-            materialization_input=materialization_input,
-            artifact_source_identity=ctx.artifact_source_identity,
-            output_plan=ctx.output_plan,
-            pipeline_position=ctx.pipeline_position,
-        )
-    )
+    targets = _ROI_MATERIALIZATION_TARGETS.targets(request)
     outs: list[Output] = []
     total_roi_count = 0
     roi_paths: list[str] = []
@@ -3801,7 +3853,10 @@ class MaterializationSpec(ArtifactMaterializationPayload):
         return tabular_field_names_from_options(self.outputs, primary=self.primary)
 
     def candidate_paths(self, base_path: str) -> tuple[str, ...]:
-        """Return all paths this materialization spec may emit for backend routing."""
+        """Return representative declaration-time paths for previews and routing.
+
+        Runtime payload and source metadata can refine names and add outputs.
+        """
         return tuple(
             path
             for output_options in self.outputs
@@ -3927,8 +3982,10 @@ def _materialization_output_groups(
     spec: MaterializationSpec,
     data: MaterializationValue,
     context: MaterializationContext,
+    *,
+    output_path_filter: Callable[[Path], bool] | None = None,
 ) -> tuple[tuple[WriterSpec, tuple[Output, ...]], ...]:
-    """Build writer outputs once for persistence and exact output observation."""
+    """Render requested outputs through each writer's declared path projection."""
 
     return tuple(
         (
@@ -3937,7 +3994,7 @@ def _materialization_output_groups(
                 output.with_source_identity_fallback(
                     context.artifact_source_identity
                 ).with_variable_components(context.variable_components)
-                for output in writer.write(data, options, context)
+                for output in writer.outputs(data, options, context, output_path_filter)
             ),
         )
         for options in spec.outputs
@@ -3958,8 +4015,13 @@ def materialization_outputs(
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
     output_plan: ArtifactOutputPlan | None = None,
+    output_path_filter: Callable[[Path], bool] | None = None,
 ) -> tuple[Output, ...]:
-    """Derive every concrete output from a materialization contract without saving."""
+    """Derive selected writer outputs without saving.
+
+    Runtime path projections can skip writers with no matching outputs. Writers
+    without a projection render before their actual output paths are filtered.
+    """
 
     materialization_context = MaterializationContext(
         base_path=path,
@@ -3981,6 +4043,7 @@ def materialization_outputs(
             spec,
             data,
             materialization_context,
+            output_path_filter=output_path_filter,
         )
         for output in outputs
     )

@@ -127,8 +127,10 @@ from openhcs.core.streaming_config_factory import (
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
 from openhcs.processing.materialization import (
     CsvOptions,
+    FileBundleOptions,
     JsonOptions,
     ROIOptions,
+    TextOptions,
     csv_only,
     json_only,
     roi_zip,
@@ -1357,7 +1359,7 @@ def test_grouped_special_output_retains_group_coordinate_in_aggregate_name():
     )
 
 
-def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer():
+def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monkeypatch):
     output_plan = ArtifactOutputPlan(
         name="segmentation_masks",
         path="/memory/segmentation_masks.pkl",
@@ -1454,6 +1456,12 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer():
         persistent_backend="disk",
     )
     context.step_plans = {plan.step_index: plan}
+    monkeypatch.setattr(
+        "polystore.roi.extract_rois_from_labeled_mask",
+        lambda *args, **kwargs: pytest.fail(
+            "Consolidation must not reconstruct unrelated ROI geometry"
+        ),
+    )
     assert (
         execution_analysis_outputs(
             {"A01": context},
@@ -1670,6 +1678,67 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
     assert "cell_count" in runtime_output.csv_content
     assert consolidation_inputs.destination.backend == "disk"
     assert consolidation_inputs.destination.images_dir == "/images"
+
+
+@pytest.mark.parametrize(
+    ("options", "payload"),
+    (
+        (
+            FileBundleOptions(),
+            {
+                "Image.csv": "count,intensity\n2,1.25\n",
+                "prior_summary.csv": "count\n999\n",
+                "database.sqlite": b"not a table",
+            },
+        ),
+        (
+            TextOptions(
+                filename_suffix=".csv",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            ),
+            "count,intensity\n2,1.25\n",
+        ),
+    ),
+    ids=("cellprofiler_file_bundle", "explicit_text_csv"),
+)
+def test_consolidation_preserves_export_bundle_and_text_tables(options, payload):
+    output_plan = ArtifactOutputPlan(
+        name="exported_files",
+        path="/memory/exported_files.pkl",
+        artifact_type=SpecialArtifactType,
+        materialization=MaterializationSpec(options),
+    )
+    context = _context(FileManagerStub())
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(output_plan, payload, axis_id="A01"),
+        path=output_plan.path,
+        backend="memory",
+    )
+    plan = _plan(output_plan)
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True, persistent_backend="disk",
+    )
+    context.step_plans = {plan.step_index: plan}
+    consolidation = execution_analysis_outputs(
+        {"A01": context},
+        (
+            RuntimeExecutionObservation(
+                contexts=(RuntimeContextObservation(
+                    context_key="A01",
+                    records=context.runtime_value_store.observed_values,
+                ),),
+            ),
+        ),
+    )
+    assert consolidation is not None
+    outputs = tuple(
+        output for group in consolidation.outputs_by_directory.values()
+        for output in group
+    )
+    assert len(outputs) == 1
+    assert outputs[0].well_id == "A01"
+    assert outputs[0].csv_content == "count,intensity\n2,1.25\n"
+    assert outputs[0].path.suffix == ".csv"
 
 
 def test_materialize_artifact_outputs_unions_measurement_subject_records(

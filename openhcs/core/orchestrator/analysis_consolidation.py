@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -210,13 +211,15 @@ def execution_analysis_outputs(
                     backend=backend,
                     images_dir=step_plan.artifact_images_dir,
                 )
-                for output in materialization.outputs(step_plan, context):
+                for output in materialization.outputs(
+                    step_plan,
+                    context,
+                    output_path_filter=partial(
+                        analysis_file_path_is_included,
+                        analysis_consolidation_config=context.analysis_consolidation_config,
+                    ),
+                ):
                     output_path = Path(output.path)
-                    if not analysis_file_path_is_included(
-                        output_path,
-                        context.analysis_consolidation_config,
-                    ):
-                        continue
                     if (backend, output_path) in seen_paths:
                         continue
                     seen_paths.add((backend, output_path))

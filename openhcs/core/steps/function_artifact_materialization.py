@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import cast, ClassVar, TYPE_CHECKING
 
@@ -1008,6 +1008,8 @@ class RuntimeArtifactMaterialization:
         self,
         plan: CompiledStepPlan,
         context: "ProcessingContext",
+        *,
+        output_path_filter: Callable[[Path], bool] | None = None,
     ) -> tuple[Output, ...]:
         """Derive the exact writer outputs for this runtime artifact."""
         return materialization_outputs(
@@ -1020,6 +1022,7 @@ class RuntimeArtifactMaterialization:
             variable_components=self.output_plan.variable_components,
             pipeline_position=plan.pipeline_position,
             output_plan=self.output_plan,
+            output_path_filter=output_path_filter,
         )
 
     def viewer_outputs(
