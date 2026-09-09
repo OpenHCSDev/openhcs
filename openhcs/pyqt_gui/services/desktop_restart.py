@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from PyQt6.QtCore import QTimer
 
 from openhcs.pyqt_gui.services.desktop_update import (
     DesktopRestartEnvironment,
@@ -26,15 +27,43 @@ class DesktopSessionRestart:
     session: DesktopRestartSession
 
     @classmethod
-    def capture(cls, main_window) -> "DesktopSessionRestart":
+    def capture(
+        cls,
+        main_window,
+        *,
+        purpose: DesktopRestartPurpose = DesktopRestartPurpose.ZMQ_VERSION,
+    ) -> "DesktopSessionRestart":
         runtime = DesktopRestartEnvironment.current()
         return cls(
             runtime=runtime,
             session=DesktopRestartSession.capture(
                 main_window,
-                purpose=DesktopRestartPurpose.ZMQ_VERSION,
+                purpose=purpose,
             ),
         )
+
+    @classmethod
+    def available(cls, main_window) -> bool:
+        try:
+            DesktopRestartSession.require_capture_allowed(main_window)
+        except DesktopUpdateError:
+            return False
+        return True
+
+    @classmethod
+    def request(cls, main_window) -> None:
+        """Capture and arm relaunch before deferring the old UI's normal close."""
+        restart = cls.capture(main_window, purpose=DesktopRestartPurpose.SESSION)
+        try:
+            if not restart.start():
+                raise DesktopUpdateError(
+                    "OpenHCS could not launch its session restart."
+                )
+        except Exception:
+            restart.discard()
+            raise
+        # Let the action callback publish its outcome before retiring the bridge.
+        QTimer.singleShot(0, main_window.close)
 
     def discard(self) -> None:
         self.session.discard()
@@ -49,9 +78,7 @@ class DesktopSessionRestart:
         restart_spec = BackgroundProcessLaunchPolicy.current(detached=True).resolve()
         worker_policy = BackgroundProcessLaunchPolicy.current(detached=True)
         arguments = [
-            worker_policy.python_executable(
-                str(self.runtime.worker_python_executable)
-            ),
+            worker_policy.python_executable(str(self.runtime.worker_python_executable)),
             "-I",
             str(worker),
             "--parent-pid",

@@ -2650,11 +2650,14 @@ class MainWindowActionProvider(UiActionProviderABC):
         return UiActionCatalog(
             schema_version=SCHEMA_VERSION,
             actions=tuple(self.summary(action.value) for action in MainWindowAction),
+            warnings=tuple(
+                warning for action in MainWindowAction for warning in action.warnings
+            ),
         )
 
     def summary(self, action_id: str) -> UiActionSummary:
         action = self._action(action_id)
-        enabled = self._main_window.check_for_updates_action.isEnabled()
+        enabled = action.enabled_for(self._main_window)
         return UiActionSummary(
             schema_version=SCHEMA_VERSION,
             identity=UiActionIdentity(
@@ -2669,20 +2672,13 @@ class MainWindowActionProvider(UiActionProviderABC):
             selection_mode="global",
             current_selection_count=0,
             target_scope_ids=(),
-            disabled_error=(
-                None
-                if enabled
-                else AgentError(
-                    code="update_check_in_progress",
-                    message="An OpenHCS update check is already in progress.",
-                )
-            ),
+            disabled_error=None if enabled else action.unavailable_error,
         )
 
     def invoke(self, request: UiActionInvokeRequest) -> UiActionInvokeResult:
         try:
             action = self._action(request.action_id)
-            self._main_window.check_for_updates()
+            action.invoke_on(self._main_window)
         except Exception as exc:
             return UiActionInvokeResult(
                 schema_version=SCHEMA_VERSION,
@@ -2702,14 +2698,12 @@ class MainWindowActionProvider(UiActionProviderABC):
             ),
             status=UiActionInvocationStatus.ACCEPTED.value,
             receipt=UiMutationReceipt.accepted_for(request.request_token),
+            warnings=action.warnings,
         )
 
     @staticmethod
     def _action(action_id: str) -> MainWindowAction:
-        action = MainWindowAction(action_id)
-        if action is not MainWindowAction.CHECK_FOR_UPDATES:
-            raise ValueError(f"Main-window action has no route: {action_id!r}")
-        return action
+        return MainWindowAction(action_id)
 
 
 class ManagedWindowActionProvider(UiActionProviderABC):

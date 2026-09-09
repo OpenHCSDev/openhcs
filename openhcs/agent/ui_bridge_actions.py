@@ -7,8 +7,10 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from zmqruntime.startup import EndpointStartupPresentationTarget, EndpointStartupStatus
+from openhcs.agent.dto.common import AgentError, AgentWarning
 
 if TYPE_CHECKING:
+    from openhcs.pyqt_gui.main import OpenHCSMainWindow
     from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
     from openhcs.pyqt_gui.widgets.shared.services.widget_action_dispatch import (
         WidgetActionCallable,
@@ -41,6 +43,10 @@ class MainWindowAction(str, Enum):
     title: str
     side_effects: tuple[str, ...]
     confirmation_required: bool
+    enabled_for: Callable[[OpenHCSMainWindow], bool]
+    invoke_on: Callable[[OpenHCSMainWindow], None]
+    unavailable_error: AgentError
+    warnings: tuple[AgentWarning, ...]
 
     def __new__(
         cls,
@@ -48,12 +54,20 @@ class MainWindowAction(str, Enum):
         title: str,
         side_effects: tuple[str, ...],
         confirmation_required: bool,
+        enabled_for: Callable[[OpenHCSMainWindow], bool],
+        invoke_on: Callable[[OpenHCSMainWindow], None],
+        unavailable_error: AgentError,
+        warnings: tuple[AgentWarning, ...] = (),
     ) -> "MainWindowAction":
         member = str.__new__(cls, value)
         member._value_ = value
         member.title = title
         member.side_effects = side_effects
         member.confirmation_required = confirmation_required
+        member.enabled_for = enabled_for
+        member.invoke_on = invoke_on
+        member.unavailable_error = unavailable_error
+        member.warnings = warnings
         return member
 
     CHECK_FOR_UPDATES = (
@@ -61,6 +75,34 @@ class MainWindowAction(str, Enum):
         "Check for Updates",
         ("checks_trusted_release_service", "may_open_update_confirmation"),
         False,
+        lambda window: window.check_for_updates_action.isEnabled(),
+        lambda window: window.check_for_updates(),
+        AgentError(
+            code="update_check_in_progress",
+            message="An OpenHCS update check is already in progress.",
+        ),
+    )
+    RESTART_SESSION = (
+        "restart_session",
+        "Restart OpenHCS and restore session (reconnect required)",
+        (
+            "saves_all_plate_declarations_and_history",
+            "restarts_ui_process",
+            "requires_ui_bridge_rediscovery",
+        ),
+        True,
+        lambda window: window.session_restart_available(),
+        lambda window: window.restart_session(),
+        AgentError(
+            code="session_restart_unavailable",
+            message="Finish plate initialization, compilation and execution, and recover any pending restart first.",
+        ),
+        (
+            AgentWarning(
+                code="ui_restart_reconnect_required",
+                message="restart_session returns an accepted receipt before the old UI exits. Rediscover the new UI bridge and verify restored state; the old process's operation receipt is not persistent across restart.",
+            ),
+        ),
     )
 
 

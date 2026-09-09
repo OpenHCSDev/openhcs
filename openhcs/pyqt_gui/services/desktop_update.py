@@ -73,6 +73,11 @@ class DesktopUpdateCheckOrigin(Enum):
 class DesktopRestartPurpose(Enum):
     """User-facing purpose that owns one captured desktop restart."""
 
+    SESSION = (
+        "session",
+        "OpenHCS restarted and restored the working session and edit history.",
+        False,
+    )
     UPDATE = (
         "update",
         "OpenHCS updated successfully and restored the working session and edit history.",
@@ -369,6 +374,24 @@ class DesktopRestartSession:
         return self.session_document.is_file() and self.history_document.is_file()
 
     @classmethod
+    def require_capture_allowed(cls, main_window) -> None:
+        """Admit capture only after all declaration-owning work has finished."""
+        manager = main_window.embedded_widgets.require_plate_manager()
+        if manager.is_any_plate_running():
+            raise DesktopUpdateError(
+                "Stop the active plate execution before restarting OpenHCS."
+            )
+        try:
+            manager.require_pipeline_definition_mutation_allowed()
+        except RuntimeError as error:
+            raise DesktopUpdateError(str(error)) from error
+        if cls.pending().directory.exists():
+            raise DesktopUpdateError(
+                "A saved OpenHCS restart session is already pending. Restart "
+                "OpenHCS to recover it before starting another restart."
+            )
+
+    @classmethod
     def capture(
         cls,
         main_window,
@@ -386,20 +409,12 @@ class DesktopRestartSession:
         )
         from openhcs.resources.brand import BrandAsset, brand_asset_path
 
+        cls.require_capture_allowed(main_window)
         plate_manager = main_window.embedded_widgets.require_plate_manager()
-        if plate_manager.is_any_plate_running():
-            raise DesktopUpdateError(
-                "Stop the active plate execution before restarting OpenHCS."
-            )
         context = plate_manager.orchestrator_code_document_context(
             selection_mode=PlateManagerCodeSelectionMode.ALL,
         )
         session = cls.pending()
-        if session.directory.exists():
-            raise DesktopUpdateError(
-                "A saved OpenHCS restart session is already pending. Restart "
-                "OpenHCS to recover it before starting another restart."
-            )
         session.directory.mkdir(parents=True)
         try:
             session.session_document.write_text(context.source, encoding="utf-8")

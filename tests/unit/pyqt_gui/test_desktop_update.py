@@ -991,6 +991,7 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
 ) -> None:
     plate_manager = SimpleNamespace(
         is_any_plate_running=lambda: False,
+        require_pipeline_definition_mutation_allowed=lambda: None,
         orchestrator_code_document_context=lambda **_kwargs: SimpleNamespace(
             source="canonical session source"
         ),

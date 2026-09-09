@@ -184,6 +184,7 @@ from openhcs.pyqt_gui.services.ui_bridge_server import (
     UiBridgeServerBinding,
 )
 from openhcs.pyqt_gui.services.ui_bridge_windows import (
+    MainWindowActionProvider,
     MainWindowBridgeProviderSet,
     ManagedWindowAction,
     QtTopLevelWindowProjection,
@@ -577,6 +578,13 @@ class FakeMainWindow:
         self.window_specs = {}
         self.check_for_updates_action = QPushButton()
         self.update_check_count = 0
+        self.restart_count = 0
+
+    def session_restart_available(self) -> bool:
+        return True
+
+    def restart_session(self) -> None:
+        self.restart_count += 1
 
     def check_for_updates(self) -> None:
         self.update_check_count += 1
@@ -616,6 +624,29 @@ def test_main_window_update_action_is_projected_and_dispatches() -> None:
     assert action.invocation_mode == "async"
     assert result.status == "accepted"
     assert main_window.update_check_count == 1
+
+
+def test_main_window_restart_action_owns_dispatch_and_reconnect_warning() -> None:
+    QtApplicationAuthority.app()
+    main_window = FakeMainWindow()
+    provider = MainWindowActionProvider(main_window)
+    action = MainWindowAction.RESTART_SESSION
+    summary = provider.summary(action.value)
+    assert summary.enabled
+    assert summary.confirmation_required
+    result = provider.invoke(
+        UiActionInvokeRequest(
+            widget_id="main_window",
+            action_id=action.value,
+        )
+    )
+    assert result.status == "accepted"
+    assert main_window.restart_count == 1
+    assert main_window.update_check_count == 0
+    assert result.warnings == action.warnings
+    assert "ui_restart_reconnect_required" in {
+        warning.code for warning in provider.catalog().warnings
+    }
 
 
 def test_ui_bridge_composition_discovers_new_provider_set_declarations() -> None:

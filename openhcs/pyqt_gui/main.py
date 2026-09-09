@@ -54,6 +54,7 @@ from openhcs.agent.ui_bridge_identities import (
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.progress.projection import ExecutionRuntimeProjection
 from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext, UIConfig
+from openhcs.pyqt_gui.services.desktop_restart import DesktopSessionRestart
 from openhcs.pyqt_gui.services.desktop_update import (
     DesktopRestartSession,
     DesktopRuntimeEnvironment,
@@ -1666,6 +1667,13 @@ class OpenHCSMainWindow(QMainWindow):
         """Open the package-owned OpenHCS identity and version window."""
 
         self.show_window(OpenHCSUiWindowId.about, hide_if_startup=False)
+
+    def session_restart_available(self) -> bool:
+        return DesktopSessionRestart.available(self)
+
+    def restart_session(self) -> None:
+        """Restart through the session/history-preserving desktop lifecycle."""
+        DesktopSessionRestart.request(self)
 
     def check_for_updates(self) -> None:
         """Start an explicit, asynchronous stable-release check."""

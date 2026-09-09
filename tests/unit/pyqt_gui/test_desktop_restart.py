@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import pytest
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,6 +17,7 @@ from openhcs.pyqt_gui.services.desktop_update import (
     DesktopRestartEnvironment,
     DesktopRestartPurpose,
     DesktopRestartSession,
+    DesktopUpdateError,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
 from openhcs.pyqt_gui.services.zmq_version_restart import (
@@ -73,6 +75,7 @@ def test_version_restart_capture_omits_update_only_assets(
 ) -> None:
     plate_manager = SimpleNamespace(
         is_any_plate_running=lambda: False,
+        require_pipeline_definition_mutation_allowed=lambda: None,
         orchestrator_code_document_context=lambda **_kwargs: SimpleNamespace(
             source="plate_paths = []"
         ),
@@ -111,6 +114,53 @@ def test_version_restart_capture_omits_update_only_assets(
     assert not session.worker_document.exists()
     assert not session.progress_theme_document.exists()
     assert not session.progress_brand_document.exists()
+
+
+@pytest.mark.parametrize("pending", ["initialization", "compilation"])
+def test_session_restart_admission_uses_existing_declaration_work_guard(pending):
+    def require_idle():
+        raise RuntimeError(f"pending {pending}")
+
+    window = SimpleNamespace(
+        embedded_widgets=SimpleNamespace(
+            require_plate_manager=lambda: SimpleNamespace(
+                is_any_plate_running=lambda: False,
+                require_pipeline_definition_mutation_allowed=require_idle,
+            )
+        )
+    )
+    assert not DesktopSessionRestart.available(window)
+    with pytest.raises(DesktopUpdateError, match=pending):
+        DesktopRestartSession.require_capture_allowed(window)
+
+
+@pytest.mark.parametrize("started", [True, False])
+def test_session_restart_closes_only_after_successful_handoff(
+    qapp, monkeypatch, started
+):
+    calls = []
+    restart = SimpleNamespace(
+        start=lambda: calls.append("start") or started,
+        discard=lambda: calls.append("discard"),
+    )
+
+    def capture(cls, window, *, purpose):
+        assert purpose is DesktopRestartPurpose.SESSION
+        calls.append("capture")
+        return restart
+
+    monkeypatch.setattr(DesktopSessionRestart, "capture", classmethod(capture))
+    window = SimpleNamespace(close=lambda: calls.append("close"))
+    if started:
+        DesktopSessionRestart.request(window)
+        assert calls == ["capture", "start"]
+        qapp.processEvents()
+        assert calls == ["capture", "start", "close"]
+    else:
+        with pytest.raises(DesktopUpdateError, match="could not launch"):
+            DesktopSessionRestart.request(window)
+        qapp.processEvents()
+        assert calls == ["capture", "start", "discard"]
 
 
 def test_version_mismatch_dialog_is_themed_and_reports_both_versions(
