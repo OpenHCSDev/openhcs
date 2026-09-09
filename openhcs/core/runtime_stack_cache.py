@@ -73,3 +73,7 @@ class RuntimeImageStackCache:
         for key in tuple(self.stacks):
             if path_set.intersection(key.paths):
                 del self.stacks[key]
+
+    def clear(self) -> None:
+        """Release all retained stack payloads at the execution boundary."""
+        self.stacks.clear()

@@ -797,6 +797,9 @@ def _execute_axis_with_sequential_combinations(
                 cancellation=cancellation,
             )
         finally:
+            # This cache is context-local even when lanes share a process.
+            # Runtime observations remain owned by the value store below.
+            frozen_context.release_execution_image_cache()
             if release_axis_resources:
                 _release_runtime_resources((frozen_context,), owner=f"axis {axis_id}")
         if runtime_observation_mode.collects_records:

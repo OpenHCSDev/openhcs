@@ -168,6 +168,10 @@ class ProcessingContext:
 
         self.execution_runtime = runtime
 
+    def release_execution_image_cache(self) -> None:
+        """Release image reuse storage without discarding runtime observations."""
+        self.runtime_image_stack_cache.clear()
+
     def install_debug_event_sink(self, debug_event_sink: DebugEventSink) -> None:
         """Install the debug sink selected for this execution context."""
 
