@@ -2440,7 +2440,7 @@
       },
       {
         "path": "openhcs/agent/services/knowledge_base_service.py",
-        "sha256": "a6cfcca532fd2bbb3509918b7685d27447ace34788eec876e18fef2a05ffd556",
+        "sha256": "50e5faf83fae94e5c7c3ea20ef3c7b48e0c7dcf3413017bb983a13262f06053a",
         "role": "Source-backed knowledge catalogue, search, section reads, and lazy Official30 projection."
       },
       {
@@ -2481,7 +2481,9 @@
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "On 2026-08-27, applied the Diataxis visual-documentation boundary and re-read the complete authoring guide after adding the declaration-derived gallery directive workflow; focused tests, a warning-clean Sphinx build, and desktop plus narrow visual inspection validated the projection.",
       "On 2026-08-28, re-read the complete guide after publication targets separated the shared media inventory from website and documentation projections; the guide retains one declaration owner and no documentation-only registry.",
-      "On 2026-08-28, re-read the complete how-to against the stable-window registry projection and the declaration-owned contextual capture targets; individual and family Sphinx projections still consume the same nominal gallery catalogue without copying captions, assets, accessibility text, or capture semantics. Focused gallery, website, and fixture-declaration validation passed 53 tests."
+      "On 2026-08-28, re-read the complete how-to against the stable-window registry projection and the declaration-owned contextual capture targets; individual and family Sphinx projections still consume the same nominal gallery catalogue without copying captions, assets, accessibility text, or capture semantics. Focused gallery, website, and fixture-declaration validation passed 53 tests.",
+      "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests.",
+      "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests. The release and CI claims were also checked against the explicit Qt/OpenGL native preflight and clean Ubuntu runtime dependency control; native requirements are not inferred from pytest capture or an offscreen Qt plugin."
     ]
   },
   {
@@ -2896,7 +2898,7 @@
   },
   {
     "path": "docs/source/development/mcp_knowledge_base.rst",
-    "source_sha256": "6e65449aae00d1b61c4c70f461d7a64b46eafacc1de814cfdd00e83a63b03ea7",
+    "source_sha256": "5c80d2a633a6c49ce2301a02d47ca10051ff5289c60e16b1e0e01ce12e7a84fa",
     "audience": [
       "OpenHCS MCP and knowledge-service developers"
     ],
@@ -2905,17 +2907,17 @@
     "authority": [
       {
         "path": "openhcs/agent/services/knowledge_base_service.py",
-        "sha256": "a6cfcca532fd2bbb3509918b7685d27447ace34788eec876e18fef2a05ffd556",
+        "sha256": "50e5faf83fae94e5c7c3ea20ef3c7b48e0c7dcf3413017bb983a13262f06053a",
         "role": "Source-backed knowledge catalogue, search, section reads, and lazy Official30 projection."
       },
       {
         "path": "openhcs/agent/knowledge_manifest.py",
-        "sha256": "e9700b579b9931361a969d7f46814cbae232822af84b9dc064cffb0815c92b61",
+        "sha256": "2136e24d452774f8ae92a2644940da547152bb7e2d995a9fdb476ba4bcea0107",
         "role": "Canonical allowlist mapping document identities to source-backed knowledge content."
       },
       {
         "path": "tests/unit/agent/test_knowledge_base_service.py",
-        "sha256": "5224f06125824ed3ca2e67080800baa5fd969e8010f191dadf0760341d7c8efc",
+        "sha256": "79fbfd2d362bff38279662a1fe0091e5f7f21c4c44f03b251600ac128cf612d7",
         "role": "Regression proof for canonical document IDs, search, bounded reads, and section selection."
       },
       {
@@ -2929,12 +2931,14 @@
     "validation": [
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "tests/unit/agent/test_knowledge_base_service.py passed; source inspection confirmed lazy selected-section Official30 conversion",
-      "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate."
+      "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
+      "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests.",
+      "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests. The release and CI claims were also checked against the explicit Qt/OpenGL native preflight and clean Ubuntu runtime dependency control; native requirements are not inferred from pytest capture or an offscreen Qt plugin."
     ]
   },
   {
     "path": "docs/source/development/mcp_release.rst",
-    "source_sha256": "3e81c8ea04888fd65389aae117fcb5faebecfddd2b1305ce4fc1cce8642e25de",
+    "source_sha256": "9bc62fb4f4392c25bc0b4e9a2f2e7a6c71649f579c073afaecbda08746e9c733",
     "audience": [
       "OpenHCS release maintainers"
     ],
@@ -3008,7 +3012,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "d128abd5a36de5a844ccd733388459f054699605f9623e9e5a75dc8bcfea2ae6",
+        "sha256": "6117eb188556f077abe7eca23def1f8ed7987df9fc78769e549b6ade8a340b72",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3093,7 +3097,7 @@
       },
       {
         "path": "tests/unit/test_ci_package_boundaries.py",
-        "sha256": "ddd173fc69fe79d9fb862fbb53f828d264e4fab99098bb9a7363b8c9f54ac9c5",
+        "sha256": "06cd191fe933b08d0568d7bbbef2ac2c2e30bb8707123bba5b9c73b66f8eed03",
         "role": "Proves publication consumes central release requirements and that candidate and published GUI matrices retain their typed screenshot evidence."
       }
     ],
@@ -3184,7 +3188,8 @@
       "On 2026-09-07, re-read the complete page and checked its affected claims against the regression enforcing separate native-crash and common GUI evidence artifact boundaries; separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
       "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests. The release and CI claims were also checked against the explicit Qt/OpenGL native preflight and clean Ubuntu runtime dependency control; native requirements are not inferred from pytest capture or an offscreen Qt plugin."
     ]
   },
   {
@@ -3243,7 +3248,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "d128abd5a36de5a844ccd733388459f054699605f9623e9e5a75dc8bcfea2ae6",
+        "sha256": "6117eb188556f077abe7eca23def1f8ed7987df9fc78769e549b6ade8a340b72",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],
@@ -3291,7 +3296,8 @@
       "On 2026-09-07, re-read the complete OMERO testing how-to against the changed CI workflow; added PyPI GUI crash artifacts do not change OMERO lifecycle, readiness, storage or publication ownership.",
       "On 2026-09-07, re-read the complete page and checked its affected claims against separate macOS-only native-crash artifacts and shared runner-temp GUI evidence, avoiding cross-drive Windows artifact roots without changing the execution or release gates. Retained its existing Diataxis audience and scope; revised only the owning MCP explanation and exact diagnostic artifact reference where needed.",
       "On 2026-09-07, re-read the complete page against the one added installed MCP stdio test file in the existing Python/OS boundary matrix. Protocol cold imports and channel cleanup now participate in that matrix; installation, OMERO, dependency publication, and release acceptance procedures are unchanged. The testing guide names the new native boundary without duplicating its test implementation.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests. The release and CI claims were also checked against the explicit Qt/OpenGL native preflight and clean Ubuntu runtime dependency control; native requirements are not inferred from pytest capture or an offscreen Qt plugin."
     ]
   },
   {

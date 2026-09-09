@@ -95,6 +95,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    env:
+      QT_QPA_PLATFORM: xcb
+      QT_XCB_GL_INTEGRATION: xcb_glx
+      LIBGL_ALWAYS_SOFTWARE: "1"
 
     steps:
       - name: Checkout
@@ -112,6 +116,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libgl1 libegl1 libgl1-mesa-dri libglx-mesa0 libopengl0 \
+            libdbus-1-3 libfontconfig1 libglib2.0-0 libxcb-shape0 \
             libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 \
             libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
             libxcb-xfixes0 xauth xvfb
@@ -150,11 +155,28 @@ jobs:
             benchmark/native_refs/official30_scoped_rows/ExampleHuman_ExampleHuman_wells_include_first1/native_cellprofiler_headless/ExampleHuman.cppipe \
             "$CELLPROFILER_EXAMPLES_ROOT/ExampleHuman/ExampleHuman.cppipe"
 
+      - name: Verify native Qt and software OpenGL before test capture
+        run: |
+          ulimit -c 0
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24 +extension GLX" python -u - <<'PY'
+          from PyQt6.QtGui import QOffscreenSurface, QOpenGLContext
+          from PyQt6.QtWidgets import QApplication
+          from OpenGL.GL import GL_RENDERER, GL_VERSION, glGetString
+
+          application = QApplication([])
+          surface = QOffscreenSurface()
+          surface.create()
+          context = QOpenGLContext()
+          if not surface.isValid() or not context.create() or not context.makeCurrent(surface):
+              raise RuntimeError("The unit-test runtime cannot create a native OpenGL context")
+          version, renderer = glGetString(GL_VERSION), glGetString(GL_RENDERER)
+          if not version or not renderer:
+              raise RuntimeError("The unit-test runtime has no usable OpenGL renderer")
+          print(f"Qt platform={application.platformName()}, OpenGL={version!r}, renderer={renderer!r}")
+          context.doneCurrent()
+          PY
+
       - name: Run unit tests
-        env:
-          QT_QPA_PLATFORM: xcb
-          QT_XCB_GL_INTEGRATION: xcb_glx
-          LIBGL_ALWAYS_SOFTWARE: "1"
         run: >-
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24 +extension GLX"
           python -m pytest tests/unit tests/core -p no:randomly -q

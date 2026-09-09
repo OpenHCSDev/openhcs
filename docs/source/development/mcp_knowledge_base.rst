@@ -61,6 +61,16 @@ For nested step overrides, construct the mutation value from each field's
 ``authoring_value_path`` rather than treating its schema-navigation ``path`` as
 a dotted mutation key.
 
+Native Example Sources
+----------------------
+
+The example corpus document derives its native Python sections from the paths
+declared in :doc:`../guides/example_corpus_map`. In an installed distribution,
+documentation comes from packaged knowledge resources and Python examples come
+from the installed OpenHCS modules. The renderer reads those source files
+without importing or executing them. An explicitly selected checkout uses its
+own Python sources; missing files are not substituted from another installation.
+
 Official30 Converted Examples
 -----------------------------
 

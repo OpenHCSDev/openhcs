@@ -99,9 +99,7 @@ async def _run_protocol_smoke() -> dict:
                 )
             )
             if not document_ids:
-                raise AssertionError(
-                    f"Installed knowledge catalog is empty: {catalog}"
-                )
+                raise AssertionError(f"Installed knowledge catalog is empty: {catalog}")
             document_results = {
                 document_id: _tool_payload(
                     await asyncio.wait_for(
@@ -117,6 +115,37 @@ async def _run_protocol_smoke() -> dict:
                 )
                 for document_id in document_ids
             }
+            example_document = document_results["openhcs_example_corpus_map"]
+            example_source_sections = tuple(
+                section
+                for section in example_document["sections"]
+                if section["title"].endswith(".py")
+            )
+            if not example_source_sections:
+                raise AssertionError(
+                    "Installed knowledge document exposes no native Python examples."
+                )
+            for section in example_source_sections:
+                source = _tool_payload(
+                    await asyncio.wait_for(
+                        session.call_tool(
+                            "openhcs_get_knowledge_document",
+                            {
+                                "document_id": "openhcs_example_corpus_map",
+                                "section_id": section["section_id"],
+                                "max_chars": 50_000,
+                            },
+                        ),
+                        timeout=30,
+                    )
+                )
+                if (
+                    source["errors"]
+                    or ".. code-block:: python" not in source["content"]
+                ):
+                    raise AssertionError(
+                        f"Installed native example source is unreadable: {source}"
+                    )
 
     health = _tool_payload(health_result)
     capabilities = _tool_payload(capabilities_result)
@@ -165,8 +194,7 @@ async def _run_protocol_smoke() -> dict:
     }
     if unreadable_documents:
         raise AssertionError(
-            "Installed knowledge resources are unreadable: "
-            f"{unreadable_documents}"
+            "Installed knowledge resources are unreadable: " f"{unreadable_documents}"
         )
     return {
         "health_status": health["status"],
@@ -175,6 +203,7 @@ async def _run_protocol_smoke() -> dict:
         "mcp_surface_profile": capabilities["surface_profile"],
         "mcp_tool_count": len(listed_tool_names),
         "knowledge_document_count": len(document_results),
+        "native_example_source_count": len(example_source_sections),
         "knowledge_document": "openhcs_core_model",
     }
 

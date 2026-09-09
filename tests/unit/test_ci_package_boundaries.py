@@ -295,19 +295,38 @@ def test_unit_gate_supplies_native_opengl_for_real_napari_images() -> None:
     workflow = yaml.safe_load(
         (WORKFLOW_ROOT / "integration-tests.yml").read_text(encoding="utf-8")
     )
-    steps = workflow["jobs"]["unit-tests"]["steps"]
+    job = workflow["jobs"]["unit-tests"]
+    steps = job["steps"]
     runtime = next(
         step
         for step in steps
         if step["name"] == "Install native Qt and software OpenGL test runtime"
     )
     unit_tests = next(step for step in steps if step["name"] == "Run unit tests")
-    assert {"libgl1-mesa-dri", "libglx-mesa0", "xauth", "xvfb"} <= set(
-        runtime["run"].split()
+    assert {
+        "libgl1-mesa-dri",
+        "libglx-mesa0",
+        "libdbus-1-3",
+        "libfontconfig1",
+        "libglib2.0-0",
+        "libxcb-shape0",
+        "xauth",
+        "xvfb",
+    } <= set(runtime["run"].split())
+    assert job["env"]["QT_QPA_PLATFORM"] == "xcb"
+    assert job["env"]["QT_XCB_GL_INTEGRATION"] == "xcb_glx"
+    assert job["env"]["LIBGL_ALWAYS_SOFTWARE"] == "1"
+    preflight = next(
+        step
+        for step in steps
+        if step["name"] == "Verify native Qt and software OpenGL before test capture"
     )
-    assert unit_tests["env"]["QT_QPA_PLATFORM"] == "xcb"
-    assert unit_tests["env"]["QT_XCB_GL_INTEGRATION"] == "xcb_glx"
-    assert unit_tests["env"]["LIBGL_ALWAYS_SOFTWARE"] == "1"
+    assert steps.index(preflight) < steps.index(unit_tests)
+    assert "ulimit -c 0" in preflight["run"]
+    assert "QApplication([])" in preflight["run"]
+    assert "context.makeCurrent(surface)" in preflight["run"]
+    assert "glGetString(GL_RENDERER)" in preflight["run"]
+    assert "xvfb-run --auto-servernum" in preflight["run"]
     assert "xvfb-run --auto-servernum" in unit_tests["run"]
     assert "tests/unit tests/core" in unit_tests["run"]
 

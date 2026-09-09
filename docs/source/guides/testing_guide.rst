@@ -64,6 +64,9 @@ offscreen Qt against the exact pinned pyqt-reactive wheel. Dedicated Linux jobs
 run OMERO on supported Python versions with an explicit ZeroC Ice wheel.
 The unit/core job uses Xvfb, the XCB Qt backend and Mesa software OpenGL so native
 Napari image and ROI settlement tests exercise a real rendering context.
+An uncaptured native Qt/OpenGL preflight proves that context before pytest,
+so missing system libraries produce their own diagnostics rather than a
+captured application-startup abort.
 
 The Python/OS boundary matrix also opens fresh MCP stdio sessions before
 importing NumPy and SciPy inside a tool. These tests exercise cold native-library

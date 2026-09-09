@@ -334,6 +334,81 @@ def test_example_corpus_document_exposes_native_python_source():
     assert "def build_mfd_preset" in source.content
 
 
+@pytest.mark.parametrize("installed", (False, True))
+def test_native_examples_use_original_python_root_without_copying_sources(
+    tmp_path, monkeypatch, installed
+):
+    source_root = tmp_path / "site-packages"
+    packaged_root = source_root / "openhcs" / "agent" / "resources" / "knowledge"
+    monkeypatch.setattr(knowledge_manifest, "source_checkout_root", lambda: source_root)
+    monkeypatch.setattr(
+        knowledge_manifest, "packaged_knowledge_base_root", lambda: packaged_root
+    )
+    knowledge_root = packaged_root if installed else tmp_path / "explicit-checkout"
+    python_root = source_root if installed else knowledge_root
+    reference = "openhcs/preset.py"
+    source = python_root / reference
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text(
+        "raise RuntimeError('Source must never execute')\n", encoding="utf-8"
+    )
+    document = knowledge_root / "docs/examples.rst"
+    document.parent.mkdir(parents=True)
+    document.write_text(
+        "Examples\n========\n\nNative OpenHCS Examples\n"
+        "-----------------------\n\n``openhcs/preset.py``\n",
+        encoding="utf-8",
+    )
+    service = KnowledgeBaseService(
+        repo_root=knowledge_root,
+        document_specs=(
+            _document_spec(
+                document_id="openhcs_example_corpus_map",
+                title="Examples",
+                source_path="docs/examples.rst",
+            ),
+        ),
+    )
+
+    result = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id="openhcs_example_corpus_map",
+            section_id="openhcs-preset-py",
+        )
+    )
+
+    assert not result.errors
+    assert "Source must never execute" in result.content
+    assert knowledge_manifest.python_source_root(knowledge_root) == python_root
+    if installed:
+        assert not (knowledge_root / reference).exists()
+
+
+def test_explicit_knowledge_root_does_not_fall_back_to_installed_examples(
+    tmp_path, monkeypatch
+):
+    source_root = tmp_path / "site-packages"
+    source = source_root / "openhcs/preset.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("INSTALLED_ONLY = True\n", encoding="utf-8")
+    monkeypatch.setattr(knowledge_manifest, "source_checkout_root", lambda: source_root)
+    explicit_root = tmp_path / "explicit-checkout"
+    explicit_root.mkdir()
+    lines = (
+        "Native OpenHCS Examples",
+        "-----------------------",
+        "",
+        "``openhcs/preset.py``",
+    )
+
+    assert (
+        KnowledgeBaseService._native_example_source_projection_lines(
+            lines, explicit_root
+        )
+        == ()
+    )
+
+
 def test_knowledge_base_search_covers_native_python_source():
     service = KnowledgeBaseService()
 
@@ -684,7 +759,18 @@ def test_packaged_knowledge_remains_available_with_explicit_data_roots(
     assert service.list_documents().documents[0].document_id == "packaged_kb"
 
 
-def test_knowledge_base_path_policy_does_not_fallback_to_installed_checkout(tmp_path):
+def test_knowledge_base_path_policy_does_not_fallback_to_installed_checkout(
+    tmp_path, monkeypatch
+):
+    checkout_root = tmp_path / "other-checkout"
+    outside_document = (
+        checkout_root / "docs/source/guide_for_biologists/domain_expert_onboarding.rst"
+    )
+    outside_document.parent.mkdir(parents=True)
+    outside_document.write_text("Other checkout\n==============\n", encoding="utf-8")
+    monkeypatch.setattr(
+        knowledge_base_service_module, "default_repo_root", lambda: checkout_root
+    )
     active_root = tmp_path / "active"
     active_root.mkdir()
     policy = AgentPathPolicy.with_roots(

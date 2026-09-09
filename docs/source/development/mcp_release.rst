@@ -59,7 +59,9 @@ from outside the checkout. The MCP smoke test asserts that:
 * the combined client environment contains the PyQt UI dependency;
 * health succeeds over a real stdio session and reports the wheel's version;
 * the health resource projection reports no missing package resource;
-* every document in the packaged knowledge catalogue can be read; and
+* every document in the packaged knowledge catalogue can be read;
+* every native Python example section is derived and readable from the installed
+  package; and
 * no knowledge path resolves back into the source checkout.
 
 The GUI smoke allocates isolated execution and authenticated UI-bridge endpoints

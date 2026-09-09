@@ -17,6 +17,7 @@ from openhcs.agent.knowledge_manifest import (
     KnowledgeBaseManifestField,
     default_repo_root,
     packaged_knowledge_base_root,
+    python_source_root,
 )
 from openhcs.agent.dto.common import (
     AgentError,
@@ -729,7 +730,9 @@ class KnowledgeBaseService:
         lines: tuple[str, ...],
         repo_root: Path,
     ) -> tuple[str, ...]:
-        source_files = _native_example_source_files(lines, repo_root)
+        source_files = _native_example_source_files(
+            lines, python_source_root(repo_root)
+        )
         if not source_files:
             return ()
 

@@ -39,6 +39,18 @@ def default_knowledge_base_manifest_path() -> Path:
     return default_repo_root() / DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH
 
 
+def python_source_root(knowledge_root: Path) -> Path:
+    """Resolve Python references against their owning checkout or installation.
+
+    Installed documents live in a resource projection; their Python sources
+    remain in the installed package. Explicit checkout roots stay isolated.
+    """
+    root = knowledge_root.resolve()
+    if root == packaged_knowledge_base_root().resolve():
+        return source_checkout_root().resolve()
+    return root
+
+
 def knowledge_base_source_paths_from_manifest(
     manifest_path: Path | None = None,
 ) -> tuple[Path, ...]:
