@@ -1254,7 +1254,8 @@ class NapariLayerRouteStateStore:
     layer_titles: dict[str, str]
     layer_dimension_states: dict[str, NapariDimensionLayerState]
     layer_pending_updates: dict[str, NapariPendingLayerUpdate]
-    layer_update_errors: dict[str, str]
+    # None identifies accepted work that failed before a route was available.
+    layer_update_errors: dict[str | None, str]
     active_dimension_label_route: str | None
     layer_settlement: NapariLayerSettlementState | None
     _settlement_lock: threading.RLock = field(
@@ -1392,7 +1393,12 @@ class NapariLayerRouteStateStore:
         return settlement.progress()
 
     def reset_settlement(self) -> None:
-        """Discard terminal settlement state before a new stream cycle."""
+        """Begin a new stream cycle after any observed terminal settlement.
+
+        Route failures remain attached to their route until a successful update
+        or clear-state. Failures without a route belong to the completed intake
+        cycle; retain them until that cycle has reached settlement.
+        """
 
         with self._settlement_lock:
             if (
@@ -1400,9 +1406,13 @@ class NapariLayerRouteStateStore:
                 and self.layer_settlement.phase is ViewerSettlePhase.RUNNING
             ):
                 raise RuntimeError("Cannot reset an active Napari layer settlement.")
+            if self.layer_settlement is not None:
+                self.layer_update_errors.pop(None, None)
             self.layer_settlement = None
 
-    def record_update_error(self, layer_key: str, error: Exception) -> None:
+    def record_update_error(self, layer_key: str | None, error: Exception) -> None:
+        """Retain a display failure, including intake without a resolved route."""
+
         with self._settlement_lock:
             self.layer_update_errors[layer_key] = str(error)
 
@@ -1422,13 +1432,13 @@ class NapariLayerRouteStateStore:
         raise RuntimeError(f"Napari layer updates failed: {failure_message}")
 
     def update_failure_message(self) -> str | None:
-        """Return the exact recorded route failures, if any."""
+        """Return recorded display failures without inventing missing routes."""
 
         with self._settlement_lock:
             if not self.layer_update_errors:
                 return None
             return "; ".join(
-                f"{layer_key}: {message}"
+                message if layer_key is None else f"{layer_key}: {message}"
                 for layer_key, message in self.layer_update_errors.items()
             )
 

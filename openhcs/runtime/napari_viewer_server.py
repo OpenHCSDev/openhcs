@@ -5140,6 +5140,9 @@ class NapariViewerServer(StreamingVisualizerServer):
             accepted_batch = NapariStreamMessageHandler.for_message_type(
                 msg_type
             ).accept(self, data)
+            # Receipt certifies ownership, not display completion. Invalidate a
+            # prior terminal settlement before acknowledging this new work.
+            self.layer_route_state.reset_settlement()
             self.accepted_stream_batches.put(accepted_batch)
             return NapariStreamMessageReply.success(msg_type)
         except Exception as error:
@@ -5159,7 +5162,11 @@ class NapariViewerServer(StreamingVisualizerServer):
                 accepted_batch = self.accepted_stream_batches.get_nowait()
             except queue.Empty:
                 return processed_count
-            accepted_batch.dispatch_to(self)
+            try:
+                accepted_batch.dispatch_to(self)
+            except Exception as error:
+                self.layer_route_state.record_update_error(None, error)
+                logger.exception("Failed to project accepted Napari batch metadata")
             processed_count += 1
 
     def process_messages(self) -> None:
@@ -5230,6 +5237,7 @@ class NapariViewerServer(StreamingVisualizerServer):
                 self.send_ack(payload.image_id, status=_ACK_SUCCESS)
 
         except Exception as e:
+            self.layer_route_state.record_update_error(None, e)
             logger.error(
                 f"🔬 NAPARI PROCESS: Failed to process {payload_address.stream_layer_data_type} {payload_address.path}: {e}",
                 exc_info=True,
