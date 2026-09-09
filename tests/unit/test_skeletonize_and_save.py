@@ -1,4 +1,4 @@
-from inspect import unwrap
+from inspect import signature, unwrap
 from io import StringIO
 from pathlib import Path
 
@@ -7,6 +7,9 @@ import pandas as pd
 import pytest
 from polystore.filemanager import FileManager
 from polystore.memory import MemoryStorageBackend
+from skimage.filters import threshold_otsu
+from skimage.measure import label
+from skimage.morphology import skeletonize
 
 from openhcs.core.artifacts import (
     MeasurementsArtifactType,
@@ -72,6 +75,133 @@ def test_skeletonize_and_save_emits_measurements_and_labeled_masks():
     )
     assert masks.dtype == np.int32
     assert [set(np.unique(mask)) for mask in masks] == [{0, 1, 2}, {0, 1}]
+
+
+@pytest.mark.parametrize("dtype", [np.uint16, np.float32])
+@pytest.mark.parametrize("multiplier", [None, 1.0, 0.5])
+def test_public_callable_preserves_positional_api_and_scales_fixed_pixel_control(
+    dtype, multiplier
+):
+    image = np.zeros((1, 12, 12), dtype=dtype)
+    image[0, 2:7, 2] = 12
+    image[0, 2:7, 8] = 6
+    image[0, 10, 5] = 12  # Excluded by the existing component-size argument.
+    original = image.copy()
+    kwargs = {} if multiplier is None else {"threshold_multiplier": multiplier}
+
+    # The original three positional arguments must keep their meaning.
+    output, rows, masks = skeletonize_and_save(image, 10.0, 3, **kwargs)
+
+    expected_mask = np.zeros_like(image, dtype=np.int32)
+    expected_mask[0, 2:7, 2] = 1
+    if multiplier == 0.5:
+        expected_mask[0, 2:7, 8] = 2
+    expected_count = 2 if multiplier == 0.5 else 1
+    assert output is image
+    np.testing.assert_array_equal(image, original)
+    np.testing.assert_array_equal(masks, expected_mask)
+    assert masks.dtype == np.int32
+    assert rows.row_mappings() == (
+        {
+            "slice_index": 0,
+            "skeleton_count": expected_count,
+            "skeleton_length_pixels": expected_count * 5,
+            "foreground_area_pixels": expected_count * 5 + 1,
+            "threshold": 5.0 if multiplier == 0.5 else 10.0,
+        },
+    )
+    parameter = signature(skeletonize_and_save).parameters["threshold_multiplier"]
+    assert parameter.annotation is float
+    assert parameter.default == 1.0
+
+
+@pytest.mark.parametrize("dtype", [np.uint16, np.float32])
+@pytest.mark.parametrize("threshold", [None, 10.0])
+def test_threshold_multiplier_default_preserves_original_algorithm(dtype, threshold):
+    image = np.stack(
+        [
+            np.arange(36).reshape(6, 6),
+            np.arange(36).reshape(6, 6) * 3,
+        ]
+    ).astype(dtype)
+    expected_masks = []
+    expected_rows = []
+    for index, plane in enumerate(image):
+        cutoff = float(threshold_otsu(plane)) if threshold is None else threshold
+        binary = plane > cutoff
+        mask = label(skeletonize(binary)).astype(np.int32, copy=False)
+        expected_masks.append(mask)
+        expected_rows.append(
+            SkeletonizationResult(
+                slice_index=index,
+                skeleton_count=int(mask.max()),
+                skeleton_length_pixels=int(np.count_nonzero(mask)),
+                foreground_area_pixels=int(np.count_nonzero(binary)),
+                threshold=cutoff,
+            )
+        )
+    expected = DataclassMeasurementColumnarRows(
+        tuple(expected_rows), row_type=SkeletonizationResult
+    )
+    for kwargs in ({}, {"threshold_multiplier": 1.0}):
+        output, rows, masks = _skeletonize_and_save_impl()(
+            image, threshold=threshold, **kwargs
+        )
+        assert output is image
+        assert rows.row_mappings() == expected.row_mappings()
+        np.testing.assert_array_equal(masks, np.stack(expected_masks))
+
+
+@pytest.mark.parametrize("threshold", [None, 12.0])
+@pytest.mark.parametrize("multiplier", [0.5, 2.0])
+def test_threshold_multiplier_scales_resolved_plane_thresholds(threshold, multiplier):
+    image = np.stack(
+        [
+            np.arange(36).reshape(6, 6),
+            np.arange(36).reshape(6, 6) * 4,
+        ]
+    ).astype(np.float32)
+    _, rows, masks = _skeletonize_and_save_impl()(
+        image,
+        threshold=threshold,
+        threshold_multiplier=multiplier,
+    )
+    for index, row in enumerate(rows.row_mappings()):
+        plane = image[index]
+        resolved = float(threshold_otsu(plane)) if threshold is None else threshold
+        applied = resolved * multiplier
+        binary = plane > applied
+        assert row["threshold"] == applied
+        assert row["foreground_area_pixels"] == np.count_nonzero(binary)
+        np.testing.assert_array_equal(masks[index], label(skeletonize(binary)))
+
+
+def test_threshold_multiplier_also_scales_existing_mean_fallback(monkeypatch):
+    def unavailable_threshold(_plane):
+        raise ValueError("Synthetic Otsu failure")
+
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.skeletonize_and_save.threshold_otsu",
+        unavailable_threshold,
+    )
+    image = np.arange(32, dtype=np.float32).reshape(2, 4, 4)
+    _, rows, masks = _skeletonize_and_save_impl()(image, threshold_multiplier=0.5)
+    for index, row in enumerate(rows.row_mappings()):
+        applied = float(np.mean(image[index])) * 0.5
+        assert row["threshold"] == applied
+        np.testing.assert_array_equal(
+            masks[index], label(skeletonize(image[index] > applied))
+        )
+
+
+@pytest.mark.parametrize("multiplier", [0.0, -1.0, np.nan, np.inf, -np.inf])
+def test_threshold_multiplier_rejects_nonpositive_or_nonfinite_values(multiplier):
+    with pytest.raises(
+        ValueError, match="threshold_multiplier must be finite and positive"
+    ):
+        _skeletonize_and_save_impl()(
+            np.ones((1, 4, 4)), threshold_multiplier=multiplier
+        )
 
 
 def test_skeletonize_and_save_declares_csv_and_roi_materialization():

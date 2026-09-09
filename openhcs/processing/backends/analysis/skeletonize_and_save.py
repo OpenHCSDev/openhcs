@@ -55,12 +55,15 @@ def skeletonize_and_save(
     image,
     threshold: Optional[float] = None,
     min_component_size: int = 1,
+    threshold_multiplier: float = 1.0,
 ) -> tuple[np.ndarray, DataclassMeasurementColumnarRows, np.ndarray]:
     """Skeletonize each image plane and emit CSV measurements and labeled ROIs.
 
     Each plane along the first axis is thresholded independently. When
     ``threshold`` is ``None``, Otsu's method is used for that plane and falls
-    back to its mean intensity if Otsu cannot determine a threshold. Connected
+    back to its mean intensity if Otsu cannot determine a threshold. The resolved
+    threshold is multiplied by ``threshold_multiplier`` before segmentation;
+    the measurement records this actual applied threshold. Connected
     skeleton components smaller than ``min_component_size`` pixels are removed.
 
     The ``skeleton_measurements`` special output is materialized as CSV and is
@@ -76,15 +79,20 @@ def skeletonize_and_save(
             When omitted, a threshold is calculated independently per plane.
         min_component_size: Minimum connected skeleton length, in pixels, to
             retain. Must be at least ``1``.
+        threshold_multiplier: Finite positive factor applied to the resolved
+            threshold of every plane, including an explicit ``threshold``.
+            The default ``1.0`` preserves the original threshold; ``0.5`` uses
+            half of each plane's threshold without specifying per-plane values.
 
     Returns:
-        A tuple containing the unchanged input image, per-slice measurement
-        dictionaries, and one sequentially labeled ``int32`` skeleton mask per
+        A tuple containing the unchanged input image, typed per-plane measurement
+        rows, and one sequentially labeled ``int32`` skeleton mask per
         input plane.
 
     Raises:
         ValueError: If ``image`` is not three-dimensional, has empty spatial
-            dimensions, or ``min_component_size`` is less than ``1``.
+            dimensions, ``min_component_size`` is less than ``1``, or
+            ``threshold_multiplier`` is not finite and positive.
     """
 
     image_array = np.asarray(image)
@@ -96,6 +104,8 @@ def skeletonize_and_save(
         raise ValueError("skeletonize_and_save requires non-empty image planes")
     if min_component_size < 1:
         raise ValueError("min_component_size must be at least 1")
+    if not np.isfinite(threshold_multiplier) or threshold_multiplier <= 0:
+        raise ValueError("threshold_multiplier must be finite and positive")
 
     results: list[SkeletonizationResult] = []
     masks: list[np.ndarray] = []
@@ -109,6 +119,7 @@ def skeletonize_and_save(
         else:
             slice_threshold = float(threshold)
 
+        slice_threshold *= threshold_multiplier
         binary = slice_2d > slice_threshold
         skeleton = skeletonize(binary)
         if min_component_size > 1:
