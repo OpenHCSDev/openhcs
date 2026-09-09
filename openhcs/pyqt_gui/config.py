@@ -52,6 +52,12 @@ class UIConfigCacheEnvironment:
     cache_file_path_key = "OPENHCS_UI_CONFIG_CACHE_FILE"
 
     @classmethod
+    def child_process_environment_keys(cls) -> tuple[str, ...]:
+        """Preserve the same configuration authority in child processes."""
+
+        return (cls.cache_file_path_key,)
+
+    @classmethod
     def cache_file_path(
         cls,
         environment: Mapping[str, str] | None = None,

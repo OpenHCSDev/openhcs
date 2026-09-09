@@ -4158,7 +4158,9 @@ def test_pipeline_editor_action_invoke_uses_selection_token_and_confirmation() -
     assert "selection_mode=selected_steps" in stale_result.errors[0].hint
     assert "pipeline_editor.state" in stale_result.errors[0].hint
     assert "openhcs_ui_navigate_window" in stale_result.errors[0].hint
-    assert "window_id='wrong-target'" in stale_result.errors[0].hint
+    assert "window_id='pipeline_editor'" in stale_result.errors[0].hint
+    assert "item_id from its current state surface" in stale_result.errors[0].hint
+    assert "window_id='wrong-target'" not in stale_result.errors[0].hint
 
 
 def test_selected_workflow_returns_before_queued_plate_action_runs() -> None:

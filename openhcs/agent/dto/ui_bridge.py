@@ -1140,14 +1140,17 @@ class UiActionSummary(SelectionModeCarrier):
             )
         if len(request.selected_scope_ids) == 1:
             parts.append(
-                "To open the requested ObjectState scope directly, call "
-                "openhcs_ui_navigate_window with "
-                f"window_id={requested_targets!r}."
+                "For a list-backed manager, select the desired item with "
+                "openhcs_ui_navigate_window using "
+                f"window_id={self.identity.widget_id!r} and item_id from its "
+                "current state surface. "
+                f"The requested target scope is {requested_targets!r}. "
+                "Then read the action again for its current selection revision."
             )
         else:
             parts.append(
-                "To open a known ObjectState scope directly, call "
-                "openhcs_ui_navigate_window with window_id=<object_state_scope_id>."
+                "Change the selection in the owning manager, then read the action "
+                "again for its current targets and selection revision."
             )
         return " ".join(parts)
 

@@ -61,6 +61,7 @@ from openhcs.mcp.control_timeout import (
     McpUiBridgeTimeoutPolicy,
     McpViewerTimeoutPolicy,
 )
+from openhcs.pyqt_gui.config import UIConfigCacheEnvironment
 from openhcs.serialization.json import to_jsonable
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -302,6 +303,7 @@ class McpDevServerSpec:
                     *self.mcp_environment_keys,
                     *AgentPathPolicy.environment_keys(),
                     *UiBridgeDescriptorEnvironment.child_process_environment_keys(),
+                    *UIConfigCacheEnvironment.child_process_environment_keys(),
                     *OpenHCSProcessEnvironment.child_process_environment_keys(),
                     *native_thread_count_environment_keys(),
                 ),

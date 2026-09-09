@@ -5077,11 +5077,38 @@ def test_mcp_dev_client_artifact_plan_explains_empty_source_workspace():
     )
 
     assert "Source workspace (source-bound files): files=0 truncated=0" in rendered
-    assert (
-        "note: no source-bound virtual files were compiled. Standard microscope "
-        "input may still be available through the plate handler"
-    ) in rendered
-    assert "use inspect-plate or selected-plate-images" in rendered
+    from inspect import getdoc
+    from openhcs.agent.dto.execution import SourceWorkspaceSummary
+
+    assert f"note: {getdoc(SourceWorkspaceSummary)}" in rendered
+
+
+def test_artifact_plan_exposes_source_workspace_count_meaning_without_shape_change():
+    from dataclasses import asdict
+    from inspect import getdoc
+    from openhcs.agent.dto.execution import SourceWorkspaceSummary
+    from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
+
+    description = getdoc(SourceWorkspaceSummary)
+    assert "not the total plate image inventory" in description
+    assert asdict(SourceWorkspaceSummary()) == {
+        "file_count": 0,
+        "files": (),
+        "truncated_file_count": 0,
+        "axis_file_counts": {},
+    }
+    built = server.build_server(
+        capability_surface_profile=CoreLocalCapabilitySurfaceProfile()
+    )
+    tools = asyncio.run(built.list_tools())
+    tool = next(
+        tool
+        for tool in tools
+        if tool.name == InspectPipelineSourceArtifactPlanCapability.name
+    )
+    assert description in tool.description
+    assert json.loads(tool.model_dump_json())["description"] == tool.description
+    assert tool.outputSchema is not None
 
 
 def test_mcp_dev_client_execute_source_composes_session_and_submit(monkeypatch):

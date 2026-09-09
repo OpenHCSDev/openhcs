@@ -154,8 +154,8 @@ class FirstUseAuthoringContext(
     route = AuthoringContextRoute(
         title="Choose an OpenHCS workflow",
         use_when=(
-            "you do not yet know which OpenHCS state owner or workflow matches "
-            "the request"
+            "you are starting or resuming work and need to choose the OpenHCS "
+            "state owner or next workflow"
         ),
         knowledge_targets=(
             KnowledgeBaseDocumentTarget("openhcs_architecture_quick_start"),
@@ -319,9 +319,7 @@ class ViewerReviewAuthoringContext(
             "execution produced images, labels, or ROIs that need bounded visual "
             "and structured validation"
         ),
-        knowledge_targets=(
-            KnowledgeBaseDocumentTarget("openhcs_viewer_management"),
-        ),
+        knowledge_targets=(KnowledgeBaseDocumentTarget("openhcs_viewer_management"),),
     )
 
 

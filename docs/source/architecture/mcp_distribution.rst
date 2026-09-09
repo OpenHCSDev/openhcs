@@ -95,10 +95,21 @@ continues to come from code documents, widget fields, state surfaces, and
 declared actions.
 
 Window focus and target navigation are separate results. The bridge reports
-``navigated`` only when the registered nominal driver accepts the requested
-ObjectState scope and item or field target. Focusing an existing window cannot
+``navigated`` only when the owning nominal driver accepts the requested
+item or field target. Focusing an existing window cannot
 turn an undeclared target into success; the response instead carries the typed
 ``ui_window_navigation_target_unsupported`` error.
+
+Embedded managers and registered windows share pyqt-reactive's navigation
+dispatch. A manager resolves an item identity through its existing selection
+controller and selects it through the ordinary Qt selection lifecycle. The
+driver checks membership both at admission and before deferred dispatch; a
+removed target is not selected. Navigation acceptance does not replace a fresh
+selection read or the action's selection-revision guard.
+
+For manager selection, the navigation window is the manager and the item is
+identified by its state surface. Opening an ObjectState scope instead opens its
+editor and does not select a manager row.
 
 Generic widget-tree projection applies its depth and node limits while visiting
 the live tree. pyqt-reactive presents visible siblings first within those bounds

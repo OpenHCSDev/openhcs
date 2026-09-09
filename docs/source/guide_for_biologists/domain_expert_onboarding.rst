@@ -79,21 +79,17 @@ The pipeline concepts to read next are:
 Agent And MCP Path
 ------------------
 
-When an agent is helping through the MCP surface, use current tools before
-assuming older planning documents are implemented:
+Follow the first MCP session sequence in
+:doc:`../architecture/quick_start`. Its built-in operating guides choose the
+next task route and point to current capabilities, schemas and source-backed
+examples. Reuse the matching guide when resuming work or moving from authoring
+to execution and result review.
 
-1. ``openhcs_list_knowledge_documents`` to find source-backed docs.
-2. ``openhcs_search_knowledge`` for domain terms such as ``microscopy``,
-   ``plate layout``, ``well site channel``, ``segmentation``, ``fluorescence``,
-   ``getting started``, ``CellProfiler``, ``Napari``, or ``zarr``.
-3. ``openhcs_get_authoring_context`` for the current pipeline-authoring
-   contract.
-4. ``openhcs_search_functions`` for task terms such as ``normalize``,
-   ``gaussian``, ``threshold``, ``watershed``, ``count cells``, or
-   ``colocalization``.
-5. ``openhcs_create_pipeline`` and ``openhcs_add_function_step`` for a draft
-   only after the data layout and first biological goal are clear.
-6. ``openhcs_inspect_pipeline_source_artifact_plan`` before a full run.
+Choose UI-visible or headless ownership before creating a pipeline. When the
+scientist should see or continue editing the work in the desktop, use the
+UI-owned route; a headless draft or execution does not create Plate Manager
+state. Discover the capabilities exposed by the current profile before
+following a guide, and validate a representative bounded run before scaling up.
 
 CellProfiler Mental Model
 -------------------------

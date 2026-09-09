@@ -473,7 +473,12 @@ class SourceWorkspaceFileRecord:
 
 @dataclass(frozen=True, slots=True)
 class SourceWorkspaceSummary:
-    """Bounded source-workspace inventory visible to compiled execution."""
+    """Counts source-bound virtual files, not the total plate image inventory.
+
+    Zero files means no source-bound virtual mappings were compiled. Native
+    microscope input may still be available through the plate handler. Plate
+    inspection and selected-plate image inventory report those physical inputs.
+    """
 
     file_count: int = 0
     files: tuple[SourceWorkspaceFileRecord, ...] = ()

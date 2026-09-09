@@ -7,10 +7,54 @@ import io
 import json
 import subprocess
 import sys
+from dataclasses import replace
 
 import pytest
 
 import openhcs.mcp.dev_client as dev_client
+from openhcs.pyqt_gui.config import (
+    UIConfigCacheEnvironment,
+    get_default_ui_config,
+    save_ui_config_sync,
+)
+from openhcs.runtime.zmq_config import OpenHCSZMQConfig
+
+
+def test_child_process_uses_same_isolated_ui_execution_endpoint(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    """Project the actual child environment and load its endpoint in a new process."""
+
+    cache_file = tmp_path / "private-ui.config"
+    monkeypatch.setenv(UIConfigCacheEnvironment.cache_file_path_key, str(cache_file))
+    endpoint = OpenHCSZMQConfig(default_port=18888)
+    assert save_ui_config_sync(replace(get_default_ui_config(), zmq=endpoint))
+    environment = dev_client.McpDevServerSpec(sys.executable).environment()
+
+    assert environment[UIConfigCacheEnvironment.cache_file_path_key] == str(cache_file)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from openhcs.pyqt_gui.config import load_cached_ui_execution_endpoint_sync; "
+            "print(load_cached_ui_execution_endpoint_sync().default_port)",
+        ],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )
+    assert result.stdout.strip() == str(endpoint.default_port)
+
+
+def test_child_environment_does_not_invent_ui_config_override(monkeypatch) -> None:
+    monkeypatch.delenv(UIConfigCacheEnvironment.cache_file_path_key, raising=False)
+
+    environment = dev_client.McpDevServerSpec(sys.executable).environment()
+
+    assert UIConfigCacheEnvironment.cache_file_path_key not in environment
 
 
 def test_multi_call_command_honors_its_declared_timeout_floor() -> None:

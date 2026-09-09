@@ -383,6 +383,86 @@ class InlineUiThreadDispatcher:
         callback()
 
 
+def test_embedded_manager_navigation_selects_exact_live_row(tmp_path: Path) -> None:
+    from PyQt6.QtWidgets import QMainWindow
+    from openhcs.agent.dto.ui_bridge import UiWindowNavigateRequest
+    from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
+    from openhcs.pyqt_gui.services.main_window_workflows import (
+        MainWindowDockPane,
+        MainWindowEmbeddedWidgets,
+    )
+    from openhcs.pyqt_gui.services.ui_bridge_windows import UiWindowProjectionService
+
+    app = QtApplicationHarness.app()
+    ObjectStateRegistry.clear()
+    manager = PlateManagerWidget(
+        PlateManagerServiceStub(), gui_config=get_default_ui_config()
+    )
+    main_window = QMainWindow()
+    main_window.embedded_widgets = MainWindowEmbeddedWidgets()
+    main_window.window_specs = {}
+    pane = MainWindowDockPane.create(
+        main_window=main_window,
+        window_id=OpenHCSUiWindowId.plate_manager,
+        title="Plate Manager",
+        widget=manager,
+    )
+    main_window.embedded_widgets.register(pane)
+    paths = tuple(str(tmp_path / name) for name in ("first", "second"))
+    for path in paths:
+        manager._create_orchestrator_for_plate(path)
+    manager._ensure_root_state().update_parameter("orchestrator_scope_ids", list(paths))
+    manager.update_item_list()
+    selected = []
+    manager.plate_selected.connect(selected.append)
+    projection = UiWindowProjectionService(main_window)
+
+    try:
+        for path in reversed(paths):
+            result = projection.navigate(
+                UiWindowNavigateRequest.from_fields(
+                    window_id=OpenHCSUiWindowId.plate_manager, item_id=path
+                )
+            )
+            app.processEvents()
+            assert result.focused and result.navigated and not result.errors
+            assert [row.scope_id for row in manager.get_selected_items()] == [path]
+            assert manager.selected_plate_path == path
+            assert selected[-1] == path
+
+        for item_id, field_path in (
+            (str(tmp_path / "missing"), None),
+            (paths[0], "not_a_list_target"),
+            (None, "not_a_list_target"),
+        ):
+            result = projection.navigate(
+                UiWindowNavigateRequest.from_fields(
+                    window_id=OpenHCSUiWindowId.plate_manager,
+                    item_id=item_id,
+                    field_path=field_path,
+                )
+            )
+            app.processEvents()
+            assert result.focused and not result.navigated
+            assert result.errors[0].code == "ui_window_navigation_target_unsupported"
+            assert manager.selected_plate_path == paths[0]
+        assert selected == list(reversed(paths))
+        manager._ensure_root_state().update_parameter("orchestrator_scope_ids", [])
+        manager.update_item_list()
+        result = projection.navigate(
+            UiWindowNavigateRequest.from_fields(
+                window_id=OpenHCSUiWindowId.plate_manager, item_id=paths[0]
+            )
+        )
+        app.processEvents()
+        assert not result.navigated
+        assert not manager.get_selected_items()
+    finally:
+        manager.cleanup()
+        main_window.close()
+        ObjectStateRegistry.clear()
+
+
 class TestPlateManagerWidget:
     def test_restart_restores_missing_plate_without_initializing_or_retrying(
         self,

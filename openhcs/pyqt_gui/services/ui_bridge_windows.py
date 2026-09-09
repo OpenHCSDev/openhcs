@@ -34,7 +34,11 @@ from pyqt_reactive.services.widget_tree_projection import (
     WidgetTreeProjectionService,
 )
 from pyqt_reactive.services.window_manager import WindowManager
-from pyqt_reactive.services.window_navigation import WindowNavigationRequest
+from pyqt_reactive.services.window_navigation import (
+    NullWindowNavigationDriver,
+    WindowNavigationDispatch,
+    WindowNavigationRequest,
+)
 from pyqt_reactive.services.window_snapshot import (
     QtWindowSnapshotRequest,
     QtWindowSnapshotService,
@@ -530,6 +534,22 @@ class EmbeddedWindowRoute:
         self.pane.show()
         return self.summary()
 
+    def navigate(self, request: UiWindowNavigateRequest) -> WindowNavigationDispatch:
+        self.pane.show()
+        widget = self.widget()
+        driver = (
+            widget.window_navigation_driver()
+            if isinstance(widget, AbstractManagerWidget)
+            else NullWindowNavigationDriver()
+        )
+        return WindowManager.dispatch_widget_navigation(
+            widget,
+            driver,
+            requested_scope_id=request.window_id,
+            item_id=request.item_id,
+            field_path=request.field_path,
+        )
+
     def overview_sections(self) -> tuple[UiLiveOverviewSection, ...]:
         widget = self.widget()
         if isinstance(widget, UiLiveOverviewWidget):
@@ -565,6 +585,15 @@ class ManagedWindowRoute(FocusableWindowRouteMixin):
 
     identity: UiWindowIdentity
     title: str
+
+    def navigate(self, request: UiWindowNavigateRequest) -> WindowNavigationDispatch:
+        self.focus()
+        return WindowManager.focus_and_navigate_result(
+            UiWindowManagerScope.from_identity(self.identity).value,
+            item_id=request.item_id,
+            field_path=request.field_path,
+            requested_scope_id=request.window_id,
+        )
 
     def widget(self, create_if_missing: bool) -> QWidget | None:
         scope = UiWindowManagerScope.from_identity(self.identity)
@@ -2372,6 +2401,20 @@ class UiWindowProjectionService(
             errors=(WindowProjectionResultAuthority.unknown_window(identity),),
         )
 
+    def _navigate_static_route(
+        self,
+        request: UiWindowNavigateRequest,
+        resolution: WindowRouteResolution,
+    ) -> UiWindowNavigateResult:
+        dispatch = resolution.route.navigate(request)
+        return self._navigate_result(
+            request,
+            focused=dispatch.focused,
+            created=False,
+            navigated=dispatch.navigated,
+            summary=resolution.summary(),
+        )
+
     def navigate(
         self,
         request: UiWindowNavigateRequest,
@@ -2384,13 +2427,7 @@ class UiWindowProjectionService(
             resolve_scope_alias=False,
         )
         if embedded_route is not None:
-            return self._navigate_result(
-                request,
-                focused=True,
-                created=False,
-                navigated=False,
-                summary=embedded_route.focus(),
-            )
+            return self._navigate_static_route(request, embedded_route)
 
         managed_route = self._managed_route_resolution(
             identity,
@@ -2398,13 +2435,7 @@ class UiWindowProjectionService(
             resolve_scope_alias=False,
         )
         if managed_route is not None and request.open_policy.create_if_missing:
-            return self._navigate_result(
-                request,
-                focused=True,
-                created=False,
-                navigated=False,
-                summary=managed_route.focus(),
-            )
+            return self._navigate_static_route(request, managed_route)
 
         open_scope_id = self._open_window_manager_scope_id(identity)
         if open_scope_id is not None:
@@ -2432,26 +2463,14 @@ class UiWindowProjectionService(
             resolve_scope_alias=True,
         )
         if embedded_route is not None:
-            return self._navigate_result(
-                request,
-                focused=True,
-                created=False,
-                navigated=False,
-                summary=embedded_route.focus(),
-            )
+            return self._navigate_static_route(request, embedded_route)
         managed_route = self._managed_route_resolution(
             identity,
             route_index,
             resolve_scope_alias=True,
         )
         if managed_route is not None and request.open_policy.create_if_missing:
-            return self._navigate_result(
-                request,
-                focused=True,
-                created=False,
-                navigated=False,
-                summary=managed_route.focus(),
-            )
+            return self._navigate_static_route(request, managed_route)
 
         result = ScopeWindowNavigationService.navigate(
             WindowNavigationRequest(

@@ -123,6 +123,11 @@ An attached MCP agent should navigate semantically:
 5. validate code, then apply with the current revision token;
 6. dispatch semantic init/compile/run actions and poll operation/state surfaces.
 
+To select a manager item through MCP, use that manager's window identity and
+the item identity from its state surface, then check the current selection
+before invoking an action. Opening a plate's configuration window does not
+select its Plate Manager row.
+
 Window focus and field navigation are reported separately. A configuration
 field request selects the tab whose declared ObjectState scope owns that path.
 If no unique owner accepts the field, the window may still be focused, but the

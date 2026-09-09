@@ -94,6 +94,11 @@ First MCP session
 
 The server instructions and ``first_use`` context are intentionally small
 discovery routes. An agent should not need a copied list of every OpenHCS tool.
+These built-in operating guides remain useful after onboarding: retrieve the
+matching task context when resuming a session or moving from pipeline editing
+to execution, diagnosis or result review. ``first_use`` lists the available
+routes from their declarations; no separate skill installation is required.
+
 Use this sequence:
 
 1. Call ``openhcs_health_check``. Stop on bootstrap or stale-process errors.

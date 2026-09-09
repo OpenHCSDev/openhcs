@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from inspect import getdoc
 
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.common import JsonObject, JsonValue
-from openhcs.agent.dto.execution import ArtifactPlanInspection
+from openhcs.agent.dto.execution import ArtifactPlanInspection, SourceWorkspaceSummary
 from openhcs.mcp.dev_client_rendering import (
     McpDevOutputRenderer,
     McpDevPayloadProjection,
@@ -264,13 +265,7 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
         if axis_file_counts:
             lines.append(f"  axis files: {cls._mapping_text(axis_file_counts)}")
         if optional_int(source_workspace.get("file_count")) == 0:
-            lines.append(
-                "  note: no source-bound virtual files were compiled. Standard "
-                "microscope input may still be available through the plate handler; "
-                "use inspect-plate or selected-plate-images to review raw image "
-                "inventory, and configure source bindings for custom source-bound "
-                "layouts."
-            )
+            lines.append(f"  note: {getdoc(SourceWorkspaceSummary)}")
         files = McpDevPayloadProjection.sequence_of_mappings(
             source_workspace.get("files")
         )

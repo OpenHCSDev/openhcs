@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields as dataclass_fields
 from enum import Enum
+from inspect import getdoc
 from math import isfinite
 from typing import ClassVar, Generic, Self, TypeAlias, TypeVar
 
@@ -55,6 +56,7 @@ from openhcs.agent.dto.execution import (
     RuntimeServerInfoRequest,
     RuntimeServerScanRequest,
     RuntimeServerScanResult,
+    SourceWorkspaceSummary,
 )
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
@@ -202,7 +204,9 @@ class LocalStdioCapabilityTransportSemantics(CapabilityTransportSemanticsABC):
             f"Call {agent_capabilities.health_check.name} first. If OpenHCS is unfamiliar, call "
             f"{agent_capabilities.get_authoring_context.name} with kind='first_use' before choosing "
             "tools. That context is a compact orientation and intent router: follow it with the one "
-            "task-specific context relevant to the request instead of loading every guide. Then call "
+            "task-specific context relevant to the request instead of loading every guide. "
+            "Return to these operating guides after a handoff or when the task changes; "
+            "they are useful beyond first use. Then call "
             f"{agent_capabilities.search_capabilities.name} with task-relevant workflow, target, "
             "or text filters; its registry-owned workflow groups, target contexts, side effects, "
             "and security metadata are the authority for selecting the safe tool for that route. "
@@ -1847,12 +1851,13 @@ class GetAuthoringContextCapability(KnowledgeCapability):
     name = "openhcs_get_authoring_context"
     cli_command = "authoring-context"
     kind = CapabilityKind.TOOL
-    title = "Get authoring context"
+    title = "Get operating guide"
     description = (
-        "Returns bounded prompt/context text for agents authoring OpenHCS code. "
+        "Returns bounded operating guidance for choosing and completing OpenHCS workflows. "
         "Agents that do not already know OpenHCS should request kind='first_use' "
         "for a compact orientation and intent router before choosing tools, then "
-        "request only the task-specific context it recommends."
+        "request only the task-specific context it recommends. Reuse these operating "
+        "guides when resuming work or moving to execution, diagnosis, or result review."
     )
     service = "llm_context"
     input_contract = AuthoringContextRequest
@@ -2516,6 +2521,7 @@ class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
         "Compiles a complete pycodified PipelineDocument with an explicit progress queue "
         "and returns bounded axis, step, group-key, virtual source-workspace, "
         "path, main-flow checkpoint, viewer-streaming, and artifact-output plans."
+        f" Source workspace: {getdoc(SourceWorkspaceSummary)}"
     )
     service = "execution_session"
     exposition = PipelineDraftCapability.exposition.refine(
@@ -3107,10 +3113,19 @@ class UiNavigateWindowCapability(UiWindowCapability):
     name = "openhcs_ui_navigate_window"
     kind = CapabilityKind.TOOL
     title = "Navigate UI window"
-    description = "Opens or focuses one ObjectState-backed UI window scope and reveals an optional field path or item id."
+    description = (
+        "Opens or focuses a UI window, reveals a field, or selects an item in an "
+        "embedded manager. For list selection, use the manager's window_id and "
+        "the item_id from its current state surface. Using an ObjectState scope "
+        "as window_id opens that scope's editor; it does not select a manager row."
+    )
     service = "ui_bridge"
     mutating = True
-    side_effects = ("changes_running_ui_focus", "may_open_running_ui_window")
+    side_effects = (
+        "changes_running_ui_focus",
+        "may_open_running_ui_window",
+        "may_mutate_running_ui_state",
+    )
     runtime_requirements = ("running_openhcs_ui_bridge",)
     security_requirements = ("ui_bridge_auth_token",)
     input_contract = UiWindowNavigateRequest

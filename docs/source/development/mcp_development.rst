@@ -104,6 +104,13 @@ an installed-client projection. When ``OPENHCS_UI_BRIDGE_DESCRIPTOR`` or
 client forwards that selector to its fresh MCP child. An explicit descriptor
 directory remains authoritative and does not fall back to process discovery.
 
+For an isolated desktop configuration, set ``OPENHCS_UI_CONFIG_CACHE_FILE`` to
+the same absolute cache path used by that GUI. The development client forwards
+this override to its MCP child through ``UIConfigCacheEnvironment``, so function
+discovery reads the same configured execution endpoint. The bridge descriptor
+selects the UI connection; it does not also select the execution server. When
+no cache override is set, the normal desktop configuration path remains in use.
+
 Each command is validated against the selected declaration-derived surface
 before a one-shot MCP child starts and before a persistent session dispatches
 the call. If the selected surface excludes the tool, the client exits with the

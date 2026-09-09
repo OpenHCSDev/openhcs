@@ -21,12 +21,15 @@ from openhcs.agent.authoring_contexts import (
     FolderOnboardingContext,
     HeadlessExecutionContext,
     ObjectStateEditingContext,
+    PipelineAuthoringContext,
     PipelineAuthoringRulesContext,
     PipelineSystemModelContext,
     RuntimeUiCoordinationContext,
     SourceBindingWorkflowContext,
     StateCodeRoundtripContext,
     UiVisibleWorkflowContext,
+    UiVisibleWorkflowAuthoringContext,
+    ViewerReviewAuthoringContext,
     ViewerReviewContext,
 )
 from openhcs.agent.capabilities import agent_capabilities
@@ -42,7 +45,7 @@ from openhcs.agent.services.function_catalog_service import (
     FunctionCatalogServiceABC,
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.agent.ui_bridge_actions import PlateManagerAction
+from openhcs.agent.ui_bridge_actions import MainWindowAction, PlateManagerAction
 from openhcs.agent.ui_bridge_identities import (
     PipelineDebugSessionStateSurfaceIdentityDeclaration,
     PlateManagerOrchestratorCodeDocumentIdentity,
@@ -170,6 +173,7 @@ class RuntimeUiCoordinationSection(
 - If the OpenHCS UI is open and the user should see the work, use the UI bridge path: read/apply {code_document_id} as one complete document ({document_fields}), then dispatch {workflow_names} through {agent_capabilities.ui_selected_plate_workflow.name}.
 - Direct orchestrator sessions are headless runtime jobs: they can execute, stream to viewers, and write output plates, but they do not make PlateManager rows, ObjectState snapshots, or selected UI state visible unless the UI path is used.
 - A UI bridge mutation receipt and a workflow terminal state are separate evidence. Retain the returned operation_id, wait once with {agent_capabilities.ui_wait_for_operation_receipt.name} only for bridge receipt terminality, then read {state_surface_id} with {agent_capabilities.ui_get_state_surface.name} until the selected plate's compile/run state is terminal.
+- An observation timeout does not mean the job failed or stopped. Keep the operation and execution identities, inspect bridge health, then resume reading the same receipt or workflow state. If a mutation response was lost, reconcile current state before retrying; do not issue another Run to test whether the first one started.
 - After UI-owned runs, confirm source and output rows on that state surface, then inspect/query/sample the output plate and validate viewer layers from those visible paths."""
 
 
@@ -183,10 +187,11 @@ class StateCodeRoundtripSection(
     def render(cls, service: "AgentAuthoringContextService") -> str:
         del service
         return f"""=== OBJECTSTATE AND CODE ROUNDTRIP ===
-- ObjectState is the edit/provenance layer for config, pipelines, steps, and code surfaces; list scopes and fields through {agent_capabilities.ui_list_object_state_scopes.name} and {agent_capabilities.ui_get_object_state_fields.name} before assuming UI text or raw None values.
+- ObjectState is the edit/provenance layer for config, pipelines, steps, and code surfaces. When code-document capabilities are exposed, read the current document before assuming UI text or raw None values. When capability discovery exposes the advanced field tools, {agent_capabilities.ui_list_object_state_scopes.name} and {agent_capabilities.ui_get_object_state_fields.name} provide finer inspection. Code-document editing can work without those advanced tools, but only when its own capabilities are exposed; if neither route is available, report the capability-profile boundary before attempting a UI edit.
 - Field markers are semantic: * means unsaved/dirty, _ means differs from defaults, inherited/resolved values show lazy/default resolution even when raw values are None.
 - Code documents are live typed bidirectional UI<->code projections over ObjectState-backed UI objects, not freeform files. Read, validate, and apply them through their declared capabilities with fresh revision tokens.
-- UI mutations can create snapshots and branches. Inspect them with {agent_capabilities.ui_list_snapshots.name} and {agent_capabilities.ui_list_branches.name}; recover an approved prior state with {agent_capabilities.ui_restore_snapshot.name}, return from historical inspection with {agent_capabilities.ui_time_travel_head.name}, and change branches only through {agent_capabilities.ui_switch_branch.name}. Retrieve the targeted code/UI knowledge document below only when this ownership boundary needs more detail."""
+- UI mutations can create snapshots and branches. Inspect them with {agent_capabilities.ui_list_snapshots.name} and {agent_capabilities.ui_list_branches.name}; recover an approved prior state with {agent_capabilities.ui_restore_snapshot.name}, return from historical inspection with {agent_capabilities.ui_time_travel_head.name}, and change branches only through {agent_capabilities.ui_switch_branch.name}. Retrieve the targeted code/UI knowledge document below only when this ownership boundary needs more detail.
+- A code export preserves current declarations; a snapshot catalogue lists recovery points. Neither exports the full restorable history. For a state-preserving restart, discover the running UI's {MainWindowAction.RESTART_SESSION.value!r} action through {agent_capabilities.ui_list_actions.name}, honour its availability and confirmation policy, then rediscover the new bridge and verify restored state. An older running UI may not expose that action: retain it and report the boundary instead of killing it or claiming a code export preserves its history."""
 
 
 class CustomFunctionRuntimeSection(
@@ -407,12 +412,15 @@ class FirstUseOrientationSection(
 - Choose the state owner before choosing file formats or tools. If the user asks to open, show, continue, or edit work in the desktop, the UI-owned route always takes precedence over folder inspection or a headless session.
 
 === CHOOSE ONE TASK ROUTE ===
-Request exactly one matching context with {agent_capabilities.get_authoring_context.name}; deepen into another only when the workflow reaches that boundary.
+Request exactly one matching context with {agent_capabilities.get_authoring_context.name}; deepen into another only when the workflow reaches that boundary. Reuse this router after a handoff or a change of task; first_use is not a one-time setup step.
 {routes}
 
 === SAFE FIRST ACTION ===
 - Start read-only. Query the active surface through {agent_capabilities.search_capabilities.name} with task-relevant workflow, target, or text filters; its registry-owned metadata is the authority for what this server exposes. Use {agent_capabilities.list_capabilities.name} only when the complete selected surface is required.
+- Guides describe workflows across capability profiles. Confirm a named tool is exposed before calling it. Desktop actions are discovered separately through {agent_capabilities.ui_list_actions.name}; an empty capability search does not establish that a running window lacks the action.
 - Request the matching task context before mutation. Do not read every knowledge document, enumerate every function, invent config fields, or load full-resolution image data up front.
+- When continuing an analysis, read and reuse its existing pipeline and configuration. Adapt only the required source/layout choices, preserve earlier outputs in a separate destination, and record unavailable acquisitions as missing rather than zero measurements. Validate a representative bounded run before expanding.
+- If returned guidance is truncated, retrieve the same context with a sufficient max_chars before acting on an incomplete workflow.
 - Before any write or execution, show the exact target and intended change, refresh revision/request tokens, obtain approval, validate, and compile before running."""
 
 
@@ -458,7 +466,8 @@ class UiVisibleWorkflowStepsSection(
 - Read, validate, and apply the PlateManager code document with {agent_capabilities.ui_list_code_documents.name}, {agent_capabilities.ui_get_code_document.name}, {agent_capabilities.ui_validate_code_document.name}, and {agent_capabilities.ui_apply_code_document.name}.
 - Add the containing plate directory and initialize with auto-detection. Recognized HCS layouts and CZI/OME stores keep their detected handler; use SourceBindingsConfig only for semantic selection/naming after discovery, or as the SourceBindingsHandler ingestion declaration for an otherwise unrecognized arbitrary-file folder.
 - For a write: read, explain, obtain approval, re-read, validate, then apply using the fresh document revision and approved confirmation policy; retain the mutation receipt and snapshot facts.
-- Dispatch init, compile, and run through {agent_capabilities.ui_selected_plate_workflow.name} using its current selection revision token. Wait for the returned operation_id once with {agent_capabilities.ui_wait_for_operation_receipt.name} only to establish bridge receipt terminality, then read the Plate Manager state surface for the separate workflow terminal condition.
+- Use kind="{PipelineAuthoringContext.require_kind()}" when revising functions or configuration, then return to this UI-owned route. Bound the pipeline's execution well filter for the first run; a viewer-only filter does not reduce processing. Dispatch init, compile, and run through {agent_capabilities.ui_selected_plate_workflow.name} with the current selection revision token, and follow the receipt/workflow distinction above.
+- After terminal execution, request kind="{ViewerReviewAuthoringContext.require_kind()}" for native-resolution source/result and ROI checks before accepting the analysis; successful execution alone does not establish scientific accuracy.
 - For an assay with measurement outputs, completion includes reading the live-measurement surface and reconciling its object identifiers and row cardinality with final labels/ROIs. Invoke the declared Plate Manager Results action when the user should see the same retained tables; do not scrape the widget tree to reconstruct them.
 - Retrieve the targeted code/UI knowledge document below only if the ownership boundary remains unclear."""
 
@@ -531,6 +540,7 @@ class ObjectStateEditingStepsSection(
 ):
     section_id = "objectstate_editing_steps"
     content = f"""=== OBJECTSTATE EDITING WORKFLOW ===
+- Discover these advanced field tools on the current capability profile first. If they are not exposed, check whether code-document capabilities are exposed. When available, request kind="{UiVisibleWorkflowAuthoringContext.require_kind()}" and use its revision-checked code documents. If neither route is available, report the capability-profile boundary before attempting a UI edit; do not assume a tool named in a guide is available on every server.
 - List scopes and fields with {agent_capabilities.ui_list_object_state_scopes.name} and {agent_capabilities.ui_get_object_state_fields.name}; use {agent_capabilities.ui_describe_object_state_field.name} when a field's semantics are unclear.
 - Apply field changes with {agent_capabilities.ui_mutate_object_state_field.name}; keep save/commit explicit through managed UI actions so dirty/default markers remain inspectable.
 - A field-mutation request token is idempotency, not a base-revision guard. Confirm branch head, re-read the exact field immediately before one small approved mutation, and verify the field and related state surface immediately afterward; prefer a revision-checked code document for related atomic changes.

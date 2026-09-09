@@ -5,8 +5,12 @@ from pathlib import Path
 from openhcs.agent.authoring_contexts import (
     AuthoringContextDeclaration,
     AuthoringContextRoute,
+    PipelineAuthoringContext,
+    UiVisibleWorkflowAuthoringContext,
+    ViewerReviewAuthoringContext,
 )
 from openhcs.agent.capabilities import agent_capabilities
+from openhcs.agent.dto.authoring import AuthoringContextRequest
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.config import ConfigFieldSchema, ConfigSchema
 from openhcs.agent.dto.knowledge import (
@@ -20,7 +24,9 @@ from openhcs.agent.services.llm_context_service import AgentAuthoringContextServ
 
 class _UnexpectedFunctionCatalog:
     def search(self, **_kwargs):
-        raise AssertionError("progressive contexts must not enumerate arbitrary functions")
+        raise AssertionError(
+            "progressive contexts must not enumerate arbitrary functions"
+        )
 
 
 class _ReflectedConfigService:
@@ -98,6 +104,47 @@ def test_context_registry_orders_ui_ownership_before_headless_routes() -> None:
         "objectstate_editing",
         "cellprofiler_translation",
     )
+
+
+def test_operating_guides_cover_resume_and_safe_execution_boundaries() -> None:
+    service, _ = _service()
+    first_use = service.get_authoring_context("first_use").content
+    ui = service.get_authoring_context("ui_visible_workflow").content
+    state = service.get_authoring_context("objectstate_editing").content
+
+    assert "first_use is not a one-time setup step" in first_use
+    assert "unavailable acquisitions as missing rather than zero" in first_use
+    assert "reuse its existing pipeline and configuration" in first_use
+    assert "preserve earlier outputs in a separate destination" in first_use
+    assert "Confirm a named tool is exposed" in first_use
+    assert agent_capabilities.ui_list_actions.name in first_use
+    assert "observation timeout does not mean the job failed" in ui
+    assert "do not issue another Run" in ui
+    assert ui.count("only for bridge receipt terminality") == 1
+    assert f'kind="{PipelineAuthoringContext.require_kind()}"' in ui
+    assert f'kind="{ViewerReviewAuthoringContext.require_kind()}"' in ui
+    assert "viewer-only filter does not reduce processing" in ui
+    assert "Neither exports the full restorable history" in ui
+    assert "older running UI may not expose that action" in ui
+    assert "If they are not exposed" in state
+    assert f'kind="{UiVisibleWorkflowAuthoringContext.require_kind()}"' in state
+    assert "only when its own capabilities are exposed" in state
+    assert "check whether code-document capabilities are exposed" in state
+    assert (
+        "If neither route is available, report the capability-profile boundary" in state
+    )
+
+
+def test_actual_source_backed_guides_fit_the_public_default_bound() -> None:
+    service = AgentAuthoringContextService(
+        function_catalog=_UnexpectedFunctionCatalog()
+    )
+    for declaration in AuthoringContextDeclaration.__registry__.values():
+        request = AuthoringContextRequest(kind=declaration.require_kind())
+        complete = service.get_authoring_context(request.kind)
+        bounded = service.get_bounded_authoring_context(request)
+        assert len(complete.content) <= request.max_chars
+        assert bounded.content == complete.content
 
 
 def test_first_use_projects_new_routes_from_the_nominal_registry() -> None:
