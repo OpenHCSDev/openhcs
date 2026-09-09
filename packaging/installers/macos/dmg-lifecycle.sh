@@ -90,14 +90,14 @@ openhcs_detach_disk_image() {
   fi
   printf 'Releasing the still-attached owned disk image %s after normal detach.\n' \
     "$mounted_device" >&2
-  /usr/sbin/diskutil info -plist "$mounted_device" >&2 || true
-  _openhcs_disk_image_holders "$mounted_device" || true
   # Release filesystems separately from their backing image. Disk Arbitration
   # reports unmount dissent here; preserve it rather than retrying a busy eject.
   /usr/sbin/diskutil unmountDisk force "$mounted_device" >&2 || true
   /usr/bin/hdiutil detach -debug -force "$mounted_device" || true
   if test -e "$mounted_device"; then
     printf 'Owned disk image remains attached: %s.\n' "$mounted_device" >&2
+    /usr/sbin/diskutil info -plist "$mounted_device" >&2 || true
+    _openhcs_disk_image_holders "$mounted_device" || true
     /usr/bin/log show --last 2m --style compact --info --debug \
       --predicate "process == 'diskarbitrationd' AND eventMessage MATCHES '.*\\\\b${mounted_device#/dev/}(s[0-9]+)*\\\\b.*'" >&2 || true
     return 1
