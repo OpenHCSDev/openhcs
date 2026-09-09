@@ -114,9 +114,7 @@ class StreamImagePayloadMetadataProjector:
 
         item_fields[ViewerWireField.PLANE_AXIS.value] = metadata.plane_axis.value
         plane_component_values = (
-            metadata.source_provenance.varying_plane_component_values(
-                plane_components
-            )
+            metadata.source_provenance.varying_plane_component_values(plane_components)
         )
         if (
             not plane_component_values
@@ -168,8 +166,10 @@ class StreamImagePayloadMetadataProjector:
             )
         return values
 
+
 class StreamComponentNameMetadata(dict[str, dict[str, ComponentDisplayName]]):
     """Component value display names keyed by component then raw value."""
+
 
 @dataclass(frozen=True, slots=True)
 class StreamScopedDisplayConfig(ViewerDisplayConfigABC):
@@ -199,6 +199,7 @@ class StreamScopedDisplayConfig(ViewerDisplayConfigABC):
         """Retain backend-specific display fields while scoping component axes."""
 
         return dict(self.base.display_payload_extra())
+
 
 @dataclass(frozen=True)
 class StreamComponentMessageExtraPayload(ViewerComponentMetadataPayload):
@@ -329,11 +330,7 @@ class StreamSourceComponentMetadataItems:
         )
 
     def domain_metadata_items(self) -> StreamComponentDomainMetadataItems:
-        return tuple(
-            dict(metadata)
-            for metadata in self.values
-            if metadata is not None
-        )
+        return tuple(dict(metadata) for metadata in self.values if metadata is not None)
 
     def viewer_source_metadata(
         self,
@@ -376,6 +373,7 @@ class StreamSourceComponentMetadataItems:
                     continue
                 name_map.include_observed_value(component, value)
 
+
 class StreamComponentNameMap(StreamComponentNameMetadata):
     """Mutable builder for stream component display-name metadata."""
 
@@ -396,6 +394,7 @@ class StreamComponentNameMap(StreamComponentNameMetadata):
         wire_value = str(value)
         if wire_value not in self[component]:
             self[component][wire_value] = None
+
 
 @dataclass(frozen=True, slots=True)
 class StreamMetadataRoot:
@@ -433,6 +432,7 @@ class StreamMetadataRoot:
         if values is None:
             return ()
         return tuple(str(value) for value in values)
+
 
 @dataclass(frozen=True, slots=True)
 class StreamMetadataRootAuthority:
@@ -487,6 +487,7 @@ class StreamMetadataRootAuthority:
             except (FileNotFoundError, MetadataNotFoundError, NotADirectoryError):
                 continue
         return tuple(metadata_roots)
+
 
 @dataclass(frozen=True, slots=True)
 class StreamComponentDomainProvider(ABC, metaclass=AutoRegisterMeta):
@@ -606,6 +607,7 @@ class StreamMetadataBackedComponentDomainProvider(StreamComponentDomainProvider)
                 items.append({self.component: value})
         return tuple(items)
 
+
 @dataclass(frozen=True, slots=True)
 class StreamComponentDomainProviders:
     """Ordered domain-provider set for one viewer component layout."""
@@ -641,6 +643,7 @@ class StreamComponentDomainProviders:
     def include_display_names(self, name_map: StreamComponentNameMap) -> None:
         for provider in self.values:
             provider.include_display_names(name_map)
+
 
 @dataclass(frozen=True, slots=True)
 class StreamComponentMessageExtraAuthority:
@@ -701,9 +704,11 @@ class StreamComponentMessageExtraAuthority:
         viewer_surface: StreamingViewerSurface,
         source_metadata_items: StreamSourceComponentMetadataItems,
     ) -> StreamingViewerSurface:
-        component_order = ViewerObjectDisplayConfigInput(
-            viewer_surface.display_config
-        ).layout().component_order
+        component_order = (
+            ViewerObjectDisplayConfigInput(viewer_surface.display_config)
+            .layout()
+            .component_order
+        )
         complete_component_order = source_metadata_items.complete_component_order(
             component_order
         )
