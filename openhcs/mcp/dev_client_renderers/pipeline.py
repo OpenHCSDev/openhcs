@@ -18,19 +18,26 @@ from openhcs.mcp.dev_client_renderers.object_state import ObjectStateScopeRender
 from openhcs.mcp.dev_client_renderers.ui_bridge import CodeDocumentRenderer
 from openhcs.mcp.dev_client_renderers.viewer import ViewerValidationRenderer
 
+
 class PipelineDraftStepRenderer:
     """Compact renderer for one-step pipeline draft smoke checks."""
 
     @classmethod
     def render(cls, response: JsonObject, *, max_source_chars: int = 2_000) -> str:
-        create_payload = cls._payload_for_tool(response, agent_capabilities.create_pipeline.name)
-        add_payload = cls._payload_for_tool(response, agent_capabilities.add_function_step.name)
-        validate_payload = cls._payload_for_tool(response, agent_capabilities.validate_pipeline.name)
-        render_payload = cls._payload_for_tool(response, agent_capabilities.render_pipeline_source.name)
+        create_payload = cls._payload_for_tool(
+            response, agent_capabilities.create_pipeline.name
+        )
+        add_payload = cls._payload_for_tool(
+            response, agent_capabilities.add_function_step.name
+        )
+        validate_payload = cls._payload_for_tool(
+            response, agent_capabilities.validate_pipeline.name
+        )
+        render_payload = cls._payload_for_tool(
+            response, agent_capabilities.render_pipeline_source.name
+        )
         pipeline_id = (
-            create_payload.get("pipeline_id")
-            if create_payload is not None
-            else None
+            create_payload.get("pipeline_id") if create_payload is not None else None
         )
         pipeline_steps = (
             McpDevPayloadProjection.sequence_of_mappings(add_payload.get("steps"))
@@ -141,10 +148,7 @@ class PipelineDraftStepRenderer:
         function_id = cls._first_function_id(steps)
         if function_id is None:
             return
-        kwargs_shape = ", ".join(
-            f'"{name}": <value>'
-            for name in missing_kwargs
-        )
+        kwargs_shape = ", ".join(f'"{name}": <value>' for name in missing_kwargs)
         lines.append(f"Next: function {function_id}")
         lines.append(
             "Retry shape: "
@@ -178,9 +182,7 @@ class PipelineDraftStepRenderer:
             return ()
         tail = tail.strip().rstrip(".")
         names = tuple(
-            name.strip().strip("`'")
-            for name in tail.split(",")
-            if name.strip()
+            name.strip().strip("`'") for name in tail.split(",") if name.strip()
         )
         return names
 
@@ -197,6 +199,7 @@ class PipelineDraftStepRenderer:
                 if isinstance(function_id, str) and function_id:
                     return function_id
         return None
+
 
 class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
     """Compact renderer for pycodified pipeline artifact-plan inspection."""
@@ -220,9 +223,7 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
         ObjectStateScopeRenderer._append_messages(lines, payload)
         axes = payload.get("axes")
         if axes:
-            lines.append(
-                f"Axes: {ViewerValidationRenderer._sequence_text(axes)}"
-            )
+            lines.append(f"Axes: {ViewerValidationRenderer._sequence_text(axes)}")
         axis_filter = payload.get("axis_filter")
         if axis_filter:
             lines.append(
@@ -413,10 +414,7 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
             status_parts.append(
                 f"analysis_dir={McpDevPayloadProjection.text(analysis_output_dir)}"
             )
-        if (
-            optional_bool(materialization.get("filename_uses_source_identity"))
-            is True
-        ):
+        if optional_bool(materialization.get("filename_uses_source_identity")) is True:
             status_parts.append("source-identity-filenames")
         if (
             optional_bool(materialization.get("runtime_metadata_can_refine_paths"))
@@ -431,10 +429,7 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
         for path in paths[:3]:
             group_key = McpDevPayloadProjection.text(path.get("group_key"))
             candidates = cls._candidate_path_text(path.get("candidate_paths"))
-            lines.append(
-                "      candidates "
-                f"group={group_key}: {candidates}"
-            )
+            lines.append("      candidates " f"group={group_key}: {candidates}")
         if len(paths) > 3:
             lines.append(f"      candidates ... truncated={len(paths) - 3}")
         note = materialization.get("note")
@@ -462,10 +457,13 @@ class PipelineArtifactPlanRenderer(McpDevOutputRenderer):
             for worker, axes in mapping.items()
         )
 
+
 class ExecuteSourceRenderer:
     """Compact renderer for source-backed headless execution command results."""
 
-    SESSION_TOOL = agent_capabilities.create_orchestrator_session_from_pipeline_source.name
+    SESSION_TOOL = (
+        agent_capabilities.create_orchestrator_session_from_pipeline_source.name
+    )
     SUBMIT_TOOL = agent_capabilities.submit_pipeline_execution.name
 
     @classmethod
@@ -507,8 +505,7 @@ class ExecuteSourceRenderer:
             )
             if response_payload:
                 lines.append(
-                    "Response: "
-                    + cls._response_summary_text(response_payload)
+                    "Response: " + cls._response_summary_text(response_payload)
                 )
             ObjectStateScopeRenderer._append_messages(lines, submit_payload)
         else:
@@ -533,4 +530,6 @@ class ExecuteSourceRenderer:
         ]
         if parts:
             return " ".join(parts)
-        return f"keys={ViewerValidationRenderer._sequence_text(sorted(response_payload))}"
+        return (
+            f"keys={ViewerValidationRenderer._sequence_text(sorted(response_payload))}"
+        )
