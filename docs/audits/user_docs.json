@@ -1027,7 +1027,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/basic_interface.rst",
-    "source_sha256": "b44681e95f064f91197c1033a2f5a9895fefe474571b6b98d381821750529eaa",
+    "source_sha256": "28a809e484ed803551ca6fbc729fee0a851067f84c5979f0320e4e325cf4207b",
     "audience": [
       "desktop users",
       "MCP-assisted operators"
@@ -1123,7 +1123,8 @@
       "On 2026-08-27, re-read the complete reference against propagated catalogue cancellation; background loading, responsive selection, and exact-reference transfer remain accurate.",
       "On 2026-08-28, re-read the complete reference against the registered stable-window titles and the new declaration-derived Function Selector figure; workspace, editor, catalogue, and agent-navigation claims remain accurate.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "Verified the current top-docked system monitor against MainWindowDockPane construction and the installed 0.8.3 MCP screenshot."
     ]
   },
   {
