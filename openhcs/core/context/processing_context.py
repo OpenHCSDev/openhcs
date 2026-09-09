@@ -7,6 +7,10 @@ This module defines the ProcessingContext class, which maintains state during pi
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 
 from polystore.filemanager import FileManager
 from zmqruntime.config import ZMQConfig
@@ -149,10 +153,7 @@ class ProcessingContext:
         self.output_plate_root = output_plate_root
         self.transport_config = transport_config
 
-        self.execution_id = None
-        self.plate_id = None
-        self.worker_slot = None
-        self.owned_wells = None
+        self.execution_runtime: WorkerLaneExecutionContext | None = None
         self.debug_event_sink = NO_OP_DEBUG_EVENT_SINK
 
         self.pipeline_sequential_mode = False
@@ -161,18 +162,11 @@ class ProcessingContext:
 
     def bind_execution_runtime(
         self,
-        *,
-        execution_id: str,
-        plate_id: str,
-        worker_slot: str,
-        owned_wells: tuple[str, ...],
+        runtime: WorkerLaneExecutionContext,
     ) -> None:
         """Bind worker-owned execution identity after compilation freeze."""
 
-        self.execution_id = execution_id
-        self.plate_id = plate_id
-        self.worker_slot = worker_slot
-        self.owned_wells = list(owned_wells)
+        self.execution_runtime = runtime
 
     def install_debug_event_sink(self, debug_event_sink: DebugEventSink) -> None:
         """Install the debug sink selected for this execution context."""

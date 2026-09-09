@@ -208,7 +208,7 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
             plate_id="plate-1",
             debug_execution_policy=NoOpDebugExecutionPolicy(),
             worker_slot="worker-0",
-            owned_wells=("A01",),
+            worker_assignments={"worker-0": ["A01"]},
         ),
         runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
     )
@@ -268,7 +268,7 @@ def test_axis_teardown_preserves_execution_error_and_attempts_every_stage(
                 plate_id="plate-1",
                 debug_execution_policy=NoOpDebugExecutionPolicy(),
                 worker_slot="worker-0",
-                owned_wells=("A01",),
+                worker_assignments={"worker-0": ["A01"]},
             ),
             runtime_observation_mode=RuntimeObservationMode.OMIT,
         )

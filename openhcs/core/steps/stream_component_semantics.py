@@ -548,13 +548,14 @@ class StreamComponentDomainProvider(ABC, metaclass=AutoRegisterMeta):
                 metadata_root.component_display_names(self.component),
             )
 
+
 @dataclass(frozen=True, slots=True)
 class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
     """Declared domain provider for the execution multiprocessing axis."""
 
     registry_key: ClassVar[str] = "execution_axis"
     axis_component: ClassVar[str] = str(get_multiprocessing_axis().value)
-    owned_axis_values: tuple[ComponentValue, ...] = ()
+    execution_axis_values: tuple[ComponentValue, ...] = ()
 
     @classmethod
     def build_for_component(
@@ -564,20 +565,20 @@ class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
         component: str,
         metadata_roots: tuple[StreamMetadataRoot, ...],
     ) -> "StreamExecutionAxisDomainProvider":
-        if context.owned_wells is None:
+        if context.execution_runtime is None:
             raise RuntimeError(
-                "Streaming component domain requires ProcessingContext.owned_wells "
+                "Streaming component domain requires ProcessingContext.execution_runtime "
                 "for the multiprocessing axis."
             )
-        values = tuple(str(value) for value in context.owned_wells)
+        values = context.execution_runtime.execution_axis_values
         if not values:
             raise RuntimeError(
-                "Streaming component domain requires at least one owned axis value."
+                "Streaming component domain requires at least one execution axis value."
             )
         return cls(
             component=component,
             metadata_roots=metadata_roots,
-            owned_axis_values=values,
+            execution_axis_values=values,
         )
 
     @classmethod
@@ -585,7 +586,8 @@ class StreamExecutionAxisDomainProvider(StreamComponentDomainProvider):
         return component == cls.axis_component
 
     def domain_metadata_items(self) -> StreamComponentDomainMetadataItems:
-        return tuple({self.component: value} for value in self.owned_axis_values)
+        return tuple({self.component: value} for value in self.execution_axis_values)
+
 
 @dataclass(frozen=True, slots=True)
 class StreamMetadataBackedComponentDomainProvider(StreamComponentDomainProvider):

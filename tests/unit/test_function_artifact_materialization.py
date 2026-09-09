@@ -450,7 +450,7 @@ def _context(filemanager):
     )
     context.plate_path = Path("/tmp/plate")
     context.input_dir = Path("/tmp/plate/images")
-    context.owned_wells = ["A01"]
+    context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"
     context.step_axis_filters = {}
     context.analysis_consolidation_config = AnalysisConsolidationConfig()

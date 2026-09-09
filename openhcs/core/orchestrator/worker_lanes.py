@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Optional, TypeAlias
+from typing import Dict, List, Mapping, Optional, Sequence, TypeAlias
 
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.context.processing_context import ProcessingContext
@@ -65,7 +65,18 @@ class WorkerLaneExecutionContext(ProgressExecutionContext):
 
     debug_execution_policy: DebugExecutionPolicy
     worker_slot: str
-    owned_wells: tuple[str, ...]
+    worker_assignments: Mapping[str, Sequence[str]]
+
+    @property
+    def owned_wells(self) -> tuple[str, ...]:
+        return tuple(self.worker_assignments[self.worker_slot])
+
+    @property
+    def execution_axis_values(self) -> tuple[str, ...]:
+        """Complete execution domain, independent of this worker's partition."""
+        return tuple(
+            value for values in self.worker_assignments.values() for value in values
+        )
 
     def install_debug_sink(self, processing_context: DebugExecutionContext) -> None:
         self.debug_execution_policy.install_context_sink(
@@ -120,7 +131,7 @@ class WorkerLaneExecutionPlan(ProgressExecutionContext):
             plate_id=self.plate_id,
             debug_execution_policy=self.debug_execution_policy,
             worker_slot=worker_slot,
-            owned_wells=self.assignments.owned_wells(worker_slot),
+            worker_assignments=self.assignments.worker_assignments,
         )
 
 

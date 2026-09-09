@@ -6,10 +6,62 @@ from openhcs.core.source_metadata import ORIGINAL_SOURCE_METADATA_FIELD
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.stream_component_semantics import (
+    StreamExecutionAxisDomainProvider,
     StreamImagePayloadMetadataProjector,
     StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
 )
+from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.debug import NoOpDebugExecutionPolicy
+from openhcs.core.orchestrator.worker_lanes import (
+    WorkerAssignmentPlan,
+    WorkerLaneExecutionContext,
+)
+
+
+def test_streaming_domain_spans_worker_lanes_without_mirroring_worker_identity():
+    assignments = WorkerAssignmentPlan(
+        {"worker_0": ["R02C05", "R04C04"], "worker_1": ["R04C02", "R07C02"]},
+        {},
+    )
+    domains = []
+    for slot in assignments.worker_assignments:
+        lane = WorkerLaneExecutionContext(
+            execution_id="execution",
+            plate_id="plate",
+            debug_execution_policy=NoOpDebugExecutionPolicy(),
+            worker_slot=slot,
+            worker_assignments=assignments.worker_assignments,
+        )
+        context = ProcessingContext()
+        context.bind_execution_runtime(lane)
+        assert context.execution_runtime is lane
+        assert lane.worker_assignments is assignments.worker_assignments
+        assert lane.owned_wells == tuple(assignments.worker_assignments[slot])
+        provider = StreamExecutionAxisDomainProvider.build_for_component(
+            context=context,
+            component=StreamExecutionAxisDomainProvider.axis_component,
+            metadata_roots=(),
+        )
+        domains.append(provider.domain_metadata_items())
+    assert domains[0] == domains[1]
+    assert {
+        item[StreamExecutionAxisDomainProvider.axis_component] for item in domains[0]
+    } == {
+        "R02C05",
+        "R04C04",
+        "R04C02",
+        "R07C02",
+    }
+
+
+def test_streaming_domain_requires_bound_execution():
+    with pytest.raises(RuntimeError, match="execution_runtime"):
+        StreamExecutionAxisDomainProvider.build_for_component(
+            context=ProcessingContext(),
+            component=StreamExecutionAxisDomainProvider.axis_component,
+            metadata_roots=(),
+        )
 
 
 def test_stream_viewer_component_metadata_projector_keeps_only_declared_axes():

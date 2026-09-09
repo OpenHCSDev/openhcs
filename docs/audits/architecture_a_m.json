@@ -164,7 +164,7 @@
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
-        "sha256": "5a075a9785925abf518cab78577fe3c80579f4bd283ce361a9cd89b1e65ecd7f",
+        "sha256": "d05d01a5b22909f85d4d2fba9d397337cb5552cb706cf2520f5591a62a913c8f",
         "role": "Proves consolidation consumes runtime CSV values, uses the compiled backend destination, ignores non-table artifacts, and propagates failures."
       },
       {
@@ -724,7 +724,7 @@
   },
   {
     "path": "docs/source/architecture/concurrency_model.rst",
-    "source_sha256": "e8d985a9b5d1e63e1d7ea436e5c714dec2a50dce51711be556e0aa4bd2a8c8c2",
+    "source_sha256": "db244918e5b7ef7ba93ae17d1855954c630e577b56813f8ded29dafd4e7889bc",
     "audience": [
       "OpenHCS runtime and multiprocessing maintainers"
     ],
@@ -738,12 +738,12 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "52277cdc9ab672d147f2d0b3b7d79d6dc0cb747ab4956c187891732d2613c6a3",
+        "sha256": "145c0334be395ff89f447b64016099c0aa1a36279024bef28edfbb06e40ef349",
         "role": "Owns the compiled multiprocessing-axis identity for one processing context."
       },
       {
         "path": "openhcs/core/orchestrator/worker_lanes.py",
-        "sha256": "93bf6c3cb89ecbf8745cb9a1dc6342c5df2b0dd810400e94af2ebbb928636c3a",
+        "sha256": "2e2a17b52e06f692c924554c387ed7aed9d25b3174c60e69d28bed6906f430b0",
         "role": "Groups runtime contexts into worker lanes from their declared axis identity."
       },
       {
@@ -753,7 +753,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "d5a4c60794e6b6edf162059e1c0a969d3fae8731b7fd32346a692a3c72a8444a",
+        "sha256": "f361aad7b942e4118e2ec3ca5c5efc6cd543d7da495d3ec724d277d362cc802c",
         "role": "Owns executor construction, submission, result collection, cancellation, and footprint-aware cleanup."
       },
       {
@@ -1533,7 +1533,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "d5a4c60794e6b6edf162059e1c0a969d3fae8731b7fd32346a692a3c72a8444a",
+        "sha256": "f361aad7b942e4118e2ec3ca5c5efc6cd543d7da495d3ec724d277d362cc802c",
         "role": "Consumes compiled footprints for worker execution and lane-appropriate framework cleanup."
       },
       {
@@ -2106,7 +2106,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "d5a4c60794e6b6edf162059e1c0a969d3fae8731b7fd32346a692a3c72a8444a",
+        "sha256": "f361aad7b942e4118e2ec3ca5c5efc6cd543d7da495d3ec724d277d362cc802c",
         "role": "Installs the bundle, submits one task per compiled axis, collects typed results, and performs footprint-aware cleanup."
       },
       {

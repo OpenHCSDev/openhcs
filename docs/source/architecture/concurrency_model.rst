@@ -23,6 +23,14 @@ the context-owned identity instead of parsing those keys.
 submission, result collection, cancellation, and cleanup. ``worker_lanes``
 provides the process-local bundle authority used by worker code.
 
+At execution, each context binds its ``WorkerLaneExecutionContext`` directly.
+The lane identity references the execution's worker-assignment mapping, without
+carrying other workers' processing contexts. Progress projects the current
+lane's owned axes; streaming projects the complete assigned axis domain so that
+every worker declares the same viewer coordinates. ``ProcessingContext`` does
+not retain separate copies of the lane's execution, plate, worker, or ownership
+fields.
+
 Start-method policy
 -------------------
 

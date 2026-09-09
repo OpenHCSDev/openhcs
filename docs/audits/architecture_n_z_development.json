@@ -212,7 +212,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "d5a4c60794e6b6edf162059e1c0a969d3fae8731b7fd32346a692a3c72a8444a",
+        "sha256": "f361aad7b942e4118e2ec3ca5c5efc6cd543d7da495d3ec724d277d362cc802c",
         "role": "Worker task execution and owner-bound runtime/framework cleanup for process, inline, and thread lanes."
       },
       {
@@ -541,12 +541,12 @@
       },
       {
         "path": "openhcs/core/context/processing_context.py",
-        "sha256": "52277cdc9ab672d147f2d0b3b7d79d6dc0cb747ab4956c187891732d2613c6a3",
+        "sha256": "145c0334be395ff89f447b64016099c0aa1a36279024bef28edfbb06e40ef349",
         "role": "Owns the compiled multiprocessing-axis identity carried by each runtime context."
       },
       {
         "path": "tests/unit/test_compiled_execution.py",
-        "sha256": "f328432069d426a59bd4f95e83e1bc17f4c1beecb824c757f3fc911d7015b201",
+        "sha256": "feea4629d61f1def4f73c25c55c140869040884046a9ab83efb07c37e08f9044",
         "role": "Verifies that bundle axis projection derives from context declarations rather than mapping-key syntax."
       },
       {

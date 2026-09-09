@@ -244,7 +244,7 @@ def context_stub(filemanager, parser=None):
     )
     context.plate_path = Path("/tmp/plate")
     context.input_dir = Path("/tmp/plate/images")
-    context.owned_wells = ["A01"]
+    context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"
     context.step_axis_filters = {}
     return context

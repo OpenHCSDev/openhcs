@@ -927,12 +927,7 @@ def _execute_single_axis_static(
         logger.error(error_msg)
         raise RuntimeError(error_msg)
 
-    frozen_context.bind_execution_runtime(
-        execution_id=lane_context.execution_id,
-        plate_id=lane_context.plate_id,
-        worker_slot=lane_context.worker_slot,
-        owned_wells=lane_context.owned_wells,
-    )
+    frozen_context.bind_execution_runtime(lane_context)
     lane_context.install_debug_sink(frozen_context)
     runtime_value_store = frozen_context.runtime_value_store
 

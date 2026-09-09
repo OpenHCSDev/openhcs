@@ -1112,9 +1112,12 @@ class FunctionStepExecutor:
         component_value: FunctionGroupKey,
         pattern_item: SourceCandidatePath,
     ) -> None:
+        runtime = self.context.execution_runtime
+        if runtime is None:
+            return
         emit(
-            execution_id=self.context.execution_id,
-            plate_id=self.context.plate_id,
+            execution_id=runtime.execution_id,
+            plate_id=runtime.plate_id,
             axis_id=self.plan.axis_id,
             step_name=self.plan.step_name,
             phase=ProgressPhase.PATTERN_GROUP,
@@ -1124,6 +1127,6 @@ class FunctionStepExecutor:
             percent=(completed_groups / total_groups) * 100.0,
             component=str(component_value),
             pattern=str(pattern_item),
-            worker_slot=self.context.worker_slot,
-            owned_wells=self.context.owned_wells,
+            worker_slot=runtime.worker_slot,
+            owned_wells=list(runtime.owned_wells),
         )
