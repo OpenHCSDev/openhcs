@@ -8,6 +8,12 @@ shared endpoint projection and requests the updated catalogue asynchronously,
 so the Function Selector remains responsive while the execution server exposes
 the new declaration.
 
+After an MCP agent registers a function on the same execution endpoint, reopen
+the Function Selector to read its current catalogue. This also works when the
+desktop prepared its catalogue before registration. The server retains its
+registry cache, and closing a selector does not cancel another consumer's
+shared request.
+
 .. openhcs-gallery:: ui-custom-function-manager
 
 ``CustomFunctionManager`` owns persisted source and coordinates create, load,

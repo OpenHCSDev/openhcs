@@ -191,21 +191,19 @@ class ZMQFunctionCatalogService(FunctionCatalogServiceABC):
         *,
         compact_signatures: bool = True,
     ) -> Future[FunctionCatalogPage]:
-        """Start one shared endpoint catalog read without blocking the caller."""
+        """Read the endpoint's current catalog, coalescing concurrent callers.
+
+        A completed projection proves its contents, not that the endpoint still
+        has the same revision. Other authoring processes can register functions
+        without emitting an event in this process. Registry discovery remains
+        cached by the endpoint; consumers request a fresh projection here.
+        """
 
         endpoint = self._config_provider()
         self._cancel_mismatched_preparation(endpoint, compact_signatures)
         with self._state_lock:
             if self._closed:
                 raise RuntimeError("Function catalog projection is closed")
-            if (
-                isinstance(self._endpoint_state, FunctionCatalogProjection)
-                and self._endpoint_state.endpoint == endpoint
-                and self._endpoint_state.compact_signatures == compact_signatures
-            ):
-                ready: Future[FunctionCatalogPage] = Future()
-                ready.set_result(self._endpoint_state.page)
-                return ready
             if self._preparation is not None and self._preparation.matches(
                 endpoint,
                 compact_signatures,

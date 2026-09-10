@@ -1089,7 +1089,7 @@
       },
       {
         "path": "openhcs/agent/services/endpoint_function_catalog_service.py",
-        "sha256": "ac1e621d5464c6d3283b0e100d580675eae177b802cde48f0dc0cf8cdcbd9d08",
+        "sha256": "977a74003819f2547548d322f4c5f0cb148b23fec20f31be4fa462bfcfb7ea04",
         "role": "Owns asynchronous preparation and reuse of the endpoint callable catalogue across desktop and local MCP authoring."
       },
       {
@@ -1159,7 +1159,8 @@
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "Verified the current top-docked system monitor against MainWindowDockPane construction and the installed 0.8.3 MCP screenshot.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-10 UTC: Re-read the complete page against the endpoint catalogue refresh and FutureCompletion lifetime changes. Every new preparation reads current endpoint membership while concurrent callers coalesce; expensive registry discovery stays cached on the endpoint. Process-local events do not prove remote membership freshness. Reviewed the canonical UI-config environment selector, source registration and native receiver-destruction boundaries. Root catalogue/selector/ZMQ regressions pass 44 tests; the full generic owner suite passes 533 tests and its warning-fatal documentation build passes."
     ]
   },
   {
@@ -1667,7 +1668,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/troubleshooting_FAQ.rst",
-    "source_sha256": "1a92ed5b611c9df58c7309aa032044d6044527030ae45ef63be38c64008e8f65",
+    "source_sha256": "0f7869c544946353a5dab1bfc1ae1fd686c1bb9dc005edeb41e7f0dcfab7fcf1",
     "audience": [
       "desktop operators diagnosing a failed workflow"
     ],
@@ -1751,12 +1752,12 @@
       },
       {
         "path": "openhcs/agent/services/endpoint_function_catalog_service.py",
-        "sha256": "ac1e621d5464c6d3283b0e100d580675eae177b802cde48f0dc0cf8cdcbd9d08",
+        "sha256": "977a74003819f2547548d322f4c5f0cb148b23fec20f31be4fa462bfcfb7ea04",
         "role": "Owns asynchronous execution-endpoint catalogue loading, failure projection, revision state, and reuse."
       },
       {
         "path": "tests/unit/pyqt_gui/test_function_catalog_projection.py",
-        "sha256": "328ca03c41d8e3310c9b6d9e3ec422a2d60939d0cb19e14f5393a3222d5db87d",
+        "sha256": "b16c69e8290aa7c74dd142288b16b7e0975652fb227384f0abb50fc156387a60",
         "role": "Proves one shared non-blocking catalogue request, endpoint invalidation, and safe background-client lifecycle."
       },
       {
@@ -1781,7 +1782,8 @@
       "The guide did not tell operators how to distinguish a known pre-dispatch MCP timeout from an execute request with an unknown acceptance outcome.",
       "The guide did not distinguish execution-server replacement from recovery after an MCP/UI bridge version mismatch.",
       "The documented version-restart recovery lacked direct evidence for capture, executor-shutdown, endpoint-replacement, and detached-launch failure outcomes.",
-      "The selector recovery section did not explain that progress renews client inactivity or that closing the server reaps the exact cold-catalogue preparation process."
+      "The selector recovery section did not explain that progress renews client inactivity or that closing the server reaps the exact cold-catalogue preparation process.",
+      "Clarified current endpoint catalogue reads after remote registration and retained asynchronous/cache ownership."
     ],
     "disposition": "revise",
     "validation": [
@@ -1812,7 +1814,8 @@
       "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-10 UTC: Re-read the complete page against the endpoint catalogue refresh and FutureCompletion lifetime changes. Every new preparation reads current endpoint membership while concurrent callers coalesce; expensive registry discovery stays cached on the endpoint. Process-local events do not prove remote membership freshness. Reviewed the canonical UI-config environment selector, source registration and native receiver-destruction boundaries. Root catalogue/selector/ZMQ regressions pass 44 tests; the full generic owner suite passes 533 tests and its warning-fatal documentation build passes."
     ]
   },
   {
@@ -3332,7 +3335,7 @@
   },
   {
     "path": "docs/source/user_guide/custom_function_management.rst",
-    "source_sha256": "aee67758960cdab990d0f21421d1253a30a3e5d0f720f83f2b34e15b2e17b14d",
+    "source_sha256": "a543658a18b61b83e0e516d59f13e543090213d904b7503c89ef479eb9a55f87",
     "audience": [
       "desktop callable authors"
     ],
@@ -3376,12 +3379,12 @@
       },
       {
         "path": "openhcs/agent/services/endpoint_function_catalog_service.py",
-        "sha256": "ac1e621d5464c6d3283b0e100d580675eae177b802cde48f0dc0cf8cdcbd9d08",
+        "sha256": "977a74003819f2547548d322f4c5f0cb148b23fec20f31be4fa462bfcfb7ea04",
         "role": "Owns endpoint registration, asynchronous invalidation, and refresh of the shared catalogue projection."
       },
       {
         "path": "openhcs/pyqt_gui/dialogs/function_selector_dialog.py",
-        "sha256": "c88ff6a258f96ee17c98bec675bc1051821258fa328c72a7ad667647122a89f5",
+        "sha256": "e11c456a5322038408edd42df7d2674cda42e1992f7f6c6e567e7923bf3526c3",
         "role": "Projects catalogue loading and failure state without blocking the Qt thread."
       },
       {
@@ -3398,13 +3401,34 @@
         "path": "scripts/gallery_catalog.py",
         "sha256": "1ec2e0457fb37a93120754b3b8e24adf3f50b8bba9373e5b9ac491c2db8c2f9d",
         "role": "Owns the documentation-enabled Custom Function Manager capture declaration, accessibility text, capture target, and generated visual projection."
+      },
+      {
+        "path": "external/pyqt-reactive/src/pyqt_reactive/core/future_completion.py",
+        "sha256": "7ba6ef203bae81319004ccc4ddfe4226e0230b177df663cfb0d02c364e1dbc47",
+        "role": "Owns future completion relay lifetime and Qt receiver disconnection."
+      },
+      {
+        "path": "external/pyqt-reactive/tests/test_future_completion.py",
+        "sha256": "b125587df2d974cf4c7e37bd022fe702fa32d81c538ff0ba18913b11b417acf6",
+        "role": "Verifies native receiver destruction, delivery thread, garbage collection and cancellation."
+      },
+      {
+        "path": "openhcs/mcp/context.py",
+        "sha256": "31302d876170c4ad8612ef8e1dda1d10e49b9736334b50115e8b084df2f7e0b1",
+        "role": "Projects the local MCP catalogue endpoint from the canonical UI configuration."
+      },
+      {
+        "path": "openhcs/pyqt_gui/config.py",
+        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "role": "Owns the explicit canonical UI configuration file selector."
       }
     ],
     "findings": [
       "The task guide did not explain that custom-function changes invalidate and asynchronously refresh the endpoint-owned catalogue projection.",
       "The guide assigned both persistence and runtime publication to CustomFunctionManager instead of distinguishing persisted source from the atomic process projection.",
       "The custom-function manager imported a global Qt signal as part of its headless lifecycle; change publication is now a domain event with a separate desktop Qt adapter.",
-      "The domain event retained temporary Qt adapters after their C++ objects were destroyed, allowing a later custom-function update to invoke an invalid callback and crash the process."
+      "The domain event retained temporary Qt adapters after their C++ objects were destroyed, allowing a later custom-function update to invoke an invalid callback and crash the process.",
+      "Clarified current endpoint catalogue reads after remote registration and retained asynchronous/cache ownership."
     ],
     "disposition": "revise",
     "validation": [
@@ -3424,7 +3448,8 @@
       "On 2026-08-28, re-read the complete how-to against the registered desktop identities and declaration-derived Custom Function Manager capture; persistence, validation, event, runtime-registry, and asynchronous catalogue ownership remain accurate.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-10 UTC: Re-read the complete page against the endpoint catalogue refresh and FutureCompletion lifetime changes. Every new preparation reads current endpoint membership while concurrent callers coalesce; expensive registry discovery stays cached on the endpoint. Process-local events do not prove remote membership freshness. Reviewed the canonical UI-config environment selector, source registration and native receiver-destruction boundaries. Root catalogue/selector/ZMQ regressions pass 44 tests; the full generic owner suite passes 533 tests and its warning-fatal documentation build passes."
     ]
   },
   {

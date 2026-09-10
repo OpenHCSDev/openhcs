@@ -8,7 +8,7 @@ from concurrent.futures import Future
 from dataclasses import dataclass, field
 from typing import Self
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QDialog,
@@ -22,6 +22,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from pyqt_reactive.core.future_completion import FutureCompletion
 from pyqt_reactive.theming import ColorScheme
 from pyqt_reactive.widgets.shared.function_table_browser import (
     FunctionTableBrowser,
@@ -142,7 +143,6 @@ class FunctionSelectorDialog(QDialog):
 
     # Signals
     function_selected = pyqtSignal(object)  # Selected function
-    catalog_prepared = pyqtSignal(object)
 
     def __init__(
         self,
@@ -178,7 +178,6 @@ class FunctionSelectorDialog(QDialog):
 
         # Connect to custom function signals for auto-refresh
         custom_function_signals.functions_changed.connect(self._on_functions_changed)
-        self.catalog_prepared.connect(self._apply_function_data)
         self._request_function_data()
 
         logger.debug(
@@ -197,8 +196,9 @@ class FunctionSelectorDialog(QDialog):
         self.function_table_browser.status_label.setText(
             "Loading function catalog from the execution server..."
         )
-        future.add_done_callback(self.catalog_prepared.emit)
+        FutureCompletion(future, self._apply_function_data)
 
+    @pyqtSlot(object)
     def _apply_function_data(
         self,
         future: Future[FunctionCatalogPage],

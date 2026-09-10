@@ -258,7 +258,7 @@
   },
   {
     "path": "docs/source/architecture/batch_workflow_service.rst",
-    "source_sha256": "c56c5c87b4cf844d47924ad9240679026b0645a17a106f58303869b0f5d90933",
+    "source_sha256": "5b35c78968bea4782ff67974f90428b37d7f00d79ef00509155f2b6d79917798",
     "audience": [
       "OpenHCS desktop and execution-service maintainers"
     ],
@@ -302,7 +302,7 @@
       },
       {
         "path": "openhcs/agent/services/endpoint_function_catalog_service.py",
-        "sha256": "ac1e621d5464c6d3283b0e100d580675eae177b802cde48f0dc0cf8cdcbd9d08",
+        "sha256": "977a74003819f2547548d322f4c5f0cb148b23fec20f31be4fa462bfcfb7ea04",
         "role": "Owns the shared asynchronous endpoint catalogue, exact revision state, and selected-reference projection for desktop and local MCP consumers."
       },
       {
@@ -334,7 +334,8 @@
     "findings": [
       "The lifecycle explanation still described attach-only startup and omitted asynchronous endpoint-catalogue prewarming; it now follows the persistent endpoint and shared projection owners.",
       "The status explanation assigned the indicator to client connection lifecycle even though the browser snapshot now owns every endpoint-status projection; the page now names the shared snapshot boundary.",
-      "GUI cleanup previously gated client-owner teardown on application admission, leaving an in-progress endpoint attempt alive; the explanation now records unconditional owner teardown and typed cancellation."
+      "GUI cleanup previously gated client-owner teardown on application admission, leaving an in-progress endpoint attempt alive; the explanation now records unconditional owner teardown and typed cancellation.",
+      "Clarified current endpoint catalogue reads after remote registration and retained asynchronous/cache ownership."
     ],
     "disposition": "revise",
     "validation": [
@@ -356,7 +357,8 @@
       "Focused batch compilation, endpoint routing, and experimental-analysis tests passed: 53 tests.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-10 UTC: Re-read the complete page against the endpoint catalogue refresh and FutureCompletion lifetime changes. Every new preparation reads current endpoint membership while concurrent callers coalesce; expensive registry discovery stays cached on the endpoint. Process-local events do not prove remote membership freshness. Reviewed the canonical UI-config environment selector, source registration and native receiver-destruction boundaries. Root catalogue/selector/ZMQ regressions pass 44 tests; the full generic owner suite passes 533 tests and its warning-fatal documentation build passes."
     ]
   },
   {

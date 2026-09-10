@@ -7,6 +7,9 @@ import time
 from concurrent.futures import CancelledError
 from dataclasses import replace
 
+from PyQt6 import sip
+from PyQt6.QtCore import QCoreApplication, QEvent
+
 from openhcs.agent.dto.functions import (
     FunctionCatalogControlRequest,
     FunctionCatalogEntry,
@@ -335,6 +338,51 @@ def test_projection_close_cancels_and_joins_catalog_preparation() -> None:
     )
 
 
+def test_preparation_reads_remote_changes_after_completed_projection() -> None:
+    original = _entry("cpu:original")
+    registered = _entry("custom:new_function")
+    client = _EndpointClient(_page(original), _page(original, registered))
+    service = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda _config: client,
+    )
+    try:
+        first = service.prepare().result(timeout=2)
+        refreshed = service.prepare().result(timeout=2)
+
+        assert first.items == (original,)
+        assert refreshed.items == (original, registered)
+        assert refreshed.revision != first.revision
+        assert len(client.catalog_requests) == 2
+        assert service.projection.page is refreshed
+    finally:
+        service.close()
+
+
+def test_selector_after_prewarm_reads_remote_registration(qapp) -> None:
+    original = _entry("cpu:original")
+    registered = _entry("custom:new_function")
+    client = _EndpointClient(_page(original), _page(original, registered))
+    service = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda _config: client,
+    )
+    service.prepare().result(timeout=2)
+    dialog = FunctionSelectorDialog(service)
+    dialog.show()
+    try:
+        _wait_until(qapp, lambda: registered.function_id in dialog.catalog_entries)
+        assert tuple(dialog.function_table_browser.all_items) == (
+            original.function_id,
+            registered.function_id,
+        )
+        assert len(client.catalog_requests) == 2
+    finally:
+        service.close()
+        dialog.close()
+        dialog.deleteLater()
+
+
 def test_prepared_projection_survives_same_endpoint_detail_client_creation() -> None:
     entry = _entry("cpu:prepared-detail")
     client = _EndpointClient(_page(entry))
@@ -350,6 +398,39 @@ def test_prepared_projection_survives_same_endpoint_detail_client_creation() -> 
     assert len(client.catalog_requests) == 1
     assert service.projection is not None
     assert service.projection.entries_by_id[entry.function_id] is entry
+
+
+def test_selector_destruction_does_not_own_shared_catalog_completion(qapp) -> None:
+    release = threading.Event()
+
+    class _BlockingEndpointClient(_EndpointClient):
+        def get_function_catalog(self, request, *, cancellation=None):
+            self.catalog_requests.append(request)
+            if not release.wait(2):
+                raise TimeoutError("test did not release catalog request")
+            return self.catalogs[0]
+
+    entry = _entry("cpu:after_close")
+    client = _BlockingEndpointClient(_page(entry))
+    service = ZMQFunctionCatalogService(
+        lambda: OPENHCS_ZMQ_CONFIG,
+        client_factory=lambda _config: client,
+    )
+    dialog = FunctionSelectorDialog(service)
+    future = dialog._catalog_future
+    dialog.close()
+    dialog.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert sip.isdeleted(dialog)
+    try:
+        release.set()
+        assert future.result(timeout=2).items == (entry,)
+        qapp.processEvents()
+        assert service.projection.page.items == (entry,)
+        assert len(client.catalog_requests) == 1
+    finally:
+        release.set()
+        service.close()
 
 
 def test_selector_never_scans_local_registry_and_reports_remote_only_selection(

@@ -97,6 +97,13 @@ After changing the desktop execution host, port, or transport, restart the MCP
 client so its newly launched local server snapshots the same saved endpoint
 configuration.
 
+If a function registered through MCP is missing, confirm that the MCP client
+and desktop use the same execution endpoint, then reopen the selector. Each
+opening requests current server membership. For isolated development sessions,
+``OPENHCS_UI_CONFIG_CACHE_FILE`` selects the canonical UI configuration for
+both processes; selecting a UI bridge descriptor alone does not select the
+execution endpoint.
+
 Where are outputs?
 ------------------
 
