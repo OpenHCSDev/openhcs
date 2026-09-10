@@ -159,9 +159,10 @@ second registry or copied path setting.
 
 The ``list_previews`` field embeds pyqt-reactive's generic formatting policy.
 The main window gives that policy to both manager panels on startup and after
-a save. The generic manager refreshes its formatting and wrapping together;
+a save. The generic manager refreshes its formatting and wrapping default together;
 OpenHCS does not maintain a second collection of preview rules or copy the
-configuration's fields into panel-specific settings.
+configuration's fields into panel-specific settings. Explicit row overrides
+remain owned by the item model; see :doc:`list_item_preview_system`.
 
 ``MainWindowUiBridgeLifecycle`` owns bridge enable/disable and exact
 configuration reconciliation. An unchanged running configuration is a no-op.

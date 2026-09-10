@@ -24,5 +24,12 @@ manager uses the policy for both text formatting and row layout. Preview field
 selection and abbreviations still come from the domain declarations; display
 preferences do not change source bindings or pipeline values.
 
+The shared policy supplies the wrapping default. pyqt-reactive owns explicit
+per-row choices in the item model, the disclosure arrow, and the repeated
+graphical indent on wrapped settings lines. Its manager updater reuses existing
+rows during refresh and reordering, preserving their display choices. OpenHCS
+does not copy these choices into pipeline declarations or a second settings
+store. Native clicks and the MCP row-preview action use the same generic owner.
+
 See :doc:`ui_services_architecture` for the current OpenHCS integration boundary
 and :doc:`external_foundations` for the package ownership policy.

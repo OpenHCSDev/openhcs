@@ -93,9 +93,17 @@ List previews
 -------------
 
 The ``list_previews`` section of UI configuration controls the Plate Manager
-and Pipeline Editor summaries. It can wrap rows to the panel width, include or
-hide detail lines and modified settings, and show collections compactly or in
-detail. Saving applies the same display policy to both panels immediately.
+and Pipeline Editor summaries. It sets the default wrapping behaviour, includes
+or hides detail lines and modified settings, and shows collections compactly
+or in detail. Saving applies the same display policy to both panels immediately.
+
+Click the arrow beside a plate or step to switch that row between wrapping to
+the panel width and horizontal scrolling. This choice overrides the shared
+default for that row and survives list refreshes and reordering. Changing the
+shared default leaves explicitly chosen rows as they are. Indented guide marks
+repeat beside each wrapped line of the settings summary to keep it visually
+attached to its plate or step.
+
 The editors and code mode retain the full values regardless of how compact the
 preview is. Exact fields and defaults are listed in
 :doc:`../reference/configuration`.
