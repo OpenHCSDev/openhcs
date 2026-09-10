@@ -210,6 +210,11 @@ Keep credentials in the environment and close connections owned by a test. See
 Failure diagnosis
 -----------------
 
+The CI unit/core job prints each test name and short failure tracebacks. If a
+test stalls for two minutes, Python's fault handler prints its thread stacks;
+this diagnostic does not extend the job deadline. For a local reproduction,
+add ``-vv --tb=short -o faulthandler_timeout=120`` to the focused pytest command.
+
 The installed GUI probe enables Python's fault handler before loading Qt. The
 PyPI installation jobs retain their GUI phase journal, snapshots, and OpenHCS
 logs as ``pypi-gui-*`` artifacts, including failed runs. macOS jobs separately

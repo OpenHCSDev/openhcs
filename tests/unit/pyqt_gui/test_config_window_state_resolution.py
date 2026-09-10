@@ -544,11 +544,19 @@ config = PipelineConfig(
         window.close()
 
 
-def test_ui_config_save_commits_state_before_live_notifications(qapp) -> None:
+def test_ui_config_save_commits_state_before_live_notifications(
+    qapp, monkeypatch
+) -> None:
     from types import MethodType, SimpleNamespace
 
     from openhcs.pyqt_gui.config import PyQtGuiRuntimeContext
     from openhcs.pyqt_gui.main import OpenHCSMainWindow
+    from openhcs.pyqt_gui.windows import config_window
+
+    def unexpected_save_error(_parent, _title, message):
+        pytest.fail(message)
+
+    monkeypatch.setattr(config_window.QMessageBox, "critical", unexpected_save_error)
 
     class ConfigConsumer:
         def __init__(self) -> None:
@@ -556,6 +564,9 @@ def test_ui_config_save_commits_state_before_live_notifications(qapp) -> None:
 
         def set_ui_config(self, config) -> None:
             self.config = config
+
+        def set_preview_config(self, config) -> None:
+            self.preview_config = config
 
     class ZMQConsumer:
         def __init__(self) -> None:
@@ -601,6 +612,7 @@ def test_ui_config_save_commits_state_before_live_notifications(qapp) -> None:
         ),
         system_monitor=MonitorConsumer(),
         plate_manager_widget=ConfigConsumer(),
+        pipeline_editor_widget=ConfigConsumer(),
         zmq_manager_widget=ZMQConsumer(),
         ui_config_changed=Signal(),
         shortcut_lifecycle=SimpleNamespace(apply=lambda config: None),
@@ -612,6 +624,10 @@ def test_ui_config_save_commits_state_before_live_notifications(qapp) -> None:
     main_window.set_ui_config = MethodType(OpenHCSMainWindow.set_ui_config, main_window)
     main_window._apply_ui_config_consumers = MethodType(
         OpenHCSMainWindow._apply_ui_config_consumers,
+        main_window,
+    )
+    main_window._apply_list_preview_config = MethodType(
+        OpenHCSMainWindow._apply_list_preview_config,
         main_window,
     )
     signal_observations: list[tuple[UIConfig, UIConfig]] = []
@@ -649,6 +665,12 @@ def test_ui_config_save_commits_state_before_live_notifications(qapp) -> None:
         assert main_window.window_services.widget_gui_config is committed
         assert main_window.system_monitor.config is committed.performance_monitor
         assert main_window.plate_manager_widget.config is committed
+        assert (
+            main_window.plate_manager_widget.preview_config is committed.list_previews
+        )
+        assert (
+            main_window.pipeline_editor_widget.preview_config is committed.list_previews
+        )
         assert main_window.zmq_manager_widget.config is committed.zmq
         assert main_window.zmq_manager_widget.progress_config is committed.progress
         assert signal_observations == [(committed, committed)]

@@ -223,7 +223,7 @@ After the release-candidate matrix is green and the release commit is on
 
 .. code-block:: bash
 
-   python scripts/release.py
+   python -m scripts.release
 
 The script proves that the checkout is clean, on ``main``, synchronized with its
 configured upstream, and contains clean recursive submodules at their recorded
