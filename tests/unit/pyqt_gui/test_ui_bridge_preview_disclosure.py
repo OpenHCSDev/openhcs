@@ -84,6 +84,9 @@ def test_bridge_toggle_is_row_local_and_auto_still_selects(qtbot):
         lambda: view.item(0).data(PREVIEW_WRAP_ROLE) is PreviewWrapMode.WRAPPED
     )
     assert view.item(1).data(PREVIEW_WRAP_ROLE) is None
+    # Require a real selection transition, not the initially selected first row.
+    # The bridge schedules the action, so its accepted receipt is not completion.
+    view.setCurrentRow(1)
     auto_request = UiWidgetActionInvokeRequest.from_fields(
         window_id="preview-test",
         path_id=row_descriptor.path_id,
