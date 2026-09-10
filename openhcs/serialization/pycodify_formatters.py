@@ -299,14 +299,12 @@ class FunctionPatternTupleFormatter(SourceFormatter):
         if not args and context.clean_mode:
             return to_source(public_func, context)
 
-        if context.clean_mode:
-            final_args = callable_declaration_kwargs(
-                public_func,
-                args,
-                values_equal=semantic_values_equal,
-            )
-        else:
-            final_args = args
+        final_args = callable_declaration_kwargs(
+            public_func,
+            args,
+            values_equal=semantic_values_equal,
+            omit_defaults=context.clean_mode,
+        )
 
         if not final_args and context.clean_mode:
             return to_source(public_func, context)

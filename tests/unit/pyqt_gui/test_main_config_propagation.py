@@ -189,6 +189,8 @@ def test_set_ui_config_propagates_one_exact_object_to_live_consumers() -> None:
     main_like.zmq_manager_widget = ZMQConsumer()
     main_like.shortcut_lifecycle = SimpleNamespace(apply=lambda config: None)
     main_like._reconcile_ui_bridge = lambda config: None
+    preview_configs = []
+    main_like._apply_list_preview_config = preview_configs.append
     main_like.zmq_server_manager_ports_to_scan = lambda config=None: [8123, 5555]
     main_like.ui_config_changed = Signal()
     main_like._apply_ui_config_consumers = MethodType(
@@ -205,6 +207,7 @@ def test_set_ui_config_propagates_one_exact_object_to_live_consumers() -> None:
     assert main_like.zmq_manager_widget.config is updated.zmq
     assert main_like.zmq_manager_widget.progress_config is updated.progress
     assert main_like.ui_config_changed.value is updated
+    assert preview_configs == [updated]
     assert scheduled_operations == [main_like._prepare_execution_services]
 
 
@@ -254,6 +257,7 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
     shortcuts = Recorder()
     bridge = Recorder()
     manager_zmq = Recorder()
+    preview = Recorder()
 
     plate_manager = SimpleNamespace(
         zmq_client_service=SimpleNamespace(set_config=plate_zmq.record),
@@ -273,6 +277,7 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
             set_progress_config=progress.record,
         ),
         _create_ui_bridge_server=lambda *_args: None,
+        _apply_list_preview_config=lambda config: preview.record(config.list_previews),
         zmq_server_manager_ports_to_scan=lambda _config: (),
     )
     main_like._reconcile_ui_bridge = MethodType(
@@ -291,6 +296,7 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
             *shortcuts.values,
             *bridge.values,
             *manager_zmq.values,
+            *preview.values,
         )
     }
     visible_component_owners = {
@@ -332,6 +338,37 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
     assert global_publication.values == [global_config]
     assert global_propagation.values == [global_config]
     assert _visible_leaf_paths(global_config)
+
+
+def test_list_preview_config_applies_to_both_real_lists(qtbot) -> None:
+    from pyqt_reactive.core import ReorderableListWidget
+    from pyqt_reactive.strategies.preview_formatting import ObjectStatePreviewFormattingService
+    from pyqt_reactive.widgets.shared.abstract_manager_widget import AbstractManagerWidget
+
+    lists = (ReorderableListWidget(), ReorderableListWidget())
+    current = get_default_ui_config()
+    managers = []
+    for view in lists:
+        qtbot.addWidget(view)
+        manager = SimpleNamespace(
+            item_list=view,
+            _preview_formatter=ObjectStatePreviewFormattingService(current.list_previews),
+            update_item_list=lambda: None,
+        )
+        manager.set_preview_config = MethodType(AbstractManagerWidget.set_preview_config, manager)
+        managers.append(manager)
+    main_like = SimpleNamespace(
+        plate_manager_widget=managers[0],
+        pipeline_editor_widget=managers[1],
+    )
+    assert current.list_previews.wrap_lines is False
+    for enabled in (True, False):
+        policy = replace(current.list_previews, wrap_lines=enabled)
+        OpenHCSMainWindow._apply_list_preview_config(
+            main_like, replace(current, list_previews=policy),
+        )
+        assert all(view.wordWrap() == enabled for view in lists)
+        assert all(manager._preview_formatter.config is policy for manager in managers)
 
 
 def test_set_ui_config_restores_previous_consumers_before_rejecting_update() -> None:

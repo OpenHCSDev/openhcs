@@ -215,6 +215,18 @@ def test_full_function_pattern_source_preserves_signature_default_kwargs():
     assert "'enabled': True" in source
 
 
+@pytest.mark.parametrize("clean_mode", [True, False])
+def test_function_pattern_parameter_order_matches_declaration(clean_mode):
+    kwargs = {"enabled": False, "threshold": 9}
+    source = generate_python_source(
+        Assignment("pattern", (configurable_test_function, kwargs)),
+        clean_mode=clean_mode,
+    )
+    node = next(node for node in ast.walk(ast.parse(source)) if isinstance(node, ast.Dict))
+    assert [key.value for key in node.keys] == ["threshold", "enabled"]
+    assert list(kwargs) == ["enabled", "threshold"]
+
+
 def test_function_pattern_source_does_not_emit_declared_hidden_parameters():
     rank_provider_default = (
         inspect.signature(measure_colocalization_objects)

@@ -238,6 +238,7 @@ class OpenHCSMainWindow(QMainWindow):
 
         # Initialize UI
         self.setup_ui()
+        self._apply_list_preview_config(runtime_context.ui_config)
         self.setup_menu_bar()
         self.setup_status_bar()
         self.zmq_version_restart_workflow = ZMQVersionRestartWorkflow(
@@ -305,6 +306,7 @@ class OpenHCSMainWindow(QMainWindow):
             )
 
     def _apply_ui_config_consumers(self, config: UIConfig) -> None:
+        self._apply_list_preview_config(config)
         self._reconcile_ui_bridge(config)
         self.system_monitor.update_config(config.performance_monitor)
         self.plate_manager_widget.set_ui_config(config)
@@ -314,6 +316,10 @@ class OpenHCSMainWindow(QMainWindow):
             self.zmq_server_manager_ports_to_scan(config),
         )
         self.zmq_manager_widget.set_progress_config(config.progress)
+
+    def _apply_list_preview_config(self, config: UIConfig) -> None:
+        for manager in (self.plate_manager_widget, self.pipeline_editor_widget):
+            manager.set_preview_config(config.list_previews)
 
     @property
     def service_adapter(self):

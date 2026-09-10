@@ -659,8 +659,7 @@ class StepParameterEditorWidget(ScrollableFormMixin, DetachableActionBarHost, QW
 
         parent_window = self.window()
         func_editor = parent_window.func_editor
-        func_editor._initialize_pattern_data(new_step.func)
-        func_editor._populate_function_list()
+        func_editor._apply_edited_pattern(new_step.func)
         logger.debug("Updated function list editor with new func: %r", new_step.func)
 
         self.step_parameter_changed.emit()

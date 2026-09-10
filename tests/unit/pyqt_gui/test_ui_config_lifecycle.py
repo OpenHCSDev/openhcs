@@ -49,6 +49,12 @@ def test_ui_config_cache_round_trip_applies_environment_at_load(
     persisted = replace(
         get_default_ui_config(),
         check_for_updates_on_startup=False,
+        list_previews=replace(
+            get_default_ui_config().list_previews,
+            wrap_lines=True,
+            show_modified_fields=False,
+            max_value_length=160,
+        ),
         progress=ProgressUIConfig(update_fps=17.0),
         logging=LoggingConfig(
             level=GuiLogLevel.WARNING,
@@ -71,6 +77,8 @@ def test_ui_config_cache_round_trip_applies_environment_at_load(
 
     assert type(restored) is UIConfig
     assert restored.check_for_updates_on_startup is False
+    assert restored.list_previews.wrap_lines is True
+    assert restored.list_previews == persisted.list_previews
     assert restored.progress == ProgressUIConfig(update_fps=17.0)
     assert restored.logging == persisted.logging
     assert restored.agent_bridge.host == "environment-host"

@@ -18,6 +18,7 @@ from typing import Annotated
 
 from pyqt_reactive.qt_types import QtKeySequenceText
 from pyqt_reactive.services.system_monitor_config import PerformanceMonitorConfig
+from pyqt_reactive.strategies.preview_formatting import FormattingConfig
 from python_introspect import (
     EnvironmentVariable,
     overlay_dataclass_from_environment,
@@ -366,6 +367,14 @@ class UIConfig:
     """
 
     # Component configurations
+    list_previews: FormattingConfig = field(default_factory=FormattingConfig)
+    """Plate Manager and Pipeline Editor row wrapping and preview detail.
+
+    Field choices and abbreviations come from their configuration declarations.
+    Saving applies these display settings to both panels without restarting;
+    full values remain available in the editors and code mode.
+    """
+
     performance_monitor: PerformanceMonitorConfig = field(
         default_factory=PerformanceMonitorConfig
     )
