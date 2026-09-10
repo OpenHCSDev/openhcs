@@ -114,9 +114,7 @@ def _config_graph() -> tuple[
         config_types.update(discovered_subclasses)
     for config_type in tuple(config_types):
         config_types.update(
-            candidate
-            for candidate in config_type.__mro__
-            if candidate is not object
+            candidate for candidate in config_type.__mro__ if candidate is not object
         )
 
     for config_type in tuple(config_types):
@@ -210,9 +208,7 @@ def _functions_with_owner(
                 visit(statement.body, class_qualname)
             elif isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 owner = (
-                    _ClassScope(unit.path, owner_qualname)
-                    if owner_qualname
-                    else None
+                    _ClassScope(unit.path, owner_qualname) if owner_qualname else None
                 )
                 functions.append((statement, owner))
                 nested_visitor = _NestedFunctionVisitor()
@@ -248,9 +244,7 @@ def _module_imports(unit: _SyntaxUnit) -> tuple[ast.ImportFrom, ...]:
         ):
             continue
         imports.extend(
-            nested
-            for nested in statement.body
-            if isinstance(nested, ast.ImportFrom)
+            nested for nested in statement.body if isinstance(nested, ast.ImportFrom)
         )
     return tuple(imports)
 
@@ -325,8 +319,7 @@ class _TypedAttributeFlow:
         for config_type in config_types:
             types_by_name.setdefault(config_type.__name__, set()).add(config_type)
         self._types_by_name = {
-            name: frozenset(types)
-            for name, types in types_by_name.items()
+            name: frozenset(types) for name, types in types_by_name.items()
         }
         types_by_source_qualname: dict[
             tuple[Path, str],
@@ -362,8 +355,7 @@ class _TypedAttributeFlow:
             _TypeDomain,
         ] = {}
         self._type_aliases_by_source = {
-            unit.path.resolve(): self._type_aliases(unit)
-            for unit in units
+            unit.path.resolve(): self._type_aliases(unit) for unit in units
         }
         self._function_return_aliases_by_source: dict[
             Path,
@@ -436,10 +428,7 @@ class _TypedAttributeFlow:
                         imported.asname or imported.name,
                         set(),
                     ).add(candidate_scope)
-        return {
-            name: frozenset(candidates)
-            for name, candidates in aliases.items()
-        }
+        return {name: frozenset(candidates) for name, candidates in aliases.items()}
 
     @staticmethod
     def _resolved_import_module(
@@ -449,12 +438,8 @@ class _TypedAttributeFlow:
         imported_module = statement.module or ""
         if not statement.level:
             return imported_module
-        package_parts = unit.module_name.split(".")[:-statement.level]
-        return ".".join(
-            part
-            for part in (*package_parts, imported_module)
-            if part
-        )
+        package_parts = unit.module_name.split(".")[: -statement.level]
+        return ".".join(part for part in (*package_parts, imported_module) if part)
 
     def _annotation_types(
         self,
@@ -491,18 +476,17 @@ class _TypedAttributeFlow:
                 )
                 owner = _ClassScope(source_path.resolve(), qualname)
                 for member in statement.body:
-                    if (
-                        isinstance(member, ast.AnnAssign)
-                        and isinstance(member.target, ast.Name)
+                    if isinstance(member, ast.AnnAssign) and isinstance(
+                        member.target, ast.Name
                     ):
                         declared_types = self._annotation_types(
                             member.annotation,
                             source_path,
                         )
                         if declared_types:
-                            self._class_attribute_types[
-                                (owner, member.target.id)
-                            ] = declared_types
+                            self._class_attribute_types[(owner, member.target.id)] = (
+                                declared_types
+                            )
                 visit(statement.body, source_path, qualname)
 
         for unit in self._units:
@@ -531,8 +515,7 @@ class _TypedAttributeFlow:
             if return_types and owner is not None:
                 key = (owner, function.name)
                 self._method_return_types[key] = (
-                    self._method_return_types.get(key, frozenset())
-                    | return_types
+                    self._method_return_types.get(key, frozenset()) | return_types
                 )
 
         for unit in self._units:
@@ -544,14 +527,10 @@ class _TypedAttributeFlow:
             for statement in _module_imports(unit):
                 imported_module = self._resolved_import_module(unit, statement)
                 for imported in statement.names:
-                    return_types = module_returns.get(
-                        (imported_module, imported.name)
-                    )
+                    return_types = module_returns.get((imported_module, imported.name))
                     if return_types:
                         aliases[imported.asname or imported.name] = return_types
-            self._function_return_aliases_by_source[
-                unit.path.resolve()
-            ] = aliases
+            self._function_return_aliases_by_source[unit.path.resolve()] = aliases
 
     @staticmethod
     def _runtime_class_scope(
@@ -613,11 +592,7 @@ class _TypedAttributeFlow:
                 frozenset(),
             )
         nested_type = self._nested_type(receiver, attribute_name)
-        return (
-            frozenset((nested_type,))
-            if nested_type is not None
-            else frozenset()
-        )
+        return frozenset((nested_type,)) if nested_type is not None else frozenset()
 
     def _infer(
         self,
@@ -632,17 +607,12 @@ class _TypedAttributeFlow:
             return environment.get(expression.id, frozenset())
         if isinstance(expression, ast.Call):
             if isinstance(expression.func, ast.Name):
-                return (
-                    self._type_aliases_by_source[source_path.resolve()].get(
-                        expression.func.id,
-                        frozenset(),
-                    )
-                    | self._function_return_aliases_by_source[
-                        source_path.resolve()
-                    ].get(
-                        expression.func.id,
-                        frozenset(),
-                    )
+                return self._type_aliases_by_source[source_path.resolve()].get(
+                    expression.func.id,
+                    frozenset(),
+                ) | self._function_return_aliases_by_source[source_path.resolve()].get(
+                    expression.func.id,
+                    frozenset(),
                 )
             if isinstance(expression.func, ast.Attribute):
                 receivers = self._infer(
@@ -673,9 +643,7 @@ class _TypedAttributeFlow:
                 and expression.value.id == "self"
                 and owner is not None
             ):
-                owned_type = self._class_attribute_types.get(
-                    (owner, expression.attr)
-                )
+                owned_type = self._class_attribute_types.get((owner, expression.attr))
                 if owned_type:
                     return owned_type
             base_types = self._infer(
@@ -746,10 +714,7 @@ class _TypedAttributeFlow:
             environment["self"] = frozenset((owner,)) | frozenset(
                 config_type
                 for config_type in self._config_types
-                if any(
-                    owner_type in config_type.__mro__
-                    for owner_type in owner_types
-                )
+                if any(owner_type in config_type.__mro__ for owner_type in owner_types)
             )
         return environment
 
@@ -820,9 +785,7 @@ class _TypedAttributeFlow:
                 if not assigned_types:
                     continue
                 for target in targets:
-                    if (
-                        isinstance(target, ast.Name)
-                    ):
+                    if isinstance(target, ast.Name):
                         previous = environment.get(target.id, frozenset())
                         combined = previous | assigned_types
                         if combined != previous:
@@ -899,9 +862,7 @@ class _TypedAttributeFlow:
         )
 
     @staticmethod
-    def _shortcut_projection_fields() -> frozenset[
-        _ConsumedField
-    ]:
+    def _shortcut_projection_fields() -> frozenset[_ConsumedField]:
         """Resolve shortcut lambdas through their exact typed lifecycle owner."""
 
         binding_methods: set[str] = set()
@@ -916,9 +877,7 @@ class _TypedAttributeFlow:
                 )
             except (NameError, TypeError):
                 continue
-            callable_signature = get_args(
-                hints.get("key_from_config")
-            )
+            callable_signature = get_args(hints.get("key_from_config"))
             if callable_signature == ([ShortcutConfig], str):
                 binding_methods.add(method_name)
         assert binding_methods
@@ -995,13 +954,8 @@ class _TypedAttributeFlow:
                 owner,
                 unit.path,
             )
-            for node, shadowed_names in self._read_scope_nodes_by_function[
-                function
-            ]:
-                if (
-                    isinstance(node, ast.Attribute)
-                    and isinstance(node.ctx, ast.Load)
-                ):
+            for node, shadowed_names in self._read_scope_nodes_by_function[function]:
+                if isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Load):
                     read_environment = {
                         name: types
                         for name, types in environment.items()
@@ -1046,6 +1000,5 @@ def test_every_visible_config_leaf_has_typed_production_consumer() -> None:
 
     assert leaves
     assert not missing, "\n".join(
-        f"{path}: {owner_field}"
-        for path, owner_field in sorted(missing.items())
+        f"{path}: {owner_field}" for path, owner_field in sorted(missing.items())
     )
