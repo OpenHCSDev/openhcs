@@ -210,6 +210,11 @@ and shutdown boundary used by the OpenHCS service adapter. Both reject
 work after shutdown. Domain workflows choose whether a response is required;
 they do not grow their own signal/thread fallback chains.
 
+Once work reaches the GUI thread, pyqt-reactive also owns target-bound deferred
+delivery. Form callbacks and projected widget actions share its QObject-owned
+timer mechanism. OpenHCS row actions delegate to the generic item declaration;
+see :doc:`mcp_distribution` for acceptance, completion and target identity.
+
 Contextual Help routes
 ----------------------
 

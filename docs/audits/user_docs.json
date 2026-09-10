@@ -1107,7 +1107,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_windows.py",
-        "sha256": "a6b2ca6d3435bc44086d5b5573bfcc22cc43049486ca4256c4c9ea597c4224c2",
+        "sha256": "eff9f8735250ebf2487503c56a762ad5c109205aa3a4da4c8158f59fefe6065e",
         "role": "Projects embedded manager navigation through the generic declared driver."
       },
       {
@@ -1132,7 +1132,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/list_item_delegate.py",
-        "sha256": "796473d0817717edbb056efea6a34f602a3c3bbe174cfce98441fd8dcd5f6943",
+        "sha256": "d6f84397c81f8f568e4d7bfc3725f25c694dc31b213378bcdef1f61e04574044",
         "role": "Owns per-row wrapping overrides, inherited view defaults and shared native/MCP toggling."
       },
       {
@@ -1147,12 +1147,12 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/widget_tree_projection.py",
-        "sha256": "4f7a3007c14150197f45fbd38e0662aa55835a5c631f11a4ad6a7a88634d3f78",
+        "sha256": "05d5221d64e74ff14483f203975f17543381d959c30ee5918c200fa8e9957547",
         "role": "Owns row action declarations, automatic selection and explicit preview toggling."
       },
       {
         "path": "external/pyqt-reactive/tests/test_list_preview_wrapping.py",
-        "sha256": "54584c533597f63863a06177d7134232d1db53ae0c42b1aff553babd8e1a251b",
+        "sha256": "d454bc750b6b5b3f0871cecd2eb96f1e14ed009197dcf9797a50f70f7a97bc12",
         "role": "Native Qt regressions prove arrows, default overrides, refresh/reorder preservation, repeated guides and structural action parity; combined row/future suite passed 25 tests."
       }
     ],
@@ -1191,7 +1191,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "2026-09-10 UTC: Re-read the complete page against the endpoint catalogue refresh and FutureCompletion lifetime changes. Every new preparation reads current endpoint membership while concurrent callers coalesce; expensive registry discovery stays cached on the endpoint. Process-local events do not prove remote membership freshness. Reviewed the canonical UI-config environment selector, source registration and native receiver-destruction boundaries. Root catalogue/selector/ZMQ regressions pass 44 tests; the full generic owner suite passes 533 tests and its warning-fatal documentation build passes.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Row actions delegate to generic declarations; automatic selection and explicit preview toggling share native item-model state. Four hidden formatting fields gain declaration-owned help; visible fields/defaults are unchanged and the generated reference remains authoritative.",
-      "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. Wrapped native style, background, flash, disclosure and text now share one row frame. Explicit wrapping choices, defaults, guides and MCP actions are unchanged. Screenshot regressions control pointer/focus state and retain exact QImage equality. The integrated renderer/test files are byte-identical to ee0c351, whose complete 12-job CI run passed, including three Windows lanes (release-agent evidence)."
+      "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. Wrapped native style, background, flash, disclosure and text now share one row frame. Explicit wrapping choices, defaults, guides and MCP actions are unchanged. Screenshot regressions control pointer/focus state and retain exact QImage equality. The integrated renderer/test files are byte-identical to ee0c351, whose complete 12-job CI run passed, including three Windows lanes (release-agent evidence).",
+      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed."
     ]
   },
   {

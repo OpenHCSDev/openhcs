@@ -124,6 +124,12 @@ selection and preview-wrapping actions use the same row state as mouse input.
 When a row exposes both actions, automatic invocation retains selection as its
 declared default; preview wrapping requires the explicit projected action.
 
+An accepted widget-action receipt means the action has been queued. Read the
+resulting selection or preview state to observe completion. The generic action
+owner binds pending work to the view's lifetime and a persistent model index:
+row reordering preserves the target, while row removal, model replacement or
+view destruction cancels delivery.
+
 Local client registration
 -------------------------
 
