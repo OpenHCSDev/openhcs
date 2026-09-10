@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 from objectstate import ObjectState
-from PyQt6.QtCore import QItemSelectionModel, QModelIndex, Qt, QTimer
+from PyQt6.QtCore import QModelIndex, Qt, QTimer
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QMessageBox,
@@ -1406,8 +1406,8 @@ class UiWidgetActionInvokeResultFactory:
         if isinstance(action_kind, AgentError):
             return self.error(request, action_kind, summary=action_summary)
 
-        if action_kind == WidgetActionKind.ITEM_SELECT:
-            return self._invoke_item_select(
+        if action_kind.item_action is not None:
+            return self._invoke_item_action(
                 request,
                 target,
                 path,
@@ -1504,7 +1504,7 @@ class UiWidgetActionInvokeResultFactory:
             summary=action_summary,
         )
 
-    def _invoke_item_select(
+    def _invoke_item_action(
         self,
         request: UiWidgetActionInvokeRequest,
         target: WindowProjectionTarget,
@@ -1531,7 +1531,7 @@ class UiWidgetActionInvokeResultFactory:
                     code=UiWidgetActionIssueCode.ACTION_UNSUPPORTED.value,
                     message=(
                         f"Widget path_id {request.path_id!r} does not resolve to "
-                        "a selectable item-view row."
+                        "an actionable item-view row."
                     ),
                 ),
                 summary=action_summary,
@@ -1540,7 +1540,7 @@ class UiWidgetActionInvokeResultFactory:
 
         QTimer.singleShot(
             0,
-            lambda: self._select_item_index(resolution.view, resolution.index),
+            lambda: action_kind.item_action.invoke(resolution.view, resolution.index),
         )
         return UiWidgetActionInvokeResult(
             schema_version=SCHEMA_VERSION,
@@ -1552,18 +1552,6 @@ class UiWidgetActionInvokeResultFactory:
             summary=action_summary,
         )
 
-    @staticmethod
-    def _select_item_index(view: QAbstractItemView, index: QModelIndex) -> None:
-        view.setCurrentIndex(index)
-        selection_model = view.selectionModel()
-        if selection_model is not None:
-            selection_model.select(
-                index,
-                QItemSelectionModel.SelectionFlag.ClearAndSelect
-                | QItemSelectionModel.SelectionFlag.Rows,
-            )
-        view.scrollTo(index)
-
     def _resolve_action_kind(
         self,
         request: UiWidgetActionInvokeRequest,
@@ -1572,6 +1560,13 @@ class UiWidgetActionInvokeResultFactory:
         if request.action_kind == self.AUTO_ACTION_KIND:
             if len(descriptor.action_kinds) == 1:
                 return next(iter(descriptor.action_kinds))
+            default_actions = tuple(
+                kind
+                for kind in descriptor.action_kinds
+                if kind.item_action is not None and kind.item_action.default
+            )
+            if len(default_actions) == 1:
+                return default_actions[0]
             return self._action_kind_unavailable_error(request, descriptor)
         try:
             action_kind = WidgetActionKind(request.action_kind)
