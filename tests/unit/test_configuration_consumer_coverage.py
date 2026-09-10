@@ -6,6 +6,7 @@ import ast
 import inspect
 import re
 from dataclasses import dataclass, fields, is_dataclass
+from functools import cache
 from pathlib import Path
 from typing import get_args, get_type_hints
 
@@ -41,6 +42,12 @@ _TypeReference = type[object] | _ClassScope
 _TypeDomain = frozenset[_TypeReference]
 _OwnerIdentity = tuple[Path, str]
 _ConsumedField = tuple[_OwnerIdentity, str]
+
+
+@cache
+def _annotation_name_pattern(name: str) -> re.Pattern[str]:
+    """Compile each nominal alias once across the source-wide annotation scan."""
+    return re.compile(rf"\b{re.escape(name)}\b")
 
 
 def _owner_identity(owner: type[object]) -> _OwnerIdentity:
@@ -462,7 +469,7 @@ class _TypedAttributeFlow:
             for name, config_types in self._type_aliases_by_source[
                 source_path.resolve()
             ].items()
-            if re.search(rf"\b{re.escape(name)}\b", annotation_source)
+            if _annotation_name_pattern(name).search(annotation_source)
             for config_type in config_types
         )
 
