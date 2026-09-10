@@ -1,5 +1,8 @@
 """Native bridge actions consume generic row-disclosure declarations."""
 
+import pytest
+from PyQt6 import sip
+from PyQt6.QtCore import QCoreApplication, QEvent, Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QListWidgetItem
 
@@ -28,9 +31,9 @@ from openhcs.pyqt_gui.services.ui_bridge_windows import (
 )
 
 
-def test_bridge_toggle_is_row_local_and_auto_still_selects(qtbot):
+@pytest.fixture
+def preview_target(qapp):
     view = ReorderableListWidget()
-    qtbot.addWidget(view)
     view.setItemDelegate(
         MultilinePreviewItemDelegate(
             QColor("black"), QColor("gray"), QColor("white"), parent=view
@@ -50,7 +53,7 @@ def test_bridge_toggle_is_row_local_and_auto_still_selects(qtbot):
         view.addItem(row)
     view.show()
     view.doItemsLayout()
-    target = WindowProjectionTarget(
+    yield WindowProjectionTarget(
         view,
         UiWindowSummary(
             schema_version=SCHEMA_VERSION,
@@ -61,6 +64,12 @@ def test_bridge_toggle_is_row_local_and_auto_still_selects(qtbot):
             focusable=True,
         ),
     )
+    if not sip.isdeleted(view):
+        view.close()
+        view.deleteLater()
+
+
+def _first_row_descriptor(view):
     projection = WidgetTreeProjectionService.project(view)
 
     def walk(node):
@@ -68,9 +77,15 @@ def test_bridge_toggle_is_row_local_and_auto_still_selects(qtbot):
         for child in node.children:
             yield from walk(child)
 
-    row_descriptor = next(
+    return next(
         node for node in walk(projection.root) if node.class_name == "QModelIndex"
     )
+
+
+def test_bridge_toggle_is_row_local_and_auto_still_selects(qtbot, preview_target):
+    target = preview_target
+    view = target.widget
+    row_descriptor = _first_row_descriptor(view)
     factory = UiWidgetActionInvokeResultFactory()
     request = UiWidgetActionInvokeRequest.from_fields(
         window_id="preview-test",
@@ -96,3 +111,80 @@ def test_bridge_toggle_is_row_local_and_auto_still_selects(qtbot):
     assert selected.action_kind == WidgetActionKind.ITEM_SELECT.value
     qtbot.waitUntil(lambda: view.currentRow() == 0)
     assert view.item(0).data(PREVIEW_WRAP_ROLE) is PreviewWrapMode.WRAPPED
+
+
+@pytest.mark.parametrize(
+    "action_kind",
+    [WidgetActionKind.ITEM_SELECT, WidgetActionKind.ITEM_PREVIEW_TOGGLE],
+)
+def test_closing_view_cancels_accepted_row_action(qtbot, preview_target, action_kind):
+    view = preview_target.widget
+    view.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+    request = UiWidgetActionInvokeRequest.from_fields(
+        window_id="preview-test",
+        path_id=_first_row_descriptor(view).path_id,
+        action_kind=action_kind.value,
+    )
+    result = UiWidgetActionInvokeResultFactory().invoke(request, preview_target)
+    assert result.invoked
+    assert not result.errors
+
+    view.close()
+    # Deliver the real close's deferred deletion before the accepted zero-timer.
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert sip.isdeleted(view)
+    with qtbot.captureExceptions() as exceptions:
+        QCoreApplication.processEvents()
+    assert not exceptions
+
+
+@pytest.mark.parametrize(
+    "action_kind",
+    [WidgetActionKind.ITEM_SELECT, WidgetActionKind.ITEM_PREVIEW_TOGGLE],
+)
+def test_removing_row_cancels_accepted_action(qtbot, preview_target, action_kind):
+    view = preview_target.widget
+    request = UiWidgetActionInvokeRequest.from_fields(
+        window_id="preview-test",
+        path_id=_first_row_descriptor(view).path_id,
+        action_kind=action_kind.value,
+    )
+    result = UiWidgetActionInvokeResultFactory().invoke(request, preview_target)
+    assert result.invoked
+    removed = view.takeItem(0)
+    assert removed.text() == "First plate"
+    view.setCurrentRow(-1)
+    with qtbot.captureExceptions() as exceptions:
+        QCoreApplication.processEvents()
+    assert not exceptions
+    assert view.currentRow() == -1
+    assert view.item(0).data(PREVIEW_WRAP_ROLE) is None
+
+
+@pytest.mark.parametrize(
+    "action_kind",
+    [WidgetActionKind.ITEM_SELECT, WidgetActionKind.ITEM_PREVIEW_TOGGLE],
+)
+def test_queued_action_tracks_original_row_after_insertion(
+    qtbot, preview_target, action_kind
+):
+    view = preview_target.widget
+    original = view.item(0)
+    request = UiWidgetActionInvokeRequest.from_fields(
+        window_id="preview-test",
+        path_id=_first_row_descriptor(view).path_id,
+        action_kind=action_kind.value,
+    )
+    result = UiWidgetActionInvokeResultFactory().invoke(request, preview_target)
+    assert result.invoked
+    view.insertItem(0, QListWidgetItem("New plate"))
+    view.setCurrentRow(-1)
+    with qtbot.captureExceptions() as exceptions:
+        QCoreApplication.processEvents()
+    assert not exceptions
+    assert view.item(1) is original
+    if action_kind is WidgetActionKind.ITEM_SELECT:
+        assert view.currentItem() is original
+    else:
+        assert original.data(PREVIEW_WRAP_ROLE) is PreviewWrapMode.WRAPPED
+    assert view.item(0).data(PREVIEW_WRAP_ROLE) is None

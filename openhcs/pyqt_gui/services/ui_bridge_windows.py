@@ -1538,10 +1538,7 @@ class UiWidgetActionInvokeResultFactory:
                 action_kind=action_kind.value,
             )
 
-        QTimer.singleShot(
-            0,
-            lambda: action_kind.item_action.invoke(resolution.view, resolution.index),
-        )
+        action_kind.item_action.defer(resolution.view, resolution.index)
         return UiWidgetActionInvokeResult(
             schema_version=SCHEMA_VERSION,
             window_id=request.window_id,
