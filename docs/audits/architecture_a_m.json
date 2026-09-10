@@ -10,7 +10,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/abstract_manager_widget.py",
-        "sha256": "071b828274f54cdfce96927722fdef6a8c16816c790fe563ecdbcb5a4cf03e7c",
+        "sha256": "92f8ede35a48392112c6c1aa17e959c3cc4a9450e69f5b1447cbc4ef5498dd5b",
         "role": "Defines the extracted abstract manager widget, lifecycle hooks, selection, and item-management mechanism."
       },
       {
@@ -27,7 +27,8 @@
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. The manager imports formatting declarations from their canonical module rather than a package re-export; documented ownership and behaviour are unchanged."
     ]
   },
   {
@@ -1798,7 +1799,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/list_item_delegate.py",
-        "sha256": "06a60a1b1b26967b8628277f7ba387b73cc3880049d37541de8be911bf975e24",
+        "sha256": "796473d0817717edbb056efea6a34f602a3c3bbe174cfce98441fd8dcd5f6943",
         "role": "Owns per-row wrapping overrides, inherited view defaults and shared native/MCP toggling."
       },
       {
@@ -1818,7 +1819,7 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_list_preview_wrapping.py",
-        "sha256": "5379474d5c218f28856daaab60c9aa7ae54d15b7b2d6626afd7b527be2d3db00",
+        "sha256": "54584c533597f63863a06177d7134232d1db53ae0c42b1aff553babd8e1a251b",
         "role": "Native Qt regressions prove arrows, default overrides, refresh/reorder preservation, repeated guides and structural action parity; combined row/future suite passed 25 tests."
       }
     ],
@@ -1834,7 +1835,8 @@
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "On 2026-08-24, re-read the complete reference and its generic and domain authorities after moving preview semantics onto the WellFilterConfig family and WellFilterMode members; the page now names the projection boundary without duplicating a registry.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
-      "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Four hidden formatting fields gain declaration-owned help; visible fields/defaults are unchanged and the generated reference remains authoritative."
+      "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Four hidden formatting fields gain declaration-owned help; visible fields/defaults are unchanged and the generated reference remains authoritative.",
+      "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. Wrapped native style, background, flash, disclosure and text now share one row frame. Explicit wrapping choices, defaults, guides and MCP actions are unchanged. Screenshot regressions control pointer/focus state and retain exact QImage equality. The integrated renderer/test files are byte-identical to ee0c351, whose complete 12-job CI run passed, including three Windows lanes (release-agent evidence)."
     ]
   },
   {
