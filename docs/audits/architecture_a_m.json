@@ -10,12 +10,12 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/abstract_manager_widget.py",
-        "sha256": "0824b49de8d34b30a3dd6829a12fb66493f59a45f536e0353c66be5f5079f9a5",
+        "sha256": "071b828274f54cdfce96927722fdef6a8c16816c790fe563ecdbcb5a4cf03e7c",
         "role": "Defines the extracted abstract manager widget, lifecycle hooks, selection, and item-management mechanism."
       },
       {
         "path": "external/pyqt-reactive/tests/test_widgets.py",
-        "sha256": "89fdb07d734c4b70bc522312612cd7fd33386b505af4650a468ea46b5bd701e4",
+        "sha256": "5a16099e8328851128c59a011a5b76619cb176d432d8cebeafbed85eb9598b79",
         "role": "Exercises the reusable pyqt-reactive widget behaviours referenced by the transition page."
       }
     ],
@@ -26,7 +26,8 @@
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
-      "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence."
+      "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -45,7 +46,7 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_widgets.py",
-        "sha256": "89fdb07d734c4b70bc522312612cd7fd33386b505af4650a468ea46b5bd701e4",
+        "sha256": "5a16099e8328851128c59a011a5b76619cb176d432d8cebeafbed85eb9598b79",
         "role": "Covers the generic widget behaviour supplied by pyqt-reactive."
       }
     ],
@@ -55,7 +56,8 @@
     "disposition": "redirect",
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
-      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings."
+      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -285,7 +287,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00cacb7b518ab31c72e8c210a0d0e1e535a71fcd0d4403b7593bd055b4b5def0",
+        "sha256": "7b87d8e35f8b91eff9dac31cc792e45b69c8bf1ab8d2d1870e36a7d14d444a45",
         "role": "Coordinates post-paint endpoint preparation, projects the browser-owned endpoint snapshot into both status-bar surfaces, and routes endpoint termination to the client lifecycle owner."
       },
       {
@@ -353,7 +355,8 @@
       "On 2026-08-28, re-read the complete explanation against the current desktop composition after dock identities and titles began descending from nominal window declarations; the batch, endpoint snapshot, asynchronous catalogue, and cleanup ownership claims remain accurate.",
       "Focused batch compilation, endpoint routing, and experimental-analysis tests passed: 53 tests.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -417,7 +420,7 @@
   },
   {
     "path": "docs/source/architecture/code_ui_interconversion.rst",
-    "source_sha256": "f5e5f699a37e95396df00fb04ff4f03c3cbc48e710c5715074fef48058208778",
+    "source_sha256": "295a9198608a3c5de853ada53173fc7aa85e36732666405e5779aeacd6abacdf",
     "audience": [
       "OpenHCS UI and agent-surface maintainers",
       "advanced attached-agent users"
@@ -484,13 +487,54 @@
         "path": "tests/unit/pyqt_gui/test_pipeline_code_document_transactionality.py",
         "sha256": "b7e546e904b897f13d76f0c523e751afa541a75c627349ba79a3a87313d30f4c",
         "role": "Verifies revision checks, validation, snapshots, rollback, and transactional application."
+      },
+      {
+        "path": "openhcs/pyqt_gui/widgets/step_parameter_editor.py",
+        "sha256": "54e0bdd74f8d781c2bfdf1da559bbe7e2393f19ef74826d374a2281e8eb96258",
+        "role": "Applies edited function patterns through generic reconciliation before rebuilding parameter panes."
+      },
+      {
+        "path": "openhcs/serialization/pycodify_formatters.py",
+        "sha256": "316ff58e34dcb87816082ead03347cd280fe72b4e3ab8ea31affc1627e548c23",
+        "role": "Supplies OpenHCS semantic equality and clean/full choices to shared parameter projection."
+      },
+      {
+        "path": "external/python-introspect/src/python_introspect/callable_declaration.py",
+        "sha256": "3bb8b474624fe6b2964a5c1f9a6aa540b2703500bfa124e7808995cb789d6951",
+        "role": "Orders supplied parameters by signature with optional default omission and caller-owned equality."
+      },
+      {
+        "path": "external/pyqt-reactive/src/pyqt_reactive/services/function_pattern_code_document.py",
+        "sha256": "bf1f8cc0581a4099f99110d30ec5eb722c4e332b1a759f6a129e81f620f4e23d",
+        "role": "Projects retained child parameter states into function-pattern code documents."
+      },
+      {
+        "path": "external/pyqt-reactive/src/pyqt_reactive/protocols/widget_adapters.py",
+        "sha256": "1ae6653bf3f2786eafa9f53f246e145ebfa34b81c190aaa8f41c19a1463a42f9",
+        "role": "Owns locale-aware compact numeric text without reducing configured precision."
+      },
+      {
+        "path": "tests/unit/pyqt_gui/test_step_code_widget_roundtrip.py",
+        "sha256": "a67876053a5381e1767060d0ee5d54c79d96dfbaec8ef0e267bd767993a821cd",
+        "role": "Verifies real step-code and widget round trips, including retained and hidden child states."
+      },
+      {
+        "path": "tests/unit/test_pycodify_formatters.py",
+        "sha256": "445479f81fd70ce7f288d5b7537b9bbb85d1b5dd724d27baabf8e4c4e508128c",
+        "role": "Verifies clean/full parameter order and semantic default handling."
+      },
+      {
+        "path": "external/pyqt-reactive/tests/test_numeric_roundtrip.py",
+        "sha256": "5975b0ce8bd7bfcf1b21bf03593b72882c775a7982d834894081b6012c556566",
+        "role": "Verifies numeric value preservation and compact presentation."
       }
     ],
     "findings": [
       "The page duplicated the task-oriented attached-agent sequence and rules already owned by the code/UI user guide, and bare knowledge identifiers were not navigable RTD links.",
       "The page omitted the generic owner's dynamic writability and declaration-normalised no-op contracts.",
       "The field projection list omitted declaration-derived enum inputs exposed by ObjectState field help.",
-      "The process boundary did not previously reject an MCP/UI pairing whose OpenHCS versions were incompatible despite sharing an older bridge protocol."
+      "The process boundary did not previously reject an MCP/UI pairing whose OpenHCS versions were incompatible despite sharing an older bridge protocol.",
+      "Explained signature-ordered parameter projection, retained child-state reconciliation, and generic numeric presentation ownership."
     ],
     "disposition": "revise",
     "validation": [
@@ -507,7 +551,8 @@
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence."
+      "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -634,8 +679,8 @@
       },
       {
         "path": "external/python-introspect/src/python_introspect/callable_declaration.py",
-        "sha256": "23542ba1c05ce5a23853627f3100e4a56c9b0d25c76fdce7af1288ba0599e400",
-        "role": "Projects canonical callable keyword declarations from signature defaults with caller-owned equality."
+        "sha256": "3bb8b474624fe6b2964a5c1f9a6aa540b2703500bfa124e7808995cb789d6951",
+        "role": "Orders supplied parameters by signature with optional default omission and caller-owned equality."
       },
       {
         "path": "external/metaclass-registry/src/metaclass_registry/core.py",
@@ -662,7 +707,8 @@
       "On 2026-08-25, traced the zero-execution OpenHCS metaprogramming scaffold against every live import and replaced it as an authority with the actual component enum declaration owner.",
       "On 2026-08-27, re-read the complete reference redirect against python-introspect's current wrapped-annotation and docstring-derived type analysis; the stated ownership boundary remains accurate.",
       "Focused python-introspect signature-analysis and callable-declaration tests passed: 37 tests.",
-      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files."
+      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -1078,7 +1124,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "00cacb7b518ab31c72e8c210a0d0e1e535a71fcd0d4403b7593bd055b4b5def0",
+        "sha256": "7b87d8e35f8b91eff9dac31cc792e45b69c8bf1ab8d2d1870e36a7d14d444a45",
         "role": "Routes the desktop analysis action through ExperimentalAnalysisEngine rather than the deprecated wrapper."
       },
       {
@@ -1102,7 +1148,8 @@
       "On 2026-08-28, re-read the complete explanation and current desktop action after unrelated dock titles began descending from nominal identity declarations; the action still constructs ExperimentalAnalysisConfig and calls ExperimentalAnalysisEngine.run_directory without restating filename values.",
       "Focused batch compilation, endpoint routing, and experimental-analysis tests passed: 53 tests.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -1117,7 +1164,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "a0a1242d2467aa53acc2a66b4826b81140eab6b284f96ebbeb3fa8f4ffae0e36",
+        "sha256": "928fbc8306eb2e31cfc236d50129eeaee8d5c62dfe95e0ea6d7918813e34c30d",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1236,7 +1283,8 @@
       "On 2026-09-07, re-read this complete page against the final root dependency declaration after PolyStore advanced from 0.2.10 to 0.2.11 for declaration/runtime import separation. The reviewed patch changes no capability, installation command, ownership boundary, or storage format described here. PolyStore preserves address/backend declarations without importing Zarr until a read-only store operation; minimum and latest runtime suites passed 487 and 488 tests respectively. Refreshed only this reviewed pyproject.toml authority hash.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence."
+      "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -1389,13 +1437,18 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/animation/flash_mixin.py",
-        "sha256": "275a017d2c05b8b2127a50c173e7c9c82383153288828b1727ccf12df0bdc129",
+        "sha256": "42c572644096d141dac1b1af07920a03bad605cf13f363406fea04b1b3030e7c",
         "role": "Implements reusable flash propagation and animation coordination."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/animation/flash_config.py",
         "sha256": "d0ea00191db61e5934410fcc9d53aebdebf1cc2e93706fb1c8640809af4541fd",
         "role": "Declares generic flash timing, colour, and animation configuration."
+      },
+      {
+        "path": "external/pyqt-reactive/tests/test_flash_destruction_lifetime.py",
+        "sha256": "a567e8b978182773d316e9a7dc7934b80da2708e2804bd8e84898b4b1a030b37",
+        "role": "Verifies Qt-owned cleanup receivers survive native sender destruction and Python garbage collection."
       }
     ],
     "findings": [
@@ -1405,7 +1458,8 @@
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
-      "On 2026-09-06, re-read the complete redirect and canonical pyqt-reactive flash page against the native widget raster surface, shared mask projection, resolved-change notification ownership and unchanged FlashConfig timing. The redirect still points to the package that owns these generic mechanisms. Native RGB/BGR coverage passed 240 checks across 100%, 125% and 150% scaling; 460 reactive tests, nine OpenHCS form integration tests and five real MCP reset/edit checks passed. Reactive main CI 34044272928 passed every platform job."
+      "On 2026-09-06, re-read the complete redirect and canonical pyqt-reactive flash page against the native widget raster surface, shared mask projection, resolved-change notification ownership and unchanged FlashConfig timing. The redirect still points to the package that owns these generic mechanisms. Native RGB/BGR coverage passed 240 checks across 100%, 125% and 150% scaling; 460 reactive tests, nine OpenHCS form integration tests and five real MCP reset/edit checks passed. Reactive main CI 34044272928 passed every platform job.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -1456,8 +1510,8 @@
       },
       {
         "path": "external/python-introspect/src/python_introspect/callable_declaration.py",
-        "sha256": "23542ba1c05ce5a23853627f3100e4a56c9b0d25c76fdce7af1288ba0599e400",
-        "role": "Projects canonical callable keyword declarations from signature defaults with caller-owned equality."
+        "sha256": "3bb8b474624fe6b2964a5c1f9a6aa540b2703500bfa124e7808995cb789d6951",
+        "role": "Orders supplied parameters by signature with optional default omission and caller-owned equality."
       },
       {
         "path": "openhcs/core/callable_contract.py",
@@ -1486,7 +1540,8 @@
       "On 2026-08-27, re-read the complete reference redirect against python-introspect's current signature analysis and OpenHCS runtime-owned parameter projection; the generic and domain ownership boundary remains accurate.",
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests; focused python-introspect signature-analysis and callable-declaration tests passed: 37 tests.",
       "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
-      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit."
+      "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -1686,7 +1741,7 @@
   },
   {
     "path": "docs/source/architecture/list_item_preview_system.rst",
-    "source_sha256": "2c1a4099a529e5f9434c85e33ae789b70c7690ccc0380a349356c9363480bb66",
+    "source_sha256": "b691873fa0ee9805f7f41ec52c2506fc3984207ee6d68951000bb4fb875f7631",
     "audience": [
       "OpenHCS UI maintainers following the extracted list-preview URL"
     ],
@@ -1695,8 +1750,8 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/strategies/preview_formatting.py",
-        "sha256": "14ed1b4412ce817d862d68c850c31c43544f5fa9f4908f7b33718d55c82e7091",
-        "role": "Implements registered generic preview formatting strategies."
+        "sha256": "b6502936a1643782c333833e5a68c0610d5779199aaef2767dcfa603fca5a57e",
+        "role": "Owns preview detail, collection bounds, and wrapping declarations."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/protocols/preview_formatter.py",
@@ -1717,17 +1772,39 @@
         "path": "openhcs/pyqt_gui/services/reactor_providers.py",
         "sha256": "e937c310e6dd7f06bf8e2cfc227ce442310f6d249fc0abed4ed0e588b4121fe8",
         "role": "Registers the OpenHCS domain formatter with the generic preview service."
+      },
+      {
+        "path": "openhcs/pyqt_gui/config.py",
+        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "role": "Embeds the persisted generic list-preview policy in UIConfig."
+      },
+      {
+        "path": "openhcs/pyqt_gui/main.py",
+        "sha256": "7b87d8e35f8b91eff9dac31cc792e45b69c8bf1ab8d2d1870e36a7d14d444a45",
+        "role": "Applies the same preview policy to both managers at startup and after configuration save."
+      },
+      {
+        "path": "tests/unit/pyqt_gui/test_main_config_propagation.py",
+        "sha256": "291dc45ca20ead6025c255a8109a2e6c55d90bd7858e80ad12484dafa733d7c5",
+        "role": "Verifies live preview policy propagation through the main configuration lifecycle."
+      },
+      {
+        "path": "tests/unit/pyqt_gui/test_source_binding_preview_policy.py",
+        "sha256": "e0d551b50676e332190aa3ab70115d2566ae2af1ff71a6583d0717b11e9b3475",
+        "role": "Verifies compact and expanded source-binding previews preserve declarations."
       }
     ],
     "findings": [
       "The compatibility page lacked the exact owner-page link and duplicated a package-level boundary link.",
-      "The page did not identify the OpenHCS declarations that own well-filter preview labels, empty-selection visibility, and include or exclude operators."
+      "The page did not identify the OpenHCS declarations that own well-filter preview labels, empty-selection visibility, and include or exclude operators.",
+      "Added the persisted generic preview policy and its shared two-manager application boundary; retained declaration-owned field selection."
     ],
     "disposition": "revise",
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
-      "On 2026-08-24, re-read the complete reference and its generic and domain authorities after moving preview semantics onto the WellFilterConfig family and WellFilterMode members; the page now names the projection boundary without duplicating a registry."
+      "On 2026-08-24, re-read the complete reference and its generic and domain authorities after moving preview semantics onto the WellFilterConfig family and WellFilterMode members; the page now names the projection boundary without duplicating a registry.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {
@@ -1787,7 +1864,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "f94369ca7ecafdd71a27e2814b71dcd18fb8be99ac402140bfd5dff846f08feb",
+        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
         "role": "Declares UIConfig and projects its unique execution endpoint without constructing unrelated UI configuration."
       },
       {
@@ -1960,7 +2037,8 @@
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
-      "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages."
+      "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
     ]
   },
   {

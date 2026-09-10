@@ -133,8 +133,9 @@ OpenHCS-owned ``OpenHCSZMQConfig`` subtype of ZMQRuntime's generic
 ``PyQtGuiRuntimeContext`` carries the current
 ``UIConfig`` beside ``GlobalPipelineConfig``. The global configuration window
 edits their registered ObjectState scopes. The declaration contains only
-settings with real lifecycle owners: performance-monitor sampling and
-presentation, progress-update coalescing, application shortcuts, execution ZMQ,
+settings with real lifecycle owners: list-preview presentation,
+performance-monitor sampling and presentation, progress-update coalescing,
+application shortcuts, execution ZMQ,
 process logging, and the local agent UI bridge. Theme, generic window policy,
 plugin payloads, bridge reserve limits, and shortcut action descriptions are not
 duplicated as editable UIConfig fields. The update-check preference is itself a
@@ -155,6 +156,12 @@ the exact ``UIConfig.logging`` declaration. Launcher flags are ephemeral
 overrides rather than persisted mirrors. Log discovery derives its directory
 from that same live declaration, so changing the location does not require a
 second registry or copied path setting.
+
+The ``list_previews`` field embeds pyqt-reactive's generic formatting policy.
+The main window gives that policy to both manager panels on startup and after
+a save. The generic manager refreshes its formatting and wrapping together;
+OpenHCS does not maintain a second collection of preview rules or copy the
+configuration's fields into panel-specific settings.
 
 ``MainWindowUiBridgeLifecycle`` owns bridge enable/disable and exact
 configuration reconciliation. An unchanged running configuration is a no-op.

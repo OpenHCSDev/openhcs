@@ -22,14 +22,22 @@ from pyqt_reactive.widgets.function_list_editor import FunctionListEditorWidget
 
 class NoSelectionProvider(FunctionSelectionProviderABC):
     def select_function(self, parent=None, **context):
-        raise AssertionError("Editing an existing parameter must not open function selection")
+        raise AssertionError(
+            "Editing an existing parameter must not open function selection"
+        )
 
 
 @pytest.fixture
 def step_editor(qapp, qtbot, monkeypatch):
     ObjectStateRegistry.clear()
-    monkeypatch.setattr(component_selection, "_component_selection_provider", OpenHCSComponentSelectionProvider())
-    monkeypatch.setattr(component_selection, "_function_selection_provider", NoSelectionProvider())
+    monkeypatch.setattr(
+        component_selection,
+        "_component_selection_provider",
+        OpenHCSComponentSelectionProvider(),
+    )
+    monkeypatch.setattr(
+        component_selection, "_function_selection_provider", NoSelectionProvider()
+    )
     monkeypatch.setattr(codegen_provider, "_codegen_provider", OpenHCSCodegenProvider())
     plate = ObjectState(PipelineConfig(), scope_id="roundtrip-plate")
     step = FunctionStep(func=(percentile_normalize, {"high_percentile": 99.8}))
@@ -40,10 +48,15 @@ def step_editor(qapp, qtbot, monkeypatch):
     qtbot.addWidget(host)
     layout = QVBoxLayout(host)
     host.func_editor = FunctionListEditorWidget(
-        step.func, scope_id=state.scope_id, parent=host,
+        step.func,
+        scope_id=state.scope_id,
+        parent=host,
     )
     editor = StepParameterEditorWidget(
-        step, parent=host, scope_id=state.scope_id, pipeline_config=plate.to_object(),
+        step,
+        parent=host,
+        scope_id=state.scope_id,
+        pipeline_config=plate.to_object(),
     )
     layout.addWidget(editor)
     layout.addWidget(host.func_editor)
@@ -55,15 +68,18 @@ def step_editor(qapp, qtbot, monkeypatch):
 
 
 @pytest.mark.parametrize("value", [99.6, 99.8, 25])
-def test_step_code_updates_existing_function_state_and_widget(step_editor, qtbot, value):
+def test_step_code_updates_existing_function_state_and_widget(
+    step_editor, qtbot, value
+):
     editor, functions = step_editor
     original_state = functions.function_panes[0].form_manager.state
     new_step = FunctionStep(func=(percentile_normalize, {"high_percentile": value}))
     editor._apply_step_from_code_document(new_step)
     qtbot.waitUntil(
-        lambda: functions.function_panes[0].form_manager.widgets[
-            "high_percentile"
-        ].value() == value
+        lambda: functions.function_panes[0]
+        .form_manager.widgets["high_percentile"]
+        .value()
+        == value
     )
     pane = functions.function_panes[0]
     assert pane.form_manager.state is original_state
@@ -111,7 +127,9 @@ def test_hidden_group_values_are_projected_from_their_child_states(step_editor, 
     editor._apply_step_from_code_document(FunctionStep(func=pattern))
     first_state = functions.function_panes[0].form_manager.state
     functions._select_pattern_key("2", commit_current_view=True, persist_selection=True)
-    qtbot.waitUntil(lambda: functions.function_panes[0].form_manager.state is not first_state)
+    qtbot.waitUntil(
+        lambda: functions.function_panes[0].form_manager.state is not first_state
+    )
     first_state.update_parameter("high_percentile", 98.5)
     resolved = editor._current_step_for_code_document().func
     assert resolved["1"][0][1]["high_percentile"] == 98.5

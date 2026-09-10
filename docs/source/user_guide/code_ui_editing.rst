@@ -53,6 +53,12 @@ Channel-grouped patterns may combine individual functions, ``(function, kwargs)`
 pairs, and lists of functions. Explicit per-function settings, including dtype
 conversion and slice-by-slice execution, remain part of the code/UI round trip.
 
+Generated function parameters follow the function's declared signature order,
+matching the form's parameter order. Extra keyword parameters follow the
+declared parameters in their supplied order. Decimal fields use compact,
+locale-aware text, so a value such as ``99.8`` remains readable without changing
+the field's configured numeric precision.
+
 Applying a complete Pipeline Editor or Plate Manager code document reconciles
 the submitted declaration with the live ObjectState graph. Unchanged and
 unambiguously edited occurrences retain their history across reordering; added
@@ -69,6 +75,11 @@ each nested function parameter state. There is no transient post-apply pipeline
 value waiting for a separate Save button. A step or configuration editor that
 provides an explicit save action retains that smaller editor's normal dirty-state
 workflow.
+
+After applying step code, inspect its function fields directly: retained
+function occurrences update their existing parameter states. Changes made in
+a function form also appear when you reopen its Code view, including changes
+to a group that is not currently selected in the function list.
 
 .. openhcs-gallery:: lazy-inheritance
 

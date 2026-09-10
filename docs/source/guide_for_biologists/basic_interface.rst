@@ -89,6 +89,17 @@ reference to the authoring process; it does not rebuild the catalogue there.
 
 .. openhcs-gallery:: ui-function-selector
 
+List previews
+-------------
+
+The ``list_previews`` section of UI configuration controls the Plate Manager
+and Pipeline Editor summaries. It can wrap rows to the panel width, include or
+hide detail lines and modified settings, and show collections compactly or in
+detail. Saving applies the same display policy to both panels immediately.
+The editors and code mode retain the full values regardless of how compact the
+preview is. Exact fields and defaults are listed in
+:doc:`../reference/configuration`.
+
 Image and metadata browsing
 ---------------------------
 

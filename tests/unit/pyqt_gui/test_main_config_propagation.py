@@ -342,8 +342,12 @@ def test_configure_openhcs_roots_reach_live_application_owners() -> None:
 
 def test_list_preview_config_applies_to_both_real_lists(qtbot) -> None:
     from pyqt_reactive.core import ReorderableListWidget
-    from pyqt_reactive.strategies.preview_formatting import ObjectStatePreviewFormattingService
-    from pyqt_reactive.widgets.shared.abstract_manager_widget import AbstractManagerWidget
+    from pyqt_reactive.strategies.preview_formatting import (
+        ObjectStatePreviewFormattingService,
+    )
+    from pyqt_reactive.widgets.shared.abstract_manager_widget import (
+        AbstractManagerWidget,
+    )
 
     lists = (ReorderableListWidget(), ReorderableListWidget())
     current = get_default_ui_config()
@@ -352,10 +356,14 @@ def test_list_preview_config_applies_to_both_real_lists(qtbot) -> None:
         qtbot.addWidget(view)
         manager = SimpleNamespace(
             item_list=view,
-            _preview_formatter=ObjectStatePreviewFormattingService(current.list_previews),
+            _preview_formatter=ObjectStatePreviewFormattingService(
+                current.list_previews
+            ),
             update_item_list=lambda: None,
         )
-        manager.set_preview_config = MethodType(AbstractManagerWidget.set_preview_config, manager)
+        manager.set_preview_config = MethodType(
+            AbstractManagerWidget.set_preview_config, manager
+        )
         managers.append(manager)
     main_like = SimpleNamespace(
         plate_manager_widget=managers[0],
@@ -365,7 +373,8 @@ def test_list_preview_config_applies_to_both_real_lists(qtbot) -> None:
     for enabled in (True, False):
         policy = replace(current.list_previews, wrap_lines=enabled)
         OpenHCSMainWindow._apply_list_preview_config(
-            main_like, replace(current, list_previews=policy),
+            main_like,
+            replace(current, list_previews=policy),
         )
         assert all(view.wordWrap() == enabled for view in lists)
         assert all(manager._preview_formatter.config is policy for manager in managers)

@@ -17,5 +17,12 @@ own the compact include or exclude operator. The formatter resolves those
 declarations through pyqt-reactive's preview API; it does not scan unrelated
 registries or reproduce subtype tables.
 
+``UIConfig.list_previews`` embeds pyqt-reactive's ``FormattingConfig`` rather
+than redeclaring its fields. The main window applies that same policy to Plate
+Manager and Pipeline Editor at startup and after a UI configuration save. Each
+manager uses the policy for both text formatting and row layout. Preview field
+selection and abbreviations still come from the domain declarations; display
+preferences do not change source bindings or pipeline values.
+
 See :doc:`ui_services_architecture` for the current OpenHCS integration boundary
 and :doc:`external_foundations` for the package ownership policy.

@@ -222,7 +222,9 @@ def test_function_pattern_parameter_order_matches_declaration(clean_mode):
         Assignment("pattern", (configurable_test_function, kwargs)),
         clean_mode=clean_mode,
     )
-    node = next(node for node in ast.walk(ast.parse(source)) if isinstance(node, ast.Dict))
+    node = next(
+        node for node in ast.walk(ast.parse(source)) if isinstance(node, ast.Dict)
+    )
     assert [key.value for key in node.keys] == ["threshold", "enabled"]
     assert list(kwargs) == ["enabled", "threshold"]
 

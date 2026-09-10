@@ -159,6 +159,20 @@ Round-trip fidelity means:
 * validation catches syntax, import, type, and policy errors before mutation;
 * apply returns enough snapshot/revision data to audit or undo the change.
 
+Function parameter order is projected by python-introspect from the function
+signature for both clean and full code views. The OpenHCS formatter supplies
+its semantic equality rule and whether signature defaults should be omitted;
+extra keywords retain their supplied order after the declared parameters.
+
+When a nested function ObjectState exists, pyqt-reactive projects its current
+values into the function pattern, including groups whose panes are not visible.
+Step-code application uses that same pattern-reconciliation path to update
+retained function states before refreshing their panes. A step editor retains
+its existing saved baseline until its Save action; a complete pipeline apply
+keeps the pipeline's commit semantics. Generic numeric controls likewise own
+locale-aware decimal presentation without changing the stored numeric value or
+creating an OpenHCS-specific display formatter.
+
 If a field's meaning is unclear, use ObjectState field-help tools or config
 schema reflection before editing. Do not infer behaviour from widget labels or
 raw ``None`` values.

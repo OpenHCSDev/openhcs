@@ -35,8 +35,9 @@ override.
 Desktop UI configuration
 ------------------------
 
-``UIConfig`` owns process-level desktop behavior such as logging, shortcuts,
-progress updates, execution transport, and the local agent bridge. These fields
+``UIConfig`` owns process-level desktop behaviour such as list-preview
+presentation, logging, shortcuts, progress updates, execution transport, and
+the local agent bridge. These fields
 are edited through the UI configuration ObjectState, not ``ConfigPatch``.
 
 .. openhcs-config-reference:: ui
