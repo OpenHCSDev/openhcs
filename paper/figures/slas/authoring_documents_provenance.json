@@ -1,0 +1,91 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_list_code_documents",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "schema_version": "openhcs.agent.v1",
+          "documents": [
+            {
+              "widget_id": "object_state_scope",
+              "schema_version": "openhcs.agent.v1",
+              "title": "Code mode - Edit Step: 1. Enhanced neuronal signal",
+              "readable": true,
+              "writable": true,
+              "supported_selection_modes": [],
+              "current_selection_count": 1,
+              "total_scope_count": 9,
+              "document_id": "object_state_scope:/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+            },
+            {
+              "widget_id": "object_state_scope",
+              "schema_version": "openhcs.agent.v1",
+              "title": "Code mode - /home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0::func_0",
+              "readable": true,
+              "writable": true,
+              "supported_selection_modes": [],
+              "current_selection_count": 1,
+              "total_scope_count": 9,
+              "document_id": "object_state_scope:/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0::func_0"
+            },
+            {
+              "widget_id": "object_state_scope",
+              "schema_version": "openhcs.agent.v1",
+              "title": "Code mode - /home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_1::func_0",
+              "readable": true,
+              "writable": true,
+              "supported_selection_modes": [],
+              "current_selection_count": 1,
+              "total_scope_count": 9,
+              "document_id": "object_state_scope:/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_1::func_0"
+            },
+            {
+              "widget_id": "pipeline_editor",
+              "schema_version": "openhcs.agent.v1",
+              "title": "Code mode - Edit Pipeline",
+              "readable": true,
+              "writable": true,
+              "supported_selection_modes": [],
+              "current_selection_count": 1,
+              "total_scope_count": 2,
+              "document_id": "window_code_document:pipeline_editor"
+            },
+            {
+              "widget_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "schema_version": "openhcs.agent.v1",
+              "title": "Code mode - Edit Step: 1. Enhanced neuronal signal",
+              "readable": true,
+              "writable": true,
+              "supported_selection_modes": [],
+              "current_selection_count": 1,
+              "total_scope_count": 2,
+              "document_id": "window_code_document:/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+            },
+            {
+              "widget_id": "plate_manager",
+              "schema_version": "openhcs.agent.v1",
+              "title": "Plate manager orchestrator config",
+              "readable": true,
+              "writable": true,
+              "supported_selection_modes": [
+                "selected",
+                "all"
+              ],
+              "current_selection_count": 1,
+              "total_scope_count": 1,
+              "document_id": "plate_manager.orchestrator_config"
+            }
+          ],
+          "errors": [],
+          "warnings": []
+        }
+      ]
+    }
+  ]
+}

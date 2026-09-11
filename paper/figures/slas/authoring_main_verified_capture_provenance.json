@@ -1,0 +1,54 @@
+{
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_snapshot_window",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "main_window",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "output_dir_path": "/tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures",
+            "capture_scope": "widget",
+            "captured": true,
+            "resource": {
+              "uri": "file:///tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures/20260910T062545673518Z_main_window_OpenHCS.png",
+              "title": "OpenHCS",
+              "mime_type": "image/png",
+              "path": "/tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures/20260910T062545673518Z_main_window_OpenHCS.png",
+              "size_bytes": 139348,
+              "sha256": "ed486ff1f356b11db0632530b85cb535e37f688be6617d21b1d41c8ee506f0d7"
+            },
+            "summary": {
+              "object_state_scope_id": null,
+              "dirty": false,
+              "signature_diff": false,
+              "dirty_field_count": 0,
+              "signature_diff_field_count": 0,
+              "semantic_markers": [],
+              "managed_action_ids": [],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "main_window"
+              },
+              "title": "OpenHCS",
+              "window_kind": "qt_top_level",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": null
+            },
+            "width": 1024,
+            "height": 768
+          }
+        ]
+      }
+    ]
+  }
+}

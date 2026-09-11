@@ -1,0 +1,73 @@
+{
+  "generator_sha256": "b8c8fa8861cef56f0ac607482905f3bd744ace2aeaff39f1be4a7ca701211362",
+  "source_sha256": {
+    "openhcs/core/pipeline/compiler.py": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
+    "openhcs/core/pipeline/path_planner.py": "90a4991b326c37f86fa1bbcacb5b5cfecc40147ab86f3bcd3ba973c7003bd867",
+    "openhcs/core/pipeline/framework_device_assignment.py": "f77f3fb2d30c4af8cab6210dbe294f9fb5e246dad0a6bbf88bcaf1e2b58dead7",
+    "openhcs/core/pipeline/funcstep_contract_validator.py": "88fb772ae68cc2719e71baf7f633ed7c4bda5b59f029f28831816cf2c65b02d5",
+    "openhcs/core/context/processing_context.py": "9384fcc4d5ed7ea8607257ec448958f85a88a5caa6ae06f22142cc51b58b479e",
+    "openhcs/core/compiled_execution.py": "b2dd83ebf18f59d868e8fb12535c3e3f7c3c3df48ed963775cd57b62e4141d47",
+    "paper/figures/build_slas_visual_story.py": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "compiler_preparation.png": "41d45bf597ceb66aae1e83b990889976b99b651871ceba9e8aca47b3ce52ed60",
+    "compiler_preparation.pdf": "5a7d879d13b51a883d14afde5d15b68dfeefe71ec20ee6c118d3618717edbe66",
+    "compiler_preparation.svg": "fdfbe4ff5bf332d02256d1560a09db6a86edad8e14a222a0d25589f38cb5d3da"
+  },
+  "interpretation": "Original explanatory diagram, not an executed analysis or a trace. Panels group responsibilities from PipelineCompiler.compile_pipelines. Initial path and artifact planning precedes materialization planning; post-plan stages validate memory contracts and source metadata, assign framework devices, resolve remaining configuration and freeze contexts. Sequential mode is first inspected using a temporary initialized context and may cause each ordered component combination to be planned separately. Worker assignments and prepared functions are assembled after context compilation. Source-backend compatibility is also checked before axis fanout; panel D does not claim all validation occurs in one pass. Segment-to-measure labels illustrate declared artifact dependencies.",
+  "caption": "Compiler preparation turns an authored image-analysis workflow into an execution plan. A, inherited settings and step parameters are resolved for the submitted pipeline. B, source metadata identifies image groups, and declared inputs link functions to images and named results from earlier steps. C, the compiler plans which results remain in memory or are saved, and separates contexts for ordered components such as time. D, function parameters, processing groups and array-backend requirements are checked before compatible devices are assigned. E, frozen contexts, prepared functions and worker assignments form the execution bundle. The schematic groups related compiler responsibilities rather than enumerating every internal pass. Image stacks and segmentation outputs are illustrative; analysis functions run during execution.",
+  "label_source_symbols": {
+    "A: Resolve the submitted workflow": {
+      "openhcs/core/pipeline/compiler.py": {
+        "PipelineCompiler._register_and_resolve_pipeline_once": 1047,
+        "PipelineCompiler._capture_pipeline_config": 1215,
+        "PipelineCompiler.compile_pipelines": 1518
+      }
+    },
+    "B: Match images and connect step inputs": {
+      "openhcs/core/pipeline/compiler.py": {
+        "PipelineCompiler.initialize_step_plans_for_context": 222,
+        "PipelineCompiler._supplement_step_plans": 410
+      },
+      "openhcs/core/pipeline/path_planner.py": {
+        "PipelinePathPlanner.prepare_pipeline_paths": 2785
+      }
+    },
+    "C: Plan storage and ordered processing": {
+      "openhcs/core/pipeline/compiler.py": {
+        "PipelineCompiler._compile_axis_value": 1266,
+        "PipelineCompiler._compile_sequential_axis_contexts": 1321,
+        "PipelineCompiler._compile_single_axis_context": 1351,
+        "PipelineCompiler.declare_zarr_stores": 577,
+        "PipelineCompiler.plan_materialization_flags": 616,
+        "PipelineCompiler.analyze_pipeline_sequential_mode": 740
+      }
+    },
+    "D: Check requirements and assign devices": {
+      "openhcs/core/pipeline/compiler.py": {
+        "PipelineCompiler._run_post_plan_compile_stages": 1379,
+        "PipelineCompiler.validate_memory_contracts": 823,
+        "PipelineCompiler.validate_source_workspace_projection": 1395
+      },
+      "openhcs/core/pipeline/framework_device_assignment.py": {
+        "assign_framework_devices": 9
+      },
+      "openhcs/core/pipeline/funcstep_contract_validator.py": {
+        "FuncStepContractValidator.validate_pipeline": 512
+      }
+    },
+    "E: Prepare execution tasks": {
+      "openhcs/core/pipeline/compiler.py": {
+        "PipelineCompiler.compile_pipelines": 1518,
+        "PipelineCompiler._calculate_worker_assignments": 1501
+      },
+      "openhcs/core/context/processing_context.py": {
+        "ProcessingContext.freeze": 203
+      },
+      "openhcs/core/compiled_execution.py": {
+        "CompiledExecutionBundle": 119
+      }
+    }
+  }
+}

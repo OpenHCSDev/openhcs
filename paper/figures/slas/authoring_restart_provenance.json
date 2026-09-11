@@ -1,0 +1,45 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_invoke_action",
+    "--arguments",
+    "{\"widget_id\":\"main_window\",\"action_id\":\"restart_session\",\"require_confirmation\":false}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_invoke_action",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "schema_version": "openhcs.agent.v1",
+            "identity": {
+              "widget_id": "main_window",
+              "action_id": "restart_session"
+            },
+            "status": "accepted",
+            "receipt": {
+              "request_token": {
+                "value": null
+              },
+              "bridge_operation_id": "2cd02847-abf8-4b26-99f6-78d23add7c80",
+              "accepted": true
+            },
+            "target_scope_ids": [],
+            "selection_revision_token": null,
+            "workflow_status_surface_ids": [],
+            "recommended_poll_interval_ms": 500,
+            "errors": [],
+            "warnings": []
+          }
+        ]
+      }
+    ]
+  }
+}

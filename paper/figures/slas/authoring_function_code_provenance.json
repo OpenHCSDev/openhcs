@@ -1,0 +1,56 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_get_code_document",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "selection_mode": "selected",
+          "selected_scope_ids": [
+            "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0::func_0"
+          ],
+          "current_snapshot": {
+            "snapshot_id": "9da9be78-b764-458f-be8b-2d8ed0813e60",
+            "schema_version": "openhcs.agent.v1",
+            "index": 1,
+            "branch": "main",
+            "parent_snapshot_id": "0f706d7e-93a0-4e22-a402-767716bbd2c7",
+            "timestamp_unix": 1789003312.2570183,
+            "timestamp": "2026-09-09T21:21:52.257",
+            "label": "edit plate_manager.orchestrator_config via MCP [/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate]",
+            "num_states": 9,
+            "is_current": true,
+            "is_head": true,
+            "uri": "openhcs://ui/snapshots/9da9be78-b764-458f-be8b-2d8ed0813e60"
+          },
+          "current_revision_token": "156da5f3c7f5ebede9dbf2e40eb00ee0fc4c5abb33278778411bb9e35abfc49c",
+          "schema_version": "openhcs.agent.v1",
+          "summary": {
+            "widget_id": "object_state_scope",
+            "schema_version": "openhcs.agent.v1",
+            "identity": {
+              "document_id": "object_state_scope:/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0::func_0"
+            },
+            "title": "Edit Function: percentile_normalize",
+            "readable": true,
+            "writable": true,
+            "supported_selection_modes": [],
+            "current_selection_count": 1,
+            "total_scope_count": 9
+          },
+          "source": "# Edit this function pattern and save to apply changes\n\nfrom openhcs.processing.backends.processors.numpy_processor import percentile_normalize\n\npattern = (percentile_normalize, {\n        'enabled': True,\n        'low_percentile': 1.0,\n        'target_max': 255.0,\n        'high_percentile': 99.8,\n        'target_min': 0.0\n    })",
+          "mime_type": "text/x-python",
+          "size_bytes": 330,
+          "sha256": "8b1025a90659ee6d2672026bdfecfd534b90035877f6dccee7269059a99c1d7e",
+          "warnings": [],
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

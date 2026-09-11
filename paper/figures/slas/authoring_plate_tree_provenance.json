@@ -1,0 +1,255 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_get_widget_tree",
+    "--arguments",
+    "{\"window_id\":\"plate_manager\",\"actionable_only\":true,\"compact_actions\":true}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_get_widget_tree",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "plate_manager",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "projected": true,
+            "root": null,
+            "actionable_widgets": [
+              {
+                "path": [
+                  0,
+                  0,
+                  0
+                ],
+                "path_id": "0.0.0",
+                "child_index": 0,
+                "class_name": "QPushButton",
+                "label": "Add",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 5,
+                  "y": 5,
+                  "width": 50,
+                  "height": 27
+                },
+                "global_geometry": {
+                  "x": 1478,
+                  "y": 944,
+                  "width": 50,
+                  "height": 27
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "tool_tip": "Add new plate directory"
+              },
+              {
+                "path": [
+                  0,
+                  0,
+                  1
+                ],
+                "path_id": "0.0.1",
+                "child_index": 1,
+                "class_name": "QPushButton",
+                "label": "Del",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 60,
+                  "y": 5,
+                  "width": 49,
+                  "height": 27
+                },
+                "global_geometry": {
+                  "x": 1533,
+                  "y": 944,
+                  "width": 49,
+                  "height": 27
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "tool_tip": "Delete selected plates"
+              },
+              {
+                "path": [
+                  0,
+                  0,
+                  3
+                ],
+                "path_id": "0.0.3",
+                "child_index": 3,
+                "class_name": "QPushButton",
+                "label": "Init",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 169,
+                  "y": 5,
+                  "width": 49,
+                  "height": 27
+                },
+                "global_geometry": {
+                  "x": 1642,
+                  "y": 944,
+                  "width": 49,
+                  "height": 27
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "tool_tip": "Initialize selected plates"
+              },
+              {
+                "path": [
+                  0,
+                  0,
+                  6
+                ],
+                "path_id": "0.0.6",
+                "child_index": 6,
+                "class_name": "QPushButton",
+                "label": "Code",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 340,
+                  "y": 5,
+                  "width": 49,
+                  "height": 27
+                },
+                "global_geometry": {
+                  "x": 1813,
+                  "y": 944,
+                  "width": 49,
+                  "height": 27
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "tool_tip": "Generate Python code"
+              },
+              {
+                "path": [
+                  0,
+                  0,
+                  7
+                ],
+                "path_id": "0.0.7",
+                "child_index": 7,
+                "class_name": "QPushButton",
+                "label": "Results",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 394,
+                  "y": 5,
+                  "width": 51,
+                  "height": 27
+                },
+                "global_geometry": {
+                  "x": 1867,
+                  "y": 944,
+                  "width": 51,
+                  "height": 27
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "tool_tip": "View live measurement results"
+              },
+              {
+                "path": [
+                  0,
+                  1,
+                  3
+                ],
+                "path_id": "0.1.3",
+                "child_index": 3,
+                "class_name": "QModelIndex",
+                "signature_diff": true,
+                "semantic_markers": [
+                  "_"
+                ],
+                "action_role": "item_select",
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate",
+                "label": "plate | /home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate | root{num_workers:1} | vfs{materialize:DISK} | proc{vars:site, group:CHANNEL, source:PREVIOUS_STEP} | analysis{:True} | pp{:0, suffix:_openhcs, global_folder:/tmp/openhcs-paper-ui-JvncuC/outputs} | compile_dbg{enabled:True} | root{materialization_results_path:/tmp/openhcs-paper-ui-JvncuC/outputs/results, SRC, materialize_runtime_artifacts:True} | src{bindings:(NamedSourceBinding(alias='W1_neuron_neurite', selector=SourceSelector(components=(), metadata=(), filters=(SourceFilterClause(subject=<SourceFilterSubject.FILE: 'file'>, match_type=<SourceFilterMatchType.EQUALS: 'equals'>, value='1_w1.tif', any_group=None),), inherit_current_scope=True), origin=<SourceBindingOrigin.STEP_INPUT: 'step_input'>, component_identity=(ComponentSelector(component=<AllComponents.WELL: 'well'>, value='1'), ComponentSelector(component=<AllComponents.SITE: 'site'>, value='1'), ComponentSelector(component=<AllComponents.CHANNEL: 'channel'>, value='1'), ComponentSelector(component=<AllComponents.Z_INDEX: 'z_index'>, value='1'), ComponentSelector(component=<AllComponents.TIMEPOINT: 'timepoint'>, value='1')), artifact_kind=<class 'openhcs.core.artifacts.ImageArtifactType'>, required=True, source_set_role=<SourceSetRole.MATCHED: 'matched'>, projection_role=<SourceProjectionRole.PRIMARY_PLANE: 'primary_plane'>, explicit_source=None, load_as_monochrome=False, load_as_mask=False, source_channel_axis=None, source_channel_counts=None), NamedSourceBinding(alias='W2_soma_nuclear', selector=SourceSelector(components=(), metadata=(), filters=(SourceFilterClause(subject=<SourceFilterSubject.FILE: 'file'>, match_type=<SourceFilterMatchType.EQUALS: 'equals'>, value='1_w2.tif', any_group=None),), inherit_current_scope=True), origin=<SourceBindingOrigin.STEP_INPUT: 'step_input'>, component_identity=(ComponentSelector(component=<AllComponents.WELL: 'well'>, value='1'), ComponentSelector(component=<AllComponents.SITE: 'site'>, value='1'), ComponentSelector(component=<AllComponents.CHANNEL: 'channel'>, value='2'), ComponentSelector(component=<AllComponents.Z_INDEX: 'z_index'>, value='1'), ComponentSelector(component=<AllComponents.TIMEPOINT: 'timepoint'>, value='1')), artifact_kind=<class 'openhcs.core.artifacts.ImageArtifactType'>, required=True, source_set_role=<SourceSetRole.MATCHED: 'matched'>, projection_role=<SourceProjectionRole.PRIMARY_PLANE: 'primary_plane'>, explicit_source=None, load_as_monochrome=False, load_as_mask=False, source_channel_axis=None, source_channel_counts=None))}",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 14762,
+                  "height": 65
+                },
+                "global_geometry": {
+                  "x": 1473,
+                  "y": 646,
+                  "width": 14762,
+                  "height": 65
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "plate | /home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate | root{num_workers:1} | vfs{materialize:DISK} | proc{vars:site, group:CHANNEL, source:PREVIOUS_STEP} | analysis{:True} | pp{:0, suffix:_openhcs, global_folder:/tmp/openhcs-paper-ui-JvncuC/outputs} | compile_dbg{enabled:True} | root{materialization_results_path:/tmp/openhcs-paper-ui-JvncuC/outputs/results, SRC, materialize_runtime_artifacts:True} | src{bindings:(NamedSourceBinding(alias='W1_neuron_neurite', selector=SourceSelector(components=(), metadata=(), filters=(SourceFilterClause(subject=<SourceFilterSubject.FILE: 'file'>, match_type=<SourceFilterMatchType.EQUALS: 'equals'>, value='1_w1.tif', any_group=None),), inherit_current_scope=True), origin=<SourceBindingOrigin.STEP_INPUT: 'step_input'>, component_identity=(ComponentSelector(component=<AllComponents.WELL: 'well'>, value='1'), ComponentSelector(component=<AllComponents.SITE: 'site'>, value='1'), ComponentSelector(component=<AllComponents.CHANNEL: 'channel'>, value='1'), ComponentSelector(component=<AllComponents.Z_INDEX: 'z_index'>, value='1'), ComponentSelector(component=<AllComponents.TIMEPOINT: 'timepoint'>, value='1')), artifact_kind=<class 'openhcs.core.artifacts.ImageArtifactType'>, required=True, source_set_role=<SourceSetRole.MATCHED: 'matched'>, projection_role=<SourceProjectionRole.PRIMARY_PLANE: 'primary_plane'>, explicit_source=None, load_as_monochrome=False, load_as_mask=False, source_channel_axis=None, source_channel_counts=None), NamedSourceBinding(alias='W2_soma_nuclear', selector=SourceSelector(components=(), metadata=(), filters=(SourceFilterClause(subject=<SourceFilterSubject.FILE: 'file'>, match_type=<SourceFilterMatchType.EQUALS: 'equals'>, value='1_w2.tif', any_group=None),), inherit_current_scope=True), origin=<SourceBindingOrigin.STEP_INPUT: 'step_input'>, component_identity=(ComponentSelector(component=<AllComponents.WELL: 'well'>, value='1'), ComponentSelector(component=<AllComponents.SITE: 'site'>, value='1'), ComponentSelector(component=<AllComponents.CHANNEL: 'channel'>, value='2'), ComponentSelector(component=<AllComponents.Z_INDEX: 'z_index'>, value='1'), ComponentSelector(component=<AllComponents.TIMEPOINT: 'timepoint'>, value='1')), artifact_kind=<class 'openhcs.core.artifacts.ImageArtifactType'>, required=True, source_set_role=<SourceSetRole.MATCHED: 'matched'>, projection_role=<SourceProjectionRole.PRIMARY_PLANE: 'primary_plane'>, explicit_source=None, load_as_monochrome=False, load_as_mask=False, source_channel_axis=None, source_channel_counts=None))}",
+                "item_count": 0,
+                "tool_tip": "Status: created"
+              }
+            ],
+            "summary": {
+              "object_state_scope_id": null,
+              "dirty": false,
+              "signature_diff": true,
+              "dirty_field_count": 0,
+              "signature_diff_field_count": 7,
+              "semantic_markers": [
+                "_"
+              ],
+              "managed_action_ids": [],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "plate_manager"
+              },
+              "title": "Plate Manager",
+              "window_kind": "embedded",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": {
+                "value": "plate_manager"
+              }
+            },
+            "widget_count": 21,
+            "actionable_count": 6,
+            "returned_widget_count": 0,
+            "returned_actionable_count": 6,
+            "tree_truncated": false,
+            "actionable_widgets_truncated": false,
+            "actionable_only": true,
+            "include_tree": false,
+            "max_depth": 8,
+            "max_nodes": 80
+          }
+        ]
+      }
+    ]
+  }
+}

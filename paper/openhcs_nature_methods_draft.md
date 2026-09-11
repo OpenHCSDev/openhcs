@@ -1,294 +1,254 @@
-# OpenHCS: a composable bioimage workflow platform
+---
+bibliography: openhcs_references.json
+csl: styles/elsevier-vancouver.csl
+reference-section-title: References
+link-citations: true
+link-bibliography: true
+---
 
-**Working draft.** Public adoption, funding, citation, company-use statements, and final integration validation require source/code verification before submission.
+# OpenHCS: interoperable, agent-guided microscopy analysis
+
+**Short title:** OpenHCS: agent-guided microscopy analysis
+
+**Keywords:** microscopy; image analysis; laboratory automation; agentic AI; interoperability; high-content screening
 
 ## Abstract
 
-High-throughput microscopy can produce biological images faster than they can be analyzed, inspected, and converted into reproducible evidence. OpenHCS is an open-source bioimage workflow platform that keeps source identity, parameters, intermediate results, viewer inspection, custom functions, and worker execution in one executable analysis. Typed source bindings and artifact contracts carry dimensional identity through compilation, process-isolated execution, plate-scoped export, and napari/Fiji review. Imported CellProfiler pipelines provide reference analyses on biological image datasets. Across 30 workflows from official CellProfiler examples, tutorials, and benchmark supplements, OpenHCS reproduced the declared native output values with no unresolved differences. Among 29 workflows with completed native timing, every workflow executed at least 4.03-fold faster (median, 7.39-fold) under one-sample, one-thread/core, CPU-only conditions. GUI edits, generated Python, capability-declared Model Context Protocol (MCP) tools, CellProfiler Analyst-compatible export, viewer outputs, and persistent workers operate on the same public workflow model, so an agent-authored analysis remains inspectable and editable outside the agent client. OpenHCS preserves established biological analyses while reducing execution time for larger screens, repeated quality-control cycles, and method development.
+Automated microscopy produces images that must be converted into measurements through analysis workflows scientists can inspect, adapt, and repeat. OpenHCS is an open-source platform that allows scientists and AI agents to operate the same microscopy workflow through a graphical interface, Python, and the Model Context Protocol (MCP). It combines image-source mapping, established image-processing functions, intermediate-output inspection in napari and Fiji, and parallel execution. In a recorded neurite-outgrowth analysis of a public image, an agent selected and configured functions, executed a pipeline, saved images, regions of interest, morphology files and measurements, and inspected the napari results without further human input after a detailed prompt. The pipeline remained editable in the desktop interface and Python. Separately, all 30 official CellProfiler workflows passed their enabled reference-output comparisons, and persistent-worker runs recorded repeated-sample execution and memory use. OpenHCS provides an image-analysis component for AI-guided laboratories in which established methods, intermediate results and processing choices remain accessible to scientists and agents.
 
 ## Introduction
 
-Image analysis is where microscopy becomes biological evidence. A screen or time-course may begin with automated acquisition, but the experiment becomes interpretable only after cells, organelles, tissues, tracks, intensities, textures, morphologies, and quality-control failures have been identified and reviewed. As acquisition throughput increases, analysis and review often become the slowest and most fragile part of the workflow.
+Automated microscopy supports screening, time-course experiments, and quantitative studies of cells and tissues. Turning the resulting images into useful measurements requires an analysis workflow: identifying the image channels and dimensions, selecting processing functions, inspecting segmentation, and repeating the analysis across samples. Scientists often revise these choices after reviewing intermediate images. AI-guided laboratories need access to these same operations so that analysis can respond to experimental goals and scientist feedback.
 
-The bottleneck includes runtime, inspection, extension, provenance, and repeated execution. Researchers need to adapt an analysis when an assay changes, inspect intermediate masks when results look wrong, add assay-specific logic, rerun the same workflow across many samples, and explain which parameters produced a table or figure. These needs often span high-throughput batch tools, plugin systems, commercial workflows, open viewers, managed image stores, Python functions, and reproducible execution systems.
+An agent-operated analysis must also remain usable by the scientist. Researchers need to see which images were selected, how parameters were chosen, and whether the resulting masks match the structures of interest. They need to revise the pipeline directly and rerun it on another experiment. These requirements connect agent access to existing image-analysis tools, viewers, data stores, and execution systems.
 
-Fiji/ImageJ, CellProfiler, Icy, BioImageIT, napari, OMERO, Zarr-backed image storage, Bio-Formats, scientific Python, GPU libraries, and workflow systems each solve distinct parts of biological image analysis and computational reproducibility [Schneider2012; Schindelin2012; Carpenter2006; McQuin2018; deChaumont2012; Prigent2022; Sofroniew2019; Allan2012; Moore2021; BioFormats; vanDerWalt2014; Haase2020; Koster2012; DiTommaso2017; Galaxy2020; Galaxy2024]. The boundary problem appears when an analysis crosses those tools. Parameters are copied between GUIs and scripts, intermediate images are saved without clear provenance, viewers inspect masks that may not correspond to the current run, and custom code loses dimensional context such as channel, timepoint, z-plane, field, or well.
+Related laboratory-automation work has connected liquid handlers to workflow orchestration and linked laboratory assets through shared information models [@Thieme2024; @Rihm2024]. OpenHCS addresses microscopy analysis within this broader effort to make laboratory operations interoperable and accessible.
 
-OpenHCS treats the workflow itself as the shared record. The user-facing pipeline remains an ordered list of steps; images, source metadata, parameters, functions, intermediate masks, measurement tables, exported files, viewer streams, and worker execution are named parts of that workflow. Imported workflows remain editable and executable: they can be inspected, inherited, overridden, extended with Python, serialized as generated code, accessed through a capability-declared agent interface, streamed to viewers, compared against references, and rerun through the same state model.
+Fiji/ImageJ, CellProfiler, Icy and BioImageIT support image processing and workflow construction [@Schneider2012; @Schindelin2012; @Carpenter2006; @McQuin2018; @deChaumont2012; @Prigent2022]. napari provides interactive multidimensional viewing, while OMERO, OME-NGFF and Bio-Formats support image management and access [@Napari; @Allan2012; @Moore2021; @BioFormats]. Scientific Python and GPU libraries supply additional algorithms [@vanDerWalt2014; @Haase2020], and workflow systems organize reproducible computation [@Koster2012; @DiTommaso2017; @Galaxy2020; @Galaxy2024]. Combining these resources requires keeping image identities, parameter choices and intermediate results consistent as an analysis moves between tools.
 
-Before a run starts, OpenHCS checks which data exist, what each step consumes and produces, where outputs will go, which memory backend is required, and which worker will execute the work. Declared source bindings, callable and artifact contracts, typed compiled plans, storage backends, memory conversion, a typed runtime-value store, and process-isolated workers implement these checks.
+MCMICRO combines interchangeable processing modules for multiplexed tissue imaging [@Schapiro2022]. AI assistants also support executable bioimage analysis: BioImage.IO Chatbot connects community resources with analysis extensions, Omega generates and runs Python within napari, and the Agentic-J preprint describes a containerised system for Fiji workflows with MCP-based extensions [@Lei2024; @Royer2024; @Johanns2026].
 
-CellProfiler equivalence provides the strictest test of this model. A `.cppipe` file contains image-loading rules, module settings, image names, object names, measurement expectations, display choices, and output behavior. OpenHCS compiles `.cppipe` files into editable workflows, compares their outputs against native CellProfiler, and reports speed only after equivalence is established. Native OpenHCS functions and backend-specific algorithms remain distinct methods unless they are evaluated against their own reference.
+OpenHCS represents an analysis as an ordered list of configured processing steps shared by the graphical interface, Python and MCP clients. This common definition includes imported CellProfiler workflows and custom Python functions. Scientists and agents can edit its image selections and parameters, inspect intermediate results in napari or Fiji, and run it across samples. These choices remain attached to the pipeline as users move between interfaces.
 
-Validation spans the complete execution path from source discovery or import through inspection, extension, equivalence testing, and scaled execution. The validation corpus applies official CellProfiler workflows to biological image datasets spanning DNA damage, cell and tissue morphology, Cell Painting, translocation, wound healing, tracking, imaging flow cytometry, yeast screening, and worm phenotyping. The same workflow model supports step-level viewer output, generated Python, custom functions, managed sources, CellProfiler Analyst export, agent-guided authoring and review, and persistent workers.
+Before execution, a compilation stage resolves the selected images, checks the inputs and outputs of each step, and prepares the work for separate execution processes. These checks give scientists and agents feedback on setup errors before a long analysis starts. The same pipeline can incorporate existing CellProfiler modules and additional Python functions.
+
+CellProfiler import provides a direct test of workflow preservation. A `.cppipe` file contains image-loading rules, module settings, image names, object names, measurement expectations, display choices, and output behavior. OpenHCS compiles `.cppipe` files into editable workflows and compares their outputs against native CellProfiler; the benchmark retains these comparisons alongside timing records. Native OpenHCS functions and backend-specific algorithms remain distinct methods unless they are evaluated against their own reference.
+
+We evaluated agent-operated pipeline construction and inspection using a public neurite-outgrowth image, and workflow preservation using official CellProfiler analyses spanning cellular morphology, Cell Painting, translocation, wound healing, tracking, yeast screening, and worm phenotyping. Execution benchmarks assessed single-sample runtime and many-sample throughput. Together, these evaluations examine how existing microscopy analyses can be operated through an agent interface while retaining reviewable results and reusable pipelines.
+
+## Materials and Methods
+
+### Workflow definition and image sources
+
+An OpenHCS pipeline contains shared configuration and an ordered list of function steps. Each step specifies a Python function or a sequence of functions with their parameters. Before execution, compilation resolves inherited defaults and step-specific overrides, identifies source images and dependencies, and prepares function calls, array conversions and output destinations. Workers receive this prepared plan (Supplementary Figure 3).
+
+Function signatures supply the editable parameters shown in the GUI and generated Python. Each function declares the array library it expects, allowing compatible conversions between CPU arrays, GPU array libraries and deep-learning frameworks. Functions retain their own dimensional requirements: volumetric analysis uses functions that support three-dimensional inputs, while two-dimensional functions operate on image planes.
+
+Users can register custom Python functions for use in ordinary pipeline steps. The registered function appears in the editor's function list; its signature and docstring supply parameter controls and MCP descriptions (Supplementary Figure 5).
+
+Image-source mappings select and name the inputs, link them to metadata tables, and specify how they form stacks and processing groups. Individual steps inherit these choices and can select different inputs. Sample, site, channel, plane and time coordinates are recorded separately from storage addresses, preserving acquisition identity when images are assembled into stacks or passed to later steps.
+
+Microscope handlers interpret acquisition-specific layouts and metadata. Bio-Formats-backed discovery provides image-plane records from microscopy containers. The OME-Zarr source reads declared axes, channels, pixel scale and image or plate structure. Explicit source mappings assign roles where acquisition metadata are insufficient. Experimental OMERO support supplies managed images and metadata through the same source model.
+
+### Execution, intermediate results and viewers
+
+Processing steps produce named images, labels, measurements, relationships and files. Each function declares its required inputs and available outputs; the compiler connects later operations to the source images or earlier results they need. During execution, named results retain their producing step, source coordinates and processing group. Saving a result and sending it to a viewer are independent configuration choices (Supplementary Figure 4).
+
+napari and Fiji receive selected outputs with producer and source metadata. The streaming service checks that each viewer is ready and waits for pending display updates to finish. Persistent viewer sessions remain available for inspection after execution. Local files, in-memory data, Zarr-backed stores and OMERO provide storage routes; the OME-Zarr array source is read-only.
+
+Persistent execution processes reuse imported libraries and backend initialization across samples. The worker experiments measure execution time, completed sample count, worker count and peak memory separately from the single-sample comparison.
+
+### Agent access through MCP
+
+MCP gives an agent structured operations for discovering functions, editing and validating pipelines, running analyses, and inspecting progress and results [@MCP]. Each operation is defined once, with its request and result types, implementation, side effects, data access and security requirements. MCP derives the exposed operations from these definitions, which also govern execution.
+
+Local clients communicate with the MCP server through standard input and output. Deployment profiles select desktop-assisted, headless, authoring or development operations. Desktop operations connect to the running application through an authenticated bridge; revision checks detect edits based on an outdated workflow state. Headless operations use a separate execution context. Filesystem reads and writes are restricted to configured roots. A hosted HTTP service exposes a selected read-only subset in isolated server-side workspaces.
+
+### Agent-operated analysis
+
+The recorded run used Codex 0.146.0 with gpt-5.6-sol on Linux, connected by local stdio MCP to the desktop profile of OpenHCS 0.7.13 in a source-checkout virtual environment. The input was field 1 from the public NeuronCyto II dataset [@NeuronCytoII], comprising two 800 x 800-pixel, unsigned 8-bit TIFF images. Both were assigned to one biological image, with separate neuronal/neurite and soma/nuclear channels. Supplementary Data 4 identifies the software revision, input checksums and exact task prompt.
+
+The prompt requested normalization, dim-neurite enhancement, segmentation and per-neuron morphology measurements, with saved images, regions of interest (ROIs), graph paths, SWC neuron-morphology files, tables and a reviewable napari presentation. It authorized changes to an isolated desktop session and writes under the stated output root, and prohibited shell commands and repository inspection. The client ran with approval checks and its operating-system sandbox bypassed. MCP-only operation was assessed from the observed tool trace: no non-MCP calls or subsequent human interventions were recorded.
+
+The event trace was used to count attempted calls, returned errors and subsequent corrections (Supplementary Data 4). Agent wall time was measured from the recorded start and end timestamps; pipeline execution time was reported separately. Checks covered completed execution, saved files, editable pipeline source, and delivered viewer outputs and coordinates. Segmentation accuracy was not quantified against a manual ground truth in this run.
+
+### CellProfiler import and reference-output comparison
+
+CellProfiler `.cppipe` files are parsed into modules and settings. Setup modules define image sources; registered processing and export modules become editable OpenHCS steps. Each module declaration specifies the images, objects, measurements and relationships its function needs, together with whether it runs per image group or across the plate. The same function is exposed in the GUI, Python and MCP.
+
+The imported ExampleCometAssay illustrates this mapping (Figure 4). Its 16 modules become image-source configuration and 12 processing steps containing 16 function calls. One step measures the size and shape of three named object sets: Comet, CometHead and CometTail. Another defines CometTail by masking the comet with the inverted head mask. These names connect each measurement to the object set it describes.
+
+Two additional workflows illustrate larger imports: the advanced segmentation tutorial and the 3D monolayer tutorial [@CellProfilerTutorials]. Enabled modules were parsed from the benchmark pipeline files, translated using the current importer, and counted alongside their generated function steps and individual calls. The imported Python documents were reloaded to check preservation of function identities and parameters. These authoring checks are separate from the archived output comparisons. Supplementary Data 5 provides the complete step sequences and source records.
+
+Imported `ExportToDatabase` modules run once per plate after image-group processing. They collect the selected images, objects, measurements, relationships, thumbnails and grouping information into CellProfiler Analyst tables [@Jones2008]. The export produces a self-contained SQLite database and matching `.properties` files. Non-SQLite databases, custom filter rows, `.workspace` generation and some historical aggregation settings remain unsupported; unsupported requests fail or are identified in the compatibility documentation.
+
+Native CellProfiler generates the reference outputs for each benchmark workflow. OpenHCS imports and runs the same `.cppipe` file on the same images. The official-30 manifest enables value-output comparison: exported tables and database values are checked, with image comparisons for native reference profiles containing only images. CellProfiler Analyst SQLite tables and `.properties` values participate when present. Numeric comparisons use declared absolute and relative tolerances; identifiers and categorical values are compared exactly unless a specific CellProfiler-compatible normalization is documented. A workflow passes when its enabled comparisons report no unresolved differences. The original per-run comparison profiles and environment records are needed to reproduce the historical checks exactly.
+
+The corpus contains 22 workflows and associated image sets from the official CellProfiler 3 examples repository, seven workflows and image sets from the official CellProfiler tutorials repository, and one workflow from the supplement to the CellProfiler 4 performance study [@CellProfilerExamples; @CellProfilerTutorials; @Stirling2021]. The CellProfiler project and the cited dataset contributors retain authorship and provenance for these materials. The retained manifest maps workflow names to pipeline and image locations; Supplementary Data 1-3 provide the corresponding comparison, coverage and throughput tables.
+
+### Performance measurements and reproducibility
+
+Multi-sample runs measured completed wells per execution second and peak memory while varying worker count and queue depth. Workers reused imported libraries and initialized backends across replicated inputs. The throughput comparison queued four wells per worker; the memory sweep used four workers. Runtime-artifact saving and runtime-observation collection were disabled. These measurements cover CPU execution on local or explicitly mounted image sources; GPU and cloud or network-storage performance were not measured.
+
+The archived single-sample benchmark specifies one thread/core, CPU-only execution and no batching, with one retained comparison observation per workflow. The harness committed with the tables times the native CellProfiler command from subprocess launch through completion, including its startup. It times OpenHCS execution after initialization and compilation. Total-phase values also include different work, including benchmark validation and comparison on the OpenHCS path. Supplementary Figure 6 and Supplementary Data 1 report these observations with their timer definitions; they do not establish a like-for-like speed comparison. The wound-healing native duration equals the 900-s timeout ceiling without an explicit completion flag and is excluded from timing statistics.
+
+The benchmark package contains the workflow manifest, pinned dataset revisions, timing and output-comparison summaries, worker/memory measurements, and coverage tables. Figure scripts regenerate panels from saved CSVs and record source and output checksums.
 
 ## Results
 
 ### One executable workflow retains analysis state across tools
 
-Official CellProfiler `.cppipe` workflows enter OpenHCS with their image-loading semantics intact. Source images resolve to well, site, channel, z-plane, and timepoint identities. Processing steps produce named images, object labels, measurements, relationships, grids, and files. Selected outputs can be streamed to napari or Fiji during execution, exported as spreadsheets or CellProfiler Analyst-compatible databases, extended with Python functions, inspected through MCP clients, compared against native CellProfiler references, and executed across wells with persistent workers (Figure 1).
+The desktop interface, generated Python and MCP operations read and modify the same workflow definition (Figure 1). A pipeline created by an agent can be opened in the editor, revised by a scientist and run again. Source mappings connect folders, Bio-Formats containers and managed images to named inputs. Intermediate images and measurements retain their source coordinates and producing step, allowing a displayed result to be traced back to its processing choices.
 
-OpenHCS records these operations as one ordered workflow and one workflow state. A source binding, GUI edit, revision-checked MCP edit, generated Python file, viewer request, imported CellProfiler module, custom Python function, or worker submission updates or projects the same public declarations. The compiler derives internal source and artifact dependencies from that ordered list; those dependencies are not a second user-authored graph. The workflow therefore retains provenance for image identity, parameter state, intermediate results, output destinations, viewer streams, and execution conditions.
+A recorded authoring check demonstrates this connection directly (Figure 2). Through MCP, the normalization high-percentile parameter was changed in Python from 99.8 to 99.6, and the corresponding control was checked. Editing the field back to 99.8 then produced matching regenerated Python. The full application view, parameter controls and function-code window were captured in the same session, using the source commit released as OpenHCS 0.8.5. Forms show effective values, including inherited defaults; clearing a local override restores inheritance.
 
-The public executable boundary consists of `PipelineConfig` and a list of `FunctionStep` declarations, whether authored in the GUI, Python, a `.cppipe` import, or an MCP client. Compilation resolves those declarations once into per-step source universes and bindings, callable invocations, artifact producer-consumer edges, memory conversions, execution scopes, materialization targets, and viewer destinations. Workers consume the resulting typed plans and record typed runtime values; they do not reconstruct source, artifact, or grouping semantics from filenames or parameter names.
+Stacking, grouping and scheduling express different choices. A step can assemble Z planes into an array, apply different function chains to different channels, and supply named segmentation labels to a later measurement step. When time is configured as sequential, the entire pipeline finishes for one timepoint before the next begins; separate wells can run in parallel (Supplementary Figure 1). Each selected function determines its array-library support and whether it processes individual planes, whole stacks or reduces a stack to an output.
 
-Compile-time checks expose common setup failures before long runs. Image inputs must resolve to the intended well, site, channel, z-plane, and timepoint. Each imported module or Python function must receive the inputs it expects. CPU and backend requirements must be declared. Output policies must specify whether masks, measurements, files, viewer outputs, and comparison artifacts are kept, written, streamed, compared, or discarded.
+The UI submits work to a separate execution server using ZeroMQ messaging. The server compiles the workflow and coordinates workers. Workers execute the prepared steps and stream selected results to separate napari or Fiji processes, while progress returns through the server to the UI (Supplementary Figure 2). Figure 6 shows both viewer destinations. napari additionally exposes structured image, layer and ROI information for agent inspection; Supplementary Figure 4 links a selected object to its saved measurements and viewer features. Fiji provides native image and ROI display with a smaller programmatic inspection interface.
 
-Parameter state remains traceable without requiring every option to remain visible. A threshold, channel name, output setting, or source mapping can come from an imported setting, a parent/default configuration, or a local override. Forms display the effective inherited defaults and let users expose only the fields they need to override; clearing an override returns the field to inherited state. The GUI, generated Python, and reflected MCP configuration schema project the same declarations, so a domain expert can remain in the GUI while a computational collaborator reviews generated code or an agent validates a proposed quality-control step.
+### An agent builds and inspects a neurite-outgrowth workflow
 
-### CellProfiler output equivalence validates biological workflow preservation
+From a detailed prompt identifying the two NeuronCyto II channels and requested outputs, the agent built and inspected a neurite-outgrowth analysis without further human input.
 
-Reference equivalence is the validation target for an imported analysis: execution may change, but the declared outputs used for biological interpretation must remain equivalent. A CellProfiler `.cppipe` file contains module settings, image names, object names, measurement expectations, display choices, and output behavior. OpenHCS parses the file, maps image-loading and metadata modules to image sources, maps processing modules to CellProfiler-compatible functions, and stores images, objects, measurements, relationships, grids, and files as named workflow results.
+The agent inspected the images' organization and constructed a two-step pipeline: normalization followed by a registered neurite morphology and topology function (Figure 3). Of 140 attempted MCP calls, one failed at the tool-call level and 30 completed responses reported operation errors. Code-document validation rejected incorrect preset imports and configuration values before execution; the agent revised the document until validation succeeded, then compiled and ran it in the desktop session. The saved record reports 609 s from start to completion, including authoring, corrections, execution and review; pipeline execution took 16.5 s. Outputs included neuron and nuclear labels, per-neuron measurements, neurite paths, ROI files and an SWC morphology file. The pipeline remained editable in Python and the graphical interface.
 
-| CellProfiler concept | OpenHCS representation | Result |
-|---|---|---|
-| `.cppipe` file | Imported pipeline file | Official CellProfiler workflows enter OpenHCS without manual rewriting |
-| Images, Metadata, NamesAndTypes | Image sources and image-name-to-file matching | Image identity is checked before execution |
-| Processing module | OpenHCS workflow step with a CellProfiler-compatible callable | Module behavior runs through the normal analysis workflow |
-| Images and objects | Named image and label outputs | Intermediates can be stored, streamed, compared, or reused |
-| Measurements | Named measurement outputs | Tables remain tied to the workflow that produced them |
-| Relationships and grids | Named non-image outputs | Object relationships and geometry are preserved explicitly |
-| SaveImages, ExportToSpreadsheet, and ExportToDatabase | Named materialization and terminal plate-scoped export steps | Image files, tables, CPA-compatible SQLite databases, and `.properties` files are produced from typed workflow results, not hidden side effects |
-| Module settings | Traceable parameter state | Settings can be edited, inherited, and reviewed in the workflow record |
+The final napari view displayed enhanced neuronal signal, unified neuron labels and neurite paths, with a feature table linking paths to measurements. Structured viewer checks found all nine expected outputs present with no missing or duplicate coordinates. The original analysis reported nine neurons, ten nuclei and 25 graph paths. Subsequent visual review identified a crossover classified as branching. The later corrected demonstration reported the same neuron and nucleus counts, six branches instead of eight, and 24 graph paths instead of 25. Supplementary Data 4 separates the original and later result summaries. The example records agent-operated construction, execution and inspection followed by scientist-led review and method refinement.
 
-Preservation is defined by output equivalence under a declared comparison profile. The official-30 manifest uses value-output comparison: exported tables and database values are compared for every workflow, and image artifacts are compared when the native reference contains only images. A workflow passes only when the enabled comparisons report no unresolved differences. Speed is reported only for passing workflows (Figure 2).
+### Imported CellProfiler workflows match the compared reference outputs
 
-The validation corpus contains 22 workflows and associated images from the official CellProfiler 3 example collection, seven workflows from the official CellProfiler tutorial collection, and one workflow from the CellProfiler 4 benchmark supplement [CellProfilerExamples; CellProfilerTutorials; Stirling2021]. These materials were created and distributed by the CellProfiler project and its contributors; OpenHCS uses them as external biological reference analyses. The assays include DNA-damage measurement, human and Drosophila cell morphology, tumor morphology, Cell Painting morphology and quality control, protein translocation, wound healing, time-lapse tracking, imaging flow cytometry, colocalization, positive-cell classification, yeast screening, and *C. elegans* phenotyping. The corresponding operations include segmentation, filtering, intensity and texture measurement, illumination correction, spatial relationships, tracking, image and table export, and specialized worm morphology. Each corpus row retains its official CellProfiler source, workflow, images, assay category, and original citation where available.
+An imported workflow is assessed against the outputs produced by native CellProfiler on the same images. The official-30 manifest checks exported table and database values and, for image-only reference profiles, image outputs. All 30 workflows passed their enabled comparisons with no unresolved differences. The retained tables report one passing comparison observation per workflow, alongside timing and separate module/setting coverage (Supplementary Data 1 and 2). Figure 4 shows how named images, objects and operations are retained in the imported Comet Assay.
 
-Native CellProfiler produced the reference outputs for each workflow. OpenHCS imported and ran the same `.cppipe` file on the same biological images, then compared corresponding output values under the declared equivalence policy. All 30 workflows reached an accuracy fraction of 1.0, with no unresolved differences under the enabled checks. The benchmark artifacts retain the comparison profile, pass table, module coverage, unsupported-feature status, speedup, and tolerated numerical differences.
+The assays include DNA-damage measurement, human and Drosophila cell morphology, tumor morphology, Cell Painting morphology and quality control, protein translocation, wound healing, time-lapse tracking, imaging flow cytometry, colocalization, positive-cell classification, yeast screening, and *C. elegans* phenotyping. The corresponding operations include segmentation, filtering, intensity and texture measurement, illumination correction, spatial relationships, tracking, image and table export, and specialized worm morphology. Supplementary Data 1-2 identify the workflows and imported settings.
 
-The current executable compatibility report contains 30 supported `.cppipe` cases, 471 CellProfiler module instances, 58 unique CellProfiler module names, and 5,640 setting rows. All setting rows are covered. The corpus exercises 54 absorbed processing modules plus four source/infrastructure modules, with no missing processing module and no known-invalid absorbed processing module; 32 additional registered processing modules remain outside the tested corpus. Version-specific parity artifacts record the CellProfiler and OpenHCS versions used for each comparison; new CellProfiler versions receive their own declared compatibility checks before output preservation or speed is reported for those versions.
+The archived coverage tables list 58 distinct module names and 7,158 setting rows. They record whether a setting supplies a function parameter, an input/output requirement, an infrastructure option, or is intentionally ignored. Coverage describes how configurations are imported; the comparison results assess their outputs. Database export remains an ordinary terminal workflow step, using the same measurements and source identities as preceding steps.
 
-`ExportToDatabase` is translated as an executable terminal step over the same typed measurements and source provenance, rather than as a benchmark-only postprocessing script. The implemented CellProfiler Analyst route writes a self-contained SQLite database and matching `.properties` files with image, object, location, grouping, relationship, channel-display, and optional thumbnail information [Jones2008]. It does not currently generate a CellProfiler Analyst `.workspace` file, support non-SQLite databases, or implement every historical filter and aggregation setting; those requests remain explicit compatibility boundaries.
+### Complex workflows retain their processing and measurement structure
 
-### Reference-equivalent workflows execute at least fourfold faster
+The advanced segmentation tutorial imports 23 enabled modules into 16 steps containing 59 function calls (Supplementary Data 5). It corrects illumination in five channels and identifies nuclei, cells, cytoplasm, nucleoli and mitochondria. Measurements include colocalization, intensity, radial intensity distribution, size and shape, and neighbors. Object relationships associate nucleoli with nuclei and mitochondria with cells before SQLite export. Repeated channel/object measurements become function lists within a step, retaining the selected inputs and parameters.
 
-The primary performance benchmark constrains execution to one sample, one thread/core, CPU-only execution, and no batching. This condition separates the CellProfiler-compatible execution path from additional cores, GPU kernels, larger batch size, and amortized throughput over many wells.
-
-The benchmark reports execution-only timing separately from total phase timing. Execution-only timing measures the part of the run most directly comparable to CellProfiler module execution. Total phase timing includes startup, imports, compilation, preparation, and execution, reflecting a one-off user run.
-
-Twenty-nine workflows had completed native execution timings. Their median native execution time was 5.39 s, compared with 0.653 s for OpenHCS. Execution-only speedup was at least 4.03-fold for every one of these workflows, with a median of 7.39-fold. Total phase speedup was lower because startup and compilation are included; the median total phase speedup was 3.42-fold. The remaining wound-healing row equaled the configured 900-s native timeout ceiling without an explicit completion flag and is excluded from timing summaries pending a final benchmark rerun.
-
-The single-thread CPU-only result establishes a performance floor for imported CellProfiler workflows. The measured reduction applies directly to repeated biological-analysis tasks such as screening additional wells, rerunning quality control, and iterating segmentation or measurement settings when execution dominates the analysis cycle. GPU-backed functions and backend-specific algorithms are supported as intentional OpenHCS methods, but they are not part of the CellProfiler-preserving speed result unless separately benchmarked against an appropriate reference.
-
-### Typed sources, viewers, code, and agent operations remain attached to the run
-
-Many microscopy groups organize data in managed stores such as OMERO. Others work from local disks, OME-Zarr/NGFF stores, or acquisition folders exported by vendor acquisition software. OpenHCS treats those inputs as workflow sources. `SourceBindingsConfig` is the public authority for declared semantic ingestion: typed filters bound the file universe, metadata rules extract well, site, channel, z-plane, timepoint, or experiment fields, named bindings assign biological roles and component identity, and step-local bindings select the ordered subset required by one step. Compilation records the resolved source universe and binding plan, while runtime image values retain the selected plane provenance. Analysis code therefore refers to an intended image role rather than reparsing a path string.
-
-Microscope and store handlers convert acquisition-specific layouts into analysis-ready image identities before source bindings select semantic inputs. ImageXpress-style exports can place timepoints and z-planes in nested folders rather than encoding every dimension in each filename. Opera Phenix exports can use acquisition-order field indices rather than spatial field order and can omit images when autofocus fails. OpenHCS builds an analysis-ready view of the plate, normalizes field labels, and fills missing Opera Phenix images with black placeholders where the handler can infer the expected grid. Bio-Formats-backed discovery labels CZI, OME-TIFF, and other readable microscopy planes by series, channel, z-plane, and timepoint. A registered OME-Zarr adapter reads declared NGFF image and plate metadata, axes, channel labels, spatial scale, wells, and array addresses. Ambiguous well or site identity requires an explicit binding rather than a guessed label.
-
-Viewer integration follows the typed-output model. napari and Fiji outputs are enabled through step configuration. When streaming is enabled, OpenHCS launches or reuses the viewer, verifies typed readiness, sends outputs with distinct producer and source identities, waits for deferred updates to settle, and checks lifecycle cleanup. The same object-label result can remain available to a later step, materialize as ROI shapes, be compared against a reference, or be streamed for review without being reclassified by its filename or array dtype. Napari exposes typed layer, payload, image-sample, and ROI summaries that can be reconciled with live measurement rows; Fiji participates in the common readiness and settlement protocol but does not expose the same live state-inspection controls.
-
-OpenHCS exposes ordinary Python functions as workflow steps with the same parameter editing, validation, viewer output, generated code, and worker execution used by imported modules. Function signatures expose editable parameters. Memory-backend declarations record whether a function expects arrays from a NumPy-like CPU library, a GPU array library, or a deep-learning framework. An imported CellProfiler workflow can therefore be extended with an assay-specific quality-control function, and a native OpenHCS workflow can mix CPU image processing, GPU-compatible array operations, and table-producing functions when those choices are appropriate for the analysis.
-
-Local agent clients access this model through an MCP server whose tools are projected from registered capability declarations [MCP]. Through that surface, an agent can inspect a microscopy folder, discover registered functions, propose and validate a public pipeline, compile and run it headlessly or through the visible desktop, inspect structured progress and artifacts, and validate results exposed by a connected viewer. The resulting pipeline is not private agent state: it remains an ordinary OpenHCS workflow that can be reviewed and revised in the GUI or as generated Python. Capability metadata owns tool input/output contracts, mutability, side effects, data exposure, and transport availability; clients discover the installed surface rather than relying on a copied tool list. Revision checks protect concurrent desktop edits, and snapshot and history operations provide explicit recovery boundaries. The local stdio server receives only explicitly granted read/write roots. A separate hosted HTTP surface is narrower and read-only by design and cannot expose a user's local UI, filesystem, or runtime processes.
-
-In one fixed desktop evaluation, Codex 0.146.0 with gpt-5.6-sol received a single biological request and a two-channel ImageXpress folder, with no shell or repository access and no later human steering. It inspected the axes, selected a registered dual-channel analysis, constructed and validated the public pipeline, initialized and compiled the visible plate, executed it, and verified persistent TIFF, CSV, and ROI outputs plus a settled three-layer napari view. The complete pipeline remained editable as generated Python. The uncut screen recording, event stream, transcript, generated source, and machine-readable acceptance record retain the model's unsuccessful calls and subsequent repairs rather than presenting only the successful endpoint. This result applies to that exact client, model, version, prompt, fixture, and permission policy; installer registration for other clients is not evidence of equivalent behavior.
-
-Each integration preserves a distinct role in the biological analysis and has a corresponding evidence boundary.
-
-| Existing tool or platform | Preserved role | OpenHCS integration | Reported evidence |
-|---|---|---|---|
-| CellProfiler | Established modular bioimage analysis and `.cppipe` workflows | CellProfiler pipelines run through OpenHCS with loading semantics preserved and named results exposed | 30-workflow value-output equivalence corpus; speed reported only after equivalence |
-| CellProfiler Analyst | Interactive exploration and classification of image-derived measurements | Plate-scoped export renders CPA-compatible SQLite tables and `.properties` files from typed image, object, measurement, and relationship artifacts | Focused database/properties projection and materialization tests; no `.workspace` generation or non-SQLite route |
-| Fiji/ImageJ | Familiar inspection and image-processing environment | Fiji receives selected step outputs as named workflow results | Implemented viewer destination; GUI/runtime environment requirements reported separately |
-| napari | Python-native multidimensional image and ROI inspection | napari receives selected step outputs with producer, source, component, label, and ROI identities attached | Automated readiness, payload, state, ROI, settlement, and cleanup paths; full functional corpus validation is reported separately from headless parity |
-| OMERO and BIOMERO-style systems | Managed image storage, collaboration, and launch surfaces | OMERO can provide workflow sources and managed environments can launch OpenHCS workflows | OMERO support tested across multiple versions; launch-surface support should cite exact tested versions |
-| Bio-Formats | Broad pixel and metadata readability | Bio-Formats-backed discovery labels images where metadata support safe inference and requires explicit mapping when metadata are ambiguous | Source discovery uses the same normalized image-label model as vendor handlers |
-| OME-Zarr/NGFF | Cloud- and object-store-oriented multidimensional image representation | A registered store adapter projects declared plate/image metadata, axes, channels, scale, and array addresses into the source-binding model | Unit and ZMQ integration tests cover source projection and code-mode round trips |
-| Microscope vendor folders | Acquisition-specific plate layouts and metadata conventions | Vendor handlers normalize wells, fields, channels, z-planes, timepoints, and missing-image behavior before analysis starts | ImageXpress and Opera Phenix quirks are handled explicitly |
-| Python, GPU, and deep-learning libraries | Assay-specific operations and backend-specific methods | Python callables become workflow steps with declared parameters, memory expectations, outputs, viewer policies, and worker execution | Integrated as native methods; CellProfiler equivalence requires separate validation |
-| MCP-compatible agent clients | Source inspection, workflow authoring, execution, and evidence review through the same public workflow | Registered capabilities project live schemas and structured operations over local stdio, with a separate restricted hosted boundary | Capability registry, protocol, clean-wheel, UI-bridge, headless-execution, and viewer-inspection tests; client/model behavior requires separate empirical evaluation |
-| Generic workflow managers | Scalable and reproducible command execution | OpenHCS supplies bioimage-specific source identity, named outputs, viewer destinations, and parity artifacts inside an executable workflow | Worker benchmarks report throughput, queue depth, and RAM tradeoffs |
+The 3D monolayer tutorial imports 35 enabled modules into 31 steps containing 35 function calls. It combines volumetric resizing and filtering, hole filling, nuclear watershed segmentation, seed preparation and cell watershed segmentation, followed by intensity and shape measurements, overlays, label-image saving and spreadsheet export. Both workflows have passing output-comparison summaries in the archived corpus. The current import checks additionally preserve their function identities and parameters through generated Python; they do not constitute new analysis executions.
 
 ### Many-well throughput uses persistent workers
 
-OpenHCS is also evaluated in the way high-content screening is often used: many samples, persistent worker processes, and enough RAM to keep workers alive across repeated work. In that setting, import cost, compile cost, and backend warmup are paid once and divided across many samples rather than paid again for every well.
+OpenHCS throughput was measured directly in replicated-well runs over all 30 workflows. With four wells queued per worker, median throughput across workflows was 1.79, 2.67 and 2.96 completed wells per execution second with two, three and four workers, respectively (Figure 5A). Each run completed all assigned wells. These measurements describe prepared execution with persistent workers under the output settings specified in Methods. Supplementary Data 3 retains the individual runs and a separate serial CellProfiler projection; native persistent or matched parallel execution was not measured.
 
-OpenHCS throughput was measured directly in replicated-well runs over all 30 workflows. Comparisons to CellProfiler were projected by multiplying each workflow's measured native single-sample execution time by the number of wells; native CellProfiler was not rerun as a matched multi-process workload. The projected summaries exclude the unresolved wound-healing timing. Across the remaining 29 workflows, minimum and median execution speedups were 7.22-fold and 9.88-fold with two cores and four wells per core, 10.8-fold and 14.2-fold with three cores and four wells per core, and 12.3-fold and 16.7-fold with four cores and eight wells per core. At four cores, increasing queue depth from one to eight wells per core raised median projected execution speedup from 12.8-fold to 16.7-fold.
-
-Scaling is reported per resource, not only per wall-clock speedup. Each worker adds CPU capacity but also memory pressure because it may hold imported libraries, compiled kernels, open stores, cached arrays, and intermediate outputs. In the four-core queue-depth sweep, median peak RAM increased from 3.98 GB at one well per core to 4.25 GB at eight wells per core, with maximum peak RAM reaching 14.6 GB.
+Each worker uses memory for imported libraries, cached arrays, and intermediate outputs. Across all 30 OpenHCS workflows in the four-core queue-depth sweep, median peak RAM increased from 3.89 GiB at one well per core to 4.15 GiB at eight wells per core, with maximum peak RAM reaching 14.3 GiB. Memory summaries include the wound-healing workflow because its OpenHCS run completed; only comparisons requiring its native CellProfiler timing exclude it.
 
 ## Discussion
 
-OpenHCS preserves existing bioimage workflows by keeping sources, parameters, intermediate outputs, viewers, generated code, and worker execution in one provenance-tracked workflow. Thirty official CellProfiler workflows applied to their associated biological image data supply the strongest preservation test. Imported `.cppipe` workflows reproduce native CellProfiler outputs under declared equivalence checks and retain named results that can be inspected, extended, serialized, streamed to viewers, and executed through workers.
+OpenHCS makes microscopy workflows accessible to scientists and agents through a shared analysis definition. In the recorded neurite-outgrowth example, an agent constructed and executed the pipeline, inspected its outputs, and left an editable workflow for further use. The CellProfiler experiments address a complementary requirement: retaining the outputs of established analyses while changing how they are configured and executed. Together, these capabilities support the analysis stage of AI-guided laboratory work.
 
-CellProfiler and OpenHCS both present an ordered sequence of analysis steps; the distinction is not a linear pipeline versus a free-form graph. CellProfiler supplies the established module interface and scientific ecosystem, while OpenHCS keeps the visible editor compact through inherited defaults and makes the resolved consequences inspectable as generated Python, source bindings, callable and artifact contracts, compiled dependencies, materialization targets, and runtime values. Icy Protocols and BioImageIT provide closer comparisons for graphical workflow composition and integrated image-data processing [deChaumont2012; Prigent2022]. OpenHCS differs by making the same public declarations authoritative across its forms, code, CellProfiler import, compiler, workers, viewers, and agent interface.
+CellProfiler contributes established analysis modules and reusable workflows, while Fiji and napari provide familiar environments for inspecting images. Icy Protocols and BioImageIT also address graphical workflow composition and integrated image-data processing [@deChaumont2012; @Prigent2022]. OpenHCS connects these roles to agent-operated authoring and execution. Its shared workflow definition allows scientists to take over an agent-authored pipeline, adjust a processing step, or inspect an intermediate result through the desktop interface.
 
-Compatibility also creates an extension path. A preserved CellProfiler workflow can be modified with an ordinary Python function, routed to napari or Fiji for step-level inspection, exported for CellProfiler Analyst, proposed and operated through MCP, reviewed in the GUI or as generated Python, or run across persistent workers. Agent operation does not create a separate workflow representation: the resulting declarations remain available for direct human review and revision through the other surfaces. Native OpenHCS workflows can use the same source, output, viewer, function, agent, and worker mechanisms without requiring a CellProfiler origin. Backend-specific GPU or deep-learning methods remain distinct scientific methods unless a separate parity or validation target is defined for them.
+Workflow reuse can reduce the setup required for a new experiment. A laboratory can import a CellProfiler analysis, adjust its source mapping and parameters, add an assay-specific Python function, and inspect the resulting masks before processing further samples. Pipelines can also be authored directly in OpenHCS. Keeping the processing choices explicit provides a basis for review as analysis methods and experimental conditions change.
 
-The equivalence result validates OpenHCS as an execution environment for the 30 biological analyses. Native CellProfiler supplies the version-matched reference behavior, while the official workflows and images supply the biological assay context. Assay-specific biological validation remains attached to the originating workflow rather than being redefined by the execution platform.
+The single-field agent demonstration establishes workflow completion under the stated prompt and client/model conditions. The crossover correction illustrates the value of reviewing segmentation and tracing after execution succeeds. Further evaluations across datasets and users can measure task completion, required interventions, elapsed time, and agreement with expert-reviewed results using the same trace-based assessment.
 
-The measured speedup makes preservation consequential for experiment scale. Screening, longitudinal imaging, parameter refinement, and quality-control reruns repeatedly apply the same analysis to additional images. Reducing execution time without changing the declared outputs increases the analysis that can be completed within a fixed computational window when execution is the limiting phase.
+The many-well runs show completed work and memory use with persistent workers. Comparative throughput can be assessed with paired CellProfiler and OpenHCS runs using the same output requirements and resource limits, measuring cold-start analysis and repeated prepared execution separately.
 
-The CellProfiler importer covers the module and setting subset represented in the equivalence-tested corpus. Modules outside that set require explicit validation before preservation is reported. CellProfiler Analyst support is limited to the implemented SQLite/`.properties` route. Bio-Formats and OME-Zarr improve readability, while ambiguous well, site, channel, z-plane, or timepoint identity requires explicit source binding. Viewer integration depends on GUI/runtime environment availability, and local MCP access depends on explicit filesystem grants and an available desktop bridge for UI operations. MCP server and bridge tests establish the available operations, not the scientific adequacy or autonomous performance of every agent client and model. Such claims require runs identified by exact client, model, version, prompt, dataset, permissions, intervention record, and acceptance evidence. Persistent workers add process-lifecycle, memory, restart, and cache-warmth tradeoffs. Performance results are therefore separated into execution-only time, total wall time, single-thread CPU speed, measured OpenHCS throughput, and projected comparison to serial native CellProfiler execution.
+The tested CellProfiler corpus defines the present output-equivalence evidence. Additional modules, settings, and versions can be assessed through the same comparison procedure. For new image sources, explicit channel and dimensional mappings remain important, particularly when acquisition metadata are incomplete. The workflow records these choices so that they can be reviewed before interpreting measurements.
 
-Output equivalence and constrained execution timing establish a preservation-plus-performance baseline. Under one-sample, one-thread/core, CPU-only conditions, all 29 workflows with completed native timing executed at least 4.03-fold faster after equivalence was established. Persistent workers amortized startup and compilation costs in many-sample runs while exposing throughput and RAM tradeoffs directly. OpenHCS provides a migration path for retaining established CellProfiler analyses while adding provenance, viewer inspection, custom functions, generated code, and scalable execution.
+OpenHCS provides reusable image-analysis infrastructure for laboratories adopting agent-guided workflows. Scientists can retain established functions, review intermediate results in familiar viewers, and move between agent assistance and direct editing. Its combination of workflow reuse, inspectable results, and parallel execution supports applying that process to repeated microscopy experiments.
 
-## Online Methods
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 
-### Pipeline object model and compilation
+## Figures
 
-The public OpenHCS pipeline consists of a `PipelineConfig` and an ordered list of `FunctionStep` declarations. Before execution, ObjectState-backed configuration is resolved once and the compiler creates a typed `CompiledStepPlan` for each step. These plans record source universes and bindings, ordinary main-flow dependencies, callable invocations, exact artifact input occurrences and outputs, component grouping, memory conversions, execution scope, paths and backends, materialization targets, and enabled viewer destinations. A compiled execution bundle joins the plans to worker assignments and runtime context; workers consume that bundle rather than reconstructing declaration semantics.
+### Figure 1. Scientists and agents operate a shared microscopy workflow
 
-### Source binding and source projection
+![Shared workflow, source connections and execution.](figures/slas/shared_workflow.png){width=6in}
 
-`SourceBindingsConfig` contains typed source filters, metadata extraction rules, named source bindings, grouping metadata, and explicit image-plane sources. `StepSourceBindingsConfig` selects the named views used by one step. The compiler resolves these declarations into a source-universe plan and an ordered binding plan, including component identity and alias-matching rules. Virtual-workspace projection keeps canonical OpenHCS paths separate from backend addresses and optional physical files, and runtime image metadata carries source-plane provenance into downstream artifacts. The former source-schema layer is not part of the current model.
+\(A) Desktop, Python and MCP operations act on a shared pipeline; CellProfiler import supplies an editable analysis in that model. The processing sequence is illustrative, with functions chosen for each assay. (B) Image-source bindings and established or custom functions connect to the same definition. OMERO is experimental. (C) Compilation resolves inputs, dependencies and array requirements before worker processes execute the analysis. Selected intermediate results can be inspected in napari or Fiji, and retained images, ROIs and measurements support review and subsequent edits. CPU/GPU support depends on the selected functions; performance measurements are presented separately in Figure 5.
 
-### Microscope handlers and Bio-Formats source discovery
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 
-Microscope handlers convert acquisition-specific file layouts into analysis-ready image identities. Vendor-specific handlers encode known quirks such as nested timepoint and z-plane folders, field remapping, metadata sidecars, pixel-size lookup, channel names, and missing-image policy. Bio-Formats-backed discovery emits normalized plane records for broadly readable containers. The OME-Zarr adapter reads declared NGFF plate or image structure, axes, channel labels, pixel scale, and array addresses through a registered store backend. When a handler or store cannot infer a semantic well, site, or channel role safely, OpenHCS requires an explicit source binding rather than silently constructing an ambiguous image set.
+### Figure 2. Forms, Python and MCP edit the same analysis
 
-### Function registration and memory-backend requirements
+![Matching main window, recorded MCP edits, parameter controls and Python code.](figures/slas/editable_analyses.png){width=6in}
 
-OpenHCS functions declare their memory interface through backend annotations for NumPy-like CPU arrays, GPU array libraries, OpenCL-based image-processing libraries, or deep-learning frameworks. These declarations record the expected input and output memory types. During execution, OpenHCS converts image payloads between compatible backends when required. Function signatures expose parameters in the GUI and generated Python representation.
+\(A) The main window shows the public NeuronCyto II workflow, its two processing steps and connected execution server. (B) A recorded MCP authoring check changes the normalization percentile through Python code, verifies the updated control, then edits the same field and verifies the regenerated code. (C, D) Details from the same session show matching function controls and Python parameters, including the restored high percentile of 99.8. Parameter order follows the function signature. Captures use OpenHCS 0.8.5; Figure 3 presents the original analysis execution.
 
-### Runtime outputs and materialization
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 
-OpenHCS treats intermediate images, labels, measurements, relationships, grids, tables, metadata, and files as typed artifacts. Callable contracts declare exact semantic inputs and outputs; compilation creates producer-consumer edges and records whether each input occurrence is satisfied by a source binding, ordinary main flow, metadata, or a prior runtime producer. Workers validate and record values in `RuntimeValueStore` under artifact, execution-axis, and component-group identity. Runtime availability is separate from persistence: output policies independently determine whether a value is checkpointed, materialized to a configured store, streamed to napari or Fiji, compared against a reference, or discarded after its consumers finish.
+### Figure 3. Agent-operated analysis of a public neurite-outgrowth image
 
-### Viewer and storage backends
+![Original inputs and recorded viewer inspection.](figures/slas/figure3_agent_workflow.png){width=5.5in}
 
-Viewer and storage integrations are treated as destinations for workflow outputs or sources for workflow inputs. napari and Fiji receive compiled output routes with separate producer, source, and component metadata. Viewer reuse requires a typed readiness response; completion requires acknowledged transport, settlement of deferred updates, and lifecycle cleanup. Non-persistent napari runs can capture typed layer and payload state before shutdown. OMERO, local disk, memory, Zarr-backed stores, and the read-only OME-Zarr array source participate through registered storage owners rather than backend-name conditionals in the compiler.
+(A, B) Original 800 x 800-pixel neuronal/neurite and soma/nuclear images from NeuronCyto II field 1 [@NeuronCytoII], displayed linearly over their unsigned 8-bit range without spatial cropping. The two step names and functions come from the agent's saved pipeline. (C) Full frame at 600 s of the original OpenHCS 0.7.13 unattended-run recording, showing outlines, ROI entries and the feature table. Labelled rectangles locate the enlarged details: (D) neuron and neurite outlines and (E) native measurement columns. Both details use unchanged pixels from C. Native column names are preserved; no physical calibration is inferred. This is the original result before the crossover correction described in Results.
 
-### Worker execution
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 
-OpenHCS uses process-level worker execution for isolation, progress reporting, viewer separation, and throughput scaling. Persistent workers can amortize startup, imports, compilation, and warmup across repeated samples. Worker-level benchmarks report wall time, execution time, sample count, worker count, and memory use.
+### Figure 4. A familiar CellProfiler pipeline expressed as OpenHCS steps
 
-### Agent access through MCP
+![CellProfiler modules, imported function steps and named-object relationships.](figures/slas/cellprofiler_translation.png){width=5.8in}
 
-The OpenHCS MCP server projects tools generically from registered `AgentCapabilityDeclaration` classes. Each declaration owns its typed request and result contract, service binding, mutability and side effects, data exposure, security requirements, and allowed transports. Local stdio profiles expose different declared workflow groups for desktop-assisted, headless, authoring, or full development use. UI operations attach to a separately running application through an authenticated, revision-checked bridge; headless authoring and execution do not claim a visible desktop state. Filesystem reads and writes are restricted to configured roots. A separate hosted HTTP projection includes only explicitly opted-in, read-only capabilities and uses isolated server-side workspaces.
+\(A) The public ExampleCometAssay pipeline maps image loading to source bindings and processing to 12 function steps. Rows align original modules and imported functions; multiplicity marks repeated calls. Spreadsheet export runs plate-wide. (B) MeasureObjectSizeShape applies the same function to Comet, CometHead and CometTail within one step. (C) Masking the comet with its head, with inversion enabled, defines CometTail. The diagram is derived from the source pipeline and importer code matching OpenHCS 0.8.5.
 
-Automated MCP tests establish capability discovery, request and result contracts, clean installed-wheel startup, headless execution, revision-checked UI attachment, and typed viewer inspection. They do not by themselves establish how a language model performs a biological analysis task. Model-level evaluation therefore uses a fixed microscopy folder and task prompt, a fresh client session without repository-source access, explicitly recorded filesystem grants, and one exact client, model, and version per run. The client may invoke only the installed OpenHCS MCP surface; shell commands and repository inspection are excluded. The pre-specified first task uses the deterministic installed-demo ImageXpress fixture: one A01 well; 192 x 192-pixel planes; two wavelengths; one z-plane; 12 simulated cells with a 0.95 shared-cell fraction; 10% tile overlap; 1-pixel stage error; and random seed 1. Starting only from the folder and a biological request to segment channel-1 nuclei and quantify channel-2 marker-positive cells, the client must inspect the image axes, select registered OpenHCS functions or presets, construct and validate a pipeline, compile and execute it, materialize images, ROIs, and measurements without a redundant exporter, obtain settled napari validation, and return editable Python. The evidence record retains the complete prompt, tool and intervention trace, proposed pipeline source, validation and compilation attempts, terminal execution state, materialized artifacts, viewer-state validation, elapsed times, software commit, and screen recording. Results are reported for the evaluated combinations only; client registration support is not treated as evidence of equivalent agent performance.
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 
-### CellProfiler import
+### Figure 5. Measured OpenHCS throughput and memory use
 
-CellProfiler `.cppipe` files are parsed into module blocks and settings. Setup modules contribute ordinary source bindings. Processing and export modules resolve through registered CellProfiler module declarations into public OpenHCS workflow steps. During compilation, declaration-owned invocation contracts provide exact images, object labels, measurements, grids, relationships, execution scope, and runtime adaptation while preserving the public callable shown in the GUI, Python, and MCP surfaces.
+![Archived benchmark measurements.](figures/slas/figure2_benchmarks.png){width=5.5in}
 
-### CellProfiler Analyst export
+\(A) Completed wells per execution second with four replicated wells queued per worker. (B) Peak memory with four workers and increasing wells per worker. Both panels include all 30 workflows; every run completed its assigned wells. Thin lines identify workflows and thick lines show medians. Execution follows compilation, with runtime-artifact saving and runtime-observation collection disabled. Throughput uses a logarithmic axis. Supplementary Figure 6 presents the separate historical single-sample timings.
 
-Imported `ExportToDatabase` modules execute once per plate after axis-scoped work. Their callable contract selects exact image, object, measurement, relationship, thumbnail, and grouping artifacts from the merged runtime-value store. A typed projection builder constructs CellProfiler Analyst image, object, experiment, and relationship tables; renderers emit a self-contained SQLite database and one or more `.properties` files as one materialized file bundle. Unsupported non-SQLite databases, custom filter rows, `.workspace` generation, and unimplemented historical aggregation settings fail or remain documented compatibility gaps rather than producing inferred side outputs.
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 
-### Parity comparison
+### Figure 6. Image and object inspection in Fiji and napari
 
-Native CellProfiler is run for each benchmark workflow to generate reference outputs. OpenHCS then imports and runs the same `.cppipe` file. The official-30 manifest enables value-output comparison. Exported tables and database values are compared for every workflow; image outputs are additionally compared when the native reference profile contains only images. CPA SQLite tables and `.properties` values participate when those outputs are present. Numeric comparisons use declared absolute and relative tolerances; non-numeric identifiers and categorical values are compared exactly unless a specific CellProfiler-compatible normalization is documented. Equivalence is therefore semantic under a declared typed policy, not a claim of universal byte-for-byte identity. Each report records the enabled artifact classes, CellProfiler version or commit, and OpenHCS commit.
+![Recorded image and ROI inspection in two viewers.](figures/slas/inspectable_results.png){width=5.5in}
 
-### Performance benchmarking
+\(A) Fiji displays a single NeuronCyto II field 1 nuclear plane with nine corresponding native ROI Manager entries. (B) A separate three-plane napari demonstration shows segmented objects, a selected ROI-list entry and the displayed channel/Z coordinates. Its accompanying recording shows selection navigating between planes. These are retained viewer demonstrations, separate from the unattended analysis in Figure 3; their segmentation outputs are not compared with each other. The full captures and checksum records are retained in the gallery archive.
 
-The primary benchmark condition uses one sample, one thread/core, CPU-only execution, and no batching. Timing is reported as execution-only time and total wall time. Execution-only time isolates module/runtime execution after startup and compile overhead. Total wall time includes startup, imports, compile, preparation, and execution. The wound-healing native duration equals the configured 900-s timeout ceiling, while the summary row lacks an explicit completion flag. This row is excluded from timing statistics pending a final rerun with explicit completion or censoring metadata. Throughput benchmarks are reported separately using multi-sample execution and worker-level parallelism. GPU-backed functions are reported only as OpenHCS method support unless a separate benchmark defines the GPU hardware, backend version, reference behavior, and comparison policy.
+## Supplementary Data
 
-The benchmark runs use local or explicitly mounted paths recorded in the benchmark manifest. Cloud-bursting or network-filesystem-latency performance requires a benchmark that records the storage environment, path form, cache state, and worker placement.
+The [supplementary index](supplementary/README.md) links the retained files and describes their fields and interpretation.
 
-### Benchmark corpus
-
-The corpus contains 22 workflows and associated image sets from the official CellProfiler 3 examples repository, seven workflows and image sets from the official CellProfiler tutorials repository, and one workflow from the supplement to the CellProfiler 4 performance study [CellProfilerExamples; CellProfilerTutorials; Stirling2021]. The CellProfiler project and the cited dataset contributors retain authorship and provenance for these materials. The corpus table lists each workflow, official source URL, immutable source revision for the final benchmark release, original data citation where available, assay family, image-analysis behavior, output files, module coverage, equivalence status, single-thread/core speedup, and throughput status.
-
-The executable acquisition declarations pin the official CellProfiler examples source to `4972b59e670a4ae96c3d453803c92eeff378d054`, the CellProfiler tutorials source to `264a8155da21a2d468051f78211bed2e580a8934`, and the CellProfiler 4 benchmark supplement to `40abc2e600fd46b74c213999dd25c5245048dc92`.
-
-### Reproducibility package
-
-The benchmark runner emits the OpenHCS commit, CellProfiler version or commit, Python version, operating system, CPU model, GPU model if used, RAM, pipeline manifest, dataset manifest, checksums where available, native CellProfiler timing, OpenHCS timing, parity reports, and raw CSVs used to generate figures. Benchmark figures are regenerated from saved CSV files without rerunning CellProfiler.
-
-## Draft Figure Captions
-
-### Figure 1. Sources, tools, agents, viewers, code, and workers remain one workflow
-
-Automated microscopy produces wells, sites, channels, z-planes, and timepoints that become masks, measurements, quality-control decisions, reruns, and output tables. OpenHCS keeps typed source bindings, parameters, named artifacts, CPA exports, viewer destinations, generated code, MCP operations, and worker execution attached to one public runnable workflow. Diagram source: `paper/figures/rendered/fig01_field_integration_gap.svg`.
-
-### Figure 2. Official CellProfiler biological workflows are preserved and accelerated
-
-Representative official CellProfiler biological images, native outputs, OpenHCS outputs, and difference views make the preservation target visible. The examples include at least one cellular assay and one morphologically distinct assay such as wound healing, yeast, or worm phenotyping. These image panels require selected workflows to be rerun with image-output comparison enabled; they do not infer image equivalence from the value-output corpus result. The benchmark manifest feeds native CellProfiler and OpenHCS runs. OpenHCS parses `.cppipe` files into image sources, image-name-to-file matching, CellProfiler-compatible workflow steps, named outputs, and saved results. Quantitative panels separate output equivalence, module coverage, constrained one-sample CPU-only speedup, cold-run overhead, measured OpenHCS throughput, projected native comparison, and RAM scaling. Every image panel credits the official CellProfiler source and original dataset citation. Diagram sources: `paper/figures/rendered/fig03_cellprofiler_import_path.svg` and `paper/figures/rendered/fig04_benchmark_validation_structure.svg`.
-
-### Figure 3. GUI edits, generated Python, agent operations, and Python functions modify the same workflow
-
-The pipeline editor, generated Python representation, reflected MCP schemas and revision-checked operations, source bindings, step-level napari/Fiji output, ordinary Python functions, backend-specific functions, and worker execution all target the same public declarations. A pipeline proposed through MCP therefore remains directly reviewable and editable in the GUI or as Python, including after validation failure and recovery. Diagram sources: `paper/figures/rendered/fig07_typed_state_bidirectional_editing.svg` and `paper/figures/rendered/fig06_backend_extensibility.svg`.
-
-## Supplementary Table Captions
-
-### Supplementary Table 1. Benchmark corpus
-
-Each row lists one `.cppipe` workflow, official CellProfiler source collection, immutable source revision, source URL, original dataset citation where available, assay family, image-analysis behavior, output files, CellProfiler modules, native CellProfiler runtime or timeout status, OpenHCS execution runtime, total OpenHCS runtime, speedup, equivalence status, and notes. Equivalence, timing, and timeout status remain separate columns.
-
-### Supplementary Table 2. CellProfiler module coverage
-
-Each row lists one registered CellProfiler module class, whether the 30-workflow corpus exercises it, its source/infrastructure or processing role, importability, declared contract and backend, unsupported settings or features, and notes. Processing modules outside the corpus remain explicitly untested rather than being inferred covered from family similarity.
-
-### Supplementary Table 3. Worker/RAM scaling
-
-Each row lists a throughput condition, pipeline group, sample count, worker count, core count, peak RAM, RAM per worker, total wall time, samples per hour, speedup versus native CellProfiler, and speedup versus OpenHCS single-worker execution.
-
-### Supplementary Table 4. Agent workflow evaluation
-
-Each row identifies one evaluated client, model, client version, model version, OpenHCS commit, operating system, fixed dataset and prompt, filesystem grants, intervention count, validation and execution attempts, terminal status, elapsed time, materialized-artifact checks, viewer-validation result, and evidence-record location. Auto-registration support without a completed evaluation remains explicitly untested.
-
-The first populated row is the Codex 0.146.0/gpt-5.6-sol desktop run described above, with its record and linked evidence under `website/assets/agent/`. Other registered clients remain untested until they complete the same protocol.
+1. **CellProfiler workflow comparison:** archived single-process timing and equivalence summaries for all 30 workflows. The unresolved native wound-healing time is retained in the source table and excluded from manuscript timing comparisons.
+2. **CellProfiler coverage:** module-to-workflow associations, individual setting handling, and archived processing-registration coverage.
+3. **Worker and memory measurements:** measured execution and memory by workflow, worker count and well count, including completion status and the serial CellProfiler projection.
+4. **Recorded agent workflow:** evaluated client, model and software versions; input checksums; exact prompt; tool trace and error counts; original outputs; and separately identified later corrections.
+5. **Complex CellProfiler workflows:** source-derived step sequences, function-call counts and editable Python for advanced segmentation and 3D monolayer analysis.
 
 ## Code and Data Availability
 
-OpenHCS source code: `https://github.com/OpenHCSDev/OpenHCS`.
+OpenHCS source code: <https://github.com/OpenHCSDev/OpenHCS>.
 
-OpenHCS documentation: `https://openhcs.readthedocs.io/`.
+OpenHCS documentation: <https://openhcs.readthedocs.io/>.
 
-Benchmark scripts, manifests, raw timing CSVs, parity reports, figure-generation scripts, and generated figures: `https://github.com/OpenHCSDev/openhcs`.
+Benchmark scripts and records are indexed in the [supplementary data](supplementary/README.md). Figure-generation scripts and figures are located under `paper/figures/` in the source repository.
 
 The benchmark uses biological images and pipelines distributed by the CellProfiler project rather than OpenHCS-authored benchmark data. Original sources:
 
-- official CellProfiler example pipelines and images: `https://github.com/CellProfiler/examples` [CellProfilerExamples]
-- official CellProfiler tutorial pipelines and images: `https://github.com/CellProfiler/tutorials` [CellProfilerTutorials]
-- CellProfiler 4 benchmark supplement: `https://github.com/carpenterlab/2021_Stirling_BMCBioInformatics` [Stirling2021]
+- official CellProfiler example pipelines and images: <https://github.com/CellProfiler/examples> [@CellProfilerExamples]
+- official CellProfiler tutorial pipelines and images: <https://github.com/CellProfiler/tutorials> [@CellProfilerTutorials]
+- CellProfiler 4 benchmark supplement: <https://github.com/carpenterlab/2021_Stirling_BMCBioInformatics> [@Stirling2021]
 
-The OpenHCS benchmark manifest records acquisition paths and maps every workflow to its original source. Its executable acquisition declarations pin immutable revisions for all three source collections; the archived benchmark release additionally retains checksums, source licenses, and original dataset citations.
+The benchmark manifest records acquisition paths and maps workflows to pinned revisions of their source collections. The linked package contains the archived summaries; original per-run environment records and detailed comparison reports are not included.
 
 Reusable libraries:
 
-- ObjectState: `https://github.com/OpenHCSDev/objectstate`
-- ArrayBridge: `https://github.com/OpenHCSDev/arraybridge`
-- PolyStore: `https://github.com/OpenHCSDev/PolyStore`
-- ZMQRuntime: `https://github.com/OpenHCSDev/zmqruntime`
-- pyqt-reactive: `https://github.com/OpenHCSDev/pyqt-reactive`
-- pycodify: `https://github.com/OpenHCSDev/pycodify`
-- python-introspect: `https://github.com/OpenHCSDev/python-introspect`
-- metaclass-registry: `https://github.com/OpenHCSDev/metaclass-registry`
+- ObjectState: <https://github.com/OpenHCSDev/objectstate>
+- ArrayBridge: <https://github.com/OpenHCSDev/arraybridge>
+- PolyStore: <https://github.com/OpenHCSDev/PolyStore>
+- ZMQRuntime: <https://github.com/OpenHCSDev/zmqruntime>
+- pyqt-reactive: <https://github.com/OpenHCSDev/pyqt-reactive>
+- pycodify: <https://github.com/OpenHCSDev/pycodify>
+- python-introspect: <https://github.com/OpenHCSDev/python-introspect>
+- metaclass-registry: <https://github.com/OpenHCSDev/metaclass-registry>
 
 ## Acknowledgements
 
-We thank the CellProfiler project, its contributors, and the authors of the underlying biological datasets for making the example, tutorial, and benchmark materials available. The original CellProfiler sources and dataset-specific citations will accompany every benchmark manifest row and figure panel.
-
-## References To Format
-
-- `[Carpenter2006]` Carpenter et al. CellProfiler: image analysis software for identifying and quantifying cell phenotypes. Genome Biology 7, R100 (2006). DOI: 10.1186/gb-2006-7-10-r100.
-- `[McQuin2018]` McQuin et al. CellProfiler 3.0: next-generation image processing for biology. PLoS Biology 16, e2005970 (2018). DOI: 10.1371/journal.pbio.2005970.
-- `[Stirling2021]` Stirling et al. CellProfiler 4: improvements in speed, utility and usability. BMC Bioinformatics 22, 433 (2021). DOI: 10.1186/s12859-021-04344-9.
-- `[Jones2008]` Jones et al. CellProfiler Analyst: data exploration and analysis software for complex image-based screens. BMC Bioinformatics 9, 482 (2008). DOI: 10.1186/1471-2105-9-482.
-- `[MCP]` Model Context Protocol contributors. Model Context Protocol specification. `https://modelcontextprotocol.io/specification/`.
-- `[CellProfilerExamples]` CellProfiler contributors. CellProfiler example pipelines and associated biological images. `https://github.com/CellProfiler/examples`, revision `4972b59e670a4ae96c3d453803c92eeff378d054`.
-- `[CellProfilerTutorials]` CellProfiler contributors. CellProfiler tutorial pipelines and associated biological images. `https://github.com/CellProfiler/tutorials`, revision `264a8155da21a2d468051f78211bed2e580a8934`.
-- `[Schneider2012]` Schneider, Rasband and Eliceiri. NIH Image to ImageJ: 25 years of image analysis. Nature Methods 9, 671-675 (2012). DOI: 10.1038/nmeth.2089.
-- `[Schindelin2012]` Schindelin et al. Fiji: an open-source platform for biological-image analysis. Nature Methods 9, 676-682 (2012). DOI: 10.1038/nmeth.2019.
-- `[deChaumont2012]` de Chaumont et al. Icy: an open bioimage informatics platform for extended reproducible research. Nature Methods 9, 690-696 (2012). DOI: 10.1038/nmeth.2075.
-- `[Prigent2022]` Prigent et al. BioImageIT: Open-source framework for integration of image data management with analysis. Nature Methods 19, 1328-1330 (2022). DOI: 10.1038/s41592-022-01642-9.
-- `[Allan2012]` Allan et al. OMERO: flexible, model-driven data management for experimental biology. Nature Methods 9, 245-253 (2012). DOI: 10.1038/nmeth.1896.
-- `[Sofroniew2019]` napari contributors. napari: a multi-dimensional image viewer for Python. Zenodo (2019). DOI: 10.5281/zenodo.3555620.
-- `[vanDerWalt2014]` van der Walt et al. scikit-image: image processing in Python. PeerJ 2, e453 (2014). DOI: 10.7717/peerj.453.
-- `[Moore2021]` Moore et al. OME-NGFF: a next-generation file format for expanding bioimaging data-access strategies. Nature Methods 18, 1496-1498 (2021). DOI: 10.1038/s41592-021-01326-w.
-- `[BioFormats]` Linkert et al. Metadata matters: access to image data in the real world. Journal of Cell Biology 189, 777-782 (2010). DOI: 10.1083/jcb.201004104.
-- `[MCMICRO]` Schapiro et al. MCMICRO: a scalable, modular image-processing pipeline for multiplexed tissue imaging. Nature Methods 19, 311-315 (2022). DOI: 10.1038/s41592-021-01308-y.
-- `[BIOMERO]` Balaz et al. BIOMERO: a scalable and extensible image analysis framework. PLOS Computational Biology 19, e1011369 (2023). DOI: 10.1371/journal.pcbi.1011369.
-- `[Koster2012]` Koester and Rahmann. Snakemake: a scalable bioinformatics workflow engine. Bioinformatics 28, 2520-2522 (2012). DOI: 10.1093/bioinformatics/bts480.
-- `[DiTommaso2017]` Di Tommaso et al. Nextflow enables reproducible computational workflows. Nature Biotechnology 35, 316-319 (2017). DOI: 10.1038/nbt.3820.
-- `[Galaxy2020]` The Galaxy Community. The Galaxy platform for accessible, reproducible and collaborative biomedical analyses: 2020 update. Nucleic Acids Research 48, 8205-8207 (2020). DOI: 10.1093/nar/gkaa554.
-- `[Galaxy2024]` Abueg et al. The Galaxy platform for accessible, reproducible, and collaborative data analyses: 2024 update. Nucleic Acids Research 52, W83-W94 (2024). DOI: 10.1093/nar/gkae410.
-- `[Haase2020]` Haase et al. CLIJ: GPU-accelerated image processing for everyone. Nature Methods 17, 5-6 (2020). DOI: 10.1038/s41592-019-0650-1.
-- `[CuPy]` Okuta et al. CuPy: A NumPy-Compatible Library for NVIDIA GPU Calculations. Proceedings of Workshop on Machine Learning Systems at NeurIPS (2017). DOI: 10.25080/shinma-7f4c6e7-00e.
-- `[CuCIM]` Lee et al. cuCIM: a GPU image I/O and processing library. Zenodo (2021). DOI: 10.25080/majora-1b6fd038-022.
-- `[JAX]` Bradbury et al. JAX: composable transformations of Python+NumPy programs (2018).
-- `[PyTorch]` Paszke et al. PyTorch: an imperative style, high-performance deep learning library. Advances in Neural Information Processing Systems 32, 8024-8035 (2019).
-- `[TensorFlow]` Abadi et al. TensorFlow: a system for large-scale machine learning. 12th USENIX Symposium on Operating Systems Design and Implementation, 265-283 (2016).
-- `[ObjectState]` Simas. ObjectState: generic lazy dataclass configuration framework with dual-axis inheritance and contextvars-based resolution. Software. `https://github.com/OpenHCSDev/objectstate`.
-- `[ArrayBridge]` Simas. ArrayBridge: unified API for NumPy, CuPy, PyTorch, TensorFlow, JAX, and pyclesperanto with automatic memory type conversion. Software. `https://github.com/OpenHCSDev/arraybridge`.
-- `[PolyStore]` Simas. PolyStore: framework-agnostic multi-backend storage abstraction for ML and scientific computing. Software. `https://github.com/OpenHCSDev/PolyStore`.
-- `[ZMQRuntime]` Simas. ZMQRuntime: generic ZMQ-based distributed execution framework. Software. `https://github.com/OpenHCSDev/zmqruntime`.
-- `[pyqtReactive]` Simas. pyqt-reactive: reactive form generation framework for PyQt6. Software. `https://github.com/OpenHCSDev/pyqt-reactive`.
-- `[pycodify]` Simas. pycodify: Python source code as a serialization format with automatic import resolution. Software. `https://github.com/OpenHCSDev/pycodify`.
-- `[pythonIntrospect]` Simas. python-introspect: pure Python introspection toolkit for function signatures, dataclasses, and type hints. Software. `https://github.com/OpenHCSDev/python-introspect`.
-- `[metaclassRegistry]` Simas. metaclass-registry: metaclass-driven plugin registry system with lazy discovery and caching. Software. `https://github.com/OpenHCSDev/metaclass-registry`.
+We thank the CellProfiler project, its contributors, and the authors of the underlying biological datasets for making the example, tutorial, and benchmark materials available.

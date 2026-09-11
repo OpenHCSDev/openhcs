@@ -1,0 +1,250 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_get_widget_tree",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:140116128157520",
+          "schema_version": "openhcs.agent.v1",
+          "errors": [],
+          "warnings": [],
+          "projected": true,
+          "root": null,
+          "actionable_widgets": [
+            {
+              "path": [
+                0,
+                0
+              ],
+              "path_id": "0.0",
+              "child_index": 0,
+              "class_name": "QToolButton",
+              "object_name": "qt_menubar_ext_button",
+              "label": "qt_menubar_ext_button",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 87,
+                "y": 0,
+                "width": 12,
+                "height": 25
+              },
+              "global_geometry": {
+                "x": 103,
+                "y": 51,
+                "width": 12,
+                "height": 25
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true
+            },
+            {
+              "path": [
+                0,
+                1
+              ],
+              "path_id": "0.1",
+              "child_index": 1,
+              "class_name": "QMenu",
+              "label": "&File",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 30
+              },
+              "global_geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 30
+              },
+              "action_kinds": [
+                "menu"
+              ],
+              "clickable": true
+            },
+            {
+              "path": [
+                0,
+                2
+              ],
+              "path_id": "0.2",
+              "child_index": 2,
+              "class_name": "QMenu",
+              "label": "&Edit",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 30
+              },
+              "global_geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 30
+              },
+              "action_kinds": [
+                "menu"
+              ],
+              "clickable": true
+            },
+            {
+              "path": [
+                0,
+                3
+              ],
+              "path_id": "0.3",
+              "child_index": 3,
+              "class_name": "QMenu",
+              "label": "&View",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 30
+              },
+              "global_geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 30
+              },
+              "action_kinds": [
+                "menu"
+              ],
+              "clickable": true
+            },
+            {
+              "path": [
+                0,
+                4
+              ],
+              "path_id": "0.4",
+              "child_index": 4,
+              "class_name": "QMenu",
+              "label": null,
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 30
+              },
+              "global_geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 30
+              },
+              "action_kinds": [
+                "menu"
+              ],
+              "clickable": true
+            },
+            {
+              "path": [
+                2
+              ],
+              "path_id": "2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "label": "Save",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 11,
+                "y": 662,
+                "width": 37,
+                "height": 27
+              },
+              "global_geometry": {
+                "x": 16,
+                "y": 702,
+                "width": 37,
+                "height": 27
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true
+            },
+            {
+              "path": [
+                3
+              ],
+              "path_id": "3",
+              "child_index": 3,
+              "class_name": "QPushButton",
+              "label": "Cancel",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 54,
+                "y": 662,
+                "width": 48,
+                "height": 27
+              },
+              "global_geometry": {
+                "x": 59,
+                "y": 702,
+                "width": 48,
+                "height": 27
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true
+            }
+          ],
+          "summary": {
+            "object_state_scope_id": null,
+            "dirty": false,
+            "signature_diff": false,
+            "dirty_field_count": 0,
+            "signature_diff_field_count": 0,
+            "semantic_markers": [],
+            "managed_action_ids": [],
+            "schema_version": "openhcs.agent.v1",
+            "identity": {
+              "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:140116128157520"
+            },
+            "title": "Edit Function Pattern",
+            "window_kind": "scope",
+            "visible": true,
+            "focusable": true,
+            "manager_scope": {
+              "value": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:140116128157520"
+            }
+          },
+          "widget_count": 16,
+          "actionable_count": 7,
+          "returned_widget_count": 0,
+          "returned_actionable_count": 7,
+          "tree_truncated": false,
+          "actionable_widgets_truncated": false,
+          "actionable_only": true,
+          "include_tree": false,
+          "max_depth": 8,
+          "max_nodes": 80
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_snapshot_window",
+    "--arguments",
+    "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0\",\"output_dir_path\":\"/tmp/openhcs-custom-catalog-64tT3v/qa/captures\"}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_snapshot_window",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "output_dir_path": "/tmp/openhcs-custom-catalog-64tT3v/qa/captures",
+            "capture_scope": "widget",
+            "captured": true,
+            "resource": {
+              "uri": "file:///tmp/openhcs-custom-catalog-64tT3v/qa/captures/20260910T035926926564Z_home_ts_code_projects_openhcs_mcp_outputs_website-agent-demo_candidate-20260804-_Edit_Step_1._Enhanced_neuronal_signal.png",
+              "title": "* Edit Step: 1. Enhanced neuronal signal",
+              "mime_type": "image/png",
+              "path": "/tmp/openhcs-custom-catalog-64tT3v/qa/captures/20260910T035926926564Z_home_ts_code_projects_openhcs_mcp_outputs_website-agent-demo_candidate-20260804-_Edit_Step_1._Enhanced_neuronal_signal.png",
+              "size_bytes": 46697,
+              "sha256": "49f3b150a1956bf9415b6e416a2c7c6303ad1c5fb5c0d02ce1e8335bf30e3c69"
+            },
+            "summary": {
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "dirty": true,
+              "signature_diff": true,
+              "dirty_field_count": 1,
+              "signature_diff_field_count": 13,
+              "semantic_markers": [
+                "*",
+                "_"
+              ],
+              "managed_action_ids": [
+                "save_and_close",
+                "save_without_close",
+                "discard_and_close"
+              ],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "title": "* Edit Step: 1. Enhanced neuronal signal",
+              "window_kind": "scope",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": {
+                "value": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              }
+            },
+            "width": 550,
+            "height": 600
+          }
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-custom-catalog-64tT3v/qa/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/tmp/openhcs-custom-catalog-64tT3v"
+  }
+}

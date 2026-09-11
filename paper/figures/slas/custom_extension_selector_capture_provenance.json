@@ -1,0 +1,68 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_snapshot_window",
+    "--arguments",
+    "{\"window_id\":\"qt_top_level:106954800\",\"output_dir_path\":\"/tmp/openhcs-custom-catalog-64tT3v/qa/captures\"}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_snapshot_window",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "qt_top_level:106954800",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "output_dir_path": "/tmp/openhcs-custom-catalog-64tT3v/qa/captures",
+            "capture_scope": "widget",
+            "captured": true,
+            "resource": {
+              "uri": "file:///tmp/openhcs-custom-catalog-64tT3v/qa/captures/20260910T035818056558Z_qt_top_level_106954800_Select_Function_-_Dual_Pane_View.png",
+              "title": "Select Function - Dual Pane View",
+              "mime_type": "image/png",
+              "path": "/tmp/openhcs-custom-catalog-64tT3v/qa/captures/20260910T035818056558Z_qt_top_level_106954800_Select_Function_-_Dual_Pane_View.png",
+              "size_bytes": 157078,
+              "sha256": "0fe9e88471c8adc2b46c4fc8b63a94d73b7aba1c5b164dad005560dc70602508"
+            },
+            "summary": {
+              "object_state_scope_id": null,
+              "dirty": false,
+              "signature_diff": false,
+              "dirty_field_count": 0,
+              "signature_diff_field_count": 0,
+              "semantic_markers": [],
+              "managed_action_ids": [],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "qt_top_level:106954800"
+              },
+              "title": "Select Function - Dual Pane View",
+              "window_kind": "qt_top_level",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": null
+            },
+            "width": 1200,
+            "height": 700
+          }
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-custom-catalog-64tT3v/qa/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/tmp/openhcs-custom-catalog-64tT3v"
+  }
+}

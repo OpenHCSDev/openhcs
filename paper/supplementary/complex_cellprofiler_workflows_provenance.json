@@ -1,0 +1,39 @@
+{
+  "source_sha256": {
+    "benchmark/native_refs/official30_scoped_rows/CellProfiler_tutorials_cp_tutorial_3d_monolayer_wells_include_first1/native_cellprofiler_headless/3d_monolayer_final.cppipe": "e31b37a86255d6d62c59d18573b6329513fe194d024421897819e63979c24e09",
+    "benchmark/native_refs/official30_scoped_rows/CellProfiler_tutorials_cp_tutorial_advanced_segmentation_final_wells_include_first1/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe": "335b3fa5179860bfd898f09a42ed80388f8bd4bdc4b5bafa30ad769de734c35d",
+    "benchmark/results/labmeeting_20260513/official30_well_throughput/data/single_process_summary.csv": "38747ee2a7a0a8fcd361cc5269f76aaf3150396a6b2ff7988edd11aa12345488",
+    "external/arraybridge/src/arraybridge/decorators.py": "99823105b0ae59054df1d84013633b8b6628d0a6dc3326383199ac7c65c69bed",
+    "openhcs/core/function_patterns.py": "d20fe8d1614210e50bf804a6cea3ce4cc4fd3ce0459b153c1cf81e214e628d3e",
+    "openhcs/core/pipeline_document.py": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
+    "openhcs/interop/cellprofiler/module_declarations.py": "89dd65abc003c464ba6c489f52d3a4fa47be1d5f8b87d26ad72b7537f188cf8b",
+    "openhcs/interop/cellprofiler/parser.py": "25fd96f8fdd4a4f02b01fc2f55e8fdb978efa331f16ca612b1466c9435e4ac89",
+    "openhcs/interop/cellprofiler/pipeline_import.py": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+    "openhcs/interop/cellprofiler/settings_binder.py": "1f7b236d8cb946ce35171447c23dab3220c4379ab446dfefb5ee3057ead0e92b",
+    "openhcs/processing/backends/cellprofiler/export_to_database.py": "e3d32b0a2c8ad4819fb7d731fccd5c801031df54eb14dc76679018d8b1d41b70",
+    "openhcs/processing/backends/cellprofiler/spreadsheet_export.py": "5787bab5727e85c045e3aed03135bb64ddc62c5a5796fea62f9570576681e6f2",
+    "paper/figures/build_slas_complex_workflows.py": "5a1a34a9c146986346648af63ae492cb73be783830c30f65168f43d01e1e2960"
+  },
+  "output_sha256": {
+    "cp_tutorial_advanced_segmentation_final_imported.py": "df7308a23a0bfa4e255a1b29728a028ee875ebba614876ccad44703e8a22ed83",
+    "cp_tutorial_3d_monolayer_imported.py": "04334a388b8b4aafa01480339038e4155bc24f7ca2511652d8a1447e6f0639ff",
+    "complex_cellprofiler_workflows.md": "46f46953e5e388c214b6ff07103ae0582b29af998c4c905879506113299d4ff7"
+  },
+  "workflows": [
+    {
+      "case_name": "cp_tutorial_advanced_segmentation_final",
+      "enabled_modules": 23,
+      "steps": 16,
+      "function_calls": 59,
+      "function_parameter_roundtrip_verified": true
+    },
+    {
+      "case_name": "cp_tutorial_3d_monolayer",
+      "enabled_modules": 35,
+      "steps": 31,
+      "function_calls": 35,
+      "function_parameter_roundtrip_verified": true
+    }
+  ],
+  "analysis_executed": false
+}

@@ -1,0 +1,2226 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_get_widget_tree",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+          "schema_version": "openhcs.agent.v1",
+          "errors": [],
+          "warnings": [],
+          "projected": true,
+          "root": null,
+          "actionable_widgets": [
+            {
+              "path": [
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "path_id": "0.0.0.1.0",
+              "child_index": 0,
+              "class_name": "QPushButton",
+              "label": "Cancel",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 70,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 822,
+                "y": 839,
+                "width": 70,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Edit Step: 1. Enhanced neuronal signal"
+            },
+            {
+              "path": [
+                1,
+                0,
+                0,
+                0
+              ],
+              "path_id": "1.0.0.0",
+              "child_index": 0,
+              "class_name": "QTabBar",
+              "label": "Step Settings",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 1,
+                "y": 1,
+                "width": 317,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 427,
+                "y": 877,
+                "width": 317,
+                "height": 32
+              },
+              "action_kinds": [
+                "tab_selector"
+              ],
+              "clickable": true,
+              "current_index": 0,
+              "current_text": "Step Settings",
+              "item_count": 3,
+              "item_texts": [
+                "Step Settings",
+                "Function Pattern",
+                "Artifacts"
+              ],
+              "context_label": "Name:"
+            },
+            {
+              "path": [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              "path_id": "1.0.0.1.0.0",
+              "child_index": 0,
+              "class_name": "QPushButton",
+              "label": "Code",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 47,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 918,
+                "y": 877,
+                "width": 47,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Name:"
+            },
+            {
+              "path": [
+                1,
+                0,
+                0,
+                1,
+                1,
+                0
+              ],
+              "path_id": "1.0.0.1.1.0",
+              "child_index": 0,
+              "class_name": "QPushButton",
+              "object_name": "function_list_editor_action_add",
+              "label": "Add",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 451,
+                "y": 224,
+                "width": 41,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 1369,
+                "y": 1101,
+                "width": 41,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Name:"
+            },
+            {
+              "path": [
+                1,
+                0,
+                0,
+                1,
+                1,
+                1
+              ],
+              "path_id": "1.0.0.1.1.1",
+              "child_index": 1,
+              "class_name": "QPushButton",
+              "object_name": "function_list_editor_action_code",
+              "label": "Code",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 494,
+                "y": 224,
+                "width": 47,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 1412,
+                "y": 1101,
+                "width": 47,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Name:"
+            },
+            {
+              "path": [
+                1,
+                0,
+                0,
+                1,
+                1,
+                3
+              ],
+              "path_id": "1.0.0.1.1.3",
+              "child_index": 3,
+              "class_name": "QPushButton",
+              "object_name": "function_list_editor_action_previous_pattern",
+              "label": "<",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 30,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 918,
+                "y": 877,
+                "width": 30,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Name:"
+            },
+            {
+              "path": [
+                1,
+                0,
+                0,
+                1,
+                1,
+                4
+              ],
+              "path_id": "1.0.0.1.1.4",
+              "child_index": 4,
+              "class_name": "QPushButton",
+              "object_name": "function_list_editor_action_next_pattern",
+              "label": ">",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 30,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 918,
+                "y": 877,
+                "width": 30,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Name:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.0.0.1",
+              "child_index": 1,
+              "class_name": "NoneAwareLineEdit",
+              "raw_value_preview": {
+                "type_name": "str",
+                "is_none": false,
+                "text": "'Enhanced neuronal signal'",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "str",
+                "is_none": false,
+                "text": "'Enhanced neuronal signal'",
+                "truncated": false
+              },
+              "signature_diff": true,
+              "semantic_markers": [
+                "_"
+              ],
+              "action_role": "field_input",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "name",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "name",
+              "label": "Enhanced neuronal signal",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 62,
+                "y": 1,
+                "width": 251,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 649,
+                "y": 917,
+                "width": 251,
+                "height": 32
+              },
+              "action_kinds": [
+                "text_input"
+              ],
+              "clickable": true,
+              "context_label": "Name:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.0.0.2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "object_name": "_reset",
+              "raw_value_preview": {
+                "type_name": "str",
+                "is_none": false,
+                "text": "'Enhanced neuronal signal'",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "str",
+                "is_none": false,
+                "text": "'Enhanced neuronal signal'",
+                "truncated": false
+              },
+              "signature_diff": true,
+              "semantic_markers": [
+                "_"
+              ],
+              "action_role": "field_reset",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "name",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "name",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 315,
+                "y": 1,
+                "width": 43,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 902,
+                "y": 917,
+                "width": 43,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Name:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.1.0.1",
+              "child_index": 1,
+              "class_name": "NoneAwareLineEdit",
+              "raw_value_is_none": true,
+              "resolved_value_is_none": true,
+              "raw_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "action_role": "field_input",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "description",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "description",
+              "label": null,
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 92,
+                "y": 1,
+                "width": 221,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 679,
+                "y": 952,
+                "width": 221,
+                "height": 32
+              },
+              "action_kinds": [
+                "text_input"
+              ],
+              "clickable": true,
+              "tool_tip": "Pipeline default: (none)",
+              "context_label": "Description:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                0,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.1.0.2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "object_name": "_reset",
+              "raw_value_is_none": true,
+              "resolved_value_is_none": true,
+              "raw_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "action_role": "field_reset",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "description",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "description",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 315,
+                "y": 1,
+                "width": 43,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 902,
+                "y": 952,
+                "width": 43,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Description:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                2,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.2.0.1",
+              "child_index": 1,
+              "class_name": "NoneAwareCheckBox",
+              "raw_value_preview": {
+                "type_name": "bool",
+                "is_none": false,
+                "text": "True",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "bool",
+                "is_none": false,
+                "text": "True",
+                "truncated": false
+              },
+              "action_role": "field_input",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "enabled",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "enabled",
+              "label": null,
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 73,
+                "y": 1,
+                "width": 240,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 660,
+                "y": 987,
+                "width": 240,
+                "height": 32
+              },
+              "action_kinds": [
+                "button",
+                "checkable"
+              ],
+              "clickable": true,
+              "checkable": true,
+              "checked": true,
+              "context_label": "Enabled:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                2,
+                0,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.2.0.2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "object_name": "_reset",
+              "raw_value_preview": {
+                "type_name": "bool",
+                "is_none": false,
+                "text": "True",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "bool",
+                "is_none": false,
+                "text": "True",
+                "truncated": false
+              },
+              "action_role": "field_reset",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "enabled",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "enabled",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 315,
+                "y": 1,
+                "width": 43,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 902,
+                "y": 987,
+                "width": 43,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Enabled:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                3,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.3.0.1",
+              "child_index": 1,
+              "class_name": "NoneAwareCheckBox",
+              "raw_value_preview": {
+                "type_name": "bool",
+                "is_none": false,
+                "text": "False",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "bool",
+                "is_none": false,
+                "text": "False",
+                "truncated": false
+              },
+              "action_role": "field_input",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "debug_pause",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "debug_pause",
+              "label": null,
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 102,
+                "y": 1,
+                "width": 211,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 689,
+                "y": 1022,
+                "width": 211,
+                "height": 32
+              },
+              "action_kinds": [
+                "button",
+                "checkable"
+              ],
+              "clickable": true,
+              "checkable": true,
+              "checked": false,
+              "context_label": "Debug Pause:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                3,
+                0,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.3.0.2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "object_name": "_reset",
+              "raw_value_preview": {
+                "type_name": "bool",
+                "is_none": false,
+                "text": "False",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "bool",
+                "is_none": false,
+                "text": "False",
+                "truncated": false
+              },
+              "action_role": "field_reset",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "debug_pause",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "debug_pause",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 315,
+                "y": 1,
+                "width": 43,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 902,
+                "y": 1022,
+                "width": 43,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Debug Pause:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                4,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.4.0.0.0.0.1",
+              "child_index": 1,
+              "class_name": "HelpButton",
+              "label": "?",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 86,
+                "y": 6,
+                "width": 20,
+                "height": 20
+              },
+              "global_geometry": {
+                "x": 681,
+                "y": 1070,
+                "width": 20,
+                "height": 20
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Dtype Config:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                4,
+                0,
+                0,
+                0,
+                2,
+                0
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.4.0.0.0.2.0",
+              "child_index": 0,
+              "class_name": "QPushButton",
+              "label": "Reset All",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 56,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 882,
+                "y": 1064,
+                "width": 56,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "tool_tip": "Reset all parameters in Dtype Config: to defaults",
+              "context_label": "Dtype Config:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                4,
+                1,
+                0,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.4.1.0.0.1",
+              "child_index": 1,
+              "class_name": "NoScrollComboBox",
+              "raw_value_is_none": true,
+              "raw_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "DtypeConversion",
+                "is_none": false,
+                "text": "DtypeConversion.NATIVE_OUTPUT",
+                "truncated": false
+              },
+              "inherited_value": true,
+              "provenance": {
+                "source_scope_id": "global_config",
+                "source_type": "openhcs.core.config.DtypeConfig",
+                "source_field_path": "dtype_config.default_dtype_conversion"
+              },
+              "action_role": "field_input",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "dtype_config.default_dtype_conversion",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "dtype_config.default_dtype_conversion",
+              "label": null,
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 172,
+                "y": 1,
+                "width": 123,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 768,
+                "y": 1100,
+                "width": 123,
+                "height": 32
+              },
+              "action_kinds": [
+                "choice"
+              ],
+              "clickable": true,
+              "current_index": -1,
+              "item_count": 8,
+              "tool_tip": "Pipeline default: DtypeConversion.NATIVE_OUTPUT (select to set your own value)",
+              "context_label": "Default Dtype Conversion:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                4,
+                1,
+                0,
+                0,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.4.1.0.0.2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "object_name": "dtype_config_reset",
+              "raw_value_is_none": true,
+              "raw_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "DtypeConversion",
+                "is_none": false,
+                "text": "DtypeConversion.NATIVE_OUTPUT",
+                "truncated": false
+              },
+              "inherited_value": true,
+              "provenance": {
+                "source_scope_id": "global_config",
+                "source_type": "openhcs.core.config.DtypeConfig",
+                "source_field_path": "dtype_config.default_dtype_conversion"
+              },
+              "action_role": "field_reset",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "dtype_config.default_dtype_conversion",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "dtype_config.default_dtype_conversion",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 297,
+                "y": 1,
+                "width": 43,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 893,
+                "y": 1100,
+                "width": 43,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Default Dtype Conversion:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.0.0.0.0.1",
+              "child_index": 1,
+              "class_name": "HelpButton",
+              "label": "?",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 115,
+                "y": 6,
+                "width": 20,
+                "height": 20
+              },
+              "global_geometry": {
+                "x": 707,
+                "y": 1154,
+                "width": 20,
+                "height": 20
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Processing Config:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                0,
+                0,
+                0,
+                2,
+                0
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.0.0.0.2.0",
+              "child_index": 0,
+              "class_name": "QPushButton",
+              "label": "Reset All",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 56,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 885,
+                "y": 1148,
+                "width": 56,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "tool_tip": "Reset all parameters in Processing Config: to defaults",
+              "context_label": "Processing Config:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                0,
+                0,
+                1,
+                0
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.0.0.1.0",
+              "child_index": 0,
+              "class_name": "NoneAwareCheckBox",
+              "object_name": "variable_components_site",
+              "label": "site",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 4,
+                "y": 2,
+                "width": 44,
+                "height": 22
+              },
+              "global_geometry": {
+                "x": 746,
+                "y": 1186,
+                "width": 44,
+                "height": 22
+              },
+              "action_kinds": [
+                "button",
+                "checkable"
+              ],
+              "clickable": true,
+              "checkable": true,
+              "checked": false,
+              "context_label": "Variable Components:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                0,
+                0,
+                1,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.0.0.1.1",
+              "child_index": 1,
+              "class_name": "NoneAwareCheckBox",
+              "object_name": "variable_components_channel",
+              "label": "channel",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 4,
+                "y": 26,
+                "width": 69,
+                "height": 22
+              },
+              "global_geometry": {
+                "x": 746,
+                "y": 1210,
+                "width": 69,
+                "height": 22
+              },
+              "action_kinds": [
+                "button",
+                "checkable"
+              ],
+              "clickable": true,
+              "checkable": true,
+              "checked": true,
+              "context_label": "Variable Components:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                0,
+                0,
+                1,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.0.0.1.2",
+              "child_index": 2,
+              "class_name": "NoneAwareCheckBox",
+              "object_name": "variable_components_z_index",
+              "label": "z_index",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 4,
+                "y": 50,
+                "width": 67,
+                "height": 22
+              },
+              "global_geometry": {
+                "x": 746,
+                "y": 1234,
+                "width": 67,
+                "height": 22
+              },
+              "action_kinds": [
+                "button",
+                "checkable"
+              ],
+              "clickable": true,
+              "checkable": true,
+              "checked": false,
+              "context_label": "Variable Components:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                0,
+                0,
+                1,
+                3
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.0.0.1.3",
+              "child_index": 3,
+              "class_name": "NoneAwareCheckBox",
+              "object_name": "variable_components_timepoint",
+              "label": "timepoint",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 4,
+                "y": 74,
+                "width": 80,
+                "height": 22
+              },
+              "global_geometry": {
+                "x": 746,
+                "y": 1258,
+                "width": 80,
+                "height": 22
+              },
+              "action_kinds": [
+                "button",
+                "checkable"
+              ],
+              "clickable": true,
+              "checkable": true,
+              "checked": false,
+              "context_label": "Variable Components:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                0,
+                0,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.0.0.2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "object_name": "processing_config_reset",
+              "raw_value_preview": {
+                "type_name": "list",
+                "is_none": false,
+                "text": "list(len=1, items=('VariableComponents.CHANNEL',))",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "list",
+                "is_none": false,
+                "text": "list(len=1, items=('VariableComponents.CHANNEL',))",
+                "truncated": false
+              },
+              "signature_diff": true,
+              "semantic_markers": [
+                "_"
+              ],
+              "action_role": "field_reset",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "processing_config.variable_components",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "processing_config.variable_components",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 303,
+                "y": 34,
+                "width": 43,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 896,
+                "y": 1217,
+                "width": 43,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Variable Components:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                1,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.1.0.1",
+              "child_index": 1,
+              "class_name": "NoScrollComboBox",
+              "raw_value_is_none": true,
+              "raw_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "GroupBy",
+                "is_none": false,
+                "text": "GroupBy.CHANNEL",
+                "truncated": false
+              },
+              "inherited_value": true,
+              "provenance": {
+                "source_scope_id": "global_config",
+                "source_type": "openhcs.core.config.ProcessingConfig",
+                "source_field_path": "processing_config.group_by"
+              },
+              "action_role": "field_input",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "processing_config.group_by",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "processing_config.group_by",
+              "label": null,
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 80,
+                "y": 1,
+                "width": 221,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 673,
+                "y": 1285,
+                "width": 221,
+                "height": 32
+              },
+              "action_kinds": [
+                "choice"
+              ],
+              "clickable": true,
+              "current_index": -1,
+              "item_count": 6,
+              "tool_tip": "Pipeline default: GroupBy.CHANNEL (select to set your own value)",
+              "context_label": "Group By:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                1,
+                0,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.1.0.2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "object_name": "processing_config_reset",
+              "raw_value_is_none": true,
+              "raw_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "GroupBy",
+                "is_none": false,
+                "text": "GroupBy.CHANNEL",
+                "truncated": false
+              },
+              "inherited_value": true,
+              "provenance": {
+                "source_scope_id": "global_config",
+                "source_type": "openhcs.core.config.ProcessingConfig",
+                "source_field_path": "processing_config.group_by"
+              },
+              "action_role": "field_reset",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "processing_config.group_by",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "processing_config.group_by",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 303,
+                "y": 1,
+                "width": 43,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 896,
+                "y": 1285,
+                "width": 43,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Group By:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                2,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.2.0.1",
+              "child_index": 1,
+              "class_name": "NoScrollComboBox",
+              "raw_value_is_none": true,
+              "raw_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "InputSource",
+                "is_none": false,
+                "text": "InputSource.PREVIOUS_STEP",
+                "truncated": false
+              },
+              "inherited_value": true,
+              "provenance": {
+                "source_scope_id": "global_config",
+                "source_type": "openhcs.core.config.ProcessingConfig",
+                "source_field_path": "processing_config.input_source"
+              },
+              "action_role": "field_input",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "processing_config.input_source",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "processing_config.input_source",
+              "label": null,
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 100,
+                "y": 1,
+                "width": 201,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 693,
+                "y": 1320,
+                "width": 201,
+                "height": 32
+              },
+              "action_kinds": [
+                "choice"
+              ],
+              "clickable": true,
+              "current_index": -1,
+              "item_count": 2,
+              "tool_tip": "Pipeline default: InputSource.PREVIOUS_STEP (select to set your own value)",
+              "context_label": "Input Source:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                5,
+                1,
+                2,
+                0,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.5.1.2.0.2",
+              "child_index": 2,
+              "class_name": "QPushButton",
+              "object_name": "processing_config_reset",
+              "raw_value_is_none": true,
+              "raw_value_preview": {
+                "type_name": "None",
+                "is_none": true,
+                "text": "None",
+                "truncated": false
+              },
+              "resolved_value_preview": {
+                "type_name": "InputSource",
+                "is_none": false,
+                "text": "InputSource.PREVIOUS_STEP",
+                "truncated": false
+              },
+              "inherited_value": true,
+              "provenance": {
+                "source_scope_id": "global_config",
+                "source_type": "openhcs.core.config.ProcessingConfig",
+                "source_field_path": "processing_config.input_source"
+              },
+              "action_role": "field_reset",
+              "semantic_address": {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "processing_config.input_source",
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "field_path": "processing_config.input_source",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 303,
+                "y": 1,
+                "width": 43,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 896,
+                "y": 1320,
+                "width": 43,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Input Source:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.0.0.0.0.1",
+              "child_index": 1,
+              "class_name": "HelpButton",
+              "label": "?",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 104,
+                "y": 6,
+                "width": 20,
+                "height": 20
+              },
+              "global_geometry": {
+                "x": 696,
+                "y": 1371,
+                "width": 20,
+                "height": 20
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Source Bindings:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                0,
+                0,
+                0,
+                1,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.0.0.0.1.1",
+              "child_index": 1,
+              "class_name": "QPushButton",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 19,
+                "y": 0,
+                "width": 41,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 740,
+                "y": 1365,
+                "width": 41,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "tool_tip": "Reset enabled to default",
+              "context_label": "Source Bindings:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                0,
+                0,
+                0,
+                1,
+                2
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.0.0.0.1.2",
+              "child_index": 2,
+              "class_name": "ProvenanceButton",
+              "label": "^",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 65,
+                "y": 0,
+                "width": 19,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 786,
+                "y": 1365,
+                "width": 19,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Source Bindings:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                0,
+                0,
+                0,
+                2,
+                0
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.0.0.0.2.0",
+              "child_index": 0,
+              "class_name": "QPushButton",
+              "label": "Reset All",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 56,
+                "height": 32
+              },
+              "global_geometry": {
+                "x": 885,
+                "y": 1365,
+                "width": 56,
+                "height": 32
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "tool_tip": "Reset all parameters in Source Bindings: to defaults",
+              "context_label": "Source Bindings:"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                0,
+                1,
+                5
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.0.1.5",
+              "child_index": 5,
+              "class_name": "QAbstractButton",
+              "object_name": "qt_tableview_cornerbutton",
+              "label": "qt_tableview_cornerbutton",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 1,
+                "y": 1,
+                "width": 11,
+                "height": 21
+              },
+              "global_geometry": {
+                "x": 597,
+                "y": 1430,
+                "width": 11,
+                "height": 21
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Pipeline Sources"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                0,
+                1,
+                7
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.0.1.7",
+              "child_index": 7,
+              "class_name": "QModelIndex",
+              "label": "image-plane sources | 0",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 153,
+                "height": 29
+              },
+              "global_geometry": {
+                "x": 599,
+                "y": 1462,
+                "width": 153,
+                "height": 29
+              },
+              "action_kinds": [
+                "item_select"
+              ],
+              "clickable": true,
+              "current_index": 0,
+              "current_text": "image-plane sources | 0",
+              "item_count": 0,
+              "context_label": "Pipeline Sources"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                0,
+                1,
+                8
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.0.1.8",
+              "child_index": 8,
+              "class_name": "QModelIndex",
+              "label": "imported metadata tables | 0",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 30,
+                "width": 153,
+                "height": 29
+              },
+              "global_geometry": {
+                "x": 599,
+                "y": 1492,
+                "width": 153,
+                "height": 29
+              },
+              "action_kinds": [
+                "item_select"
+              ],
+              "clickable": true,
+              "current_index": 1,
+              "current_text": "imported metadata tables | 0",
+              "item_count": 0,
+              "context_label": "Pipeline Sources"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                1,
+                1,
+                5
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.1.1.5",
+              "child_index": 5,
+              "class_name": "QAbstractButton",
+              "object_name": "qt_tableview_cornerbutton",
+              "label": "qt_tableview_cornerbutton",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 1,
+                "y": 1,
+                "width": 0,
+                "height": 21
+              },
+              "global_geometry": {
+                "x": 597,
+                "y": 1554,
+                "width": 0,
+                "height": 21
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Pipeline Bindings"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                2,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.2.1",
+              "child_index": 1,
+              "class_name": "QPushButton",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 304,
+                "y": 10,
+                "width": 41,
+                "height": 24
+              },
+              "global_geometry": {
+                "x": 896,
+                "y": 1637,
+                "width": 41,
+                "height": 24
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "tool_tip": "Reset bindings to default",
+              "context_label": "Bindings"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                2,
+                2,
+                4
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.2.2.4",
+              "child_index": 4,
+              "class_name": "QAbstractButton",
+              "object_name": "qt_tableview_cornerbutton",
+              "label": "qt_tableview_cornerbutton",
+              "visible": false,
+              "enabled": true,
+              "geometry": {
+                "x": 1,
+                "y": 1,
+                "width": 0,
+                "height": 21
+              },
+              "global_geometry": {
+                "x": 597,
+                "y": 1665,
+                "width": 0,
+                "height": 21
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Bindings"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                2,
+                2,
+                7
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.2.2.7",
+              "child_index": 7,
+              "class_name": "QModelIndex",
+              "label": "2 | W1_neuron_neurite, W2_soma_nuclear | step_input",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 0,
+                "y": 0,
+                "width": 63,
+                "height": 29
+              },
+              "global_geometry": {
+                "x": 599,
+                "y": 1697,
+                "width": 63,
+                "height": 29
+              },
+              "action_kinds": [
+                "item_select"
+              ],
+              "clickable": true,
+              "current_index": 0,
+              "current_text": "2 | W1_neuron_neurite, W2_soma_nuclear | step_input",
+              "item_count": 0,
+              "context_label": "Bindings"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                2,
+                3
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.2.3",
+              "child_index": 3,
+              "class_name": "QPushButton",
+              "label": "Edit bindings...",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 4,
+                "y": 106,
+                "width": 94,
+                "height": 24
+              },
+              "global_geometry": {
+                "x": 596,
+                "y": 1733,
+                "width": 94,
+                "height": 24
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Bindings"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                2,
+                4
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.2.4",
+              "child_index": 4,
+              "class_name": "QPushButton",
+              "label": "Add binding",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 101,
+                "y": 106,
+                "width": 79,
+                "height": 24
+              },
+              "global_geometry": {
+                "x": 693,
+                "y": 1733,
+                "width": 79,
+                "height": 24
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "context_label": "Bindings"
+            },
+            {
+              "path": [
+                1,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                6,
+                1,
+                3,
+                1
+              ],
+              "path_id": "1.1.0.2.0.0.0.0.1.6.1.3.1",
+              "child_index": 1,
+              "class_name": "QPushButton",
+              "label": "Reset",
+              "visible": true,
+              "enabled": true,
+              "geometry": {
+                "x": 304,
+                "y": 10,
+                "width": 41,
+                "height": 24
+              },
+              "global_geometry": {
+                "x": 896,
+                "y": 1774,
+                "width": 41,
+                "height": 24
+              },
+              "action_kinds": [
+                "button"
+              ],
+              "clickable": true,
+              "tool_tip": "Reset source_filters to default",
+              "context_label": "Source Filters"
+            }
+          ],
+          "summary": {
+            "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+            "dirty": false,
+            "signature_diff": true,
+            "dirty_field_count": 0,
+            "signature_diff_field_count": 13,
+            "semantic_markers": [
+              "_"
+            ],
+            "managed_action_ids": [
+              "save_and_close",
+              "save_without_close",
+              "discard_and_close"
+            ],
+            "schema_version": "openhcs.agent.v1",
+            "identity": {
+              "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+            },
+            "title": "Edit Step: 1. Enhanced neuronal signal",
+            "window_kind": "scope",
+            "visible": true,
+            "focusable": true,
+            "manager_scope": {
+              "value": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+            }
+          },
+          "widget_count": 220,
+          "actionable_count": 44,
+          "returned_widget_count": 0,
+          "returned_actionable_count": 44,
+          "tree_truncated": true,
+          "actionable_widgets_truncated": true,
+          "actionable_only": true,
+          "include_tree": false,
+          "max_depth": 15,
+          "max_nodes": 220
+        }
+      ]
+    }
+  ]
+}

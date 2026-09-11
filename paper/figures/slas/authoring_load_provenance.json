@@ -1,0 +1,41 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_get_operation_status",
+    "--arguments",
+    "{\"operation_id\":\"71d44c53-631f-4e20-8167-3a5da7803529\"}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_get_operation_status",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "status": "completed",
+            "started_at_unix": 1789003308.7780545,
+            "identity": {
+              "operation_id": "71d44c53-631f-4e20-8167-3a5da7803529",
+              "route": {
+                "operation_name": "apply_document",
+                "request_id": null,
+                "target_id": "plate_manager.orchestrator_config"
+              }
+            },
+            "completed_at_unix": 1789003312.265394,
+            "outcome": "applied"
+          }
+        ]
+      }
+    ]
+  }
+}

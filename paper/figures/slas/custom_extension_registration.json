@@ -1,0 +1,58 @@
+{
+  "argv": [
+    "register-custom-function",
+    "paper/figures/slas/custom_signal_example.py",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_register_custom_function",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "registered_count": 1,
+            "persisted": true,
+            "storage_dir": "/tmp/openhcs-preview-policy-G9xfr2/data/openhcs/custom_functions",
+            "source_file_paths": [
+              "/tmp/openhcs-preview-policy-G9xfr2/data/openhcs/custom_functions/paper_rescale_signal.py"
+            ],
+            "functions": [
+              {
+                "import_path": "openhcs.processing.custom_functions.paper_rescale_signal",
+                "function_id": "openhcs:paper_rescale_signal",
+                "name": "paper_rescale_signal",
+                "module": "openhcs.processing.custom_functions",
+                "library": "openhcs",
+                "signature": "paper_rescale_signal(gain=1.2, offset=0.0, *, enabled=True)",
+                "summary": "Rescale image intensities with a gain and offset.",
+                "backend_tags": [
+                  "openhcs",
+                  "custom"
+                ]
+              }
+            ],
+            "next_steps": [
+              "Call openhcs_describe_function(function_id='openhcs:paper_rescale_signal'), then use openhcs_add_function_step or draft-pipeline-step."
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-preview-policy-G9xfr2/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/home/ts/code/projects/openhcs"
+  }
+}

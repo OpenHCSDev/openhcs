@@ -1,0 +1,48 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_invoke_widget_action",
+    "--arguments",
+    "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0\",\"path_id\":\"1.0.0.1.1.0\",\"action_kind\":\"button\"}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_invoke_widget_action",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "path_id": "1.0.0.1.1.0",
+            "action_kind": "button",
+            "invoked": false,
+            "receipt": {
+              "request_token": {
+                "value": null
+              },
+              "bridge_operation_id": "7b47c3b0-384f-4a58-a7b5-f20d04ec19f3",
+              "accepted": true
+            },
+            "summary": null
+          }
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-custom-catalog-64tT3v/qa/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/tmp/openhcs-custom-catalog-64tT3v"
+  }
+}

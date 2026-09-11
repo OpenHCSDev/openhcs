@@ -1,0 +1,235 @@
+{
+  "argv": [
+    "windows",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_list_windows",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "page": null,
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "windows": [
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": false,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 0,
+                "semantic_markers": [],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "OpenHCS",
+                "window_kind": "qt_top_level",
+                "visible": true,
+                "focusable": true,
+                "manager_scope": null,
+                "window_id": "main_window"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": false,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 0,
+                "semantic_markers": [],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "System Monitor",
+                "window_kind": "embedded",
+                "visible": true,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "system_monitor"
+                },
+                "window_id": "system_monitor"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": true,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 7,
+                "semantic_markers": [
+                  "_"
+                ],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "Plate Manager",
+                "window_kind": "embedded",
+                "visible": true,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "plate_manager"
+                },
+                "window_id": "plate_manager"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": false,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 0,
+                "semantic_markers": [],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "ZMQ Server Manager",
+                "window_kind": "embedded",
+                "visible": true,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "zmq_server_manager"
+                },
+                "window_id": "zmq_server_manager"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": true,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 22,
+                "semantic_markers": [
+                  "_"
+                ],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "Pipeline Editor",
+                "window_kind": "embedded",
+                "visible": true,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "pipeline_editor"
+                },
+                "window_id": "pipeline_editor"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": false,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 0,
+                "semantic_markers": [],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "Image Browser",
+                "window_kind": "managed",
+                "visible": false,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "image_browser"
+                },
+                "window_id": "image_browser"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": false,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 0,
+                "semantic_markers": [],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "Log Viewer",
+                "window_kind": "managed",
+                "visible": false,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "log_viewer"
+                },
+                "window_id": "log_viewer"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": false,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 0,
+                "semantic_markers": [],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "OpenHCS Knowledge Base",
+                "window_kind": "managed",
+                "visible": true,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "knowledge_base"
+                },
+                "window_id": "knowledge_base"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": false,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 0,
+                "semantic_markers": [],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "About OpenHCS",
+                "window_kind": "managed",
+                "visible": false,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "about_openhcs"
+                },
+                "window_id": "about_openhcs"
+              },
+              {
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "dirty": false,
+                "signature_diff": true,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 13,
+                "semantic_markers": [
+                  "_"
+                ],
+                "managed_action_ids": [
+                  "save_and_close",
+                  "save_without_close",
+                  "discard_and_close"
+                ],
+                "schema_version": "openhcs.agent.v1",
+                "title": "Edit Step: 1. Enhanced neuronal signal",
+                "window_kind": "scope",
+                "visible": true,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              {
+                "object_state_scope_id": null,
+                "dirty": false,
+                "signature_diff": false,
+                "dirty_field_count": 0,
+                "signature_diff_field_count": 0,
+                "semantic_markers": [],
+                "managed_action_ids": [],
+                "schema_version": "openhcs.agent.v1",
+                "title": "Edit Function Pattern",
+                "window_kind": "scope",
+                "visible": true,
+                "focusable": true,
+                "manager_scope": {
+                  "value": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:140116128157520"
+                },
+                "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:140116128157520"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

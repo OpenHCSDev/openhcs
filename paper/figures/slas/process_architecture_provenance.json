@@ -1,0 +1,22 @@
+{
+  "generator_sha256": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc",
+  "source_sha256": {
+    "openhcs/runtime/zmq_execution_client.py": "559c2e4a899ab2da3c7bf230aeb34bef45307185b058c71208d2bd2021f75bbe",
+    "openhcs/runtime/zmq_execution_server.py": "5074b4b09dd3193d9f4b83003b49beb877fedaf9f8f1ef21df5042d681c0812a",
+    "openhcs/runtime/zmq_worker_execution.py": "7af634ca2b361af6dbc13fd430dac543ee93075360d284f06b199292637b53d8",
+    "openhcs/core/orchestrator/worker_execution.py": "d2ac66e753239cf4185eb3db4db1aca2a8a55a49f92ee58f30c2ab5fe47732ef",
+    "openhcs/core/steps/function_artifact_materialization.py": "b2cffa8b2a89a3d94c3e77f1ca849d33b22451fe348a4057a7679deb9e76a95c",
+    "openhcs/runtime/napari_viewer_server.py": "a869e0224a0c8c2c96a92a70ef6061292355790205162b0d1c5beac7f64c1560",
+    "openhcs/runtime/fiji_viewer_server.py": "ff555a56474ba7ee4a8a95afeb42b76ba0d535199e7190bf50b16ed7412605f2",
+    "docs/source/architecture/zmq_execution_service_extracted.rst": "cf224a588300889446e62265d56b0225024012ef633368e376a2deac6d63d0dd",
+    "docs/source/architecture/streaming_boundary_and_wrappers.rst": "b4943eeac6a59501b60ebfa16b0b093bc415b5bf8e4124409371b0d3641cbbfd",
+    "paper/figures/build_slas_processes.py": "bd88de33313f84d01d44bbbd00e170c7025293018144f1a2cbe4a8ed4c3b1184"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "process_architecture.png": "f6856a5f564d188c14b66769de880facdd9458eb1642fa119c50e11c9b735d59",
+    "process_architecture.pdf": "1bb8bb2e4021b3f35c70022ec77c47f2cd08fad0bd584ba44e7904d4d5adb2df",
+    "process_architecture.svg": "766d21f793797cdd98fc1d2ddc5fbb9585ea8cc216883c3bd5bb66dfd56c896a"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

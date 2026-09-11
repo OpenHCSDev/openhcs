@@ -1,0 +1,26 @@
+{
+  "generator_sha256": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc",
+  "source_sha256": {
+    "docs/source/architecture/quick_start.rst": "4dcc151050f02da75a6819db0be0053a1dcbefcf236b34998536ad9fbece915d",
+    "openhcs/core/pipeline_document.py": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
+    "openhcs/core/compiled_step_plan.py": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
+    "openhcs/core/runtime_stores.py": "5f323ec8edd4221ee30e34ed0c9c09e0f4e45ef502749c1a2d331b7a5452af99",
+    "openhcs/core/source_bindings.py": "7e8852904adf9618f54d6bfce80e60a726ce514c896b4a5281a46f76ab91c5c2",
+    "openhcs/agent/capabilities.py": "b8e6a83bbbc60ed9e087a6ba84f0f6862785ec9e0c7d868ff48bbde702554b49",
+    "website/assets/logos/README.md": "76b58d9edccdfff5fca68a09032921722578f00bac3d24cf2e8004893920d4be",
+    "website/assets/logos/python.svg": "adca85e1d0bd6d796abea422d983fd131a432fe78efeac58af18461eb1548780",
+    "website/assets/logos/cellprofiler.png": "820dc710604ae6bfa5605b7a6c17817c484d91e289c15d5953e2769b083333b3",
+    "website/assets/logos/bioformats.svg": "19cfb3bc6a2274b98c76a1e9af43f1d94c56b5b5e718e60b1fecdb633c7ddf9a",
+    "website/assets/logos/cupy.svg": "30100286bd74ae633d2196b2d8ea175e405c258c22441582e6bb1715866d1756",
+    "website/assets/logos/pytorch.svg": "fa653a3e79a36d6c8738c9c05e10c0265e466db23fc4b2d7ef65d32ff84cc839",
+    "website/assets/logos/jax.png": "b336e0959efcf4835f1c4ab717398b4a8fe11dccac6790f2dcff504820d9b095",
+    "website/assets/logos/fiji.svg": "36b2b05f93e28fb37085f8d9eedaddcdda7718732bbf3f4ed40e0bd4722babea"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "shared_workflow.png": "cb9284f18cc3f26b3d6e4718e73fbf7f3bbb602e0df14f28a1f15373542b128e",
+    "shared_workflow.pdf": "ec834cf1038f6617af57c0959255f9ec46655ffe330d7f0909e3acd956cf9b80",
+    "shared_workflow.svg": "24980620f3decddafe235b14803123a89de735dd06d458b33e041d4ee3e51bbd"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

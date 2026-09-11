@@ -1,0 +1,58 @@
+{
+  "argv": [
+    "register-custom-function",
+    "qa/custom_catalog_probe.py",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_register_custom_function",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "registered_count": 1,
+            "persisted": true,
+            "storage_dir": "/tmp/openhcs-preview-policy-G9xfr2/data/openhcs/custom_functions",
+            "source_file_paths": [
+              "/tmp/openhcs-preview-policy-G9xfr2/data/openhcs/custom_functions/paper_catalog_refresh_after_prewarm.py"
+            ],
+            "functions": [
+              {
+                "import_path": "openhcs.processing.custom_functions.paper_catalog_refresh_after_prewarm",
+                "function_id": "openhcs:paper_catalog_refresh_after_prewarm",
+                "name": "paper_catalog_refresh_after_prewarm",
+                "module": "openhcs.processing.custom_functions",
+                "library": "openhcs",
+                "signature": "paper_catalog_refresh_after_prewarm(gain=1.0, *, enabled=True)",
+                "summary": "Scale the input for a nonexecuted catalogue registration check.",
+                "backend_tags": [
+                  "openhcs",
+                  "custom"
+                ]
+              }
+            ],
+            "next_steps": [
+              "Call openhcs_describe_function(function_id='openhcs:paper_catalog_refresh_after_prewarm'), then use openhcs_add_function_step or draft-pipeline-step."
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-custom-catalog-64tT3v/qa/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/tmp/openhcs-custom-catalog-64tT3v"
+  }
+}

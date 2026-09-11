@@ -1,0 +1,133 @@
+{
+  "argv": [
+    "function",
+    "openhcs:paper_rescale_signal",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_describe_function",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "schema_version": "openhcs.agent.v1",
+            "entry": {
+              "import_path": "openhcs.processing.custom_functions.paper_rescale_signal",
+              "function_id": "openhcs:paper_rescale_signal",
+              "name": "paper_rescale_signal",
+              "module": "openhcs.processing.custom_functions",
+              "library": "openhcs",
+              "signature": "paper_rescale_signal(gain=1.2, offset=0.0, *, enabled=True)",
+              "summary": "Rescale image intensities with a gain and offset.",
+              "backend_tags": [
+                "openhcs",
+                "custom"
+              ]
+            },
+            "parameters": [
+              {
+                "name": "image",
+                "annotation": null,
+                "default_repr": null,
+                "required": false,
+                "supplied_by": "runtime_primary_input",
+                "description": "Input image array supplied by the pipeline. Supplied by OpenHCS from the FunctionStep input image payload; do not pass this as a function kwarg.",
+                "enum_import_path": null,
+                "enum_members": [],
+                "enum_values": []
+              },
+              {
+                "name": "gain",
+                "annotation": "float",
+                "default_repr": "1.2",
+                "required": false,
+                "supplied_by": "agent",
+                "description": "Multiplicative intensity scale.",
+                "enum_import_path": null,
+                "enum_members": [],
+                "enum_values": []
+              },
+              {
+                "name": "offset",
+                "annotation": "float",
+                "default_repr": "0.0",
+                "required": false,
+                "supplied_by": "agent",
+                "description": "Constant added after scaling.",
+                "enum_import_path": null,
+                "enum_members": [],
+                "enum_values": []
+              },
+              {
+                "name": "slice_by_slice",
+                "annotation": "bool",
+                "default_repr": "False",
+                "required": false,
+                "supplied_by": "runtime_parameter",
+                "description": "bool, optional\nAdded by the numpy memory decorator. Process 3D arrays slice-by-slice.\nDefaults to False. Prevents cross-slice contamination when enabled. Supplied by OpenHCS runtime execution infrastructure; do not pass this as a function kwarg.",
+                "enum_import_path": null,
+                "enum_members": [],
+                "enum_values": []
+              },
+              {
+                "name": "dtype_config",
+                "annotation": "LazyDtypeConfig",
+                "default_repr": "LazyDtypeConfig(default_dtype_conversion=<DtypeConversion.NATIVE_OUTPUT: 'native'>)",
+                "required": false,
+                "supplied_by": "runtime_parameter",
+                "description": "Supplied by OpenHCS runtime execution infrastructure; do not pass this as a function kwarg.",
+                "enum_import_path": null,
+                "enum_members": [],
+                "enum_values": []
+              },
+              {
+                "name": "enabled",
+                "annotation": "bool",
+                "default_repr": "True",
+                "required": false,
+                "supplied_by": "agent",
+                "description": "Run this callable or configuration when enabled; skip it when disabled.",
+                "enum_import_path": null,
+                "enum_members": [],
+                "enum_values": []
+              }
+            ],
+            "doc": "Rescale image intensities with a gain and offset.\n\nArgs:\n    image: Input image array supplied by the pipeline.\n    gain: Multiplicative intensity scale.\n    offset: Constant added after scaling.\n\nReturns:\n    Image array with the same shape as the input.\n\n\nAdditional Parameters\n---------------------\n    slice_by_slice : bool, optional\n        Added by the numpy memory decorator. Process 3D arrays slice-by-slice.\n        Defaults to False. Prevents cross-slice contamination when enabled.",
+            "runtime_contract": {
+              "callable_kind": "regular",
+              "processing_contract": "FLEXIBLE",
+              "declared_processing_contract": "FLEXIBLE",
+              "runtime_bound_parameters": [
+                "slice_by_slice"
+              ],
+              "required_variable_components": [],
+              "artifact_inputs": [],
+              "artifact_outputs": [],
+              "cellprofiler_module": null,
+              "source_binding_rule": null,
+              "materialization_rule": null,
+              "measurement_rule": null,
+              "pattern_compatibility_rule": "Regular OpenHCS callables may participate in standard FunctionStep callable, tuple, list, or dict patterns subject to compiler validation. Dictionary keys are normalized group identities selected by group_by, may intentionally cover only a subset of available component values, and omit groups that should not be invoked; compilation rejects keys absent from the available component domain."
+            },
+            "doc_truncated": false,
+            "doc_chars": 492,
+            "max_doc_chars": 2000
+          }
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-custom-catalog-64tT3v/qa/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/tmp/openhcs-custom-catalog-64tT3v"
+  }
+}

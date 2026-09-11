@@ -1,0 +1,8 @@
+# Manuscript authorities and derived provenance belong with the review sources.
+!/openhcs_references.json
+!/figures/slas/*_provenance.json
+!/figures/slas/custom_extension_*.json
+!/supplementary/*_provenance.json
+
+# Local reading copies, reviewer snapshots and UI-debugging artefacts.
+/review/

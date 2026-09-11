@@ -1,0 +1,340 @@
+{
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-custom-catalog-64tT3v/qa/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/tmp/openhcs-custom-catalog-64tT3v"
+  },
+  "root_baseline_commit": "4c104c7c0d530215db984773aea7cd72e103fab6",
+  "root_patch_commit": "89ef46cb05c18e00fe54343dfc67c8eb008e1135",
+  "generic_patch_commit": "c5aeee24139fd9cf9871e7929fccfe47baa994af",
+  "capture_application_version": "0.8.5",
+  "post_launch_source_delta": "Before committing, the adjacent core.future_completion and theming import lines were alphabetised. No imported names, declarations, callbacks, parameters or behaviour changed after GUI launch. Both the committed and actual loaded byte hashes are retained.",
+  "source_files": {
+    "openhcs/agent/services/endpoint_function_catalog_service.py": {
+      "worktree_path": "/tmp/openhcs-custom-catalog-64tT3v/openhcs/agent/services/endpoint_function_catalog_service.py",
+      "committed_sha256": "977a74003819f2547548d322f4c5f0cb148b23fec20f31be4fa462bfcfb7ea04",
+      "capture_loaded_sha256": "977a74003819f2547548d322f4c5f0cb148b23fec20f31be4fa462bfcfb7ea04"
+    },
+    "openhcs/pyqt_gui/dialogs/function_selector_dialog.py": {
+      "worktree_path": "/tmp/openhcs-custom-catalog-64tT3v/openhcs/pyqt_gui/dialogs/function_selector_dialog.py",
+      "committed_sha256": "e11c456a5322038408edd42df7d2674cda42e1992f7f6c6e567e7923bf3526c3",
+      "capture_loaded_sha256": "4b9dd1113c6370a3fa06ebd0fa07d690de931a5009cf58a1e25c961d512ee29b"
+    },
+    "external/pyqt-reactive/src/pyqt_reactive/core/future_completion.py": {
+      "worktree_path": "/tmp/openhcs-custom-catalog-64tT3v/external/pyqt-reactive/src/pyqt_reactive/core/future_completion.py",
+      "committed_sha256": "7ba6ef203bae81319004ccc4ddfe4226e0230b177df663cfb0d02c364e1dbc47",
+      "capture_loaded_sha256": "7ba6ef203bae81319004ccc4ddfe4226e0230b177df663cfb0d02c364e1dbc47"
+    },
+    "tests/unit/pyqt_gui/test_function_catalog_projection.py": {
+      "worktree_path": "/tmp/openhcs-custom-catalog-64tT3v/tests/unit/pyqt_gui/test_function_catalog_projection.py",
+      "committed_sha256": "b16c69e8290aa7c74dd142288b16b7e0975652fb227384f0abb50fc156387a60",
+      "capture_loaded_sha256": "b16c69e8290aa7c74dd142288b16b7e0975652fb227384f0abb50fc156387a60"
+    },
+    "external/pyqt-reactive/tests/test_future_completion.py": {
+      "worktree_path": "/tmp/openhcs-custom-catalog-64tT3v/external/pyqt-reactive/tests/test_future_completion.py",
+      "committed_sha256": "b125587df2d974cf4c7e37bd022fe702fa32d81c538ff0ba18913b11b417acf6",
+      "capture_loaded_sha256": "b125587df2d974cf4c7e37bd022fe702fa32d81c538ff0ba18913b11b417acf6"
+    }
+  },
+  "custom_source": {
+    "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_signal_example.py",
+    "sha256": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c",
+    "persisted_path": "/tmp/openhcs-preview-policy-G9xfr2/data/openhcs/custom_functions/paper_rescale_signal.py",
+    "persisted_sha256": "b84af3e2857cd16636d631244aaf82d34d3bd5ebd658bd92a56281b2b3aef26c"
+  },
+  "frames": {
+    "selector": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_selector_capture.png",
+      "sha256": "0fe9e88471c8adc2b46c4fc8b63a94d73b7aba1c5b164dad005560dc70602508",
+      "source_resource": {
+        "uri": "file:///tmp/openhcs-custom-catalog-64tT3v/qa/captures/20260910T035818056558Z_qt_top_level_106954800_Select_Function_-_Dual_Pane_View.png",
+        "title": "Select Function - Dual Pane View",
+        "mime_type": "image/png",
+        "path": "/tmp/openhcs-custom-catalog-64tT3v/qa/captures/20260910T035818056558Z_qt_top_level_106954800_Select_Function_-_Dual_Pane_View.png",
+        "size_bytes": 157078,
+        "sha256": "0fe9e88471c8adc2b46c4fc8b63a94d73b7aba1c5b164dad005560dc70602508"
+      },
+      "width": 1200,
+      "height": 700
+    },
+    "parameters": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_parameters_capture.png",
+      "sha256": "49f3b150a1956bf9415b6e416a2c7c6303ad1c5fb5c0d02ce1e8335bf30e3c69",
+      "source_resource": {
+        "uri": "file:///tmp/openhcs-custom-catalog-64tT3v/qa/captures/20260910T035926926564Z_home_ts_code_projects_openhcs_mcp_outputs_website-agent-demo_candidate-20260804-_Edit_Step_1._Enhanced_neuronal_signal.png",
+        "title": "* Edit Step: 1. Enhanced neuronal signal",
+        "mime_type": "image/png",
+        "path": "/tmp/openhcs-custom-catalog-64tT3v/qa/captures/20260910T035926926564Z_home_ts_code_projects_openhcs_mcp_outputs_website-agent-demo_candidate-20260804-_Edit_Step_1._Enhanced_neuronal_signal.png",
+        "size_bytes": 46697,
+        "sha256": "49f3b150a1956bf9415b6e416a2c7c6303ad1c5fb5c0d02ce1e8335bf30e3c69"
+      },
+      "width": 550,
+      "height": 600
+    }
+  },
+  "receipts": {
+    "code-before": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_code_before.json",
+      "sha256": "0643feb3e37b62fab001619e68e6ff993a35cc9919e96aabe696c4ad47d99f0f",
+      "argv": [
+        "code-document",
+        "plate_manager.orchestrator_config",
+        "--selection-mode",
+        "all",
+        "--clean",
+        "--json"
+      ]
+    },
+    "load-authoring": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_load_authoring.json",
+      "sha256": "178c109f95ed1793d616c319cceecca7d353a5292223e8e0d501cd14fc24ceec",
+      "argv": [
+        "apply-code-document",
+        "plate_manager.orchestrator_config",
+        "--source-text",
+        "# Edit this orchestrator configuration and save to apply changes\n\nfrom openhcs.constants.constants import (\n    AllComponents,\n    VariableComponents,\n)\nfrom openhcs.core.config import (\n    GlobalPipelineConfig,\n    LazyNapariStreamingConfig,\n    LazyPathPlanningConfig,\n    LazyProcessingConfig,\n    LazyStepMaterializationConfig,\n    PipelineConfig,\n)\nfrom openhcs.core.source_bindings import (\n    ComponentSelector,\n    LazySourceBindingsConfig,\n    NamedSourceBinding,\n    SourceFilterClause,\n    SourceFilterMatchType,\n    SourceFilterSubject,\n    SourceSelector,\n)\nfrom openhcs.core.steps.function_step import FunctionStep\nfrom openhcs.processing.backends.analysis.neurite_outgrowth import (\n    MetaXpressCellBodySettings,\n    MetaXpressNuclearSettings,\n    MetaXpressOutgrowthSettings,\n    neurite_outgrowth_metaxpress,\n)\nfrom openhcs.processing.backends.processors.numpy_processor import percentile_normalize\nfrom pathlib import Path\n\npath_root = Path('/tmp/openhcs-preview-policy-G9xfr2/outputs')\npath_1 = Path('/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate')\n\nplate_paths = [\n    path_1\n]\n\nglobal_config = GlobalPipelineConfig()\n\nper_plate_configs = {\n    path_1: PipelineConfig(\n        materialization_results_path=path_root / 'results',\n        materialize_runtime_artifacts=True,\n        source_bindings_config=LazySourceBindingsConfig(\n            bindings=(\n                NamedSourceBinding(\n                    alias='W1_neuron_neurite',\n                    selector=SourceSelector(\n                        filters=(\n                            SourceFilterClause(\n                                subject=SourceFilterSubject.FILE,\n                                match_type=SourceFilterMatchType.EQUALS,\n                                value='1_w1.tif'\n                            ),\n                        )\n                    ),\n                    component_identity=(\n                        ComponentSelector(\n                            component=AllComponents.WELL,\n                            value='1'\n                        ),\n                        ComponentSelector(\n                            component=AllComponents.SITE,\n                            value='1'\n                        ),\n                        ComponentSelector(\n                            component=AllComponents.CHANNEL,\n                            value='1'\n                        ),\n                        ComponentSelector(\n                            component=AllComponents.Z_INDEX,\n                            value='1'\n                        ),\n                        ComponentSelector(\n                            component=AllComponents.TIMEPOINT,\n                            value='1'\n                        )\n                    )\n                ),\n                NamedSourceBinding(\n                    alias='W2_soma_nuclear',\n                    selector=SourceSelector(\n                        filters=(\n                            SourceFilterClause(\n                                subject=SourceFilterSubject.FILE,\n                                match_type=SourceFilterMatchType.EQUALS,\n                                value='1_w2.tif'\n                            ),\n                        )\n                    ),\n                    component_identity=(\n                        ComponentSelector(\n                            component=AllComponents.WELL,\n                            value='1'\n                        ),\n                        ComponentSelector(\n                            component=AllComponents.SITE,\n                            value='1'\n                        ),\n                        ComponentSelector(\n                            component=AllComponents.CHANNEL,\n                            value='2'\n                        ),\n                        ComponentSelector(\n                            component=AllComponents.Z_INDEX,\n                            value='1'\n                        ),\n                        ComponentSelector(\n                            component=AllComponents.TIMEPOINT,\n                            value='1'\n                        )\n                    )\n                )\n            )\n        ),\n        path_planning_config=LazyPathPlanningConfig(\n            well_filter=0,\n            global_output_folder=path_root\n        )\n    )\n}\n\npipeline_data = {\n    path_1: [\n        FunctionStep(\n            func=(percentile_normalize, {\n                    'high_percentile': 99.8,\n                    'target_max': 255.0\n                }),\n            name='Enhanced neuronal signal',\n            processing_config=LazyProcessingConfig(\n                variable_components=[\n                    VariableComponents.CHANNEL\n                ]\n            ),\n            step_materialization_config=LazyStepMaterializationConfig(\n                global_output_folder=path_root,\n                sub_dir='review_images',\n                enabled=True\n            ),\n            napari_streaming_config=LazyNapariStreamingConfig(\n                colormap='magma',\n                enabled=True,\n                persistent=True,\n                port=5613\n            )\n        ),\n        FunctionStep(\n            func=(neurite_outgrowth_metaxpress, {\n                    'cell_body': MetaXpressCellBodySettings(\n                        approximate_max_width=36.0,\n                        minimum_area=45.0,\n                        intensity_above_local_background=20.0,\n                        channel_index=0\n                    ),\n                    'outgrowth': MetaXpressOutgrowthSettings(\n                        maximum_width=6.0,\n                        intensity_above_local_background=8.0,\n                        minimum_cell_growth_to_log_as_significant=8.0\n                    ),\n                    'use_nuclear_stain': True,\n                    'nuclear_stain': MetaXpressNuclearSettings(\n                        approx_max_width=32.0,\n                        intensity_above_local_background=18.0\n                    )\n                }),\n            name='Per-neuron morphology and topology',\n            processing_config=LazyProcessingConfig(\n                variable_components=[\n                    VariableComponents.CHANNEL\n                ]\n            ),\n            napari_streaming_config=LazyNapariStreamingConfig(\n                colormap='magma',\n                enabled=True,\n                persistent=True,\n                port=5613\n            )\n        )\n    ]\n}",
+        "--base-revision-token",
+        "3bc0e0acab00fc0c2bc74378c61b025fc9c3db5ce9529b8a3591581621e5831b",
+        "--no-confirmation",
+        "--json"
+      ]
+    },
+    "registration-after-second-gui-start": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_registration_after_second_gui_start.json",
+      "sha256": "37b6075b59ca68aa4389d0895badf4ee1a7b0c6bb5d589e51c82a2bc2c846575",
+      "argv": [
+        "register-custom-function",
+        "qa/custom_catalog_probe.py",
+        "--json"
+      ]
+    },
+    "open-step": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_open_step.json",
+      "sha256": "064653c4ea78c7785571298189ffc5077c3f0f019f92dc313f81d29a432e86b7",
+      "argv": [
+        "call",
+        "openhcs_ui_navigate_window",
+        "--arguments",
+        "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0\",\"create_if_missing\":true}",
+        "--json"
+      ]
+    },
+    "step-tree-ready": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_step_tree_ready.json",
+      "sha256": "c3bfd51f801438f4856705d4f577f0ed8cef08f48db7ec62138c4c860270e765",
+      "argv": [
+        "call",
+        "openhcs_ui_get_widget_tree",
+        "--arguments",
+        "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0\",\"max_depth\":12,\"max_nodes\":650,\"maximum_text_length\":100}",
+        "--json"
+      ]
+    },
+    "function-tab": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_function_tab.json",
+      "sha256": "79f8cf6e4b259f4c1c9acd62c90513e8f3ac7ce27b21660aa082bbfd075d59d7",
+      "argv": [
+        "call",
+        "openhcs_ui_invoke_widget_action",
+        "--arguments",
+        "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0\",\"path_id\":\"1.0.0.0\",\"action_kind\":\"tab_selector\",\"target_index\":1}",
+        "--json"
+      ]
+    },
+    "open-visible-selector": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_open_visible_selector.json",
+      "sha256": "9eea9c75c7e7a2c94a0bd233895deb294ed007cb54ab97d3250284ab5156268c",
+      "argv": [
+        "call",
+        "openhcs_ui_invoke_widget_action",
+        "--arguments",
+        "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0\",\"path_id\":\"1.0.0.1.1.0\",\"action_kind\":\"button\"}",
+        "--json"
+      ]
+    },
+    "selector-windows-ready": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_selector_windows_ready.json",
+      "sha256": "35b8fdd981c12c1f9c33bd7a852d2ac78343425e16f11de5bef4786cb84f75ac",
+      "argv": [
+        "windows",
+        "--json"
+      ]
+    },
+    "selector-tree": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_selector_tree.json",
+      "sha256": "343b902367816f317c52daeb282d0dd9ee6a68be8050bda73f7f96b1ff9aec8b",
+      "argv": [
+        "call",
+        "openhcs_ui_get_widget_tree",
+        "--arguments",
+        "{\"window_id\":\"qt_top_level:106954800\",\"max_depth\":10,\"max_nodes\":3000,\"maximum_item_model_nodes\":1600,\"maximum_text_length\":200}",
+        "--json"
+      ]
+    },
+    "select-custom-function": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_select_custom_function.json",
+      "sha256": "4322e69a31ef4fe8e65aac888d923b51b7f1681beab550e7b3e0b9607b1fa8c2",
+      "argv": [
+        "call",
+        "openhcs_ui_invoke_widget_action",
+        "--arguments",
+        "{\"window_id\":\"qt_top_level:106954800\",\"path_id\":\"1.0.1.2.0.425\",\"action_kind\":\"item_select\"}",
+        "--json"
+      ]
+    },
+    "selector-selected-tree": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_selector_selected_tree.json",
+      "sha256": "ab7c7a4f0011aa3130952fb69e6ddc645d229e397d54e4434b1d2b7158e823c8",
+      "argv": [
+        "call",
+        "openhcs_ui_get_widget_tree",
+        "--arguments",
+        "{\"window_id\":\"qt_top_level:106954800\",\"max_depth\":10,\"max_nodes\":3000,\"maximum_item_model_nodes\":1600,\"maximum_text_length\":200}",
+        "--json"
+      ]
+    },
+    "accept-custom-function": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_accept_custom_function.json",
+      "sha256": "83f1edffcf055087ec218b77ac21ba78abab4f139fa7d00519f6b34b9661488c",
+      "argv": [
+        "call",
+        "openhcs_ui_invoke_widget_action",
+        "--arguments",
+        "{\"window_id\":\"qt_top_level:106954800\",\"path_id\":\"2\",\"action_kind\":\"button\"}",
+        "--json"
+      ]
+    },
+    "custom-parameters-tree": {
+      "path": "/home/ts/code/projects/openhcs/paper/figures/slas/custom_extension_custom_parameters_tree.json",
+      "sha256": "62fb8fd96c919eb39f9e6228a7f98ae1399b5560d4acc606234761aa1fa6ac58",
+      "argv": [
+        "call",
+        "openhcs_ui_get_widget_tree",
+        "--arguments",
+        "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0\",\"max_depth\":15,\"max_nodes\":1500,\"maximum_text_length\":160}",
+        "--json"
+      ]
+    }
+  },
+  "checks": {
+    "corrected_registration_endpoint": 7893,
+    "original_misrouted_endpoint": 7777,
+    "old_selector_count": 651,
+    "refreshed_selector_count": 654,
+    "refreshed_selector_revision": "8566b96993801500fd72e77f7b581f9a2cc48480eadaab08cbd2a113d2fce074",
+    "native_item_selection_and_select_button_used": true,
+    "gain_widget": {
+      "path": [
+        1,
+        1,
+        0,
+        2,
+        0,
+        0,
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "path_id": "1.1.0.2.0.0.0.1.2.0.0.0.0.1",
+      "child_index": 1,
+      "class_name": "NoScrollDoubleSpinBox",
+      "label": "1.2",
+      "visible": true,
+      "enabled": true,
+      "geometry": {
+        "x": 54,
+        "y": 1,
+        "width": 394,
+        "height": 32
+      },
+      "global_geometry": {
+        "x": 1046,
+        "y": 583,
+        "width": 394,
+        "height": 32
+      },
+      "action_kinds": [
+        "spin_input"
+      ],
+      "clickable": true,
+      "context_label": "Gain:"
+    },
+    "offset_widget": {
+      "path": [
+        1,
+        1,
+        0,
+        2,
+        0,
+        0,
+        0,
+        1,
+        2,
+        0,
+        0,
+        1,
+        0,
+        1
+      ],
+      "path_id": "1.1.0.2.0.0.0.1.2.0.0.1.0.1",
+      "child_index": 1,
+      "class_name": "NoScrollDoubleSpinBox",
+      "label": "0",
+      "visible": true,
+      "enabled": true,
+      "geometry": {
+        "x": 62,
+        "y": 1,
+        "width": 386,
+        "height": 32
+      },
+      "global_geometry": {
+        "x": 1054,
+        "y": 618,
+        "width": 386,
+        "height": 32
+      },
+      "action_kinds": [
+        "spin_input"
+      ],
+      "clickable": true,
+      "context_label": "Offset:"
+    },
+    "analysis_executed": false,
+    "scientific_outputs_changed": false,
+    "step_edit_saved": false,
+    "root_focused_tests_passed": 44,
+    "generic_full_suite_passed": 533,
+    "strict_root_and_generic_sphinx_passed": true,
+    "docs_validator": "156 files, 24 Python blocks, 155 audited documentation sources",
+    "pre_fix_destroy_pending_future_exit_code": 139
+  },
+  "scope_notes": [
+    "Execution endpoint comes from OPENHCS_UI_CONFIG_CACHE_FILE; bridge directory only selects the GUI control endpoint.",
+    "The two extra paper_catalog_refresh functions are isolated, nonexecuted QA declarations used to prove registration after GUI startup.",
+    "Public demo pipeline source was applied in an isolated GUI; adding the custom function only changes that unsaved step editor.",
+    "Original scientific analysis files and original authoring figure captures are unchanged.",
+    "The first patched GUI exited normally before capture; the retained final captures come from its separately launched second GUI."
+  ],
+  "suggested_editorial_crops_xywh": {
+    "selector": [
+      402,
+      584,
+      769,
+      38
+    ],
+    "parameters": [
+      14,
+      311,
+      521,
+      148
+    ]
+  }
+}

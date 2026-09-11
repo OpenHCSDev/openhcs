@@ -1,0 +1,56 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_get_code_document",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "selection_mode": "selected",
+          "selected_scope_ids": [
+            "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+          ],
+          "current_snapshot": {
+            "snapshot_id": "9da9be78-b764-458f-be8b-2d8ed0813e60",
+            "schema_version": "openhcs.agent.v1",
+            "index": 1,
+            "branch": "main",
+            "parent_snapshot_id": "0f706d7e-93a0-4e22-a402-767716bbd2c7",
+            "timestamp_unix": 1789003312.2570183,
+            "timestamp": "2026-09-09T21:21:52.257",
+            "label": "edit plate_manager.orchestrator_config via MCP [/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate]",
+            "num_states": 9,
+            "is_current": true,
+            "is_head": true,
+            "uri": "openhcs://ui/snapshots/9da9be78-b764-458f-be8b-2d8ed0813e60"
+          },
+          "current_revision_token": "f99426664efdfa605681c95cdba1da9bb60f1f00a5c224c78efae3400b4d0564",
+          "schema_version": "openhcs.agent.v1",
+          "summary": {
+            "widget_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+            "schema_version": "openhcs.agent.v1",
+            "identity": {
+              "document_id": "window_code_document:/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+            },
+            "title": "Edit Step: Enhanced neuronal signal",
+            "readable": true,
+            "writable": true,
+            "supported_selection_modes": [],
+            "current_selection_count": 1,
+            "total_scope_count": 2
+          },
+          "source": "# Function Step\n\nfrom openhcs.constants.constants import VariableComponents\nfrom openhcs.core.config import (\n    LazyNapariStreamingConfig,\n    LazyProcessingConfig,\n    LazyStepMaterializationConfig,\n)\nfrom openhcs.core.steps.function_step import FunctionStep\nfrom openhcs.processing.backends.processors.numpy_processor import percentile_normalize\nfrom pathlib import Path\n\nstep = FunctionStep(\n    func=(percentile_normalize, {\n            'target_max': 255.0,\n            'high_percentile': 99.8\n        }),\n    name='Enhanced neuronal signal',\n    processing_config=LazyProcessingConfig(\n        variable_components=[\n            VariableComponents.CHANNEL\n        ]\n    ),\n    step_materialization_config=LazyStepMaterializationConfig(\n        global_output_folder=Path('/tmp/openhcs-paper-ui-JvncuC/outputs'),\n        sub_dir='review_images',\n        enabled=True\n    ),\n    napari_streaming_config=LazyNapariStreamingConfig(\n        colormap='magma',\n        enabled=True,\n        persistent=True,\n        port=5613\n    )\n)",
+          "mime_type": "text/x-python",
+          "size_bytes": 1031,
+          "sha256": "f99426664efdfa605681c95cdba1da9bb60f1f00a5c224c78efae3400b4d0564",
+          "warnings": [],
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

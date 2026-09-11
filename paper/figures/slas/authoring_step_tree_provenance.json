@@ -1,0 +1,239 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_get_widget_tree",
+    "--arguments",
+    "{\"window_id\":\"pipeline_editor\",\"actionable_only\":true,\"compact_actions\":true,\"maximum_text_length\":240}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_get_widget_tree",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "pipeline_editor",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "projected": true,
+            "root": null,
+            "actionable_widgets": [
+              {
+                "path": [
+                  1,
+                  0,
+                  0
+                ],
+                "path_id": "1.0.0",
+                "child_index": 0,
+                "class_name": "QPushButton",
+                "label": "Add",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 5,
+                  "y": 5,
+                  "width": 95,
+                  "height": 27
+                },
+                "global_geometry": {
+                  "x": 1993,
+                  "y": 1108,
+                  "width": 95,
+                  "height": 27
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "tool_tip": "Add new pipeline step",
+                "context_label": "Needs Compile"
+              },
+              {
+                "path": [
+                  1,
+                  0,
+                  3
+                ],
+                "path_id": "1.0.3",
+                "child_index": 3,
+                "class_name": "QPushButton",
+                "label": "Auto",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 305,
+                  "y": 5,
+                  "width": 95,
+                  "height": 27
+                },
+                "global_geometry": {
+                  "x": 2293,
+                  "y": 1108,
+                  "width": 95,
+                  "height": 27
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "tool_tip": "Load basic_pipeline.py",
+                "context_label": "Needs Compile"
+              },
+              {
+                "path": [
+                  1,
+                  0,
+                  4
+                ],
+                "path_id": "1.0.4",
+                "child_index": 4,
+                "class_name": "QPushButton",
+                "label": "Code",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 405,
+                  "y": 5,
+                  "width": 95,
+                  "height": 27
+                },
+                "global_geometry": {
+                  "x": 2393,
+                  "y": 1108,
+                  "width": 95,
+                  "height": 27
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "tool_tip": "Edit pipeline as Python code",
+                "context_label": "Needs Compile"
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  3
+                ],
+                "path_id": "1.1.3",
+                "child_index": 3,
+                "class_name": "QModelIndex",
+                "signature_diff": true,
+                "semantic_markers": [
+                  "_"
+                ],
+                "action_role": "item_select",
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "label": "1. Enhanced neuronal signal | (root{func=percentile_normalize}) | proc{vars:channel, group:CHANNEL, source:PREVIOUS_STEP} | mat{enabled:True, subdir:review_images} | nap{enabled:True}",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 798,
+                  "height": 47
+                },
+                "global_geometry": {
+                  "x": 1988,
+                  "y": 646,
+                  "width": 798,
+                  "height": 47
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "1. Enhanced neuronal signal | (root{func=percentile_normalize}) | proc{vars:channel, group:CHANNEL, source:PREVIOUS_STEP} | mat{enabled:True, subdir:review_images} | nap{enabled:True}",
+                "item_count": 0,
+                "tool_tip": "Step: Enhanced neuronal signal\nVariable Components: [CHANNEL]\nGroup By: CHANNEL\nInput Source: PREVIOUS_STEP",
+                "context_label": "Needs Compile"
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  4
+                ],
+                "path_id": "1.1.4",
+                "child_index": 4,
+                "class_name": "QModelIndex",
+                "signature_diff": true,
+                "semantic_markers": [
+                  "_"
+                ],
+                "action_role": "item_select",
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_1",
+                "label": "2. Per-neuron morphology and topology | (root{func=neurite_outgrowth_metaxpress}) | proc{vars:channel, group:CHANNEL, source:PREVIOUS_STEP} | nap{enabled:True}",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 47,
+                  "width": 798,
+                  "height": 47
+                },
+                "global_geometry": {
+                  "x": 1988,
+                  "y": 693,
+                  "width": 798,
+                  "height": 47
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "2. Per-neuron morphology and topology | (root{func=neurite_outgrowth_metaxpress}) | proc{vars:channel, group:CHANNEL, source:PREVIOUS_STEP} | nap{enabled:True}",
+                "item_count": 0,
+                "tool_tip": "Step: Per-neuron morphology and topology\nVariable Components: [CHANNEL]\nGroup By: CHANNEL\nInput Source: PREVIOUS_STEP",
+                "context_label": "Needs Compile"
+              }
+            ],
+            "summary": {
+              "object_state_scope_id": null,
+              "dirty": false,
+              "signature_diff": true,
+              "dirty_field_count": 0,
+              "signature_diff_field_count": 22,
+              "semantic_markers": [
+                "_"
+              ],
+              "managed_action_ids": [],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "pipeline_editor"
+              },
+              "title": "Pipeline Editor",
+              "window_kind": "embedded",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": {
+                "value": "pipeline_editor"
+              }
+            },
+            "widget_count": 31,
+            "actionable_count": 5,
+            "returned_widget_count": 0,
+            "returned_actionable_count": 5,
+            "tree_truncated": false,
+            "actionable_widgets_truncated": false,
+            "actionable_only": true,
+            "include_tree": false,
+            "max_depth": 8,
+            "max_nodes": 80
+          }
+        ]
+      }
+    ]
+  }
+}

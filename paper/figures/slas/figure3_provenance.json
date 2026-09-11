@@ -1,0 +1,39 @@
+{
+  "source_sha256": {
+    "website/assets/agent/cold-start-workflow-record.json": "52d126027b39a05cd5e799e4aca28e45fd8edd251c7b523204c33c14fa7de65c",
+    "website/assets/agent/cold-start-workflow-uncut.mp4": "e3c71086fbe6ea85bfb8ae557d3cc129c6a745779fcfa6c0c0b5388e13956c58",
+    "mcp_outputs/website-agent-demo/candidate-20260804-13/plate/1_w1.tif": "2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7",
+    "mcp_outputs/website-agent-demo/candidate-20260804-13/plate/1_w2.tif": "ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847",
+    "website/assets/agent/cold-start-workflow-pipeline.py": "48b6e4f9dbc54932df8a95c405f4b832c1ca35856d866a261faf15fa3c14b754"
+  },
+  "generator_sha256": "79793900bac82b4eec0bf6090df24bf6d05a9fd222d86309cef3660af9f19a32",
+  "run_id": "candidate-20260804-13",
+  "openhcs_version": "0.7.13",
+  "video_frame_seconds": 600,
+  "image_display": "Original uint8 TIFF pixels displayed linearly at 0..255; no spatial crop",
+  "video_display": "Full original frame with labelled detail rectangles; D/E are unchanged pixel crops of the same frame, not the later corrected replay",
+  "video_detail_crops_xyxy": {
+    "D  Neuron and neurite outlines": [
+      380,
+      70,
+      725,
+      400
+    ],
+    "E  Native measurement-table detail": [
+      680,
+      500,
+      1155,
+      615
+    ]
+  },
+  "step_labels": [
+    "Enhanced neuronal signal\npercentile_normalize",
+    "Per-neuron morphology and topology\nneurite_outgrowth_metaxpress"
+  ],
+  "output_sha256": {
+    "figure3_original_video_frame.png": "c52154ecfa8f7ab3c9f8e24416b735e7ca79adf57111ba2b4dc3c824903d13c1",
+    "figure3_agent_workflow.png": "7cfaf8377c99543440bb1e646253f7a4a2283a0434aad577b9fa66368679fbce",
+    "figure3_agent_workflow.pdf": "c7d1d6c4574603e0b2950391d1ce623eb7be9aaaaaf2f0c4cbd6d1a93f9b5bc1",
+    "figure3_agent_workflow.svg": "06b458659e346af8f6c654b3e72006aa936d9a7c5a09ded7f1f6cec2d8f4f813"
+  }
+}

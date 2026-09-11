@@ -1,0 +1,20 @@
+{
+  "generator_sha256": "457f4d7860a790df009c7a2b46f4e0719de5dee761f83552fa289adb4750da51",
+  "source_sha256": {
+    "openhcs/core/config.py": "5621bd82c17a1c5dd18cc1738a8dd4f4c44be22561196f5e5835ef7bfa1c865d",
+    "openhcs/core/callable_contract.py": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
+    "openhcs/core/runtime_stores.py": "5f323ec8edd4221ee30e34ed0c9c09e0f4e45ef502749c1a2d331b7a5452af99",
+    "openhcs/core/artifacts.py": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
+    "docs/source/concepts/function_patterns.rst": "2e60a937bc001bdcc961f378c5fb29d1829580351cbf87db4eec9eda02d77411",
+    "docs/source/architecture/processing_semantics.rst": "9d1a0203f2a4236ea102cacd8e48735a24d93d55d3d5c807ed69a2f30d451278",
+    "docs/source/architecture/artifact_contract_system.rst": "eb9380b348a7fccfb4385956bc1997b4dc4bf23aaf1f45abe2fd2fd8c1342d83",
+    "paper/figures/build_slas_visual_story.py": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "runtime_composition.png": "11abab9bbcccbf1cf83a7ec699815367c95f2c1ed39ec9b75411e43c2f6bbdc7",
+    "runtime_composition.pdf": "3eea90ecb49518a12c302f62d63985f8ecccbcba537288b5bd50d2d9a29856b9",
+    "runtime_composition.svg": "5356f083ddf6c9f15f57a326c862b7fe83762fb4041a702a0312b1048efc856e"
+  },
+  "interpretation": "Illustrative configuration and callable roles, not an executed biological workflow. Panels B and C show separate composition examples: group-specific chains and an artifact routed between steps within a compatible execution group. Sequential timepoints run the entire pipeline; wells can execute in parallel and Z remains the variable component. Backend compatibility belongs to each callable contract."
+}

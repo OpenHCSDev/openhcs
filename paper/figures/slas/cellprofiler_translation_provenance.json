@@ -1,0 +1,298 @@
+{
+  "generator_sha256": "ef2cbd38939fcec105c65fdfd48731da286460214bcde7b4b43f2f46e0fd8d44",
+  "source_sha256": {
+    "benchmark/native_refs/official30_scoped_rows/ExampleCometAssay_ExampleCometAssay_wells_include_first1/native_cellprofiler_headless/ExampleCometAssay.cppipe": "daec62eb90d9457a240bd28dcb3a1002b480db366a5d6aa849a8813f1073f8b6",
+    "paper/figures/build_slas_cellprofiler.py": "ef2cbd38939fcec105c65fdfd48731da286460214bcde7b4b43f2f46e0fd8d44",
+    "paper/figures/slas/cellprofiler_translation_imported.py": "fb77e8e97af83376e6c66f7e8800a1dee3d814be19e2f013abf01ef903debab0",
+    "openhcs/interop/cellprofiler/parser.py": "25fd96f8fdd4a4f02b01fc2f55e8fdb978efa331f16ca612b1466c9435e4ac89",
+    "openhcs/interop/cellprofiler/pipeline_import.py": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+    "openhcs/interop/cellprofiler/module_declarations.py": "89dd65abc003c464ba6c489f52d3a4fa47be1d5f8b87d26ad72b7537f188cf8b",
+    "openhcs/interop/cellprofiler/settings_binder.py": "1f7b236d8cb946ce35171447c23dab3220c4379ab446dfefb5ee3057ead0e92b",
+    "openhcs/core/function_patterns.py": "d20fe8d1614210e50bf804a6cea3ce4cc4fd3ce0459b153c1cf81e214e628d3e",
+    "openhcs/core/callable_contract.py": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
+    "benchmark/manifests/official30_portable_axis1.json": "a4a7c23ac2414614678012b05b058bc9c18cf3668b105cd663528a38ef2b437e",
+    "external/arraybridge/src/arraybridge/decorators.py": "99823105b0ae59054df1d84013633b8b6628d0a6dc3326383199ac7c65c69bed",
+    "openhcs/processing/backends/cellprofiler/illumination.py": "00154af54e879d9f03bf6c918a1b2b5c6c5f2a63b16db230325a53d05a3fbf15",
+    "openhcs/processing/backends/cellprofiler/primary_objects.py": "6710b507fcdead2954e8a1038c91e2a99572d67b6d4ded8a7d41100fb229aa29",
+    "openhcs/processing/backends/cellprofiler/image_geometry.py": "3e94eac2f945ee908279a45deefcf2aa38d74502c887ed8de405e906de541c37",
+    "openhcs/processing/backends/cellprofiler/morphology.py": "8a101a8800256bb693a6c82624412bf9fc099998bf9670ae30dbfe0c3a55d08b",
+    "openhcs/processing/backends/cellprofiler/shape.py": "ebf6bbde9013e99b1cf527386b0c9efd4ed10da369843864b4cfcf28340e2823",
+    "openhcs/processing/backends/cellprofiler/texture.py": "640d9d2b5a17f643c3fe70b70bf424caa5b785693c7f6bae5d851942d52fb6f5",
+    "openhcs/processing/backends/cellprofiler/intensity.py": "f529b5bfc9c595a3f7017d2022d52425b05d2f5ed7e810823073f556e520cf1f",
+    "openhcs/processing/backends/cellprofiler/outlines.py": "82c865640a5d07401ce24fc3eeeef7fa61b1e27da45f6f0fb10348c942d8e0f9",
+    "openhcs/processing/backends/cellprofiler/save_images.py": "0042b72bdc53fabbb93248aea61c3c7ed3f488e563e9d190b9f65746d434257c",
+    "openhcs/processing/backends/cellprofiler/spreadsheet_export.py": "5787bab5727e85c045e3aed03135bb64ddc62c5a5796fea62f9570576681e6f2",
+    "paper/figures/build_slas_visual_story.py": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "cellprofiler_translation.png": "82e533e6d624a2e3fd5b2dc60b746ccdd2e87d2495d46535a33f5189f309863a",
+    "cellprofiler_translation.pdf": "72857409179816b09bc7d78cd9355ac5979660ba6bbb6d43641149c59848b0b0",
+    "cellprofiler_translation.svg": "58e0bf7d1ca3b57635e4b856d2b4cbb50226d900d10e69d0331e108105567d7b"
+  },
+  "interpretation": "Current parser/importer translation of the retained public ExampleCometAssay benchmark pipeline. No analysis was run. Panel A shows all enabled modules and all imported steps; multiplicity counts actual callable invocations, not parallel workers. Panel B expands the actual MeasureObjectSizeShape function list; panel C shows the actual MaskObjects named-object selections and inverted-mask setting. Layout is specific to this example, not a universal one-module-to-one-step claim.",
+  "imported_document": "paper/figures/slas/cellprofiler_translation_imported.py",
+  "imported_document_function_parameter_roundtrip_verified": true,
+  "source_modules": [
+    {
+      "number": 1,
+      "name": "Images"
+    },
+    {
+      "number": 2,
+      "name": "Metadata"
+    },
+    {
+      "number": 3,
+      "name": "NamesAndTypes"
+    },
+    {
+      "number": 4,
+      "name": "Groups"
+    },
+    {
+      "number": 5,
+      "name": "CorrectIlluminationCalculate"
+    },
+    {
+      "number": 6,
+      "name": "CorrectIlluminationApply"
+    },
+    {
+      "number": 7,
+      "name": "IdentifyPrimaryObjects"
+    },
+    {
+      "number": 8,
+      "name": "MaskImage"
+    },
+    {
+      "number": 9,
+      "name": "IdentifyPrimaryObjects"
+    },
+    {
+      "number": 10,
+      "name": "MaskObjects"
+    },
+    {
+      "number": 11,
+      "name": "MeasureObjectSizeShape"
+    },
+    {
+      "number": 12,
+      "name": "MeasureTexture"
+    },
+    {
+      "number": 13,
+      "name": "MeasureObjectIntensity"
+    },
+    {
+      "number": 14,
+      "name": "OverlayOutlines"
+    },
+    {
+      "number": 15,
+      "name": "SaveImages"
+    },
+    {
+      "number": 16,
+      "name": "ExportToSpreadsheet"
+    }
+  ],
+  "configuration_modules": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "module_step_correspondence": [
+    {
+      "cellprofiler_module_number": 5,
+      "cellprofiler_module": "CorrectIlluminationCalculate",
+      "function_step_number": 1,
+      "function_step_name": "CorrectIlluminationCalculate",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.illumination",
+          "function": "correct_illumination_calculate",
+          "kwargs_python": "{'intensity_choice': <IntensityChoice.BACKGROUND: 'background'>, 'block_size': 5, 'rescale_option': <RescaleOption.NO: 'no'>, 'smoothing_method': <SmoothingMethod.MEDIAN_FILTER: 'median_filter'>, 'filter_size_method': <FilterSizeMethod.MANUALLY: 'manually'>, 'manual_filter_size': 200, 'name_the_output_image': 'IllumGray'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 6,
+      "cellprofiler_module": "CorrectIlluminationApply",
+      "function_step_number": 2,
+      "function_step_name": "CorrectIlluminationApply",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.illumination",
+          "function": "correct_illumination_apply",
+          "kwargs_python": "{'method': <IlluminationCorrectionMethod.SUBTRACT: 'subtract'>, 'name_the_output_image': 'CorrGray'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 7,
+      "cellprofiler_module": "IdentifyPrimaryObjects",
+      "function_step_number": 3,
+      "function_step_name": "IdentifyPrimaryObjects",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.primary_objects",
+          "function": "identify_primary_objects",
+          "kwargs_python": "{'threshold_method': <CellProfilerThresholdMethod.ROBUST_BACKGROUND: 'Robust Background'>, 'adaptive_window_size': 50, 'lower_outlier_fraction': 0.01, 'upper_outlier_fraction': 0.001, 'number_of_deviations': 0.75, 'watershed_method': <WatershedMethod.SHAPE: 'shape'>, 'smoothing_filter_size': 60, 'automatic_smoothing': False, 'min_diameter': 40, 'max_diameter': 200, 'name_the_primary_objects_to_be_identified': 'Comet'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 8,
+      "cellprofiler_module": "MaskImage",
+      "function_step_number": 4,
+      "function_step_name": "MaskImage",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.image_geometry",
+          "function": "mask_image",
+          "kwargs_python": "{'mask_source': <MaskSource.OBJECTS: 'objects'>, 'name_the_output_image': 'MaskedComet'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 9,
+      "cellprofiler_module": "IdentifyPrimaryObjects",
+      "function_step_number": 5,
+      "function_step_name": "IdentifyPrimaryObjects",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.primary_objects",
+          "function": "identify_primary_objects",
+          "kwargs_python": "{'threshold_method': <CellProfilerThresholdMethod.OTSU: 'Otsu'>, 'adaptive_window_size': 50, 'unclump_method': <UnclumpMethod.NONE: 'none'>, 'watershed_method': <WatershedMethod.SHAPE: 'shape'>, 'fill_holes': <FillHolesOption.AFTER_DECLUMP: 'after_declump'>, 'min_diameter': 30, 'max_diameter': 100, 'name_the_primary_objects_to_be_identified': 'CometHead'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 10,
+      "cellprofiler_module": "MaskObjects",
+      "function_step_number": 6,
+      "function_step_name": "MaskObjects",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.morphology",
+          "function": "mask_objects",
+          "kwargs_python": "{'invert_mask': True, 'select_the_input_objects': 'Comet', 'select_the_masking_object': 'CometHead', 'name_the_output_objects': 'CometTail'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 11,
+      "cellprofiler_module": "MeasureObjectSizeShape",
+      "function_step_number": 7,
+      "function_step_name": "MeasureObjectSizeShape",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.shape",
+          "function": "measure_object_size_shape",
+          "kwargs_python": "{'calculate_advanced': False, 'select_object_sets_to_measure': 'Comet'}"
+        },
+        {
+          "module": "openhcs.processing.backends.cellprofiler.shape",
+          "function": "measure_object_size_shape",
+          "kwargs_python": "{'calculate_advanced': False, 'select_object_sets_to_measure': 'CometHead'}"
+        },
+        {
+          "module": "openhcs.processing.backends.cellprofiler.shape",
+          "function": "measure_object_size_shape",
+          "kwargs_python": "{'calculate_advanced': False, 'select_object_sets_to_measure': 'CometTail'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 12,
+      "cellprofiler_module": "MeasureTexture",
+      "function_step_number": 8,
+      "function_step_name": "MeasureTexture",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.texture",
+          "function": "measure_texture_objects",
+          "kwargs_python": "{'measurement_scope': <CellProfilerMeasurementTargetScope.BOTH: 'both'>, 'scale': 10, 'select_object_sets_to_measure': 'Comet', 'select_images_to_measure': 'CorrGray'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 13,
+      "cellprofiler_module": "MeasureObjectIntensity",
+      "function_step_number": 9,
+      "function_step_name": "MeasureObjectIntensity",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.intensity",
+          "function": "measure_object_intensity",
+          "kwargs_python": "{'select_object_sets_to_measure': 'Comet', 'select_images_to_measure': 'CorrGray'}"
+        },
+        {
+          "module": "openhcs.processing.backends.cellprofiler.intensity",
+          "function": "measure_object_intensity",
+          "kwargs_python": "{'select_object_sets_to_measure': 'CometHead', 'select_images_to_measure': 'CorrGray'}"
+        },
+        {
+          "module": "openhcs.processing.backends.cellprofiler.intensity",
+          "function": "measure_object_intensity",
+          "kwargs_python": "{'select_object_sets_to_measure': 'CometTail', 'select_images_to_measure': 'CorrGray'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 14,
+      "cellprofiler_module": "OverlayOutlines",
+      "function_step_number": 10,
+      "function_step_name": "OverlayOutlines",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.outlines",
+          "function": "overlay_outlines",
+          "kwargs_python": "{'line_mode': <LineMode.THICK: ('thick', 'Thick')>, 'outline_colors': ('Red', 'Green'), 'outline_source_kinds': (<OutlineSourceKind.OBJECTS: 'objects'>, <OutlineSourceKind.OBJECTS: 'objects'>), 'select_image_on_which_to_display_outlines': 'CorrGray', 'select_objects_to_display': ('Comet', 'CometHead'), 'name_the_output_image': 'CometOutline'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 15,
+      "cellprofiler_module": "SaveImages",
+      "function_step_number": 11,
+      "function_step_name": "SaveImages",
+      "execution_scope": "axis",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.save_images",
+          "function": "save_images",
+          "kwargs_python": "{'single_file_name': 'OrigBlue', 'append_suffix': True, 'filename_suffix': '_CometHeadOutline', 'file_format': <SaveImagesFileFormat.PNG: '.png'>, 'bit_depth': <SaveImagesBitDepth.UINT8: 'uint8'>, 'base_image_folder': 'Elsewhere...|', 'record_file_and_path': False, 'select_image_name_for_file_prefix': 'OrigComet', 'select_the_image_to_save': 'CometOutline'}"
+        }
+      ]
+    },
+    {
+      "cellprofiler_module_number": 16,
+      "cellprofiler_module": "ExportToSpreadsheet",
+      "function_step_number": 12,
+      "function_step_name": "ExportToSpreadsheet",
+      "execution_scope": "plate",
+      "calls": [
+        {
+          "module": "openhcs.processing.backends.cellprofiler.spreadsheet_export",
+          "function": "export_to_spreadsheet",
+          "kwargs_python": "{'add_filename_prefix': False, 'overwrite_existing_files_without_warning': True}"
+        }
+      ]
+    }
+  ]
+}

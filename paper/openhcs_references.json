@@ -1,0 +1,2548 @@
+[
+  {
+    "id": "Lei2024",
+    "type": "article-journal",
+    "title": "BioImage.IO Chatbot: a community-driven AI assistant for integrative computational bioimaging",
+    "author": [
+      {"given": "Wanlu", "family": "Lei"},
+      {"given": "Caterina", "family": "Fuster-Barceló"},
+      {"given": "Gabriel", "family": "Reder"},
+      {"given": "Arrate", "family": "Muñoz-Barrutia"},
+      {"given": "Wei", "family": "Ouyang"}
+    ],
+    "container-title": "Nature Methods",
+    "volume": "21",
+    "issue": "8",
+    "page": "1368-1370",
+    "issued": {"date-parts": [[2024, 8, 9]]},
+    "DOI": "10.1038/s41592-024-02370-y",
+    "URL": "https://doi.org/10.1038/s41592-024-02370-y"
+  },
+  {
+    "id": "Royer2024",
+    "type": "article-journal",
+    "title": "Omega — harnessing the power of large language models for bioimage analysis",
+    "author": [{"given": "Loïc A.", "family": "Royer"}],
+    "container-title": "Nature Methods",
+    "volume": "21",
+    "issue": "8",
+    "page": "1371-1373",
+    "issued": {"date-parts": [[2024, 6, 10]]},
+    "DOI": "10.1038/s41592-024-02310-w",
+    "URL": "https://doi.org/10.1038/s41592-024-02310-w"
+  },
+  {
+    "id": "Johanns2026",
+    "type": "article",
+    "title": "Agentic-J: An AI Agent for Biological Microscopy Image Analysis",
+    "author": [
+      {"given": "Lukas", "family": "Johanns"},
+      {"given": "Marilin", "family": "Moor"},
+      {"given": "Davide", "family": "Panzeri"},
+      {"given": "Yu", "family": "Zhou"},
+      {"given": "Xinyi", "family": "Chen"},
+      {"given": "Nora F. K.", "family": "Pauly"},
+      {"given": "Zixuan", "family": "Pan"},
+      {"given": "Matthias", "family": "Gunzer"},
+      {"given": "Andreas", "family": "Müller"},
+      {"given": "Yiyu", "family": "Shi"},
+      {"given": "Hedi", "family": "Peterson"},
+      {"given": "Jianxu", "family": "Chen"}
+    ],
+    "publisher": "arXiv",
+    "genre": "Preprint",
+    "number": "2606.02080v1",
+    "issued": {"date-parts": [[2026, 6, 1]]},
+    "DOI": "10.48550/arXiv.2606.02080",
+    "URL": "https://arxiv.org/abs/2606.02080v1",
+    "note": "Preprint, version 1"
+  },
+  {
+    "id": "Schapiro2022",
+    "type": "article-journal",
+    "title": "MCMICRO: a scalable, modular image-processing pipeline for multiplexed tissue imaging",
+    "author": [
+      {
+        "family": "Schapiro",
+        "given": "Denis"
+      },
+      {
+        "family": "Sokolov",
+        "given": "Artem"
+      },
+      {
+        "family": "Yapp",
+        "given": "Clarence"
+      },
+      {
+        "family": "Chen",
+        "given": "Yu-An"
+      },
+      {
+        "family": "Muhlich",
+        "given": "Jeremy L."
+      },
+      {
+        "family": "Hess",
+        "given": "Joshua"
+      },
+      {
+        "family": "Creason",
+        "given": "Allison L."
+      },
+      {
+        "family": "Nirmal",
+        "given": "Ajit J."
+      },
+      {
+        "family": "Baker",
+        "given": "Gregory J."
+      },
+      {
+        "family": "Nariya",
+        "given": "Maulik K."
+      },
+      {
+        "family": "Lin",
+        "given": "Jia-Ren"
+      },
+      {
+        "family": "Maliga",
+        "given": "Zoltan"
+      },
+      {
+        "family": "Jacobson",
+        "given": "Connor A."
+      },
+      {
+        "family": "Hodgman",
+        "given": "Matthew W."
+      },
+      {
+        "family": "Ruokonen",
+        "given": "Juha"
+      },
+      {
+        "family": "Farhi",
+        "given": "Samouil L."
+      },
+      {
+        "family": "Abbondanza",
+        "given": "Domenic"
+      },
+      {
+        "family": "McKinley",
+        "given": "Eliot T."
+      },
+      {
+        "family": "Persson",
+        "given": "Daniel"
+      },
+      {
+        "family": "Betts",
+        "given": "Courtney"
+      },
+      {
+        "family": "Sivagnanam",
+        "given": "Shamilene"
+      },
+      {
+        "family": "Regev",
+        "given": "Aviv"
+      },
+      {
+        "family": "Goecks",
+        "given": "Jeremy"
+      },
+      {
+        "family": "Coffey",
+        "given": "Robert J."
+      },
+      {
+        "family": "Coussens",
+        "given": "Lisa M."
+      },
+      {
+        "family": "Santagata",
+        "given": "Sandro"
+      },
+      {
+        "family": "Sorger",
+        "given": "Peter K."
+      }
+    ],
+    "container-title": "Nature Methods",
+    "volume": "19",
+    "issue": "3",
+    "page": "311-315",
+    "issued": {
+      "date-parts": [
+        [
+          2022,
+          3
+        ]
+      ]
+    },
+    "DOI": "10.1038/s41592-021-01308-y"
+  },
+  {
+    "id": "NeuronCytoII",
+    "type": "article-journal",
+    "title": "NeuronCyto II: An automatic and quantitative solution for crossover neural cells in high throughput screening",
+    "author": [
+      {
+        "given": "Kok Haur",
+        "family": "Ong"
+      },
+      {
+        "given": "Jaydeep",
+        "family": "De"
+      },
+      {
+        "given": "Li",
+        "family": "Cheng"
+      },
+      {
+        "given": "Sohail",
+        "family": "Ahmed"
+      },
+      {
+        "given": "Weimiao",
+        "family": "Yu"
+      }
+    ],
+    "container-title": "Cytometry Part A",
+    "issued": {
+      "date-parts": [
+        [
+          2016,
+          5,
+          27
+        ]
+      ]
+    },
+    "DOI": "10.1002/cyto.a.22872",
+    "URL": "https://doi.org/10.1002/cyto.a.22872",
+    "volume": "89",
+    "issue": "8",
+    "page": "747-754"
+  },
+  {
+    "id": "Carpenter2006",
+    "type": "article-journal",
+    "title": "CellProfiler: image analysis software for identifying and quantifying cell phenotypes",
+    "author": [
+      {
+        "given": "Anne E",
+        "family": "Carpenter"
+      },
+      {
+        "given": "Thouis R",
+        "family": "Jones"
+      },
+      {
+        "given": "Michael R",
+        "family": "Lamprecht"
+      },
+      {
+        "given": "Colin",
+        "family": "Clarke"
+      },
+      {
+        "given": "In Han",
+        "family": "Kang"
+      },
+      {
+        "given": "Ola",
+        "family": "Friman"
+      },
+      {
+        "given": "David A",
+        "family": "Guertin"
+      },
+      {
+        "given": "Joo Han",
+        "family": "Chang"
+      },
+      {
+        "given": "Robert A",
+        "family": "Lindquist"
+      },
+      {
+        "given": "Jason",
+        "family": "Moffat"
+      },
+      {
+        "given": "Polina",
+        "family": "Golland"
+      },
+      {
+        "given": "David M",
+        "family": "Sabatini"
+      }
+    ],
+    "container-title": "Genome Biology",
+    "issued": {
+      "date-parts": [
+        [
+          2006,
+          10,
+          31
+        ]
+      ]
+    },
+    "DOI": "10.1186/gb-2006-7-10-r100",
+    "URL": "https://doi.org/10.1186/gb-2006-7-10-r100",
+    "volume": "7",
+    "issue": "10",
+    "page": "R100"
+  },
+  {
+    "id": "McQuin2018",
+    "type": "article-journal",
+    "title": "CellProfiler 3.0: Next-generation image processing for biology",
+    "author": [
+      {
+        "given": "Claire",
+        "family": "McQuin"
+      },
+      {
+        "given": "Allen",
+        "family": "Goodman"
+      },
+      {
+        "given": "Vasiliy",
+        "family": "Chernyshev"
+      },
+      {
+        "given": "Lee",
+        "family": "Kamentsky"
+      },
+      {
+        "given": "Beth A.",
+        "family": "Cimini"
+      },
+      {
+        "given": "Kyle W.",
+        "family": "Karhohs"
+      },
+      {
+        "given": "Minh",
+        "family": "Doan"
+      },
+      {
+        "given": "Liya",
+        "family": "Ding"
+      },
+      {
+        "given": "Susanne M.",
+        "family": "Rafelski"
+      },
+      {
+        "given": "Derek",
+        "family": "Thirstrup"
+      },
+      {
+        "given": "Winfried",
+        "family": "Wiegraebe"
+      },
+      {
+        "given": "Shantanu",
+        "family": "Singh"
+      },
+      {
+        "given": "Tim",
+        "family": "Becker"
+      },
+      {
+        "given": "Juan C.",
+        "family": "Caicedo"
+      },
+      {
+        "given": "Anne E.",
+        "family": "Carpenter"
+      }
+    ],
+    "container-title": "PLOS Biology",
+    "issued": {
+      "date-parts": [
+        [
+          2018,
+          7,
+          3
+        ]
+      ]
+    },
+    "DOI": "10.1371/journal.pbio.2005970",
+    "URL": "https://doi.org/10.1371/journal.pbio.2005970",
+    "volume": "16",
+    "issue": "7",
+    "page": "e2005970"
+  },
+  {
+    "id": "Stirling2021",
+    "type": "article-journal",
+    "title": "CellProfiler 4: improvements in speed, utility and usability",
+    "author": [
+      {
+        "given": "David R.",
+        "family": "Stirling"
+      },
+      {
+        "given": "Madison J.",
+        "family": "Swain-Bowden"
+      },
+      {
+        "given": "Alice M.",
+        "family": "Lucas"
+      },
+      {
+        "given": "Anne E.",
+        "family": "Carpenter"
+      },
+      {
+        "given": "Beth A.",
+        "family": "Cimini"
+      },
+      {
+        "given": "Allen",
+        "family": "Goodman"
+      }
+    ],
+    "container-title": "BMC Bioinformatics",
+    "issued": {
+      "date-parts": [
+        [
+          2021,
+          9,
+          10
+        ]
+      ]
+    },
+    "DOI": "10.1186/s12859-021-04344-9",
+    "URL": "https://doi.org/10.1186/s12859-021-04344-9",
+    "volume": "22",
+    "issue": "1",
+    "page": "433"
+  },
+  {
+    "id": "Jones2008",
+    "type": "article-journal",
+    "title": "CellProfiler Analyst: data exploration and analysis software for complex image-based screens",
+    "author": [
+      {
+        "given": "Thouis R",
+        "family": "Jones"
+      },
+      {
+        "given": "In Han",
+        "family": "Kang"
+      },
+      {
+        "given": "Douglas B",
+        "family": "Wheeler"
+      },
+      {
+        "given": "Robert A",
+        "family": "Lindquist"
+      },
+      {
+        "given": "Adam",
+        "family": "Papallo"
+      },
+      {
+        "given": "David M",
+        "family": "Sabatini"
+      },
+      {
+        "given": "Polina",
+        "family": "Golland"
+      },
+      {
+        "given": "Anne E",
+        "family": "Carpenter"
+      }
+    ],
+    "container-title": "BMC Bioinformatics",
+    "issued": {
+      "date-parts": [
+        [
+          2008,
+          11,
+          15
+        ]
+      ]
+    },
+    "DOI": "10.1186/1471-2105-9-482",
+    "URL": "https://doi.org/10.1186/1471-2105-9-482",
+    "volume": "9",
+    "issue": "1",
+    "page": "482"
+  },
+  {
+    "id": "Schneider2012",
+    "type": "article-journal",
+    "title": "NIH Image to ImageJ: 25 years of image analysis",
+    "author": [
+      {
+        "given": "Caroline A",
+        "family": "Schneider"
+      },
+      {
+        "given": "Wayne S",
+        "family": "Rasband"
+      },
+      {
+        "given": "Kevin W",
+        "family": "Eliceiri"
+      }
+    ],
+    "container-title": "Nature Methods",
+    "issued": {
+      "date-parts": [
+        [
+          2012,
+          6,
+          28
+        ]
+      ]
+    },
+    "DOI": "10.1038/nmeth.2089",
+    "URL": "https://doi.org/10.1038/nmeth.2089",
+    "volume": "9",
+    "issue": "7",
+    "page": "671-675"
+  },
+  {
+    "id": "Schindelin2012",
+    "type": "article-journal",
+    "title": "Fiji: an open-source platform for biological-image analysis",
+    "author": [
+      {
+        "given": "Johannes",
+        "family": "Schindelin"
+      },
+      {
+        "given": "Ignacio",
+        "family": "Arganda-Carreras"
+      },
+      {
+        "given": "Erwin",
+        "family": "Frise"
+      },
+      {
+        "given": "Verena",
+        "family": "Kaynig"
+      },
+      {
+        "given": "Mark",
+        "family": "Longair"
+      },
+      {
+        "given": "Tobias",
+        "family": "Pietzsch"
+      },
+      {
+        "given": "Stephan",
+        "family": "Preibisch"
+      },
+      {
+        "given": "Curtis",
+        "family": "Rueden"
+      },
+      {
+        "given": "Stephan",
+        "family": "Saalfeld"
+      },
+      {
+        "given": "Benjamin",
+        "family": "Schmid"
+      },
+      {
+        "given": "Jean-Yves",
+        "family": "Tinevez"
+      },
+      {
+        "given": "Daniel James",
+        "family": "White"
+      },
+      {
+        "given": "Volker",
+        "family": "Hartenstein"
+      },
+      {
+        "given": "Kevin",
+        "family": "Eliceiri"
+      },
+      {
+        "given": "Pavel",
+        "family": "Tomancak"
+      },
+      {
+        "given": "Albert",
+        "family": "Cardona"
+      }
+    ],
+    "container-title": "Nature Methods",
+    "issued": {
+      "date-parts": [
+        [
+          2012,
+          6,
+          28
+        ]
+      ]
+    },
+    "DOI": "10.1038/nmeth.2019",
+    "URL": "https://doi.org/10.1038/nmeth.2019",
+    "volume": "9",
+    "issue": "7",
+    "page": "676-682"
+  },
+  {
+    "id": "deChaumont2012",
+    "type": "article-journal",
+    "title": "Icy: an open bioimage informatics platform for extended reproducible research",
+    "author": [
+      {
+        "given": "Fabrice",
+        "family": "de Chaumont"
+      },
+      {
+        "given": "Stéphane",
+        "family": "Dallongeville"
+      },
+      {
+        "given": "Nicolas",
+        "family": "Chenouard"
+      },
+      {
+        "given": "Nicolas",
+        "family": "Hervé"
+      },
+      {
+        "given": "Sorin",
+        "family": "Pop"
+      },
+      {
+        "given": "Thomas",
+        "family": "Provoost"
+      },
+      {
+        "given": "Vannary",
+        "family": "Meas-Yedid"
+      },
+      {
+        "given": "Praveen",
+        "family": "Pankajakshan"
+      },
+      {
+        "given": "Timothée",
+        "family": "Lecomte"
+      },
+      {
+        "given": "Yoann",
+        "family": "Le Montagner"
+      },
+      {
+        "given": "Thibault",
+        "family": "Lagache"
+      },
+      {
+        "given": "Alexandre",
+        "family": "Dufour"
+      },
+      {
+        "given": "Jean-Christophe",
+        "family": "Olivo-Marin"
+      }
+    ],
+    "container-title": "Nature Methods",
+    "issued": {
+      "date-parts": [
+        [
+          2012,
+          6,
+          28
+        ]
+      ]
+    },
+    "DOI": "10.1038/nmeth.2075",
+    "URL": "https://doi.org/10.1038/nmeth.2075",
+    "volume": "9",
+    "issue": "7",
+    "page": "690-696"
+  },
+  {
+    "id": "Prigent2022",
+    "type": "article-journal",
+    "title": "BioImageIT: Open-source framework for integration of image data management with analysis",
+    "author": [
+      {
+        "given": "Sylvain",
+        "family": "Prigent"
+      },
+      {
+        "given": "Cesar Augusto",
+        "family": "Valades-Cruz"
+      },
+      {
+        "given": "Ludovic",
+        "family": "Leconte"
+      },
+      {
+        "given": "Léo",
+        "family": "Maury"
+      },
+      {
+        "given": "Jean",
+        "family": "Salamero"
+      },
+      {
+        "given": "Charles",
+        "family": "Kervrann"
+      }
+    ],
+    "container-title": "Nature Methods",
+    "issued": {
+      "date-parts": [
+        [
+          2022,
+          10,
+          7
+        ]
+      ]
+    },
+    "DOI": "10.1038/s41592-022-01642-9",
+    "URL": "https://doi.org/10.1038/s41592-022-01642-9",
+    "volume": "19",
+    "issue": "11",
+    "page": "1328-1330"
+  },
+  {
+    "id": "Allan2012",
+    "type": "article-journal",
+    "title": "OMERO: flexible, model-driven data management for experimental biology",
+    "author": [
+      {
+        "given": "Chris",
+        "family": "Allan"
+      },
+      {
+        "given": "Jean-Marie",
+        "family": "Burel"
+      },
+      {
+        "given": "Josh",
+        "family": "Moore"
+      },
+      {
+        "given": "Colin",
+        "family": "Blackburn"
+      },
+      {
+        "given": "Melissa",
+        "family": "Linkert"
+      },
+      {
+        "given": "Scott",
+        "family": "Loynton"
+      },
+      {
+        "given": "Donald",
+        "family": "MacDonald"
+      },
+      {
+        "given": "William J",
+        "family": "Moore"
+      },
+      {
+        "given": "Carlos",
+        "family": "Neves"
+      },
+      {
+        "given": "Andrew",
+        "family": "Patterson"
+      },
+      {
+        "given": "Michael",
+        "family": "Porter"
+      },
+      {
+        "given": "Aleksandra",
+        "family": "Tarkowska"
+      },
+      {
+        "given": "Brian",
+        "family": "Loranger"
+      },
+      {
+        "given": "Jerome",
+        "family": "Avondo"
+      },
+      {
+        "given": "Ingvar",
+        "family": "Lagerstedt"
+      },
+      {
+        "given": "Luca",
+        "family": "Lianas"
+      },
+      {
+        "given": "Simone",
+        "family": "Leo"
+      },
+      {
+        "given": "Katherine",
+        "family": "Hands"
+      },
+      {
+        "given": "Ron T",
+        "family": "Hay"
+      },
+      {
+        "given": "Ardan",
+        "family": "Patwardhan"
+      },
+      {
+        "given": "Christoph",
+        "family": "Best"
+      },
+      {
+        "given": "Gerard J",
+        "family": "Kleywegt"
+      },
+      {
+        "given": "Gianluigi",
+        "family": "Zanetti"
+      },
+      {
+        "given": "Jason R",
+        "family": "Swedlow"
+      }
+    ],
+    "container-title": "Nature Methods",
+    "issued": {
+      "date-parts": [
+        [
+          2012,
+          2,
+          28
+        ]
+      ]
+    },
+    "DOI": "10.1038/nmeth.1896",
+    "URL": "https://doi.org/10.1038/nmeth.1896",
+    "volume": "9",
+    "issue": "3",
+    "page": "245-253"
+  },
+  {
+    "id": "vanDerWalt2014",
+    "type": "article-journal",
+    "title": "scikit-image: image processing in Python",
+    "author": [
+      {
+        "given": "Stéfan",
+        "family": "van der Walt"
+      },
+      {
+        "given": "Johannes L.",
+        "family": "Schönberger"
+      },
+      {
+        "given": "Juan",
+        "family": "Nunez-Iglesias"
+      },
+      {
+        "given": "François",
+        "family": "Boulogne"
+      },
+      {
+        "given": "Joshua D.",
+        "family": "Warner"
+      },
+      {
+        "given": "Neil",
+        "family": "Yager"
+      },
+      {
+        "given": "Emmanuelle",
+        "family": "Gouillart"
+      },
+      {
+        "given": "Tony",
+        "family": "Yu"
+      }
+    ],
+    "container-title": "PeerJ",
+    "issued": {
+      "date-parts": [
+        [
+          2014,
+          6,
+          19
+        ]
+      ]
+    },
+    "DOI": "10.7717/peerj.453",
+    "URL": "https://doi.org/10.7717/peerj.453",
+    "volume": "2",
+    "page": "e453"
+  },
+  {
+    "id": "Moore2021",
+    "type": "article-journal",
+    "title": "OME-NGFF: a next-generation file format for expanding bioimaging data-access strategies",
+    "author": [
+      {
+        "given": "Josh",
+        "family": "Moore"
+      },
+      {
+        "given": "Chris",
+        "family": "Allan"
+      },
+      {
+        "given": "Sébastien",
+        "family": "Besson"
+      },
+      {
+        "given": "Jean-Marie",
+        "family": "Burel"
+      },
+      {
+        "given": "Erin",
+        "family": "Diel"
+      },
+      {
+        "given": "David",
+        "family": "Gault"
+      },
+      {
+        "given": "Kevin",
+        "family": "Kozlowski"
+      },
+      {
+        "given": "Dominik",
+        "family": "Lindner"
+      },
+      {
+        "given": "Melissa",
+        "family": "Linkert"
+      },
+      {
+        "given": "Trevor",
+        "family": "Manz"
+      },
+      {
+        "given": "Will",
+        "family": "Moore"
+      },
+      {
+        "given": "Constantin",
+        "family": "Pape"
+      },
+      {
+        "given": "Christian",
+        "family": "Tischer"
+      },
+      {
+        "given": "Jason R.",
+        "family": "Swedlow"
+      }
+    ],
+    "container-title": "Nature Methods",
+    "issued": {
+      "date-parts": [
+        [
+          2021,
+          11,
+          29
+        ]
+      ]
+    },
+    "DOI": "10.1038/s41592-021-01326-w",
+    "URL": "https://doi.org/10.1038/s41592-021-01326-w",
+    "volume": "18",
+    "issue": "12",
+    "page": "1496-1498"
+  },
+  {
+    "id": "BioFormats",
+    "type": "article-journal",
+    "title": "Metadata matters: access to image data in the real world",
+    "author": [
+      {
+        "given": "Melissa",
+        "family": "Linkert"
+      },
+      {
+        "given": "Curtis T.",
+        "family": "Rueden"
+      },
+      {
+        "given": "Chris",
+        "family": "Allan"
+      },
+      {
+        "given": "Jean-Marie",
+        "family": "Burel"
+      },
+      {
+        "given": "Will",
+        "family": "Moore"
+      },
+      {
+        "given": "Andrew",
+        "family": "Patterson"
+      },
+      {
+        "given": "Brian",
+        "family": "Loranger"
+      },
+      {
+        "given": "Josh",
+        "family": "Moore"
+      },
+      {
+        "given": "Carlos",
+        "family": "Neves"
+      },
+      {
+        "given": "Donald",
+        "family": "MacDonald"
+      },
+      {
+        "given": "Aleksandra",
+        "family": "Tarkowska"
+      },
+      {
+        "given": "Caitlin",
+        "family": "Sticco"
+      },
+      {
+        "given": "Emma",
+        "family": "Hill"
+      },
+      {
+        "given": "Mike",
+        "family": "Rossner"
+      },
+      {
+        "given": "Kevin W.",
+        "family": "Eliceiri"
+      },
+      {
+        "given": "Jason R.",
+        "family": "Swedlow"
+      }
+    ],
+    "container-title": "Journal of Cell Biology",
+    "issued": {
+      "date-parts": [
+        [
+          2010,
+          5,
+          31
+        ]
+      ]
+    },
+    "DOI": "10.1083/jcb.201004104",
+    "URL": "https://doi.org/10.1083/jcb.201004104",
+    "volume": "189",
+    "issue": "5",
+    "page": "777-782"
+  },
+  {
+    "id": "Koster2012",
+    "type": "article-journal",
+    "title": "Snakemake—a scalable bioinformatics workflow engine",
+    "author": [
+      {
+        "given": "Johannes",
+        "family": "Köster"
+      },
+      {
+        "given": "Sven",
+        "family": "Rahmann"
+      }
+    ],
+    "container-title": "Bioinformatics",
+    "issued": {
+      "date-parts": [
+        [
+          2012,
+          8,
+          20
+        ]
+      ]
+    },
+    "DOI": "10.1093/bioinformatics/bts480",
+    "URL": "https://doi.org/10.1093/bioinformatics/bts480",
+    "volume": "28",
+    "issue": "19",
+    "page": "2520-2522"
+  },
+  {
+    "id": "DiTommaso2017",
+    "type": "article-journal",
+    "title": "Nextflow enables reproducible computational workflows",
+    "author": [
+      {
+        "given": "Paolo",
+        "family": "Di Tommaso"
+      },
+      {
+        "given": "Maria",
+        "family": "Chatzou"
+      },
+      {
+        "given": "Evan W",
+        "family": "Floden"
+      },
+      {
+        "given": "Pablo Prieto",
+        "family": "Barja"
+      },
+      {
+        "given": "Emilio",
+        "family": "Palumbo"
+      },
+      {
+        "given": "Cedric",
+        "family": "Notredame"
+      }
+    ],
+    "container-title": "Nature Biotechnology",
+    "issued": {
+      "date-parts": [
+        [
+          2017,
+          4
+        ]
+      ]
+    },
+    "DOI": "10.1038/nbt.3820",
+    "URL": "https://doi.org/10.1038/nbt.3820",
+    "volume": "35",
+    "issue": "4",
+    "page": "316-319"
+  },
+  {
+    "id": "Galaxy2020",
+    "type": "article-journal",
+    "title": "The Galaxy platform for accessible, reproducible and collaborative biomedical analyses: 2020 update",
+    "author": [
+      {
+        "given": "Vahid",
+        "family": "Jalili"
+      },
+      {
+        "given": "Enis",
+        "family": "Afgan"
+      },
+      {
+        "given": "Qiang",
+        "family": "Gu"
+      },
+      {
+        "given": "Dave",
+        "family": "Clements"
+      },
+      {
+        "given": "Daniel",
+        "family": "Blankenberg"
+      },
+      {
+        "given": "Jeremy",
+        "family": "Goecks"
+      },
+      {
+        "given": "James",
+        "family": "Taylor"
+      },
+      {
+        "given": "Anton",
+        "family": "Nekrutenko"
+      }
+    ],
+    "container-title": "Nucleic Acids Research",
+    "issued": {
+      "date-parts": [
+        [
+          2020,
+          6,
+          1
+        ]
+      ]
+    },
+    "DOI": "10.1093/nar/gkaa434",
+    "URL": "https://doi.org/10.1093/nar/gkaa434",
+    "volume": "48",
+    "issue": "W1",
+    "page": "W395-W402"
+  },
+  {
+    "id": "Galaxy2024",
+    "type": "article-journal",
+    "title": "The Galaxy platform for accessible, reproducible, and collaborative data analyses: 2024 update",
+    "author": [
+      {
+        "literal": "The Galaxy Community"
+      },
+      {
+        "given": "Linelle Ann L",
+        "family": "Abueg"
+      },
+      {
+        "given": "Enis",
+        "family": "Afgan"
+      },
+      {
+        "given": "Olivier",
+        "family": "Allart"
+      },
+      {
+        "given": "Ahmed H",
+        "family": "Awan"
+      },
+      {
+        "given": "Wendi A",
+        "family": "Bacon"
+      },
+      {
+        "given": "Dannon",
+        "family": "Baker"
+      },
+      {
+        "given": "Madeline",
+        "family": "Bassetti"
+      },
+      {
+        "given": "Bérénice",
+        "family": "Batut"
+      },
+      {
+        "given": "Matthias",
+        "family": "Bernt"
+      },
+      {
+        "given": "Daniel",
+        "family": "Blankenberg"
+      },
+      {
+        "given": "Aureliano",
+        "family": "Bombarely"
+      },
+      {
+        "given": "Anthony",
+        "family": "Bretaudeau"
+      },
+      {
+        "given": "Catherine J",
+        "family": "Bromhead"
+      },
+      {
+        "given": "Melissa L",
+        "family": "Burke"
+      },
+      {
+        "given": "Patrick K",
+        "family": "Capon"
+      },
+      {
+        "given": "Martin",
+        "family": "Čech"
+      },
+      {
+        "given": "María",
+        "family": "Chavero-Díez"
+      },
+      {
+        "given": "John M",
+        "family": "Chilton"
+      },
+      {
+        "given": "Tyler J",
+        "family": "Collins"
+      },
+      {
+        "given": "Frederik",
+        "family": "Coppens"
+      },
+      {
+        "given": "Nate",
+        "family": "Coraor"
+      },
+      {
+        "given": "Gianmauro",
+        "family": "Cuccuru"
+      },
+      {
+        "given": "Fabio",
+        "family": "Cumbo"
+      },
+      {
+        "given": "John",
+        "family": "Davis"
+      },
+      {
+        "given": "Paul F",
+        "family": "De Geest"
+      },
+      {
+        "given": "Willem",
+        "family": "de Koning"
+      },
+      {
+        "given": "Martin",
+        "family": "Demko"
+      },
+      {
+        "given": "Assunta",
+        "family": "DeSanto"
+      },
+      {
+        "given": "José Manuel Domínguez",
+        "family": "Begines"
+      },
+      {
+        "given": "Maria A",
+        "family": "Doyle"
+      },
+      {
+        "given": "Bert",
+        "family": "Droesbeke"
+      },
+      {
+        "given": "Anika",
+        "family": "Erxleben-Eggenhofer"
+      },
+      {
+        "given": "Melanie C",
+        "family": "Föll"
+      },
+      {
+        "given": "Giulio",
+        "family": "Formenti"
+      },
+      {
+        "given": "Anne",
+        "family": "Fouilloux"
+      },
+      {
+        "given": "Rendani",
+        "family": "Gangazhe"
+      },
+      {
+        "given": "Tanguy",
+        "family": "Genthon"
+      },
+      {
+        "given": "Jeremy",
+        "family": "Goecks"
+      },
+      {
+        "given": "Alejandra N Gonzalez",
+        "family": "Beltran"
+      },
+      {
+        "given": "Nuwan A",
+        "family": "Goonasekera"
+      },
+      {
+        "given": "Nadia",
+        "family": "Goué"
+      },
+      {
+        "given": "Timothy J",
+        "family": "Griffin"
+      },
+      {
+        "given": "Björn A",
+        "family": "Grüning"
+      },
+      {
+        "given": "Aysam",
+        "family": "Guerler"
+      },
+      {
+        "given": "Sveinung",
+        "family": "Gundersen"
+      },
+      {
+        "given": "Ove Johan Ragnar",
+        "family": "Gustafsson"
+      },
+      {
+        "given": "Christina",
+        "family": "Hall"
+      },
+      {
+        "given": "Thomas W",
+        "family": "Harrop"
+      },
+      {
+        "given": "Helge",
+        "family": "Hecht"
+      },
+      {
+        "given": "Alireza",
+        "family": "Heidari"
+      },
+      {
+        "given": "Tillman",
+        "family": "Heisner"
+      },
+      {
+        "given": "Florian",
+        "family": "Heyl"
+      },
+      {
+        "given": "Saskia",
+        "family": "Hiltemann"
+      },
+      {
+        "given": "Hans-Rudolf",
+        "family": "Hotz"
+      },
+      {
+        "given": "Cameron J",
+        "family": "Hyde"
+      },
+      {
+        "given": "Pratik D",
+        "family": "Jagtap"
+      },
+      {
+        "given": "Julia",
+        "family": "Jakiela"
+      },
+      {
+        "given": "James E",
+        "family": "Johnson"
+      },
+      {
+        "given": "Jayadev",
+        "family": "Joshi"
+      },
+      {
+        "given": "Marie",
+        "family": "Jossé"
+      },
+      {
+        "given": "Khaled",
+        "family": "Jum’ah"
+      },
+      {
+        "given": "Matúš",
+        "family": "Kalaš"
+      },
+      {
+        "given": "Katarzyna",
+        "family": "Kamieniecka"
+      },
+      {
+        "given": "Tunc",
+        "family": "Kayikcioglu"
+      },
+      {
+        "given": "Markus",
+        "family": "Konkol"
+      },
+      {
+        "given": "Leonid",
+        "family": "Kostrykin"
+      },
+      {
+        "given": "Natalie",
+        "family": "Kucher"
+      },
+      {
+        "given": "Anup",
+        "family": "Kumar"
+      },
+      {
+        "given": "Mira",
+        "family": "Kuntz"
+      },
+      {
+        "given": "Delphine",
+        "family": "Lariviere"
+      },
+      {
+        "given": "Ross",
+        "family": "Lazarus"
+      },
+      {
+        "given": "Yvan Le",
+        "family": "Bras"
+      },
+      {
+        "given": "Gildas Le",
+        "family": "Corguillé"
+      },
+      {
+        "given": "Justin",
+        "family": "Lee"
+      },
+      {
+        "given": "Simone",
+        "family": "Leo"
+      },
+      {
+        "given": "Leandro",
+        "family": "Liborio"
+      },
+      {
+        "given": "Romane",
+        "family": "Libouban"
+      },
+      {
+        "given": "David López",
+        "family": "Tabernero"
+      },
+      {
+        "given": "Lucille",
+        "family": "Lopez-Delisle"
+      },
+      {
+        "given": "Laila S",
+        "family": "Los"
+      },
+      {
+        "given": "Alexandru",
+        "family": "Mahmoud"
+      },
+      {
+        "given": "Igor",
+        "family": "Makunin"
+      },
+      {
+        "given": "Pierre",
+        "family": "Marin"
+      },
+      {
+        "given": "Subina",
+        "family": "Mehta"
+      },
+      {
+        "given": "Winnie",
+        "family": "Mok"
+      },
+      {
+        "given": "Pablo A",
+        "family": "Moreno"
+      },
+      {
+        "given": "François",
+        "family": "Morier-Genoud"
+      },
+      {
+        "given": "Stephen",
+        "family": "Mosher"
+      },
+      {
+        "given": "Teresa",
+        "family": "Müller"
+      },
+      {
+        "given": "Engy",
+        "family": "Nasr"
+      },
+      {
+        "given": "Anton",
+        "family": "Nekrutenko"
+      },
+      {
+        "given": "Tiffanie M",
+        "family": "Nelson"
+      },
+      {
+        "given": "Asime J",
+        "family": "Oba"
+      },
+      {
+        "given": "Alexander",
+        "family": "Ostrovsky"
+      },
+      {
+        "given": "Polina V",
+        "family": "Polunina"
+      },
+      {
+        "given": "Krzysztof",
+        "family": "Poterlowicz"
+      },
+      {
+        "given": "Elliott J",
+        "family": "Price"
+      },
+      {
+        "given": "Gareth R",
+        "family": "Price"
+      },
+      {
+        "given": "Helena",
+        "family": "Rasche"
+      },
+      {
+        "given": "Bryan",
+        "family": "Raubenolt"
+      },
+      {
+        "given": "Coline",
+        "family": "Royaux"
+      },
+      {
+        "given": "Luke",
+        "family": "Sargent"
+      },
+      {
+        "given": "Michelle T",
+        "family": "Savage"
+      },
+      {
+        "given": "Volodymyr",
+        "family": "Savchenko"
+      },
+      {
+        "given": "Denys",
+        "family": "Savchenko"
+      },
+      {
+        "given": "Michael C",
+        "family": "Schatz"
+      },
+      {
+        "given": "Pauline",
+        "family": "Seguineau"
+      },
+      {
+        "given": "Beatriz",
+        "family": "Serrano-Solano"
+      },
+      {
+        "given": "Nicola",
+        "family": "Soranzo"
+      },
+      {
+        "given": "Sanjay Kumar",
+        "family": "Srikakulam"
+      },
+      {
+        "given": "Keith",
+        "family": "Suderman"
+      },
+      {
+        "given": "Anna E",
+        "family": "Syme"
+      },
+      {
+        "given": "Marco Antonio",
+        "family": "Tangaro"
+      },
+      {
+        "given": "Jonathan A",
+        "family": "Tedds"
+      },
+      {
+        "given": "Mehmet",
+        "family": "Tekman"
+      },
+      {
+        "given": "Wai",
+        "family": "Cheng (Mike) Thang"
+      },
+      {
+        "given": "Anil S",
+        "family": "Thanki"
+      },
+      {
+        "given": "Michael",
+        "family": "Uhl"
+      },
+      {
+        "given": "Marius",
+        "family": "van den Beek"
+      },
+      {
+        "given": "Deepti",
+        "family": "Varshney"
+      },
+      {
+        "given": "Jenn",
+        "family": "Vessio"
+      },
+      {
+        "given": "Pavankumar",
+        "family": "Videm"
+      },
+      {
+        "given": "Greg",
+        "family": "Von Kuster"
+      },
+      {
+        "given": "Gregory R",
+        "family": "Watson"
+      },
+      {
+        "given": "Natalie",
+        "family": "Whitaker-Allen"
+      },
+      {
+        "given": "Uwe",
+        "family": "Winter"
+      },
+      {
+        "given": "Martin",
+        "family": "Wolstencroft"
+      },
+      {
+        "given": "Federico",
+        "family": "Zambelli"
+      },
+      {
+        "given": "Paul",
+        "family": "Zierep"
+      },
+      {
+        "given": "Rand",
+        "family": "Zoabi"
+      }
+    ],
+    "container-title": "Nucleic Acids Research",
+    "issued": {
+      "date-parts": [
+        [
+          2024,
+          5,
+          20
+        ]
+      ]
+    },
+    "DOI": "10.1093/nar/gkae410",
+    "URL": "https://doi.org/10.1093/nar/gkae410",
+    "volume": "52",
+    "issue": "W1",
+    "page": "W83-W94"
+  },
+  {
+    "id": "Haase2020",
+    "type": "article-journal",
+    "title": "CLIJ: GPU-accelerated image processing for everyone",
+    "author": [
+      {
+        "given": "Robert",
+        "family": "Haase"
+      },
+      {
+        "given": "Loic A.",
+        "family": "Royer"
+      },
+      {
+        "given": "Peter",
+        "family": "Steinbach"
+      },
+      {
+        "given": "Deborah",
+        "family": "Schmidt"
+      },
+      {
+        "given": "Alexandr",
+        "family": "Dibrov"
+      },
+      {
+        "given": "Uwe",
+        "family": "Schmidt"
+      },
+      {
+        "given": "Martin",
+        "family": "Weigert"
+      },
+      {
+        "given": "Nicola",
+        "family": "Maghelli"
+      },
+      {
+        "given": "Pavel",
+        "family": "Tomancak"
+      },
+      {
+        "given": "Florian",
+        "family": "Jug"
+      },
+      {
+        "given": "Eugene W.",
+        "family": "Myers"
+      }
+    ],
+    "container-title": "Nature Methods",
+    "issued": {
+      "date-parts": [
+        [
+          2020,
+          1
+        ]
+      ]
+    },
+    "DOI": "10.1038/s41592-019-0650-1",
+    "URL": "https://doi.org/10.1038/s41592-019-0650-1",
+    "volume": "17",
+    "issue": "1",
+    "page": "5-6"
+  },
+  {
+    "id": "Thieme2024",
+    "type": "article-journal",
+    "title": "Deep integration of low-cost liquid handling robots in an industrial pharmaceutical development environment",
+    "author": [
+      {
+        "given": "Anton",
+        "family": "Thieme"
+      },
+      {
+        "given": "Sean",
+        "family": "Renwick"
+      },
+      {
+        "given": "Michaela",
+        "family": "Marschmann"
+      },
+      {
+        "given": "Pedro Ivo",
+        "family": "Guimaraes"
+      },
+      {
+        "given": "Susanne",
+        "family": "Weissenborn"
+      },
+      {
+        "given": "Jamie",
+        "family": "Clifton"
+      }
+    ],
+    "container-title": "SLAS Technology",
+    "issued": {
+      "date-parts": [
+        [
+          2024,
+          10
+        ]
+      ]
+    },
+    "DOI": "10.1016/j.slast.2024.100180",
+    "URL": "https://doi.org/10.1016/j.slast.2024.100180",
+    "volume": "29",
+    "issue": "5",
+    "page": "100180",
+    "article-number": "100180"
+  },
+  {
+    "id": "Rihm2024",
+    "type": "article-journal",
+    "title": "The digital lab manager: Automating research support",
+    "author": [
+      {
+        "given": "Simon D.",
+        "family": "Rihm"
+      },
+      {
+        "given": "Yong Ren",
+        "family": "Tan"
+      },
+      {
+        "given": "Wilson",
+        "family": "Ang"
+      },
+      {
+        "given": "Markus",
+        "family": "Hofmeister"
+      },
+      {
+        "given": "Xinhong",
+        "family": "Deng"
+      },
+      {
+        "given": "Michael Teguh",
+        "family": "Laksana"
+      },
+      {
+        "given": "Hou Yee",
+        "family": "Quek"
+      },
+      {
+        "given": "Jiaru",
+        "family": "Bai"
+      },
+      {
+        "given": "Laura",
+        "family": "Pascazio"
+      },
+      {
+        "given": "Sim Chun",
+        "family": "Siong"
+      },
+      {
+        "given": "Jethro",
+        "family": "Akroyd"
+      },
+      {
+        "given": "Sebastian",
+        "family": "Mosbach"
+      },
+      {
+        "given": "Markus",
+        "family": "Kraft"
+      }
+    ],
+    "container-title": "SLAS Technology",
+    "issued": {
+      "date-parts": [
+        [
+          2024,
+          6
+        ]
+      ]
+    },
+    "DOI": "10.1016/j.slast.2024.100135",
+    "URL": "https://doi.org/10.1016/j.slast.2024.100135",
+    "volume": "29",
+    "issue": "3",
+    "page": "100135",
+    "article-number": "100135"
+  },
+  {
+    "id": "Napari",
+    "type": "software",
+    "title": "napari: a multi-dimensional image viewer for Python",
+    "author": [
+      {
+        "family": "Sofroniew",
+        "given": "Nicholas"
+      },
+      {
+        "family": "Lambert",
+        "given": "Talley"
+      },
+      {
+        "family": "Bokota",
+        "given": "Grzegorz"
+      },
+      {
+        "family": "Nunez-Iglesias",
+        "given": "Juan"
+      },
+      {
+        "family": "Sobolewski",
+        "given": "Peter"
+      },
+      {
+        "family": "Sweet",
+        "given": "Andrew"
+      },
+      {
+        "family": "Gaifas",
+        "given": "Lorenzo"
+      },
+      {
+        "family": "Evans",
+        "given": "Kira"
+      },
+      {
+        "family": "Burt",
+        "given": "Alister"
+      },
+      {
+        "family": "Doncila Pop",
+        "given": "Draga"
+      },
+      {
+        "family": "Yamauchi",
+        "given": "Kevin"
+      },
+      {
+        "family": "Weber Mendonça",
+        "given": "Melissa"
+      },
+      {
+        "family": "Rodríguez-Guerra",
+        "given": "Jaime"
+      },
+      {
+        "family": "Liu",
+        "given": "Lucy"
+      },
+      {
+        "family": "Buckley",
+        "given": "Genevieve"
+      },
+      {
+        "family": "Vierdag",
+        "given": "Wouter-Michiel"
+      },
+      {
+        "family": "Anderson",
+        "given": "Ashley"
+      },
+      {
+        "family": "Monko",
+        "given": "Timothy"
+      },
+      {
+        "family": "Willing",
+        "given": "Carol"
+      },
+      {
+        "family": "Rodríguez-Reza",
+        "given": "Carlos M."
+      },
+      {
+        "family": "Royer",
+        "given": "Loic"
+      },
+      {
+        "family": "Can Solak",
+        "given": "Ahmet"
+      },
+      {
+        "family": "Harrington",
+        "given": "Kyle I. S."
+      },
+      {
+        "family": "Abramo",
+        "given": "Jacopo"
+      },
+      {
+        "family": "Ahlers",
+        "given": "Jannis"
+      },
+      {
+        "family": "Ajina",
+        "given": "Sesan"
+      },
+      {
+        "family": "Althviz Moré",
+        "given": "Daniel"
+      },
+      {
+        "family": "Ambroset",
+        "given": "Mélodie"
+      },
+      {
+        "family": "Amsalem",
+        "given": "Oren"
+      },
+      {
+        "family": "Andò",
+        "given": "Edward"
+      },
+      {
+        "family": "Annex",
+        "given": "Andrew"
+      },
+      {
+        "family": "Archit",
+        "given": "Anwai"
+      },
+      {
+        "family": "Aronssohn",
+        "given": "Constantin"
+      },
+      {
+        "family": "Balzaretti",
+        "given": "Filippo"
+      },
+      {
+        "family": "Boone",
+        "given": "Peter"
+      },
+      {
+        "family": "Bestak",
+        "given": "Kresimir"
+      },
+      {
+        "family": "Bragantini",
+        "given": "Jordão"
+      },
+      {
+        "family": "Bunten",
+        "given": "David"
+      },
+      {
+        "family": "Bussonnier",
+        "given": "Matthias"
+      },
+      {
+        "family": "Caporal",
+        "given": "Clément"
+      },
+      {
+        "family": "Chazotte",
+        "given": "Margot"
+      },
+      {
+        "family": "Coccimiglio",
+        "given": "Ian"
+      },
+      {
+        "family": "Čočková",
+        "given": "Zuzana"
+      },
+      {
+        "family": "Defauw",
+        "given": "Arne"
+      },
+      {
+        "family": "Czasak",
+        "given": "Sara"
+      },
+      {
+        "family": "Eglinger",
+        "given": "Jan"
+      },
+      {
+        "family": "Eisenbarth",
+        "given": "Andreas"
+      },
+      {
+        "family": "Freeman",
+        "given": "Jeremy"
+      },
+      {
+        "family": "Fukai T.",
+        "given": "Yohsuke"
+      },
+      {
+        "family": "Garnett",
+        "given": "Arbor"
+      },
+      {
+        "family": "Gohlke",
+        "given": "Christoph"
+      },
+      {
+        "family": "Gunalan",
+        "given": "Kabilar"
+      },
+      {
+        "family": "Halchenko",
+        "given": "Yaroslav Olegovich"
+      },
+      {
+        "family": "Har-Gil",
+        "given": "Hagai"
+      },
+      {
+        "family": "Harfouche",
+        "given": "Mark"
+      },
+      {
+        "family": "Hilsenstein",
+        "given": "Volker"
+      },
+      {
+        "family": "Huijben",
+        "given": "Teun A.P.M."
+      },
+      {
+        "family": "Hutchings",
+        "given": "Katherine"
+      },
+      {
+        "family": "Kawai",
+        "given": "Hiroki"
+      },
+      {
+        "family": "Kozar",
+        "given": "Robert"
+      },
+      {
+        "family": "Lauer",
+        "given": "Jessy"
+      },
+      {
+        "family": "Le Meur-Diebolt",
+        "given": "Samuel"
+      },
+      {
+        "family": "Lefebvre",
+        "given": "Austin E. Y. T."
+      },
+      {
+        "family": "Lichtner",
+        "given": "Gregor"
+      },
+      {
+        "family": "Liu",
+        "given": "Hanjin"
+      },
+      {
+        "family": "Liu",
+        "given": "Ziyang"
+      },
+      {
+        "family": "Lowe",
+        "given": "Alan"
+      },
+      {
+        "family": "Malin-Mayor",
+        "given": "Caroline"
+      },
+      {
+        "family": "Marconato",
+        "given": "Luca"
+      },
+      {
+        "family": "Martin",
+        "given": "Sean"
+      },
+      {
+        "family": "McGovern",
+        "given": "Abigail"
+      },
+      {
+        "family": "Migas",
+        "given": "Lukasz"
+      },
+      {
+        "family": "Miller",
+        "given": "Nadalyn"
+      },
+      {
+        "family": "Miñano",
+        "given": "Sofía"
+      },
+      {
+        "family": "Muñoz",
+        "given": "Hector"
+      },
+      {
+        "family": "Müller",
+        "given": "Jan-Hendrik"
+      },
+      {
+        "family": "Nauroth-Kreß",
+        "given": "Christopher"
+      },
+      {
+        "family": "Newstein",
+        "given": "Peter"
+      },
+      {
+        "family": "Obenhaus",
+        "given": "Horst A."
+      },
+      {
+        "family": "Palecek",
+        "given": "David"
+      },
+      {
+        "family": "Pape",
+        "given": "Constantin"
+      },
+      {
+        "family": "Pellegrini",
+        "given": "Yann"
+      },
+      {
+        "family": "Perlman",
+        "given": "Eric"
+      },
+      {
+        "family": "Theart",
+        "given": "Rensu Petrus"
+      },
+      {
+        "family": "Pevey",
+        "given": "Kim"
+      },
+      {
+        "family": "Peña-Castellanos",
+        "given": "Gonzalo"
+      },
+      {
+        "family": "Phelps",
+        "given": "Jasper"
+      },
+      {
+        "family": "Pierré",
+        "given": "Andrea"
+      },
+      {
+        "family": "Pinto",
+        "given": "David"
+      },
+      {
+        "family": "Reksoatmodjo",
+        "given": "Anthony"
+      },
+      {
+        "family": "Ross",
+        "given": "David"
+      },
+      {
+        "family": "Russell",
+        "given": "Craig T."
+      },
+      {
+        "family": "Ryan",
+        "given": "James"
+      },
+      {
+        "family": "Saveur",
+        "given": "Tom"
+      },
+      {
+        "family": "Schabel",
+        "given": "Matthias Christian"
+      },
+      {
+        "family": "Selzer",
+        "given": "Gabriel"
+      },
+      {
+        "family": "Sharma",
+        "given": "Rupesh"
+      },
+      {
+        "family": "Sheikh",
+        "given": "Imad Uddin"
+      },
+      {
+        "family": "Sirmpilatze",
+        "given": "Nikoloz"
+      },
+      {
+        "family": "Smith",
+        "given": "MB"
+      },
+      {
+        "family": "Smith",
+        "given": "Paul"
+      },
+      {
+        "family": "Sofiiuk",
+        "given": "Konstantin"
+      },
+      {
+        "family": "Soltwedel",
+        "given": "Johannes"
+      },
+      {
+        "family": "Stansby",
+        "given": "David"
+      },
+      {
+        "family": "Steuer",
+        "given": "Michal"
+      },
+      {
+        "family": "Teo",
+        "given": "Wulin"
+      },
+      {
+        "family": "Vanaret",
+        "given": "Jules"
+      },
+      {
+        "family": "Wadhwa",
+        "given": "Pam"
+      },
+      {
+        "family": "Weigert",
+        "given": "Martin"
+      },
+      {
+        "family": "Windhager",
+        "given": "Jonas"
+      },
+      {
+        "family": "Winston",
+        "given": "Philip"
+      },
+      {
+        "family": "Yu",
+        "given": "Qin"
+      },
+      {
+        "family": "Zhang",
+        "given": "Liudeng"
+      },
+      {
+        "family": "Zhao",
+        "given": "Rubin"
+      },
+      {
+        "family": "Witz",
+        "given": "Guillaume"
+      },
+      {
+        "family": "Leomil Zoccoler",
+        "given": "Marcelo"
+      },
+      {
+        "family": "Yadav",
+        "given": "Aniket Singh"
+      },
+      {
+        "family": "Hinderling",
+        "given": "Lucien"
+      },
+      {
+        "family": "Kabde",
+        "given": "Omkar"
+      },
+      {
+        "family": "Roald-Arbøl",
+        "given": "Mikkel"
+      },
+      {
+        "family": "Rochat",
+        "given": "Giliane"
+      },
+      {
+        "family": "Castelli",
+        "given": "Filippo Maria"
+      },
+      {
+        "family": "Venugopal",
+        "given": "Revathy"
+      },
+      {
+        "family": "Coussoux",
+        "given": "Edouard"
+      },
+      {
+        "family": "Seth",
+        "given": "Mridul"
+      },
+      {
+        "family": "Becht",
+        "given": "Job"
+      },
+      {
+        "family": "Creeten",
+        "given": "Christophe"
+      },
+      {
+        "family": "Morais",
+        "given": "Sébastien"
+      },
+      {
+        "family": "Bloemsaat",
+        "given": "Bas"
+      },
+      {
+        "family": "Kania",
+        "given": "Kamil"
+      },
+      {
+        "family": "Liaskas",
+        "given": "Ioannis"
+      },
+      {
+        "family": "Hada",
+        "given": "Aroj"
+      },
+      {
+        "family": "Nagineni",
+        "given": "Venkateswarlu"
+      },
+      {
+        "family": "Naik",
+        "given": "Suyash"
+      }
+    ],
+    "issued": {
+      "date-parts": [
+        [
+          2026
+        ]
+      ]
+    },
+    "DOI": "10.5281/zenodo.3555620",
+    "URL": "https://zenodo.org/doi/10.5281/zenodo.3555620",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          9,
+          9
+        ]
+      ]
+    }
+  },
+  {
+    "id": "MCP",
+    "type": "webpage",
+    "author": [
+      {
+        "literal": "Model Context Protocol contributors"
+      }
+    ],
+    "title": "Model Context Protocol specification",
+    "URL": "https://modelcontextprotocol.io/specification/2026-07-28",
+    "issued": {
+      "date-parts": [
+        [
+          2026,
+          7,
+          28
+        ]
+      ]
+    },
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          9,
+          9
+        ]
+      ]
+    }
+  },
+  {
+    "id": "CellProfilerExamples",
+    "type": "webpage",
+    "author": [
+      {
+        "literal": "CellProfiler contributors"
+      }
+    ],
+    "title": "CellProfiler example pipelines and associated biological images",
+    "version": "4972b59e670a4ae96c3d453803c92eeff378d054",
+    "URL": "https://github.com/CellProfiler/examples/tree/4972b59e670a4ae96c3d453803c92eeff378d054",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          9,
+          9
+        ]
+      ]
+    }
+  },
+  {
+    "id": "CellProfilerTutorials",
+    "type": "webpage",
+    "author": [
+      {
+        "literal": "CellProfiler contributors"
+      }
+    ],
+    "title": "CellProfiler tutorial pipelines and associated biological images",
+    "version": "264a8155da21a2d468051f78211bed2e580a8934",
+    "URL": "https://github.com/CellProfiler/tutorials/tree/264a8155da21a2d468051f78211bed2e580a8934",
+    "accessed": {
+      "date-parts": [
+        [
+          2026,
+          9,
+          9
+        ]
+      ]
+    }
+  }
+]

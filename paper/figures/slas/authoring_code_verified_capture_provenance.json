@@ -1,0 +1,56 @@
+{
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_snapshot_window",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139890653004976",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "output_dir_path": "/tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures",
+            "capture_scope": "widget",
+            "captured": true,
+            "resource": {
+              "uri": "file:///tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures/20260910T062546491481Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png",
+              "title": "Edit Function Pattern",
+              "mime_type": "image/png",
+              "path": "/tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures/20260910T062546491481Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png",
+              "size_bytes": 35844,
+              "sha256": "9154c252f4d2a86be1ceac9a235d4a5c97e1cdca9516f6ad4699250105f1715b"
+            },
+            "summary": {
+              "object_state_scope_id": null,
+              "dirty": false,
+              "signature_diff": false,
+              "dirty_field_count": 0,
+              "signature_diff_field_count": 0,
+              "semantic_markers": [],
+              "managed_action_ids": [],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139890653004976"
+              },
+              "title": "Edit Function Pattern",
+              "window_kind": "scope",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": {
+                "value": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:139890653004976"
+              }
+            },
+            "width": 900,
+            "height": 700
+          }
+        ]
+      }
+    ]
+  }
+}

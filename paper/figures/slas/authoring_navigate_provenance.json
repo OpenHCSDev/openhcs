@@ -1,0 +1,59 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_navigate_window",
+    "--arguments",
+    "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0::func_0\",\"field_path\":\"high_percentile\",\"create_if_missing\":true}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_navigate_window",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0::func_0",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "focused": true,
+            "navigated": true,
+            "created": false,
+            "summary": {
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "dirty": false,
+              "signature_diff": true,
+              "dirty_field_count": 0,
+              "signature_diff_field_count": 13,
+              "semantic_markers": [
+                "_"
+              ],
+              "managed_action_ids": [
+                "save_and_close",
+                "save_without_close",
+                "discard_and_close"
+              ],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0::func_0"
+              },
+              "title": "Edit Step: 1. Enhanced neuronal signal",
+              "window_kind": "scope",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": {
+                "value": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

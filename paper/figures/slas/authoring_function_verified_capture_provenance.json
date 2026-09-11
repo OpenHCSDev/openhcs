@@ -1,0 +1,63 @@
+{
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_snapshot_window",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "/tmp/openhcs-paper-final-nv8a9b/NeuronCyto_II::functionstep_0",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "output_dir_path": "/tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures",
+            "capture_scope": "widget",
+            "captured": true,
+            "resource": {
+              "uri": "file:///tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures/20260910T062545577539Z_tmp_openhcs-paper-final-nv8a9b_NeuronCyto_II_functionstep_0_Edit_Step_1._Enhanced_neuronal_signal.png",
+              "title": "* Edit Step: 1. Enhanced neuronal signal",
+              "mime_type": "image/png",
+              "path": "/tmp/openhcs-paper-final-nv8a9b/authoring-evidence/captures/20260910T062545577539Z_tmp_openhcs-paper-final-nv8a9b_NeuronCyto_II_functionstep_0_Edit_Step_1._Enhanced_neuronal_signal.png",
+              "size_bytes": 35130,
+              "sha256": "56c35478fb88c3cd9f0aa4db82f247a287742ba3947db28da18fd7b7bed09d29"
+            },
+            "summary": {
+              "object_state_scope_id": "/tmp/openhcs-paper-final-nv8a9b/NeuronCyto_II::functionstep_0",
+              "dirty": true,
+              "signature_diff": true,
+              "dirty_field_count": 1,
+              "signature_diff_field_count": 13,
+              "semantic_markers": [
+                "*",
+                "_"
+              ],
+              "managed_action_ids": [
+                "save_and_close",
+                "save_without_close",
+                "discard_and_close"
+              ],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "/tmp/openhcs-paper-final-nv8a9b/NeuronCyto_II::functionstep_0"
+              },
+              "title": "* Edit Step: 1. Enhanced neuronal signal",
+              "window_kind": "scope",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": {
+                "value": "/tmp/openhcs-paper-final-nv8a9b/NeuronCyto_II::functionstep_0"
+              }
+            },
+            "width": 550,
+            "height": 600
+          }
+        ]
+      }
+    ]
+  }
+}

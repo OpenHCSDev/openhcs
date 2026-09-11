@@ -1,0 +1,61 @@
+{
+  "argv": [
+    "code-document",
+    "plate_manager.orchestrator_config",
+    "--selection-mode",
+    "all",
+    "--clean",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_get_code_document",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "selection_mode": "all",
+            "selected_scope_ids": [],
+            "current_snapshot": null,
+            "current_revision_token": "3bc0e0acab00fc0c2bc74378c61b025fc9c3db5ce9529b8a3591581621e5831b",
+            "schema_version": "openhcs.agent.v1",
+            "summary": {
+              "widget_id": "plate_manager",
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "document_id": "plate_manager.orchestrator_config"
+              },
+              "title": "Plate manager orchestrator config",
+              "readable": true,
+              "writable": true,
+              "supported_selection_modes": [
+                "selected",
+                "all"
+              ],
+              "current_selection_count": 0,
+              "total_scope_count": 0
+            },
+            "source": "# Edit this orchestrator configuration and save to apply changes\n\nfrom openhcs.core.config import GlobalPipelineConfig\n\nplate_paths = []\n\nglobal_config = GlobalPipelineConfig()\n\nper_plate_configs = {}\n\npipeline_data = {}",
+            "mime_type": "text/x-python",
+            "size_bytes": 220,
+            "sha256": "a23bd4158078dd4d75a0f0153ab6afac7eb1863be6e2610c9dfea0d3be3c9a0a",
+            "warnings": [],
+            "errors": []
+          }
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-custom-catalog-64tT3v/qa/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/tmp/openhcs-custom-catalog-64tT3v"
+  }
+}

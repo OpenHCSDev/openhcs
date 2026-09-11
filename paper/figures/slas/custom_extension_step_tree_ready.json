@@ -1,0 +1,2078 @@
+{
+  "argv": [
+    "call",
+    "openhcs_ui_get_widget_tree",
+    "--arguments",
+    "{\"window_id\":\"/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0\",\"max_depth\":12,\"max_nodes\":650,\"maximum_text_length\":100}",
+    "--json"
+  ],
+  "response": {
+    "server": {
+      "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+      "module": "openhcs.mcp"
+    },
+    "errors": [],
+    "results": [
+      {
+        "tool": "openhcs_ui_get_widget_tree",
+        "mcp_error": false,
+        "payloads": [
+          {
+            "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+            "schema_version": "openhcs.agent.v1",
+            "errors": [],
+            "warnings": [],
+            "projected": true,
+            "root": null,
+            "actionable_widgets": [
+              {
+                "path": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  0
+                ],
+                "path_id": "0.0.0.1.0",
+                "child_index": 0,
+                "class_name": "QPushButton",
+                "label": "Cancel",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 70,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1365,
+                  "y": 209,
+                  "width": 70,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "Edit Step: 1. Enhanced neuronal signal"
+              },
+              {
+                "path": [
+                  1,
+                  0,
+                  0,
+                  0
+                ],
+                "path_id": "1.0.0.0",
+                "child_index": 0,
+                "class_name": "QTabBar",
+                "label": "Step Settings",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 1,
+                  "y": 1,
+                  "width": 317,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 970,
+                  "y": 247,
+                  "width": 317,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "tab_selector"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "Step Settings",
+                "item_count": 3,
+                "item_texts": [
+                  "Step Settings",
+                  "Function Pattern",
+                  "Artifacts"
+                ],
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ],
+                "path_id": "1.0.0.1.0.0",
+                "child_index": 0,
+                "class_name": "QPushButton",
+                "label": "Code",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 47,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1461,
+                  "y": 247,
+                  "width": 47,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  1,
+                  0
+                ],
+                "path_id": "1.0.0.1.1.0",
+                "child_index": 0,
+                "class_name": "QPushButton",
+                "object_name": "function_list_editor_action_add",
+                "label": "Add",
+                "visible": false,
+                "enabled": true,
+                "geometry": {
+                  "x": 451,
+                  "y": 224,
+                  "width": 41,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1912,
+                  "y": 471,
+                  "width": 41,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  1,
+                  1
+                ],
+                "path_id": "1.0.0.1.1.1",
+                "child_index": 1,
+                "class_name": "QPushButton",
+                "object_name": "function_list_editor_action_code",
+                "label": "Code",
+                "visible": false,
+                "enabled": true,
+                "geometry": {
+                  "x": 494,
+                  "y": 224,
+                  "width": 47,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1955,
+                  "y": 471,
+                  "width": 47,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  1,
+                  3
+                ],
+                "path_id": "1.0.0.1.1.3",
+                "child_index": 3,
+                "class_name": "QPushButton",
+                "object_name": "function_list_editor_action_previous_pattern",
+                "label": "<",
+                "visible": false,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 30,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1461,
+                  "y": 247,
+                  "width": 30,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  1,
+                  4
+                ],
+                "path_id": "1.0.0.1.1.4",
+                "child_index": 4,
+                "class_name": "QPushButton",
+                "object_name": "function_list_editor_action_next_pattern",
+                "label": ">",
+                "visible": false,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 30,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1461,
+                  "y": 247,
+                  "width": 30,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.0.0.0.1.0.0.1",
+                "child_index": 1,
+                "class_name": "NoneAwareLineEdit",
+                "raw_value_preview": {
+                  "type_name": "str",
+                  "is_none": false,
+                  "text": "'Enhanced neuronal signal'",
+                  "truncated": false
+                },
+                "resolved_value_preview": {
+                  "type_name": "str",
+                  "is_none": false,
+                  "text": "'Enhanced neuronal signal'",
+                  "truncated": false
+                },
+                "signature_diff": true,
+                "semantic_markers": [
+                  "_"
+                ],
+                "action_role": "field_input",
+                "semantic_address": {
+                  "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                  "field_path": "name",
+                  "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "name",
+                "label": "Enhanced neuronal signal",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 62,
+                  "y": 1,
+                  "width": 251,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1192,
+                  "y": 287,
+                  "width": 251,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "text_input"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  2
+                ],
+                "path_id": "1.1.0.2.0.0.0.0.1.0.0.2",
+                "child_index": 2,
+                "class_name": "QPushButton",
+                "object_name": "_reset",
+                "raw_value_preview": {
+                  "type_name": "str",
+                  "is_none": false,
+                  "text": "'Enhanced neuronal signal'",
+                  "truncated": false
+                },
+                "resolved_value_preview": {
+                  "type_name": "str",
+                  "is_none": false,
+                  "text": "'Enhanced neuronal signal'",
+                  "truncated": false
+                },
+                "signature_diff": true,
+                "semantic_markers": [
+                  "_"
+                ],
+                "action_role": "field_reset",
+                "semantic_address": {
+                  "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                  "field_path": "name",
+                  "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "name",
+                "label": "Reset",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 315,
+                  "y": 1,
+                  "width": 43,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1445,
+                  "y": 287,
+                  "width": 43,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  1,
+                  0,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.0.0.0.1.1.0.1",
+                "child_index": 1,
+                "class_name": "NoneAwareLineEdit",
+                "raw_value_is_none": true,
+                "resolved_value_is_none": true,
+                "raw_value_preview": {
+                  "type_name": "None",
+                  "is_none": true,
+                  "text": "None",
+                  "truncated": false
+                },
+                "resolved_value_preview": {
+                  "type_name": "None",
+                  "is_none": true,
+                  "text": "None",
+                  "truncated": false
+                },
+                "action_role": "field_input",
+                "semantic_address": {
+                  "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                  "field_path": "description",
+                  "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "description",
+                "label": null,
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 92,
+                  "y": 1,
+                  "width": 221,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1222,
+                  "y": 322,
+                  "width": 221,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "text_input"
+                ],
+                "clickable": true,
+                "tool_tip": "Pipeline default: (none)",
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  1,
+                  0,
+                  2
+                ],
+                "path_id": "1.1.0.2.0.0.0.0.1.1.0.2",
+                "child_index": 2,
+                "class_name": "QPushButton",
+                "object_name": "_reset",
+                "raw_value_is_none": true,
+                "resolved_value_is_none": true,
+                "raw_value_preview": {
+                  "type_name": "None",
+                  "is_none": true,
+                  "text": "None",
+                  "truncated": false
+                },
+                "resolved_value_preview": {
+                  "type_name": "None",
+                  "is_none": true,
+                  "text": "None",
+                  "truncated": false
+                },
+                "action_role": "field_reset",
+                "semantic_address": {
+                  "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                  "field_path": "description",
+                  "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "description",
+                "label": "Reset",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 315,
+                  "y": 1,
+                  "width": 43,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1445,
+                  "y": 322,
+                  "width": 43,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  2,
+                  0,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.0.0.0.1.2.0.1",
+                "child_index": 1,
+                "class_name": "NoneAwareCheckBox",
+                "raw_value_preview": {
+                  "type_name": "bool",
+                  "is_none": false,
+                  "text": "True",
+                  "truncated": false
+                },
+                "resolved_value_preview": {
+                  "type_name": "bool",
+                  "is_none": false,
+                  "text": "True",
+                  "truncated": false
+                },
+                "action_role": "field_input",
+                "semantic_address": {
+                  "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                  "field_path": "enabled",
+                  "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "enabled",
+                "label": null,
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 73,
+                  "y": 1,
+                  "width": 240,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1203,
+                  "y": 357,
+                  "width": 240,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button",
+                  "checkable"
+                ],
+                "clickable": true,
+                "checkable": true,
+                "checked": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  2,
+                  0,
+                  2
+                ],
+                "path_id": "1.1.0.2.0.0.0.0.1.2.0.2",
+                "child_index": 2,
+                "class_name": "QPushButton",
+                "object_name": "_reset",
+                "raw_value_preview": {
+                  "type_name": "bool",
+                  "is_none": false,
+                  "text": "True",
+                  "truncated": false
+                },
+                "resolved_value_preview": {
+                  "type_name": "bool",
+                  "is_none": false,
+                  "text": "True",
+                  "truncated": false
+                },
+                "action_role": "field_reset",
+                "semantic_address": {
+                  "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                  "field_path": "enabled",
+                  "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "enabled",
+                "label": "Reset",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 315,
+                  "y": 1,
+                  "width": 43,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1445,
+                  "y": 357,
+                  "width": 43,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  3,
+                  0,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.0.0.0.1.3.0.1",
+                "child_index": 1,
+                "class_name": "NoneAwareCheckBox",
+                "raw_value_preview": {
+                  "type_name": "bool",
+                  "is_none": false,
+                  "text": "False",
+                  "truncated": false
+                },
+                "resolved_value_preview": {
+                  "type_name": "bool",
+                  "is_none": false,
+                  "text": "False",
+                  "truncated": false
+                },
+                "action_role": "field_input",
+                "semantic_address": {
+                  "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                  "field_path": "debug_pause",
+                  "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "debug_pause",
+                "label": null,
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 102,
+                  "y": 1,
+                  "width": 211,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1232,
+                  "y": 392,
+                  "width": 211,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button",
+                  "checkable"
+                ],
+                "clickable": true,
+                "checkable": true,
+                "checked": false,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  3,
+                  0,
+                  2
+                ],
+                "path_id": "1.1.0.2.0.0.0.0.1.3.0.2",
+                "child_index": 2,
+                "class_name": "QPushButton",
+                "object_name": "_reset",
+                "raw_value_preview": {
+                  "type_name": "bool",
+                  "is_none": false,
+                  "text": "False",
+                  "truncated": false
+                },
+                "resolved_value_preview": {
+                  "type_name": "bool",
+                  "is_none": false,
+                  "text": "False",
+                  "truncated": false
+                },
+                "action_role": "field_reset",
+                "semantic_address": {
+                  "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                  "field_path": "debug_pause",
+                  "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+                },
+                "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+                "field_path": "debug_pause",
+                "label": "Reset",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 315,
+                  "y": 1,
+                  "width": 43,
+                  "height": 32
+                },
+                "global_geometry": {
+                  "x": 1445,
+                  "y": 392,
+                  "width": 43,
+                  "height": 32
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  4
+                ],
+                "path_id": "1.1.0.2.0.1.4",
+                "child_index": 4,
+                "class_name": "QModelIndex",
+                "label": "Dtype",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 20,
+                  "y": 0,
+                  "width": 130,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 989,
+                  "y": 310,
+                  "width": 130,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "Dtype",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  5
+                ],
+                "path_id": "1.1.0.2.0.1.5",
+                "child_index": 5,
+                "class_name": "QModelIndex",
+                "label": "Processing",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 20,
+                  "y": 21,
+                  "width": 130,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 989,
+                  "y": 331,
+                  "width": 130,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "Processing",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  6
+                ],
+                "path_id": "1.1.0.2.0.1.6",
+                "child_index": 6,
+                "class_name": "QModelIndex",
+                "label": "StepSourceBindings",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 20,
+                  "y": 42,
+                  "width": 130,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 989,
+                  "y": 352,
+                  "width": 130,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 2,
+                "current_text": "StepSourceBindings",
+                "item_count": 2,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  6,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.6.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "SourceBindingsConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "SourceBindingsConfig",
+                "item_count": 1,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  6,
+                  0,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.6.0.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "_SourceBindingPlanBase",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "_SourceBindingPlanBase",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  6,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.1.6.1",
+                "child_index": 1,
+                "class_name": "QModelIndex",
+                "label": "Enableable",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "Enableable",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  7
+                ],
+                "path_id": "1.1.0.2.0.1.7",
+                "child_index": 7,
+                "class_name": "QModelIndex",
+                "label": "StepWellFilter",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 20,
+                  "y": 63,
+                  "width": 130,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 989,
+                  "y": 373,
+                  "width": 130,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 3,
+                "current_text": "StepWellFilter",
+                "item_count": 1,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  7,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.7.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "WellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "WellFilterConfig",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  8
+                ],
+                "path_id": "1.1.0.2.0.1.8",
+                "child_index": 8,
+                "class_name": "QModelIndex",
+                "label": "StepMaterialization",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 20,
+                  "y": 84,
+                  "width": 130,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 989,
+                  "y": 394,
+                  "width": 130,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 4,
+                "current_text": "StepMaterialization",
+                "item_count": 3,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  8,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.8.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "Enableable",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "Enableable",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  8,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.1.8.1",
+                "child_index": 1,
+                "class_name": "QModelIndex",
+                "label": "StepWellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "StepWellFilterConfig",
+                "item_count": 1,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  8,
+                  1,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.8.1.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "WellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "WellFilterConfig",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  8,
+                  2
+                ],
+                "path_id": "1.1.0.2.0.1.8.2",
+                "child_index": 2,
+                "class_name": "QModelIndex",
+                "label": "PathPlanningConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 2,
+                "current_text": "PathPlanningConfig",
+                "item_count": 1,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  8,
+                  2,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.8.2.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "WellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "WellFilterConfig",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  9
+                ],
+                "path_id": "1.1.0.2.0.1.9",
+                "child_index": 9,
+                "class_name": "QModelIndex",
+                "label": "StreamingDefaults",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 20,
+                  "y": 105,
+                  "width": 130,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 989,
+                  "y": 415,
+                  "width": 130,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 5,
+                "current_text": "StreamingDefaults",
+                "item_count": 2,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  9,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.9.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "Enableable",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "Enableable",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  9,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.1.9.1",
+                "child_index": 1,
+                "class_name": "QModelIndex",
+                "label": "StepWellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "StepWellFilterConfig",
+                "item_count": 1,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  9,
+                  1,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.9.1.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "WellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "WellFilterConfig",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  10
+                ],
+                "path_id": "1.1.0.2.0.1.10",
+                "child_index": 10,
+                "class_name": "QModelIndex",
+                "label": "NapariStreaming",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 20,
+                  "y": 126,
+                  "width": 130,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 989,
+                  "y": 436,
+                  "width": 130,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 6,
+                "current_text": "NapariStreaming",
+                "item_count": 2,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  10,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.10.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "StreamingConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "StreamingConfig",
+                "item_count": 1,
+                "tool_tip": "This configuration is not editable in the UI (inherited by other configs)",
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  10,
+                  0,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.10.0.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "StreamingDefaults",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "StreamingDefaults",
+                "item_count": 2,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  10,
+                  0,
+                  0,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.10.0.0.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "Enableable",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "Enableable",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  10,
+                  0,
+                  0,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.1.10.0.0.1",
+                "child_index": 1,
+                "class_name": "QModelIndex",
+                "label": "StepWellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "StepWellFilterConfig",
+                "item_count": 1,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  10,
+                  0,
+                  0,
+                  1,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.10.0.0.1.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "WellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "WellFilterConfig",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  10,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.1.10.1",
+                "child_index": 1,
+                "class_name": "QModelIndex",
+                "label": "NapariDisplayConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "NapariDisplayConfig",
+                "item_count": 0,
+                "tool_tip": "This configuration is not editable in the UI (inherited by other configs)",
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  11
+                ],
+                "path_id": "1.1.0.2.0.1.11",
+                "child_index": 11,
+                "class_name": "QModelIndex",
+                "label": "FijiStreaming",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 20,
+                  "y": 147,
+                  "width": 130,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 989,
+                  "y": 457,
+                  "width": 130,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 7,
+                "current_text": "FijiStreaming",
+                "item_count": 2,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  11,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.11.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "StreamingConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "StreamingConfig",
+                "item_count": 1,
+                "tool_tip": "This configuration is not editable in the UI (inherited by other configs)",
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  11,
+                  0,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.11.0.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "StreamingDefaults",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "StreamingDefaults",
+                "item_count": 2,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  11,
+                  0,
+                  0,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.11.0.0.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "Enableable",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "Enableable",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  11,
+                  0,
+                  0,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.1.11.0.0.1",
+                "child_index": 1,
+                "class_name": "QModelIndex",
+                "label": "StepWellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "StepWellFilterConfig",
+                "item_count": 1,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  11,
+                  0,
+                  0,
+                  1,
+                  0
+                ],
+                "path_id": "1.1.0.2.0.1.11.0.0.1.0",
+                "child_index": 0,
+                "class_name": "QModelIndex",
+                "label": "WellFilterConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 0,
+                "current_text": "WellFilterConfig",
+                "item_count": 0,
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  2,
+                  0,
+                  1,
+                  11,
+                  1
+                ],
+                "path_id": "1.1.0.2.0.1.11.1",
+                "child_index": 1,
+                "class_name": "QModelIndex",
+                "label": "FijiDisplayConfig",
+                "visible": true,
+                "enabled": true,
+                "geometry": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                },
+                "global_geometry": {
+                  "x": 969,
+                  "y": 310,
+                  "width": 0,
+                  "height": 0
+                },
+                "action_kinds": [
+                  "item_select"
+                ],
+                "clickable": true,
+                "current_index": 1,
+                "current_text": "FijiDisplayConfig",
+                "item_count": 0,
+                "tool_tip": "This configuration is not editable in the UI (inherited by other configs)",
+                "context_label": "No compiled artifact plan."
+              },
+              {
+                "path": [
+                  1,
+                  1,
+                  0,
+                  0,
+                  1,
+                  4
+                ],
+                "path_id": "1.1.0.0.1.4",
+                "child_index": 4,
+                "class_name": "QAbstractButton",
+                "object_name": "qt_tableview_cornerbutton",
+                "label": "qt_tableview_cornerbutton",
+                "visible": false,
+                "enabled": true,
+                "geometry": {
+                  "x": 1,
+                  "y": 1,
+                  "width": 0,
+                  "height": 21
+                },
+                "global_geometry": {
+                  "x": 978,
+                  "y": 312,
+                  "width": 0,
+                  "height": 21
+                },
+                "action_kinds": [
+                  "button"
+                ],
+                "clickable": true,
+                "context_label": "No compiled artifact plan."
+              }
+            ],
+            "summary": {
+              "object_state_scope_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+              "dirty": false,
+              "signature_diff": true,
+              "dirty_field_count": 0,
+              "signature_diff_field_count": 13,
+              "semantic_markers": [
+                "_"
+              ],
+              "managed_action_ids": [
+                "save_and_close",
+                "save_without_close",
+                "discard_and_close"
+              ],
+              "schema_version": "openhcs.agent.v1",
+              "identity": {
+                "window_id": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              },
+              "title": "Edit Step: 1. Enhanced neuronal signal",
+              "window_kind": "scope",
+              "visible": true,
+              "focusable": true,
+              "manager_scope": {
+                "value": "/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0"
+              }
+            },
+            "widget_count": 242,
+            "actionable_count": 48,
+            "returned_widget_count": 0,
+            "returned_actionable_count": 48,
+            "tree_truncated": true,
+            "actionable_widgets_truncated": true,
+            "actionable_only": true,
+            "include_tree": false,
+            "max_depth": 12,
+            "max_nodes": 650
+          }
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "ui_config_cache_file": "/tmp/openhcs-preview-policy-G9xfr2/ui.config",
+    "ui_bridge_descriptor_directory": "/tmp/openhcs-custom-catalog-64tT3v/qa/bridge",
+    "xdg_data_home": "/tmp/openhcs-preview-policy-G9xfr2/data",
+    "execution_port": 7893,
+    "checkout": "/tmp/openhcs-custom-catalog-64tT3v"
+  }
+}

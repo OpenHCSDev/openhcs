@@ -1,0 +1,52 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_snapshot_window",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "window_id": "main_window",
+          "schema_version": "openhcs.agent.v1",
+          "errors": [],
+          "warnings": [],
+          "output_dir_path": "/tmp/openhcs-paper-ui-JvncuC/captures",
+          "capture_scope": "widget",
+          "captured": true,
+          "resource": {
+            "uri": "file:///tmp/openhcs-paper-ui-JvncuC/captures/20260910T012417460938Z_main_window_OpenHCS.png",
+            "title": "OpenHCS",
+            "mime_type": "image/png",
+            "path": "/tmp/openhcs-paper-ui-JvncuC/captures/20260910T012417460938Z_main_window_OpenHCS.png",
+            "size_bytes": 120263,
+            "sha256": "fef97515c69409193cf040a680222ad3e2e77c6c3f20f286488c654d4037576e"
+          },
+          "summary": {
+            "object_state_scope_id": null,
+            "dirty": false,
+            "signature_diff": false,
+            "dirty_field_count": 0,
+            "signature_diff_field_count": 0,
+            "semantic_markers": [],
+            "managed_action_ids": [],
+            "schema_version": "openhcs.agent.v1",
+            "identity": {
+              "window_id": "main_window"
+            },
+            "title": "OpenHCS",
+            "window_kind": "qt_top_level",
+            "visible": true,
+            "focusable": true,
+            "manager_scope": null
+          },
+          "width": 1024,
+          "height": 768
+        }
+      ]
+    }
+  ]
+}

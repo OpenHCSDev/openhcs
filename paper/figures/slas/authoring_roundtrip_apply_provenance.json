@@ -1,0 +1,23 @@
+{
+  "document_id": "window_code_document:/home/ts/code/projects/openhcs/mcp_outputs/website-agent-demo/candidate-20260804-13/plate::functionstep_0",
+  "schema_version": "openhcs.agent.v1",
+  "applied": false,
+  "base_revision_token": "4981bc87141e0dd6db5de64acff6ca7a16786ba0ea05ef94773a8fef34fb13a7",
+  "receipt": {
+    "request_token": {
+      "value": null
+    },
+    "bridge_operation_id": "425b2786-82eb-4455-80b1-13320891adfb",
+    "accepted": true
+  },
+  "outcome": "running",
+  "operation_id": "425b2786-82eb-4455-80b1-13320891adfb",
+  "new_revision_token": null,
+  "current_revision_token": null,
+  "current_snapshot": null,
+  "undo_snapshot": null,
+  "pre_apply_snapshot": null,
+  "post_apply_snapshot": null,
+  "errors": [],
+  "warnings": []
+}

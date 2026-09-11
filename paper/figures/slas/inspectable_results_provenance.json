@@ -1,0 +1,15 @@
+{
+  "generator_sha256": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc",
+  "source_sha256": {
+    "website/assets/gallery/release-media-record.json": "a4d6a0ea60b042351d4065c0c5fe4fe4e48ef14e82914ef3a81a3882c52ef19e",
+    "website/assets/gallery/fiji-review.webp": "c02d9e4e02c3e8f504fcedc4440dafa154072a876f8669c3b7d9df89254ed893",
+    "website/assets/gallery/napari-roi-navigation-poster.webp": "f1e9c29db9436df7e6e2dcdb134b6d8529538143f05b732cbe38ec100cd5e1b5"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "inspectable_results.png": "c8dc64b45b5d659ecc7cdc03c2a869e4a77b30f57fa4ef242affe4aa3deb2659",
+    "inspectable_results.pdf": "cd2e957c740daa59263a658fae457845a0f2c73088dfa5bf9e0cbfabec773fc8",
+    "inspectable_results.svg": "1486e681772836076154514f08fa012b093e2b76b29a9e63722e73dd519a821e"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}

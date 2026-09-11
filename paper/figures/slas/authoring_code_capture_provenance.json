@@ -1,0 +1,54 @@
+{
+  "server": {
+    "command": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "module": "openhcs.mcp"
+  },
+  "errors": [],
+  "results": [
+    {
+      "tool": "openhcs_ui_snapshot_window",
+      "mcp_error": false,
+      "payloads": [
+        {
+          "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:140116128157520",
+          "schema_version": "openhcs.agent.v1",
+          "errors": [],
+          "warnings": [],
+          "output_dir_path": "/tmp/openhcs-paper-ui-JvncuC/captures",
+          "capture_scope": "widget",
+          "captured": true,
+          "resource": {
+            "uri": "file:///tmp/openhcs-paper-ui-JvncuC/captures/20260910T013546408244Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png",
+            "title": "Edit Function Pattern",
+            "mime_type": "image/png",
+            "path": "/tmp/openhcs-paper-ui-JvncuC/captures/20260910T013546408244Z_code_editor_pyqt_reactive.services.function_pattern_code_document.FunctionPatter_Edit_Function_Pattern.png",
+            "size_bytes": 35397,
+            "sha256": "b328e409ac28e08f7b25bb166b72cc36551d9f8eadac0f8ce8a72fd91896e303"
+          },
+          "summary": {
+            "object_state_scope_id": null,
+            "dirty": false,
+            "signature_diff": false,
+            "dirty_field_count": 0,
+            "signature_diff_field_count": 0,
+            "semantic_markers": [],
+            "managed_action_ids": [],
+            "schema_version": "openhcs.agent.v1",
+            "identity": {
+              "window_id": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:140116128157520"
+            },
+            "title": "Edit Function Pattern",
+            "window_kind": "scope",
+            "visible": true,
+            "focusable": true,
+            "manager_scope": {
+              "value": "code_editor:pyqt_reactive.services.function_pattern_code_document.FunctionPatternValue:140116128157520"
+            }
+          },
+          "width": 900,
+          "height": 700
+        }
+      ]
+    }
+  ]
+}

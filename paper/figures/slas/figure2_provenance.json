@@ -1,0 +1,31 @@
+{
+  "source_sha256": {
+    "benchmark/results/labmeeting_20260513/official30_well_throughput/data/single_process_summary.csv": "38747ee2a7a0a8fcd361cc5269f76aaf3150396a6b2ff7988edd11aa12345488",
+    "benchmark/results/labmeeting_20260513/official30_well_throughput/data/wells_per_core_2c3c4c.csv": "1d6db1948a510855e24d52bb316e36c704fe0176d8623eb99dc1346fa396b6de",
+    "benchmark/results/labmeeting_20260513/official30_well_throughput/data/wells_per_core_4c_6wpc_8wpc.csv": "5938eefdba5aefa50b55f320120253f1096502e2ba74973ae38d05ecb3f5ab2f",
+    "benchmark/results/labmeeting_20260513/official30_well_throughput/data/core_scaling_well_throughput.csv": "3b799feec3a7c024bf878b2c08c3848b8d5320e50d87387a999eeb34a429d491"
+  },
+  "generator_sha256": "c650e47b6e90a3bd0193842db5cab7d4897be4c99a50c6a4d96abc340d3ed3ae",
+  "output_sha256": {
+    "figure2_benchmarks.pdf": "f714046c3f035f6db5d17241a000174187fcdf6899334043e6734330f5616549",
+    "figure2_benchmarks.png": "bd67515ec9ec8223103039ad94ee273001d097d3473ae93816dabc89f40e3ccb",
+    "figure2_benchmarks.svg": "28afc2c7d6cb42cd48de2f74c644f8666296c867e6ca6f3393401cf1d622c449",
+    "figure2_historical_timings.pdf": "6f907859cea9977eb24b07fc2eaac4bc59058b2138e1cc0b43b50bccc5ffe38d",
+    "figure2_historical_timings.png": "3f507fa3cd28ac8314dae49637bb5d498b829128cf24288ac2a927071de77ee8",
+    "figure2_historical_timings.svg": "4a6c0293e2dda69603b6c0cbaee79136b4fdecc95e3be43b25ac557d65433a1e",
+    "figure2_memory_observations.csv": "ef6ce818e23cc2ad2e4c2eba7d3bafa5b4bf930fbe71083c3914c1a7360c15fc",
+    "figure2_scaling_comparisons.csv": "206afb149cce99499cf36218677e74b4c4af87f14a27dc00288d09f2d85a39b2",
+    "figure2_throughput_observations.csv": "f62b96ffd6e6cc285f3a32ac88389147c6691d83c7748040e1fa0735e11635ad",
+    "figure2_timed_workflows.csv": "0a52b40f17043db5a89d7897806984706227795ee2303cf7837fd05c595b369f"
+  },
+  "unresolved_native_timing_excluded_from_speed_comparisons": "ExampleWoundHealing",
+  "single_sample_workflows": 29,
+  "repetitions_per_single_sample_row": [
+    1
+  ],
+  "memory_workflows": 30,
+  "throughput_workflows": 30,
+  "throughput_panel": "Measured completed wells divided by execution seconds, four wells per worker; historical native projections retained separately but not plotted",
+  "memory_conversion": "Source collector reports RSS bytes / 1024**2; divide by 1024 for GiB",
+  "interpretation": "Historical phase ratios with different timing boundaries: native command includes startup, OpenHCS execution follows preparation, and phase sums include different work. Native persistent or parallel throughput was not measured."
+}

@@ -1,72 +1,48 @@
-# OpenHCS Nature Methods Paper
+# OpenHCS manuscript
 
-## Working Title
-**OpenHCS: A dimensional dataflow platform for composable high-content screening analysis**
+Working author-review draft for **SLAS Technology**:
+*OpenHCS: interoperable, agent-guided microscopy analysis*.
 
-## Paper Structure
+## Versioned sources
 
-### Files
-- `01_abstract.md` - Abstract (150-200 words)
-- `02_introduction.md` - Introduction (~1000 words)
-- `03_results.md` - Results (main content)
-- `04_discussion.md` - Discussion (~800 words)
-- `05_methods.md` - Methods (detailed implementation)
-- `06_figures.md` - Figure descriptions and planning
-- `07_references.md` - Bibliography
-- `notes.md` - Working notes and ideas
+- [Manuscript source](openhcs_nature_methods_draft.md): the complete working text.
+  The filename retains the earlier journal target.
+- [Supplementary material](supplementary/README.md): five explanatory figures,
+  historical timing plots, source tables and evaluation records.
+- [Additional CellProfiler workflows](supplementary/complex_cellprofiler_workflows.md):
+  generated step sequences for public advanced-segmentation and 3D examples.
+- [Bibliographic metadata](openhcs_references.json) and [citation style](styles/README.md).
 
-### Target Journal
-**Nature Methods**
-- Focus: Novel methods with broad applicability
-- Emphasis: Biological validation + technical innovation
-- Format: ~3000-4000 words main text, 6-8 figures
+## Figures and validation
 
-## Key Messages
+The six main figures show the shared workflow, matching UI/code/MCP authoring,
+the recorded agent analysis, CellProfiler translation, benchmark results and
+viewer inspection. Supplementary figures explain runtime composition, process
+boundaries, compiler preparation, connected outputs and custom functions.
 
-1. **Problem**: HCS generates massive dimensional data (spatial × temporal × multi-channel × multi-well × multi-condition), but existing tools force researchers into rigid pipelines or complex scripting
+Generators, editable artwork, native captures and provenance receipts are in
+`figures/`. Scientific examples in this revision use public CellProfiler workflows
+and the retained public NeuronCyto II demonstration. Figure receipts distinguish
+historical analysis from later authoring and viewer checks.
 
-2. **Innovation**: Dimensional dataflow compiler with declarative composition
-   - Automatic dimensional bookkeeping
-   - Correctness by construction
-   - First-class provenance tracking
+Earlier split drafts and planning notes remain as working history. The linked
+complete manuscript identifies the current version. This is an author-review
+draft, not a submitted manuscript. Software releases are tracked separately.
 
-3. **Validation**: iPSC microfluidic device analysis
-   - Biological insights enabled by OpenHCS
-   - Performance benchmarks vs CellProfiler, ImageJ
-   - Extensibility demonstrations
+## Build a reading copy
 
-4. **Impact**: Platform for community, not just a tool
-   - Open source, well-documented
-   - Integration with pyclesperanto, napari
-   - Enables analyses impractical with existing tools
+From the repository root, with Pandoc and Python available:
 
-## Differentiators from Existing Tools
+```sh
+python paper/build_docx_from_markdown.py paper/openhcs_nature_methods_draft.md paper/review/openhcs_current.docx
+python paper/build_docx_from_markdown.py paper/supplementary/README.md paper/review/openhcs_supplement_current.docx
+```
 
-- **vs CellProfiler**: Declarative composition, dimensional reasoning, type safety
-- **vs ImageJ/FIJI**: Structured pipelines, provenance, reproducibility
-- **vs Custom Scripts**: Correctness by construction, reusability, GUI
+Figure generation also requires the linked source assets and archived benchmark
+inputs. Receipts record their identities; source files are not fabricated when
+an external input is unavailable. The checked-in figure outputs support building
+reading copies without rerunning scientific analyses.
 
-## TODO
-
-- [ ] Draft abstract
-- [ ] Write introduction
-- [ ] Plan figures (6-8 total)
-- [ ] Run performance benchmarks
-- [ ] Analyze iPSC validation data
-- [ ] Create architecture diagrams
-- [ ] Write results section
-- [ ] Draft discussion
-- [ ] Compile methods section
-- [ ] Gather references
-- [ ] Create supplementary materials plan
-
-## Collaboration Notes
-
-- Robert Haase (pyclesperanto) - potential co-author
-- Stowers Institute (Sumner Magruder) - institutional backing, validation data
-- Need to discuss authorship strategy
-
-## Timeline
-
-TBD - discuss with Tristan
-
+Dated PDF/DOCX reading copies, reviewer reports, UI debugging captures and
+withdrawn-case history remain local under `review/`. They are not part of the
+versioned draft package.
