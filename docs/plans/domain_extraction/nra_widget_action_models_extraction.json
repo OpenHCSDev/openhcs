@@ -1,0 +1,19 @@
+{
+  "recipes": [
+    {
+      "recipe_id": "openhcs-widget-action-models-extraction-probe",
+      "operations": [
+        {
+          "operation": "extract_symbol_closure_to_new_module",
+          "file_path": "openhcs/pyqt_gui/widgets/shared/services/widget_action_dispatch.py",
+          "root_symbol_qualnames": [
+            "WidgetActionDispatchResult",
+            "WidgetActionRoute"
+          ],
+          "maximum_moved_symbol_count": 8,
+          "destination_path": "openhcs/pyqt_gui/widgets/shared/services/widget_action_models.py"
+        }
+      ]
+    }
+  ]
+}

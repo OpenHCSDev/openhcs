@@ -1,0 +1,16 @@
+{
+  "recipes": [
+    {
+      "recipe_id": "openhcs-runtime-location-extraction-probe",
+      "operations": [
+        {
+          "operation": "extract_symbol_closure_to_new_module",
+          "file_path": "openhcs/core/runtime_stores.py",
+          "root_symbol_qualnames": ["RuntimeArtifactLocation"],
+          "maximum_moved_symbol_count": 4,
+          "destination_path": "openhcs/core/runtime_artifact_location.py"
+        }
+      ]
+    }
+  ]
+}
