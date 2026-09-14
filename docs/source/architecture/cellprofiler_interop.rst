@@ -259,6 +259,15 @@ actual pipeline and representative data before describing it as equivalent.
 The registry-derived compatibility report supports declarative coverage; it
 does not by itself prove levels two or three.
 
+Benchmark-only reference exports remain outside the imported pipeline model. If
+a source pipeline saves no comparable values,
+``CellProfilerReferenceExportPlan`` can derive supported terminal image and
+object-label outputs from the same importer contract graph, append exporters to
+a copy of the ``.cppipe``, and write a digest-bound
+``.reference_exports.json`` evidence record. The benchmark adapter uses that
+record only to select and compare the exact exported inventory; neither the
+importer, compiler, nor runtime consumes it as pipeline semantics.
+
 Extension boundary
 ------------------
 

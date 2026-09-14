@@ -36,7 +36,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Owns the supported CellProfiler pipeline import boundary demonstrated by this API orientation."
       },
       {
@@ -56,7 +56,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-27, applied the Diataxis reference boundary and re-read the complete page against the explicit CellProfiler import-validation hook; documented that interactive desktop modules fail clearly rather than disappearing from the public FunctionStep projection.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-14: Re-read the complete API reference against the changed importer. import_cellprofiler_pipeline remains the supported pipeline-lowering boundary and its documented return values and headless validation are unchanged; the added terminal-artifact query is a read-only declaration projection used by benchmark tooling."
     ]
   },
   {
@@ -317,7 +318,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Imports CellProfiler modules into ordinary OpenHCS pipeline declarations through the interop boundary."
       },
       {
@@ -335,7 +336,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged."
+      "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
+      "2026-09-14: Re-read the complete core-model explanation against the changed importer. CellProfiler still produces ordinary declarations through one parsed contract graph, and benchmark terminal-artifact projection does not add a runtime pipeline wrapper or alter the declaration-to-execution model."
     ]
   },
   {
@@ -702,7 +704,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Imports CellProfiler modules into ordinary OpenHCS pipeline declarations through the interop boundary."
       },
       {
@@ -761,7 +763,8 @@
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
-      "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid."
+      "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
+      "2026-09-14: Re-read the complete ownership reference against the changed importer. CellProfiler translation remains owned under openhcs/interop and the new terminal-artifact projection is derived by that owner; no package boundary or registration guidance changed."
     ]
   },
   {
@@ -1309,7 +1312,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Imports CellProfiler modules into ordinary OpenHCS pipeline declarations through the interop boundary."
       },
       {
@@ -1341,7 +1344,8 @@
       "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests. The release and CI claims were also checked against the explicit Qt/OpenGL native preflight and clean Ubuntu runtime dependency control; native requirements are not inferred from pytest capture or an offscreen Qt plugin.",
       "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
-      "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages."
+      "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
+      "2026-09-14: Re-read the complete onboarding how-to against the changed importer. Scientist-facing fit, import, headless-interaction, and Official30 recipe guidance remains accurate; benchmark-only terminal output selection does not change the user workflow."
     ]
   },
   {
@@ -1618,7 +1622,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Imports CellProfiler modules into ordinary OpenHCS pipeline declarations through the interop boundary."
       },
       {
@@ -1645,7 +1649,8 @@
       "On 2026-08-28, re-read the complete explanation after Plate Manager adopted its registered stable-window title; the introductory source, pipeline, catalogue, and execution model remains accurate.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-14: Re-read the complete introductory explanation against the changed importer. Supported cppipe import still yields normal editable OpenHCS steps; the added benchmark-facing terminal-artifact query does not change the page user need or run model."
     ]
   },
   {
@@ -2451,12 +2456,12 @@
       },
       {
         "path": "scripts/smoke_installed_gui.py",
-        "sha256": "e0dda6545e80370166982ec35c188d2e54aca90f44634f3b2501528ffa46ee37",
+        "sha256": "a5af7f55eab45b7ab43772a9ff8cf758e4940c5ad58857611cc51dbe6004bd89",
         "role": "Owns the installed-GUI acceptance timing and single terminal completion, applies the declared logging configuration, constructs the application on declaration-allocated endpoints, proves the background function catalogue and advertised endpoint log are usable, drives the GUI through packaged MCP, validates retained window snapshots, and cleans up exact owned resources outside the checkout."
       },
       {
         "path": "tests/unit/test_smoke_installed_gui.py",
-        "sha256": "206d619fc1df83e882025eda45ff14dcbee31fdc0b7648eab216573c0647dc5c",
+        "sha256": "b8d1a1fcd67c58e2b2749262b44c1dcccbb2e72a0d299d180823e94a0285ae9d",
         "role": "Proves source-checkout rejection, one derived smoke timing policy, deadline-owner error preservation under late cancellation, declaration-owned endpoint allocation, function-catalogue readiness, advertised execution-log validation, snapshot CLI projection, and emitted PNG identity validation for the installed GUI/MCP probe."
       },
       {
@@ -2575,7 +2580,8 @@
       "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests. The release and CI claims were also checked against the explicit Qt/OpenGL native preflight and clean Ubuntu runtime dependency control; native requirements are not inferred from pytest capture or an offscreen Qt plugin.",
       "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
-      "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Verbose test names, short tracebacks and a 120-second faulthandler diagnostic are documented; test selection and job deadlines are unchanged."
+      "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Verbose test names, short tracebacks and a 120-second faulthandler diagnostic are documented; test selection and job deadlines are unchanged.",
+      "2026-09-14: Applied the Diataxis testing how-to boundary and re-read the complete guide against the installed-GUI smoke timing owner and its focused tests. The cold-operation budget increased from 180 to 300 seconds without changing the documented functional acceptance, retained evidence, cleanup, or diagnosis boundaries. Focused installer and GUI validation passed 44 tests."
     ]
   },
   {
@@ -2683,7 +2689,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Imports CellProfiler modules into ordinary OpenHCS pipeline declarations through the interop boundary."
       },
       {
@@ -2709,7 +2715,8 @@
       "On 2026-08-28, re-read the complete landing page after stable desktop titles and gallery evidence became declaration-derived projections; its audience routing and multi-plate overview remain accurate.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-14: Re-read the complete documentation landing page against the changed importer. Its Diataxis routing and supported CellProfiler-import overview remain accurate; terminal-artifact benchmark planning introduces no new reader route."
     ]
   },
   {
@@ -2909,7 +2916,7 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_library_loading.py",
-        "sha256": "86f8ba8cdc4ed828b25464f0a5a7012e806ac328188c0404137447b44ee6a1e6",
+        "sha256": "b333dc5a4a756c85a7911e7546a0d5ee76504ad6f84b19f12f1c6548170539fd",
         "role": "Proves object intensity measures a 3D object as one volume and emits Z features."
       },
       {
@@ -2934,7 +2941,8 @@
       "Focused cross-lattice QA passed 179 tests spanning callable contracts, framework-device scope, custom functions, catalogue discovery, installer/update policy, MCP release, and packaged OMERO deployment.",
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
-      "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate."
+      "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
+      "2026-09-14: Re-read the complete dimensionality reference against the changed library-loading test. The changed assertion corrects ConvertObjectsToImage uint16 output in an unrelated 2-D conversion test; the authority test for one-row 3-D object intensity and Z features is unchanged, so every published volumetric claim remains accurate."
     ]
   },
   {

@@ -951,7 +951,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Public CellProfiler pipeline lowering and declaration-owned headless-import validation."
       },
       {
@@ -984,7 +984,8 @@
       "Reviewed the complete page against PipelineDocumentAuthority and the public pipeline declarations after the compatibility change.",
       "Passed the documentation validator and tests/unit/test_pipeline_document.py for parsing, defaulting, rejection, and canonical rendering behavior.",
       "On 2026-08-27, re-read and revised the complete explanation against the current CellProfiler importer and its focused regression; interactive modules now fail headless import explicitly instead of being silently omitted.",
-      "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess."
+      "2026-09-09: Re-read the complete page against the operating-guide lifecycle and isolated MCP child-environment changes. Task routes and tool/action identities remain declaration-derived; guidance checks active profile availability, distinguishes receipt from execution completion, and preserves the restart/history boundary. UIConfigCacheEnvironment forwards the existing cache authority without copying endpoint settings. Only these reviewed changes were re-fingerprinted; the unrelated scientific threshold patch was excluded. Guide/capability/service gates passed 131 tests and the child-environment suite passed 15 tests, including a fresh subprocess.",
+      "2026-09-14: Re-read the complete architecture entry point against the changed importer. The public PipelineConfig plus FunctionStep route, headless rejection, source-binding behavior, and compile/runtime guidance remain accurate; benchmark export planning reuses the parsed declaration graph without adding a public pipeline side channel."
     ]
   },
   {
@@ -2416,7 +2417,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Public CellProfiler pipeline lowering and declaration-owned headless-import validation."
       },
       {
@@ -2455,7 +2456,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-22, re-read the complete how-to against output-identity lowering, ModuleBlock reconstruction, and public source round trips; the broadened changed-unit suite passed 1,227 tests.",
       "On 2026-08-25, re-read the complete page against metaclass-registry 0.2.1, ArrayBridge 0.3.3, the public native-catalogue projection, declaration-derived child environments, and the updated package floors; revised the page where those semantics are user-relevant and confirmed its remaining claims against current source and tests.",
-      "On 2026-08-27, re-read and revised the complete how-to against declaration-owned CellProfiler headless-import validation; the focused importer regression passed."
+      "On 2026-08-27, re-read and revised the complete how-to against declaration-owned CellProfiler headless-import validation; the focused importer regression passed.",
+      "2026-09-14: Re-read the complete module-authoring how-to against the changed importer. Module leaves still own semantics and the importer remains a generic lowering pass; terminal-artifact inventory is derived from that same contract graph, so no new per-module registry or authoring step is required."
     ]
   },
   {
@@ -3179,12 +3181,12 @@
       },
       {
         "path": "scripts/smoke_installed_gui.py",
-        "sha256": "e0dda6545e80370166982ec35c188d2e54aca90f44634f3b2501528ffa46ee37",
+        "sha256": "a5af7f55eab45b7ab43772a9ff8cf758e4940c5ad58857611cc51dbe6004bd89",
         "role": "Owns the installed-GUI acceptance timing and single terminal completion, applies the declared logging configuration, constructs the application on declaration-allocated endpoints, proves the background function catalogue and advertised endpoint log are usable, drives the GUI through packaged MCP, validates retained window snapshots, and cleans up exact owned resources outside the checkout."
       },
       {
         "path": "tests/unit/test_smoke_installed_gui.py",
-        "sha256": "206d619fc1df83e882025eda45ff14dcbee31fdc0b7648eab216573c0647dc5c",
+        "sha256": "b8d1a1fcd67c58e2b2749262b44c1dcccbb2e72a0d299d180823e94a0285ae9d",
         "role": "Proves source-checkout rejection, one derived smoke timing policy, deadline-owner error preservation under late cancellation, declaration-owned endpoint allocation, function-catalogue readiness, advertised execution-log validation, snapshot CLI projection, and emitted PNG identity validation for the installed GUI/MCP probe."
       },
       {
@@ -3314,7 +3316,8 @@
       "2026-09-09: Re-read the complete page against the installed native-example source-root repair. Documents remain manifest-backed; native examples are read from their owning checkout or installed Python package without execution or copied source. Explicit roots do not fall back to installed examples. Knowledge, build and smoke unit gates passed 35 tests. The release and CI claims were also checked against the explicit Qt/OpenGL native preflight and clean Ubuntu runtime dependency control; native requirements are not inferred from pytest capture or an offscreen Qt plugin.",
       "2026-09-09: Re-read the complete release how-to for the 0.8.4 version-only authority change. The single version owner, metadata projection, clean exact-commit readiness, installer, package and Registry publication procedure remain unchanged. Refreshed only the reviewed version-authority digest; this is not publication evidence.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
-      "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Verbose test names, short tracebacks and a 120-second faulthandler diagnostic are documented; test selection and job deadlines are unchanged."
+      "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Verbose test names, short tracebacks and a 120-second faulthandler diagnostic are documented; test selection and job deadlines are unchanged.",
+      "2026-09-14: Applied the Diataxis release how-to boundary and re-read the complete page against the installed-GUI smoke timing owner and its focused tests. The cold-operation budget increased from 180 to 300 seconds while all painted-ready, catalogue, log, MCP action, snapshot, cleanup, and successful-exit assertions remain unchanged. Focused installer and GUI validation passed 44 tests."
     ]
   },
   {

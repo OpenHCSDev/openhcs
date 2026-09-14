@@ -98,7 +98,8 @@ remain diagnostic only and must not be reported as canonical acceptance timing.
 Compared modalities and policy
 ------------------------------
 
-The OpenHCS benchmark adapter builds typed runtime/output snapshots and compares:
+For ordinary reference runs, the OpenHCS benchmark adapter builds typed
+runtime/output snapshots and compares:
 
 - images and materialised label images when image comparison is enabled
 - CSV/table outputs, including measurement and relationship facts
@@ -111,6 +112,18 @@ broad feature-specific relaxations used by less strict compatibility modes, and
 applies the same policy to database export comparison. A successful observation
 therefore means semantic equivalence under that declared policy, not universal
 byte identity.
+
+Pipelines that originally save no comparable values can use a benchmark-only
+reference-export plan. Its inventory is derived from the importer's terminal
+artifact contracts, and its digest-bound sidecar must match the exact generated
+``.cppipe`` before comparison. The adapter then requires exactly one declared
+file on each side for every selected artifact. Numeric image pixels use
+``atol=1e-6``, ``rtol=1e-6``, and zero out-of-tolerance pixels; categorical
+object labels require exact integer equality. Only the explicit native 2-D
+label versus OpenHCS one-plane ``(1, Y, X)`` representation is projected before
+categorical comparison; arbitrary singleton axes and true shape differences
+remain failures. This sidecar records benchmark derivation and comparison
+semantics; it is not an importer or runtime pipeline model.
 
 Minimum durable receipt
 -----------------------

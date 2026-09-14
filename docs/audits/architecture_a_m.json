@@ -364,7 +364,7 @@
   },
   {
     "path": "docs/source/architecture/cellprofiler_interop.rst",
-    "source_sha256": "c8bfaa5771455ea6e09606372a6352eafa99f6392815348f73418bea04f314d9",
+    "source_sha256": "ca51e69ffeb5e594de80ab27c0c71bcb1d78a76fd059ab093afbab9b7a9b0040",
     "audience": [
       "CellProfiler users",
       "OpenHCS interoperability and compiler maintainers"
@@ -374,7 +374,7 @@
     "authority": [
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Implements .cppipe parsing, declaration-owned headless validation, and lowering into PipelineConfig and FunctionStep declarations."
       },
       {
@@ -401,6 +401,16 @@
         "path": "tests/unit/test_cellprofiler_pipeline_import.py",
         "sha256": "353f0c1d8e0bc3552d2e418d792794ab0631daa16c78a3e10191b1cc1ea07d73",
         "role": "Verifies that direct import rejects an enabled interactive-only module explicitly."
+      },
+      {
+        "path": "benchmark/cellprofiler_reference_exports.py",
+        "sha256": "d8bfe5495fefd52a5a77237dc59d8ddc52e4962c24d2c1d5fbdf7b754521bcf4",
+        "role": "Derives digest-bound benchmark-only exporter pipelines from terminal importer contracts and owns numeric-image and categorical-label comparison semantics."
+      },
+      {
+        "path": "tests/unit/test_cellprofiler_reference_exports.py",
+        "sha256": "62615d5c5c7317a3d4ffd7b42a03729f1a5f9435678b7874933e4611014adfc6",
+        "role": "Proves exact inventory selection, generated-pipeline digest validation, exporter derivation, and the declared image and label comparison contracts."
       }
     ],
     "findings": [
@@ -418,7 +428,8 @@
       "On 2026-08-22, re-read the complete explanation against declaration-owned output identity lowering and public source transport; every active output identity survives reconstruction while declaration-only keywords are consumed before runtime, and the broadened changed-unit suite passed 1,227 tests.",
       "On 2026-08-27, re-read the complete explanation against the current importer, nominal module roots, interactive-module leaf, and direct import test; documented explicit headless rejection before step emission.",
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
-      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files."
+      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
+      "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the importer after terminal-artifact inventory became a public projection of the same parsed declaration graph. Revised the parity section to distinguish the digest-bound benchmark evidence sidecar from importer, compiler, and runtime pipeline semantics. Focused CellProfiler implementation and comparison validation passed 292 tests."
     ]
   },
   {
@@ -1303,7 +1314,7 @@
     "authority": [
       {
         "path": "openhcs/interop/cellprofiler/pipeline_import.py",
-        "sha256": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+        "sha256": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
         "role": "Implements CellProfiler lowering and declaration-owned headless validation before public OpenHCS pipeline declarations are emitted."
       },
       {
@@ -1364,7 +1375,8 @@
       "On 2026-08-25, re-read the complete explanation against the canonical Compose declaration, plugin compatibility owner, and PolyStore boundary; corrected OMERO deployment ownership.",
       "On 2026-08-27, re-read the complete explanation against the current CellProfiler importer, nominal module declarations, and direct import test; added the explicit interactive-only rejection boundary.",
       "Focused callable-contract and CellProfiler declaration/import tests passed: 69 tests.",
-      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files."
+      "Passed .venv/bin/python scripts/validate_docs.py docs/source and a warning-fatal clean Sphinx HTML build of all 153 source files.",
+      "2026-09-14: Re-read the complete integration explanation against the changed importer. Public PipelineConfig/FunctionStep lowering, declaration-owned headless rejection, and the no-parallel-runtime boundary remain accurate; the new read-only terminal-artifact projection serves benchmark evidence planning and does not change this overview."
     ]
   },
   {
@@ -2094,7 +2106,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "8010f6b3e16db6cbe572b75e9d8633277f4689131912a8fa7d0df010611dc865",
+    "source_sha256": "9ecfea48eaa9e2600157e2be7a04b96084d68d8c17547a9ae1e793c843bd120e",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2119,8 +2131,8 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "c28da525410ff3961f4b51be005d81d65715429f9ac79fe35c2749f8cfa65a7c",
-        "role": "Builds benchmark runtime snapshots and the strict CellProfiler comparison policy."
+        "sha256": "a431869d29fe3d9a47676177a7f6362a091e630a71375cff6d76570a832d1320",
+        "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
       },
       {
         "path": "benchmark/manifests/official30_portable_axis1.json",
@@ -2131,6 +2143,21 @@
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
         "sha256": "15a7731e5e00136af020ca8b99ef61e60b36ad55898b466d0d4465012bfb199b",
         "role": "Implements the headless and non-persistent Napari acceptance routes over all manifest cases."
+      },
+      {
+        "path": "benchmark/cellprofiler_reference_exports.py",
+        "sha256": "d8bfe5495fefd52a5a77237dc59d8ddc52e4962c24d2c1d5fbdf7b754521bcf4",
+        "role": "Owns terminal-artifact exporter derivation, exact output-inventory selection, numeric-image tolerance, categorical-label equality, and explicit single-plane label projection."
+      },
+      {
+        "path": "tests/unit/test_cellprofiler_reference_exports.py",
+        "sha256": "62615d5c5c7317a3d4ffd7b42a03729f1a5f9435678b7874933e4611014adfc6",
+        "role": "Proves digest and inventory failures remain fail-closed and verifies the two declared per-artifact comparison contracts."
+      },
+      {
+        "path": "tests/unit/test_openhcs_adapter.py",
+        "sha256": "a3d7263385f5d50f8b47e23492d261385abfb99b9507b9f1379ecf5fbafecb6c",
+        "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
       }
     ],
     "findings": [
@@ -2141,7 +2168,8 @@
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "A focused 15-file architecture regression selection passed all 462 tests, including the authorities named for this page.",
-      "Re-reviewed after the Official30 viewer proof began locating route-local stack axes in their shared semantic slots; the parity and receipt claims remain accurate."
+      "Re-reviewed after the Official30 viewer proof began locating route-local stack axes in their shared semantic slots; the parity and receipt claims remain accurate.",
+      "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the current adapter and reference-export owner. Revised the comparison section to distinguish ordinary typed-snapshot parity from digest-bound exact-inventory benchmark-only exports, including numeric versus categorical contracts and explicit single-plane label projection. Focused CellProfiler implementation and comparison validation passed 292 tests."
     ]
   },
   {
