@@ -1,0 +1,13 @@
+{
+  "collect_memory_metric": false,
+  "continue_on_error": false,
+  "created_at_epoch_seconds": 1789412459.8831081,
+  "discard_openhcs_outputs": false,
+  "native_reference_root": "benchmark/native_refs/official30_scoped_rows",
+  "platform": "Linux-7.1.5-arch1-2-x86_64-with-glibc2.44",
+  "processor": "",
+  "python": "3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]",
+  "require_native_reference": true,
+  "speedup_target": 5.0,
+  "suite_id": "grid_label_aware_worktree"
+}

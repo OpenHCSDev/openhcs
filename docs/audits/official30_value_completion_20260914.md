@@ -24,15 +24,15 @@ summary or establish that its old empty output directories contained values.
 
 ## Environments and pinned inputs
 
-The final candidate suite was `cp_vs_openhcs_20260914_adfbdc533`, executed on
+The latest candidate suite was `cp_vs_openhcs_20260914_7ca8ecb8e`, executed on
 2026-09-14 from the exact benchmark and processing source snapshot in OpenHCS
-commit `adfbdc533`. It reused the same-day native CellProfiler exports generated
+commit `7ca8ecb8e`. It reused the same-day native CellProfiler exports generated
 by suite `cp_vs_openhcs_20260914_122821`, then launched a fresh nonpersistent
-execution server for each case on dedicated port 23850. Unrelated manuscript
-edits and the separately scoped installer-timeout patch were dirty at execution
-time but were not imported by this run. Per-observation provenance records the
-benchmark-client interpreter and OpenHCS import path plus the endpoint PID,
-create time, port, application version, and log path.
+execution server for each case on dedicated port 23952. A test-only expectation
+correction and unrelated manuscript edits were dirty at execution time but were
+not imported by this run. Per-observation provenance records the benchmark-client
+interpreter and OpenHCS import path plus the endpoint PID, create time, port,
+application version, and log path.
 
 | Side | Runtime |
 | --- | --- |
@@ -49,7 +49,7 @@ Both ran on `Linux-7.1.5-arch1-2-x86_64-with-glibc2.44`. Native execution set
 - CellProfiler tutorials: `264a8155da21a2d468051f78211bed2e580a8934`
 
 The machine-readable environment receipt is
-[`run_environment.json`](../../benchmark/results/official30_value_completion_20260914/committed_fixed_endpoint_run/run_environment.json).
+[`run_environment.json`](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/run_environment.json).
 These exact native dependency versions apply only to the new paired executions,
 not to retained native outputs whose old markers did not record versions.
 
@@ -130,10 +130,10 @@ singleton squeezing is rejected.
 
 ## Final exact-commit five-workflow result
 
-Suite `cp_vs_openhcs_20260914_adfbdc533` reused the five same-day native
-CellProfiler exports and freshly ran commit `adfbdc533` through five matching
+Suite `cp_vs_openhcs_20260914_7ca8ecb8e` reused the five same-day native
+CellProfiler exports and freshly ran commit `7ca8ecb8e` through five matching
 0.8.5 endpoints. The authoritative file-level receipt is
-[`artifact_comparisons.csv`](../../benchmark/results/official30_value_completion_20260914/committed_fixed_endpoint_run/artifact_comparisons.csv).
+[`artifact_comparisons.csv`](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/artifact_comparisons.csv).
 
 | Workflow / artifact | Contract result | Exact receipt |
 | --- | --- | --- |
@@ -150,7 +150,7 @@ Final aggregate: **5/5 equivalent workflows and 8/8 equivalent exported
 artifacts**. Suite observations, summary, timing, exact candidate files,
 endpoint logs, declaration-level comparison provenance, and decoded-pixel
 digests are retained under
-[`committed_fixed_endpoint_run`](../../benchmark/results/official30_value_completion_20260914/committed_fixed_endpoint_run/)
+[`label_aware_exact_commit_run`](../../benchmark/results/official30_value_completion_20260914/label_aware_exact_commit_run/)
 and the native exports under
 [`benchmark/native_refs/official30_value_completion_20260914`](../../benchmark/native_refs/official30_value_completion_20260914/).
 This demonstrates value equivalence for the new benchmark-only exports from the
@@ -186,7 +186,11 @@ owners rather than in a workflow-name registry:
 - defined-iteration shrinking used ordinary four-neighbor erosion. CellProfiler
   uses topology-preserving binary-shrink lookup tables for the declared number
   of iterations. Reusing the existing tables made the Example3 `ShrunkenWell`
-  stage exact and restored both terminal correction images.
+  stage exact and restored both terminal correction images. A subsequent full
+  Official30 run exposed that applying those tables to the union foreground
+  erased boundaries between touching labels. The lookup now preserves each
+  center label while evaluating its neighborhood, matching CellProfiler's
+  labeled-array semantics as well as its topology-preserving deletion tables.
 
 An augmented Example3 diagnostic exported nine intermediate images. Eight were
 equivalent after the shrink correction. The remaining nonterminal
@@ -203,6 +207,26 @@ nested labeled-hole
 filling, finite-iteration topology-preserving shrink, binned-mode selection,
 uint16 rendering, exact export inventories, sidecar digest validation, and the
 categorical single-plane contract.
+
+## Labeled-shrink full-suite regression
+
+Hosted run `34881128852` exercised the first binary-shrink implementation across
+the historical Official30 suite. Twenty-nine workflows passed; only
+`ExampleImagingFlowCytometryObjectsInGrid` failed, with 516 downstream
+measurement-feature value differences beginning at `BF_cells_on_grid`. Its
+one-iteration shrink receives adjacent integer grid labels, which localized the
+failure to the lost label boundaries described above.
+
+A fresh focused rerun after the label-aware correction compared the selected
+`BF_cells_on_grid.csv` against the runner-selected native reference and reported
+`equivalent=true` with zero differences at `atol=1e-6`, `rtol=1e-6`. The candidate
+CSV, compiled OpenHCS source, endpoint log, source and output digests, and exact
+observation are retained under
+[`official30_grid_shrink_regression_20260914`](../../benchmark/results/official30_grid_shrink_regression_20260914/).
+The run used source bytes subsequently committed unchanged as `7ca8ecb8e`; the
+receipt states this post-run linkage rather than describing the worktree as
+clean at launch. This focused receipt resolves the observed failure but remains
+separate from a hosted full-suite rerun.
 
 ## Superseded run that did not compare the exports
 
@@ -224,7 +248,7 @@ client importing editable OpenHCS 0.8.5. Its same numerical result is retained
 only as a diagnostic under
 [`stale_endpoint_run`](../../benchmark/results/official30_value_completion_20260914/stale_endpoint_run/).
 It does not validate the current source checkout and is superseded by suite
-`cp_vs_openhcs_20260914_adfbdc533` for every candidate claim.
+`cp_vs_openhcs_20260914_7ca8ecb8e` for every candidate claim.
 
 ## Refresh of the historical image cases
 

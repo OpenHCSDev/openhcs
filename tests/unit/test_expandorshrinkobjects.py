@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.ndimage import binary_erosion, generate_binary_structure
 
 from openhcs.core.config import DtypeConfig
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
@@ -94,7 +93,9 @@ def test_expand_or_shrink_objects_declares_output_label_extent():
     assert result.domain.declared_object_ids == ()
 
 
-def test_expand_or_shrink_objects_shrinks_labels_like_per_object_erosion():
+def test_expand_or_shrink_objects_matches_cellprofiler_labeled_binary_shrink():
+    from centrosome.cpmorphology import binary_shrink
+
     image = np.zeros((8, 9), dtype=float)
     labels = np.zeros((8, 9), dtype=np.int32)
     labels[1:6, 1:6] = 1
@@ -110,10 +111,6 @@ def test_expand_or_shrink_objects_shrinks_labels_like_per_object_erosion():
         dtype_config=DtypeConfig(),
     )
 
-    expected = np.zeros_like(labels)
-    struct = generate_binary_structure(2, 1)
-    for label_id in (1, 2, 3):
-        eroded = binary_erosion(labels == label_id, structure=struct, iterations=2)
-        expected[eroded] = label_id
+    expected = np.asarray(binary_shrink(labels, iterations=2), dtype=np.int32)
     assert result.labels.dtype == np.int32
     assert np.array_equal(result.labels, expected)

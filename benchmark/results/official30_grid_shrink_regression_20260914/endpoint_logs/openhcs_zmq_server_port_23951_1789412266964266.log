@@ -1,0 +1,7 @@
+/home/ts/code/projects/openhcs/openhcs/processing/backends/cellprofiler/intensity_distribution.py:1751: RuntimeWarning: invalid value encountered in divide
+  radial_means = np.ma.masked_array(radial_values / pixel_count, mask)
+2026-09-14 14:58:22,054 - openhcs.core.pipeline.compiler - WARNING - CompilationDebugConfig enabled but no compiled_execution_bundle_path was set.
+/home/ts/code/projects/openhcs/openhcs/processing/backends/cellprofiler/intensity_distribution.py:1706: RuntimeWarning: invalid value encountered in divide
+  histogram / np.dstack([sum_by_object] * (int(request.bin_count) + 1))[0]
+/home/ts/code/projects/openhcs/openhcs/processing/backends/cellprofiler/intensity_distribution.py:1715: RuntimeWarning: invalid value encountered in divide
+  number_at_distance

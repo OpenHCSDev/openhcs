@@ -1,0 +1,43 @@
+{
+  "audit_date": "2026-09-14",
+  "suite_id": "grid_label_aware_worktree",
+  "execution_source_commit_after_run": "7ca8ecb8e73a882ef0f15616d57b00f0dabf73e0",
+  "execution_source_state": "The label-aware morphology source used by this run was committed without modification as 7ca8ecb8e73a882ef0f15616d57b00f0dabf73e0 after the run completed. The run therefore proves those source bytes, but it did not begin from a clean committed worktree.",
+  "candidate_client": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "python_version": "3.12.3",
+    "openhcs_file": "/home/ts/code/projects/openhcs/openhcs/__init__.py",
+    "openhcs_version": "0.8.5",
+    "numpy_version": "2.1.3",
+    "scipy_version": "1.18.0"
+  },
+  "native_reference": {
+    "pipeline_sha256": "9f0de0630d2d07210c4ffc640b0e64c637565ea6850a3746c7f6759744830500",
+    "selected_output": "benchmark/native_refs/official30_scoped_rows/ExampleImagingFlowCytometryObjectsInGrid_ExampleImagingFlowCytometryObjectsInGrid_wells_include_first1/images_febbfcc5c842_ExampleImagingFlowCytometryObjectsInGrid_native_cellprofiler/BF_cells_on_grid.csv",
+    "selected_output_sha256": "23ca5a36a568fc87405888b130328aeb45e9ecf2853516d35493f8b3b4d769d1",
+    "selected_output_bytes": 11115768,
+    "cellprofiler_version_from_marker": "4.2.8.1",
+    "reused_reference_output": true
+  },
+  "candidate_execution": {
+    "endpoint_port": 23951,
+    "persistent": false,
+    "endpoint_pid": 2809989,
+    "endpoint_created_at_epoch_seconds": 1789412266.82,
+    "endpoint_openhcs_version": "0.8.5",
+    "generated_source_sha256": "ba0a589e4eccff9a5fd9bd6de634890584921feb18720a0a4e2fbc66f25101cf",
+    "selected_output": "candidate_output/BF_cells_on_grid.csv",
+    "selected_output_sha256": "9017cea6750607d456f73aa733024c91347502f27fc19cb5041455b0eaec174f",
+    "selected_output_bytes": 11549646,
+    "per_case_provenance": "observations.jsonl",
+    "retained_endpoint_logs": "endpoint_logs"
+  },
+  "comparison_result": {
+    "equivalent": true,
+    "difference_count": 0,
+    "numeric_abs_tolerance": 1e-6,
+    "numeric_rel_tolerance": 1e-6,
+    "comparison_receipt": "observations.jsonl"
+  },
+  "claim_boundary": "This is a focused current-source regression check against a retained native CellProfiler reference. It does not establish native dependency versions beyond the CellProfiler version retained in that reference marker and does not replace the hosted full-Official30 result."
+}
