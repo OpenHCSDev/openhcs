@@ -22,6 +22,7 @@ from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
 from openhcs.pyqt_gui.config import AgentUiBridgeConfig, UIConfig
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from scripts.smoke_installed_gui import (
+    INSTALLED_GUI_SMOKE_TIMING,
     InstalledExecutionServerLogEvidence,
     InstalledGuiSmokeEvidenceJournal,
     InstalledGuiSmokePhase,
@@ -78,6 +79,11 @@ def test_installed_gui_smoke_timing_derives_process_ceiling() -> None:
     )
 
     assert timing.subprocess_timeout_seconds == 135.0
+
+
+def test_installed_gui_smoke_default_allows_cold_intel_catalog_discovery() -> None:
+    assert INSTALLED_GUI_SMOKE_TIMING.operation_timeout_seconds == 300.0
+    assert INSTALLED_GUI_SMOKE_TIMING.subprocess_timeout_seconds == 330.0
 
 
 @pytest.mark.parametrize(

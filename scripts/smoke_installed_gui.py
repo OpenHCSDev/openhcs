@@ -40,7 +40,7 @@ AgentDtoT = TypeVar("AgentDtoT")
 class InstalledGuiSmokeTiming:
     """One safety budget for the complete installed-GUI acceptance process."""
 
-    operation_timeout_seconds: float = 180.0
+    operation_timeout_seconds: float = 300.0
     process_exit_grace_seconds: float = 30.0
 
     def __post_init__(self) -> None:
