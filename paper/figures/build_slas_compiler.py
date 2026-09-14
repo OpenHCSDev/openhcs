@@ -14,10 +14,18 @@ from pathlib import Path
 from matplotlib.patches import Circle, Rectangle
 
 from build_slas_visual_story import (
-    BLUE, INK, MUTED, ORANGE, PALE, PURPLE, TEAL,
-    FigureSheet, OUTPUT, ROOT, digest,
+    BLUE,
+    INK,
+    MUTED,
+    ORANGE,
+    PALE,
+    PURPLE,
+    TEAL,
+    FigureSheet,
+    OUTPUT,
+    ROOT,
+    digest,
 )
-
 
 CAPTION = (
     "Compiler preparation turns an authored image-analysis workflow into an "
@@ -80,12 +88,8 @@ LABEL_SOURCES = {
             "PipelineCompiler.compile_pipelines",
             "PipelineCompiler._calculate_worker_assignments",
         ),
-        "openhcs/core/context/processing_context.py": (
-            "ProcessingContext.freeze",
-        ),
-        "openhcs/core/compiled_execution.py": (
-            "CompiledExecutionBundle",
-        ),
+        "openhcs/core/context/processing_context.py": ("ProcessingContext.freeze",),
+        "openhcs/core/compiled_execution.py": ("CompiledExecutionBundle",),
     },
 }
 
@@ -106,7 +110,9 @@ def symbol_locations(path: Path, symbols: tuple[str, ...]) -> dict[str, int]:
 
 
 def compiler():
-    sheet = FigureSheet("compiler_preparation", "From an editable workflow to prepared execution", 9.0)
+    sheet = FigureSheet(
+        "compiler_preparation", "From an editable workflow to prepared execution", 9.0
+    )
     source_mapping = {}
     for label, sources in LABEL_SOURCES.items():
         source_mapping[label] = {}
@@ -123,17 +129,24 @@ def compiler():
         ("E", "Prepare execution tasks", 19, BLUE),
     )
     for letter, title, y, color in rows:
-        sheet.axis.add_patch(Rectangle((3, y - 12), 94, 16,
-                                       facecolor=PALE, edgecolor="none", zorder=0))
-        sheet.text(5, y + .3, letter, size=15, color=color, weight="bold")
-        sheet.text(9, y + .3, title, size=14, color=INK, weight="bold")
+        sheet.axis.add_patch(
+            Rectangle((3, y - 12), 94, 16, facecolor=PALE, edgecolor="none", zorder=0)
+        )
+        sheet.text(5, y + 0.3, letter, size=15, color=color, weight="bold")
+        sheet.text(9, y + 0.3, title, size=14, color=INK, weight="bold")
         if letter != "E":
             sheet.arrow((50, y - 12), (50, y - 13), color=MUTED)
 
     # A: a visible change from inherited settings to concrete submitted values.
     sheet.text(7, 81, "Pipeline settings\n+ step parameters", size=12, va="center")
     sheet.arrow((34, 81), (43, 81), color=BLUE)
-    sheet.text(47, 81, "Resolved settings for every step\nSelected wells and image locations", size=12, va="center")
+    sheet.text(
+        47,
+        81,
+        "Resolved settings for every step\nSelected wells and image locations",
+        size=12,
+        va="center",
+    )
 
     # B: image metadata and artifact declarations contribute different inputs.
     sheet.stack(7, 59.5, 7, 4)
@@ -145,7 +158,9 @@ def compiler():
     sheet.box(76, 59, 18, 6, "Measure", color=TEAL)
 
     # C: persistence is a plan; the functions have not generated outputs yet.
-    sheet.text(7, 47, "Results:\nkeep in memory / save", size=12, va="center", color=PURPLE)
+    sheet.text(
+        7, 47, "Results:\nkeep in memory / save", size=12, va="center", color=PURPLE
+    )
     sheet.text(47, 47, "If time is sequential:", size=11.5, va="center")
     sheet.box(47, 41.8, 20, 3.8, "t₁: all steps", color=PURPLE)
     sheet.arrow((67, 43.7), (73, 43.7), color=PURPLE)
@@ -153,16 +168,28 @@ def compiler():
 
     # D: checks are named in ordinary workflow vocabulary, not class names.
     for x, label in ((7, "Parameters"), (29, "Image groups"), (53, "Array backends")):
-        sheet.axis.add_patch(Circle((x, 29.5), .8, facecolor=ORANGE, edgecolor="none"))
+        sheet.axis.add_patch(Circle((x, 29.5), 0.8, facecolor=ORANGE, edgecolor="none"))
         sheet.text(x + 2, 29.5, label, size=11.5, va="center")
     sheet.text(7, 25.3, "Declared requirements", size=11.5, color=MUTED)
     sheet.arrow((48, 26.1), (67, 26.1), color=ORANGE)
     sheet.text(72, 26.1, "CPU / GPU\nassignment", size=11.5, color=ORANGE, va="center")
 
     # E: the output is prepared execution state rather than transformed images.
-    for x, title in ((7, "Frozen plans"), (38, "Prepared functions"), (72, "Worker map")):
+    for x, title in (
+        (7, "Frozen plans"),
+        (38, "Prepared functions"),
+        (72, "Worker map"),
+    ):
         sheet.box(x, 9, 23, 6, title, color=BLUE)
-    sheet.text(50, 5, "Execution bundle → run the analysis", size=13, weight="bold", color=BLUE, ha="center")
+    sheet.text(
+        50,
+        5,
+        "Execution bundle → run the analysis",
+        size=13,
+        weight="bold",
+        color=BLUE,
+        ha="center",
+    )
     sheet.save()
 
     path = OUTPUT / "compiler_preparation_provenance.json"

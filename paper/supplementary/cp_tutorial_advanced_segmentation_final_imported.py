@@ -52,19 +52,27 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.colocalization import measure_colocalization_objects
-from openhcs.processing.backends.cellprofiler.export_to_database import export_to_database
+from openhcs.processing.backends.cellprofiler.colocalization import (
+    measure_colocalization_objects,
+)
+from openhcs.processing.backends.cellprofiler.export_to_database import (
+    export_to_database,
+)
 from openhcs.processing.backends.cellprofiler.feature_enhancement import (
     NeuriteMethod,
     enhance_or_suppress_features,
 )
-from openhcs.processing.backends.cellprofiler.illumination import correct_illumination_apply
+from openhcs.processing.backends.cellprofiler.illumination import (
+    correct_illumination_apply,
+)
 from openhcs.processing.backends.cellprofiler.image_geometry import (
     MaskSource,
     mask_image,
 )
 from openhcs.processing.backends.cellprofiler.intensity import measure_object_intensity
-from openhcs.processing.backends.cellprofiler.intensity_distribution import measure_object_intensity_distribution
+from openhcs.processing.backends.cellprofiler.intensity_distribution import (
+    measure_object_intensity_distribution,
+)
 from openhcs.processing.backends.cellprofiler.morphology import FillHolesOption
 from openhcs.processing.backends.cellprofiler.neighbors import (
     DistanceMethod,
@@ -75,7 +83,9 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
     WatershedMethod,
     identify_primary_objects,
 )
-from openhcs.processing.backends.cellprofiler.relationships import relate_objects_with_saved_children
+from openhcs.processing.backends.cellprofiler.relationships import (
+    relate_objects_with_saved_children,
+)
 from openhcs.processing.backends.cellprofiler.secondary import (
     identify_secondary_objects,
     identify_tertiary_objects,
@@ -102,7 +112,7 @@ pipeline_config = PipelineConfig(
         channel_mode=None,
         z_index_mode=None,
         timepoint_mode=None,
-        well_mode=None
+        well_mode=None,
     ),
     fiji_display_config=LazyFijiDisplayConfig(
         lut=None,
@@ -111,70 +121,59 @@ pipeline_config = PipelineConfig(
         channel_mode=None,
         z_index_mode=None,
         timepoint_mode=None,
-        well_mode=None
+        well_mode=None,
     ),
-    well_filter_config=LazyWellFilterConfig(
-        well_filter=None,
-        well_filter_mode=None
-    ),
+    well_filter_config=LazyWellFilterConfig(well_filter=None, well_filter_mode=None),
     zarr_config=LazyZarrConfig(
-        compressor=None,
-        compression_level=None,
-        chunk_strategy=None
+        compressor=None, compression_level=None, chunk_strategy=None
     ),
     vfs_config=LazyVFSConfig(
-        read_backend=None,
-        intermediate_backend=None,
-        materialization_backend=None
+        read_backend=None, intermediate_backend=None, materialization_backend=None
     ),
-    dtype_config=LazyDtypeConfig(
-        default_dtype_conversion=None
-    ),
+    dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
     processing_config=LazyProcessingConfig(
-        variable_components=[
-            VariableComponents.SITE
-        ],
+        variable_components=[VariableComponents.SITE],
         group_by=GroupBy.CHANNEL,
-        input_source=InputSource.PREVIOUS_STEP
+        input_source=InputSource.PREVIOUS_STEP,
     ),
     source_bindings_config=LazySourceBindingsConfig(
         metadata_rules=(
             MetadataExtractionRule(
                 source=MetadataSource.FILE_NAME,
-                pattern='(?P<Well>[A-P][0-9]{2})_s(?P<Site>[0-9])_w(?P<ChannelNumber>[0-9])',
+                pattern="(?P<Well>[A-P][0-9]{2})_s(?P<Site>[0-9])_w(?P<ChannelNumber>[0-9])",
                 filters=(
                     SourceFilterClause(
                         subject=SourceFilterSubject.FILE,
                         match_type=SourceFilterMatchType.DOES_NOT_CONTAIN,
-                        value='.npy',
-                        any_group=None
+                        value=".npy",
+                        any_group=None,
                     ),
-                )
+                ),
             ),
             MetadataExtractionRule(
                 source=MetadataSource.FOLDER_NAME,
-                pattern='(?P<Plate>[0-9]{5})',
+                pattern="(?P<Plate>[0-9]{5})",
                 filters=(
                     SourceFilterClause(
                         subject=SourceFilterSubject.FILE,
                         match_type=SourceFilterMatchType.DOES_NOT_CONTAIN,
-                        value='.npy',
-                        any_group=None
+                        value=".npy",
+                        any_group=None,
                     ),
-                )
+                ),
             ),
             MetadataExtractionRule(
                 source=MetadataSource.FILE_NAME,
-                pattern='^(?P<Plate>.*)_Illum',
+                pattern="^(?P<Plate>.*)_Illum",
                 filters=(
                     SourceFilterClause(
                         subject=SourceFilterSubject.FILE,
                         match_type=SourceFilterMatchType.CONTAINS,
-                        value='.npy',
-                        any_group=None
+                        value=".npy",
+                        any_group=None,
                     ),
-                )
-            )
+                ),
+            ),
         ),
         match_plan=SourceBindingMatchPlan(
             method=SourceBindingMatchMethod.METADATA,
@@ -182,168 +181,106 @@ pipeline_config = PipelineConfig(
                 SourceBindingMatchDimension(
                     fields=(
                         SourceBindingMatchField(
-                            alias='IllumPh_golgi',
-                            metadata_field='Plate'
+                            alias="IllumPh_golgi", metadata_field="Plate"
                         ),
                         SourceBindingMatchField(
-                            alias='IllumMito',
-                            metadata_field='Plate'
+                            alias="IllumMito", metadata_field="Plate"
                         ),
                         SourceBindingMatchField(
-                            alias='OrigPh_golgi',
-                            metadata_field='Plate'
+                            alias="OrigPh_golgi", metadata_field="Plate"
                         ),
                         SourceBindingMatchField(
-                            alias='IllumER',
-                            metadata_field='Plate'
+                            alias="IllumER", metadata_field="Plate"
                         ),
                         SourceBindingMatchField(
-                            alias='OrigHoechst',
-                            metadata_field='Plate'
+                            alias="OrigHoechst", metadata_field="Plate"
+                        ),
+                        SourceBindingMatchField(alias="OrigER", metadata_field="Plate"),
+                        SourceBindingMatchField(
+                            alias="IllumSyto", metadata_field="Plate"
                         ),
                         SourceBindingMatchField(
-                            alias='OrigER',
-                            metadata_field='Plate'
+                            alias="OrigSyto", metadata_field="Plate"
                         ),
                         SourceBindingMatchField(
-                            alias='IllumSyto',
-                            metadata_field='Plate'
+                            alias="OrigMito", metadata_field="Plate"
                         ),
                         SourceBindingMatchField(
-                            alias='OrigSyto',
-                            metadata_field='Plate'
+                            alias="IllumHoechst", metadata_field="Plate"
                         ),
-                        SourceBindingMatchField(
-                            alias='OrigMito',
-                            metadata_field='Plate'
-                        ),
-                        SourceBindingMatchField(
-                            alias='IllumHoechst',
-                            metadata_field='Plate'
-                        )
                     )
                 ),
                 SourceBindingMatchDimension(
                     fields=(
                         SourceBindingMatchField(
-                            alias='OrigPh_golgi',
-                            metadata_field='Well'
+                            alias="OrigPh_golgi", metadata_field="Well"
                         ),
                         SourceBindingMatchField(
-                            alias='OrigHoechst',
-                            metadata_field='Well'
+                            alias="OrigHoechst", metadata_field="Well"
+                        ),
+                        SourceBindingMatchField(alias="OrigER", metadata_field="Well"),
+                        SourceBindingMatchField(
+                            alias="OrigSyto", metadata_field="Well"
                         ),
                         SourceBindingMatchField(
-                            alias='OrigER',
-                            metadata_field='Well'
+                            alias="OrigMito", metadata_field="Well"
                         ),
-                        SourceBindingMatchField(
-                            alias='OrigSyto',
-                            metadata_field='Well'
-                        ),
-                        SourceBindingMatchField(
-                            alias='OrigMito',
-                            metadata_field='Well'
-                        )
                     )
                 ),
                 SourceBindingMatchDimension(
                     fields=(
                         SourceBindingMatchField(
-                            alias='OrigPh_golgi',
-                            metadata_field='Site'
+                            alias="OrigPh_golgi", metadata_field="Site"
                         ),
                         SourceBindingMatchField(
-                            alias='OrigHoechst',
-                            metadata_field='Site'
+                            alias="OrigHoechst", metadata_field="Site"
+                        ),
+                        SourceBindingMatchField(alias="OrigER", metadata_field="Site"),
+                        SourceBindingMatchField(
+                            alias="OrigSyto", metadata_field="Site"
                         ),
                         SourceBindingMatchField(
-                            alias='OrigER',
-                            metadata_field='Site'
+                            alias="OrigMito", metadata_field="Site"
                         ),
-                        SourceBindingMatchField(
-                            alias='OrigSyto',
-                            metadata_field='Site'
-                        ),
-                        SourceBindingMatchField(
-                            alias='OrigMito',
-                            metadata_field='Site'
-                        )
                     )
-                )
-            )
+                ),
+            ),
         ),
         metadata_fields=(
-            FieldSpec(
-                name='FileLocation',
-                dtype=str,
-                required=False
-            ),
-            FieldSpec(
-                name='Frame',
-                dtype=str,
-                required=False
-            ),
-            FieldSpec(
-                name='Series',
-                dtype=str,
-                required=False
-            ),
-            FieldSpec(
-                name='Well',
-                dtype=str,
-                required=False
-            ),
-            FieldSpec(
-                name='Site',
-                dtype=str,
-                required=False
-            ),
-            FieldSpec(
-                name='ChannelNumber',
-                dtype=str,
-                required=False
-            ),
-            FieldSpec(
-                name='Plate',
-                dtype=str,
-                required=False
-            )
+            FieldSpec(name="FileLocation", dtype=str, required=False),
+            FieldSpec(name="Frame", dtype=str, required=False),
+            FieldSpec(name="Series", dtype=str, required=False),
+            FieldSpec(name="Well", dtype=str, required=False),
+            FieldSpec(name="Site", dtype=str, required=False),
+            FieldSpec(name="ChannelNumber", dtype=str, required=False),
+            FieldSpec(name="Plate", dtype=str, required=False),
         ),
         source_filters=(
             SourceFilterClause(
                 subject=SourceFilterSubject.EXTENSION,
                 match_type=SourceFilterMatchType.IS_IMAGE,
                 value=None,
-                any_group=0
+                any_group=0,
             ),
             SourceFilterClause(
                 subject=SourceFilterSubject.FILE,
                 match_type=SourceFilterMatchType.CONTAINS,
-                value='.npy',
-                any_group=0
-            )
+                value=".npy",
+                any_group=0,
+            ),
         ),
         bindings=(
             NamedSourceBinding(
-                alias='OrigHoechst',
+                alias="OrigHoechst",
                 selector=SourceSelector(
                     components=(),
-                    metadata=(
-                        MetadataSelector(
-                            field='ChannelNumber',
-                            value='1'
-                        ),
-                    ),
+                    metadata=(MetadataSelector(field="ChannelNumber", value="1"),),
                     filters=(),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(
-                    ComponentSelector(
-                        component=AllComponents.CHANNEL,
-                        value='1'
-                    ),
+                    ComponentSelector(component=AllComponents.CHANNEL, value="1"),
                 ),
                 artifact_kind=ImageArtifactType,
                 required=True,
@@ -353,27 +290,19 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=True,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='OrigER',
+                alias="OrigER",
                 selector=SourceSelector(
                     components=(),
-                    metadata=(
-                        MetadataSelector(
-                            field='ChannelNumber',
-                            value='2'
-                        ),
-                    ),
+                    metadata=(MetadataSelector(field="ChannelNumber", value="2"),),
                     filters=(),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(
-                    ComponentSelector(
-                        component=AllComponents.CHANNEL,
-                        value='2'
-                    ),
+                    ComponentSelector(component=AllComponents.CHANNEL, value="2"),
                 ),
                 artifact_kind=ImageArtifactType,
                 required=True,
@@ -383,27 +312,19 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=True,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='OrigSyto',
+                alias="OrigSyto",
                 selector=SourceSelector(
                     components=(),
-                    metadata=(
-                        MetadataSelector(
-                            field='ChannelNumber',
-                            value='3'
-                        ),
-                    ),
+                    metadata=(MetadataSelector(field="ChannelNumber", value="3"),),
                     filters=(),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(
-                    ComponentSelector(
-                        component=AllComponents.CHANNEL,
-                        value='3'
-                    ),
+                    ComponentSelector(component=AllComponents.CHANNEL, value="3"),
                 ),
                 artifact_kind=ImageArtifactType,
                 required=True,
@@ -413,27 +334,19 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=True,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='OrigPh_golgi',
+                alias="OrigPh_golgi",
                 selector=SourceSelector(
                     components=(),
-                    metadata=(
-                        MetadataSelector(
-                            field='ChannelNumber',
-                            value='4'
-                        ),
-                    ),
+                    metadata=(MetadataSelector(field="ChannelNumber", value="4"),),
                     filters=(),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(
-                    ComponentSelector(
-                        component=AllComponents.CHANNEL,
-                        value='4'
-                    ),
+                    ComponentSelector(component=AllComponents.CHANNEL, value="4"),
                 ),
                 artifact_kind=ImageArtifactType,
                 required=True,
@@ -443,27 +356,19 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=True,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='OrigMito',
+                alias="OrigMito",
                 selector=SourceSelector(
                     components=(),
-                    metadata=(
-                        MetadataSelector(
-                            field='ChannelNumber',
-                            value='5'
-                        ),
-                    ),
+                    metadata=(MetadataSelector(field="ChannelNumber", value="5"),),
                     filters=(),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(
-                    ComponentSelector(
-                        component=AllComponents.CHANNEL,
-                        value='5'
-                    ),
+                    ComponentSelector(component=AllComponents.CHANNEL, value="5"),
                 ),
                 artifact_kind=ImageArtifactType,
                 required=True,
@@ -473,10 +378,10 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=True,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='IllumMito',
+                alias="IllumMito",
                 selector=SourceSelector(
                     components=(),
                     metadata=(),
@@ -484,11 +389,11 @@ pipeline_config = PipelineConfig(
                         SourceFilterClause(
                             subject=SourceFilterSubject.FILE,
                             match_type=SourceFilterMatchType.CONTAINS,
-                            value='IllumMito',
-                            any_group=None
+                            value="IllumMito",
+                            any_group=None,
                         ),
                     ),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(),
@@ -500,10 +405,10 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=False,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='IllumPh_golgi',
+                alias="IllumPh_golgi",
                 selector=SourceSelector(
                     components=(),
                     metadata=(),
@@ -511,11 +416,11 @@ pipeline_config = PipelineConfig(
                         SourceFilterClause(
                             subject=SourceFilterSubject.FILE,
                             match_type=SourceFilterMatchType.CONTAINS,
-                            value='IllumPh_golgi',
-                            any_group=None
+                            value="IllumPh_golgi",
+                            any_group=None,
                         ),
                     ),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(),
@@ -527,10 +432,10 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=False,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='IllumSyto',
+                alias="IllumSyto",
                 selector=SourceSelector(
                     components=(),
                     metadata=(),
@@ -538,11 +443,11 @@ pipeline_config = PipelineConfig(
                         SourceFilterClause(
                             subject=SourceFilterSubject.FILE,
                             match_type=SourceFilterMatchType.CONTAINS,
-                            value='IllumSyto',
-                            any_group=None
+                            value="IllumSyto",
+                            any_group=None,
                         ),
                     ),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(),
@@ -554,10 +459,10 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=False,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='IllumER',
+                alias="IllumER",
                 selector=SourceSelector(
                     components=(),
                     metadata=(),
@@ -565,11 +470,11 @@ pipeline_config = PipelineConfig(
                         SourceFilterClause(
                             subject=SourceFilterSubject.FILE,
                             match_type=SourceFilterMatchType.CONTAINS,
-                            value='IllumER',
-                            any_group=None
+                            value="IllumER",
+                            any_group=None,
                         ),
                     ),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(),
@@ -581,10 +486,10 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=False,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
+                source_channel_counts=None,
             ),
             NamedSourceBinding(
-                alias='IllumHoechst',
+                alias="IllumHoechst",
                 selector=SourceSelector(
                     components=(),
                     metadata=(),
@@ -592,11 +497,11 @@ pipeline_config = PipelineConfig(
                         SourceFilterClause(
                             subject=SourceFilterSubject.FILE,
                             match_type=SourceFilterMatchType.CONTAINS,
-                            value='IllumHoechst',
-                            any_group=None
+                            value="IllumHoechst",
+                            any_group=None,
                         ),
                     ),
-                    inherit_current_scope=True
+                    inherit_current_scope=True,
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(),
@@ -608,34 +513,28 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=False,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None
-            )
+                source_channel_counts=None,
+            ),
         ),
         image_plane_sources=(),
         imported_metadata_tables=(
             ImportedMetadataTable(
-                location='20585_AE.csv',
+                location="20585_AE.csv",
                 joins=(
                     ImportedMetadataJoin(
-                        image_metadata_field='Plate',
-                        imported_metadata_field='Image_Metadata_PlateID'
+                        image_metadata_field="Plate",
+                        imported_metadata_field="Image_Metadata_PlateID",
                     ),
                     ImportedMetadataJoin(
-                        image_metadata_field='Well',
-                        imported_metadata_field='Image_Metadata_CPD_WELL_POSITION'
-                    )
-                )
+                        image_metadata_field="Well",
+                        imported_metadata_field="Image_Metadata_CPD_WELL_POSITION",
+                    ),
+                ),
             ),
         ),
         source_stack_components=(),
         grouping_metadata_fields=(),
-        source_voxel_spacing=SourceVoxelSpacing(
-            values_zyx=(
-                1.0,
-                1.0,
-                1.0
-            )
-        )
+        source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.0, 1.0, 1.0)),
     ),
     step_source_bindings_config=LazyStepSourceBindingsConfig(
         enabled=None,
@@ -648,7 +547,7 @@ pipeline_config = PipelineConfig(
         imported_metadata_tables=None,
         source_stack_components=None,
         grouping_metadata_fields=None,
-        source_voxel_spacing=None
+        source_voxel_spacing=None,
     ),
     sequential_processing_config=LazySequentialProcessingConfig(
         sequential_components=None
@@ -659,7 +558,7 @@ pipeline_config = PipelineConfig(
         file_extensions=None,
         exclude_patterns=None,
         output_filename=None,
-        global_summary_filename=None
+        global_summary_filename=None,
     ),
     plate_metadata_config=LazyPlateMetadataConfig(
         barcode=None,
@@ -667,18 +566,17 @@ pipeline_config = PipelineConfig(
         plate_id=None,
         description=None,
         acquisition_user=None,
-        z_step=None
+        z_step=None,
     ),
     path_planning_config=LazyPathPlanningConfig(
         well_filter=None,
         well_filter_mode=None,
         output_dir_suffix=None,
         global_output_folder=None,
-        sub_dir=None
+        sub_dir=None,
     ),
     step_well_filter_config=LazyStepWellFilterConfig(
-        well_filter=None,
-        well_filter_mode=None
+        well_filter=None, well_filter_mode=None
     ),
     step_materialization_config=LazyStepMaterializationConfig(
         well_filter=None,
@@ -686,7 +584,7 @@ pipeline_config = PipelineConfig(
         output_dir_suffix=None,
         global_output_folder=None,
         sub_dir=None,
-        enabled=None
+        enabled=None,
     ),
     streaming_defaults=LazyStreamingDefaults(
         well_filter=None,
@@ -695,7 +593,7 @@ pipeline_config = PipelineConfig(
         persistent=None,
         host=None,
         transport_mode=None,
-        scope_accent_color=None
+        scope_accent_color=None,
     ),
     napari_streaming_config=LazyNapariStreamingConfig(
         well_filter=None,
@@ -712,7 +610,7 @@ pipeline_config = PipelineConfig(
         host=None,
         transport_mode=None,
         scope_accent_color=None,
-        port=None
+        port=None,
     ),
     fiji_streaming_config=LazyFijiStreamingConfig(
         well_filter=None,
@@ -729,54 +627,66 @@ pipeline_config = PipelineConfig(
         host=None,
         transport_mode=None,
         scope_accent_color=None,
-        port=None
+        port=None,
     ),
     compilation_debug_config=LazyCompilationDebugConfig(
-        enabled=None,
-        compiled_execution_bundle_path=None
-    )
+        enabled=None, compiled_execution_bundle_path=None
+    ),
 )
 
 pipeline_steps = [
     FunctionStep(
         func={
-            '1': (correct_illumination_apply, {
-                    'select_the_input_image': 'OrigHoechst',
-                    'select_the_illumination_function': 'IllumHoechst',
-                    'name_the_output_image': 'Hoechst'
-                }),
-            '2': (correct_illumination_apply, {
-                    'select_the_input_image': 'OrigER',
-                    'select_the_illumination_function': 'IllumER',
-                    'name_the_output_image': 'ER'
-                }),
-            '5': (correct_illumination_apply, {
-                    'select_the_input_image': 'OrigMito',
-                    'select_the_illumination_function': 'IllumMito',
-                    'name_the_output_image': 'Mito'
-                }),
-            '4': (correct_illumination_apply, {
-                    'select_the_input_image': 'OrigPh_golgi',
-                    'select_the_illumination_function': 'IllumPh_golgi',
-                    'name_the_output_image': 'Ph_golgi'
-                }),
-            '3': (correct_illumination_apply, {
-                    'select_the_input_image': 'OrigSyto',
-                    'select_the_illumination_function': 'IllumSyto',
-                    'name_the_output_image': 'Syto'
-                })
+            "1": (
+                correct_illumination_apply,
+                {
+                    "select_the_input_image": "OrigHoechst",
+                    "select_the_illumination_function": "IllumHoechst",
+                    "name_the_output_image": "Hoechst",
+                },
+            ),
+            "2": (
+                correct_illumination_apply,
+                {
+                    "select_the_input_image": "OrigER",
+                    "select_the_illumination_function": "IllumER",
+                    "name_the_output_image": "ER",
+                },
+            ),
+            "5": (
+                correct_illumination_apply,
+                {
+                    "select_the_input_image": "OrigMito",
+                    "select_the_illumination_function": "IllumMito",
+                    "name_the_output_image": "Mito",
+                },
+            ),
+            "4": (
+                correct_illumination_apply,
+                {
+                    "select_the_input_image": "OrigPh_golgi",
+                    "select_the_illumination_function": "IllumPh_golgi",
+                    "name_the_output_image": "Ph_golgi",
+                },
+            ),
+            "3": (
+                correct_illumination_apply,
+                {
+                    "select_the_input_image": "OrigSyto",
+                    "select_the_illumination_function": "IllumSyto",
+                    "name_the_output_image": "Syto",
+                },
+            ),
         },
-        name='CorrectIlluminationApply',
+        name="CorrectIlluminationApply",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
             variable_components=None,
             group_by=None,
-            input_source=InputSource.PIPELINE_START
+            input_source=InputSource.PIPELINE_START,
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -789,11 +699,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -801,7 +710,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -810,7 +719,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -827,7 +736,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -844,37 +753,36 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
-        func=(identify_primary_objects, {
-                'max_diameter': 150,
-                'unclump_method': UnclumpMethod.SHAPE,
-                'watershed_method': WatershedMethod.SHAPE,
-                'automatic_smoothing': False,
-                'smoothing_filter_size': 20,
-                'automatic_suppression': False,
-                'maxima_suppression_size': 20.0,
-                'fill_holes': FillHolesOption.AFTER_DECLUMP,
-                'threshold_correction_factor': 0.9,
-                'threshold_min': 0.002,
-                'threshold_method': CellProfilerThresholdMethod.OTSU,
-                'otsu_class_count': CellProfilerOtsuMethod.THREE_CLASS,
-                'select_the_input_image': 'Hoechst',
-                'name_the_primary_objects_to_be_identified': 'Nuclei'
-            }),
-        name='IdentifyPrimaryObjects',
+        func=(
+            identify_primary_objects,
+            {
+                "max_diameter": 150,
+                "unclump_method": UnclumpMethod.SHAPE,
+                "watershed_method": WatershedMethod.SHAPE,
+                "automatic_smoothing": False,
+                "smoothing_filter_size": 20,
+                "automatic_suppression": False,
+                "maxima_suppression_size": 20.0,
+                "fill_holes": FillHolesOption.AFTER_DECLUMP,
+                "threshold_correction_factor": 0.9,
+                "threshold_min": 0.002,
+                "threshold_method": CellProfilerThresholdMethod.OTSU,
+                "otsu_class_count": CellProfilerOtsuMethod.THREE_CLASS,
+                "select_the_input_image": "Hoechst",
+                "name_the_primary_objects_to_be_identified": "Nuclei",
+            },
+        ),
+        name="IdentifyPrimaryObjects",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
+            variable_components=None, group_by=None, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -887,11 +795,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -899,7 +806,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -908,7 +815,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -925,7 +832,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -942,30 +849,29 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
-        func=(identify_secondary_objects, {
-                'threshold_correction_factor': 0.7,
-                'threshold_min': 0.003,
-                'otsu_class_count': CellProfilerOtsuMethod.THREE_CLASS,
-                'regularization_factor': 0.005,
-                'select_the_input_image': 'Ph_golgi',
-                'select_the_input_objects': 'Nuclei',
-                'name_the_objects_to_be_identified': 'Cells'
-            }),
-        name='IdentifySecondaryObjects',
+        func=(
+            identify_secondary_objects,
+            {
+                "threshold_correction_factor": 0.7,
+                "threshold_min": 0.003,
+                "otsu_class_count": CellProfilerOtsuMethod.THREE_CLASS,
+                "regularization_factor": 0.005,
+                "select_the_input_image": "Ph_golgi",
+                "select_the_input_objects": "Nuclei",
+                "name_the_objects_to_be_identified": "Cells",
+            },
+        ),
+        name="IdentifySecondaryObjects",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
+            variable_components=None, group_by=None, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -978,11 +884,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -990,7 +895,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -999,7 +904,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1016,7 +921,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1033,27 +938,26 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
-        func=(identify_tertiary_objects, {
-                'shrink_primary': False,
-                'select_the_larger_identified_objects': 'Cells',
-                'select_the_smaller_identified_objects': 'Nuclei',
-                'name_the_tertiary_objects_to_be_identified': 'Cytoplasm'
-            }),
-        name='IdentifyTertiaryObjects',
+        func=(
+            identify_tertiary_objects,
+            {
+                "shrink_primary": False,
+                "select_the_larger_identified_objects": "Cells",
+                "select_the_smaller_identified_objects": "Nuclei",
+                "name_the_tertiary_objects_to_be_identified": "Cytoplasm",
+            },
+        ),
+        name="IdentifyTertiaryObjects",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
+            variable_components=None, group_by=None, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1066,11 +970,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1078,7 +981,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1087,7 +990,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1104,7 +1007,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1121,27 +1024,26 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
-        func=(enhance_or_suppress_features, {
-                'radius': 5.0,
-                'neurite_method': NeuriteMethod.TUBENESS,
-                'select_the_input_image': 'Syto',
-                'name_the_output_image': 'FilteredRNA'
-            }),
-        name='EnhanceOrSuppressFeatures',
+        func=(
+            enhance_or_suppress_features,
+            {
+                "radius": 5.0,
+                "neurite_method": NeuriteMethod.TUBENESS,
+                "select_the_input_image": "Syto",
+                "name_the_output_image": "FilteredRNA",
+            },
+        ),
+        name="EnhanceOrSuppressFeatures",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
+            variable_components=None, group_by=None, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1154,11 +1056,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1166,7 +1067,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1175,7 +1076,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1192,7 +1093,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1209,27 +1110,26 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
-        func=(mask_image, {
-                'mask_source': MaskSource.OBJECTS,
-                'select_the_input_image': 'FilteredRNA',
-                'select_object_for_mask': 'Nuclei',
-                'name_the_output_image': 'SytoNuclei'
-            }),
-        name='MaskImage',
+        func=(
+            mask_image,
+            {
+                "mask_source": MaskSource.OBJECTS,
+                "select_the_input_image": "FilteredRNA",
+                "select_object_for_mask": "Nuclei",
+                "name_the_output_image": "SytoNuclei",
+            },
+        ),
+        name="MaskImage",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
+            variable_components=None, group_by=None, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1242,11 +1142,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1254,7 +1153,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1263,7 +1162,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1280,7 +1179,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1297,32 +1196,31 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
-        func=(identify_primary_objects, {
-                'min_diameter': 3,
-                'max_diameter': 15,
-                'exclude_border_objects': False,
-                'unclump_method': UnclumpMethod.SHAPE,
-                'watershed_method': WatershedMethod.SHAPE,
-                'threshold_method': CellProfilerThresholdMethod.OTSU,
-                'otsu_class_count': CellProfilerOtsuMethod.THREE_CLASS,
-                'assign_middle_to_foreground': CellProfilerThresholdAssignment.BACKGROUND,
-                'name_the_primary_objects_to_be_identified': 'Nucleoli'
-            }),
-        name='IdentifyPrimaryObjects',
+        func=(
+            identify_primary_objects,
+            {
+                "min_diameter": 3,
+                "max_diameter": 15,
+                "exclude_border_objects": False,
+                "unclump_method": UnclumpMethod.SHAPE,
+                "watershed_method": WatershedMethod.SHAPE,
+                "threshold_method": CellProfilerThresholdMethod.OTSU,
+                "otsu_class_count": CellProfilerOtsuMethod.THREE_CLASS,
+                "assign_middle_to_foreground": CellProfilerThresholdAssignment.BACKGROUND,
+                "name_the_primary_objects_to_be_identified": "Nucleoli",
+            },
+        ),
+        name="IdentifyPrimaryObjects",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
+            variable_components=None, group_by=None, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1335,11 +1233,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1347,7 +1244,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1356,7 +1253,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1373,7 +1270,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1390,27 +1287,26 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
-        func=(mask_image, {
-                'mask_source': MaskSource.OBJECTS,
-                'select_the_input_image': 'Mito',
-                'select_object_for_mask': 'Cytoplasm',
-                'name_the_output_image': 'MaskedMito'
-            }),
-        name='MaskImage',
+        func=(
+            mask_image,
+            {
+                "mask_source": MaskSource.OBJECTS,
+                "select_the_input_image": "Mito",
+                "select_object_for_mask": "Cytoplasm",
+                "name_the_output_image": "MaskedMito",
+            },
+        ),
+        name="MaskImage",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
+            variable_components=None, group_by=None, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1423,11 +1319,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1435,7 +1330,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1444,7 +1339,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1461,7 +1356,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1478,29 +1373,28 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
-        func=(identify_primary_objects, {
-                'min_diameter': 2,
-                'max_diameter': 30,
-                'exclude_border_objects': False,
-                'fill_holes': FillHolesOption.AFTER_DECLUMP,
-                'threshold_method': CellProfilerThresholdMethod.OTSU,
-                'name_the_primary_objects_to_be_identified': 'Mitochondria'
-            }),
-        name='IdentifyPrimaryObjects',
+        func=(
+            identify_primary_objects,
+            {
+                "min_diameter": 2,
+                "max_diameter": 30,
+                "exclude_border_objects": False,
+                "fill_holes": FillHolesOption.AFTER_DECLUMP,
+                "threshold_method": CellProfilerThresholdMethod.OTSU,
+                "name_the_primary_objects_to_be_identified": "Mitochondria",
+            },
+        ),
+        name="IdentifyPrimaryObjects",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
+            variable_components=None, group_by=None, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1513,11 +1407,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1525,7 +1418,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1534,7 +1427,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1551,7 +1444,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1568,796 +1461,902 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
+            port=None,
+        ),
     ),
     FunctionStep(
         func=[
-            (measure_colocalization_objects, {
-                    'select_object_sets_to_measure': 'Cytoplasm',
-                    'select_images_to_measure': (
-                        'Mito',
-                        'Syto',
-                        'Ph_golgi',
-                        'Hoechst',
-                        'ER'
-                    )
-                }),
-            (measure_colocalization_objects, {
-                    'select_object_sets_to_measure': 'Nuclei',
-                    'select_images_to_measure': (
-                        'Mito',
-                        'Syto',
-                        'Ph_golgi',
-                        'Hoechst',
-                        'ER'
-                    )
-                }),
-            (measure_colocalization_objects, {
-                    'select_object_sets_to_measure': 'Cells',
-                    'select_images_to_measure': (
-                        'Mito',
-                        'Syto',
-                        'Ph_golgi',
-                        'Hoechst',
-                        'ER'
-                    )
-                }),
-            (measure_colocalization_objects, {
-                    'select_object_sets_to_measure': 'Nucleoli',
-                    'select_images_to_measure': (
-                        'Mito',
-                        'Syto',
-                        'Ph_golgi',
-                        'Hoechst',
-                        'ER'
-                    )
-                }),
-            (measure_colocalization_objects, {
-                    'select_object_sets_to_measure': 'Mitochondria',
-                    'select_images_to_measure': (
-                        'Mito',
-                        'Syto',
-                        'Ph_golgi',
-                        'Hoechst',
-                        'ER'
-                    )
-                })
-        ],
-        name='MeasureColocalization',
-        description=None,
-        enabled=True,
-        debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
-        processing_config=LazyProcessingConfig(
-            variable_components=[
-                VariableComponents.CHANNEL
-            ],
-            group_by=GroupBy.SITE,
-            input_source=None
-        ),
-        source_bindings=LazyStepSourceBindingsConfig(
-            enabled=None,
-            metadata_rules=None,
-            match_plan=None,
-            metadata_fields=None,
-            source_filters=None,
-            bindings=None,
-            image_plane_sources=None,
-            imported_metadata_tables=None,
-            source_stack_components=None,
-            grouping_metadata_fields=None,
-            source_voxel_spacing=None
-        ),
-        step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
-        ),
-        step_materialization_config=LazyStepMaterializationConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            output_dir_suffix=None,
-            global_output_folder=None,
-            sub_dir=None,
-            enabled=None
-        ),
-        streaming_defaults=LazyStreamingDefaults(
-            well_filter=None,
-            well_filter_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None
-        ),
-        napari_streaming_config=LazyNapariStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            colormap=None,
-            variable_size_handling=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        ),
-        fiji_streaming_config=LazyFijiStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            lut=None,
-            auto_contrast=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        )
-    ),
-    FunctionStep(
-        func={
-            '2': [
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'ER'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'ER'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'ER'
-                    })
-            ],
-            '5': [
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'Mito'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'Mito'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'Mito'
-                    })
-            ],
-            '1': [
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'Hoechst'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'Hoechst'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'Hoechst'
-                    })
-            ],
-            '4': [
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'Ph_golgi'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'Ph_golgi'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'Ph_golgi'
-                    })
-            ],
-            '3': [
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'Syto'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'Syto'
-                    }),
-                (measure_object_intensity, {
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'Syto'
-                    })
-            ]
-        },
-        name='MeasureObjectIntensity',
-        description=None,
-        enabled=True,
-        debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
-        processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
-        ),
-        source_bindings=LazyStepSourceBindingsConfig(
-            enabled=None,
-            metadata_rules=None,
-            match_plan=None,
-            metadata_fields=None,
-            source_filters=None,
-            bindings=None,
-            image_plane_sources=None,
-            imported_metadata_tables=None,
-            source_stack_components=None,
-            grouping_metadata_fields=None,
-            source_voxel_spacing=None
-        ),
-        step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
-        ),
-        step_materialization_config=LazyStepMaterializationConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            output_dir_suffix=None,
-            global_output_folder=None,
-            sub_dir=None,
-            enabled=None
-        ),
-        streaming_defaults=LazyStreamingDefaults(
-            well_filter=None,
-            well_filter_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None
-        ),
-        napari_streaming_config=LazyNapariStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            colormap=None,
-            variable_size_handling=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        ),
-        fiji_streaming_config=LazyFijiStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            lut=None,
-            auto_contrast=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        )
-    ),
-    FunctionStep(
-        func={
-            '5': [
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'Mito'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'Mito'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'Mito'
-                    })
-            ],
-            '3': [
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'Syto'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cells'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'Syto'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cytoplasm'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'Syto'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Nuclei'
-                    })
-            ],
-            '1': [
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'Hoechst'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'Hoechst'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'Hoechst'
-                    })
-            ],
-            '2': [
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cells',
-                        'select_images_to_measure': 'ER'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Cytoplasm',
-                        'select_images_to_measure': 'ER'
-                    }),
-                (measure_object_intensity_distribution, {
-                        'select_objects_to_use_as_centers': 'None',
-                        'select_object_sets_to_measure': 'Nuclei',
-                        'select_images_to_measure': 'ER'
-                    })
-            ]
-        },
-        name='MeasureObjectIntensityDistribution',
-        description=None,
-        enabled=True,
-        debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
-        processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=InputSource.PIPELINE_START
-        ),
-        source_bindings=LazyStepSourceBindingsConfig(
-            enabled=None,
-            metadata_rules=None,
-            match_plan=None,
-            metadata_fields=None,
-            source_filters=None,
-            bindings=None,
-            image_plane_sources=None,
-            imported_metadata_tables=None,
-            source_stack_components=None,
-            grouping_metadata_fields=None,
-            source_voxel_spacing=None
-        ),
-        step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
-        ),
-        step_materialization_config=LazyStepMaterializationConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            output_dir_suffix=None,
-            global_output_folder=None,
-            sub_dir=None,
-            enabled=None
-        ),
-        streaming_defaults=LazyStreamingDefaults(
-            well_filter=None,
-            well_filter_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None
-        ),
-        napari_streaming_config=LazyNapariStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            colormap=None,
-            variable_size_handling=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        ),
-        fiji_streaming_config=LazyFijiStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            lut=None,
-            auto_contrast=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        )
-    ),
-    FunctionStep(
-        func={
-            '4': [
-                (measure_object_size_shape, {
-                        'calculate_advanced': False,
-                        'select_object_sets_to_measure': 'Cells'
-                    }),
-                (measure_object_size_shape, {
-                        'calculate_advanced': False,
-                        'select_object_sets_to_measure': 'Cytoplasm'
-                    })
-            ],
-            '5': (measure_object_size_shape, {
-                    'calculate_advanced': False,
-                    'select_object_sets_to_measure': 'Mitochondria'
-                }),
-            '1': (measure_object_size_shape, {
-                    'calculate_advanced': False,
-                    'select_object_sets_to_measure': 'Nuclei'
-                }),
-            '3': (measure_object_size_shape, {
-                    'calculate_advanced': False,
-                    'select_object_sets_to_measure': 'Nucleoli'
-                })
-        },
-        name='MeasureObjectSizeShape',
-        description=None,
-        enabled=True,
-        debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
-        processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
-        ),
-        source_bindings=LazyStepSourceBindingsConfig(
-            enabled=None,
-            metadata_rules=None,
-            match_plan=None,
-            metadata_fields=None,
-            source_filters=None,
-            bindings=None,
-            image_plane_sources=None,
-            imported_metadata_tables=None,
-            source_stack_components=None,
-            grouping_metadata_fields=None,
-            source_voxel_spacing=None
-        ),
-        step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
-        ),
-        step_materialization_config=LazyStepMaterializationConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            output_dir_suffix=None,
-            global_output_folder=None,
-            sub_dir=None,
-            enabled=None
-        ),
-        streaming_defaults=LazyStreamingDefaults(
-            well_filter=None,
-            well_filter_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None
-        ),
-        napari_streaming_config=LazyNapariStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            colormap=None,
-            variable_size_handling=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        ),
-        fiji_streaming_config=LazyFijiStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            lut=None,
-            auto_contrast=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        )
-    ),
-    FunctionStep(
-        func={
-            '4': (measure_object_neighbors, {
-                    'distance_method': DistanceMethod.EXPAND,
-                    'neighbor_distance': 5,
-                    'select_objects_to_measure': 'Cells',
-                    'select_neighboring_objects_to_measure': 'Cells'
-                }),
-            '1': (measure_object_neighbors, {
-                    'distance_method': DistanceMethod.EXPAND,
-                    'neighbor_distance': 5,
-                    'select_objects_to_measure': 'Nuclei',
-                    'select_neighboring_objects_to_measure': 'Nuclei'
-                }),
-            '5': (measure_object_neighbors, {
-                    'distance_method': DistanceMethod.EXPAND,
-                    'neighbor_distance': 5,
-                    'select_objects_to_measure': 'Mitochondria',
-                    'select_neighboring_objects_to_measure': 'Mitochondria'
-                })
-        },
-        name='MeasureObjectNeighbors',
-        description=None,
-        enabled=True,
-        debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
-        processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
-        ),
-        source_bindings=LazyStepSourceBindingsConfig(
-            enabled=None,
-            metadata_rules=None,
-            match_plan=None,
-            metadata_fields=None,
-            source_filters=None,
-            bindings=None,
-            image_plane_sources=None,
-            imported_metadata_tables=None,
-            source_stack_components=None,
-            grouping_metadata_fields=None,
-            source_voxel_spacing=None
-        ),
-        step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
-        ),
-        step_materialization_config=LazyStepMaterializationConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            output_dir_suffix=None,
-            global_output_folder=None,
-            sub_dir=None,
-            enabled=None
-        ),
-        streaming_defaults=LazyStreamingDefaults(
-            well_filter=None,
-            well_filter_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None
-        ),
-        napari_streaming_config=LazyNapariStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            colormap=None,
-            variable_size_handling=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        ),
-        fiji_streaming_config=LazyFijiStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            lut=None,
-            auto_contrast=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        )
-    ),
-    FunctionStep(
-        func={
-            '3': (relate_objects_with_saved_children, {
-                    'calculate_per_parent_means': True,
-                    'save_children_with_parents': True,
-                    'select_the_child_objects': 'Nucleoli',
-                    'select_the_parent_objects': 'Nuclei',
-                    'name_the_output_object': 'NucleoliChildObjects'
-                }),
-            '5': (relate_objects_with_saved_children, {
-                    'calculate_per_parent_means': True,
-                    'save_children_with_parents': True,
-                    'select_the_parent_objects': 'Cells',
-                    'select_the_child_objects': 'Mitochondria',
-                    'name_the_output_object': 'MitochondriaChildObjects'
-                })
-        },
-        name='RelateObjects',
-        description=None,
-        enabled=True,
-        debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
-        processing_config=LazyProcessingConfig(
-            variable_components=None,
-            group_by=None,
-            input_source=None
-        ),
-        source_bindings=LazyStepSourceBindingsConfig(
-            enabled=None,
-            metadata_rules=None,
-            match_plan=None,
-            metadata_fields=None,
-            source_filters=None,
-            bindings=None,
-            image_plane_sources=None,
-            imported_metadata_tables=None,
-            source_stack_components=None,
-            grouping_metadata_fields=None,
-            source_voxel_spacing=None
-        ),
-        step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
-        ),
-        step_materialization_config=LazyStepMaterializationConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            output_dir_suffix=None,
-            global_output_folder=None,
-            sub_dir=None,
-            enabled=None
-        ),
-        streaming_defaults=LazyStreamingDefaults(
-            well_filter=None,
-            well_filter_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None
-        ),
-        napari_streaming_config=LazyNapariStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            colormap=None,
-            variable_size_handling=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        ),
-        fiji_streaming_config=LazyFijiStreamingConfig(
-            well_filter=None,
-            well_filter_mode=None,
-            lut=None,
-            auto_contrast=None,
-            site_mode=None,
-            channel_mode=None,
-            z_index_mode=None,
-            timepoint_mode=None,
-            well_mode=None,
-            enabled=None,
-            persistent=None,
-            host=None,
-            transport_mode=None,
-            scope_accent_color=None,
-            port=None
-        )
-    ),
-    FunctionStep(
-        func=(export_to_database, {
-                'sqlite_file': 'BBBC022.db',
-                'experiment_name': 'BBBC022',
-                'table_prefix': 'MyExpt_',
-                'wants_relationship_tables': True,
-                'location_object': 'None',
-                'plate_type': '384',
-                'wants_group_fields': True,
-                'group_fields': (
-                    (
-                        'PerWell',
-                        'ImageNumber, Image_Metadata_Plate, Image_Metadata_Well'
+            (
+                measure_colocalization_objects,
+                {
+                    "select_object_sets_to_measure": "Cytoplasm",
+                    "select_images_to_measure": (
+                        "Mito",
+                        "Syto",
+                        "Ph_golgi",
+                        "Hoechst",
+                        "ER",
                     ),
-                )
-            }),
-        name='ExportToDatabase',
+                },
+            ),
+            (
+                measure_colocalization_objects,
+                {
+                    "select_object_sets_to_measure": "Nuclei",
+                    "select_images_to_measure": (
+                        "Mito",
+                        "Syto",
+                        "Ph_golgi",
+                        "Hoechst",
+                        "ER",
+                    ),
+                },
+            ),
+            (
+                measure_colocalization_objects,
+                {
+                    "select_object_sets_to_measure": "Cells",
+                    "select_images_to_measure": (
+                        "Mito",
+                        "Syto",
+                        "Ph_golgi",
+                        "Hoechst",
+                        "ER",
+                    ),
+                },
+            ),
+            (
+                measure_colocalization_objects,
+                {
+                    "select_object_sets_to_measure": "Nucleoli",
+                    "select_images_to_measure": (
+                        "Mito",
+                        "Syto",
+                        "Ph_golgi",
+                        "Hoechst",
+                        "ER",
+                    ),
+                },
+            ),
+            (
+                measure_colocalization_objects,
+                {
+                    "select_object_sets_to_measure": "Mitochondria",
+                    "select_images_to_measure": (
+                        "Mito",
+                        "Syto",
+                        "Ph_golgi",
+                        "Hoechst",
+                        "ER",
+                    ),
+                },
+            ),
+        ],
+        name="MeasureColocalization",
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(
-            default_dtype_conversion=None
-        ),
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
         processing_config=LazyProcessingConfig(
-            variable_components=[],
-            group_by=GroupBy.NONE,
-            input_source=None
+            variable_components=[VariableComponents.CHANNEL],
+            group_by=GroupBy.SITE,
+            input_source=None,
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=None,
+            metadata_rules=None,
+            match_plan=None,
+            metadata_fields=None,
+            source_filters=None,
+            bindings=None,
+            image_plane_sources=None,
+            imported_metadata_tables=None,
+            source_stack_components=None,
+            grouping_metadata_fields=None,
+            source_voxel_spacing=None,
+        ),
+        step_well_filter_config=LazyStepWellFilterConfig(
+            well_filter=None, well_filter_mode=None
+        ),
+        step_materialization_config=LazyStepMaterializationConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            output_dir_suffix=None,
+            global_output_folder=None,
+            sub_dir=None,
+            enabled=None,
+        ),
+        streaming_defaults=LazyStreamingDefaults(
+            well_filter=None,
+            well_filter_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+        ),
+        napari_streaming_config=LazyNapariStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            colormap=None,
+            variable_size_handling=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+        fiji_streaming_config=LazyFijiStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            lut=None,
+            auto_contrast=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+    ),
+    FunctionStep(
+        func={
+            "2": [
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "ER",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "ER",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "ER",
+                    },
+                ),
+            ],
+            "5": [
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "Mito",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "Mito",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "Mito",
+                    },
+                ),
+            ],
+            "1": [
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "Hoechst",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "Hoechst",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "Hoechst",
+                    },
+                ),
+            ],
+            "4": [
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "Ph_golgi",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "Ph_golgi",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "Ph_golgi",
+                    },
+                ),
+            ],
+            "3": [
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "Syto",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "Syto",
+                    },
+                ),
+                (
+                    measure_object_intensity,
+                    {
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "Syto",
+                    },
+                ),
+            ],
+        },
+        name="MeasureObjectIntensity",
+        description=None,
+        enabled=True,
+        debug_pause=False,
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        processing_config=LazyProcessingConfig(
+            variable_components=None, group_by=None, input_source=None
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=None,
+            metadata_rules=None,
+            match_plan=None,
+            metadata_fields=None,
+            source_filters=None,
+            bindings=None,
+            image_plane_sources=None,
+            imported_metadata_tables=None,
+            source_stack_components=None,
+            grouping_metadata_fields=None,
+            source_voxel_spacing=None,
+        ),
+        step_well_filter_config=LazyStepWellFilterConfig(
+            well_filter=None, well_filter_mode=None
+        ),
+        step_materialization_config=LazyStepMaterializationConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            output_dir_suffix=None,
+            global_output_folder=None,
+            sub_dir=None,
+            enabled=None,
+        ),
+        streaming_defaults=LazyStreamingDefaults(
+            well_filter=None,
+            well_filter_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+        ),
+        napari_streaming_config=LazyNapariStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            colormap=None,
+            variable_size_handling=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+        fiji_streaming_config=LazyFijiStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            lut=None,
+            auto_contrast=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+    ),
+    FunctionStep(
+        func={
+            "5": [
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "Mito",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "Mito",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "Mito",
+                    },
+                ),
+            ],
+            "3": [
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "Syto",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cells",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "Syto",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cytoplasm",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "Syto",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Nuclei",
+                    },
+                ),
+            ],
+            "1": [
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "Hoechst",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "Hoechst",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "Hoechst",
+                    },
+                ),
+            ],
+            "2": [
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cells",
+                        "select_images_to_measure": "ER",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Cytoplasm",
+                        "select_images_to_measure": "ER",
+                    },
+                ),
+                (
+                    measure_object_intensity_distribution,
+                    {
+                        "select_objects_to_use_as_centers": "None",
+                        "select_object_sets_to_measure": "Nuclei",
+                        "select_images_to_measure": "ER",
+                    },
+                ),
+            ],
+        },
+        name="MeasureObjectIntensityDistribution",
+        description=None,
+        enabled=True,
+        debug_pause=False,
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        processing_config=LazyProcessingConfig(
+            variable_components=None,
+            group_by=None,
+            input_source=InputSource.PIPELINE_START,
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=None,
+            metadata_rules=None,
+            match_plan=None,
+            metadata_fields=None,
+            source_filters=None,
+            bindings=None,
+            image_plane_sources=None,
+            imported_metadata_tables=None,
+            source_stack_components=None,
+            grouping_metadata_fields=None,
+            source_voxel_spacing=None,
+        ),
+        step_well_filter_config=LazyStepWellFilterConfig(
+            well_filter=None, well_filter_mode=None
+        ),
+        step_materialization_config=LazyStepMaterializationConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            output_dir_suffix=None,
+            global_output_folder=None,
+            sub_dir=None,
+            enabled=None,
+        ),
+        streaming_defaults=LazyStreamingDefaults(
+            well_filter=None,
+            well_filter_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+        ),
+        napari_streaming_config=LazyNapariStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            colormap=None,
+            variable_size_handling=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+        fiji_streaming_config=LazyFijiStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            lut=None,
+            auto_contrast=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+    ),
+    FunctionStep(
+        func={
+            "4": [
+                (
+                    measure_object_size_shape,
+                    {
+                        "calculate_advanced": False,
+                        "select_object_sets_to_measure": "Cells",
+                    },
+                ),
+                (
+                    measure_object_size_shape,
+                    {
+                        "calculate_advanced": False,
+                        "select_object_sets_to_measure": "Cytoplasm",
+                    },
+                ),
+            ],
+            "5": (
+                measure_object_size_shape,
+                {
+                    "calculate_advanced": False,
+                    "select_object_sets_to_measure": "Mitochondria",
+                },
+            ),
+            "1": (
+                measure_object_size_shape,
+                {
+                    "calculate_advanced": False,
+                    "select_object_sets_to_measure": "Nuclei",
+                },
+            ),
+            "3": (
+                measure_object_size_shape,
+                {
+                    "calculate_advanced": False,
+                    "select_object_sets_to_measure": "Nucleoli",
+                },
+            ),
+        },
+        name="MeasureObjectSizeShape",
+        description=None,
+        enabled=True,
+        debug_pause=False,
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        processing_config=LazyProcessingConfig(
+            variable_components=None, group_by=None, input_source=None
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=None,
+            metadata_rules=None,
+            match_plan=None,
+            metadata_fields=None,
+            source_filters=None,
+            bindings=None,
+            image_plane_sources=None,
+            imported_metadata_tables=None,
+            source_stack_components=None,
+            grouping_metadata_fields=None,
+            source_voxel_spacing=None,
+        ),
+        step_well_filter_config=LazyStepWellFilterConfig(
+            well_filter=None, well_filter_mode=None
+        ),
+        step_materialization_config=LazyStepMaterializationConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            output_dir_suffix=None,
+            global_output_folder=None,
+            sub_dir=None,
+            enabled=None,
+        ),
+        streaming_defaults=LazyStreamingDefaults(
+            well_filter=None,
+            well_filter_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+        ),
+        napari_streaming_config=LazyNapariStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            colormap=None,
+            variable_size_handling=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+        fiji_streaming_config=LazyFijiStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            lut=None,
+            auto_contrast=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+    ),
+    FunctionStep(
+        func={
+            "4": (
+                measure_object_neighbors,
+                {
+                    "distance_method": DistanceMethod.EXPAND,
+                    "neighbor_distance": 5,
+                    "select_objects_to_measure": "Cells",
+                    "select_neighboring_objects_to_measure": "Cells",
+                },
+            ),
+            "1": (
+                measure_object_neighbors,
+                {
+                    "distance_method": DistanceMethod.EXPAND,
+                    "neighbor_distance": 5,
+                    "select_objects_to_measure": "Nuclei",
+                    "select_neighboring_objects_to_measure": "Nuclei",
+                },
+            ),
+            "5": (
+                measure_object_neighbors,
+                {
+                    "distance_method": DistanceMethod.EXPAND,
+                    "neighbor_distance": 5,
+                    "select_objects_to_measure": "Mitochondria",
+                    "select_neighboring_objects_to_measure": "Mitochondria",
+                },
+            ),
+        },
+        name="MeasureObjectNeighbors",
+        description=None,
+        enabled=True,
+        debug_pause=False,
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        processing_config=LazyProcessingConfig(
+            variable_components=None, group_by=None, input_source=None
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=None,
+            metadata_rules=None,
+            match_plan=None,
+            metadata_fields=None,
+            source_filters=None,
+            bindings=None,
+            image_plane_sources=None,
+            imported_metadata_tables=None,
+            source_stack_components=None,
+            grouping_metadata_fields=None,
+            source_voxel_spacing=None,
+        ),
+        step_well_filter_config=LazyStepWellFilterConfig(
+            well_filter=None, well_filter_mode=None
+        ),
+        step_materialization_config=LazyStepMaterializationConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            output_dir_suffix=None,
+            global_output_folder=None,
+            sub_dir=None,
+            enabled=None,
+        ),
+        streaming_defaults=LazyStreamingDefaults(
+            well_filter=None,
+            well_filter_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+        ),
+        napari_streaming_config=LazyNapariStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            colormap=None,
+            variable_size_handling=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+        fiji_streaming_config=LazyFijiStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            lut=None,
+            auto_contrast=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+    ),
+    FunctionStep(
+        func={
+            "3": (
+                relate_objects_with_saved_children,
+                {
+                    "calculate_per_parent_means": True,
+                    "save_children_with_parents": True,
+                    "select_the_child_objects": "Nucleoli",
+                    "select_the_parent_objects": "Nuclei",
+                    "name_the_output_object": "NucleoliChildObjects",
+                },
+            ),
+            "5": (
+                relate_objects_with_saved_children,
+                {
+                    "calculate_per_parent_means": True,
+                    "save_children_with_parents": True,
+                    "select_the_parent_objects": "Cells",
+                    "select_the_child_objects": "Mitochondria",
+                    "name_the_output_object": "MitochondriaChildObjects",
+                },
+            ),
+        },
+        name="RelateObjects",
+        description=None,
+        enabled=True,
+        debug_pause=False,
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        processing_config=LazyProcessingConfig(
+            variable_components=None, group_by=None, input_source=None
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=None,
+            metadata_rules=None,
+            match_plan=None,
+            metadata_fields=None,
+            source_filters=None,
+            bindings=None,
+            image_plane_sources=None,
+            imported_metadata_tables=None,
+            source_stack_components=None,
+            grouping_metadata_fields=None,
+            source_voxel_spacing=None,
+        ),
+        step_well_filter_config=LazyStepWellFilterConfig(
+            well_filter=None, well_filter_mode=None
+        ),
+        step_materialization_config=LazyStepMaterializationConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            output_dir_suffix=None,
+            global_output_folder=None,
+            sub_dir=None,
+            enabled=None,
+        ),
+        streaming_defaults=LazyStreamingDefaults(
+            well_filter=None,
+            well_filter_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+        ),
+        napari_streaming_config=LazyNapariStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            colormap=None,
+            variable_size_handling=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+        fiji_streaming_config=LazyFijiStreamingConfig(
+            well_filter=None,
+            well_filter_mode=None,
+            lut=None,
+            auto_contrast=None,
+            site_mode=None,
+            channel_mode=None,
+            z_index_mode=None,
+            timepoint_mode=None,
+            well_mode=None,
+            enabled=None,
+            persistent=None,
+            host=None,
+            transport_mode=None,
+            scope_accent_color=None,
+            port=None,
+        ),
+    ),
+    FunctionStep(
+        func=(
+            export_to_database,
+            {
+                "sqlite_file": "BBBC022.db",
+                "experiment_name": "BBBC022",
+                "table_prefix": "MyExpt_",
+                "wants_relationship_tables": True,
+                "location_object": "None",
+                "plate_type": "384",
+                "wants_group_fields": True,
+                "group_fields": (
+                    (
+                        "PerWell",
+                        "ImageNumber, Image_Metadata_Plate, Image_Metadata_Well",
+                    ),
+                ),
+            },
+        ),
+        name="ExportToDatabase",
+        description=None,
+        enabled=True,
+        debug_pause=False,
+        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        processing_config=LazyProcessingConfig(
+            variable_components=[], group_by=GroupBy.NONE, input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=True,
@@ -2370,11 +2369,10 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None
+            source_voxel_spacing=None,
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None,
-            well_filter_mode=None
+            well_filter=None, well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -2382,7 +2380,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None
+            enabled=None,
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -2391,7 +2389,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None
+            scope_accent_color=None,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -2408,7 +2406,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
+            port=None,
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -2425,7 +2423,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None
-        )
-    )
+            port=None,
+        ),
+    ),
 ]

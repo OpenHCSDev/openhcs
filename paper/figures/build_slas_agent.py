@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import tifffile
 
-
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "website/assets/agent"
 OUTPUT = Path(__file__).resolve().parent / "slas"
@@ -42,7 +41,10 @@ def build() -> None:
         raise ValueError("Original uncut video hash differs from run record")
     fixture = record["fixture"]
     images = []
-    sources = {str(record_path.relative_to(ROOT)): digest(record_path), str(video.relative_to(ROOT)): digest(video)}
+    sources = {
+        str(record_path.relative_to(ROOT)): digest(record_path),
+        str(video.relative_to(ROOT)): digest(video),
+    }
     for item in fixture["file_manifest"]:
         if Path(item["path"]).suffix != ".tif":
             continue
@@ -58,17 +60,34 @@ def build() -> None:
         raise ValueError("This figure requires the recorded pair of input channels")
     OUTPUT.mkdir(parents=True, exist_ok=True)
     frame = OUTPUT / "figure3_original_video_frame.png"
-    subprocess.run([
-        "ffmpeg", "-v", "error", "-y", "-ss", str(FRAME_SECONDS),
-        "-i", str(video), "-frames:v", "1", str(frame),
-    ], check=True)
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-ss",
+            str(FRAME_SECONDS),
+            "-i",
+            str(video),
+            "-frames:v",
+            "1",
+            str(frame),
+        ],
+        check=True,
+    )
     pipeline = ASSETS / record["evidence"]["pipeline_source_path"]
     if digest(pipeline) != record["evidence"]["pipeline_source_sha256"]:
         raise ValueError("Saved pipeline differs from original run record")
     sources[str(pipeline.relative_to(ROOT))] = digest(pipeline)
     tree = ast.parse(pipeline.read_text())
-    steps = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
-             and isinstance(node.func, ast.Name) and node.func.id == "FunctionStep"]
+    steps = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "FunctionStep"
+    ]
     step_labels = []
     for step in steps:
         keywords = {item.arg: item.value for item in step.keywords}
@@ -89,16 +108,38 @@ def build() -> None:
         axis.set_axis_off()
     for index, label in enumerate(step_labels):
         axis = fig.add_subplot(grid[1, index])
-        axis.text(0.5, 0.5, label, fontsize=10, color="#16877f", ha="center", va="center",
-                  bbox={"boxstyle": "round,pad=0.6", "facecolor": "#edf7f5", "edgecolor": "#16877f"})
+        axis.text(
+            0.5,
+            0.5,
+            label,
+            fontsize=10,
+            color="#16877f",
+            ha="center",
+            va="center",
+            bbox={
+                "boxstyle": "round,pad=0.6",
+                "facecolor": "#edf7f5",
+                "edgecolor": "#16877f",
+            },
+        )
         axis.set_axis_off()
     axis = fig.add_subplot(grid[2, :])
     axis.imshow(video_pixels)
-    axis.set_title("C  Agent-authored steps and recorded napari inspection", fontsize=12)
+    axis.set_title(
+        "C  Agent-authored steps and recorded napari inspection", fontsize=12
+    )
     axis.set_axis_off()
     for index, (title, (left, top, right, bottom)) in enumerate(FRAME_DETAILS):
-        axis.add_patch(Rectangle((left, top), right - left, bottom - top,
-                                 fill=False, edgecolor="#f3ac44", linewidth=1))
+        axis.add_patch(
+            Rectangle(
+                (left, top),
+                right - left,
+                bottom - top,
+                fill=False,
+                edgecolor="#f3ac44",
+                linewidth=1,
+            )
+        )
         axis.text(left, top - 6, title[0], color="#f3ac44", fontsize=10)
         detail = fig.add_subplot(grid[3, index])
         detail.imshow(video_pixels[top:bottom, left:right], interpolation="nearest")
@@ -118,11 +159,15 @@ def build() -> None:
         "video_frame_seconds": FRAME_SECONDS,
         "image_display": "Original uint8 TIFF pixels displayed linearly at 0..255; no spatial crop",
         "video_display": "Full original frame with labelled detail rectangles; D/E are unchanged pixel crops of the same frame, not the later corrected replay",
-        "video_detail_crops_xyxy": {title: list(bounds) for title, bounds in FRAME_DETAILS},
+        "video_detail_crops_xyxy": {
+            title: list(bounds) for title, bounds in FRAME_DETAILS
+        },
         "step_labels": step_labels,
         "output_sha256": {p.name: digest(p) for p in outputs},
     }
-    (OUTPUT / "figure3_provenance.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    (OUTPUT / "figure3_provenance.json").write_text(
+        json.dumps(receipt, indent=2) + "\n"
+    )
     print(f"Rendered original-run agent figure to {OUTPUT}")
 
 

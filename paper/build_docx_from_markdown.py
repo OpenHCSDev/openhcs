@@ -10,11 +10,14 @@ import zipfile
 from pathlib import Path
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
-
 WORD_DOCUMENT_XML = "word/document.xml"
 WORD_RELATIONSHIPS_XML = "word/_rels/document.xml.rels"
-PACKAGE_RELATIONSHIPS_NAMESPACE = "http://schemas.openxmlformats.org/package/2006/relationships"
-HYPERLINK_RELATIONSHIP = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"
+PACKAGE_RELATIONSHIPS_NAMESPACE = (
+    "http://schemas.openxmlformats.org/package/2006/relationships"
+)
+HYPERLINK_RELATIONSHIP = (
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"
+)
 WORD_NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 TABLE_FONT_SIZE_HALF_POINTS = "20"
 TABLE_BORDER_SIZE_EIGHTH_POINTS = "4"
@@ -33,7 +36,8 @@ def attach_standalone_page_breaks(root: ET.Element) -> None:
     """Keep explicit breaks on the following paragraph without a blank page."""
     body = root.find(word_tag("body"))
     blocks = [
-        node for node in body
+        node
+        for node in body
         if node.tag not in (word_tag("bookmarkStart"), word_tag("bookmarkEnd"))
     ]
     for paragraph, following in zip(blocks, blocks[1:]):
@@ -124,11 +128,15 @@ def finalize_docx(docx_path: Path, source_directory: Path) -> None:
             relative_target = os.path.relpath(source_target, docx_path.parent)
             relationship.set(
                 "Target",
-                urlunsplit(target._replace(path=quote(Path(relative_target).as_posix()))),
+                urlunsplit(
+                    target._replace(path=quote(Path(relative_target).as_posix()))
+                ),
             )
 
         updated_parts = {
-            WORD_DOCUMENT_XML: ET.tostring(root, encoding="utf-8", xml_declaration=True),
+            WORD_DOCUMENT_XML: ET.tostring(
+                root, encoding="utf-8", xml_declaration=True
+            ),
             WORD_RELATIONSHIPS_XML: ET.tostring(
                 relationships, encoding="utf-8", xml_declaration=True
             ),
@@ -155,10 +163,18 @@ def main() -> int:
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    run([
-        "pandoc", str(source), "--standalone", "--citeproc",
-        "--resource-path", str(source.parent), "-o", str(output),
-    ])
+    run(
+        [
+            "pandoc",
+            str(source),
+            "--standalone",
+            "--citeproc",
+            "--resource-path",
+            str(source.parent),
+            "-o",
+            str(output),
+        ]
+    )
     finalize_docx(output, source.parent)
     print(f"DOCX written to {output}")
     return 0

@@ -19,7 +19,9 @@ def main():
     with McpDevClient() as client:
         result = client.execute(args.command, timeout_seconds=30)
     args.receipt.parent.mkdir(parents=True, exist_ok=True)
-    args.receipt.write_text(json.dumps({"argv": result.argv, "response": result.payload}, indent=2) + "\n")
+    args.receipt.write_text(
+        json.dumps({"argv": result.argv, "response": result.payload}, indent=2) + "\n"
+    )
     print(result.rendered_output)
     raise SystemExit(result.returncode)
 
