@@ -379,8 +379,8 @@ def test_forced_detach_follows_explicit_volume_release(
 @pytest.mark.skipif(
     sys.platform != "darwin", reason="Requires native macOS disk images"
 )
-def test_native_busy_disk_image_recovers_after_holder_release(tmp_path: Path):
-    """Preserve a busy device, release its holder, then verify its archive."""
+def test_native_busy_disk_image_reports_state_and_recovers(tmp_path: Path):
+    """Report native detach state, release the holder, and verify the archive."""
     writable = tmp_path / "writable.dmg"
     compressed = tmp_path / "verified.dmg"
     mount = tmp_path / "mount"
@@ -432,17 +432,19 @@ def test_native_busy_disk_image_recovers_after_holder_release(tmp_path: Path):
             0
         ], "Image holder did not start"
         assert holder.stdout.readline().strip() == "ready"
-        busy = lifecycle(
+        detached = lifecycle(
             f"openhcs_detach_disk_image {shlex.quote(device)}", check=False
         )
-        assert busy.returncode != 0
-        assert "Releasing the still-attached owned disk image" in busy.stderr
-        assert "Owned disk image remains attached" in busy.stderr
-        assert Path(device).exists()
+        device_remains = Path(device).exists()
+        assert (detached.returncode != 0) is device_remains, detached.stderr
+        if device_remains:
+            assert "Releasing the still-attached owned disk image" in detached.stderr
+            assert "Owned disk image remains attached" in detached.stderr
         holder.communicate(timeout=10)
         holder = None
-        lifecycle(f"openhcs_detach_disk_image {shlex.quote(device)}")
-        assert not Path(device).exists()
+        if device_remains:
+            lifecycle(f"openhcs_detach_disk_image {shlex.quote(device)}")
+            assert not Path(device).exists()
         device = ""
         command(
             "/usr/bin/hdiutil",

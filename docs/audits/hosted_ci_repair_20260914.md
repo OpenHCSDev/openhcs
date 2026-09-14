@@ -48,14 +48,27 @@ all five attempts while the holder remained alive. The retry implementation is
 therefore superseded by the contract below rather than treated as a successful
 lifecycle repair.
 
-The corrected native test now proves both sides of the cleanup boundary:
+An initial correction then assumed the mounted-path holder would always block a
+forced native detach. Exact-head job
+[`104131281843`](https://github.com/OpenHCSDev/openhcs/actions/runs/34890252544/job/104131281843)
+disproved that assumption: the same fixture detached the whole device and the
+helper returned success. Across the three receipts, an open mounted file and
+working directory can coincide with either a retained resource-busy device or
+a successful forced detach. The native test therefore checks state rather than
+requiring either operating-system outcome:
 
-1. while the external holder is alive, detach fails visibly, emits holder and
-   Disk Arbitration diagnostics, and retains the exact owned device;
-2. after the test releases its own holder, cleanup succeeds and proves the
-   device absent;
-3. conversion, verification, remount, and payload-integrity checks then proceed;
-4. no cleanup code signals or terminates the external holder.
+1. return status must agree with presence or absence of the exact owned device;
+2. if the device remains busy, failure is visible and the device is retained;
+3. after the test releases its own holder, any retained device cleans up and is
+   proven absent;
+4. conversion, verification, remount, and payload-integrity checks proceed;
+5. no cleanup code signals or terminates the external holder.
+
+Deterministic unit cases continue to require the visible failure and retained
+device when their simulated operating-system state refuses both normal and
+forced detach. A separate native raw-device holder proves that holder
+diagnostics include root-owned raw handles; it is not treated as an undocumented
+guarantee that macOS must refuse a forced eject.
 
 The shell helper retains a single forced whole-device detach following explicit
 volume release and returns failure if the exact owned device remains present.

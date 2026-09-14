@@ -285,6 +285,8 @@ def test_macos_disk_image_cleanup_retains_exact_device_authority() -> None:
     assert '/usr/bin/hdiutil detach -debug -force "$mounted_device"' in lifecycle
     assert "detach_attempt_limit" not in lifecycle
     assert "/bin/sleep" not in lifecycle
+    assert "/bin/kill" not in lifecycle
+    assert "pkill" not in lifecycle
     assert 'openhcs_cleanup_disk_image "$mounted_device"' in builder
     assert 'openhcs_cleanup_disk_image "$mounted_device"' in integration
     assert 'hdiutil detach "$mount_point"' not in builder
