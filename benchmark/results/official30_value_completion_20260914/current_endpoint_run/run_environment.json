@@ -1,0 +1,49 @@
+{
+  "audit_date": "2026-09-14",
+  "suite_id": "cp_vs_openhcs_20260914_133100_current",
+  "source_base_commit": "7a7d21fee726905b87b9020cebf0bdfc350631f4",
+  "executable_source_diff_sha256": "b597f0477b333551e418b873377c127c1ec217aebf8eb1d6f43a9404b40a388a",
+  "candidate_client": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "python_version": "3.12.3",
+    "openhcs_file": "/home/ts/code/projects/openhcs/openhcs/__init__.py",
+    "openhcs_version": "0.8.5",
+    "numpy_version": "2.1.3",
+    "scipy_version": "1.18.0"
+  },
+  "native_reference_origin": {
+    "suite_id": "cp_vs_openhcs_20260914_122821",
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "numpy_disabled_cpu_features": "AVX512_SKX,X86_V4"
+  },
+  "platform": "Linux-7.1.5-arch1-2-x86_64-with-glibc2.44",
+  "input_revisions": {
+    "cellprofiler_examples": "4972b59e670a4ae96c3d453803c92eeff378d054",
+    "cellprofiler4_benchmark_supplement": "40abc2e600fd46b74c213999dd25c5245048dc92",
+    "cellprofiler_tutorials": "264a8155da21a2d468051f78211bed2e580a8934"
+  },
+  "candidate_execution": {
+    "endpoint_port": 23843,
+    "persistent": false,
+    "endpoint_count": 5,
+    "endpoint_openhcs_versions": [
+      "0.8.5"
+    ],
+    "endpoint_pids": [
+      2505167,
+      2506635,
+      2508157,
+      2509399,
+      2510587
+    ],
+    "first_endpoint_created_at": "2026-09-14T13:21:56-04:00",
+    "per_case_provenance": "observations.jsonl",
+    "retained_endpoint_logs": "endpoint_logs"
+  },
+  "claim_boundary": "Same-day native references were reused; candidates were freshly executed by isolated matching OpenHCS 0.8.5 endpoints."
+}

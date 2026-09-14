@@ -1,0 +1,4 @@
+case_name,assay_category,module_category,n,equivalent_count,median_native_execution_seconds,median_openhcs_execution_seconds,median_native_total_phase_seconds,median_openhcs_total_phase_seconds,median_native_peak_memory_mb,median_openhcs_peak_memory_mb,median_speedup,median_total_phase_speedup,speedup_target,meets_execution_speedup_target,meets_total_phase_speedup_target,meets_speedup_target,min_parity_accuracy
+ExampleIlluminationCorrection_Example1_AllMethod,,,1,0,,,,,,,,,5.0,False,False,False,0.0
+cp_tutorial_advanced_segmentation_final,Cell Painting morphology,Advanced segmentation + measurement,1,1,42.970985390711576,17.615339279174805,59.48925292864442,172.13263022340834,,,2.4394071956089265,0.3456012544015287,5.0,False,False,False,1.0
+cp_tutorial_translocation_final,Translocation assay,Segmentation + classification,1,1,3.652654116973281,1.6636838912963867,5.492319785989821,14.239345713052899,,,2.195521719049065,0.3857143366464606,5.0,False,False,False,1.0

@@ -1,0 +1,3 @@
+case_name,assay_category,module_category,n,equivalent_count,median_native_execution_seconds,median_openhcs_execution_seconds,median_native_total_phase_seconds,median_openhcs_total_phase_seconds,median_native_peak_memory_mb,median_openhcs_peak_memory_mb,median_speedup,median_total_phase_speedup,speedup_target,meets_execution_speedup_target,meets_total_phase_speedup_target,meets_speedup_target,min_parity_accuracy
+ExampleIlluminationCorrection_Example1_AllMethod,,,1,1,,6.851333379745483,,26.92715450609103,,,,,5.0,False,False,False,1.0
+cp_tutorial_translocation_final,Translocation assay,Segmentation + classification,1,1,3.652654116973281,0.905958890914917,5.492319785989821,17.04330926341936,,,4.031810001096749,0.3222566522205975,5.0,False,False,False,1.0

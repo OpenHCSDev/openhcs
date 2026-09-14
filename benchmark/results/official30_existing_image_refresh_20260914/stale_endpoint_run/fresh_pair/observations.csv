@@ -1,0 +1,35 @@
+suite_id,case_name,repetition,dataset_id,assay_category,module_category,equivalent,difference_count,numeric_abs_tolerance,numeric_rel_tolerance,native_execution_seconds,openhcs_execution_seconds,native_total_phase_seconds,openhcs_total_phase_seconds,native_peak_memory_mb,openhcs_peak_memory_mb,speedup,total_phase_speedup,parity_accuracy,native_cached,openhcs_cached,native_error_message,openhcs_error_message,native_output_path,openhcs_output_path
+cp_vs_openhcs_20260914_123020,ExampleIlluminationCorrection_Example1_AllMethod,1,ExampleIlluminationCorrection,,,False,,1e-06,1e-06,,,,,,,,,0.0,False,False,"Traceback (most recent call last):
+  File ""/home/ts/code/projects/openhcs/benchmark/adapters/cellprofiler.py"", line 1123, in run
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File ""/home/ts/.pyenv/versions/3.12.3/lib/python3.12/subprocess.py"", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/ts/.pyenv/versions/3.12.3/lib/python3.12/subprocess.py"", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/ts/.pyenv/versions/3.12.3/lib/python3.12/subprocess.py"", line 2116, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File ""/home/ts/.pyenv/versions/3.12.3/lib/python3.12/subprocess.py"", line 1253, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/cellprofiler', '-c', '-r', '-p', '/home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/CellProfiler_ExampleIlluminationCorrection_ExampleIlluminationCorrection_Example1_AllMethod/native_cellprofiler_headless/ExampleIlluminationCorrection_Example1_AllMethod.cppipe', '-i', '/tmp/openhcs_benchmark_visible_sources/ExampleIlluminationCorrection_c10c4b8359cd/images', '-o', '/home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/CellProfiler_ExampleIlluminationCorrection_ExampleIlluminationCorrection_Example1_AllMethod/images_ExampleIlluminationCorrection_Example1_AllMethod_native_cellprofiler', '--file-list', '/home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/CellProfiler_ExampleIlluminationCorrection_ExampleIlluminationCorrection_Example1_AllMethod/native_cellprofiler_file_list.txt']' timed out after 900.0 seconds
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""/home/ts/code/projects/openhcs/benchmark/cellprofiler_comparison.py"", line 774, in run_comparison_suite
+    result = _run_comparison_case(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/ts/code/projects/openhcs/benchmark/cellprofiler_comparison.py"", line 1125, in _run_comparison_case
+    result = run_cellprofiler_cppipe_parity(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/ts/code/projects/openhcs/benchmark/runner.py"", line 183, in run_cellprofiler_cppipe_parity
+    native_result = native_adapter.run(
+                    ^^^^^^^^^^^^^^^^^^^
+  File ""/home/ts/code/projects/openhcs/benchmark/adapters/cellprofiler.py"", line 1133, in run
+    raise ToolExecutionError(
+benchmark.contracts.tool_adapter.ToolExecutionError: Native CellProfiler execution timed out after 900.0s:
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/cellprofiler -c -r -p /home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/CellProfiler_ExampleIlluminationCorrection_ExampleIlluminationCorrection_Example1_AllMethod/native_cellprofiler_headless/ExampleIlluminationCorrection_Example1_AllMethod.cppipe -i /tmp/openhcs_benchmark_visible_sources/ExampleIlluminationCorrection_c10c4b8359cd/images -o /home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/CellProfiler_ExampleIlluminationCorrection_ExampleIlluminationCorrection_Example1_AllMethod/images_ExampleIlluminationCorrection_Example1_AllMethod_native_cellprofiler --file-list /home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/CellProfiler_ExampleIlluminationCorrection_ExampleIlluminationCorrection_Example1_AllMethod/native_cellprofiler_file_list.txt",skipped after benchmark case failure,,
+cp_vs_openhcs_20260914_123020,cp_tutorial_advanced_segmentation_final,1,CellProfiler_tutorials,Cell Painting morphology,Advanced segmentation + measurement,True,0,1e-06,1e-06,42.970985390711576,17.615339279174805,59.48925292864442,172.13263022340834,,,2.4394071956089265,0.3456012544015287,1.0,False,False,,,/home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/CellProfiler_CellProfiler_tutorials_cp_tutorial_advanced_segmentation_final/BBBC022_20585_AE_cp_tutorial_advanced_segmentation_final_native_cellprofiler,/home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/OpenHCS_CellProfiler_tutorials_cp_tutorial_advanced_segmentation_final/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_cp_tutorial_advanced_segmentation_final_converted_cppipe
+cp_vs_openhcs_20260914_123020,cp_tutorial_translocation_final,1,CellProfiler_tutorials,Translocation assay,Segmentation + classification,True,0,1e-06,1e-06,3.652654116973281,1.6636838912963867,5.492319785989821,14.239345713052899,,,2.195521719049065,0.3857143366464606,1.0,False,False,,,/home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/CellProfiler_CellProfiler_tutorials_cp_tutorial_translocation_final/TranslocationData_cp_tutorial_translocation_final_native_cellprofiler,/home/ts/code/projects/openhcs/.benchmark-run-three-verified-LdvSyA/tool_outputs/OpenHCS_CellProfiler_tutorials_cp_tutorial_translocation_final/TranslocationData_Translocation_final_source_workspace_cp_tutorial_translocation_final_converted_cppipe

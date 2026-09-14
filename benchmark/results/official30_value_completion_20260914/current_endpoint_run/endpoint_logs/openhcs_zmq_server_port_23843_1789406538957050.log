@@ -1,0 +1,5 @@
+/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/skimage/filters/rank/generic.py:332: UserWarning: Bad rank filter performance is expected due to a large number of bins (9216), equivalent to an approximate bitdepth of 13.2.
+  image, footprint, out, mask, n_bins = _preprocess_input(
+2026-09-14 13:22:34,525 - openhcs.core.pipeline.compiler - WARNING - CompilationDebugConfig enabled but no compiled_execution_bundle_path was set.
+/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/skimage/filters/rank/generic.py:332: UserWarning: Bad rank filter performance is expected due to a large number of bins (1283), equivalent to an approximate bitdepth of 10.3.
+  image, footprint, out, mask, n_bins = _preprocess_input(
