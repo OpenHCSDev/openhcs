@@ -194,7 +194,12 @@ equivalent after the shrink correction. The remaining nonterminal
 `PolynomialCorrected`, the downstream consumed image, had zero pixels outside
 `1e-6` and maximum absolute difference `2.9802322387695312e-08`. It is therefore
 recorded as a masked-domain representation difference, not a terminal parity
-failure. Focused tests cover merge conflict assignment, nested labeled-hole
+failure. Its pipeline, exact native and candidate files, decoded-pixel receipt,
+endpoint log, and explicit dirty-source limitation are retained under
+[`example3_intermediate_diagnostic`](../../benchmark/results/official30_value_completion_20260914/example3_intermediate_diagnostic/).
+This diagnostic localizes the difference; the terminal claim comes only from
+the exact-commit final suite. Focused tests cover merge conflict assignment,
+nested labeled-hole
 filling, finite-iteration topology-preserving shrink, binned-mode selection,
 uint16 rendering, exact export inventories, sidecar digest validation, and the
 categorical single-plane contract.

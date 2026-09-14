@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "cellprofiler_timeout_seconds": 900.0,
+      "cppipe_path": "ExampleIlluminationCorrection_Example3.cppipe",
+      "cppipe_path_root": "reference_export_pipelines",
+      "dataset_id": "ExampleIlluminationCorrection",
+      "dataset_path": "ExampleIlluminationCorrection/images",
+      "dataset_path_root": "cellprofiler_examples",
+      "name": "ExampleIlluminationCorrection_Example3",
+      "value_only": false
+    }
+  ],
+  "default_well_filter": 1,
+  "description": "Ephemeral Example3 intermediate diagnostic; not manuscript evidence.",
+  "manifest_version": 2,
+  "path_roots": {
+    "cellprofiler_examples": {
+      "acquisition": {
+        "git_ref": "4972b59e670a4ae96c3d453803c92eeff378d054",
+        "git_url": "https://github.com/CellProfiler/examples.git",
+        "kind": "git_sparse",
+        "sparse_paths": [
+          "ExampleIlluminationCorrection"
+        ]
+      },
+      "default_kind": "cellprofiler_examples",
+      "env": "CELLPROFILER_EXAMPLES_ROOT"
+    },
+    "dataset_cache": {
+      "acquisition": {
+        "dataset_ids": [
+          "CellProfiler_tutorials",
+          "CellProfiler4_benchmark_supplement"
+        ],
+        "kind": "dataset_registry"
+      },
+      "default_kind": "benchmark_dataset_cache",
+      "env": "OPENHCS_BENCHMARK_DATASET_CACHE_ROOT"
+    },
+    "reference_export_pipelines": {
+      "default": "/home/ts/code/projects/openhcs/.benchmark-debug-example3-UtGYf8/pipelines",
+      "env": "OPENHCS_REFERENCE_EXPORT_PIPELINES_ROOT"
+    }
+  }
+}

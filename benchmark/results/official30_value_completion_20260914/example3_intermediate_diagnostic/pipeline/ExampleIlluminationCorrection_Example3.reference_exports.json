@@ -1,0 +1,76 @@
+{
+  "artifacts": [
+    {
+      "artifact_name": "Well",
+      "artifact_type": "ObjectLabelsArtifactType",
+      "comparison": "integer label pixels: exact equality",
+      "output_filename": "reference_labels__Well.tiff",
+      "semantic_kind": "categorical_object_labels"
+    },
+    {
+      "artifact_name": "ShrunkenWell",
+      "artifact_type": "ObjectLabelsArtifactType",
+      "comparison": "integer label pixels: exact equality",
+      "output_filename": "reference_labels__ShrunkenWell.tiff",
+      "semantic_kind": "categorical_object_labels"
+    },
+    {
+      "artifact_name": "InvertedWorms",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__InvertedWorms.npy",
+      "semantic_kind": "numeric_image_pixels"
+    },
+    {
+      "artifact_name": "MaskedInvertedWorms",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__MaskedInvertedWorms.npy",
+      "semantic_kind": "numeric_image_pixels"
+    },
+    {
+      "artifact_name": "PolynomialIllum",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__PolynomialIllum.npy",
+      "semantic_kind": "numeric_image_pixels"
+    },
+    {
+      "artifact_name": "PolynomialCorrected",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__PolynomialCorrected.npy",
+      "semantic_kind": "numeric_image_pixels"
+    },
+    {
+      "artifact_name": "MaskedOrigWorms",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__MaskedOrigWorms.npy",
+      "semantic_kind": "numeric_image_pixels"
+    },
+    {
+      "artifact_name": "ConvexHullIllumWorm",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__ConvexHullIllumWorm.npy",
+      "semantic_kind": "numeric_image_pixels"
+    },
+    {
+      "artifact_name": "ConvexHullCorrWorm",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__ConvexHullCorrWorm.npy",
+      "semantic_kind": "numeric_image_pixels"
+    }
+  ],
+  "derivation": "append_declaration_derived_terminal_artifact_exports",
+  "generated_sha256": "8e93c5dca4aa4abd722b69c036e05c4ccd1c337e386e3cc7716def363d9df792",
+  "provenance": {
+    "audit_date": "2026-09-14",
+    "purpose": "diagnostic_first_divergence"
+  },
+  "schema_version": 1,
+  "source_pipeline_name": "ExampleIlluminationCorrection_Example3.cppipe",
+  "source_sha256": "12fc66d146716adb3c2a4dcaaa14609288b9184216bb54372b6a2f16d75bdbbe"
+}

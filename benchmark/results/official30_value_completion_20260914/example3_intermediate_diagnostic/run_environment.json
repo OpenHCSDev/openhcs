@@ -1,0 +1,33 @@
+{
+  "audit_date": "2026-09-14",
+  "suite_id": "example3_intermediate_after_shrink_fix_20260914",
+  "candidate_source_boundary": "Diagnostic-only dirty working tree based on 7a7d21fee; the exact pre-format diff is not retained. This receipt localizes the Example3 difference but is not the final terminal-parity claim.",
+  "candidate_client": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "openhcs_file": "/home/ts/code/projects/openhcs/openhcs/__init__.py",
+    "openhcs_version": "0.8.5"
+  },
+  "candidate_execution": {
+    "endpoint_port": 23848,
+    "persistent": false,
+    "endpoint_pid": 2622183,
+    "endpoint_created_at": "2026-09-14T13:56:55-04:00",
+    "endpoint_openhcs_version": "0.8.5",
+    "per_case_provenance": "observations.jsonl",
+    "retained_endpoint_logs": "endpoint_logs"
+  },
+  "native_execution": {
+    "cellprofiler_version": "4.2.8.1",
+    "numpy_disabled_cpu_features": "AVX512_SKX,X86_V4",
+    "selected_well": "A01",
+    "image_output_count": 9,
+    "provenance": "native_outputs/.cellprofiler_benchmark_reference.json"
+  },
+  "retained_artifacts": {
+    "declared_comparisons": "artifact_comparisons.csv",
+    "native_outputs": "native_outputs",
+    "candidate_outputs": "candidate_outputs",
+    "derived_pipeline_and_sidecar": "pipeline"
+  },
+  "claim_boundary": "Eight of nine diagnostic intermediates were equivalent. PolynomialIllum differed in the masked-out domain while the consumed downstream PolynomialCorrected output passed. Final terminal parity is established separately by exact-commit suite cp_vs_openhcs_20260914_adfbdc533."
+}
