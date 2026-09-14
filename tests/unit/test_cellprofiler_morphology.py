@@ -125,6 +125,21 @@ def test_shrink_defined_pixels_uses_topology_preserving_iterations() -> None:
     np.testing.assert_array_equal(shrunken, expected)
 
 
+def test_shrink_defined_pixels_matches_cellprofiler_at_touching_labels() -> None:
+    from centrosome.cpmorphology import binary_shrink
+
+    labels = np.zeros((9, 9), dtype=np.int32)
+    labels[1:8, 1:4] = 1
+    labels[1:8, 4:8] = 2
+
+    shrunken = ExpandShrinkOperationStrategy.for_mode(
+        ExpandShrinkMode.SHRINK_DEFINED_PIXELS
+    ).apply(labels, iterations=1, fill_holes=False)
+
+    expected = np.asarray(binary_shrink(labels, iterations=1), dtype=np.int32)
+    np.testing.assert_array_equal(shrunken, expected)
+
+
 def test_fill_labeled_holes_fills_enclosed_background_only() -> None:
     labels = np.zeros((5, 7), dtype=np.int32)
     labels[1:4, 1:4] = 4

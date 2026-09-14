@@ -4482,12 +4482,12 @@ def _first_adjacent_foreground_label_numba(labels: np.ndarray, y: int, x: int):
 
 @njit(cache=True)
 def _binary_shrink_2d_numba(
-    mask: np.ndarray,
+    image: np.ndarray,
     tables: np.ndarray,
     maximum_iterations: int,
 ) -> np.ndarray:
-    height, width = mask.shape
-    current = np.zeros((height + 2, width + 2), dtype=np.bool_)
+    height, width = image.shape
+    current = np.zeros((height + 2, width + 2), dtype=image.dtype)
     capacity = height * width
     coords_y = np.empty(capacity, dtype=np.int64)
     coords_x = np.empty(capacity, dtype=np.int64)
@@ -4496,11 +4496,11 @@ def _binary_shrink_2d_numba(
     count = 0
     for y in range(height):
         for x in range(width):
-            if not mask[y, x]:
+            if image[y, x] == 0:
                 continue
             padded_y = y + 1
             padded_x = x + 1
-            current[padded_y, padded_x] = True
+            current[padded_y, padded_x] = image[y, x]
             coords_y[count] = padded_y
             coords_x[count] = padded_x
             count += 1
@@ -4516,11 +4516,12 @@ def _binary_shrink_2d_numba(
                 x = coords_x[coord_index]
                 if not current[y, x]:
                     continue
+                center_value = current[y, x]
                 pattern_index = 0
                 bit = 1
                 for dy in range(-1, 2):
                     for dx in range(-1, 2):
-                        if current[y + dy, x + dx]:
+                        if current[y + dy, x + dx] == center_value:
                             pattern_index += bit
                         bit <<= 1
                 if table[pattern_index]:
@@ -4532,13 +4533,15 @@ def _binary_shrink_2d_numba(
                     removed_x[removed_count] = x
                     removed_count += 1
             for removed_index in range(removed_count):
-                current[removed_y[removed_index], removed_x[removed_index]] = False
+                current[removed_y[removed_index], removed_x[removed_index]] = 0
             count = new_count
         if count == pixel_count:
             break
-    output = np.zeros((height, width), dtype=np.bool_)
+    output = np.zeros((height, width), dtype=image.dtype)
     for coord_index in range(count):
-        output[coords_y[coord_index] - 1, coords_x[coord_index] - 1] = True
+        y = coords_y[coord_index]
+        x = coords_x[coord_index]
+        output[y - 1, x - 1] = current[y, x]
     return output
 
 
@@ -4898,12 +4901,12 @@ def _shrink_defined_pixels(
             original, lambda plane: _shrink_defined_pixels(plane, iterations, fill)
         )
     working = _cellprofiler_fill_labeled_holes_2d(original) if fill else original
-    survivor_mask = _binary_shrink_2d_numba(
-        np.ascontiguousarray(working != 0),
+    shrunken = _binary_shrink_2d_numba(
+        np.ascontiguousarray(working),
         _binary_shrink_table_stack(),
         int(iterations),
     )
-    return np.where(survivor_mask, working, 0).astype(np.int32, copy=False)
+    return shrunken.astype(np.int32, copy=False)
 
 
 def _restore_eroded_objects_to_centroids(
