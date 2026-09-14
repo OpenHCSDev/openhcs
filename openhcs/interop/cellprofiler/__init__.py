@@ -20,7 +20,10 @@ from openhcs.interop.cellprofiler.measurement_lookup import (
     child_count_feature_child_name,
     count_feature_object_name,
 )
-from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
+from openhcs.interop.cellprofiler.pipeline_import import (
+    cellprofiler_terminal_artifact_specs,
+    import_cellprofiler_pipeline,
+)
 from openhcs.interop.cellprofiler.parser import (
     CPPipeParser,
     ModuleBlock,
@@ -55,7 +58,9 @@ from openhcs.interop.cellprofiler.measurement_scope import (
 
 # Importing the interop boundary registers the compiler provider for the
 # declaration-owned CellProfiler callables exposed by the processing package.
-from openhcs.interop.cellprofiler import compile_time_contracts as _compile_time_contracts
+from openhcs.interop.cellprofiler import (
+    compile_time_contracts as _compile_time_contracts,
+)
 
 __all__ = exported_public_names(
     globals(),

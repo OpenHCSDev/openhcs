@@ -90,6 +90,14 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
         )
         parser.add_argument("--native-reference-root", type=Path)
         parser.add_argument(
+            "--openhcs-execution-port",
+            type=int,
+            help=(
+                "Execution endpoint port. Use an unused port to require a fresh "
+                "benchmark-owned server; endpoint application versions must match."
+            ),
+        )
+        parser.add_argument(
             "--require-native-reference",
             action="store_true",
             help=(
@@ -150,6 +158,7 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
             speedup_target=args.speedup_target,
             native_reference_root=args.native_reference_root,
             require_native_reference=args.require_native_reference,
+            openhcs_execution_port=args.openhcs_execution_port,
             discard_openhcs_outputs=args.discard_openhcs_outputs,
             continue_on_error=args.continue_on_error,
             metric_policy=ComparisonMetricPolicy(

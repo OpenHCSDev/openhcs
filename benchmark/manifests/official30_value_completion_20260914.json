@@ -1,0 +1,92 @@
+{
+  "manifest_version": 2,
+  "description": "Dated five-case extension of the Official30 protocol. Each generated pipeline preserves its pinned source modules and appends only declaration-derived terminal image or object-label exports. This manifest does not alter the historical Official30 cache or summary.",
+  "default_well_filter": 1,
+  "cases": [
+    {
+      "cellprofiler_timeout_seconds": 900.0,
+      "cppipe_path": "ExampleIlluminationCorrection_Example1_EachMethod.cppipe",
+      "cppipe_path_root": "reference_export_pipelines",
+      "dataset_id": "ExampleIlluminationCorrection",
+      "dataset_path": "ExampleIlluminationCorrection/images",
+      "dataset_path_root": "cellprofiler_examples",
+      "name": "ExampleIlluminationCorrection_Example1_EachMethod",
+      "value_only": false
+    },
+    {
+      "cellprofiler_timeout_seconds": 900.0,
+      "cppipe_path": "ExampleIlluminationCorrection_Example2.cppipe",
+      "cppipe_path_root": "reference_export_pipelines",
+      "dataset_id": "ExampleIlluminationCorrection",
+      "dataset_path": "ExampleIlluminationCorrection/images",
+      "dataset_path_root": "cellprofiler_examples",
+      "name": "ExampleIlluminationCorrection_Example2",
+      "value_only": false
+    },
+    {
+      "cellprofiler_timeout_seconds": 900.0,
+      "cppipe_path": "ExampleIlluminationCorrection_Example3.cppipe",
+      "cppipe_path_root": "reference_export_pipelines",
+      "dataset_id": "ExampleIlluminationCorrection",
+      "dataset_path": "ExampleIlluminationCorrection/images",
+      "dataset_path_root": "cellprofiler_examples",
+      "name": "ExampleIlluminationCorrection_Example3",
+      "value_only": false
+    },
+    {
+      "assay_category": "Object-combination benchmark",
+      "cellprofiler_timeout_seconds": 900.0,
+      "cppipe_path": "cp4_supplement_combine_objects.cppipe",
+      "cppipe_path_root": "reference_export_pipelines",
+      "dataset_id": "CellProfiler4_benchmark_supplement",
+      "dataset_path": "CellProfiler4_benchmark_supplement/data/CombineObjects",
+      "dataset_path_root": "dataset_cache",
+      "microscope_type": "cellprofiler4_benchmark",
+      "module_category": "Object set algebra",
+      "name": "cp4_supplement_combine_objects",
+      "value_only": false
+    },
+    {
+      "assay_category": "Translocation assay",
+      "cellprofiler_timeout_seconds": 300.0,
+      "cppipe_path": "cp_tutorial_translocation_start.cppipe",
+      "cppipe_path_root": "reference_export_pipelines",
+      "dataset_id": "CellProfiler_tutorials",
+      "dataset_path": "CellProfiler_tutorials/data/Translocation/TranslocationData",
+      "dataset_path_root": "dataset_cache",
+      "microscope_type": "cellprofiler_tutorials",
+      "module_category": "Starter nuclei segmentation",
+      "name": "cp_tutorial_translocation_start",
+      "value_only": false
+    }
+  ],
+  "path_roots": {
+    "cellprofiler_examples": {
+      "acquisition": {
+        "git_ref": "4972b59e670a4ae96c3d453803c92eeff378d054",
+        "git_url": "https://github.com/CellProfiler/examples.git",
+        "kind": "git_sparse",
+        "sparse_paths": [
+          "ExampleIlluminationCorrection"
+        ]
+      },
+      "default_kind": "cellprofiler_examples",
+      "env": "CELLPROFILER_EXAMPLES_ROOT"
+    },
+    "dataset_cache": {
+      "acquisition": {
+        "dataset_ids": [
+          "CellProfiler_tutorials",
+          "CellProfiler4_benchmark_supplement"
+        ],
+        "kind": "dataset_registry"
+      },
+      "default_kind": "benchmark_dataset_cache",
+      "env": "OPENHCS_BENCHMARK_DATASET_CACHE_ROOT"
+    },
+    "reference_export_pipelines": {
+      "default": "benchmark/reference_exports/official30_value_completion_20260914",
+      "env": "OPENHCS_REFERENCE_EXPORT_PIPELINES_ROOT"
+    }
+  }
+}

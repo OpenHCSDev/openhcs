@@ -646,7 +646,7 @@ def test_convert_objects_to_image_uint16_preserves_integer_object_ids() -> None:
         labels,
         image_mode=ImageMode.UINT16,
     )
-    assert converted.dtype == np.int32
+    assert converted.dtype == np.uint16
     np.testing.assert_array_equal(converted, labels)
 
 

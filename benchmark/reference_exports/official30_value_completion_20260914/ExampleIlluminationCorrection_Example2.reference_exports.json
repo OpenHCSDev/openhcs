@@ -1,0 +1,35 @@
+{
+  "artifacts": [
+    {
+      "artifact_name": "UncorrectedNuclei",
+      "artifact_type": "ObjectLabelsArtifactType",
+      "comparison": "integer label pixels: exact equality",
+      "output_filename": "reference_labels__UncorrectedNuclei.tiff",
+      "semantic_kind": "categorical_object_labels"
+    },
+    {
+      "artifact_name": "SmallBlockCorrectedNuclei",
+      "artifact_type": "ObjectLabelsArtifactType",
+      "comparison": "integer label pixels: exact equality",
+      "output_filename": "reference_labels__SmallBlockCorrectedNuclei.tiff",
+      "semantic_kind": "categorical_object_labels"
+    },
+    {
+      "artifact_name": "LargeBlockCorrectedNuclei",
+      "artifact_type": "ObjectLabelsArtifactType",
+      "comparison": "integer label pixels: exact equality",
+      "output_filename": "reference_labels__LargeBlockCorrectedNuclei.tiff",
+      "semantic_kind": "categorical_object_labels"
+    }
+  ],
+  "derivation": "append_declaration_derived_terminal_artifact_exports",
+  "generated_sha256": "fa2966b0cd36932e1fa5a853e3a5f4d272173f20c97b81636cdfeb31d79419a2",
+  "provenance": {
+    "dataset_id": "ExampleIlluminationCorrection",
+    "source_case_name": "ExampleIlluminationCorrection_Example2",
+    "source_manifest": "benchmark/manifests/official30_portable_axis1.json"
+  },
+  "schema_version": 1,
+  "source_pipeline_name": "ExampleIlluminationCorrection_Example2.cppipe",
+  "source_sha256": "b119263dd46e77c92bd15911d52a39c7b29f763b4a0787bbd463ada215ce61be"
+}

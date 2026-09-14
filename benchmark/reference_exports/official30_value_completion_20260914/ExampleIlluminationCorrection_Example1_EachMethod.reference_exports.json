@@ -1,0 +1,21 @@
+{
+  "artifacts": [
+    {
+      "artifact_name": "CorrGreen",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__CorrGreen.npy",
+      "semantic_kind": "numeric_image_pixels"
+    }
+  ],
+  "derivation": "append_declaration_derived_terminal_artifact_exports",
+  "generated_sha256": "3879f7d442034a3603f4dabe44ba4a542d831156494fff0d4e37b64cbf2161ad",
+  "provenance": {
+    "dataset_id": "ExampleIlluminationCorrection",
+    "source_case_name": "ExampleIlluminationCorrection_Example1_EachMethod",
+    "source_manifest": "benchmark/manifests/official30_portable_axis1.json"
+  },
+  "schema_version": 1,
+  "source_pipeline_name": "ExampleIlluminationCorrection_Example1_EachMethod.cppipe",
+  "source_sha256": "f89905419591d34b2e454b33037b1d18e78d7d09b17d6c742abead9550d3655f"
+}

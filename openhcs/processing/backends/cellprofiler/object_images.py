@@ -158,7 +158,14 @@ class Uint16ImageModeRenderer(ImageModeRenderer):
 
     def render(self, labels: np.ndarray, *, colormap_value: str) -> np.ndarray:
         del colormap_value
-        return labels.astype(np.int32, copy=False)
+        minimum = int(labels.min(initial=0))
+        maximum = int(labels.max(initial=0))
+        if minimum < 0 or maximum > np.iinfo(np.uint16).max:
+            raise ValueError(
+                "ConvertObjectsToImage uint16 labels must be in the inclusive "
+                f"range 0..65535, got {minimum}..{maximum}."
+            )
+        return labels.astype(np.uint16, copy=False)
 
 
 def object_label_colormap(colormap_name: str, num_labels: int) -> np.ndarray:

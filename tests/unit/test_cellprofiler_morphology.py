@@ -21,6 +21,8 @@ from openhcs.processing.backends.cellprofiler.morphology import (
     CellProfilerDeclumpMethod,
     CombineObjectsMethod,
     CombineObjectsStrategy,
+    ExpandShrinkMode,
+    ExpandShrinkOperationStrategy,
     MorphologyBackendStrategy,
     NumbaNumpyMorphologyBackendStrategy,
     NumpyMorphologyBackendStrategy,
@@ -32,6 +34,7 @@ from openhcs.processing.backends.cellprofiler.morphology import (
 from openhcs.processing.backends.cellprofiler.relationships import (
     ObjectRelationshipBackendStrategy,
 )
+from openhcs.processing.backends.cellprofiler.thresholding import threshold_primitives
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
 MORPHOLOGY = MorphologyBackendStrategy.for_memory_type(MemoryType.NUMPY)
@@ -82,6 +85,46 @@ def test_combine_objects_strategies_are_registered_by_enum_value() -> None:
     } == expected
 
 
+def test_combine_objects_merge_partitions_bridge_by_nearest_initial_object() -> None:
+    initial = np.zeros((5, 9), dtype=np.int32)
+    initial[1:4, 1:3] = 1
+    initial[1:4, 6:8] = 2
+    incoming = np.zeros_like(initial)
+    incoming[2, 2:7] = 1
+
+    combined = CombineObjectsStrategy.for_method(CombineObjectsMethod.MERGE).combine(
+        initial, incoming
+    )
+
+    assert set(np.unique(combined)) == {0, 1, 2}
+    assert combined[2, 3] == combined[2, 2]
+    assert combined[2, 5] == combined[2, 6]
+    assert combined[2, 2] != combined[2, 6]
+    np.testing.assert_array_equal(initial[1:4, 1:3], np.ones((3, 2), dtype=np.int32))
+    np.testing.assert_array_equal(incoming[2, 2:7], np.ones(5, dtype=np.int32))
+
+
+def test_cellprofiler_binned_mode_returns_selected_sample_percentile() -> None:
+    values = np.asarray([0, 0, 0, 0, 0, 10, 10], dtype=np.float64)
+
+    mode = threshold_primitives().binned_mode(values)
+
+    assert mode == 0.0
+
+
+def test_shrink_defined_pixels_uses_topology_preserving_iterations() -> None:
+    labels = np.zeros((9, 9), dtype=np.int32)
+    labels[1:8, 1:8] = 3
+
+    shrunken = ExpandShrinkOperationStrategy.for_mode(
+        ExpandShrinkMode.SHRINK_DEFINED_PIXELS
+    ).apply(labels, iterations=2, fill_holes=False)
+
+    expected = np.zeros_like(labels)
+    expected[3:6, 3:6] = 3
+    np.testing.assert_array_equal(shrunken, expected)
+
+
 def test_fill_labeled_holes_fills_enclosed_background_only() -> None:
     labels = np.zeros((5, 7), dtype=np.int32)
     labels[1:4, 1:4] = 4
@@ -93,6 +136,15 @@ def test_fill_labeled_holes_fills_enclosed_background_only() -> None:
     assert filled[2, 2] == 4
     np.testing.assert_array_equal(filled[:, 0], labels[:, 0])
     np.testing.assert_array_equal(filled[:, 6], labels[:, 6])
+
+
+def test_fill_labeled_holes_absorbs_nested_foreground_object() -> None:
+    labels = np.ones((5, 5), dtype=np.int32)
+    labels[2, 2] = 2
+
+    filled = MORPHOLOGY.fill_labeled_holes(labels)
+
+    np.testing.assert_array_equal(filled, np.ones((5, 5), dtype=np.int32))
 
 
 def test_fill_labeled_holes_honors_size_predicate() -> None:

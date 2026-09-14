@@ -1,0 +1,67 @@
+{
+  "manifest_version": 2,
+  "description": "Dated three-case refresh of the Official30 workflows that retained native image outputs. Value-only pruning is disabled so newly executed native CellProfiler and OpenHCS image pixels are compared.",
+  "default_well_filter": 1,
+  "cases": [
+    {
+      "cellprofiler_timeout_seconds": 900.0,
+      "cppipe_path": "ExampleIlluminationCorrection/ExampleIlluminationCorrection_Example1_AllMethod.cppipe",
+      "cppipe_path_root": "cellprofiler_examples",
+      "dataset_id": "ExampleIlluminationCorrection",
+      "dataset_path": "ExampleIlluminationCorrection/images",
+      "dataset_path_root": "cellprofiler_examples",
+      "name": "ExampleIlluminationCorrection_Example1_AllMethod",
+      "value_only": false
+    },
+    {
+      "assay_category": "Cell Painting morphology",
+      "cellprofiler_timeout_seconds": 900.0,
+      "cppipe_path": "CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_Analysis_Final.cppipe",
+      "cppipe_path_root": "dataset_cache",
+      "dataset_id": "CellProfiler_tutorials",
+      "dataset_path": "CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE",
+      "dataset_path_root": "dataset_cache",
+      "microscope_type": "cellprofiler_tutorials",
+      "module_category": "Advanced segmentation + measurement",
+      "name": "cp_tutorial_advanced_segmentation_final",
+      "value_only": false
+    },
+    {
+      "assay_category": "Translocation assay",
+      "cellprofiler_timeout_seconds": 900.0,
+      "cppipe_path": "CellProfiler_tutorials/data/Translocation/Translocation_final.cppipe",
+      "cppipe_path_root": "dataset_cache",
+      "dataset_id": "CellProfiler_tutorials",
+      "dataset_path": "CellProfiler_tutorials/data/Translocation/TranslocationData",
+      "dataset_path_root": "dataset_cache",
+      "microscope_type": "cellprofiler_tutorials",
+      "module_category": "Segmentation + classification",
+      "name": "cp_tutorial_translocation_final",
+      "value_only": false
+    }
+  ],
+  "path_roots": {
+    "cellprofiler_examples": {
+      "acquisition": {
+        "git_ref": "4972b59e670a4ae96c3d453803c92eeff378d054",
+        "git_url": "https://github.com/CellProfiler/examples.git",
+        "kind": "git_sparse",
+        "sparse_paths": [
+          "ExampleIlluminationCorrection"
+        ]
+      },
+      "default_kind": "cellprofiler_examples",
+      "env": "CELLPROFILER_EXAMPLES_ROOT"
+    },
+    "dataset_cache": {
+      "acquisition": {
+        "dataset_ids": [
+          "CellProfiler_tutorials"
+        ],
+        "kind": "dataset_registry"
+      },
+      "default_kind": "benchmark_dataset_cache",
+      "env": "OPENHCS_BENCHMARK_DATASET_CACHE_ROOT"
+    }
+  }
+}

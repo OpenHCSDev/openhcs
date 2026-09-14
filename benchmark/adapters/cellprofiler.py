@@ -1371,13 +1371,17 @@ def _primary_workspace_wells(
     workspace: SourceBindingWorkspaceMaterialization,
 ) -> tuple[str, ...]:
     parser = SourceSchemaFilenameParser()
+    workspace_paths = (
+        *workspace.plane_mappings,
+        *workspace.artifact_mappings,
+    )
     return tuple(
         dict.fromkeys(
             NativeCellProfilerSelectedSourceUniverse._virtual_path_well(
                 parser,
                 virtual_path,
             )
-            for virtual_path in workspace.plane_mappings
+            for virtual_path in workspace_paths
         )
     )
 

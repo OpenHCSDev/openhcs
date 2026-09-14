@@ -19,16 +19,40 @@ def _binned_mode_numba(values: np.ndarray) -> float:
     bin_count = int(math.ceil(math.sqrt(float(values.size))))
     if bin_count < 2:
         bin_count = 2
-    counts = _histogram_counts_numba(values, bin_count, minimum, maximum)
+    # CellProfiler bins values into indices 0..bin_count (the maximum maps to
+    # the extra endpoint bin), selects the most populated bin, and returns the
+    # corresponding sample percentile. Returning the geometric bin center is
+    # not equivalent for quantized microscopy images.
+    counts = np.zeros(bin_count + 1, dtype=np.int64)
+    scale = float(bin_count) / (maximum - minimum)
+    for index in range(values.size):
+        bin_index = int((values[index] - minimum) * scale)
+        if bin_index < 0:
+            bin_index = 0
+        elif bin_index > bin_count:
+            bin_index = bin_count
+        counts[bin_index] += 1
 
     best_index = 0
     best_count = counts[0]
-    for index in range(1, bin_count):
+    for index in range(1, counts.size):
         if counts[index] > best_count:
             best_index = index
             best_count = counts[index]
-    return minimum + (float(best_index) + 0.5) * (maximum - minimum) / bin_count
-
+    quantile = (float(best_index) + 0.5) / float(bin_count)
+    if quantile > 1.0:
+        raise ValueError("Binned-mode percentile exceeds the sample domain.")
+    sorted_values = np.sort(values.copy())
+    rank = quantile * float(sorted_values.size - 1)
+    lower_index = int(math.floor(rank))
+    upper_index = int(math.ceil(rank))
+    if lower_index == upper_index:
+        return float(sorted_values[lower_index])
+    fraction = rank - float(lower_index)
+    return float(
+        sorted_values[lower_index]
+        + fraction * (sorted_values[upper_index] - sorted_values[lower_index])
+    )
 
 
 @njit(cache=True)
@@ -99,21 +123,17 @@ def _otsu_threshold_numba(values: np.ndarray, bin_count: int) -> float:
         if background_count <= 0 or foreground_count <= 0:
             continue
         background_mean = background_weighted / float(background_count)
-        foreground_mean = (
-            total_weighted - background_weighted
-        ) / float(foreground_count)
+        foreground_mean = (total_weighted - background_weighted) / float(
+            foreground_count
+        )
         mean_delta = background_mean - foreground_mean
         variance = (
-            float(background_count)
-            * float(foreground_count)
-            * mean_delta
-            * mean_delta
+            float(background_count) * float(foreground_count) * mean_delta * mean_delta
         )
         if variance > best_variance:
             best_variance = variance
             best_index = index
     return minimum + (float(best_index) + 0.5) * width
-
 
 
 @njit(cache=True)
@@ -168,12 +188,10 @@ def _triangle_threshold_numba(values: np.ndarray, bin_count: int) -> float:
         threshold_index = first
         max_distance = -1.0
         for index in range(first, last + 1):
-            distance = abs(
-                dy * float(index)
-                - dx * float(counts[index])
-                + x2 * y1
-                - y2 * x1
-            ) / normalizer
+            distance = (
+                abs(dy * float(index) - dx * float(counts[index]) + x2 * y1 - y2 * x1)
+                / normalizer
+            )
             if distance > max_distance:
                 max_distance = distance
                 threshold_index = index
@@ -270,9 +288,7 @@ def _yen_threshold_numba(values: np.ndarray, bin_count: int) -> float:
         probability_product = foreground_probability * background_probability
         if square_product <= 0.0 or probability_product <= 0.0:
             continue
-        criterion = -math.log(square_product) + 2.0 * math.log(
-            probability_product
-        )
+        criterion = -math.log(square_product) + 2.0 * math.log(probability_product)
         if criterion > best_criterion:
             best_criterion = criterion
             best_index = index
@@ -371,20 +387,16 @@ def _multiotsu_three_class_thresholds_numba(
     for index in range(bin_count):
         if counts[index] > 0:
             if nonzero_count < 2:
-                thresholds[nonzero_count] = (
-                    minimum
-                    + (float(index) + 0.5) * (maximum - minimum) / float(bin_count)
-                )
+                thresholds[nonzero_count] = minimum + (float(index) + 0.5) * (
+                    maximum - minimum
+                ) / float(bin_count)
             last_nonzero = index
             nonzero_count += 1
     if nonzero_count < 3:
         if nonzero_count == 2:
-            thresholds[1] = (
-                minimum
-                + (float(last_nonzero) + 0.5)
-                * (maximum - minimum)
-                / float(bin_count)
-            )
+            thresholds[1] = minimum + (float(last_nonzero) + 0.5) * (
+                maximum - minimum
+            ) / float(bin_count)
         return thresholds
     if nonzero_count == 3:
         return thresholds
@@ -460,8 +472,7 @@ def _multiotsu_interval_score_numba(
             cumulative_probability[last] - cumulative_probability[first - 1]
         )
         weighted_index = np.float32(
-            cumulative_weighted_index[last]
-            - cumulative_weighted_index[first - 1]
+            cumulative_weighted_index[last] - cumulative_weighted_index[first - 1]
         )
     if probability <= np.float32(0.0):
         return np.float32(0.0)

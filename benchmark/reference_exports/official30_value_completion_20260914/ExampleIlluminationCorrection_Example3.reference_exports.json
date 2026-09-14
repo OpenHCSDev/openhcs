@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    {
+      "artifact_name": "PolynomialCorrected",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__PolynomialCorrected.npy",
+      "semantic_kind": "numeric_image_pixels"
+    },
+    {
+      "artifact_name": "ConvexHullCorrWorm",
+      "artifact_type": "ImageArtifactType",
+      "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches",
+      "output_filename": "reference_image__ConvexHullCorrWorm.npy",
+      "semantic_kind": "numeric_image_pixels"
+    }
+  ],
+  "derivation": "append_declaration_derived_terminal_artifact_exports",
+  "generated_sha256": "f7ec9eb561730cc567986e6a50504a69f23a3ca78a1a033faba0b2fea52759fb",
+  "provenance": {
+    "dataset_id": "ExampleIlluminationCorrection",
+    "source_case_name": "ExampleIlluminationCorrection_Example3",
+    "source_manifest": "benchmark/manifests/official30_portable_axis1.json"
+  },
+  "schema_version": 1,
+  "source_pipeline_name": "ExampleIlluminationCorrection_Example3.cppipe",
+  "source_sha256": "12fc66d146716adb3c2a4dcaaa14609288b9184216bb54372b6a2f16d75bdbbe"
+}

@@ -1,0 +1,21 @@
+{
+  "artifacts": [
+    {
+      "artifact_name": "CombinedObjects",
+      "artifact_type": "ObjectLabelsArtifactType",
+      "comparison": "integer label pixels: exact equality",
+      "output_filename": "reference_labels__CombinedObjects.tiff",
+      "semantic_kind": "categorical_object_labels"
+    }
+  ],
+  "derivation": "append_declaration_derived_terminal_artifact_exports",
+  "generated_sha256": "25d76709b04f6eaeae234545948e9cb304b5d88a4988631fea0bc60113a71fe3",
+  "provenance": {
+    "dataset_id": "CellProfiler4_benchmark_supplement",
+    "source_case_name": "cp4_supplement_combine_objects",
+    "source_manifest": "benchmark/manifests/official30_portable_axis1.json"
+  },
+  "schema_version": 1,
+  "source_pipeline_name": "CombineObjectsDemo.cppipe",
+  "source_sha256": "07c3851b7f48ae5570ff3061df3cbebc0c2a8503668c85b1d1eabf656349bdd7"
+}

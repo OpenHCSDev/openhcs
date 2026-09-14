@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import signal
+import sys
 import threading
 import time
 from collections.abc import Mapping, Sequence
@@ -33,6 +34,10 @@ from benchmark.contracts.metric import MetricCollector
 from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
 )
+from benchmark.cellprofiler_reference_exports import (
+    CellProfilerReferenceArtifactComparison,
+    CellProfilerReferenceExportPlan,
+)
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import (
     CompilationDebugConfig,
@@ -40,6 +45,10 @@ from openhcs.core.config import (
     LazyCompilationDebugConfig,
 )
 from openhcs.core.equivalence import RuntimeEquivalencePolicy, RuntimeEquivalenceReport
+from openhcs.core.equivalence.report import (
+    RuntimeEquivalenceDifference,
+    RuntimeEquivalenceDifferenceKind,
+)
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
@@ -77,6 +86,7 @@ class _ZMQOpenHCSExecution:
     observation_export: ZMQRuntimeExecutionObservationExport
     output_roots: tuple[Path, ...]
     results_summary: Mapping[str, Any]
+    endpoint_provenance: Mapping[str, Any]
 
     @property
     def execution_output_root(self) -> Path:
@@ -230,6 +240,56 @@ def _strict_cellprofiler_runtime_equivalence_policy() -> RuntimeEquivalencePolic
     )
 
 
+def _reference_export_plan(
+    cppipe_path: Path,
+) -> CellProfilerReferenceExportPlan | None:
+    """Load and validate benchmark-only declared export semantics when present."""
+
+    sidecar_path = Path(cppipe_path).with_suffix(".reference_exports.json")
+    if not sidecar_path.is_file():
+        return None
+    plan = CellProfilerReferenceExportPlan.from_sidecar(sidecar_path)
+    plan.validate_generated_pipeline(cppipe_path)
+    return plan
+
+
+def _reference_export_equivalence(
+    plan: CellProfilerReferenceExportPlan,
+    *,
+    reference_root: Path,
+    candidate_root: Path,
+) -> tuple[
+    RuntimeEquivalenceReport,
+    tuple[CellProfilerReferenceArtifactComparison, ...],
+]:
+    """Apply declaration-owned numeric-image and categorical-label contracts."""
+
+    try:
+        comparisons = plan.compare_output_roots(reference_root, candidate_root)
+    except ValueError as exc:
+        return (
+            RuntimeEquivalenceReport(
+                (
+                    RuntimeEquivalenceDifference(
+                        RuntimeEquivalenceDifferenceKind.IMAGE_CONTENT,
+                        str(exc),
+                    ),
+                )
+            ),
+            (),
+        )
+    differences = tuple(
+        RuntimeEquivalenceDifference(
+            RuntimeEquivalenceDifferenceKind.IMAGE_CONTENT,
+            f"declared reference export {comparison.artifact.artifact_name!r} "
+            f"differs under {comparison.artifact.comparison}",
+        )
+        for comparison in comparisons
+        if not comparison.equivalent
+    )
+    return RuntimeEquivalenceReport(differences), comparisons
+
+
 def _execute_pipeline_via_zmq_server(
     *,
     plate_id: str | Path,
@@ -268,6 +328,41 @@ def _execute_pipeline_via_zmq_server(
     )
     try:
         with client:
+            endpoint = client.connected_endpoint
+            if endpoint is None:
+                raise ToolExecutionError(
+                    "OpenHCS ZMQ client entered without a connected endpoint."
+                )
+            compatibility = client.endpoint_compatibility()
+            try:
+                compatibility.require_match()
+            except ValueError as exc:
+                raise ToolExecutionError(str(exc)) from exc
+            endpoint_provenance = {
+                "client_python_executable": sys.executable,
+                "client_openhcs_file": str(
+                    Path(importlib.util.find_spec("openhcs").origin).resolve()
+                ),
+                "client_openhcs_version": compatibility.expected.version,
+                "endpoint_application_identifier": (
+                    endpoint.application.identifier
+                    if endpoint.application is not None
+                    else None
+                ),
+                "endpoint_openhcs_version": compatibility.observed_version_label,
+                "endpoint_pid": (
+                    endpoint.process_identity.pid
+                    if endpoint.process_identity is not None
+                    else None
+                ),
+                "endpoint_create_time_epoch_seconds": (
+                    endpoint.process_identity.create_time
+                    if endpoint.process_identity is not None
+                    else None
+                ),
+                "endpoint_log_file_path": endpoint.log_file_path,
+                "endpoint_port": endpoint.port,
+            }
             with phase_timing.phase(BenchmarkPhase.SUBMIT_OPENHCS):
                 compile_submission_response = ExecutionSubmissionResponse.from_wire(
                     client.submit_compile(submission)
@@ -353,6 +448,7 @@ def _execute_pipeline_via_zmq_server(
             observation_export=observation_export,
             output_roots=output_roots,
             results_summary=results_summary,
+            endpoint_provenance=endpoint_provenance,
         ),
         pipeline_source,
     )
@@ -475,6 +571,13 @@ class OpenHCSAdapter(ToolAdapter):
             cppipe_source = self._resolve_cppipe_source(request)
         cppipe_path = cppipe_source.path
         reference_url = cppipe_source.reference_url
+        try:
+            reference_export_plan = _reference_export_plan(cppipe_path)
+        except ValueError as exc:
+            raise ToolExecutionError(
+                f"Invalid CellProfiler reference-export sidecar for {cppipe_path}: "
+                f"{exc}"
+            ) from exc
 
         output_suffix = f"_{request.pipeline_name}_converted_cppipe"
         output_plate_root = (
@@ -495,6 +598,9 @@ class OpenHCSAdapter(ToolAdapter):
         )
 
         equivalence_report = None
+        reference_export_comparisons: tuple[
+            CellProfilerReferenceArtifactComparison, ...
+        ] = ()
         equivalence_failure_message = None
         try:
             with phase_timing.phase(BenchmarkPhase.COMPILE_DIALECT):
@@ -617,18 +723,28 @@ class OpenHCSAdapter(ToolAdapter):
                 )
             equivalence_policy = _strict_cellprofiler_runtime_equivalence_policy()
             with phase_timing.phase(BenchmarkPhase.COMPARE_EQUIVALENCE):
-                reference_snapshot = RuntimeOutputSnapshot.from_output_root(
-                    equivalence_reference
-                )
-                if not request.compare_image_outputs:
-                    reference_snapshot = RuntimeOutputSnapshot(
-                        tables=reference_snapshot.tables,
+                if reference_export_plan is not None:
+                    (
+                        equivalence_report,
+                        reference_export_comparisons,
+                    ) = _reference_export_equivalence(
+                        reference_export_plan,
+                        reference_root=equivalence_reference,
+                        candidate_root=execution_output_root / "images_results",
                     )
-                equivalence_report = runtime_reference_artifact_equivalence(
-                    reference_snapshot,
-                    observation,
-                    policy=equivalence_policy,
-                )
+                else:
+                    reference_snapshot = RuntimeOutputSnapshot.from_output_root(
+                        equivalence_reference
+                    )
+                    if not request.compare_image_outputs:
+                        reference_snapshot = RuntimeOutputSnapshot(
+                            tables=reference_snapshot.tables,
+                        )
+                    equivalence_report = runtime_reference_artifact_equivalence(
+                        reference_snapshot,
+                        observation,
+                        policy=equivalence_policy,
+                    )
                 database_export_report = cellprofiler_database_export_equivalence(
                     equivalence_reference,
                     observation.exports,
@@ -658,6 +774,7 @@ class OpenHCSAdapter(ToolAdapter):
 
         provenance = {
             "openhcs_version": self.version,
+            **server_execution.endpoint_provenance,
             "microscope_type": request.microscope_type,
             "pipeline_source": "converted_cppipe",
             "cppipe_path": str(cppipe_path),
@@ -681,6 +798,24 @@ class OpenHCSAdapter(ToolAdapter):
             provenance["equivalence_reference_output_dir"] = str(equivalence_reference)
             provenance["equivalence_difference_count"] = len(
                 equivalence_report.differences if equivalence_report else ()
+            )
+        if reference_export_plan is not None:
+            provenance["reference_export_comparisons"] = tuple(
+                {
+                    "artifact_name": comparison.artifact.artifact_name,
+                    "semantic_kind": comparison.artifact.semantic_kind.value,
+                    "comparison_contract": comparison.artifact.comparison,
+                    "reference_shape": comparison.reference_shape,
+                    "candidate_shape": comparison.candidate_shape,
+                    "compared_pixel_count": comparison.compared_pixel_count,
+                    "different_pixel_count": comparison.different_pixel_count,
+                    "out_of_tolerance_pixel_count": (
+                        comparison.out_of_tolerance_pixel_count
+                    ),
+                    "max_abs_difference": comparison.max_abs_difference,
+                    "equivalent": comparison.equivalent,
+                }
+                for comparison in reference_export_comparisons
             )
         if reference_url is not None:
             provenance["cppipe_reference_url"] = reference_url

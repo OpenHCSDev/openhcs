@@ -69,6 +69,7 @@ def test_comparison_observation_extracts_execution_only_speedup(
     assert observation.difference_count == 0
     assert observation.native_cellprofiler.execution_seconds == 42.0
     assert observation.openhcs.execution_seconds == 6.0
+    assert observation.openhcs.provenance["equivalence_difference_count"] == 0
     assert observation.speedup == 7.0
     assert observation.parity_accuracy == 1.0
 
@@ -342,7 +343,7 @@ def test_native_reference_scope_resolves_relative_root(
                 "CellProfiler Pipeline: http://www.cellprofiler.org",
                 "NamesAndTypes:[module_num:1|enabled:True]",
                 "    Assignments count:1",
-                "    Select the rule criteria:and (file does contain \"DNA\")",
+                '    Select the rule criteria:and (file does contain "DNA")',
                 "    Name to assign these images:DNA",
                 "    Select the image type:Grayscale image",
             ]
@@ -410,10 +411,7 @@ def test_comparison_writers_emit_raw_phase_and_summary_tables(
     summary_rows = _csv_rows(tmp_path / "summary.csv")
     assert observation_rows[0]["case_name"] == "ExampleFly"
     assert observation_rows[0]["assay_category"] == "Tissue/object morphology"
-    assert (
-        observation_rows[0]["module_category"]
-        == "Segmentation + object measurement"
-    )
+    assert observation_rows[0]["module_category"] == "Segmentation + object measurement"
     assert observation_rows[0]["difference_count"] == "4"
     assert observation_rows[0]["openhcs_error_message"] == "semantic mismatch"
     assert observation_rows[0]["parity_accuracy"] == "0.0"
@@ -631,7 +629,9 @@ def test_load_comparison_cases_resolves_declared_path_roots(
     cases = load_comparison_cases(manifest)
 
     assert cases[0].dataset_path == tmp_path / "examples" / "ExampleHuman/images"
-    assert cases[0].cppipe_path == tmp_path / "cache" / "ExampleHuman/ExampleHuman.cppipe"
+    assert (
+        cases[0].cppipe_path == tmp_path / "cache" / "ExampleHuman/ExampleHuman.cppipe"
+    )
 
 
 def test_write_module_coverage_artifacts_for_manifest(tmp_path: Path) -> None:
@@ -643,7 +643,7 @@ def test_write_module_coverage_artifacts_for_manifest(tmp_path: Path) -> None:
                 "Version:3",
                 "NamesAndTypes:[module_num:1|enabled:True]",
                 "    Assignments count:1",
-                "    Select the rule criteria:and (file does contain \"DNA\")",
+                '    Select the rule criteria:and (file does contain "DNA")',
                 "    Name to assign these images:DNA",
                 "    Select the image type:Grayscale image",
                 "IdentifyPrimaryObjects:[module_num:2|enabled:True]",
@@ -707,9 +707,7 @@ def test_write_module_coverage_artifacts_for_manifest(tmp_path: Path) -> None:
             "bound",
         ),
     }
-    declarations_by_module = {
-        row["module_name"]: row for row in declaration_rows
-    }
+    declarations_by_module = {row["module_name"]: row for row in declaration_rows}
     identify = declarations_by_module["IdentifyPrimaryObjects"]
     assert identify["execution_scope"] == "axis"
     assert identify["processing_contract"]

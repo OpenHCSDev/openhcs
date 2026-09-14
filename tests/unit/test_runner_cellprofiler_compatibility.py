@@ -14,6 +14,7 @@ from benchmark.adapters.cellprofiler import (
     CELLPROFILER_LAST_IMAGE_SET_PARAM,
     NativeCellProfilerInputDomainStrategyKey,
     NativeCellProfilerProvenanceField,
+    _primary_workspace_wells,
     _write_native_reference_success_marker,
     native_cellprofiler_well_filter_scope_slug,
 )
@@ -28,32 +29,52 @@ from benchmark.runner import (
     run_cellprofiler_cppipe_parity,
 )
 from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
+from openhcs.core.source_binding_workspace import SourceBindingWorkspaceMaterialization
 
-
-SOURCE_ONLY_CPIPE = "\n".join(
-    (
-        "CellProfiler Pipeline: http://www.cellprofiler.org",
-        "Images:[module_num:1|enabled:True]",
-        "    Filter images?:Images only",
-        "    Select the rule criteria:and (extension does isimage)",
-        "NamesAndTypes:[module_num:2|enabled:True]",
-        "    Assign a name to:Images matching rules",
-        "    Select the image type:Grayscale image",
-        "    Name to assign these images:DNA",
-        "    Match metadata:[]",
-        "    Image set matching method:Order",
-        "    Assignments count:1",
-        "    Single images count:0",
-        "    Maximum intensity:255.0",
-        "    Process as 3D?:No",
-        "    Relative pixel spacing in X:1.0",
-        "    Relative pixel spacing in Y:1.0",
-        "    Relative pixel spacing in Z:1.0",
-        "    Select the rule criteria:and (file does contain \"\")",
-        "    Name to assign these images:DNA",
-        "    Select the image type:Grayscale image",
+SOURCE_ONLY_CPIPE = (
+    "\n".join(
+        (
+            "CellProfiler Pipeline: http://www.cellprofiler.org",
+            "Images:[module_num:1|enabled:True]",
+            "    Filter images?:Images only",
+            "    Select the rule criteria:and (extension does isimage)",
+            "NamesAndTypes:[module_num:2|enabled:True]",
+            "    Assign a name to:Images matching rules",
+            "    Select the image type:Grayscale image",
+            "    Name to assign these images:DNA",
+            "    Match metadata:[]",
+            "    Image set matching method:Order",
+            "    Assignments count:1",
+            "    Single images count:0",
+            "    Maximum intensity:255.0",
+            "    Process as 3D?:No",
+            "    Relative pixel spacing in X:1.0",
+            "    Relative pixel spacing in Y:1.0",
+            "    Relative pixel spacing in Z:1.0",
+            '    Select the rule criteria:and (file does contain "")',
+            "    Name to assign these images:DNA",
+            "    Select the image type:Grayscale image",
+        )
     )
-) + "\n"
+    + "\n"
+)
+
+
+def test_native_well_selection_includes_source_artifact_projections(
+    tmp_path: Path,
+) -> None:
+    workspace = SourceBindingWorkspaceMaterialization(
+        source_root=tmp_path / "source",
+        workspace_root=tmp_path / "workspace",
+        metadata_path=tmp_path / "workspace" / "openhcs_metadata.json",
+        plane_mappings={},
+        artifact_mappings={
+            "A01_s001_w1_z001_t001.tif": {},
+            "A01_s001_w2_z001_t001.tif": {},
+        },
+    )
+
+    assert _primary_workspace_wells(workspace) == ("A01",)
 
 
 def test_cellprofiler_compatibility_runner_feeds_native_output_to_openhcs(
@@ -86,9 +107,8 @@ def test_cellprofiler_compatibility_runner_feeds_native_output_to_openhcs(
     assert openhcs_adapter.validated is True
     assert native_adapter.pipeline_params["cppipe_reference_index"] == 0
     assert openhcs_adapter.pipeline_params["cppipe_reference_index"] == 0
-    assert (
-        openhcs_adapter.pipeline_params["equivalence_reference_output_dir"]
-        == str(native_adapter.output_path)
+    assert openhcs_adapter.pipeline_params["equivalence_reference_output_dir"] == str(
+        native_adapter.output_path
     )
 
 
@@ -118,11 +138,13 @@ def test_cellprofiler_cppipe_parity_runner_accepts_local_cppipe(
     assert native_adapter.pipeline_params["cppipe_path"] == str(cppipe_path)
     assert openhcs_adapter.pipeline_params["cppipe_path"] == str(cppipe_path)
     assert openhcs_adapter.pipeline_params["microscope_type"] == "imagexpress"
-    assert (
-        openhcs_adapter.pipeline_params["equivalence_reference_output_dir"]
-        == str(native_adapter.output_path)
+    assert openhcs_adapter.pipeline_params["equivalence_reference_output_dir"] == str(
+        native_adapter.output_path
     )
-    assert native_adapter.output_path.parent.name == "CellProfiler_examplefly_official_Example_Fly"
+    assert (
+        native_adapter.output_path.parent.name
+        == "CellProfiler_examplefly_official_Example_Fly"
+    )
 
 
 def test_native_reference_lookup_uses_visible_source_identity(
@@ -210,8 +232,7 @@ def test_native_reference_lookup_separates_bounded_image_set_scope(
     location = _native_reference_location(case, native_reference_root)
 
     assert location.output_dir == (
-        native_reference_root
-        / "example_ExampleBounded_image_sets_first1_last1"
+        native_reference_root / "example_ExampleBounded_image_sets_first1_last1"
     )
 
 
@@ -243,7 +264,7 @@ def test_native_reference_lookup_separates_public_well_filter_scope(
                 "    Relative pixel spacing in X:1.0",
                 "    Relative pixel spacing in Y:1.0",
                 "    Relative pixel spacing in Z:1.0",
-                "    Select the rule criteria:and (file does contain \"\")",
+                '    Select the rule criteria:and (file does contain "")',
                 "    Name to assign these images:DNA",
                 "    Select the image type:Grayscale image",
             ]
@@ -272,8 +293,7 @@ def test_native_reference_lookup_separates_public_well_filter_scope(
         == "wells_include_first1"
     )
     assert location.output_dir == (
-        native_reference_root
-        / "example_ExampleOneWell_wells_include_first1"
+        native_reference_root / "example_ExampleOneWell_wells_include_first1"
     )
 
 

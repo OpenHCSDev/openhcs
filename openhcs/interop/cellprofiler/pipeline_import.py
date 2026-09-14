@@ -106,6 +106,18 @@ class _LoweredModuleBatch:
     units: tuple[_ParsedTargetUnit, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class _ParsedPipelineDeclaration:
+    """One parsed pipeline projected through declaration-owned contracts."""
+
+    executable_modules: tuple[tuple[type[CellProfilerModule], ModuleBlock], ...]
+    pipeline_processing: ProcessingConfig
+    pipeline_config: PipelineConfig
+    step_source_bindings: StepSourceBindingsConfig
+    initial_context: ArtifactDeclarationStepContext
+    target_units: tuple[_ParsedTargetUnit, ...]
+
+
 def import_cellprofiler_pipeline(
     cppipe_path: str | Path,
     *,
@@ -133,55 +145,75 @@ def import_cellprofiler_pipeline(
     )
 
 
+def cellprofiler_terminal_artifact_specs(
+    cppipe_path: str | Path,
+    *,
+    filemanager: FileManagerLike | None = None,
+    backend: Backend = Backend.DISK,
+    source_root: str | Path | None = None,
+) -> tuple[ArtifactSpec, ...]:
+    """Return processing outputs not consumed or replaced later in a pipeline.
+
+    The projection uses the same parsed module contracts and artifact context as
+    :func:`import_cellprofiler_pipeline`.  Setup-module source declarations and
+    consumer-local guesses therefore cannot become terminal processing outputs.
+    """
+
+    path = Path(cppipe_path)
+    parser = CPPipeParser()
+    modules = tuple(parser.parse(path, filemanager=filemanager, backend=backend))
+    if not modules:
+        raise ValueError(f"CellProfiler pipeline {path} contains no modules.")
+    source_bindings = CellProfilerModule.source_bindings_for_modules(
+        modules,
+        SourceBindingsConfig(image_plane_sources=parser.image_plane_sources),
+    )
+    declaration = _parsed_pipeline_declaration(
+        modules,
+        source_bindings,
+        binder=SettingsBinder(
+            source_root=path.parent if source_root is None else source_root,
+        ),
+    )
+    terminal_specs: list[ArtifactSpec] = []
+    units = declaration.target_units
+    for position, unit in enumerate(units):
+        later_units = units[position + 1 :]
+        later_input_refs = frozenset(
+            spec.ref().for_plan_type(ArtifactInputPlan)
+            for later_unit in later_units
+            for spec in later_unit.contract.artifact_inputs
+        )
+        later_output_refs = frozenset(
+            spec.ref().for_plan_type(ArtifactInputPlan)
+            for later_unit in later_units
+            for spec in later_unit.contract.artifact_outputs
+        )
+        for spec in unit.contract.artifact_outputs:
+            input_ref = spec.ref().for_plan_type(ArtifactInputPlan)
+            if input_ref in later_input_refs or input_ref in later_output_refs:
+                continue
+            terminal_specs.append(spec)
+    return tuple(terminal_specs)
+
+
 def _public_pipeline(
     modules: tuple[ModuleBlock, ...],
     source_bindings: SourceBindingsConfig,
     *,
     binder: SettingsBinder,
 ) -> tuple[list[FunctionStep], PipelineConfig]:
-    executable_modules: list[tuple[type[CellProfilerModule], ModuleBlock]] = []
-    for module in modules:
-        if not module.enabled:
-            continue
-        module_type = CellProfilerModule.require_module(module.name)
-        module_type.validate_pipeline_import(module)
-        if not module_type.emits_function_step():
-            continue
-        executable_modules.extend(
-            (module_type, block)
-            for block in module_type.invocation_module_blocks(module)
-        )
-
-    pipeline_processing = _pipeline_processing_config(
-        executable_modules,
+    declaration = _parsed_pipeline_declaration(
+        modules,
         source_bindings,
-    )
-    source_fragments = () if source_bindings.is_empty else (source_bindings,)
-    pipeline_config = PipelineConfig.from_config(
-        *source_fragments,
-        pipeline_processing,
-    )
-    with config_context(pipeline_config):
-        step_source_bindings = resolve_lazy_configurations_for_serialization(
-            LazyStepSourceBindingsConfig()
-        )
-    if not isinstance(step_source_bindings, StepSourceBindingsConfig):
-        raise TypeError(
-            "CellProfiler source declarations must resolve to "
-            f"StepSourceBindingsConfig, got {type(step_source_bindings).__name__}."
-        )
-
-    forward_context = ArtifactDeclarationStepContext().with_source_binding_scope(
-        source_bindings=step_source_bindings,
-        group_by=GroupBy.NONE,
-        input_source=InputSource.PIPELINE_START,
-    )
-    target_units = _parsed_target_units(
-        executable_modules,
         binder=binder,
-        step_context=forward_context,
-        inherited_processing_config=pipeline_processing,
     )
+    executable_modules = declaration.executable_modules
+    pipeline_processing = declaration.pipeline_processing
+    pipeline_config = declaration.pipeline_config
+    step_source_bindings = declaration.step_source_bindings
+    forward_context = declaration.initial_context
+    target_units = declaration.target_units
     emissions: list[
         tuple[
             FunctionPatternSyntax,
@@ -256,6 +288,68 @@ def _public_pipeline(
         ) in emissions
     ]
     return steps, pipeline_config
+
+
+def _parsed_pipeline_declaration(
+    modules: tuple[ModuleBlock, ...],
+    source_bindings: SourceBindingsConfig,
+    *,
+    binder: SettingsBinder,
+) -> _ParsedPipelineDeclaration:
+    """Resolve one module sequence through the importer contract graph once."""
+
+    executable_modules: list[tuple[type[CellProfilerModule], ModuleBlock]] = []
+    for module in modules:
+        if not module.enabled:
+            continue
+        module_type = CellProfilerModule.require_module(module.name)
+        module_type.validate_pipeline_import(module)
+        if not module_type.emits_function_step():
+            continue
+        executable_modules.extend(
+            (module_type, block)
+            for block in module_type.invocation_module_blocks(module)
+        )
+
+    pipeline_processing = _pipeline_processing_config(
+        executable_modules,
+        source_bindings,
+    )
+    source_fragments = () if source_bindings.is_empty else (source_bindings,)
+    pipeline_config = PipelineConfig.from_config(
+        *source_fragments,
+        pipeline_processing,
+    )
+    with config_context(pipeline_config):
+        step_source_bindings = resolve_lazy_configurations_for_serialization(
+            LazyStepSourceBindingsConfig()
+        )
+    if not isinstance(step_source_bindings, StepSourceBindingsConfig):
+        raise TypeError(
+            "CellProfiler source declarations must resolve to "
+            f"StepSourceBindingsConfig, got {type(step_source_bindings).__name__}."
+        )
+
+    forward_context = ArtifactDeclarationStepContext().with_source_binding_scope(
+        source_bindings=step_source_bindings,
+        group_by=GroupBy.NONE,
+        input_source=InputSource.PIPELINE_START,
+    )
+    target_units = _parsed_target_units(
+        executable_modules,
+        binder=binder,
+        step_context=forward_context,
+        inherited_processing_config=pipeline_processing,
+    )
+    resolved_executable_modules = tuple(executable_modules)
+    return _ParsedPipelineDeclaration(
+        executable_modules=resolved_executable_modules,
+        pipeline_processing=pipeline_processing,
+        pipeline_config=pipeline_config,
+        step_source_bindings=step_source_bindings,
+        initial_context=forward_context,
+        target_units=target_units,
+    )
 
 
 def _pipeline_processing_config(

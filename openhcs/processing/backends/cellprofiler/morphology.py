@@ -2116,46 +2116,35 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
         mask: np.ndarray | None = None,
         size_predicate: HolePredicate | None = None,
     ) -> np.ndarray:
-        from scipy import ndimage as ndi
-
         array = np.asarray(labels)
-        foreground = array != 0
-        background = ~foreground
-        if mask is not None:
-            background &= np.asarray(mask, dtype=bool)
-        if not background.any():
-            return array.copy()
-        structure = ndi.generate_binary_structure(array.ndim, 1)
-        background_labels, component_count = ndi.label(background, structure=structure)
-        if component_count == 0:
-            return array.copy()
-        border_ids = _border_component_ids(background_labels)
-        candidate_ids = set(range(1, component_count + 1)) - border_ids
-        if size_predicate is not None:
-            sizes = np.bincount(
-                background_labels.ravel(), minlength=component_count + 1
+        if array.ndim == 2:
+            return _cellprofiler_fill_labeled_holes_2d(
+                array,
+                mask=mask,
+                size_predicate=size_predicate,
             )
-            candidate_ids = {
-                component_id
-                for component_id in candidate_ids
-                if size_predicate(int(sizes[component_id]), False)
-            }
-        if not candidate_ids:
-            return array.copy()
-        fill_mask = np.isin(background_labels, tuple(sorted(candidate_ids)))
-        if array.dtype == bool or np.array_equal(
-            np.unique(array), np.array([False, True])
-        ):
-            output = foreground.copy()
-            output[fill_mask] = True
-            return output.astype(array.dtype, copy=False)
-        _, nearest_indices = ndi.distance_transform_edt(
-            background, return_distances=True, return_indices=True
+        if array.ndim < 2:
+            raise ValueError("Hole filling requires at least two dimensions.")
+        mask_array = None if mask is None else np.asarray(mask, dtype=bool)
+        if mask_array is not None and mask_array.shape != array.shape:
+            raise ValueError(
+                f"Hole-fill mask shape must match labels shape; got "
+                f"{mask_array.shape!r} for {array.shape!r}."
+            )
+        output = np.empty_like(array)
+        source_planes = array.reshape((-1, *array.shape[-2:]))
+        output_planes = output.reshape(source_planes.shape)
+        mask_planes = (
+            None
+            if mask_array is None
+            else mask_array.reshape((-1, *mask_array.shape[-2:]))
         )
-        output = array.copy()
-        output[fill_mask] = array[
-            tuple((axis_indices[fill_mask] for axis_indices in nearest_indices))
-        ]
+        for plane_index, plane in enumerate(source_planes):
+            output_planes[plane_index] = _cellprofiler_fill_labeled_holes_2d(
+                plane,
+                mask=(None if mask_planes is None else mask_planes[plane_index]),
+                size_predicate=size_predicate,
+            )
         return output
 
     def restore_removed_declump_basins(
@@ -2589,25 +2578,9 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     def _fill_labeled_holes_2d(
         self, labels: np.ndarray, *, size_predicate: HolePredicate | None = None
     ) -> np.ndarray:
-        components, sizes, touches_border, component_count = (
-            _background_components_2d_numba(np.ascontiguousarray(labels))
-        )
-        fill_flags = np.zeros(component_count + 1, dtype=np.bool_)
-        for component_id in range(1, component_count + 1):
-            if touches_border[component_id]:
-                continue
-            if size_predicate is None or size_predicate(
-                int(sizes[component_id]), False
-            ):
-                fill_flags[component_id] = True
-        if not np.any(fill_flags):
-            return labels
-        if labels.dtype == np.bool_:
-            return _fill_binary_holes_from_components_numba(
-                np.ascontiguousarray(labels), components, fill_flags
-            )
-        return _fill_labeled_holes_single_label_components_numba(
-            np.ascontiguousarray(labels), components, fill_flags
+        return _cellprofiler_fill_labeled_holes_2d(
+            labels,
+            size_predicate=size_predicate,
         )
 
     def restore_removed_declump_basins(
@@ -2682,7 +2655,9 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
                 "Numba morphology backend currently supports 2-D seed shrinking."
             )
         return _binary_shrink_2d_numba(
-            np.ascontiguousarray(mask_array), _binary_shrink_table_stack()
+            np.ascontiguousarray(mask_array),
+            _binary_shrink_table_stack(),
+            -1,
         )
 
     def declumping_seed_points(
@@ -3047,6 +3022,130 @@ def _scipy_connected_components(
     )
     labels, count = ndi.label(mask_array, structure=structure)
     return (labels.astype(np.int32, copy=False), int(count))
+
+
+def _cellprofiler_fill_labeled_holes_2d(
+    labels: np.ndarray,
+    *,
+    mask: np.ndarray | None = None,
+    size_predicate: HolePredicate | None = None,
+) -> np.ndarray:
+    """Fill nested foreground/background regions using CellProfiler's graph.
+
+    A labeled hole is not limited to pixels whose value is zero. A foreground
+    object fully enclosed by another foreground object is also a hole and must
+    inherit the enclosing label. CellProfiler determines this by walking the
+    four-connected adjacency graph of foreground labels and background
+    components from the image boundary.
+    """
+
+    from scipy import ndimage as ndi
+
+    source = np.asarray(labels)
+    if source.ndim != 2:
+        raise ValueError(
+            f"CellProfiler labeled-hole filling requires a 2-D plane, got "
+            f"shape {source.shape!r}."
+        )
+    mask_array = None if mask is None else np.asarray(mask, dtype=bool)
+    if mask_array is not None and mask_array.shape != source.shape:
+        raise ValueError(
+            f"Hole-fill mask shape must match labels shape; got "
+            f"{mask_array.shape!r} for {source.shape!r}."
+        )
+
+    background = source == 0
+    if mask_array is not None:
+        background &= mask_array
+    background_labels, background_count = ndi.label(
+        background,
+        structure=ndi.generate_binary_structure(2, 1),
+    )
+    working = source.copy().astype(np.int64, copy=False)
+    foreground_label_count = int(working.max(initial=0))
+    working[background_labels != 0] = (
+        background_labels[background_labels != 0] + foreground_label_count + 1
+    )
+    maximum_node = foreground_label_count + int(background_count) + 1
+    node_count = maximum_node + 1
+
+    is_not_hole = np.zeros(node_count, dtype=bool)
+    boundary_nodes = np.unique(
+        np.concatenate((working[0, :], working[:, 0], working[-1, :], working[:, -1]))
+    )
+    boundary_nodes = boundary_nodes[boundary_nodes != 0]
+    is_not_hole[boundary_nodes] = True
+    to_visit = [int(node) for node in boundary_nodes]
+
+    first = np.concatenate((working[:-1, :].ravel(), working[:, :-1].ravel()))
+    second = np.concatenate((working[1:, :].ravel(), working[:, 1:].ravel()))
+    differing = first != second
+    directed_edges = np.stack(
+        (
+            np.concatenate((first[differing], second[differing])),
+            np.concatenate((second[differing], first[differing])),
+        ),
+        axis=1,
+    )
+    if directed_edges.size:
+        directed_edges = np.unique(directed_edges, axis=0)
+    adjacency: list[list[int]] = [[] for _ in range(node_count)]
+    for left, right in directed_edges:
+        adjacency[int(left)].append(int(right))
+
+    if size_predicate is not None:
+        areas = np.bincount(working.ravel(), minlength=node_count)
+        for node, area in enumerate(areas):
+            if (
+                node > 0
+                and area > 0
+                and not is_not_hole[node]
+                and not size_predicate(
+                    int(area),
+                    node <= foreground_label_count,
+                )
+            ):
+                is_not_hole[node] = True
+                to_visit.append(node)
+
+    adjacent_non_hole = np.zeros(node_count, dtype=np.int64)
+    while to_visit:
+        current = to_visit.pop()
+        for neighbor in adjacency[current]:
+            if is_not_hole[neighbor]:
+                continue
+            if current <= foreground_label_count:
+                if adjacent_non_hole[neighbor] == 0:
+                    adjacent_non_hole[neighbor] = current
+                    continue
+                if adjacent_non_hole[neighbor] == current:
+                    continue
+            elif neighbor > foreground_label_count:
+                continue
+            is_not_hole[neighbor] = True
+            to_visit.append(neighbor)
+
+    to_visit = [
+        node
+        for node in range(node_count)
+        if not is_not_hole[node] and adjacent_non_hole[node] != 0
+    ]
+    while to_visit:
+        current = to_visit.pop()
+        for neighbor in adjacency[current]:
+            if not is_not_hole[neighbor] and adjacent_non_hole[neighbor] == 0:
+                adjacent_non_hole[neighbor] = adjacent_non_hole[current]
+                to_visit.append(neighbor)
+
+    lookup = np.arange(node_count, dtype=np.int64)
+    lookup[foreground_label_count + 1 :] = 0
+    lookup[~is_not_hole] = adjacent_non_hole[~is_not_hole]
+    if mask_array is None:
+        output = lookup[working]
+    else:
+        output = working.copy()
+        output[mask_array] = lookup[working[mask_array]]
+    return output.astype(source.dtype, copy=False)
 
 
 def _scipy_fix_labeled_result(values: np.ndarray) -> np.ndarray:
@@ -4382,7 +4481,11 @@ def _first_adjacent_foreground_label_numba(labels: np.ndarray, y: int, x: int):
 
 
 @njit(cache=True)
-def _binary_shrink_2d_numba(mask: np.ndarray, tables: np.ndarray) -> np.ndarray:
+def _binary_shrink_2d_numba(
+    mask: np.ndarray,
+    tables: np.ndarray,
+    maximum_iterations: int,
+) -> np.ndarray:
     height, width = mask.shape
     current = np.zeros((height + 2, width + 2), dtype=np.bool_)
     capacity = height * width
@@ -4401,7 +4504,7 @@ def _binary_shrink_2d_numba(mask: np.ndarray, tables: np.ndarray) -> np.ndarray:
             coords_y[count] = padded_y
             coords_x[count] = padded_x
             count += 1
-    iterations = count
+    iterations = count if maximum_iterations < 0 else min(count, maximum_iterations)
     for _iteration in range(iterations):
         pixel_count = count
         for table_index in range(4):
@@ -4786,7 +4889,7 @@ def _expand_until_touching(labels: np.ndarray) -> np.ndarray:
 def _shrink_defined_pixels(
     labels: np.ndarray, iterations: int, fill: bool
 ) -> np.ndarray:
-    """Shrink labeled objects by a defined number of pixels."""
+    """Topology-preservingly shrink labels by a defined iteration count."""
     if iterations <= 0:
         return labels.copy()
     original = labels.astype(np.int32, copy=False)
@@ -4794,21 +4897,13 @@ def _shrink_defined_pixels(
         return ExpandShrinkOperationStrategy.apply_label_planes(
             original, lambda plane: _shrink_defined_pixels(plane, iterations, fill)
         )
-    result = original.copy()
-    for _ in range(iterations):
-        same_neighbors = np.zeros(result.shape, dtype=bool)
-        center = result[1:-1, 1:-1]
-        same_neighbors[1:-1, 1:-1] = (
-            (center > 0)
-            & (center == result[:-2, 1:-1])
-            & (center == result[2:, 1:-1])
-            & (center == result[1:-1, :-2])
-            & (center == result[1:-1, 2:])
-        )
-        result = np.where(same_neighbors, result, 0).astype(np.int32, copy=False)
-    if fill:
-        _restore_eroded_objects_to_centroids(original, result)
-    return result
+    working = _cellprofiler_fill_labeled_holes_2d(original) if fill else original
+    survivor_mask = _binary_shrink_2d_numba(
+        np.ascontiguousarray(working != 0),
+        _binary_shrink_table_stack(),
+        int(iterations),
+    )
+    return np.where(survivor_mask, working, 0).astype(np.int32, copy=False)
 
 
 def _restore_eroded_objects_to_centroids(
@@ -5436,11 +5531,58 @@ class MergeCombineObjectsStrategy(CombineObjectsStrategy):
     method = CombineObjectsMethod.MERGE
 
     def combine(self, labels_x: np.ndarray, labels_y: np.ndarray) -> np.ndarray:
-        from scipy.ndimage import label as scipy_label
+        from scipy.ndimage import distance_transform_edt
+        from skimage.morphology import label as skimage_label
 
-        combined_binary = ((labels_x > 0) | (labels_y > 0)).astype(np.uint8)
-        merged_labels, _ = scipy_label(combined_binary)
-        return merged_labels.astype(np.int32)
+        initial = np.asarray(labels_x, dtype=np.int32).copy()
+        incoming = np.asarray(labels_y, dtype=np.int32).copy()
+        if initial.shape != incoming.shape:
+            raise ValueError(
+                "CombineObjects label inputs must have the same shape; got "
+                f"{initial.shape!r} and {incoming.shape!r}."
+            )
+        if initial.ndim not in (2, 3):
+            raise NotImplementedError(
+                "CellProfiler CombineObjects merge supports 2-D and 3-D label "
+                f"arrays, got {initial.ndim}-D."
+            )
+
+        incoming[incoming > 0] += int(initial.max())
+        output = np.zeros_like(initial, dtype=np.int32)
+
+        # Preserve objects that occur in only one set before resolving the
+        # disputed domain. CellProfiler's Merge policy does not collapse the
+        # binary union: pixels from an incoming object that overlaps multiple
+        # initial objects are assigned to the nearest initial object.
+        undisputed = np.logical_xor(initial > 0, incoming > 0)
+        undisputed_initial = np.setdiff1d(
+            np.unique(initial[initial > 0]),
+            np.unique(initial[~undisputed]),
+        )
+        initial_mask = np.isin(initial, undisputed_initial)
+        output[initial_mask] = initial[initial_mask]
+        initial[initial_mask] = 0
+
+        undisputed_incoming = np.setdiff1d(
+            np.unique(incoming[incoming > 0]),
+            np.unique(incoming[~undisputed]),
+        )
+        incoming_mask = np.isin(incoming, undisputed_incoming)
+        output[incoming_mask] = incoming[incoming_mask]
+        incoming[incoming_mask] = 0
+
+        disputed_domain = np.logical_or(initial > 0, incoming > 0)
+        if np.any(disputed_domain):
+            _distance, nearest_initial_indices = distance_transform_edt(
+                initial == 0,
+                return_indices=True,
+            )
+            nearest_initial_labels = initial[tuple(nearest_initial_indices)]
+            output[disputed_domain] = nearest_initial_labels[disputed_domain]
+
+        # CellProfiler re-labels the categorical result after applying the
+        # selected combination policy.
+        return skimage_label(output).astype(np.int32, copy=False)
 
 
 class PreserveCombineObjectsStrategy(CombineObjectsStrategy):

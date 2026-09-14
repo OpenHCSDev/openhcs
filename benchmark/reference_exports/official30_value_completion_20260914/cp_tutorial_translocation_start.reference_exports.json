@@ -1,0 +1,21 @@
+{
+  "artifacts": [
+    {
+      "artifact_name": "Nuclei",
+      "artifact_type": "ObjectLabelsArtifactType",
+      "comparison": "integer label pixels: exact equality",
+      "output_filename": "reference_labels__Nuclei.tiff",
+      "semantic_kind": "categorical_object_labels"
+    }
+  ],
+  "derivation": "append_declaration_derived_terminal_artifact_exports",
+  "generated_sha256": "15d95afa1821526e5b58cc76fc33916ee0107ba5a3123cba33fa91ac319e5708",
+  "provenance": {
+    "dataset_id": "CellProfiler_tutorials",
+    "source_case_name": "cp_tutorial_translocation_start",
+    "source_manifest": "benchmark/manifests/official30_portable_axis1.json"
+  },
+  "schema_version": 1,
+  "source_pipeline_name": "Translocation_start.cppipe",
+  "source_sha256": "693f3dcc7783b40320e88aca96aaf12fb939f702255077764b921292b2a52fbc"
+}

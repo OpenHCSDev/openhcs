@@ -102,6 +102,8 @@ CsvRowBuilder = Callable[
     [Sequence["CellProfilerComparisonObservation"]],
     Iterable[CsvRow],
 ]
+
+
 @dataclass(frozen=True, slots=True)
 class CsvTableSpec:
     """Authoritative CSV table projection."""
@@ -456,6 +458,7 @@ class ToolExecutionSummary:
     cached: bool
     error_message: str | None
     phase_seconds: Mapping[str, float]
+    provenance: Mapping[str, object] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -957,8 +960,7 @@ def _summary_csv_rows(
                 for observation in case_observations
             ),
             MEDIAN_OPENHCS_PEAK_MEMORY_MB_FIELD: _median_present(
-                observation.openhcs.peak_memory_mb
-                for observation in case_observations
+                observation.openhcs.peak_memory_mb for observation in case_observations
             ),
             MEDIAN_SPEEDUP_FIELD: median_speedup,
             MEDIAN_TOTAL_PHASE_SPEEDUP_FIELD: median_total_phase_speedup,
@@ -1013,6 +1015,8 @@ _PHASE_TIMING_TABLE = CsvTableSpec(
     ),
     _phase_timing_csv_rows,
 )
+
+
 def _summary_table(speedup_target: float) -> CsvTableSpec:
     return CsvTableSpec(
         (
@@ -1079,19 +1083,7 @@ def _run_comparison_case(
     effective_global_config = case.effective_global_config(
         context.openhcs_global_config
     )
-    pipeline_params: dict[str, object] = {
-        **case.pipeline_params,
-        "dataset_id": case.resolved_dataset_id,
-        "cppipe_path": str(case.cppipe_path),
-        "compare_image_outputs": not case.value_only,
-        "raise_on_equivalence_failure": False,
-    }
-    if case.value_only:
-        pipeline_params.setdefault("materialize_runtime_artifacts", False)
-    if case.cellprofiler_timeout_seconds is not None:
-        pipeline_params["cellprofiler_timeout_seconds"] = (
-            case.cellprofiler_timeout_seconds
-        )
+    pipeline_params = _comparison_pipeline_params(case)
     native_reference = _native_reference_location(
         case,
         context.native_reference_root,
@@ -1153,6 +1145,27 @@ def _run_comparison_case(
             tool_output_root=tool_output_root,
         )
     return observation
+
+
+def _comparison_pipeline_params(
+    case: CellProfilerComparisonCase,
+) -> dict[str, object]:
+    """Return the shared execution and native-reference scope parameters."""
+
+    pipeline_params: dict[str, object] = {
+        **case.pipeline_params,
+        "dataset_id": case.resolved_dataset_id,
+        "cppipe_path": str(case.cppipe_path),
+        "compare_image_outputs": not case.value_only,
+        "raise_on_equivalence_failure": False,
+    }
+    if case.value_only:
+        pipeline_params.setdefault("materialize_runtime_artifacts", False)
+    if case.cellprofiler_timeout_seconds is not None:
+        pipeline_params["cellprofiler_timeout_seconds"] = (
+            case.cellprofiler_timeout_seconds
+        )
+    return pipeline_params
 
 
 def _native_reference_location(
@@ -1277,15 +1290,16 @@ def _tool_execution_summary(
         success=result.success,
         output_path=str(result.output_path),
         execution_seconds=phase_seconds.get(execution_phase),
-        total_metric_seconds=total_phase_seconds
-        if total_phase_seconds is not None
-        else (float(metric_seconds) if metric_seconds is not None else None),
-        peak_memory_mb=(
-            float(peak_memory_mb) if peak_memory_mb is not None else None
+        total_metric_seconds=(
+            total_phase_seconds
+            if total_phase_seconds is not None
+            else (float(metric_seconds) if metric_seconds is not None else None)
         ),
+        peak_memory_mb=(float(peak_memory_mb) if peak_memory_mb is not None else None),
         cached=bool(cached) if cached is not None else _result_is_cached(result),
         error_message=result.error_message,
         phase_seconds=phase_seconds,
+        provenance=dict(result.provenance or {}),
     )
 
 

@@ -3,16 +3,25 @@ from __future__ import annotations
 import ast
 import json
 import signal
+from types import SimpleNamespace
 from pathlib import Path
 
+import imageio.v3 as imageio
+import numpy as np
 import pytest
 
 from benchmark.adapters.openhcs import (
     ZMQ_RESULTS_SUMMARY_FILENAME,
     _execute_pipeline_via_zmq_server,
     _openhcs_execution_watchdog,
+    _reference_export_equivalence,
     _strict_cellprofiler_runtime_equivalence_policy,
     _ZMQProgressTimingObserver,
+)
+from benchmark.cellprofiler_reference_exports import (
+    CellProfilerReferenceExportArtifact,
+    CellProfilerReferenceExportPlan,
+    ReferenceExportSemanticKind,
 )
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
@@ -43,6 +52,11 @@ from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
 from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
+from zmqruntime import (
+    EndpointApplication,
+    EndpointApplicationCompatibility,
+    ProcessIdentity,
+)
 
 _HAS_INTERVAL_TIMER = all(
     hasattr(signal, attribute) for attribute in ("SIGALRM", "ITIMER_REAL", "setitimer")
@@ -85,6 +99,40 @@ def test_strict_cellprofiler_policy_has_no_tolerance_coarser_than_one_e_minus_si
     assert not policy.allow_unstable_zernike_descriptors
 
 
+def test_reference_export_equivalence_uses_declared_label_plane_contract(
+    tmp_path: Path,
+) -> None:
+    artifact = CellProfilerReferenceExportArtifact(
+        artifact_name="Labels",
+        artifact_type="ObjectLabelsArtifactType",
+        semantic_kind=ReferenceExportSemanticKind.CATEGORICAL_OBJECT_LABELS,
+        output_filename="labels.tiff",
+        comparison="integer label pixels: exact equality",
+    )
+    plan = CellProfilerReferenceExportPlan(
+        source_pipeline_name="source.cppipe",
+        source_sha256="source",
+        artifacts=(artifact,),
+    )
+    reference_root = tmp_path / "reference"
+    candidate_root = tmp_path / "candidate"
+    reference_root.mkdir()
+    candidate_root.mkdir()
+    labels = np.asarray([[0, 1], [2, 0]], dtype=np.uint16)
+    imageio.imwrite(reference_root / artifact.output_filename, labels)
+    imageio.imwrite(candidate_root / artifact.output_filename, labels[np.newaxis, ...])
+
+    report, comparisons = _reference_export_equivalence(
+        plan,
+        reference_root=reference_root,
+        candidate_root=candidate_root,
+    )
+
+    assert report.is_equivalent is True
+    assert len(comparisons) == 1
+    assert comparisons[0].equivalent is True
+
+
 def test_benchmark_executes_pipeline_via_zmq_client(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -96,6 +144,12 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         def __init__(self, *, port, persistent, progress_callback):
             assert port is None
             self.progress_callback = progress_callback
+            self.connected_endpoint = SimpleNamespace(
+                application=EndpointApplication("openhcs", "0.8.5"),
+                process_identity=ProcessIdentity(pid=321, create_time=123.0),
+                log_file_path="/tmp/benchmark-server.log",
+                port=7777,
+            )
 
         def __enter__(self):
             return self
@@ -105,6 +159,12 @@ def test_benchmark_executes_pipeline_via_zmq_client(
 
         def disconnect(self):
             return None
+
+        def endpoint_compatibility(self):
+            return EndpointApplicationCompatibility(
+                expected=EndpointApplication("openhcs", "0.8.5"),
+                observed=self.connected_endpoint.application,
+            )
 
         def submit_compile(self, submission):
             compile_submission = submission.compile_request()
@@ -181,6 +241,9 @@ def test_benchmark_executes_pipeline_via_zmq_client(
     assert execution.execution_id == "exec-1"
     assert execution.output_roots == (tmp_path,)
     assert execution.results_summary == {"output_plate_root": str(tmp_path)}
+    assert execution.endpoint_provenance["endpoint_openhcs_version"] == "0.8.5"
+    assert execution.endpoint_provenance["endpoint_pid"] == 321
+    assert execution.endpoint_provenance["endpoint_create_time_epoch_seconds"] == 123.0
     assert (
         json.loads(
             (tmp_path / ZMQ_RESULTS_SUMMARY_FILENAME).read_text(encoding="utf-8")
@@ -209,6 +272,57 @@ def test_benchmark_executes_pipeline_via_zmq_client(
         BenchmarkPhase.COMPILE_OPENHCS.name,
         BenchmarkPhase.EXECUTE_OPENHCS.name,
     }
+
+
+def test_benchmark_rejects_incompatible_execution_endpoint(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    class IncompatibleZMQExecutionClient:
+        def __init__(self, *, port, persistent, progress_callback):
+            self.connected_endpoint = SimpleNamespace(
+                application=EndpointApplication("openhcs", "0.8.4"),
+                process_identity=None,
+                log_file_path=None,
+                port=7777,
+            )
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return None
+
+        def disconnect(self):
+            return None
+
+        def endpoint_compatibility(self):
+            return EndpointApplicationCompatibility(
+                expected=EndpointApplication("openhcs", "0.8.5"),
+                observed=self.connected_endpoint.application,
+            )
+
+    monkeypatch.setattr(
+        "benchmark.adapters.openhcs.ZMQExecutionClient",
+        IncompatibleZMQExecutionClient,
+    )
+
+    with pytest.raises(ToolExecutionError, match="0.8.4"):
+        _execute_pipeline_via_zmq_server(
+            plate_id="/tmp/plate",
+            execution_plate_id="/tmp/execution_plate",
+            selected_pipeline_path="/tmp/pipeline.cppipe",
+            pipeline_steps=_public_steps(),
+            global_config=GlobalPipelineConfig(),
+            pipeline_config=PipelineConfig(),
+            observation_export_path=tmp_path / "observation.pkl",
+            phase_timing=PhaseTimingTrace(
+                run_id="run",
+                pipeline_name="pipe",
+                tool="OpenHCS",
+            ),
+            timing_observer=_ZMQProgressTimingObserver(),
+        )
 
 
 def test_openhcs_progress_timing_uses_completion_bound_without_axis_events() -> None:
