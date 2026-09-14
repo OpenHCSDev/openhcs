@@ -82,7 +82,6 @@ _openhcs_disk_image_holders() {
 
 openhcs_detach_disk_image() {
   local mounted_device=$1
-  local detach_attempt
 
   /bin/sync
   /usr/bin/hdiutil detach "$mounted_device" || true
@@ -94,21 +93,9 @@ openhcs_detach_disk_image() {
   /usr/sbin/diskutil info -plist "$mounted_device" >&2 || true
   _openhcs_disk_image_holders "$mounted_device" || true
   # Release filesystems separately from their backing image. Disk Arbitration
-  # reports unmount dissent here. A completed unmount and whole-device eject are
-  # separate asynchronous operations, so retry only the owned whole device while
-  # continuing to require its terminal absence.
+  # reports unmount dissent here; preserve it rather than retrying a busy eject.
   /usr/sbin/diskutil unmountDisk force "$mounted_device" >&2 || true
-  for detach_attempt in 1 2 3 4 5; do
-    /usr/bin/hdiutil detach -debug -force "$mounted_device" || true
-    if test ! -e "$mounted_device"; then
-      return 0
-    fi
-    if ((detach_attempt < 5)); then
-      printf 'Owned disk image %s is still present after forced detach attempt %s; retrying.\n' \
-        "$mounted_device" "$detach_attempt" >&2
-      /bin/sleep 1
-    fi
-  done
+  /usr/bin/hdiutil detach -debug -force "$mounted_device" || true
   if test -e "$mounted_device"; then
     printf 'Owned disk image remains attached: %s.\n' "$mounted_device" >&2
     /usr/bin/log show --last 2m --style compact --info --debug \

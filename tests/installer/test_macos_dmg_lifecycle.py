@@ -44,13 +44,7 @@ if tool == "hdiutil":
         assert args[-1] == "/dev/disk4", "Detach must target the whole owned device"
         mode = "force" if "-force" in args else "normal"
         can_release = mode == "normal" or not state["volumes_mounted"]
-        if mode == "force":
-            state["force_attempts"] += 1
-        reached_release_attempt = (
-            mode == "normal"
-            or state["force_attempts"] >= state["force_removes_after_attempt"]
-        )
-        if state[mode + "_removes_disk"] and can_release and reached_release_attempt:
+        if state[mode + "_removes_disk"] and can_release:
             state["attached"] = False
         state_path.write_text(json.dumps(state))
         if state[mode + "_status"]:
@@ -88,8 +82,6 @@ elif tool == "log":
     assert args[7] == "--predicate"
     assert args[8] == "process == 'diskarbitrationd' AND eventMessage MATCHES '.*\\\\bdisk4(s[0-9]+)*\\\\b.*'"
     print("Owned Disk Arbitration failure diagnostic", file=sys.stderr)
-elif tool == "sleep":
-    assert args == ["1"]
 elif tool == "plutil":
     payload = plistlib.loads(sys.stdin.buffer.read())
     try:
@@ -130,8 +122,6 @@ def lifecycle_harness(tmp_path: Path):
         "normal_removes_disk": True,
         "force_status": 0,
         "force_removes_disk": True,
-        "force_attempts": 0,
-        "force_removes_after_attempt": 1,
         "family": ["disk4", "disk4s1"],
         "parents": {"disk4": "disk4", "disk4s1": "disk4"},
         "holder_status": 1,
@@ -151,7 +141,6 @@ def lifecycle_harness(tmp_path: Path):
                 ("/usr/bin/sudo", "sudo"),
                 ("/usr/bin/log", "log"),
                 ("/bin/sync", "sync"),
-                ("/bin/sleep", "sleep"),
                 ("test", "test"),
             )
         )
@@ -269,8 +258,7 @@ def test_detach_proves_backing_device_absence(
     assert (result.returncode == 0) is success, result.stderr
     detach_calls = [call for call in calls if call[:2] == ["hdiutil", "detach"]]
     assert detach_calls[0] == ["hdiutil", "detach", "/dev/disk4"]
-    expected_force_attempts = 0 if normal_removes_disk else (1 if success else 5)
-    assert len(detach_calls) == 1 + expected_force_attempts
+    assert len(detach_calls) == (1 if normal_removes_disk else 2)
     if not normal_removes_disk:
         assert detach_calls[1] == [
             "hdiutil",
@@ -288,28 +276,16 @@ def test_detach_proves_backing_device_absence(
         assert "Resource busy" in result.stderr
     if not success:
         assert "remains attached" in result.stderr
-    assert ["test", "!", "-e", "/dev/disk4"] in calls
-    if not success:
-        assert ["test", "-e", "/dev/disk4"] in calls
+    terminal_check = (
+        ["test", "!", "-e", "/dev/disk4"]
+        if normal_removes_disk
+        else ["test", "-e", "/dev/disk4"]
+    )
+    assert terminal_check in calls
     assert any(call[0] == "log" for call in calls) is (not success)
     if not success:
         assert "Owned Disk Arbitration failure diagnostic" in result.stderr
     assert ["diskutil", "info", "/dev/disk4"] not in calls
-
-
-def test_forced_detach_retries_owned_device_until_absent(lifecycle_harness):
-    _state, run = lifecycle_harness
-    result, calls = run(
-        'openhcs_detach_disk_image "$mounted_device"',
-        normal_status=1,
-        normal_removes_disk=False,
-        force_removes_after_attempt=2,
-    )
-
-    assert result.returncode == 0, result.stderr
-    assert calls.count(["hdiutil", "detach", "-debug", "-force", "/dev/disk4"]) == 2
-    assert calls.count(["sleep", "1"]) == 1
-    assert "still present after forced detach attempt 1" in result.stderr
 
 
 @pytest.mark.parametrize("family", [["disk4", "disk4s1"], ["disk4s1", "disk4"]])
@@ -403,8 +379,8 @@ def test_forced_detach_follows_explicit_volume_release(
 @pytest.mark.skipif(
     sys.platform != "darwin", reason="Requires native macOS disk images"
 )
-def test_native_busy_disk_image_detaches_and_retains_payload(tmp_path: Path):
-    """Hold a real file open, release the owned image, then verify its archive."""
+def test_native_busy_disk_image_recovers_after_holder_release(tmp_path: Path):
+    """Preserve a busy device, release its holder, then verify its archive."""
     writable = tmp_path / "writable.dmg"
     compressed = tmp_path / "verified.dmg"
     mount = tmp_path / "mount"
@@ -456,12 +432,18 @@ def test_native_busy_disk_image_detaches_and_retains_payload(tmp_path: Path):
             0
         ], "Image holder did not start"
         assert holder.stdout.readline().strip() == "ready"
-        detached = lifecycle(f"openhcs_detach_disk_image {shlex.quote(device)}")
-        assert "Releasing the still-attached owned disk image" in detached.stderr
-        assert not Path(device).exists()
-        device = ""
+        busy = lifecycle(
+            f"openhcs_detach_disk_image {shlex.quote(device)}", check=False
+        )
+        assert busy.returncode != 0
+        assert "Releasing the still-attached owned disk image" in busy.stderr
+        assert "Owned disk image remains attached" in busy.stderr
+        assert Path(device).exists()
         holder.communicate(timeout=10)
         holder = None
+        lifecycle(f"openhcs_detach_disk_image {shlex.quote(device)}")
+        assert not Path(device).exists()
+        device = ""
         command(
             "/usr/bin/hdiutil",
             "convert",
