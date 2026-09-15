@@ -1,11 +1,11 @@
 {
-  "generator_sha256": "ef2cbd38939fcec105c65fdfd48731da286460214bcde7b4b43f2f46e0fd8d44",
+  "generator_sha256": "c0134cf20b33cc6048722dff5503f143b711ec56c2ef8f9036e5ee40d6db0999",
   "source_sha256": {
     "benchmark/native_refs/official30_scoped_rows/ExampleCometAssay_ExampleCometAssay_wells_include_first1/native_cellprofiler_headless/ExampleCometAssay.cppipe": "daec62eb90d9457a240bd28dcb3a1002b480db366a5d6aa849a8813f1073f8b6",
-    "paper/figures/build_slas_cellprofiler.py": "ef2cbd38939fcec105c65fdfd48731da286460214bcde7b4b43f2f46e0fd8d44",
+    "paper/figures/build_slas_cellprofiler.py": "c0134cf20b33cc6048722dff5503f143b711ec56c2ef8f9036e5ee40d6db0999",
     "paper/figures/slas/cellprofiler_translation_imported.py": "fb77e8e97af83376e6c66f7e8800a1dee3d814be19e2f013abf01ef903debab0",
     "openhcs/interop/cellprofiler/parser.py": "25fd96f8fdd4a4f02b01fc2f55e8fdb978efa331f16ca612b1466c9435e4ac89",
-    "openhcs/interop/cellprofiler/pipeline_import.py": "7ddd5fc47324f1e75e31442185dac5199138ab300b368569c4ef66fc9f7a28d3",
+    "openhcs/interop/cellprofiler/pipeline_import.py": "b547c838b2c86fe7cc5fe12d6cbf6a6715e83055c2d8c1a109ac22566d22c51e",
     "openhcs/interop/cellprofiler/module_declarations.py": "89dd65abc003c464ba6c489f52d3a4fa47be1d5f8b87d26ad72b7537f188cf8b",
     "openhcs/interop/cellprofiler/settings_binder.py": "1f7b236d8cb946ce35171447c23dab3220c4379ab446dfefb5ee3057ead0e92b",
     "openhcs/core/function_patterns.py": "d20fe8d1614210e50bf804a6cea3ce4cc4fd3ce0459b153c1cf81e214e628d3e",
@@ -15,20 +15,20 @@
     "openhcs/processing/backends/cellprofiler/illumination.py": "00154af54e879d9f03bf6c918a1b2b5c6c5f2a63b16db230325a53d05a3fbf15",
     "openhcs/processing/backends/cellprofiler/primary_objects.py": "6710b507fcdead2954e8a1038c91e2a99572d67b6d4ded8a7d41100fb229aa29",
     "openhcs/processing/backends/cellprofiler/image_geometry.py": "3e94eac2f945ee908279a45deefcf2aa38d74502c887ed8de405e906de541c37",
-    "openhcs/processing/backends/cellprofiler/morphology.py": "8a101a8800256bb693a6c82624412bf9fc099998bf9670ae30dbfe0c3a55d08b",
+    "openhcs/processing/backends/cellprofiler/morphology.py": "f174e6b6f940e083c904245354cdf384e81d287b1b2c6354eb7cb08aae4514ac",
     "openhcs/processing/backends/cellprofiler/shape.py": "ebf6bbde9013e99b1cf527386b0c9efd4ed10da369843864b4cfcf28340e2823",
     "openhcs/processing/backends/cellprofiler/texture.py": "640d9d2b5a17f643c3fe70b70bf424caa5b785693c7f6bae5d851942d52fb6f5",
     "openhcs/processing/backends/cellprofiler/intensity.py": "f529b5bfc9c595a3f7017d2022d52425b05d2f5ed7e810823073f556e520cf1f",
     "openhcs/processing/backends/cellprofiler/outlines.py": "82c865640a5d07401ce24fc3eeeef7fa61b1e27da45f6f0fb10348c942d8e0f9",
     "openhcs/processing/backends/cellprofiler/save_images.py": "0042b72bdc53fabbb93248aea61c3c7ed3f488e563e9d190b9f65746d434257c",
     "openhcs/processing/backends/cellprofiler/spreadsheet_export.py": "5787bab5727e85c045e3aed03135bb64ddc62c5a5796fea62f9570576681e6f2",
-    "paper/figures/build_slas_visual_story.py": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc"
+    "paper/figures/build_slas_visual_story.py": "7eb189ca5fa55aff5c6dfdeac48da7dc5cb0af3217b214e836afeda3c0a7715d"
   },
   "ui_crops": [],
   "output_sha256": {
-    "cellprofiler_translation.png": "82e533e6d624a2e3fd5b2dc60b746ccdd2e87d2495d46535a33f5189f309863a",
-    "cellprofiler_translation.pdf": "72857409179816b09bc7d78cd9355ac5979660ba6bbb6d43641149c59848b0b0",
-    "cellprofiler_translation.svg": "58e0bf7d1ca3b57635e4b856d2b4cbb50226d900d10e69d0331e108105567d7b"
+    "cellprofiler_translation.png": "4a6c8f6708314c273c364abb3bb8ab2b9ee47ef0a403784116fe869018ba1fc7",
+    "cellprofiler_translation.pdf": "f881fe911aedf8e1e0f64a0d4af40953e237dfa1afaaae182b5732da3815dc2c",
+    "cellprofiler_translation.svg": "3e0685123106c42fded116f8277be1014140f1040cab01b4102d87b3f19d8f42"
   },
   "interpretation": "Current parser/importer translation of the retained public ExampleCometAssay benchmark pipeline. No analysis was run. Panel A shows all enabled modules and all imported steps; multiplicity counts actual callable invocations, not parallel workers. Panel B expands the actual MeasureObjectSizeShape function list; panel C shows the actual MaskObjects named-object selections and inverted-mask setting. Layout is specific to this example, not a universal one-module-to-one-step claim.",
   "imported_document": "paper/figures/slas/cellprofiler_translation_imported.py",

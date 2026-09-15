@@ -23,7 +23,7 @@ FRAME_SECONDS = 600
 # Coordinates are (left, top, right, bottom), without image resampling.
 FRAME_DETAILS = (
     ("D  Neuron and neurite outlines", (380, 70, 725, 400)),
-    ("E  Native measurement-table detail", (680, 500, 1155, 615)),
+    ("E  Three path measurements", (691, 501, 978, 580)),
 )
 
 
@@ -100,18 +100,18 @@ def build() -> None:
     if video_pixels.shape[:2] != (720, 1280):
         raise ValueError("Review editorial crops when original video geometry changes")
     fig = plt.figure(figsize=(9, 9.3), layout="constrained")
-    grid = fig.add_gridspec(4, 2, height_ratios=(1, 0.24, 1.15, 0.8))
+    grid = fig.add_gridspec(4, 6, height_ratios=(1, 0.24, 1.25, 0.85))
     for index, (name, pixels) in enumerate(images):
-        axis = fig.add_subplot(grid[0, index])
+        axis = fig.add_subplot(grid[0, index * 3 : (index + 1) * 3])
         axis.imshow(pixels, cmap="gray", vmin=0, vmax=255, interpolation="nearest")
         axis.set_title(f"{'AB'[index]}  Original input: {name}", fontsize=12)
         axis.set_axis_off()
     for index, label in enumerate(step_labels):
-        axis = fig.add_subplot(grid[1, index])
+        axis = fig.add_subplot(grid[1, index * 3 : (index + 1) * 3])
         axis.text(
             0.5,
             0.5,
-            label,
+            f"Step {index + 1}: {label}",
             fontsize=10,
             color="#16877f",
             ha="center",
@@ -123,13 +123,16 @@ def build() -> None:
             },
         )
         axis.set_axis_off()
-    axis = fig.add_subplot(grid[2, :])
+    axis = fig.add_subplot(grid[2, :4])
     axis.imshow(video_pixels)
     axis.set_title(
-        "C  Agent-authored steps and recorded napari inspection", fontsize=12
+        "C  Recorded napari inspection", fontsize=12
     )
     axis.set_axis_off()
-    for index, (title, (left, top, right, bottom)) in enumerate(FRAME_DETAILS):
+    detail_positions = (grid[2, 4:], grid[3, :])
+    for position, (title, (left, top, right, bottom)) in zip(
+        detail_positions, FRAME_DETAILS, strict=True
+    ):
         axis.add_patch(
             Rectangle(
                 (left, top),
@@ -141,10 +144,14 @@ def build() -> None:
             )
         )
         axis.text(left, top - 6, title[0], color="#f3ac44", fontsize=10)
-        detail = fig.add_subplot(grid[3, index])
+        detail = fig.add_subplot(position)
         detail.imshow(video_pixels[top:bottom, left:right], interpolation="nearest")
         detail.set_title(title, fontsize=11)
         detail.set_axis_off()
+    detail.text(
+        0.5, -0.12, "Native _um labels; physical calibration not recorded",
+        transform=detail.transAxes, ha="center", fontsize=10, color="#526174",
+    )
     outputs = [frame]
     for suffix in ("png", "pdf", "svg"):
         destination = OUTPUT / f"figure3_agent_workflow.{suffix}"

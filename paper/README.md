@@ -1,7 +1,7 @@
 # OpenHCS manuscript
 
 Working author-review draft for **SLAS Technology**:
-*OpenHCS: interoperable, agent-guided microscopy analysis*.
+*OpenHCS: shared microscopy workflows for scientists and AI agents*.
 
 ## Versioned sources
 
@@ -11,6 +11,9 @@ Working author-review draft for **SLAS Technology**:
   historical timing plots, source tables and evaluation records.
 - [Additional CellProfiler workflows](supplementary/complex_cellprofiler_workflows.md):
   generated step sequences for public advanced-segmentation and 3D examples.
+- [OpenHCS 0.8.5 CI evidence](supplementary/ci_official30_085/README.md):
+  preserved hosted execution and selected-value comparison records, source
+  revision, reference inventory and checksums.
 - [Bibliographic metadata](openhcs_references.json) and [citation style](styles/README.md).
 
 ## Figures and validation

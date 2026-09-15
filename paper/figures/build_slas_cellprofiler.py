@@ -111,7 +111,7 @@ def build():
     sheet.text(
         5, 88, "CellProfiler modules (.cppipe)", size=11, weight="bold", color=BLUE
     )
-    sheet.text(48, 88, "OpenHCS declarations", size=11, weight="bold", color=TEAL)
+    sheet.text(48, 88, "Configured OpenHCS steps", size=11, weight="bold", color=TEAL)
     setup_text = "\n".join(
         " · ".join(
             f"{module.module_num} {module.name}" for module in setup[start : start + 2]
@@ -128,11 +128,11 @@ def build():
         79.3,
         48,
         7.4,
-        "PipelineConfig + source bindings",
+        "PipelineConfig: images and settings",
         f"Named input: {aliases}",
         color=TEAL,
     )
-    sheet.text(48, 77, "FunctionStep.func", family="monospace", size=9.5, color=TEAL)
+    sheet.text(48, 77, "Processing function (FunctionStep.func)", size=9, color=TEAL)
 
     records = []
     for index, (module, step) in enumerate(pairs, 1):
@@ -209,7 +209,7 @@ def build():
     sheet.text(
         95,
         34.5,
-        "Plate-wide step: "
+        "Export after all groups: step "
         + ", ".join(str(r["function_step_number"]) for r in plate_records),
         size=10,
         color=ORANGE,

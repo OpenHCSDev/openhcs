@@ -45,9 +45,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.interop.cellprofiler.measurement_scope import (
-    CellProfilerMeasurementTargetScope,
-)
+from openhcs.interop.cellprofiler.measurement_scope import CellProfilerMeasurementTargetScope
 from openhcs.processing.backends.cellprofiler.illumination import (
     FilterSizeMethod,
     IlluminationCorrectionMethod,
@@ -82,13 +80,9 @@ from openhcs.processing.backends.cellprofiler.save_images import (
     save_images,
 )
 from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
-from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
-    export_to_spreadsheet,
-)
+from openhcs.processing.backends.cellprofiler.spreadsheet_export import export_to_spreadsheet
 from openhcs.processing.backends.cellprofiler.texture import measure_texture_objects
-from openhcs.processing.backends.cellprofiler.thresholding import (
-    CellProfilerThresholdMethod,
-)
+from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
 
 pipeline_config = PipelineConfig(
     materialization_results_path=None,
@@ -105,7 +99,7 @@ pipeline_config = PipelineConfig(
         channel_mode=None,
         z_index_mode=None,
         timepoint_mode=None,
-        well_mode=None,
+        well_mode=None
     ),
     fiji_display_config=LazyFijiDisplayConfig(
         lut=None,
@@ -114,44 +108,62 @@ pipeline_config = PipelineConfig(
         channel_mode=None,
         z_index_mode=None,
         timepoint_mode=None,
-        well_mode=None,
+        well_mode=None
     ),
-    well_filter_config=LazyWellFilterConfig(well_filter=None, well_filter_mode=None),
+    well_filter_config=LazyWellFilterConfig(
+        well_filter=None,
+        well_filter_mode=None
+    ),
     zarr_config=LazyZarrConfig(
-        compressor=None, compression_level=None, chunk_strategy=None
+        compressor=None,
+        compression_level=None,
+        chunk_strategy=None
     ),
     vfs_config=LazyVFSConfig(
-        read_backend=None, intermediate_backend=None, materialization_backend=None
+        read_backend=None,
+        intermediate_backend=None,
+        materialization_backend=None
     ),
-    dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+    dtype_config=LazyDtypeConfig(
+        default_dtype_conversion=None
+    ),
     processing_config=LazyProcessingConfig(
-        variable_components=[VariableComponents.SITE],
+        variable_components=[
+            VariableComponents.SITE
+        ],
         group_by=GroupBy.CHANNEL,
-        input_source=InputSource.PREVIOUS_STEP,
+        input_source=InputSource.PREVIOUS_STEP
     ),
     source_bindings_config=LazySourceBindingsConfig(
         metadata_rules=(),
         match_plan=SourceBindingMatchPlan(
-            method=SourceBindingMatchMethod.ORDER, dimensions=()
+            method=SourceBindingMatchMethod.ORDER,
+            dimensions=()
         ),
-        metadata_fields=(FieldSpec(name="FileLocation", dtype=str, required=False),),
+        metadata_fields=(
+            FieldSpec(
+                name='FileLocation',
+                dtype=str,
+                required=False
+            ),
+        ),
         source_filters=(
             SourceFilterClause(
                 subject=SourceFilterSubject.EXTENSION,
                 match_type=SourceFilterMatchType.IS_IMAGE,
                 value=None,
-                any_group=None,
+                any_group=None
             ),
             SourceFilterClause(
                 subject=SourceFilterSubject.DIRECTORY,
                 match_type=SourceFilterMatchType.DOES_NOT_CONTAIN_REGEX,
-                value="[\\\\/]\\.",
-                any_group=None,
-            ),
+                value='[\\\\/]\\.',
+                any_group=None
+            )
         ),
         bindings=(
             NamedSourceBinding(
-                alias="OrigComet",
+                alias='OrigComet',
                 selector=SourceSelector(
                     components=(),
                     metadata=(),
@@ -159,15 +171,18 @@ pipeline_config = PipelineConfig(
                         SourceFilterClause(
                             subject=SourceFilterSubject.FILE,
                             match_type=SourceFilterMatchType.CONTAINS,
-                            value=".tif",
-                            any_group=None,
+                            value='.tif',
+                            any_group=None
                         ),
                     ),
-                    inherit_current_scope=True,
+                    inherit_current_scope=True
                 ),
                 origin=SourceBindingOrigin.PIPELINE_START,
                 component_identity=(
-                    ComponentSelector(component=AllComponents.CHANNEL, value="1"),
+                    ComponentSelector(
+                        component=AllComponents.CHANNEL,
+                        value='1'
+                    ),
                 ),
                 artifact_kind=ImageArtifactType,
                 required=True,
@@ -177,14 +192,20 @@ pipeline_config = PipelineConfig(
                 load_as_monochrome=True,
                 load_as_mask=False,
                 source_channel_axis=None,
-                source_channel_counts=None,
+                source_channel_counts=None
             ),
         ),
         image_plane_sources=(),
         imported_metadata_tables=(),
         source_stack_components=(),
         grouping_metadata_fields=(),
-        source_voxel_spacing=SourceVoxelSpacing(values_zyx=(1.0, 1.0, 1.0)),
+        source_voxel_spacing=SourceVoxelSpacing(
+            values_zyx=(
+                1.0,
+                1.0,
+                1.0
+            )
+        )
     ),
     step_source_bindings_config=LazyStepSourceBindingsConfig(
         enabled=None,
@@ -197,7 +218,7 @@ pipeline_config = PipelineConfig(
         imported_metadata_tables=None,
         source_stack_components=None,
         grouping_metadata_fields=None,
-        source_voxel_spacing=None,
+        source_voxel_spacing=None
     ),
     sequential_processing_config=LazySequentialProcessingConfig(
         sequential_components=None
@@ -208,7 +229,7 @@ pipeline_config = PipelineConfig(
         file_extensions=None,
         exclude_patterns=None,
         output_filename=None,
-        global_summary_filename=None,
+        global_summary_filename=None
     ),
     plate_metadata_config=LazyPlateMetadataConfig(
         barcode=None,
@@ -216,17 +237,18 @@ pipeline_config = PipelineConfig(
         plate_id=None,
         description=None,
         acquisition_user=None,
-        z_step=None,
+        z_step=None
     ),
     path_planning_config=LazyPathPlanningConfig(
         well_filter=None,
         well_filter_mode=None,
         output_dir_suffix=None,
         global_output_folder=None,
-        sub_dir=None,
+        sub_dir=None
     ),
     step_well_filter_config=LazyStepWellFilterConfig(
-        well_filter=None, well_filter_mode=None
+        well_filter=None,
+        well_filter_mode=None
     ),
     step_materialization_config=LazyStepMaterializationConfig(
         well_filter=None,
@@ -234,7 +256,7 @@ pipeline_config = PipelineConfig(
         output_dir_suffix=None,
         global_output_folder=None,
         sub_dir=None,
-        enabled=None,
+        enabled=None
     ),
     streaming_defaults=LazyStreamingDefaults(
         well_filter=None,
@@ -243,7 +265,7 @@ pipeline_config = PipelineConfig(
         persistent=None,
         host=None,
         transport_mode=None,
-        scope_accent_color=None,
+        scope_accent_color=None
     ),
     napari_streaming_config=LazyNapariStreamingConfig(
         well_filter=None,
@@ -260,7 +282,7 @@ pipeline_config = PipelineConfig(
         host=None,
         transport_mode=None,
         scope_accent_color=None,
-        port=None,
+        port=None
     ),
     fiji_streaming_config=LazyFijiStreamingConfig(
         well_filter=None,
@@ -277,36 +299,36 @@ pipeline_config = PipelineConfig(
         host=None,
         transport_mode=None,
         scope_accent_color=None,
-        port=None,
+        port=None
     ),
     compilation_debug_config=LazyCompilationDebugConfig(
-        enabled=None, compiled_execution_bundle_path=None
-    ),
+        enabled=None,
+        compiled_execution_bundle_path=None
+    )
 )
 
 pipeline_steps = [
     FunctionStep(
-        func=(
-            correct_illumination_calculate,
-            {
-                "intensity_choice": IntensityChoice.BACKGROUND,
-                "block_size": 5,
-                "rescale_option": RescaleOption.NO,
-                "smoothing_method": SmoothingMethod.MEDIAN_FILTER,
-                "filter_size_method": FilterSizeMethod.MANUALLY,
-                "manual_filter_size": 200,
-                "name_the_output_image": "IllumGray",
-            },
-        ),
-        name="CorrectIlluminationCalculate",
+        func=(correct_illumination_calculate, {
+                'intensity_choice': IntensityChoice.BACKGROUND,
+                'block_size': 5,
+                'rescale_option': RescaleOption.NO,
+                'smoothing_method': SmoothingMethod.MEDIAN_FILTER,
+                'filter_size_method': FilterSizeMethod.MANUALLY,
+                'manual_filter_size': 200,
+                'name_the_output_image': 'IllumGray'
+            }),
+        name='CorrectIlluminationCalculate',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
             variable_components=None,
             group_by=None,
-            input_source=InputSource.PIPELINE_START,
+            input_source=InputSource.PIPELINE_START
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -319,10 +341,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -330,7 +353,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -339,7 +362,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -356,7 +379,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -373,26 +396,25 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            correct_illumination_apply,
-            {
-                "method": IlluminationCorrectionMethod.SUBTRACT,
-                "name_the_output_image": "CorrGray",
-            },
-        ),
-        name="CorrectIlluminationApply",
+        func=(correct_illumination_apply, {
+                'method': IlluminationCorrectionMethod.SUBTRACT,
+                'name_the_output_image': 'CorrGray'
+            }),
+        name='CorrectIlluminationApply',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
             variable_components=None,
             group_by=None,
-            input_source=InputSource.PIPELINE_START,
+            input_source=InputSource.PIPELINE_START
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -405,10 +427,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -416,7 +439,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -425,7 +448,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -442,7 +465,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -459,33 +482,34 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            identify_primary_objects,
-            {
-                "min_diameter": 40,
-                "max_diameter": 200,
-                "watershed_method": WatershedMethod.SHAPE,
-                "automatic_smoothing": False,
-                "smoothing_filter_size": 60,
-                "threshold_method": CellProfilerThresholdMethod.ROBUST_BACKGROUND,
-                "adaptive_window_size": 50,
-                "lower_outlier_fraction": 0.01,
-                "upper_outlier_fraction": 0.001,
-                "number_of_deviations": 0.75,
-                "name_the_primary_objects_to_be_identified": "Comet",
-            },
-        ),
-        name="IdentifyPrimaryObjects",
+        func=(identify_primary_objects, {
+                'min_diameter': 40,
+                'max_diameter': 200,
+                'watershed_method': WatershedMethod.SHAPE,
+                'automatic_smoothing': False,
+                'smoothing_filter_size': 60,
+                'threshold_method': CellProfilerThresholdMethod.ROBUST_BACKGROUND,
+                'adaptive_window_size': 50,
+                'lower_outlier_fraction': 0.01,
+                'upper_outlier_fraction': 0.001,
+                'number_of_deviations': 0.75,
+                'name_the_primary_objects_to_be_identified': 'Comet'
+            }),
+        name='IdentifyPrimaryObjects',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -498,10 +522,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -509,7 +534,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -518,7 +543,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -535,7 +560,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -552,21 +577,25 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            mask_image,
-            {"mask_source": MaskSource.OBJECTS, "name_the_output_image": "MaskedComet"},
-        ),
-        name="MaskImage",
+        func=(mask_image, {
+                'mask_source': MaskSource.OBJECTS,
+                'name_the_output_image': 'MaskedComet'
+            }),
+        name='MaskImage',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -579,10 +608,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -590,7 +620,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -599,7 +629,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -616,7 +646,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -633,30 +663,31 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            identify_primary_objects,
-            {
-                "min_diameter": 30,
-                "max_diameter": 100,
-                "unclump_method": UnclumpMethod.NONE,
-                "watershed_method": WatershedMethod.SHAPE,
-                "fill_holes": FillHolesOption.AFTER_DECLUMP,
-                "threshold_method": CellProfilerThresholdMethod.OTSU,
-                "adaptive_window_size": 50,
-                "name_the_primary_objects_to_be_identified": "CometHead",
-            },
-        ),
-        name="IdentifyPrimaryObjects",
+        func=(identify_primary_objects, {
+                'min_diameter': 30,
+                'max_diameter': 100,
+                'unclump_method': UnclumpMethod.NONE,
+                'watershed_method': WatershedMethod.SHAPE,
+                'fill_holes': FillHolesOption.AFTER_DECLUMP,
+                'threshold_method': CellProfilerThresholdMethod.OTSU,
+                'adaptive_window_size': 50,
+                'name_the_primary_objects_to_be_identified': 'CometHead'
+            }),
+        name='IdentifyPrimaryObjects',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -669,10 +700,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -680,7 +712,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -689,7 +721,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -706,7 +738,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -723,26 +755,27 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            mask_objects,
-            {
-                "invert_mask": True,
-                "select_the_input_objects": "Comet",
-                "select_the_masking_object": "CometHead",
-                "name_the_output_objects": "CometTail",
-            },
-        ),
-        name="MaskObjects",
+        func=(mask_objects, {
+                'invert_mask': True,
+                'select_the_input_objects': 'Comet',
+                'select_the_masking_object': 'CometHead',
+                'name_the_output_objects': 'CometTail'
+            }),
+        name='MaskObjects',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -755,10 +788,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -766,7 +800,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -775,7 +809,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -792,7 +826,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -809,37 +843,35 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
         func=[
-            (
-                measure_object_size_shape,
-                {"calculate_advanced": False, "select_object_sets_to_measure": "Comet"},
-            ),
-            (
-                measure_object_size_shape,
-                {
-                    "calculate_advanced": False,
-                    "select_object_sets_to_measure": "CometHead",
-                },
-            ),
-            (
-                measure_object_size_shape,
-                {
-                    "calculate_advanced": False,
-                    "select_object_sets_to_measure": "CometTail",
-                },
-            ),
+            (measure_object_size_shape, {
+                    'calculate_advanced': False,
+                    'select_object_sets_to_measure': 'Comet'
+                }),
+            (measure_object_size_shape, {
+                    'calculate_advanced': False,
+                    'select_object_sets_to_measure': 'CometHead'
+                }),
+            (measure_object_size_shape, {
+                    'calculate_advanced': False,
+                    'select_object_sets_to_measure': 'CometTail'
+                })
         ],
-        name="MeasureObjectSizeShape",
+        name='MeasureObjectSizeShape',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -852,10 +884,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -863,7 +896,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -872,7 +905,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -889,7 +922,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -906,26 +939,27 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            measure_texture_objects,
-            {
-                "measurement_scope": CellProfilerMeasurementTargetScope.BOTH,
-                "scale": 10,
-                "select_object_sets_to_measure": "Comet",
-                "select_images_to_measure": "CorrGray",
-            },
-        ),
-        name="MeasureTexture",
+        func=(measure_texture_objects, {
+                'measurement_scope': CellProfilerMeasurementTargetScope.BOTH,
+                'scale': 10,
+                'select_object_sets_to_measure': 'Comet',
+                'select_images_to_measure': 'CorrGray'
+            }),
+        name='MeasureTexture',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -938,10 +972,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -949,7 +984,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -958,7 +993,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -975,7 +1010,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -992,40 +1027,35 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
         func=[
-            (
-                measure_object_intensity,
-                {
-                    "select_object_sets_to_measure": "Comet",
-                    "select_images_to_measure": "CorrGray",
-                },
-            ),
-            (
-                measure_object_intensity,
-                {
-                    "select_object_sets_to_measure": "CometHead",
-                    "select_images_to_measure": "CorrGray",
-                },
-            ),
-            (
-                measure_object_intensity,
-                {
-                    "select_object_sets_to_measure": "CometTail",
-                    "select_images_to_measure": "CorrGray",
-                },
-            ),
+            (measure_object_intensity, {
+                    'select_object_sets_to_measure': 'Comet',
+                    'select_images_to_measure': 'CorrGray'
+                }),
+            (measure_object_intensity, {
+                    'select_object_sets_to_measure': 'CometHead',
+                    'select_images_to_measure': 'CorrGray'
+                }),
+            (measure_object_intensity, {
+                    'select_object_sets_to_measure': 'CometTail',
+                    'select_images_to_measure': 'CorrGray'
+                })
         ],
-        name="MeasureObjectIntensity",
+        name='MeasureObjectIntensity',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1038,10 +1068,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1049,7 +1080,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1058,7 +1089,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1075,7 +1106,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1092,31 +1123,38 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            overlay_outlines,
-            {
-                "line_mode": LineMode.THICK,
-                "outline_source_kinds": (
+        func=(overlay_outlines, {
+                'line_mode': LineMode.THICK,
+                'outline_source_kinds': (
                     OutlineSourceKind.OBJECTS,
-                    OutlineSourceKind.OBJECTS,
+                    OutlineSourceKind.OBJECTS
                 ),
-                "outline_colors": ("Red", "Green"),
-                "select_image_on_which_to_display_outlines": "CorrGray",
-                "select_objects_to_display": ("Comet", "CometHead"),
-                "name_the_output_image": "CometOutline",
-            },
-        ),
-        name="OverlayOutlines",
+                'outline_colors': (
+                    'Red',
+                    'Green'
+                ),
+                'select_image_on_which_to_display_outlines': 'CorrGray',
+                'select_objects_to_display': (
+                    'Comet',
+                    'CometHead'
+                ),
+                'name_the_output_image': 'CometOutline'
+            }),
+        name='OverlayOutlines',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1129,10 +1167,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1140,7 +1179,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1149,7 +1188,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1166,7 +1205,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1183,31 +1222,32 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            save_images,
-            {
-                "single_file_name": "OrigBlue",
-                "append_suffix": True,
-                "filename_suffix": "_CometHeadOutline",
-                "file_format": SaveImagesFileFormat.PNG,
-                "bit_depth": SaveImagesBitDepth.UINT8,
-                "base_image_folder": "Elsewhere...|",
-                "record_file_and_path": False,
-                "select_image_name_for_file_prefix": "OrigComet",
-                "select_the_image_to_save": "CometOutline",
-            },
-        ),
-        name="SaveImages",
+        func=(save_images, {
+                'single_file_name': 'OrigBlue',
+                'append_suffix': True,
+                'filename_suffix': '_CometHeadOutline',
+                'file_format': SaveImagesFileFormat.PNG,
+                'bit_depth': SaveImagesBitDepth.UINT8,
+                'base_image_folder': 'Elsewhere...|',
+                'record_file_and_path': False,
+                'select_image_name_for_file_prefix': 'OrigComet',
+                'select_the_image_to_save': 'CometOutline'
+            }),
+        name='SaveImages',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=None, group_by=None, input_source=None
+            variable_components=None,
+            group_by=None,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=True,
@@ -1220,10 +1260,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1231,7 +1272,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1240,7 +1281,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1257,7 +1298,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1274,24 +1315,25 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
+            port=None
+        )
     ),
     FunctionStep(
-        func=(
-            export_to_spreadsheet,
-            {
-                "add_filename_prefix": False,
-                "overwrite_existing_files_without_warning": True,
-            },
-        ),
-        name="ExportToSpreadsheet",
+        func=(export_to_spreadsheet, {
+                'add_filename_prefix': False,
+                'overwrite_existing_files_without_warning': True
+            }),
+        name='ExportToSpreadsheet',
         description=None,
         enabled=True,
         debug_pause=False,
-        dtype_config=LazyDtypeConfig(default_dtype_conversion=None),
+        dtype_config=LazyDtypeConfig(
+            default_dtype_conversion=None
+        ),
         processing_config=LazyProcessingConfig(
-            variable_components=[], group_by=GroupBy.NONE, input_source=None
+            variable_components=[],
+            group_by=GroupBy.NONE,
+            input_source=None
         ),
         source_bindings=LazyStepSourceBindingsConfig(
             enabled=None,
@@ -1304,10 +1346,11 @@ pipeline_steps = [
             imported_metadata_tables=None,
             source_stack_components=None,
             grouping_metadata_fields=None,
-            source_voxel_spacing=None,
+            source_voxel_spacing=None
         ),
         step_well_filter_config=LazyStepWellFilterConfig(
-            well_filter=None, well_filter_mode=None
+            well_filter=None,
+            well_filter_mode=None
         ),
         step_materialization_config=LazyStepMaterializationConfig(
             well_filter=None,
@@ -1315,7 +1358,7 @@ pipeline_steps = [
             output_dir_suffix=None,
             global_output_folder=None,
             sub_dir=None,
-            enabled=None,
+            enabled=None
         ),
         streaming_defaults=LazyStreamingDefaults(
             well_filter=None,
@@ -1324,7 +1367,7 @@ pipeline_steps = [
             persistent=None,
             host=None,
             transport_mode=None,
-            scope_accent_color=None,
+            scope_accent_color=None
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             well_filter=None,
@@ -1341,7 +1384,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
+            port=None
         ),
         fiji_streaming_config=LazyFijiStreamingConfig(
             well_filter=None,
@@ -1358,7 +1401,7 @@ pipeline_steps = [
             host=None,
             transport_mode=None,
             scope_accent_color=None,
-            port=None,
-        ),
-    ),
+            port=None
+        )
+    )
 ]

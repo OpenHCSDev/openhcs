@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "9c617efef4cee575d203b04246b2c0ae854c264b2fa117eddf709c1db06eb8cc",
+  "generator_sha256": "174e4c2577274fc2bc875bee64c9f7285de623862714572cd708dfee6278484f",
   "source_sha256": {
     "docs/source/architecture/quick_start.rst": "4dcc151050f02da75a6819db0be0053a1dcbefcf236b34998536ad9fbece915d",
     "openhcs/core/pipeline_document.py": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
@@ -18,9 +18,9 @@
   },
   "ui_crops": [],
   "output_sha256": {
-    "shared_workflow.png": "cb9284f18cc3f26b3d6e4718e73fbf7f3bbb602e0df14f28a1f15373542b128e",
-    "shared_workflow.pdf": "ec834cf1038f6617af57c0959255f9ec46655ffe330d7f0909e3acd956cf9b80",
-    "shared_workflow.svg": "24980620f3decddafe235b14803123a89de735dd06d458b33e041d4ee3e51bbd"
+    "shared_workflow.png": "239b6aa327fd6c398d9a6650596b0afa18f7e6d3fb110f56111d4c700039002f",
+    "shared_workflow.pdf": "3947a545524e617e2402382d002cc415b72f06446fcd8db682557317e9829216",
+    "shared_workflow.svg": "61bbaecaf2b7739984e33af8bd6bc2de2fef9d4cabacba737610ca9dbdaf02a6"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

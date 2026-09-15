@@ -193,7 +193,7 @@ def build() -> None:
             group.worker_count,
             group.completed_wells_per_execution_second,
             color=blue,
-            alpha=0.15,
+            alpha=0.35,
             linewidth=0.7,
         )
     medians = throughput.groupby(
@@ -210,8 +210,8 @@ def build() -> None:
     c.set(
         yscale="log",
         xticks=sorted(throughput.worker_count.unique()),
-        xlabel="OpenHCS workers\n(4 wells per worker)",
-        ylabel="Completed wells / execution second",
+        xlabel="OpenHCS workers\n(4 repeated-image assignments per worker)",
+        ylabel="Completed assignments\nper execution second (log scale)",
         title="A  Measured OpenHCS throughput",
     )
     c.legend(frameon=False, fontsize=10)
@@ -222,7 +222,7 @@ def build() -> None:
             group.wells_per_worker,
             group.peak_gib,
             color=orange,
-            alpha=0.18,
+            alpha=0.35,
             linewidth=0.7,
         )
     medians = memory.groupby("wells_per_worker").peak_gib.median()
@@ -237,7 +237,7 @@ def build() -> None:
     d.set(
         ylim=(0, None),
         xticks=sorted(memory.wells_per_worker.unique()),
-        xlabel="Wells per worker\n(4 workers)",
+        xlabel="Repeated-image assignments per worker\n(4 workers)",
         ylabel="Peak RAM (GiB)",
         title="B  Memory use",
     )
@@ -245,7 +245,7 @@ def build() -> None:
     for axis in (*historical_axes, *axes):
         axis.grid(axis="y", alpha=0.18, linewidth=0.5)
         axis.set_axisbelow(True)
-    fig.suptitle("Persistent-worker execution across 30 workflows", fontsize=12)
+    fig.suptitle("Worker reuse within each execution across 30 workflows", fontsize=12)
     historical_figure.suptitle(
         "Archived single-sample observations: unequal timing boundaries", fontsize=12
     )

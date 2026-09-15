@@ -6,7 +6,7 @@
     "mcp_outputs/website-agent-demo/candidate-20260804-13/plate/1_w2.tif": "ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847",
     "website/assets/agent/cold-start-workflow-pipeline.py": "48b6e4f9dbc54932df8a95c405f4b832c1ca35856d866a261faf15fa3c14b754"
   },
-  "generator_sha256": "79793900bac82b4eec0bf6090df24bf6d05a9fd222d86309cef3660af9f19a32",
+  "generator_sha256": "cea43b841d1c9517718545766bb572a908d38c64f2f6bcb722c43de8c3d87a35",
   "run_id": "candidate-20260804-13",
   "openhcs_version": "0.7.13",
   "video_frame_seconds": 600,
@@ -19,11 +19,11 @@
       725,
       400
     ],
-    "E  Native measurement-table detail": [
-      680,
-      500,
-      1155,
-      615
+    "E  Three path measurements": [
+      691,
+      501,
+      978,
+      580
     ]
   },
   "step_labels": [
@@ -32,8 +32,8 @@
   ],
   "output_sha256": {
     "figure3_original_video_frame.png": "c52154ecfa8f7ab3c9f8e24416b735e7ca79adf57111ba2b4dc3c824903d13c1",
-    "figure3_agent_workflow.png": "7cfaf8377c99543440bb1e646253f7a4a2283a0434aad577b9fa66368679fbce",
-    "figure3_agent_workflow.pdf": "c7d1d6c4574603e0b2950391d1ce623eb7be9aaaaaf2f0c4cbd6d1a93f9b5bc1",
-    "figure3_agent_workflow.svg": "06b458659e346af8f6c654b3e72006aa936d9a7c5a09ded7f1f6cec2d8f4f813"
+    "figure3_agent_workflow.png": "b9df5d31223d9785881f3903652f6bc8696637f3f627c2d7b48dcfd9e65de37a",
+    "figure3_agent_workflow.pdf": "6c6910a80b37f4d7087805b4b980bb4bf1e89f8dc1f639379cb53cf1f3eebe88",
+    "figure3_agent_workflow.svg": "a424c43b7c06454e87e3a342143e5046fc4dc36ecf597eaddf26238971d494a8"
   }
 }

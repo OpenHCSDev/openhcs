@@ -1,0 +1,13 @@
+{
+  "collect_memory_metric": true,
+  "continue_on_error": true,
+  "created_at_epoch_seconds": 1789023232.4722521,
+  "discard_openhcs_outputs": true,
+  "native_reference_root": "/home/runner/work/openhcs/openhcs/benchmark/native_refs/official30_scoped_rows",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "processor": "x86_64",
+  "python": "3.12.14 (main, Aug 13 2026, 02:47:42) [GCC 13.3.0]",
+  "require_native_reference": true,
+  "speedup_target": 5.0,
+  "suite_id": "official30-zmq-baseline"
+}

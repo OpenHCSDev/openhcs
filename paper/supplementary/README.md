@@ -74,13 +74,13 @@ saved measurements, while native feature rows support viewer selection.
 
 ## Supplementary Figure 5. Custom functions enter the shared workflow
 
-![A registered Python function appears in the editor with matching controls and MCP parameters.](../figures/slas/custom_function_extension.png){width=5.3in}
+![A registered Python function appears in the editor with matching controls and catalog parameters.](../figures/slas/custom_function_extension.png){width=5.3in}
 
 \(A) A custom intensity-scaling function declares its array backend and typed
 parameters. (B) After registration through MCP, the function is selected in the
 editor's existing function list. (C) The editor generates gain and offset controls
-from the function signature. (D) MCP exposes the same defaults and the parameter
-descriptions from its docstring. UI details are cropped from native screenshots;
+from the function signature. (D) Function discovery through MCP exposes the same
+defaults and the parameter descriptions from its docstring. UI details are cropped from native screenshots;
 the complete source and captures accompany the figure.
 
 ```{=openxml}
@@ -116,20 +116,53 @@ The acquisition scripts pin the official CellProfiler examples to
 `264a8155da21a2d468051f78211bed2e580a8934`, and the CellProfiler 4 benchmark
 supplement to `40abc2e600fd46b74c213999dd25c5245048dc92`.
 
-[Single-process results](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/single_process_summary.csv)
-contain one row per workflow, repetition and equivalence counts, execution and
-total-phase timings, ratios, and the retained accuracy summary.
+### OpenHCS 0.8.5 release comparison
 
-The native ExampleWoundHealing timing field is 900 s, without an explicit native
-completion flag. Its recorded ratio is retained in the source CSV but excluded
-from manuscript timing comparisons. Empty assay-category and memory fields are
-empty in the original table; this supplement does not infer their values.
+The [preserved CI evidence](ci_official30_085/README.md) contains the observations,
+summary, phase timings and suite metadata from the hosted Official30 job at
+release commit `e867013a8eb188edcc63b5b0cdfd06f42a99b409`.
+[The successful job](https://github.com/OpenHCSDev/openhcs/actions/runs/34445574926/job/102769520329)
+built candidate packages and executed all 30 imported workflows through ZMQ on
+Linux with Python 3.12.14. Every OpenHCS execution was uncached; native
+CellProfiler outputs came from the committed references.
+
+The [per-workflow observations](ci_official30_085/observations.csv) report
+successful execution and zero comparison differences for all 30 cases. The
+[reference inventory](ci_official30_085/reference_inventory.csv) identifies
+which cases contain values to compare:
+
+| Selected native reference class | Workflows | Value comparisons |
+| --- | ---: | --- |
+| CSV measurements | 21 | Measurement tables |
+| SQLite and CellProfiler Analyst properties | 3 | Database tables and properties; one also has an overlay image |
+| NPY-only illumination output | 1 | Image pixels |
+| No retained value files | 5 | Execution checks only |
+
+Image comparison selects output directories containing images and no CSV files.
+This selects two workflows: the AllMethod illumination array and the completed
+translocation tutorial's overlay alongside SQLite measurements. The advanced
+segmentation tutorial's five illumination arrays are source inputs outside its
+reference-output directory. Images saved alongside CSV measurements in 14
+profiles are outside image comparison. Numeric comparisons use absolute and
+relative tolerances of `1e-6`, with no pixels allowed outside tolerance.
+
+The records retain per-case comparison outcomes and timing, rather than raw
+candidate output trees or individual pixel-difference reports. The native
+references' original dependency environments were not recorded. The evidence
+index supplies source and test permalinks, checksums and the separate
+14 September 2026 reference-inventory audit provenance.
 
 ### Retained single-sample timing records
 
-The source table records one observation and one passing output-comparison result for
-each of the 30 workflows. Its field `min_parity_accuracy` is 1.0 in all rows;
-this is the recorded comparison summary, not a manual segmentation score.
+The separate [May single-process table](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/single_process_summary.csv)
+contains one observation and one passing status flag per workflow, execution and
+total-phase timings, ratios and the legacy accuracy field. Its native
+ExampleWoundHealing timing is 900 s without a native completion flag, so that
+row is excluded from timing comparisons. Empty fields remain as recorded.
+
+The field `min_parity_accuracy` is 1.0 in all rows. It is the minimum Boolean
+pass flag across a workflow's observations, including the five workflows without
+reference values, rather than the fraction of matching measurements or pixels.
 Times below are in seconds, rounded to five significant figures from the source
 CSV. The full-precision values remain in that file. Native command and prepared
 OpenHCS execution have different timing boundaries, described below. The other
@@ -225,9 +258,11 @@ current-version compatibility matrix.
 - [Two-, three- and four-worker queue-depth conditions](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/wells_per_core_2c3c4c.csv).
 - [Four-worker conditions with six and eight wells per worker](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/wells_per_core_4c_6wpc_8wpc.csv).
 
-Figure 5A uses the measured two-, three- and four-worker rows, with four wells
-per worker, for all 30 workflows. Each row reports completion of every assigned
-well. Throughput is completed wells divided by execution seconds; the derived
+Figure 5A uses the measured two-, three- and four-worker rows, with four repeated-image
+assignments per worker, for all 30 workflows. The runtime schedules each assignment
+as a well; these are repeated inputs, not independent biological replicates.
+Each row reports completion of every assignment. Throughput is completed
+assignments divided by execution seconds; the derived
 values match the source `wells_per_second` field. The one-worker condition used
 one well and is not included in this fixed-queue-depth panel.
 
@@ -381,29 +416,43 @@ Python. The generator checks function identities and parameters after reloading
 each document and records the hashes of the source pipelines, importer and
 function implementations.
 
-These are current import and code-round-trip checks. The report separately
-identifies each workflow's archived output-comparison summary; no scientific
-analysis was rerun to generate the report.
+These are import and code-round-trip checks. Supplementary Data 1 separately
+records the release CI executions and selected output comparisons for both
+workflows.
+
+## Supplementary Data 6. Workflow regression tests
+
+The tests exercise representative authoring and validation cases alongside the
+recorded UI demonstration. The following source files are pinned to commit
+`7a7d21fee726905b87b9020cebf0bdfc350631f4`; these three test files are unchanged
+from the OpenHCS 0.8.5 release commit.
+
+| Tested behavior | Source tests |
+| --- | --- |
+| Nested and inherited configuration, parameter order, enum identity and function-step reconstruction | [Python generation tests](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_pycodify_formatters.py) |
+| Rejection of incompatible memory types, grouping, required axes and stack configuration | [Compiled-function validation tests](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_funcstep_contract_validator.py) |
+| Rejection of a function-detail request using a stale catalog revision | [Function-catalog tests](https://github.com/OpenHCSDev/openhcs/blob/7a7d21fee726905b87b9020cebf0bdfc350631f4/tests/unit/test_function_catalog_zmq.py) |
+
+The [unit-test job](https://github.com/OpenHCSDev/openhcs/actions/runs/34870874969/job/104066142788)
+passed while selecting `tests/unit` and `tests/core`. These focused tests include
+controlled fixtures and isolate the stated behavior. The real-corpus execution
+and value comparisons are provided by the separate Official30 job in
+Supplementary Data 1.
 
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
 |------------------------------|------------------------------|----------------------------------------|
 | May CellProfiler benchmark | Co-committed source `f58bca4e9`; executed environment still to be recovered | Retained comparison and timing summaries, worker and memory observations |
+| Release Official30 comparison | OpenHCS 0.8.5, `e867013a8`; Linux, Python 3.12.14 | 30 fresh candidate executions; 25 retained-value comparisons; two selected image cases |
+| Workflow regression tests | `7a7d21fee`; named test files unchanged from 0.8.5 | Successful unit-test job; representative authoring and validation cases |
 | Original unattended neurite run; Figure 3 | OpenHCS 0.7.13, `f1c1d9b670`; Codex 0.146.0, gpt-5.6-sol | Recorded construction, execution, saved outputs and viewer checks |
 | Later corrected neurite demonstration; Supplementary Figure 4 | OpenHCS 0.7.14; correction `0eb5f77c02` | Separately recorded corrected outputs and object-to-measurement links |
 | Parameter/code round trip; Figure 2 | OpenHCS 0.8.5 release commit `e867013a8` | Same-session code/field edits and matching native controls |
-| Comet Assay translation; Figure 4 | Recorded importer source hashes match OpenHCS 0.8.5 | Module-to-step mapping and generated-code round trip |
+| Comet Assay translation; Figure 4 | Mapping retained from the 0.8.5 figure; regenerated with source hashes in the translation receipt | Unchanged module-to-step mapping, function parameters and generated-code round trip |
 | Custom-function registration; Supplementary Figure 5 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
 
 The full figure receipts retain source hashes and capture-specific changes.
 The custom-function example was registered and selected but not executed on
 the analysis dataset. Viewer demonstrations in Figure 6 are identified by the
 gallery record and remain separate from the original unattended evaluation.
-
-## Review and deposition status
-
-[SLAS_READINESS.md](../review/SLAS_READINESS.md) records unresolved benchmark
-environment metadata, raw comparison reports, source-version correspondence,
-and remaining citation checks. The current submission choices are listed in
-[AUTHOR_DECISIONS.md](../review/AUTHOR_DECISIONS.md).

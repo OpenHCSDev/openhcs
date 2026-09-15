@@ -275,6 +275,7 @@ def architecture():
     ):
         sheet.text(x, 73.5, label, size=10.5, ha="center", weight="bold")
         sheet.arrow((x, 71.5), (x, 67.5), both=x != 87, color=PURPLE)
+        sheet.text(x + 2, 69.5, "Import" if x == 87 else "Edit", size=10.5, color=PURPLE)
 
     sheet.axis.add_patch(
         FancyBboxPatch(
@@ -300,12 +301,12 @@ def architecture():
         sheet.box(x, 49, 19, 9, title, "Python function", color=TEAL)
     for start, end in ((19, 24), (43, 48), (67, 72)):
         sheet.arrow((start, 53.5), (end, 53.5), color=TEAL)
-    sheet.text(12, 44, "Bind images", size=9.5, ha="center")
+    sheet.text(12, 44, "Named images", size=11, ha="center")
     sheet.text(
         59,
         43,
-        "Choose stack axes, processing groups, function chains and named results",
-        size=9.3,
+        "Choose stack axes, processing groups,\nfunction chains and named results",
+        size=11,
         ha="center",
     )
 
@@ -313,22 +314,30 @@ def architecture():
     sheet.asset(logos / "bioformats.svg", (6, 24, 9, 7))
     sheet.text(18, 28.5, "Image folders · Bio-Formats", size=10.5, va="center")
     sheet.text(
-        18, 24, "OME-Zarr · OMERO (experimental)", size=9.5, va="center", color=MUTED
+        18, 24, "OME-Zarr · OMERO (experimental)", size=11, va="center"
     )
     for name, x in (("cupy.svg", 58), ("pytorch.svg", 70), ("jax.png", 82)):
         sheet.asset(logos / name, (x, 24, 8, 7))
-    sheet.text(74, 21, "Scientific Python + custom functions", size=10, ha="center")
+    sheet.text(74, 21, "Scientific Python + custom functions", size=11, ha="center")
     sheet.route(((8, 31), (1.5, 31), (1.5, 53), (6, 53)), color=BLUE)
     sheet.route(((93, 28), (98.5, 28), (98.5, 53), (92, 53)), color=ORANGE)
+    sheet.text(2.1, 45, "Images", size=11, color=BLUE, rotation=90)
+    sheet.text(97, 43, "Functions", size=11, color=ORANGE, rotation=90)
 
-    sheet.panel("C", "Compile, execute and inspect", 3, 17)
+    sheet.panel("C", "Compile, execute and inspect", 3, 19)
     sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=TEAL)
+    sheet.text(
+        35, 36.5, "Workflow to compile", size=11, color=TEAL,
+        ha="center", va="center",
+        bbox={"facecolor": "white", "edgecolor": "none", "pad": 1},
+    )
     sheet.text(11, 9, "Compile", size=12, weight="bold", ha="center", color=BLUE)
-    sheet.text(11, 5.5, "validate + plan", size=9, ha="center")
+    sheet.text(11, 5.5, "validate + plan", size=11, ha="center")
     sheet.arrow((20, 9), (26, 9))
     sheet.chip(28, 5, "CPU")
     sheet.chip(45, 5, "GPU")
-    sheet.text(42.5, 2.3, "Persistent workers", size=10, ha="center")
+    sheet.text(42.5, 15.5, "Support depends on the function", size=11, ha="center")
+    sheet.text(42.5, 2.3, "Workers reused within each run", size=11, ha="center")
     sheet.arrow((59, 9), (65, 9), color=TEAL)
     sheet.stack(67, 6, 6, 5)
     sheet.axis.add_patch(Rectangle((77, 6), 7, 6, edgecolor=TEAL, facecolor="white"))
@@ -336,14 +345,14 @@ def architecture():
         sheet.axis.plot([77, 84], [y, y], color=TEAL, linewidth=0.7)
     sheet.axis.plot([79.5, 79.5], [6, 12], color=TEAL, linewidth=0.7)
     sheet.asset(logos / "fiji.svg", (88, 6, 7, 6))
-    sheet.text(81, 2.3, "Images · ROIs · tables", size=10, ha="center")
-    sheet.text(81, 14, "napari / Fiji + saved outputs", size=9, ha="center", color=TEAL)
+    sheet.text(81, 2.3, "Images · ROIs · tables", size=11, ha="center")
+    sheet.text(81, 13.3, "napari / Fiji + saved outputs", size=11, ha="center", color=TEAL)
     sheet.save()
 
 
 def authoring():
     sheet = FigureSheet(
-        "editable_analyses", "Edit one analysis through forms, Python or MCP", 8.2
+        "editable_analyses", "Edit one analysis through forms, Python or MCP", 9.3
     )
     record_path = OUTPUT / "authoring_verified_roundtrip_provenance.json"
     record = json.loads(record_path.read_text())
@@ -373,14 +382,14 @@ def authoring():
         raise ValueError("Recorded final field and control do not agree")
 
     sheet.panel("A", "Main window: the complete workflow", 3, 90)
-    sheet.native_image("authoring_main_verified_capture", (3, 40, 60, 48))
+    sheet.native_image("authoring_main_verified_capture", (3, 49, 60, 39))
     sheet.panel("B", "Recorded MCP edits", 66, 90)
     sheet.box(
         67,
         73,
         29,
         12,
-        "Apply Python code",
+        "Apply code to step",
         f"Control updates to {observed[0]}",
         color=PURPLE,
     )
@@ -395,30 +404,27 @@ def authoring():
         color=TEAL,
     )
     sheet.text(
-        81.5,
-        47,
-        "Read and edit the same\nlive session through MCP",
-        size=10,
-        ha="center",
-        va="center",
-        color=MUTED,
-        linespacing=1.5,
-    )
-    sheet.text(
-        3, 37, "NeuronCyto II workflow • two function steps", size=10, color=MUTED
-    )
-    sheet.panel("C", "Function controls", 3, 33)
-    sheet.panel("D", "Matching Python code", 54, 33)
-    sheet.native_image(
-        "authoring_function_verified_capture", (3, 8, 44, 23), crop=(15, 86, 535, 304)
+        3, 46, "Detail from A: the two analysis steps", size=10, color=MUTED
     )
     sheet.native_image(
-        "authoring_code_verified_capture", (54, 8, 43, 23), crop=(65, 96, 410, 224)
+        "authoring_main_verified_capture", (3, 35, 62, 9), crop=(516, 230, 1024, 320)
     )
-    sheet.arrow((48, 19), (53, 19), both=True, color=PURPLE)
+    sheet.text(69, 46, "Connection status in A", size=10, color=MUTED)
+    sheet.native_image(
+        "authoring_main_verified_capture", (69, 36, 27, 7), crop=(895, 733, 1024, 768)
+    )
+    sheet.panel("C", "Function controls", 3, 29)
+    sheet.panel("D", "Matching Python code", 54, 29)
+    sheet.native_image(
+        "authoring_function_verified_capture", (3, 6, 44, 21), crop=(25, 153, 193, 290)
+    )
+    sheet.native_image(
+        "authoring_code_verified_capture", (54, 6, 43, 21), crop=(74, 96, 292, 222)
+    )
+    sheet.arrow((48, 17), (53, 17), both=True, color=PURPLE)
     sheet.text(
         50,
-        5,
+        3,
         "The same parameters, in the same order, with the same values",
         size=11,
         ha="center",
@@ -433,7 +439,11 @@ def viewers():
         "inspectable_results", "Inspect images and objects in familiar viewers", 9.1
     )
     sheet.panel("A", "Fiji: an image plane and its matching ROI list", 3, 90)
-    sheet.gallery_image("fiji-review.webp", (3, 53, 94, 34))
+    sheet.gallery_image("fiji-review.webp", (3, 53, 61, 34))
+    sheet.text(68, 86, "Nine ROI entries", size=10, weight="bold")
+    sheet.gallery_image("fiji-review.webp", (68, 64, 29, 20), crop=(822, 112, 1235, 433))
+    sheet.text(68, 62, "Nuclear outline", size=10, weight="bold")
+    sheet.gallery_image("fiji-review.webp", (75, 54, 15, 7), crop=(421, 497, 493, 550))
     sheet.text(
         50,
         50,
@@ -443,7 +453,19 @@ def viewers():
         color=MUTED,
     )
     sheet.panel("B", "napari: object selection and image coordinates", 3, 44)
-    sheet.gallery_image("napari-roi-navigation-poster.webp", (3, 7, 94, 34))
+    sheet.gallery_image("napari-roi-navigation-poster.webp", (3, 7, 61, 34))
+    sheet.text(68, 40, "Selected object", size=10, weight="bold")
+    sheet.gallery_image(
+        "napari-roi-navigation-poster.webp", (75, 27, 15, 12), crop=(862, 454, 950, 538)
+    )
+    sheet.text(68, 25, "Selected list entry", size=10, weight="bold")
+    sheet.gallery_image(
+        "napari-roi-navigation-poster.webp", (68, 20, 29, 4), crop=(15, 823, 320, 849)
+    )
+    sheet.text(68, 17, "Channel and Z plane", size=10, weight="bold")
+    sheet.gallery_image(
+        "napari-roi-navigation-poster.webp", (68, 8, 29, 7), crop=(1446, 507, 1598, 548)
+    )
     sheet.text(
         50,
         4,

@@ -110,6 +110,12 @@ def finalize_docx(docx_path: Path, source_directory: Path) -> None:
 
         for paragraph in root.findall(".//w:p", namespace):
             paragraph_properties = paragraph.find("w:pPr", namespace)
+            if tuple(paragraph.iter(word_tag("drawing"))):
+                if paragraph_properties is None:
+                    paragraph_properties = ET.Element(word_tag("pPr"))
+                    paragraph.insert(0, paragraph_properties)
+                if paragraph_properties.find(word_tag("keepNext")) is None:
+                    ET.SubElement(paragraph_properties, word_tag("keepNext"))
             if (
                 paragraph_properties is not None
                 and paragraph_properties.find("w:numPr", namespace) is not None
@@ -168,6 +174,7 @@ def main() -> int:
             "pandoc",
             str(source),
             "--standalone",
+            "--from=markdown-implicit_figures",
             "--citeproc",
             "--resource-path",
             str(source.parent),
