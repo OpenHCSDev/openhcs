@@ -101,8 +101,15 @@ provenance/results receipts and intentionally selected main artifacts. Generated
 newly track raw microscopy images, bulk data, archives, intermediate renders or
 old output variants. Existing tracked historical assets are unchanged.
 
-All successful runs are retained in this first migration; no automatic pruning
-or deletion of historical reviews is enabled. `review/latest` is a compatibility
+The generated [history index](review/INDEX.md) exposes successful runs, frozen
+snapshots and labelled legacy folders. `history` refreshes it without rebuilding.
+`cleanup` reports exact older owned candidates and byte footprint without changes;
+current, previous successful, newer candidates, frozen snapshots and unmanaged
+folders are protected. Optional `cleanup --archive` journals and recoverably
+moves old owned runs, keeping their original URLs via relative symlinks. This
+organises live runs, not disk reclamation; a multi-run interruption can leave a
+partial recoverable archive. Migration does not execute it automatically or
+delete historical reports. `review/latest` is a compatibility
 link to `current`, with its former manually copied pair preserved in a frozen
 directory. For a consistent multi-file read, resolve `current` once or use a
 snapshot. Native Windows publication is not implemented or claimed as tested.
