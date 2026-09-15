@@ -123,6 +123,11 @@ dmypy.json
 *.swo
 
 # Project specific
+paper/current
+paper/.current-*
+# Build runs, snapshots and intermediates are local. Main publication artifacts
+# are selected explicitly; do not force-add review history or microscopy dumps.
+paper/build/
 output/
 *.json
 !examples/*.json

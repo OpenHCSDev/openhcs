@@ -1,0 +1,3 @@
+# Build-only dependency, not an OpenHCS application/runtime dependency.
+# One imported implementation, pinned to the reviewed shared infrastructure.
+paper-build @ git+https://github.com/OpenHCSDev/papers.git@d871687199d5e0478f88a2b0af2bb0700a47eeda
