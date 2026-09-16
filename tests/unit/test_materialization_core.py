@@ -1561,6 +1561,82 @@ def test_roi_materialization_replaces_parser_equivalent_reference_source_prefix(
 
 
 @pytest.mark.unit
+def test_roi_materialization_uses_filename_identity_without_restoring_collapsed_site() -> (
+    None
+):
+    filemanager = _RecordingFileManager()
+    payload = _addressable_roi_label_payload(
+        None,
+        None,
+        {
+            "well": "A01",
+            "channel": 1,
+            "z_index": 1,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+        {
+            "well": "A01",
+            "channel": 2,
+            "z_index": 1,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+    )
+
+    outputs = materialization_outputs(
+        MaterializationSpec(ROIOptions(min_area=0)),
+        data=payload,
+        path="/tmp/A01_neurons_step5.roi.zip",
+        filemanager=filemanager,
+        context=_SourceSchemaProcessingContext(),
+        artifact_source_identity=SourceImageIdentity(
+            component_metadata={
+                "well": "A01",
+                "z_index": 1,
+                "timepoint": 1,
+                "extension": ".tif",
+            }
+        ),
+        artifact_filename_identity=SourceImageIdentity(
+            path="/input/A01_s001_w1_z001_t001.tif",
+            component_metadata={
+                "well": "A01",
+                "site": 1,
+                "channel": 1,
+                "z_index": 1,
+                "timepoint": 1,
+                "extension": ".tif",
+            },
+        ),
+    )
+
+    roi_outputs = [output for output in outputs if output.path.endswith(".roi.zip")]
+    assert [output.path for output in roi_outputs] == [
+        "/tmp/A01_neurons_step5_A01_s001_w1_z001_t001_rois.roi.zip",
+        "/tmp/A01_neurons_step5_A01_s001_w2_z001_t001_rois.roi.zip",
+    ]
+    assert [
+        dict(output.metadata.source_component_metadata or {}) for output in roi_outputs
+    ] == [
+        {
+            "well": "A01",
+            "channel": 1,
+            "z_index": 1,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+        {
+            "well": "A01",
+            "channel": 2,
+            "z_index": 1,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+    ]
+
+
+@pytest.mark.unit
 def test_roi_streaming_applies_target_metadata_without_scalar_stream_metadata() -> None:
     fm = _RecordingFileManager()
     labels = np.zeros((2, 8, 8), dtype=np.int32)

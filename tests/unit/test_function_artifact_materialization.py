@@ -96,6 +96,9 @@ from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
 from openhcs.core.source_image_provenance import (
+    RuntimeSourceImageProvenancePlane,
+    SourceImageIdentity,
+    SourceImageProvenanceContributor,
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_metadata import (
@@ -2548,6 +2551,88 @@ def test_materialize_artifact_outputs_streams_aggregate_artifact_with_incomplete
         "z_index": [1],
         "timepoint": [1],
     }
+
+
+def test_projected_artifact_uses_filename_identity_without_restoring_collapsed_site():
+    output_plan = ArtifactOutputPlan(
+        name="neurons",
+        path="/memory/neurons.pkl",
+        artifact_type=ObjectLabelsArtifactType,
+        materialization=roi_zip(),
+        variable_components=(VariableComponents.CHANNEL,),
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.ones((2, 4, 4), dtype=np.int32)),
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        domain=ObjectLabelDomain(
+            declared_object_id_domains=((), ()),
+            scope=ObjectLabelDomainScope.PLANE,
+        ),
+        source_image_provenance_planes=SourceImageProvenancePlanes(
+            tuple(
+                RuntimeSourceImageProvenancePlane(
+                    source_identity=SourceImageIdentity(
+                        component_metadata={
+                            "well": "A01",
+                            "channel": channel,
+                            "z_index": 1,
+                            "timepoint": 1,
+                            "extension": ".tif",
+                        }
+                    ),
+                    contributors=tuple(
+                        SourceImageProvenanceContributor(
+                            SourceImageIdentity(
+                                path=(
+                                    f"/input/A01_s{site:03d}_w{channel}"
+                                    "_z001_t001.tif"
+                                ),
+                                component_metadata={
+                                    "well": "A01",
+                                    "site": site,
+                                    "channel": channel,
+                                    "z_index": 1,
+                                    "timepoint": 1,
+                                    "extension": ".tif",
+                                },
+                            )
+                        )
+                        for site in (1, 2)
+                    ),
+                )
+                for channel in (1, 2)
+            )
+        ),
+    )
+    context = _context(FileManagerStub())
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(output_plan, labels, axis_id="A01"),
+        path=output_plan.path,
+        backend="memory",
+    )
+    plan = _plan(
+        output_plan,
+        variable_components=(VariableComponents.CHANNEL,),
+    )
+
+    [materialization] = runtime_artifact_materializations(plan, context)
+    assert materialization.source_identity is None
+    filename_metadata = materialization.filename_source_identity.component_metadata
+    outputs = materialization.outputs(plan, context)
+    roi_outputs = tuple(
+        output for output in outputs if output.path.endswith(".roi.zip")
+    )
+
+    assert filename_metadata is not None
+    assert filename_metadata["site"] == "1"
+    assert [output.path for output in roi_outputs] == [
+        "/analysis/A01_s001_w1_z001_t001_neurons_step7_rois.roi.zip",
+        "/analysis/A01_s001_w2_z001_t001_neurons_step7_rois.roi.zip",
+    ]
+    assert all(
+        "site" not in (output.metadata.source_component_metadata or {})
+        for output in roi_outputs
+    )
 
 
 def test_materialize_artifact_outputs_uses_declared_metadata_json_spec(

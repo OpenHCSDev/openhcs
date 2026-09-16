@@ -935,6 +935,7 @@ class RuntimeArtifactMaterialization:
     data: MaterializationValue
     base_path: Path
     source_identity: SourceImageIdentity | None
+    filename_source_identity: SourceImageIdentity | None
 
     @classmethod
     def from_record(
@@ -960,6 +961,16 @@ class RuntimeArtifactMaterialization:
         ):
             source_identity = (
                 ArtifactStreamSourceMetadataAuthority.payload_source_identity(data)
+            )
+            record_source = AnalysisOutputDescriptorAuthority.record_source_descriptor(
+                context,
+                plan,
+                record,
+                spec,
+                output_plan=output_plan,
+            )
+            filename_source_identity = (
+                None if record_source is None else record_source.source_identity
             )
             aggregate_descriptor = (
                 AnalysisOutputDescriptorAuthority.aggregate_descriptor(
@@ -992,6 +1003,7 @@ class RuntimeArtifactMaterialization:
                 output_plan=output_plan,
             )
             source_identity = output_descriptor.source_identity
+            filename_source_identity = output_descriptor.source_identity
         return cls(
             output_plan=output_plan,
             spec=spec,
@@ -999,6 +1011,7 @@ class RuntimeArtifactMaterialization:
             data=data,
             base_path=base_path,
             source_identity=source_identity,
+            filename_source_identity=filename_source_identity,
         )
 
     def outputs(
@@ -1016,6 +1029,7 @@ class RuntimeArtifactMaterialization:
             context.filemanager,
             context=context,
             artifact_source_identity=self.source_identity,
+            artifact_filename_identity=self.filename_source_identity,
             variable_components=self.output_plan.variable_components,
             pipeline_position=plan.pipeline_position,
             output_plan=self.output_plan,
@@ -1283,6 +1297,7 @@ def materialize_artifact_outputs(
             ),
             context=context,
             artifact_source_identity=materialization.source_identity,
+            artifact_filename_identity=materialization.filename_source_identity,
             variable_components=materialization.output_plan.variable_components,
             pipeline_position=plan.pipeline_position,
             output_plan=materialization.output_plan,
