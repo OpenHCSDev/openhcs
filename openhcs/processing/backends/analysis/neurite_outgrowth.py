@@ -509,8 +509,8 @@ def count_neuronal_cell_bodies_metaxpress(
     if not np.isfinite(pixel_size_um) or pixel_size_um <= 0:
         raise ValueError("pixel_size must be a finite value > 0")
 
-    body_channel_index = 0 if cell_body.channel_index is None else int(
-        cell_body.channel_index
+    body_channel_index = (
+        0 if cell_body.channel_index is None else int(cell_body.channel_index)
     )
     nuclear_channel_index = int(nuclear_stain.channel_index)
     for name, channel_index in (
@@ -561,7 +561,9 @@ def count_neuronal_cell_bodies_metaxpress(
         nuclei_detected=int(nuclei_labels.max()),
         neuronal_cell_body_count=len(cell_results),
         total_cell_body_area_um2=total_area,
-        mean_cell_body_area_um2=(total_area / len(cell_results) if cell_results else 0.0),
+        mean_cell_body_area_um2=(
+            total_area / len(cell_results) if cell_results else 0.0
+        ),
         mean_cell_body_intensity=mean_intensity,
     )
 
@@ -1018,9 +1020,7 @@ def _identify_cell_bodies_cellprofiler(
     keep = contract_candidates.copy()
     if nuclear_supported is not None:
         for label in np.flatnonzero(contract_candidates):
-            keep[label] = (
-                label < nuclear_supported.size and nuclear_supported[label]
-            )
+            keep[label] = label < nuclear_supported.size and nuclear_supported[label]
     filtered_labels = _relabel(detected_labels, keep)
     return object_label_value_with_dense_labels(
         detected_payload,
@@ -1965,8 +1965,7 @@ def _owner_qualified_path_branch_types(
             branch_types[path_index] = 3
             continue
         branch_types[path_index] = sum(
-            endpoint_degrees[owner, group_id] >= 3
-            for group_id in endpoint_groups
+            endpoint_degrees[owner, group_id] >= 3 for group_id in endpoint_groups
         )
     return branch_types
 

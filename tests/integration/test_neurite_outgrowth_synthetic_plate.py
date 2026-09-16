@@ -15,8 +15,14 @@ import tifffile
 from objectstate import ObjectStateRegistry
 from polystore.roi import PolylineShape, load_rois_from_zip
 from polystore.napari_stream import NapariStreamingBackend
-from polystore.streaming import StreamingBatchMessageBuilder, StreamingBatchMessageRequest
-from polystore.streaming.identity import FixedStreamProducerIdentityKind, StreamProducerIdentity
+from polystore.streaming import (
+    StreamingBatchMessageBuilder,
+    StreamingBatchMessageRequest,
+)
+from polystore.streaming.identity import (
+    FixedStreamProducerIdentityKind,
+    StreamProducerIdentity,
+)
 from polystore.streaming.viewer_transport import (
     BatchViewerStreamSourceMetadata,
     ViewerStreamBackendKwargs,
@@ -49,7 +55,10 @@ from openhcs.core.progress import ProgressEvent, set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.steps import FunctionStep
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.processing.materialization.core import Output, ViewerStreamBackendCallKwargs
+from openhcs.processing.materialization.core import (
+    Output,
+    ViewerStreamBackendCallKwargs,
+)
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
@@ -302,7 +311,8 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                     ),
                     producer=ViewerStreamProducer.from_identity(
                         StreamProducerIdentity.fixed_output(
-                            FixedStreamProducerIdentityKind.DIRECT, "synthetic-retained-domain"
+                            FixedStreamProducerIdentityKind.DIRECT,
+                            "synthetic-retained-domain",
                         )
                     ),
                 )
@@ -310,7 +320,9 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         )
         backend = NapariStreamingBackend()
         try:
-            for outputs, kwargs in stream_kwargs.filemanager_batches(tuple(dense_outputs.values())):
+            for outputs, kwargs in stream_kwargs.filemanager_batches(
+                tuple(dense_outputs.values())
+            ):
                 request = kwargs["stream_request"]
                 assert request.source.item_fields["plane_component_values"] == {
                     "channel": ["1", "2"]
@@ -321,7 +333,9 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                         data_list=[output.content for output in outputs],
                         file_paths=[output.path for output in outputs],
                         stream_request=request,
-                        component_names_request=backend.component_names_request(request),
+                        component_names_request=backend.component_names_request(
+                            request
+                        ),
                         display_payload_extra=backend.display_payload_extra(request),
                     ),
                 )
@@ -331,7 +345,12 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                     # but does not declare voxel spacing on its runtime images.
                     assert output.metadata.source_voxel_spacing == SourceVoxelSpacing()
                     assert item["plane_component_values"] == {"channel": ["1", "2"]}
-                    assert "channel" not in request.source.metadata.component_metadata_for_item(output.path, 0)
+                    assert (
+                        "channel"
+                        not in request.source.metadata.component_metadata_for_item(
+                            output.path, 0
+                        )
+                    )
                     memory = SharedMemory(name=item["shm_name"])
                     try:
                         transmitted = np.ndarray(
@@ -340,7 +359,9 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                     finally:
                         memory.close()
                     np.testing.assert_array_equal(transmitted, output.content)
-                    np.testing.assert_array_equal(transmitted, tifffile.imread(output.path))
+                    np.testing.assert_array_equal(
+                        transmitted, tifffile.imread(output.path)
+                    )
         finally:
             backend.cleanup()
 

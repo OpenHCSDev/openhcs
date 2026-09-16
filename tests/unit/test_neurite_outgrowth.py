@@ -441,7 +441,9 @@ def test_edgeless_skeleton_has_empty_topology(coordinates):
     for coordinate in coordinates:
         skeleton[coordinate] = True
     original = skeleton.copy()
-    topology = _analyze_topology(skeleton, np.zeros(skeleton.shape, np.int32), 1.3556, 3.0)
+    topology = _analyze_topology(
+        skeleton, np.zeros(skeleton.shape, np.int32), 1.3556, 3.0
+    )
     assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
     assert np.array_equal(skeleton, original)
 
@@ -451,11 +453,17 @@ def test_sparse_owned_singleton_regression_has_no_neurite_paths():
 
     skeleton = np.zeros((1024, 1024), dtype=bool)
     skeleton[599, 168] = True
-    assert hashlib.sha256(skeleton.tobytes()).hexdigest() == "20dee1df23f3a7a23408e3d3091477e7cc57aedb726e232a2481fd89f8faa015"
+    assert (
+        hashlib.sha256(skeleton.tobytes()).hexdigest()
+        == "20dee1df23f3a7a23408e3d3091477e7cc57aedb726e232a2481fd89f8faa015"
+    )
     cell_bodies = np.zeros(skeleton.shape, np.int32)
     cell_bodies[599, 168] = 2
     topology = _analyze_topology(
-        skeleton, cell_bodies, 1.3556, 4.0 / 1.3556,
+        skeleton,
+        cell_bodies,
+        1.3556,
+        4.0 / 1.3556,
         assigned_path_labels=cell_bodies,
     )
     assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
@@ -480,7 +488,10 @@ def test_isolated_pixels_do_not_change_connected_path_geometry_or_ownership(diag
     assert actual.path_endpoint_groups == expected.path_endpoint_groups
     assert actual.transitions == expected.transitions
     assert len(actual.path_coordinates) == len(expected.path_coordinates) == 1
-    assert all(np.array_equal(left, right) for left, right in zip(actual.path_coordinates, expected.path_coordinates))
+    assert all(
+        np.array_equal(left, right)
+        for left, right in zip(actual.path_coordinates, expected.path_coordinates)
+    )
 
 
 def test_crossing_resolution_retains_two_logical_endpoint_groups():
@@ -579,9 +590,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
         1,
         2,
     }
-    assert {
-        edge.feature_mapping()["branch_type"] for edge in morphology.edges
-    } == {0}
+    assert {edge.feature_mapping()["branch_type"] for edge in morphology.edges} == {0}
 
 
 @pytest.mark.parametrize(
@@ -619,9 +628,9 @@ def test_branch_events_require_three_paths_of_the_same_final_owner(
         outgrowth_width_px=1.0,
     )
     morphology.require_directed_forest()
-    assert {
-        edge.feature_mapping()["branch_type"] for edge in morphology.edges
-    } == ({1} if expected_branch_cells else {0})
+    assert {edge.feature_mapping()["branch_type"] for edge in morphology.edges} == (
+        {1} if expected_branch_cells else {0}
+    )
 
 
 def test_nearby_nonopposite_junctions_remain_a_branch_event():
@@ -705,9 +714,7 @@ def test_neurite_morphology_is_soma_rooted_feature_bearing_forest():
 @pytest.mark.parametrize("branched", [False, True])
 @pytest.mark.parametrize("pixel_size", [0.5, 1.0, 1.3556])
 def test_cell_lengths_measure_the_published_owned_paths(branched, pixel_size):
-    image = _with_separate_body_channel(
-        _draw_fluorescent_neuron(branched=branched)
-    )
+    image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=branched))
     result = _implementation()(
         image,
         neurite_channel_index=1,
@@ -1027,7 +1034,9 @@ def test_final_neurons_project_rooted_trace_ownership_not_secondary_propagation(
     assert np.count_nonzero(neurons) > np.count_nonzero(traces)
     # CP propagation is detection evidence, not an independently authoritative
     # final labeling that may contradict corrected trace ownership.
-    assert not np.array_equal(neurons, object_label_dense_array(expected_neuron_payload))
+    assert not np.array_equal(
+        neurons, object_label_dense_array(expected_neuron_payload)
+    )
 
 
 def test_overwide_nuclear_guided_foreground_is_not_a_cell_body():
@@ -1392,13 +1401,12 @@ def test_morphology_retains_topology_owners_when_shared_endpoints_collide():
     assert len(graph.edges) == 2
     for owner, expected_length in ((1, 1.0), (2, 1.0 + np.sqrt(2.0))):
         owned_edges = [
-            edge for edge in graph.edges
+            edge
+            for edge in graph.edges
             if edge.feature_mapping()["neuron_label"] == owner
         ]
         assert len(owned_edges) == 1
         assert owned_edges[0].feature_mapping()["branch_distance_um"] == (
             pytest.approx(expected_length)
         )
-        assert np.asarray(owned_edges[0].coordinates) == pytest.approx(
-            paths[owner - 1]
-        )
+        assert np.asarray(owned_edges[0].coordinates) == pytest.approx(paths[owner - 1])

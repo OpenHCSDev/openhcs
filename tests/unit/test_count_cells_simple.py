@@ -257,25 +257,29 @@ def test_dual_channel_scores_w2_positive_cells_by_minimum_stained_area():
     rr, cc = disk((20, 20), 4, shape=image.shape[1:])
     image[1, rr, cc] = 700.0
 
-    output, results, cell_results, w1_labels, w2_labels = (
-        _count_cells_simple_dual_channel_impl()(
-            image,
-            w1=_metaxpress_settings(
-                channel_index=0,
-                approx_min_width=6.0,
-                approx_max_width=14.0,
-                intensity_above_local_background=300.0,
-            ),
-            w2=_metaxpress_w2_settings(
-                channel_index=1,
-                approx_min_width=4.0,
-                approx_max_width=14.0,
-                intensity_above_local_background=200.0,
-                stained_area=StainedArea.NUCLEUS,
-            ),
-            minimum_stained_area=20.0,
-            pixel_size=1.0,
-        )
+    (
+        output,
+        results,
+        cell_results,
+        w1_labels,
+        w2_labels,
+    ) = _count_cells_simple_dual_channel_impl()(
+        image,
+        w1=_metaxpress_settings(
+            channel_index=0,
+            approx_min_width=6.0,
+            approx_max_width=14.0,
+            intensity_above_local_background=300.0,
+        ),
+        w2=_metaxpress_w2_settings(
+            channel_index=1,
+            approx_min_width=4.0,
+            approx_max_width=14.0,
+            intensity_above_local_background=200.0,
+            stained_area=StainedArea.NUCLEUS,
+        ),
+        minimum_stained_area=20.0,
+        pixel_size=1.0,
     )
 
     assert output is image
@@ -363,21 +367,17 @@ def test_w2_nucleus_and_cytoplasm_scores_stain_outside_the_nucleus():
         minimum_stained_area=20.0,
         pixel_size=1.0,
     )
-    _, whole_cell_results, _, _, w2_labels = (
-        _count_cells_simple_dual_channel_impl()(
-            image,
-            w1=w1,
-            w2=replace(w2, stained_area=StainedArea.NUCLEUS_AND_CYTOPLASM),
-            minimum_stained_area=20.0,
-            pixel_size=1.0,
-        )
+    _, whole_cell_results, _, _, w2_labels = _count_cells_simple_dual_channel_impl()(
+        image,
+        w1=w1,
+        w2=replace(w2, stained_area=StainedArea.NUCLEUS_AND_CYTOPLASM),
+        minimum_stained_area=20.0,
+        pixel_size=1.0,
     )
 
     assert _rows(nucleus_results)[0]["w2_positive_cell_count"] == 0
     assert _rows(whole_cell_results)[0]["w2_positive_cell_count"] == 1
-    assert _rows(whole_cell_results)[0]["w2_stained_area"] == (
-        "nucleus and cytoplasm"
-    )
+    assert _rows(whole_cell_results)[0]["w2_stained_area"] == ("nucleus and cytoplasm")
     assert set(np.unique(w2_labels[1])) == {0, 1}
 
 

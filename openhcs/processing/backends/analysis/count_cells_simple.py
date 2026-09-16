@@ -195,6 +195,7 @@ class SimpleCellCountResult:
     slice_index: int
     cell_count: int
 
+
 @dataclass(frozen=True)
 class DualChannelCountResult:
     """MetaXpress-style W1 cell count and W2 positive/negative scoring summary."""
@@ -209,7 +210,6 @@ class DualChannelCountResult:
     minimum_stained_area: float
     all_w2_mean_stained_area: float
     positive_w2_mean_stained_area: float
-
 
 
 @dataclass(frozen=True)
@@ -279,9 +279,7 @@ W2_STAIN_OUTPUT = ArtifactSpec.output(
 DUAL_CHANNEL_CELLS_OUTPUT = ArtifactSpec.output(
     "dual_channel_cells",
     MeasurementsArtifactType,
-    materialization=MaterializationSpec(
-        CsvOptions(filename_suffix="_cells.csv")
-    ),
+    materialization=MaterializationSpec(CsvOptions(filename_suffix="_cells.csv")),
     relations=(
         ObjectMeasurementSubjectRelation(
             source=W1_NUCLEI_OUTPUT.ref(),
@@ -785,9 +783,7 @@ def _watershed_large_objects(
         # Width-based detection needs distinct object-scale peaks, not multiple
         # pixel-scale maxima on the medial ridge of one elongated nucleus.
         peak_support = (
-            h_maxima(distance, peak_prominence)
-            if peak_prominence > 0.0
-            else component
+            h_maxima(distance, peak_prominence) if peak_prominence > 0.0 else component
         )
         peak_components, _ = ndi.label(peak_support)
         seeds = peak_local_max(

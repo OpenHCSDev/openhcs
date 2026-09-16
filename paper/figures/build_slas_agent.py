@@ -125,9 +125,7 @@ def build() -> None:
         axis.set_axis_off()
     axis = fig.add_subplot(grid[2, :4])
     axis.imshow(video_pixels)
-    axis.set_title(
-        "C  Recorded napari inspection", fontsize=12
-    )
+    axis.set_title("C  Recorded napari inspection", fontsize=12)
     axis.set_axis_off()
     detail_positions = (grid[2, 4:], grid[3, :])
     for position, (title, (left, top, right, bottom)) in zip(
@@ -149,8 +147,13 @@ def build() -> None:
         detail.set_title(title, fontsize=11)
         detail.set_axis_off()
     detail.text(
-        0.5, -0.12, "Native _um labels; physical calibration not recorded",
-        transform=detail.transAxes, ha="center", fontsize=10, color="#526174",
+        0.5,
+        -0.12,
+        "Native _um labels; physical calibration not recorded",
+        transform=detail.transAxes,
+        ha="center",
+        fontsize=10,
+        color="#526174",
     )
     outputs = [frame]
     for suffix in ("png", "pdf", "svg"):
