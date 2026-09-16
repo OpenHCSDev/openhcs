@@ -45,6 +45,11 @@ and exact backend locations. A later producer may explicitly replace the current
 binding while observation history is retained. Consumers use compiled typed
 queries rather than searching filenames.
 
+Runtime materialization likewise distinguishes an artifact's semantic source
+identity from the complete source identity used to form an output filename.
+Path construction may fill missing filename coordinates without changing the
+artifact metadata or reintroducing an axis that processing collapsed.
+
 PolyStore boundary
 ------------------
 

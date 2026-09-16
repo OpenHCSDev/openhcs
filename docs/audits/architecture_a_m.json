@@ -174,7 +174,7 @@
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
-        "sha256": "0cbf6590f3f5a23a42bedef65f23c075e76e8cfa718985465d5e3e2dc4889625",
+        "sha256": "b721e6fd9a55181bdd9f2b83974a653d1887f8cbc77acd1339c5683faa45a006",
         "role": "Proves consolidation consumes runtime CSV values, uses the compiled backend destination, ignores non-table artifacts, and propagates failures."
       },
       {
@@ -184,7 +184,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "0d752a149c02d8088a9686aae16e4d942c2c4266c80548745d5b8d265ccd0db1",
+        "sha256": "74759b37cb83a6c59f616b8b14fed21bbb187a8f489c4086bfb0fc7d380fddf0",
         "role": "Owns writer runtime-path selection before rendering and the shared ROI target request."
       }
     ],
@@ -203,7 +203,8 @@
       "On 2026-08-24, re-read the explanation against the execution-ledger table source, nominal summary-writer boundary, FileManager destination adapter, and regression coverage after removing backend path readback and swallowed failures.",
       "On 2026-08-24, rechecked the complete explanation after consolidation began requesting text through the materialization output contract; the documented ledger and destination ownership remains accurate, and the full installed MCP neurite workflow completed.",
       "On 2026-09-08, re-read the full explanation and documented per-directory storage ownership and output-root global consolidation. The native multi-directory regression passes, and a GUI/MCP POST pilot consolidated all three analysis directories and their merged summary successfully.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-16: Re-read the complete page against the projected-ROI filename-identity change. Consolidation still selects paths through the shared target request and does not own source-identity projection; 249 focused materialization and adjacent runtime tests passed."
     ]
   },
   {

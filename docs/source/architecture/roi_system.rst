@@ -42,6 +42,12 @@ Object-label artifacts use their nominal materialization strategy to project
 label members into ROI shapes. Spatial graphs have two independent registered
 projections:
 
+Projected materialization keeps semantic source identity separate from
+filename identity. A semantic identity may intentionally omit an axis that was
+collapsed by processing. The complete record-source identity may fill only the
+missing parser coordinates needed to construct a filename; it does not restore
+that axis to the artifact metadata.
+
 ``SpatialGraphROIOptions``
   Writes one feature-bearing polyline ROI per graph edge. It retains edge
   identity and scalar branch features. ImageJ ROI geometry is two-dimensional,

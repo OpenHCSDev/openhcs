@@ -855,7 +855,7 @@
   },
   {
     "path": "docs/source/concepts/storage_system.rst",
-    "source_sha256": "c8d52c1b64544b626f5431428fece0d3388b8b7ffd16198cd4a48ba136579e5d",
+    "source_sha256": "fa377aa5280583609ca43d6190cc03aaabb1a7abed40dd4344d8e686866ce1f7",
     "audience": [
       "pipeline authors",
       "storage integrators"
@@ -875,7 +875,7 @@
       },
       {
         "path": "openhcs/core/steps/function_artifact_materialization.py",
-        "sha256": "b2cffa8b2a89a3d94c3e77f1ca849d33b22451fe348a4057a7679deb9e76a95c",
+        "sha256": "6bd29a3c394408d9ebbfb1cc55b2c992fc471ec54b38e363ac7306d7b97da2a3",
         "role": "Owns the rules that materialise function outputs through the configured storage backend."
       },
       {
@@ -898,7 +898,8 @@
       "Passed ./.venv/bin/python scripts/validate_docs.py docs/source: 154 files, 23 Python blocks, and 153 audited RST pages.",
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-16: Re-read the complete explanation against runtime artifact materialization changes. Added the semantic-versus-filename identity boundary and confirmed that path completion does not mutate artifact metadata; 249 focused materialization and adjacent runtime tests passed."
     ]
   },
   {
