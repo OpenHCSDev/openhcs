@@ -31,6 +31,12 @@ OpenHCS-owned areas
   Application-specific local/remote execution wiring and agent/UI services over
   the generic ZMQRuntime/MCP foundations.
 
+``benchmark``
+  Packaged comparison command declarations, manifests, adapters, typed run
+  receipts, result artifacts, and reporting helpers. The expert local MCP
+  capability inspects existing authorized run directories through these
+  contracts; it does not own benchmark execution.
+
 Extracted foundations
 ---------------------
 

@@ -143,6 +143,26 @@ Rejected paths report the effective readable or writable roots used by the
 running server, so an agent can choose a permitted destination without
 inspecting OpenHCS source or guessing an unavailable environment variable.
 
+Inspect an existing benchmark run
+---------------------------------
+
+The OpenHCS package installs ``openhcs-benchmark`` for benchmark execution and
+report generation. Its comparison runs write a typed lifecycle receipt,
+append-only observations, and structured JSON, JSONL, and CSV artifacts.
+
+``openhcs_inspect_benchmark_run`` is an expert-only local capability, so select
+the ``full`` surface and restart the client before using it. Grant the result
+directory through ``OPENHCS_AGENT_READ_ROOTS``, then ask the agent to inspect
+that directory. The result reports recorded lifecycle status, live observation
+count relative to declared work, the exact recorded rerun invocation, and
+discoverable structured artifacts. A historical directory without a current
+typed receipt is reported with warnings instead of an inferred completion
+claim.
+
+Inspection is read-only. The MCP capability cannot launch, resume, cancel, or
+rerun a benchmark. Review the recorded command and scientific inputs, then run
+``openhcs-benchmark`` separately only when execution is explicitly authorized.
+
 Codex
 -----
 

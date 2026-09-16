@@ -45,6 +45,10 @@ that needs the behavior.
      - pycodify
    * - JSON transport projection
      - OpenHCS ``serialization.json.to_jsonable``
+   * - Benchmark command or report entry point
+     - ``BenchmarkCliCommand`` registered declaration family
+   * - Comparison-run provenance or lifecycle
+     - ``ComparisonSuiteRunDeclaration`` and ``ComparisonSuiteRunReceipt``
 
 Common workflow
 ---------------

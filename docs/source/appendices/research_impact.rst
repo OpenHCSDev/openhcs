@@ -9,5 +9,11 @@ the published documentation. Benchmark and deployment claims should be
 published from reproducible measurements with hardware, dataset, version, and
 methodology recorded.
 
+The packaged ``openhcs-benchmark`` command records typed run provenance and
+structured artifacts, and the expert local MCP surface can inspect an existing
+authorized result directory. Those receipts improve reproducibility and status
+reporting, but neither a completed receipt nor MCP inspection establishes
+scientific equivalence or authorizes a new benchmark run.
+
 The historical text is retained under
 ``docs/archive/user/research_impact.rst``.

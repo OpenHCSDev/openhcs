@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "source_sha256": "f5e56ada7d20c7d252aabbbc4f8a27a9450193769630e51ef85c3ec82555542b",
+    "source_sha256": "1f118a786ec1604f982e3eda83738e1553b44127d490e681302c856b32647735",
     "audience": [
       "imaging scientists evaluating OpenHCS",
       "pipeline authors",
@@ -12,7 +12,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "54bb6b32b78231d2abc9502057f4b748ed37508d42573b447d38efd2f958ad27",
+        "sha256": "5845d375c1bac4ed59ea067c5307810d80f9147ad68aeb46faf17fff481f7d71",
         "role": "Declares the published README, Python range, package dependencies, optional surfaces, console commands, and project links."
       },
       {
@@ -57,7 +57,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "b8e6a83bbbc60ed9e087a6ba84f0f6862785ec9e0c7d868ff48bbde702554b49",
+        "sha256": "a508b27a16e8ccc5f209cf4a47fe08c3c646d56d14526f9d458664f9c8a9e3f1",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
@@ -74,11 +74,37 @@
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
         "sha256": "15a7731e5e00136af020ca8b99ef61e60b36ad55898b466d0d4465012bfb199b",
         "role": "Exercises all 30 declared CellProfiler comparison cases over ZMQ and validates live Napari and Fiji projections."
+      },
+      {
+        "path": "benchmark/cellprofiler_benchmark_cli.py",
+        "sha256": "a7e5cefd0327ae710e95690f52cfa6736da34bd6ad4f8c68b55e174f93a56b61",
+        "role": "Owns the installed registry-derived benchmark execution and report command surface."
+      },
+      {
+        "path": "benchmark/contracts/run_receipt.py",
+        "sha256": "a40d36cf433ad234b277632e4664c3e0e7ae4cc9bb9b10cf439f1748dc7246d7",
+        "role": "Owns typed run provenance, lifecycle status, exact rerun arguments, and receipt validation."
+      },
+      {
+        "path": "benchmark/contracts/control.py",
+        "sha256": "898d5639e8b53b5c04cd28f93c5cddd8b9388a5f79177f85ec80f9bbc7c74131",
+        "role": "Declares the typed benchmark inspection request and result exposed through MCP."
+      },
+      {
+        "path": "benchmark/control.py",
+        "sha256": "d1beef268c2fb6e2a327a1084fb060eff633945a8096e9cd39f0e8b7789dab8f",
+        "role": "Owns read-only inspection of receipts, observation progress, and structured artifacts."
+      },
+      {
+        "path": "tests/unit/test_benchmark_control.py",
+        "sha256": "4ffd949056d8e511c9eafda7d7e81d54668ea25bfd58e6e3167f7022be349da6",
+        "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],
     "findings": [
       "The agent-workflow capability still claimed that the removed embedded UI assistant could use Ollama or remote LLM endpoints.",
-      "The root README is the package-index long description but was outside the editorial drift gate that covered active RTD pages."
+      "The root README is the package-index long description but was outside the editorial drift gate that covered active RTD pages.",
+      "The package overview mentioned Official30 evidence but did not identify the installed benchmark command, typed run receipt, or the expert MCP inspect-only boundary."
     ],
     "disposition": "revise",
     "validation": [
@@ -107,7 +133,8 @@
       "2026-09-09: Reviewed affected source and page claims after clarifying SourceWorkspaceSummary. Its source-bound virtual counts are not total native-handler input counts. The existing DTO docstring now owns this explanation; capability discovery and the CLI renderer project it. No DTO fields, counts, execution/progress semantics, or output-schema shape changed. Actual MCP tool-list JSON description and renderer regressions pass; nested typed output schemas are not claimed. Existing installation, ownership, and operation guidance remains accurate, so no parallel prose explanation was added to these pages.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
-      "2026-09-14: Re-read the complete project overview against the changed CellProfiler importer. Supported cppipe lowering, ordinary declaration output, and Official30 scope remain accurate; the new terminal-artifact projection is benchmark evidence machinery and does not change the installation or product workflow claims."
+      "2026-09-14: Re-read the complete project overview against the changed CellProfiler importer. Supported cppipe lowering, ordinary declaration output, and Official30 scope remain accurate; the new terminal-artifact projection is benchmark evidence machinery and does not change the installation or product workflow claims.",
+      "2026-09-16: Re-read the complete project README against package metadata, benchmark contracts/control, capability declarations, context composition, and focused tests. Added a bounded operator note identifying the installed CLI and expert read-only inspection tool, explicitly excluding launch, resume, cancellation, rerun, and scientific parity claims. Focused benchmark/control tests and README documentation validation passed."
     ]
   }
 ]

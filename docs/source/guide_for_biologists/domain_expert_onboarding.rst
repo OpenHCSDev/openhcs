@@ -144,6 +144,12 @@ the smaller current native preset family. Use
 :doc:`../guides/example_corpus_map` to choose the closest verified workflow and
 to distinguish current examples from older migration/reference scripts.
 
+For a reviewed comparison run, maintainers can use the packaged
+``openhcs-benchmark`` command. An agent using the expert ``full`` MCP surface
+can inspect the receipt, progress, rerun invocation, and structured artifacts
+of an existing readable run directory. That inspection is read-only and does
+not start, resume, cancel, or establish the scientific validity of a run.
+
 Practical Search Terms
 ----------------------
 

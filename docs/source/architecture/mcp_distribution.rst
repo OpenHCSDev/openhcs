@@ -76,6 +76,27 @@ Installing the GUI with the MCP server is a packaging convenience, not a reason
 to merge their process lifetimes. MCP startup must remain usable in a headless
 environment, and GUI launch must be an explicit human-approved action.
 
+Benchmark inspection boundary
+-----------------------------
+
+The installed ``openhcs-benchmark`` entry point owns benchmark execution and
+report-generation commands. Comparison runs persist a typed lifecycle receipt,
+append-only observations, and structured result artifacts through the benchmark
+contract package.
+
+The expert-only ``openhcs_inspect_benchmark_run`` capability is a read-only
+projection of one existing run directory. ``AgentPathPolicy`` first requires
+that directory to be readable; the benchmark control service then reports the
+recorded status and rerun invocation, observation progress, and discovered
+JSON/JSONL/CSV artifacts. Historical or invalid metadata produces a warning
+rather than a guessed completion claim.
+
+This capability does not launch, resume, cancel, or rerun a benchmark. An agent
+must treat the recorded invocation as reviewable provenance and use the CLI
+separately if execution is authorized. Lightweight request/result contracts are
+imported during capability discovery; benchmark execution modules remain
+outside the MCP startup path.
+
 Window-capture boundary
 -----------------------
 
