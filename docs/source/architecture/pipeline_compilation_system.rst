@@ -175,9 +175,13 @@ to per-axis execution.
 
 After axis and plate-scoped work completes, the parent refreshes each populated
 OpenHCS metadata target from its completed storage contents before viewer
-settlement. Step plans declare those output targets; the final projection is
-deduplicated across axes so a multi-well plate records every materialized image
-without creating a second metadata owner.
+settlement. While an image value is still typed, materialization records its
+semantic source projection beside the complete storage address. The address
+identifies the stored file; the projection preserves collapsed axes and source
+contributors without reconstructing either from its filename. Step plans
+declare the output targets, and the final plate refresh merges and deduplicates
+their persisted projections across axes without creating a second metadata
+owner.
 
 Adding compiler behavior
 ------------------------

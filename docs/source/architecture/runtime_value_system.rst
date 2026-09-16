@@ -134,6 +134,15 @@ stack requires a declared runtime plane axis and complete per-slice component or
 source provenance when source identity matters. Cardinality mismatches fail at
 the projection boundary.
 
+Materialized images persist that semantic metadata and their source contributors
+for later workspace reconstruction. Their complete storage address is a separate
+file-identity fact: it may contain a coordinate such as ``SITE`` that was needed
+to name the file even when the producing operation collapsed ``SITE`` out of the
+semantic projection. Reload therefore restores the persisted projection and
+does not reintroduce filename coordinates as semantic provenance. Only legacy
+records without persisted semantic metadata use the complete source metadata as
+a compatibility fallback.
+
 Adding a runtime value
 ----------------------
 

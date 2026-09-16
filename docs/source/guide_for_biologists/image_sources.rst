@@ -309,6 +309,17 @@ directly. Do not force a rich image container through ``SourceBindingsHandler``
 when its structured decoder is
 missing or unhealthy; repair that decoder instead.
 
+Reopening OpenHCS outputs
+-------------------------
+
+Add a generated output plate to the Plate Manager and initialize it normally.
+OpenHCS reloads the semantic axes and source contributors saved with each
+processed image. Do not add source bindings merely to recreate an axis that a
+processing step collapsed: a coordinate retained in the filename identifies the
+stored file, but does not restore that axis to the image's semantic provenance.
+Use source bindings only when you intend to select or rename the reloaded
+sources.
+
 Selecting channels and samples
 ------------------------------
 

@@ -544,7 +544,7 @@
   },
   {
     "path": "docs/source/architecture/pipeline_compilation_system.rst",
-    "source_sha256": "9f582b3d52b7b48dd277fef54e41a494236c5f0faaed7a1d8d4e66dc7ed57291",
+    "source_sha256": "a8b349cd9e24e5ca683416666c05ce71e9c74fbdddd4f216f20c1b0837ac36a6",
     "audience": [
       "OpenHCS compiler, runtime, and extension maintainers"
     ],
@@ -583,8 +583,8 @@
       },
       {
         "path": "openhcs/core/steps/function_outputs.py",
-        "sha256": "692d3889e96f4ee5a46db08cd95be4c1697efeaaf2b1015b3c95012205c4c15a",
-        "role": "Declaration-owned OpenHCS metadata targets and completed-plate deduplication across compiled axes."
+        "sha256": "5332f168d1ee9ba4c52cc4e65cbd8ca7fd6fb3a1b51ba20f4523481f1d8228d6",
+        "role": "Declaration-owned OpenHCS metadata targets, typed projection persistence, and completed-plate deduplication across compiled axes."
       },
       {
         "path": "tests/unit/test_compilation_session.py",
@@ -634,7 +634,8 @@
       "On 2026-08-26, re-read the complete page against the compiled context and execution bundle owners; revised the execution boundary to make context-owned axis identity explicit.",
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
-      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims."
+      "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
+      "2026-09-16: Re-read the complete explanation against typed semantic projection persistence. Documented the distinction between complete storage addresses and semantic image metadata; 277 focused source, output, materialization, and provenance tests passed."
     ]
   },
   {
@@ -1033,7 +1034,7 @@
   },
   {
     "path": "docs/source/architecture/runtime_value_system.rst",
-    "source_sha256": "685e26819a6c15194d729b18bf648cd1e91e8e698034041a33fe0da259b2b714",
+    "source_sha256": "130ae142dd1d147f24317d06c900d6701482fd492d580ee819082c8a756f7703",
     "audience": [
       "OpenHCS runtime and artifact maintainers"
     ],
@@ -1057,8 +1058,8 @@
       },
       {
         "path": "openhcs/core/runtime_image_values.py",
-        "sha256": "b65a52508d73a14a8dd8c37eb848a7ec5cf66962af259ce91bdb003e67a264e9",
-        "role": "Owns semantic image payload metadata, geometry use, masks, source provenance, and context projection."
+        "sha256": "5625ad31adc2d64d8524ab96cc9deaad013404313dc19feb2f682c4b9106f740",
+        "role": "Owns semantic image payload metadata, its serialized projection, geometry use, masks, source provenance, and context projection."
       },
       {
         "path": "external/arraybridge/src/arraybridge/array_geometry.py",
@@ -1094,7 +1095,8 @@
       "Passed ./.venv/bin/python -m sphinx -E -W --keep-going -b html docs/source <temporary-build-directory>: 153 source files rendered without warnings.",
       "On 2026-08-22, re-read the complete explanation against runtime image values, slice projection, ArrayBridge geometry, and the no-host-conversion regression; the OpenHCS and generic owner boundary remains explicit.",
       "On 2026-08-24, re-read the complete page against the changed declaration, dependency, UI state, knowledge, and test authorities named by this record; the documented behavior and ownership boundaries remain accurate.",
-      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid."
+      "2026-09-08: Re-read this page against the changed declaration, initial-source planning, and image-context boundaries. Stack outputs now derive source lineage from their declaration; selected-plane outputs retain ordered source identity. Unaffected framework and extension claims remain valid.",
+      "2026-09-16: Re-read the complete explanation against persisted semantic metadata replay. Documented why reload preserves collapsed axes and contributor provenance independently from complete storage addresses; 277 focused source, output, materialization, and provenance tests passed."
     ]
   },
   {
