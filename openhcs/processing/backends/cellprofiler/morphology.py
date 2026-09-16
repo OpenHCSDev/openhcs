@@ -3080,18 +3080,16 @@ def _cellprofiler_fill_labeled_holes_2d(
     first = np.concatenate((working[:-1, :].ravel(), working[:, :-1].ravel()))
     second = np.concatenate((working[1:, :].ravel(), working[:, 1:].ravel()))
     differing = first != second
-    directed_edges = np.stack(
-        (
-            np.concatenate((first[differing], second[differing])),
-            np.concatenate((second[differing], first[differing])),
-        ),
-        axis=1,
-    )
-    if directed_edges.size:
-        directed_edges = np.unique(directed_edges, axis=0)
+    adjacent_first = first[differing].astype(np.int64, copy=False)
+    adjacent_second = second[differing].astype(np.int64, copy=False)
+    lower_nodes = np.minimum(adjacent_first, adjacent_second)
+    upper_nodes = np.maximum(adjacent_first, adjacent_second)
+    undirected_edges = np.unique(lower_nodes * node_count + upper_nodes)
     adjacency: list[list[int]] = [[] for _ in range(node_count)]
-    for left, right in directed_edges:
-        adjacency[int(left)].append(int(right))
+    for encoded_edge in undirected_edges:
+        left, right = divmod(int(encoded_edge), node_count)
+        adjacency[left].append(right)
+        adjacency[right].append(left)
 
     if size_predicate is not None:
         areas = np.bincount(working.ravel(), minlength=node_count)

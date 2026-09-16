@@ -573,11 +573,98 @@ def segment_metaxpress_round_objects(
         watershed_peak_prominence=min_width_px / 2.0,
     )
 
-    keep_mask = np.zeros(int(labeled.max()) + 1, dtype=bool)
-    for region in regionprops(labeled):
-        if min_width_px <= region.axis_minor_length <= max_width_px:
-            keep_mask[region.label] = True
+    _, minor_axis_lengths = _axis_lengths_by_label(labeled)
+    keep_mask = (minor_axis_lengths >= min_width_px) & (
+        minor_axis_lengths <= max_width_px
+    )
+    if keep_mask.size:
+        keep_mask[0] = False
     return _relabel_by_keep_mask(labeled, keep_mask)
+
+
+def _axis_lengths_by_label(labeled: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Return major and minor axis lengths indexed by 2D object label."""
+
+    labels = np.asarray(labeled)
+    if labels.ndim != 2:
+        raise ValueError(
+            f"Object axis lengths require a 2D label image, got shape {labels.shape}."
+        )
+    label_count = int(labels.max())
+    output_size = label_count + 1
+    flat_labels = labels.ravel()
+    foreground_indices = np.flatnonzero(flat_labels)
+    if not len(foreground_indices):
+        empty = np.zeros(output_size, dtype=float)
+        return empty, empty.copy()
+
+    object_labels = flat_labels[foreground_indices]
+    rows = (foreground_indices // labels.shape[1]).astype(float, copy=False)
+    columns = (foreground_indices % labels.shape[1]).astype(float, copy=False)
+    counts = np.bincount(object_labels, minlength=output_size).astype(float)
+    row_sums = np.bincount(object_labels, weights=rows, minlength=output_size)
+    column_sums = np.bincount(
+        object_labels,
+        weights=columns,
+        minlength=output_size,
+    )
+    mean_rows = np.divide(
+        row_sums,
+        counts,
+        out=np.zeros(output_size, dtype=float),
+        where=counts > 0,
+    )
+    mean_columns = np.divide(
+        column_sums,
+        counts,
+        out=np.zeros(output_size, dtype=float),
+        where=counts > 0,
+    )
+    row_variances = np.divide(
+        np.bincount(
+            object_labels,
+            weights=rows * rows,
+            minlength=output_size,
+        ),
+        counts,
+        out=np.zeros(output_size, dtype=float),
+        where=counts > 0,
+    ) - np.square(mean_rows)
+    column_variances = np.divide(
+        np.bincount(
+            object_labels,
+            weights=columns * columns,
+            minlength=output_size,
+        ),
+        counts,
+        out=np.zeros(output_size, dtype=float),
+        where=counts > 0,
+    ) - np.square(mean_columns)
+    covariance = np.divide(
+        np.bincount(
+            object_labels,
+            weights=rows * columns,
+            minlength=output_size,
+        ),
+        counts,
+        out=np.zeros(output_size, dtype=float),
+        where=counts > 0,
+    ) - (mean_rows * mean_columns)
+    discriminant = np.sqrt(
+        np.maximum(
+            0.0,
+            np.square(row_variances - column_variances) + 4.0 * np.square(covariance),
+        )
+    )
+    major_variances = np.maximum(
+        0.0,
+        0.5 * (row_variances + column_variances + discriminant),
+    )
+    minor_variances = np.maximum(
+        0.0,
+        0.5 * (row_variances + column_variances - discriminant),
+    )
+    return 4.0 * np.sqrt(major_variances), 4.0 * np.sqrt(minor_variances)
 
 
 def _build_w2_compartments(

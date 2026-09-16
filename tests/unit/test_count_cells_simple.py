@@ -5,6 +5,7 @@ from inspect import signature, unwrap
 import numpy as np
 import pytest
 from skimage.draw import disk, ellipse
+from skimage.measure import regionprops
 
 from openhcs.core.artifacts import (
     MeasurementsArtifactType,
@@ -399,6 +400,56 @@ def test_width_based_watershed_preserves_one_elongated_nucleus(rotation_degrees)
     # Its area exceeds the circular split trigger, but its short-axis width
     # fits the declared range and its medial ridge belongs to one nucleus.
     assert len(rr) > np.pi * (settings.approx_max_width / 2.0) ** 2
+    assert labels.max() == 1
+    assert labels[48, 48] == 1
+
+
+def test_label_indexed_axis_lengths_match_regionprops():
+    labels = np.zeros((128, 144), dtype=np.int32)
+    for label, center, radii, rotation in (
+        (1, (0, 0), (9, 7), 0.0),
+        (2, (45, 50), (15, 6), np.deg2rad(30)),
+        (3, (95, 110), (8, 18), np.deg2rad(75)),
+    ):
+        rows, columns = ellipse(
+            *center,
+            *radii,
+            rotation=rotation,
+            shape=labels.shape,
+        )
+        labels[rows, columns] = label
+
+    major_lengths, minor_lengths = count_cells_simple_module._axis_lengths_by_label(
+        labels
+    )
+
+    for region in regionprops(labels):
+        assert major_lengths[region.label] == pytest.approx(region.axis_major_length)
+        assert minor_lengths[region.label] == pytest.approx(region.axis_minor_length)
+
+
+def test_round_object_width_filter_does_not_iterate_region_objects(monkeypatch):
+    image = np.zeros((96, 96), dtype=np.float64)
+    rows, columns = disk((48, 48), 9, shape=image.shape)
+    image[rows, columns] = 1000.0
+
+    def reject_region_iteration(*args, **kwargs):
+        raise AssertionError("round-object filtering must use indexed moments")
+
+    monkeypatch.setattr(
+        count_cells_simple_module, "regionprops", reject_region_iteration
+    )
+
+    labels = segment_metaxpress_round_objects(
+        image,
+        MetaXpressWavelengthSettings(
+            approx_min_width=5.0,
+            approx_max_width=24.0,
+            intensity_above_local_background=300.0,
+        ),
+        1.0,
+    )
+
     assert labels.max() == 1
     assert labels[48, 48] == 1
 

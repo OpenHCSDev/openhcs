@@ -14,6 +14,8 @@ from typing import Iterable, Mapping, Sequence
 
 import numpy as np
 from scipy import ndimage as ndi
+from scipy.spatial import cKDTree
+from skimage.graph import MCP_Geometric
 from skimage.measure import regionprops
 from skimage.segmentation import expand_labels
 from skan import Skeleton, summarize
@@ -34,6 +36,9 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.runtime_image_values import image_payload_data
+from openhcs.core.runtime_object_label_building import (
+    SourceImageObjectLabelBuildRequest,
+)
 from openhcs.core.runtime_object_label_domains import (
     PresentObjectLabelIdsDomainDeclaration,
 )
@@ -69,7 +74,11 @@ from ..cellprofiler.feature_enhancement import (
 )
 from ..cellprofiler.medial_axis import medialaxis
 from ..cellprofiler.primary_objects import identify_primary_objects
-from ..cellprofiler.secondary import SecondaryMethod, identify_secondary_objects
+from ..cellprofiler.secondary import (
+    SecondaryMethod,
+    identify_secondary_objects,
+    secondary_propagation_backend,
+)
 from ..cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
     CellProfilerThresholdScope,
@@ -705,17 +714,10 @@ def neurite_outgrowth_metaxpress(
     )
     body_image = image_array[body_detection_channel_index]
     if nuclear_seeded_signal_body_mode:
-        seed_payload_template = _identify_cell_bodies_cellprofiler(
-            body_image,
-            cell_body,
-            pixel_size_um,
-            bright_objects=bright_objects,
-        )
-        cell_body_payload = object_label_value_with_dense_labels(
-            seed_payload_template,
-            nuclei_labels,
-            domain_declaration=PresentObjectLabelIdsDomainDeclaration(),
-        )
+        cell_body_payload = SourceImageObjectLabelBuildRequest(
+            image=body_image,
+            labels=nuclei_labels,
+        ).payload()
     else:
         cell_body_payload = _identify_cell_bodies_cellprofiler(
             body_image,
@@ -740,21 +742,6 @@ def neurite_outgrowth_metaxpress(
         )
     )
     outgrowth_width_px = outgrowth.maximum_width / pixel_size_um
-    topology = _analyze_topology(
-        outgrowth_skeleton,
-        cell_body_labels,
-        pixel_size_um,
-        outgrowth_width_px,
-    )
-    owner_skeleton = _render_owned_skeleton(
-        outgrowth_skeleton.shape,
-        topology,
-    )
-    owner_outgrowth = _expand_skeleton_ownership(
-        owner_skeleton,
-        outgrowth_binary,
-        outgrowth_width_px,
-    )
     secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
         neurite_image,
         cell_body_payload,
@@ -765,11 +752,6 @@ def neurite_outgrowth_metaxpress(
         nuclear_stain.channel_index
     )
     if nuclear_seed_mode:
-        owner_skeleton = _adopt_secondary_owned_skeleton(
-            outgrowth_skeleton,
-            owner_skeleton,
-            secondary_owner_regions,
-        )
         cell_body_payload = _qualify_nuclear_cell_bodies(
             cell_body_payload,
             cell_body_labels,
@@ -779,16 +761,18 @@ def neurite_outgrowth_metaxpress(
             cell_body_payload,
             dtype=np.int32,
         )
-        topology = _analyze_topology(
-            outgrowth_skeleton,
-            cell_body_labels,
-            pixel_size_um,
-            outgrowth_width_px,
-        )
-        owner_skeleton = _render_owned_skeleton(
-            outgrowth_skeleton.shape,
-            topology,
-        )
+
+    topology = _analyze_topology(
+        outgrowth_skeleton,
+        cell_body_labels,
+        pixel_size_um,
+        outgrowth_width_px,
+    )
+    owner_skeleton = _render_owned_skeleton(
+        outgrowth_skeleton.shape,
+        topology,
+    )
+    if nuclear_seed_mode:
         secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
             neurite_image,
             cell_body_payload,
@@ -823,16 +807,10 @@ def neurite_outgrowth_metaxpress(
                 secondary_owner_regions,
                 keep_signal_body,
             )
-            cell_body_payload = object_label_value_with_dense_labels(
-                cell_body_payload,
+            secondary_owner_regions = _propagate_neurite_owner_regions(
+                outgrowth_response,
                 cell_body_labels,
-                domain_declaration=PresentObjectLabelIdsDomainDeclaration(),
-            )
-            secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
-                neurite_image,
-                cell_body_payload,
-                body_width_px=cell_body.approximate_max_width / pixel_size_um,
-                bright_objects=bright_objects,
+                minimum_response=outgrowth.intensity_above_local_background,
             )
             owner_skeleton = _adopt_secondary_owned_skeleton(
                 outgrowth_skeleton,
@@ -1096,8 +1074,18 @@ def _cell_body_contract_candidates(
 
     keep = np.zeros(int(labels.max()) + 1, dtype=bool)
     for region in regionprops(labels):
-        region_mask = labels == region.label
-        region_response = response[region_mask]
+        row_slice, column_slice = region.slice
+        region_slice = (
+            slice(
+                max(0, row_slice.start - 1), min(labels.shape[0], row_slice.stop + 1)
+            ),
+            slice(
+                max(0, column_slice.start - 1),
+                min(labels.shape[1], column_slice.stop + 1),
+            ),
+        )
+        region_mask = labels[region_slice] == region.label
+        region_response = response[region_slice][region_mask]
         maximum_inscribed_diameter_px = (
             2.0 * float(np.max(ndi.distance_transform_edt(region_mask))) - 1.0
         )
@@ -1222,6 +1210,33 @@ def _identify_secondary_owner_regions_cellprofiler(
     return object_label_dense_array(unified_payload, dtype=np.int32)
 
 
+def _propagate_neurite_owner_regions(
+    signal_response: np.ndarray,
+    cell_body_labels: np.ndarray,
+    *,
+    minimum_response: float,
+) -> np.ndarray:
+    """Propagate soma identities through the declared neurite foreground."""
+
+    response = np.asarray(signal_response, dtype=float)
+    bodies = np.asarray(cell_body_labels, dtype=np.int32)
+    if response.shape != bodies.shape:
+        raise ValueError(
+            "signal_response and cell_body_labels must have the same shape"
+        )
+    if not np.isfinite(minimum_response) or minimum_response < 0:
+        raise ValueError("minimum_response must be finite and >= 0")
+    if not np.any(bodies):
+        return np.zeros_like(bodies)
+    support = (response >= minimum_response) | (bodies > 0)
+    return secondary_propagation_backend().propagate(
+        response,
+        bodies,
+        support,
+        CELLPROFILER_NEURITE_ENGINE_PROFILE.secondary_regularization_factor,
+    )
+
+
 def _adopt_secondary_owned_skeleton(
     skeleton: np.ndarray,
     owner_skeleton: np.ndarray,
@@ -1234,19 +1249,31 @@ def _adopt_secondary_owned_skeleton(
         np.asarray(skeleton, dtype=bool),
         structure=np.ones((3, 3), dtype=bool),
     )
-    for component in range(1, component_count + 1):
-        component_mask = components == component
-        owners = np.unique(
-            np.concatenate(
-                (
-                    adopted[component_mask],
-                    secondary_owner_regions[component_mask],
-                )
-            )
+    if component_count == 0:
+        return adopted
+
+    minimum_owners = np.full(
+        component_count + 1,
+        np.iinfo(np.int32).max,
+        dtype=np.int32,
+    )
+    maximum_owners = np.zeros(component_count + 1, dtype=np.int32)
+    foreground_components = components > 0
+    for owner_source in (adopted, secondary_owner_regions):
+        present = foreground_components & (owner_source > 0)
+        np.minimum.at(
+            minimum_owners,
+            components[present],
+            owner_source[present],
         )
-        owners = owners[owners > 0]
-        if owners.size == 1:
-            adopted[component_mask] = int(owners[0])
+        np.maximum.at(
+            maximum_owners,
+            components[present],
+            owner_source[present],
+        )
+    single_owner = (minimum_owners == maximum_owners) & (maximum_owners > 0)
+    adopted_owners = np.where(single_owner, maximum_owners, 0)[components]
+    adopted[adopted_owners > 0] = adopted_owners[adopted_owners > 0]
     return adopted
 
 
@@ -1303,23 +1330,39 @@ def _derive_signal_cell_bodies(
     foreground_distance = ndi.distance_transform_edt(body_foreground)
     bodies = np.zeros(seeds.shape, dtype=np.int32)
     connectivity = np.ones((3, 3), dtype=bool)
-    for owner in range(1, int(seeds.max()) + 1):
-        seed = seeds == owner
-        if not np.any(seed):
-            continue
+    maximum_radius_margin = int(np.ceil(maximum_radius_px))
+    for seed_region in regionprops(seeds):
+        owner = int(seed_region.label)
+        minimum_row, minimum_column, maximum_row, maximum_column = seed_region.bbox
+        owner_slice = (
+            slice(
+                max(0, minimum_row - maximum_radius_margin),
+                min(seeds.shape[0], maximum_row + maximum_radius_margin),
+            ),
+            slice(
+                max(0, minimum_column - maximum_radius_margin),
+                min(seeds.shape[1], maximum_column + maximum_radius_margin),
+            ),
+        )
+        local_seeds = seeds[owner_slice]
+        seed = local_seeds == owner
         seed_coordinates = np.argwhere(seed)
         seed_centroid = tuple(
-            int(np.clip(round(value), 0, seeds.shape[axis] - 1))
+            int(np.clip(round(value), 0, seed.shape[axis] - 1))
             for axis, value in enumerate(seed_coordinates.mean(axis=0))
         )
-        local_foreground_width = 2.0 * float(foreground_distance[seed_centroid]) - 1.0
+        local_foreground_width = (
+            2.0 * float(foreground_distance[owner_slice][seed_centroid]) - 1.0
+        )
         if local_foreground_width > settings.approximate_max_width / pixel_size_um:
             continue
         distance_from_seed = ndi.distance_transform_edt(~seed)
+        local_unified = unified[owner_slice]
+        local_body_foreground = body_foreground[owner_slice]
         candidate = (
-            (unified == owner)
+            (local_unified == owner)
             & (distance_from_seed <= maximum_radius_px)
-            & body_foreground
+            & local_body_foreground
         )
         components, component_count = ndi.label(candidate, structure=connectivity)
         if component_count == 0:
@@ -1334,7 +1377,8 @@ def _derive_signal_cell_bodies(
         body = ndi.binary_fill_holes(components == component)
         if np.count_nonzero(body) < minimum_area_px:
             continue
-        bodies[body] = owner
+        local_bodies = bodies[owner_slice]
+        local_bodies[body] = owner
     return bodies
 
 
@@ -1368,26 +1412,55 @@ def _repair_signal_supported_skeleton(
         raise ValueError("minimum_response must be finite and >= 0")
 
     connectivity = np.ones((3, 3), dtype=bool)
-    owners = sorted(int(value) for value in np.unique(repaired) if value > 0)
+    owner_bounds: dict[int, list[tuple[int, int, int, int]]] = defaultdict(list)
+    for owner_source in (repaired, regions, bodies):
+        for owner_region in regionprops(owner_source):
+            owner_bounds[int(owner_region.label)].append(owner_region.bbox)
+    owners = sorted(int(region.label) for region in regionprops(repaired))
     for owner in owners:
-        body_mask = bodies == owner
-        original_owner = (repaired == owner) & ~body_mask
-        repaired[(repaired == owner) & body_mask] = 0
-        if not np.any(original_owner):
-            continue
-        soma_coordinate = tuple(
-            int(round(value)) for value in _in_body_soma_coordinate(bodies, owner)
+        bounds = owner_bounds[owner]
+        owner_slice = (
+            slice(
+                min(bound[0] for bound in bounds),
+                max(bound[2] for bound in bounds),
+            ),
+            slice(
+                min(bound[1] for bound in bounds),
+                max(bound[3] for bound in bounds),
+            ),
         )
-        repaired[soma_coordinate] = owner
-        occupied_by_other_owner = (repaired > 0) & (repaired != owner)
-        signal_support = (response >= minimum_response) & (regions == owner)
+        local_repaired = repaired[owner_slice].copy()
+        local_response = response[owner_slice]
+        local_regions = regions[owner_slice]
+        local_bodies = bodies[owner_slice]
+        body_mask = local_bodies == owner
+        original_owner = (local_repaired == owner) & ~body_mask
+        local_repaired[(local_repaired == owner) & body_mask] = 0
+        if not np.any(original_owner):
+            repaired[owner_slice] = local_repaired
+            continue
+        body_coordinates = np.argwhere(body_mask)
+        if not len(body_coordinates):
+            raise ValueError(
+                f"Neurite topology owner {owner} has no corresponding cell body."
+            )
+        body_centroid = body_coordinates.mean(axis=0)
+        soma_coordinate = tuple(
+            int(value)
+            for value in body_coordinates[
+                np.argmin(np.sum((body_coordinates - body_centroid) ** 2, axis=1))
+            ]
+        )
+        local_repaired[soma_coordinate] = owner
+        occupied_by_other_owner = (local_repaired > 0) & (local_repaired != owner)
+        signal_support = (local_response >= minimum_response) & (local_regions == owner)
         allowed = (
             signal_support | original_owner | body_mask
         ) & ~occupied_by_other_owner
 
         while True:
             components, _ = ndi.label(
-                repaired == owner,
+                local_repaired == owner,
                 structure=connectivity,
             )
             root_component = int(components[soma_coordinate])
@@ -1397,7 +1470,7 @@ def _repair_signal_supported_skeleton(
                 break
             path = _least_cost_supported_path(
                 allowed,
-                response,
+                local_response,
                 connected,
                 targets,
                 preferred=(original_owner | body_mask),
@@ -1405,14 +1478,15 @@ def _repair_signal_supported_skeleton(
             )
             if path is None:
                 break
-            repaired[tuple(path.T)] = owner
+            local_repaired[tuple(path.T)] = owner
 
         components, _ = ndi.label(
-            repaired == owner,
+            local_repaired == owner,
             structure=connectivity,
         )
         root_component = int(components[soma_coordinate])
-        repaired[(repaired == owner) & (components != root_component)] = 0
+        local_repaired[(local_repaired == owner) & (components != root_component)] = 0
+        repaired[owner_slice] = local_repaired
     return repaired
 
 
@@ -1427,11 +1501,7 @@ def _least_cost_supported_path(
 ) -> np.ndarray | None:
     """Return one deterministic 8-connected path over accepted support pixels."""
 
-    shape = allowed.shape
-    distances = np.full(shape, np.inf, dtype=float)
-    predecessor_rows = np.full(shape, -1, dtype=np.int32)
-    predecessor_columns = np.full(shape, -1, dtype=np.int32)
-    pixel_cost = np.full(shape, np.inf, dtype=float)
+    pixel_cost = np.full(allowed.shape, np.inf, dtype=float)
     if minimum_response > 0:
         supported_response = np.maximum(signal_response, minimum_response)
         pixel_cost[allowed] = 1.0 + (minimum_response / supported_response[allowed])
@@ -1439,65 +1509,34 @@ def _least_cost_supported_path(
         pixel_cost[allowed] = 1.0
     pixel_cost[preferred & allowed] = 0.5
 
-    queue: list[tuple[float, int, int]] = []
-    for row, column in np.argwhere(starts & allowed):
-        row_index = int(row)
-        column_index = int(column)
-        distances[row_index, column_index] = 0.0
-        heapq.heappush(queue, (0.0, row_index, column_index))
-
-    neighbor_offsets = (
-        (-1, -1, np.sqrt(2.0)),
-        (-1, 0, 1.0),
-        (-1, 1, np.sqrt(2.0)),
-        (0, -1, 1.0),
-        (0, 1, 1.0),
-        (1, -1, np.sqrt(2.0)),
-        (1, 0, 1.0),
-        (1, 1, np.sqrt(2.0)),
-    )
-    destination: tuple[int, int] | None = None
-    while queue:
-        distance, row, column = heapq.heappop(queue)
-        if distance != distances[row, column]:
-            continue
-        if targets[row, column]:
-            destination = (row, column)
-            break
-        for row_offset, column_offset, step_length in neighbor_offsets:
-            next_row = row + row_offset
-            next_column = column + column_offset
-            if not (0 <= next_row < shape[0] and 0 <= next_column < shape[1]):
-                continue
-            if not allowed[next_row, next_column]:
-                continue
-            step_cost = (
-                0.5
-                * (pixel_cost[row, column] + pixel_cost[next_row, next_column])
-                * step_length
-            )
-            candidate = distance + step_cost
-            if candidate >= distances[next_row, next_column]:
-                continue
-            distances[next_row, next_column] = candidate
-            predecessor_rows[next_row, next_column] = row
-            predecessor_columns[next_row, next_column] = column
-            heapq.heappush(queue, (candidate, next_row, next_column))
-
-    if destination is None:
+    start_coordinates = [
+        tuple(int(value) for value in coordinate)
+        for coordinate in np.argwhere(starts & allowed)
+    ]
+    target_coordinates = [
+        tuple(int(value) for value in coordinate)
+        for coordinate in np.argwhere(targets & allowed)
+    ]
+    if not start_coordinates or not target_coordinates:
         return None
-    path = [destination]
-    while not starts[path[-1]]:
-        row, column = path[-1]
-        predecessor = (
-            int(predecessor_rows[row, column]),
-            int(predecessor_columns[row, column]),
-        )
-        if predecessor[0] < 0:
-            raise RuntimeError("Signal-supported path has no predecessor to a start")
-        path.append(predecessor)
-    path.reverse()
-    return np.asarray(path, dtype=np.int32)
+    path_finder = MCP_Geometric(pixel_cost, fully_connected=True)
+    cumulative_costs, _ = path_finder.find_costs(
+        starts=start_coordinates,
+        ends=target_coordinates,
+        find_all_ends=False,
+    )
+    reachable_targets = [
+        coordinate
+        for coordinate in target_coordinates
+        if np.isfinite(cumulative_costs[coordinate])
+    ]
+    if not reachable_targets:
+        return None
+    destination = min(
+        reachable_targets,
+        key=lambda coordinate: (cumulative_costs[coordinate], *coordinate),
+    )
+    return np.asarray(path_finder.traceback(destination), dtype=np.int32)
 
 
 def _relabel(labels: np.ndarray, keep: np.ndarray) -> np.ndarray:
@@ -2023,6 +2062,9 @@ def _build_neurite_morphology_graph(
         pixel_size_um / 2.0,
         outgrowth_width_px * pixel_size_um / 2.0,
     )
+    body_regions = {
+        int(region.label): region for region in regionprops(cell_body_labels)
+    }
 
     for owner in sorted(paths_by_owner):
         owner_paths = tuple(sorted(paths_by_owner[owner]))
@@ -2034,11 +2076,22 @@ def _build_neurite_morphology_graph(
         for incident_paths in adjacency.values():
             incident_paths.sort()
 
-        body_area_um2 = float(np.count_nonzero(cell_body_labels == owner)) * (
-            pixel_size_um**2
+        try:
+            body_region = body_regions[owner]
+        except KeyError as error:
+            raise ValueError(
+                f"Neurite topology owner {owner} has no corresponding cell body."
+            ) from error
+        body_coordinates = body_region.coords
+        body_centroid = body_coordinates.mean(axis=0)
+        soma_coordinate = tuple(
+            float(value)
+            for value in body_coordinates[
+                np.argmin(np.sum((body_coordinates - body_centroid) ** 2, axis=1))
+            ]
         )
-        soma_distance = ndi.distance_transform_edt(cell_body_labels != owner)
-        soma_coordinate = _in_body_soma_coordinate(cell_body_labels, owner)
+        body_area_um2 = float(body_region.area) * pixel_size_um**2
+        soma_tree = cKDTree(body_coordinates)
         soma_radius_um = max(
             process_radius_um,
             float(np.sqrt(body_area_um2 / np.pi)),
@@ -2101,12 +2154,13 @@ def _build_neurite_morphology_graph(
                 outgrowth_width_px / 2.0 + 0.5,
             )
             root_touches_soma = any(
-                float(
-                    np.min(
-                        soma_distance[tuple(topology.path_coordinates[path_index].T)]
-                    )
+                np.any(
+                    soma_tree.query(
+                        topology.path_coordinates[path_index],
+                        distance_upper_bound=soma_attachment_distance,
+                    )[0]
+                    <= soma_attachment_distance
                 )
-                <= soma_attachment_distance
                 for path_index in component_paths
             )
             soma_connected = root_inside_soma or root_touches_soma
@@ -2345,6 +2399,16 @@ def _build_cell_results(
         float
     )
     body_areas *= pixel_size_um**2
+    outgrowth_labels = owner_outgrowth.ravel()
+    outgrowth_pixel_counts = np.bincount(
+        outgrowth_labels,
+        minlength=cell_count + 1,
+    )
+    outgrowth_intensity_sums = np.bincount(
+        outgrowth_labels,
+        weights=np.asarray(neurite_image, dtype=float).ravel(),
+        minlength=cell_count + 1,
+    )
     results = []
 
     for cell in range(1, cell_count + 1):
@@ -2356,10 +2420,9 @@ def _build_cell_results(
         curve_length = float(np.sum(topology.path_lengths[path_indexes]))
         euclidean_length = float(np.sum(topology.path_euclidean_lengths[path_indexes]))
         straightness = euclidean_length / curve_length if curve_length else 0.0
-        outgrowth_pixels = owner_outgrowth == cell
         mean_intensity = (
-            float(np.mean(neurite_image[outgrowth_pixels]))
-            if outgrowth_pixels.any()
+            float(outgrowth_intensity_sums[cell] / outgrowth_pixel_counts[cell])
+            if outgrowth_pixel_counts[cell]
             else 0.0
         )
         results.append(

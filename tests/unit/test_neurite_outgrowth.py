@@ -35,10 +35,15 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     NEURITE_OBJECT_LABEL_MATERIALIZATION,
     NeuriteIllumination,
     _TopologyResult,
+    _adopt_secondary_owned_skeleton,
     _analyze_topology,
     _build_neurite_morphology_graph,
+    _cell_body_contract_candidates,
+    _derive_signal_cell_bodies,
     _expand_skeleton_ownership,
     _identify_cell_bodies_cellprofiler,
+    _identify_secondary_owner_regions_cellprofiler,
+    _propagate_neurite_owner_regions,
     _repair_signal_supported_skeleton,
     count_neuronal_cell_bodies_metaxpress,
     neurite_outgrowth_metaxpress,
@@ -1224,7 +1229,9 @@ def test_nuclear_body_mode_rejects_non_neuronal_dapi_seed_and_unowned_signal():
     )
 
 
-def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell():
+def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell(
+    monkeypatch,
+):
     image = np.zeros((2, 160, 160), dtype=np.uint16)
     for center in ((80, 25), (35, 105)):
         rows, columns = disk(center, 5, shape=image.shape[1:])
@@ -1233,6 +1240,26 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell():
         image[1, rows, columns] = 1200
     rows, columns = line(80, 33, 80, 130)
     image[1, rows, columns] = 700
+
+    def reject_discarded_body_segmentation(*args, **kwargs):
+        raise AssertionError("nuclear-seeded mode must build directly from its seeds")
+
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.neurite_outgrowth."
+        "_identify_cell_bodies_cellprofiler",
+        reject_discarded_body_segmentation,
+    )
+    secondary_calls = []
+
+    def record_secondary_call(*args, **kwargs):
+        secondary_calls.append(None)
+        return _identify_secondary_owner_regions_cellprofiler(*args, **kwargs)
+
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.neurite_outgrowth."
+        "_identify_secondary_owner_regions_cellprofiler",
+        record_secondary_call,
+    )
 
     result = _implementation()(
         image,
@@ -1271,6 +1298,108 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell():
     }
     assert not np.any((cell_bodies[1] > 0) & (neurites[1] > 0))
     assert result[5][1, 35, 140] == 0
+    assert len(secondary_calls) == 2
+
+
+def test_neurite_owner_regions_propagate_only_through_declared_signal_support():
+    response = np.zeros((32, 32), dtype=float)
+    response[16, 3:29] = 150.0
+    response[4:17, 3] = 150.0
+    bodies = np.zeros(response.shape, dtype=np.int32)
+    bodies[4, 3] = 1
+    bodies[16, 28] = 2
+
+    owner_regions = _propagate_neurite_owner_regions(
+        response,
+        bodies,
+        minimum_response=100.0,
+    )
+
+    assert owner_regions[4, 3] == 1
+    assert owner_regions[16, 28] == 2
+    assert np.all(owner_regions[4:17, 3] == 1)
+    assert np.all(owner_regions[response < 100.0] == 0)
+    assert set(np.unique(owner_regions)) == {0, 1, 2}
+
+
+def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch):
+    shape = (512, 512)
+    seeds = np.zeros(shape, dtype=np.int32)
+    unified = np.zeros(shape, dtype=np.int32)
+    image = np.zeros(shape, dtype=np.uint16)
+    for owner, center, region_slice in (
+        (1, (80, 80), (slice(0, 256), slice(0, 256))),
+        (2, (430, 430), (slice(256, 512), slice(256, 512))),
+    ):
+        rows, columns = disk(center, 4, shape=shape)
+        seeds[rows, columns] = owner
+        rows, columns = disk(center, 12, shape=shape)
+        image[rows, columns] = 1200
+        unified[region_slice] = owner
+
+    observed_shapes = []
+    distance_transform = ndi.distance_transform_edt
+
+    def record_distance_transform(array, *args, **kwargs):
+        observed_shapes.append(array.shape)
+        return distance_transform(array, *args, **kwargs)
+
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.neurite_outgrowth."
+        "ndi.distance_transform_edt",
+        record_distance_transform,
+    )
+
+    bodies = _derive_signal_cell_bodies(
+        seeds,
+        unified,
+        image,
+        _cell_body_settings(channel_index=1),
+        1.0,
+        bright_objects=True,
+    )
+
+    assert set(np.unique(bodies)) == {0, 1, 2}
+    assert observed_shapes[0] == shape
+    assert len(observed_shapes) == 3
+    assert all(
+        rows < shape[0] and columns < shape[1] for rows, columns in observed_shapes[1:]
+    )
+
+
+def test_cell_body_contract_bounds_each_object_distance_transform(monkeypatch):
+    shape = (512, 512)
+    labels = np.zeros(shape, dtype=np.int32)
+    response = np.full(shape, 150.0)
+    labels[0:11, 0:11] = 1
+    labels[245:256, 245:256] = 2
+
+    observed_shapes = []
+    distance_transform = ndi.distance_transform_edt
+
+    def record_distance_transform(array, *args, **kwargs):
+        observed_shapes.append(array.shape)
+        return distance_transform(array, *args, **kwargs)
+
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.neurite_outgrowth."
+        "ndi.distance_transform_edt",
+        record_distance_transform,
+    )
+
+    keep = _cell_body_contract_candidates(
+        labels,
+        response,
+        minimum_area_px=100.0,
+        maximum_width_px=20.0,
+        intensity_threshold=100.0,
+    )
+
+    np.testing.assert_array_equal(keep, np.array([False, True, True]))
+    assert len(observed_shapes) == 2
+    assert all(
+        rows < shape[0] and columns < shape[1] for rows, columns in observed_shapes
+    )
 
 
 def test_signal_supported_repair_follows_curved_trace_instead_of_chord():
@@ -1299,6 +1428,82 @@ def test_signal_supported_repair_follows_curved_trace_instead_of_chord():
     assert ndi.label(repaired == 1, structure=np.ones((3, 3), dtype=bool))[1] == 1
     assert repaired[18, 28] == 1
     assert not np.any(repaired[32, 16:43])
+
+
+def test_secondary_ownership_adopts_only_single_owner_components():
+    skeleton = np.zeros((24, 32), dtype=bool)
+    skeleton[4, 3:12] = True
+    skeleton[12, 3:12] = True
+    skeleton[20, 3:12] = True
+    owner_skeleton = np.zeros(skeleton.shape, dtype=np.int32)
+    owner_skeleton[4, 3] = 1
+    owner_skeleton[12, 3] = 2
+    secondary_regions = np.zeros(skeleton.shape, dtype=np.int32)
+    secondary_regions[3:6, 2:13] = 1
+    secondary_regions[11:14, 2:7] = 2
+    secondary_regions[11:14, 7:13] = 3
+
+    adopted = _adopt_secondary_owned_skeleton(
+        skeleton,
+        owner_skeleton,
+        secondary_regions,
+    )
+
+    assert np.all(adopted[4, 3:12] == 1)
+    assert adopted[12, 3] == 2
+    assert not np.any(adopted[12, 4:12])
+    assert not np.any(adopted[20, 3:12])
+
+
+def test_signal_supported_repair_bounds_compiled_search_to_owner_regions(monkeypatch):
+    shape = (512, 512)
+    labels = np.zeros(shape, dtype=np.int32)
+    cell_bodies = np.zeros(shape, dtype=np.int32)
+    response = np.zeros(shape, dtype=float)
+    owner_regions = np.zeros(shape, dtype=np.int32)
+    for owner, row, column in ((1, 80, 60), (2, 400, 360)):
+        cell_bodies[row - 3 : row + 4, column - 8 : column] = owner
+        labels[row, column : column + 8] = owner
+        labels[row, column + 50 : column + 58] = owner
+        response[row, column : column + 58] = 150.0
+        owner_regions[
+            row - 20 : row + 21,
+            column - 20 : column + 81,
+        ] = owner
+
+    observed_shapes = []
+    from skimage.graph import MCP_Geometric as CompiledPathFinder
+
+    def record_path_finder(costs, *args, **kwargs):
+        observed_shapes.append(costs.shape)
+        return CompiledPathFinder(costs, *args, **kwargs)
+
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.neurite_outgrowth.MCP_Geometric",
+        record_path_finder,
+    )
+
+    repaired = _repair_signal_supported_skeleton(
+        labels,
+        response,
+        owner_regions,
+        cell_bodies,
+        minimum_response=100.0,
+    )
+
+    assert len(observed_shapes) == 4
+    assert all(
+        rows < shape[0] and columns < shape[1] for rows, columns in observed_shapes
+    )
+    for owner, row, column in ((1, 80, 60), (2, 400, 360)):
+        assert (
+            ndi.label(
+                repaired == owner,
+                structure=np.ones((3, 3), dtype=bool),
+            )[1]
+            == 1
+        )
+        assert np.all(repaired[row, column : column + 58] == owner)
 
 
 def test_signal_supported_repair_rejects_unsupported_and_foreign_owner_routes():
