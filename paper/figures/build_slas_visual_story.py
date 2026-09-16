@@ -259,13 +259,7 @@ def architecture():
         sheet.axis.add_patch(Circle((15, y), 0.5, color=PURPLE))
     sheet.axis.plot([11, 19], [75.5, 75.5], color=PURPLE, linewidth=2)
     sheet.asset(logos / "python.svg", (34, 77, 10, 9))
-    sheet.axis.add_patch(
-        FancyBboxPatch(
-            (57, 77), 12, 8, boxstyle="round,pad=0.2", facecolor=PALE, edgecolor=PURPLE
-        )
-    )
-    sheet.text(63, 81, "MCP", ha="center", va="center", weight="bold", color=PURPLE)
-    sheet.axis.plot([59, 58, 62], [77, 75.5, 77], color=PURPLE)
+    sheet.asset(logos / "mcp.svg", (59, 77, 8, 8))
     sheet.asset(logos / "cellprofiler.png", (82, 77, 10, 9))
     for x, label in (
         (15, "Desktop forms"),
@@ -275,7 +269,9 @@ def architecture():
     ):
         sheet.text(x, 73.5, label, size=10.5, ha="center", weight="bold")
         sheet.arrow((x, 71.5), (x, 67.5), both=x != 87, color=PURPLE)
-        sheet.text(x + 2, 69.5, "Import" if x == 87 else "Edit", size=10.5, color=PURPLE)
+        sheet.text(
+            x + 2, 69.5, "Import" if x == 87 else "Edit", size=10.5, color=PURPLE
+        )
 
     sheet.axis.add_patch(
         FancyBboxPatch(
@@ -313,9 +309,8 @@ def architecture():
     sheet.panel("B", "Connect data and processing tools", 3, 34)
     sheet.asset(logos / "bioformats.svg", (6, 24, 9, 7))
     sheet.text(18, 28.5, "Image folders · Bio-Formats", size=10.5, va="center")
-    sheet.text(
-        18, 24, "OME-Zarr · OMERO (experimental)", size=11, va="center"
-    )
+    sheet.text(18, 24, "OME-Zarr · OMERO (experimental)", size=11, va="center")
+    sheet.asset(logos / "zarr.svg", (40, 23.5, 10, 8))
     for name, x in (("cupy.svg", 58), ("pytorch.svg", 70), ("jax.png", 82)):
         sheet.asset(logos / name, (x, 24, 8, 7))
     sheet.text(74, 21, "Scientific Python + custom functions", size=11, ha="center")
@@ -327,8 +322,13 @@ def architecture():
     sheet.panel("C", "Compile, execute and inspect", 3, 19)
     sheet.route(((50, 39), (50, 36.5), (0.7, 36.5), (0.7, 9), (4, 9)), color=TEAL)
     sheet.text(
-        35, 36.5, "Workflow to compile", size=11, color=TEAL,
-        ha="center", va="center",
+        35,
+        36.5,
+        "Workflow to compile",
+        size=11,
+        color=TEAL,
+        ha="center",
+        va="center",
         bbox={"facecolor": "white", "edgecolor": "none", "pad": 1},
     )
     sheet.text(11, 9, "Compile", size=12, weight="bold", ha="center", color=BLUE)
@@ -344,9 +344,12 @@ def architecture():
     for y in (7.5, 9, 10.5):
         sheet.axis.plot([77, 84], [y, y], color=TEAL, linewidth=0.7)
     sheet.axis.plot([79.5, 79.5], [6, 12], color=TEAL, linewidth=0.7)
-    sheet.asset(logos / "fiji.svg", (88, 6, 7, 6))
+    sheet.asset(logos / "napari.svg", (87, 6, 5, 6))
+    sheet.asset(logos / "fiji.svg", (93, 6, 5, 6))
     sheet.text(81, 2.3, "Images · ROIs · tables", size=11, ha="center")
-    sheet.text(81, 13.3, "napari / Fiji + saved outputs", size=11, ha="center", color=TEAL)
+    sheet.text(
+        81, 13.3, "napari / Fiji + saved outputs", size=11, ha="center", color=TEAL
+    )
     sheet.save()
 
 
@@ -403,9 +406,7 @@ def authoring():
         f"Code returns to {field_edit['value']}",
         color=TEAL,
     )
-    sheet.text(
-        3, 46, "Detail from A: the two analysis steps", size=10, color=MUTED
-    )
+    sheet.text(3, 46, "Detail from A: the two analysis steps", size=10, color=MUTED)
     sheet.native_image(
         "authoring_main_verified_capture", (3, 35, 62, 9), crop=(516, 230, 1024, 320)
     )
@@ -441,7 +442,9 @@ def viewers():
     sheet.panel("A", "Fiji: an image plane and its matching ROI list", 3, 90)
     sheet.gallery_image("fiji-review.webp", (3, 53, 61, 34))
     sheet.text(68, 86, "Nine ROI entries", size=10, weight="bold")
-    sheet.gallery_image("fiji-review.webp", (68, 64, 29, 20), crop=(822, 112, 1235, 433))
+    sheet.gallery_image(
+        "fiji-review.webp", (68, 64, 29, 20), crop=(822, 112, 1235, 433)
+    )
     sheet.text(68, 62, "Nuclear outline", size=10, weight="bold")
     sheet.gallery_image("fiji-review.webp", (75, 54, 15, 7), crop=(421, 497, 493, 550))
     sheet.text(

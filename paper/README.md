@@ -6,8 +6,9 @@ Working author-review draft for **SLAS Technology**:
 ## Versioned sources
 
 - [Manuscript source](manuscript.md): the sole complete working text.
-- [Supplementary material](supplementary/README.md): five explanatory figures,
-  historical timing plots, source tables and evaluation records.
+- [Supplementary material](supplementary/README.md): eight explanatory figures,
+  historical timing and prospective validation plots, source tables and
+  evaluation records.
 - [Additional CellProfiler workflows](supplementary/complex_cellprofiler_workflows.md):
   generated step sequences for public advanced-segmentation and 3D examples.
 - [OpenHCS 0.8.5 CI evidence](supplementary/ci_official30_085/README.md):
@@ -19,8 +20,10 @@ Working author-review draft for **SLAS Technology**:
 
 The six main figures show the shared workflow, matching UI/code/MCP authoring,
 the recorded agent analysis, CellProfiler translation, benchmark results and
-viewer inspection. Supplementary figures explain runtime composition, process
-boundaries, compiler preparation, connected outputs and custom functions.
+viewer inspection. Eight supplementary figures explain runtime composition,
+process boundaries, compiler preparation, connected outputs and custom functions.
+They also report historical timing observations and three prospective
+agent-authored assays on held-out public data.
 
 Generators, editable artwork, native captures and provenance receipts are in
 `figures/`. Scientific examples in this revision use public CellProfiler workflows
@@ -34,10 +37,12 @@ are tracked separately.
 
 ## Build a reading copy
 
-Read [current manuscript PDF](current/manuscript.pdf) and
-[current supplement PDF](current/supplement.pdf). Editable DOCX files, input/tool
+Read [current manuscript PDF](current/openhcs_manuscript.pdf) and
+[current supplement PDF](current/openhcs_supplement.pdf). Editable DOCX files, input/tool
 provenance (`build.json`) and complete command output (`build.log`) are beside them.
 `current` switches only when both documents build and validate successfully.
+PDF and DOCX filenames use the paper's declared `openhcs` prefix so they can be
+uploaded alongside other papers without renaming. Source filenames are unchanged.
 
 Create a build-only environment (not the OpenHCS runtime environment). Install
 Pandoc, LibreOffice and Poppler on Linux, then install the pinned shared package:
@@ -71,6 +76,22 @@ an external input is unavailable. The checked-in figure outputs support building
 reading copies without rerunning scientific analyses. Automatic
 `--refresh-figures` deliberately fails: no safe historical-input/live-UI refresh
 is declared. Figure generation remains a separate explicit workflow.
+
+The overview and benchmark figures can be regenerated independently from their
+declared source assets and CSV tables:
+
+```sh
+PYTHONPATH=paper/figures python -c \
+  'from build_slas_visual_story import architecture; architecture()'
+python paper/figures/build_slas_benchmark.py \
+  --data-dir benchmark/results/labmeeting_20260513/official30_well_throughput/data \
+  --output-dir paper/figures/slas
+```
+
+The benchmark builder emits the main distribution figure, the supplementary
+workflow heatmap, their plotted-row CSVs and a checksum receipt. Point
+`--data-dir` at a new measurement bundle containing the four named source CSVs
+to update the paper numbers without changing plotting code.
 
 Each local document figure must have exactly one receipt output declaration;
 missing, empty, malformed or ambiguous coverage fails closed. All outputs owned

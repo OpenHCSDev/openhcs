@@ -1,26 +1,29 @@
 {
-  "generator_sha256": "174e4c2577274fc2bc875bee64c9f7285de623862714572cd708dfee6278484f",
+  "generator_sha256": "9fcb6c749a4b55d8c89c8c5841a004a6a85a96541b01d55a7214ec52314b0c10",
   "source_sha256": {
     "docs/source/architecture/quick_start.rst": "4dcc151050f02da75a6819db0be0053a1dcbefcf236b34998536ad9fbece915d",
     "openhcs/core/pipeline_document.py": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
     "openhcs/core/compiled_step_plan.py": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
     "openhcs/core/runtime_stores.py": "5f323ec8edd4221ee30e34ed0c9c09e0f4e45ef502749c1a2d331b7a5452af99",
-    "openhcs/core/source_bindings.py": "7e8852904adf9618f54d6bfce80e60a726ce514c896b4a5281a46f76ab91c5c2",
-    "openhcs/agent/capabilities.py": "b8e6a83bbbc60ed9e087a6ba84f0f6862785ec9e0c7d868ff48bbde702554b49",
-    "website/assets/logos/README.md": "76b58d9edccdfff5fca68a09032921722578f00bac3d24cf2e8004893920d4be",
+    "openhcs/core/source_bindings.py": "af35b6ace33c9f43f9921fac7dd497cd8a64b0bdf558ba12dfc4d154e93ea256",
+    "openhcs/agent/capabilities.py": "25d0ff59dc921bb2589d14656b9e7b07d89650ea109bcd118ed1446b7a01423a",
+    "website/assets/logos/README.md": "244baac8bc62478d51d3f50a750559edc1205763bcdb4c6fbab87e698a93e43b",
     "website/assets/logos/python.svg": "adca85e1d0bd6d796abea422d983fd131a432fe78efeac58af18461eb1548780",
+    "website/assets/logos/mcp.svg": "05f47fb3ffb7323bdbf6b397330229a7f32a3a1f2d17365e748f8777a82dd6c0",
     "website/assets/logos/cellprofiler.png": "820dc710604ae6bfa5605b7a6c17817c484d91e289c15d5953e2769b083333b3",
     "website/assets/logos/bioformats.svg": "19cfb3bc6a2274b98c76a1e9af43f1d94c56b5b5e718e60b1fecdb633c7ddf9a",
+    "website/assets/logos/zarr.svg": "4e7d278e12a6000c54ce3dfdee274d4dd98595bdf04d2afacda17b5a6e61ecf6",
     "website/assets/logos/cupy.svg": "30100286bd74ae633d2196b2d8ea175e405c258c22441582e6bb1715866d1756",
     "website/assets/logos/pytorch.svg": "fa653a3e79a36d6c8738c9c05e10c0265e466db23fc4b2d7ef65d32ff84cc839",
     "website/assets/logos/jax.png": "b336e0959efcf4835f1c4ab717398b4a8fe11dccac6790f2dcff504820d9b095",
+    "website/assets/logos/napari.svg": "e7d39d1a8d8ddc43190e55fb09c7ac6f3653120b4afff2dd981b3a66b326623d",
     "website/assets/logos/fiji.svg": "36b2b05f93e28fb37085f8d9eedaddcdda7718732bbf3f4ed40e0bd4722babea"
   },
   "ui_crops": [],
   "output_sha256": {
-    "shared_workflow.png": "239b6aa327fd6c398d9a6650596b0afa18f7e6d3fb110f56111d4c700039002f",
-    "shared_workflow.pdf": "3947a545524e617e2402382d002cc415b72f06446fcd8db682557317e9829216",
-    "shared_workflow.svg": "61bbaecaf2b7739984e33af8bd6bc2de2fef9d4cabacba737610ca9dbdaf02a6"
+    "shared_workflow.png": "70d1df787f4f72f7911c94216ee244eb0cb239928f97b20a8eed084ffe393aa1",
+    "shared_workflow.pdf": "4fe5268709e401d923777b38aaf9320f4a490dd5b58cfe45e13fa62f507e9545",
+    "shared_workflow.svg": "9ac75f5bb84a4b5d25588869e1d272407bb73dd28bbf744171d6cc5b1da38985"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

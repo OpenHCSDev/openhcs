@@ -6,6 +6,7 @@ The native wound-healing timing is unresolved and omitted from speed comparisons
 
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import json
@@ -15,12 +16,17 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "benchmark/results/labmeeting_20260513/official30_well_throughput/data"
-OUTPUT = Path(__file__).resolve().parent / "slas"
+DEFAULT_DATA = (
+    ROOT / "benchmark/results/labmeeting_20260513/official30_well_throughput/data"
+)
+DEFAULT_OUTPUT = Path(__file__).resolve().parent / "slas"
 UNRESOLVED_NATIVE_TIMING = "ExampleWoundHealing"
 SOURCES = (
     "single_process_summary.csv",
@@ -35,10 +41,12 @@ def sha256(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def load_tables() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    single = pd.read_csv(DATA / SOURCES[0])
-    scaled = pd.concat([pd.read_csv(DATA / name) for name in SOURCES[1:3]])
-    core = pd.read_csv(DATA / SOURCES[3])
+def load_tables(
+    data_dir: Path,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    single = pd.read_csv(data_dir / SOURCES[0])
+    scaled = pd.concat([pd.read_csv(data_dir / name) for name in SOURCES[1:3]])
+    core = pd.read_csv(data_dir / SOURCES[3])
     if len(single) != 30 or single.case_name.duplicated().any():
         raise ValueError("Expected the archived 30 distinct benchmark workflows")
     if not ((single.n == 1) & (single.equivalent_count == 1)).all():
@@ -58,8 +66,180 @@ def load_tables() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     return single, scaled, core
 
 
-def build() -> None:
-    single, scaled, core = load_tables()
+def _case_jitter(case_names: pd.Series, width: float = 0.15) -> np.ndarray:
+    """Return stable horizontal offsets derived from workflow identity."""
+    return np.asarray(
+        [
+            (
+                int.from_bytes(hashlib.sha256(name.encode("utf-8")).digest()[:8], "big")
+                / (2**64 - 1)
+                - 0.5
+            )
+            * 2
+            * width
+            for name in case_names
+        ]
+    )
+
+
+def _distribution_panel(
+    axis,
+    frame: pd.DataFrame,
+    *,
+    condition: str,
+    value: str,
+    conditions: tuple[int, ...],
+    color: str,
+    title: str,
+    xlabel: str,
+    ylabel: str,
+    logarithmic: bool,
+    annotation_unit: str,
+) -> None:
+    """Show every workflow with its interquartile range and median."""
+    for position, condition_value in enumerate(conditions, start=1):
+        group = frame[frame[condition] == condition_value].sort_values("case_name")
+        values = group[value].to_numpy(dtype=float)
+        if len(values) != 30:
+            raise ValueError(
+                f"Expected 30 workflows for {condition}={condition_value}, got {len(values)}"
+            )
+        minimum, first_quartile, median, third_quartile, maximum = np.quantile(
+            values, (0, 0.25, 0.5, 0.75, 1)
+        )
+        axis.vlines(position, minimum, maximum, color=color, linewidth=1.0, alpha=0.8)
+        axis.bar(
+            position,
+            third_quartile - first_quartile,
+            bottom=first_quartile,
+            width=0.56,
+            color=color,
+            alpha=0.28,
+            edgecolor=color,
+            linewidth=1.0,
+        )
+        axis.hlines(
+            median,
+            position - 0.28,
+            position + 0.28,
+            color="#202020",
+            linewidth=2.0,
+            zorder=4,
+        )
+        axis.scatter(
+            position + _case_jitter(group.case_name),
+            values,
+            s=22,
+            facecolor=color,
+            edgecolor="#202020",
+            linewidth=0.35,
+            alpha=0.72,
+            zorder=3,
+        )
+        axis.annotate(
+            f"{median:.2f}{annotation_unit}",
+            xy=(position, median),
+            xytext=(0, 5),
+            textcoords="offset points",
+            color=color,
+            fontsize=8,
+            fontweight="bold",
+            ha="center",
+            va="bottom",
+            zorder=5,
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.78, "pad": 0.6},
+        )
+    if logarithmic:
+        axis.set_yscale("log")
+    axis.set(
+        xticks=np.arange(1, len(conditions) + 1),
+        xticklabels=[str(item) for item in conditions],
+        xlabel=xlabel,
+        ylabel=ylabel,
+        title=title,
+    )
+    axis.grid(axis="y", alpha=0.22, linewidth=0.6)
+    axis.set_axisbelow(True)
+
+
+def _workflow_heatmaps(
+    throughput: pd.DataFrame,
+    memory: pd.DataFrame,
+):
+    """Render a supplementary workflow-by-condition view of the same records."""
+    throughput_table = throughput.pivot(
+        index="case_name",
+        columns="worker_count",
+        values="completed_wells_per_execution_second",
+    )
+    memory_table = memory.pivot(
+        index="case_name", columns="wells_per_worker", values="peak_gib"
+    )
+    workflow_order = tuple(
+        throughput_table.median(axis=1).sort_values(ascending=False).index
+    )
+    throughput_table = throughput_table.loc[list(workflow_order)]
+    memory_table = memory_table.loc[list(workflow_order)]
+    if throughput_table.isna().any().any() or memory_table.isna().any().any():
+        raise ValueError("Supplementary heatmaps require complete workflow matrices")
+
+    figure, axes = plt.subplots(
+        1,
+        2,
+        figsize=(10.2, 10.0),
+        gridspec_kw={"width_ratios": (1.0, 1.45)},
+        layout="constrained",
+    )
+    throughput_image = axes[0].imshow(
+        throughput_table.to_numpy(),
+        aspect="auto",
+        cmap="Blues",
+        norm=LogNorm(
+            vmin=float(throughput_table.to_numpy().min()),
+            vmax=float(throughput_table.to_numpy().max()),
+        ),
+    )
+    axes[0].set(
+        title="A  Throughput by workflow",
+        xlabel="OpenHCS workers\n(4 assignments per worker)",
+        xticks=np.arange(len(throughput_table.columns)),
+        xticklabels=[str(item) for item in throughput_table.columns],
+        yticks=np.arange(len(workflow_order)),
+        yticklabels=workflow_order,
+    )
+    figure.colorbar(
+        throughput_image,
+        ax=axes[0],
+        label="Completed assignments per execution second",
+        shrink=0.55,
+    )
+
+    memory_image = axes[1].imshow(
+        memory_table.to_numpy(), aspect="auto", cmap="Oranges"
+    )
+    axes[1].set(
+        title="B  Peak RAM by workflow",
+        xlabel="Assignments per worker (4 workers)",
+        xticks=np.arange(len(memory_table.columns)),
+        xticklabels=[str(item) for item in memory_table.columns],
+        yticks=np.arange(len(workflow_order)),
+        yticklabels=[],
+    )
+    figure.colorbar(memory_image, ax=axes[1], label="Peak RAM (GiB)", shrink=0.55)
+    for axis in axes:
+        axis.tick_params(axis="y", labelsize=7)
+    figure.suptitle(
+        "Per-workflow measurements underlying the aggregate benchmark",
+        fontsize=13,
+        fontweight="bold",
+    )
+    return figure
+
+
+def build(data_dir: Path = DEFAULT_DATA, output_dir: Path = DEFAULT_OUTPUT) -> None:
+    data_dir = data_dir.resolve()
+    output_dir = output_dir.resolve()
+    single, scaled, core = load_tables(data_dir)
     timed = single[single.case_name != UNRESOLVED_NATIVE_TIMING].copy()
     timed["execution_phase_ratio"] = (
         timed.median_native_execution_seconds / timed.median_openhcs_execution_seconds
@@ -112,7 +292,7 @@ def build() -> None:
         if set(group.case_name) != set(single.case_name):
             raise ValueError("Incomplete measured throughput population")
 
-    OUTPUT.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     plt.rcParams.update(
         {
             "font.size": 10.5,
@@ -124,7 +304,7 @@ def build() -> None:
     historical_figure, historical_axes = plt.subplots(
         1, 2, figsize=(8, 3.5), layout="constrained"
     )
-    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), layout="constrained")
+    fig, axes = plt.subplots(1, 2, figsize=(8.8, 4.2), layout="constrained")
     blue, orange, grey = "#247BA0", "#C56B29", "#6B7280"
     a, b = historical_axes
     c, d = axes
@@ -187,74 +367,77 @@ def build() -> None:
     )
     b.legend(frameon=False, fontsize=10)
 
-    for _, group in throughput.groupby("case_name"):
-        group = group.sort_values("worker_count")
-        c.plot(
-            group.worker_count,
-            group.completed_wells_per_execution_second,
-            color=blue,
-            alpha=0.35,
-            linewidth=0.7,
-        )
-    medians = throughput.groupby(
-        "worker_count"
-    ).completed_wells_per_execution_second.median()
-    c.plot(
-        medians.index,
-        medians,
+    _distribution_panel(
+        c,
+        throughput,
+        condition="worker_count",
+        value="completed_wells_per_execution_second",
+        conditions=tuple(sorted(throughput.worker_count.unique())),
         color=blue,
-        marker="o",
-        linewidth=2,
-        label="Median across 30 workflows",
+        title="A  Throughput across workflows",
+        xlabel="OpenHCS workers\n(4 assignments per worker)",
+        ylabel="Completed assignments per execution second",
+        logarithmic=True,
+        annotation_unit="",
     )
-    c.set(
-        yscale="log",
-        xticks=sorted(throughput.worker_count.unique()),
-        xlabel="OpenHCS workers\n(4 repeated-image assignments per worker)",
-        ylabel="Completed assignments\nper execution second (log scale)",
-        title="A  Measured OpenHCS throughput",
-    )
-    c.legend(frameon=False, fontsize=10)
-
-    for _, group in memory.groupby("case_name"):
-        group = group.sort_values("wells_per_worker")
-        d.plot(
-            group.wells_per_worker,
-            group.peak_gib,
-            color=orange,
-            alpha=0.35,
-            linewidth=0.7,
-        )
-    medians = memory.groupby("wells_per_worker").peak_gib.median()
-    d.plot(
-        medians.index,
-        medians,
+    _distribution_panel(
+        d,
+        memory,
+        condition="wells_per_worker",
+        value="peak_gib",
+        conditions=tuple(sorted(memory.wells_per_worker.unique())),
         color=orange,
-        marker="o",
-        linewidth=2,
-        label="Median across 30 workflows",
+        title="B  Peak memory across workflows",
+        xlabel="Assignments per worker\n(4 workers)",
+        ylabel="Peak process-tree RAM (GiB)",
+        logarithmic=False,
+        annotation_unit="",
     )
-    d.set(
-        ylim=(0, None),
-        xticks=sorted(memory.wells_per_worker.unique()),
-        xlabel="Repeated-image assignments per worker\n(4 workers)",
-        ylabel="Peak RAM (GiB)",
-        title="B  Memory use",
+    d.set_ylim(bottom=0)
+    fig.legend(
+        handles=(
+            Line2D(
+                (),
+                (),
+                marker="o",
+                linestyle="none",
+                markerfacecolor="#6B7280",
+                markeredgecolor="#202020",
+                markersize=5,
+                label="One workflow",
+            ),
+            Patch(
+                facecolor="#6B7280",
+                edgecolor="#6B7280",
+                alpha=0.28,
+                label="Interquartile range",
+            ),
+            Line2D((), (), color="#202020", linewidth=2, label="Median"),
+        ),
+        loc="outside lower center",
+        ncol=3,
+        frameon=False,
+        fontsize=9,
     )
-    d.legend(frameon=False, fontsize=10)
-    for axis in (*historical_axes, *axes):
+    for axis in historical_axes:
         axis.grid(axis="y", alpha=0.18, linewidth=0.5)
         axis.set_axisbelow(True)
-    fig.suptitle("Worker reuse within each execution across 30 workflows", fontsize=12)
+    fig.suptitle(
+        "Measured execution across 30 imported workflows",
+        fontsize=12,
+        fontweight="bold",
+    )
     historical_figure.suptitle(
         "Archived single-sample observations: unequal timing boundaries", fontsize=12
     )
+    detail_figure = _workflow_heatmaps(throughput, memory)
     for plot, stem in (
         (fig, "figure2_benchmarks"),
+        (detail_figure, "figure2_benchmarks_by_workflow"),
         (historical_figure, "figure2_historical_timings"),
     ):
         for suffix in ("png", "pdf", "svg"):
-            plot.savefig(OUTPUT / f"{stem}.{suffix}", dpi=300)
+            plot.savefig(output_dir / f"{stem}.{suffix}", dpi=300)
         plt.close(plot)
 
     for name, frame in (
@@ -264,13 +447,17 @@ def build() -> None:
         ("memory_observations", memory),
     ):
         frame.to_csv(
-            OUTPUT / f"figure2_{name}.csv", index=False, quoting=csv.QUOTE_MINIMAL
+            output_dir / f"figure2_{name}.csv", index=False, quoting=csv.QUOTE_MINIMAL
         )
-    outputs = sorted(OUTPUT.glob("figure2_*"))
+    outputs = sorted(output_dir.glob("figure2_*"))
     outputs = [path for path in outputs if path.suffix != ".json"]
     receipt = {
         "source_sha256": {
-            str((DATA / name).relative_to(ROOT)): sha256(DATA / name)
+            (
+                str((data_dir / name).relative_to(ROOT))
+                if (data_dir / name).is_relative_to(ROOT)
+                else str(data_dir / name)
+            ): sha256(data_dir / name)
             for name in SOURCES
         },
         "generator_sha256": sha256(Path(__file__)),
@@ -280,15 +467,20 @@ def build() -> None:
         "repetitions_per_single_sample_row": sorted(single.n.unique().tolist()),
         "memory_workflows": memory.case_name.nunique(),
         "throughput_workflows": throughput.case_name.nunique(),
-        "throughput_panel": "Measured completed wells divided by execution seconds, four wells per worker; historical native projections retained separately but not plotted",
+        "throughput_panel": "Measured completed assignments divided by execution seconds, four assignments per worker; points show all 30 workflows, boxes show interquartile ranges, and lines show medians",
+        "supplementary_workflow_panel": "The same throughput and memory observations arranged by workflow and condition; workflow order is descending median throughput",
         "memory_conversion": "Source collector reports RSS bytes / 1024**2; divide by 1024 for GiB",
         "interpretation": "Historical phase ratios with different timing boundaries: native command includes startup, OpenHCS execution follows preparation, and phase sums include different work. Native persistent or parallel throughput was not measured.",
     }
-    (OUTPUT / "figure2_provenance.json").write_text(
+    (output_dir / "figure2_provenance.json").write_text(
         json.dumps(receipt, indent=2) + "\n"
     )
-    print(f"Rendered benchmark panels and plotted observations to {OUTPUT}")
+    print(f"Rendered benchmark panels and plotted observations to {output_dir}")
 
 
 if __name__ == "__main__":
-    build()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA)
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
+    arguments = parser.parse_args()
+    build(arguments.data_dir, arguments.output_dir)

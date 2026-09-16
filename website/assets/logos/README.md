@@ -8,6 +8,10 @@ upstream source bytes.
 - `cellprofiler.png`: `CellProfiler-favicon-120.png` from CellProfiler commit
   `673225fb664a5214c24479ce6329256d046220fa`; SHA-256
   `820dc710604ae6bfa5605b7a6c17817c484d91e289c15d5953e2769b083333b3`.
+- `mcp.svg`: `docs/favicon.svg` from the official Model Context Protocol
+  repository at commit `088176704a4e8f20e7f1d237de1de8484aa412fd`;
+  SHA-256 `05f47fb3ffb7323bdbf6b397330229a7f32a3a1f2d17365e748f8777a82dd6c0`.
+  The mark is used only to identify the protocol.
 - `napari.svg`: `gradient-plain-dark.svg` from the official napari resources
   release `v0.0.4`; SHA-256
   `e7d39d1a8d8ddc43190e55fb09c7ac6f3653120b4afff2dd981b3a66b326623d`.
@@ -18,6 +22,10 @@ upstream source bytes.
 - `bioformats.svg`: `bio-formats-logomark.svg` from the official OME artwork
   repository at commit `52ee4451270db7a69d6067fcf1dec4660445a635`;
   SHA-256 `19cfb3bc6a2274b98c76a1e9af43f1d94c56b5b5e718e60b1fecdb633c7ddf9a`.
+  Preserve its colors and aspect ratio.
+- `zarr.svg`: `zarr-pink-horizontal.svg` from the official Zarr logo
+  repository at commit `4666a0b8412e4a10dfb838f5e5adee02b5547f4e`;
+  SHA-256 `4e7d278e12a6000c54ce3dfdee274d4dd98595bdf04d2afacda17b5a6e61ecf6`.
   Preserve its colors and aspect ratio.
 - `cupy.svg`: `docs/image/cupy_logo.svg` from CuPy commit
   `9771347977f79ca08ebf0fb7fb6250268eaa35f5`; SHA-256
@@ -59,9 +67,11 @@ upstream source bytes.
 Upstream sources:
 
 - <https://github.com/CellProfiler/CellProfiler>
+- <https://github.com/modelcontextprotocol/modelcontextprotocol>
 - <https://github.com/napari/resources/releases/tag/v0.0.4>
 - <https://imagej.net/software/fiji/>
 - <https://www.openmicroscopy.org/artwork/>
+- <https://github.com/zarr-developers/zarr-logo>
 - <https://cupy.dev/>
 - <https://docs.pytorch.org/assets/brand-guidelines/PyTorch-Brand-Guidelines.pdf>
 - <https://docs.jax.dev/>
