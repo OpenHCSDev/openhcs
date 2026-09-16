@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import ClassVar, Iterable, TypeAlias
+from typing import ClassVar, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
@@ -15,12 +15,12 @@ from polystore.streaming.viewer_transport import (
     DisplayModeToken,
     IndexedViewerStreamSourceMetadata,
     PathMappedViewerStreamSourceMetadata,
+    ViewerDisplayConfigABC,
     ViewerStreamBackendKwargs,
     ViewerStreamMessageContext,
     ViewerStreamProducer,
     ViewerStreamSourceIdentity,
     ViewerStreamSourceMetadata,
-    ViewerDisplayConfigABC,
 )
 from zmqruntime.viewer_protocol import (
     ViewerComponentMetadataPayload,
@@ -31,7 +31,6 @@ from zmqruntime.viewer_protocol import (
 from openhcs.constants.constants import AllComponents, get_multiprocessing_axis
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
-
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
@@ -45,12 +44,12 @@ from openhcs.core.streaming_config_factory import (
 )
 from openhcs.runtime.viewer_component_system import (
     ComponentValue,
-    ViewerComponentMetadataNormalizer,
-    ViewerComponentValueParser,
     ViewerComponentAxisSemantics,
     ViewerComponentAxisSemanticsAuthority,
     ViewerComponentLayout,
+    ViewerComponentMetadataNormalizer,
     ViewerComponentValueDomainPayload,
+    ViewerComponentValueParser,
     ViewerObjectDisplayConfigInput,
 )
 

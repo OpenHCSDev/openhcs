@@ -63,6 +63,9 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.processing.backends.analysis.consolidate_analysis_results import (
+    analysis_file_path_is_included,
+)
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
@@ -74,14 +77,11 @@ from openhcs.processing.materialization import (
     csv_only,
     json_materializer,
     json_only,
-    materialize,
     materialization_outputs,
+    materialize,
     tabular_field_names_from_materialization,
     text_only,
     tiff_stack,
-)
-from openhcs.processing.backends.analysis.consolidate_analysis_results import (
-    analysis_file_path_is_included,
 )
 from openhcs.processing.materialization.core import (
     MaterializationInputItem,
@@ -275,6 +275,35 @@ def _viewer_stream_backend_kwargs_for_display(display_config):
         ),
     )
     return ViewerStreamBackendCallKwargs(ViewerStreamBackendKwargs(request))
+
+
+def test_viewer_backend_scopes_axes_to_concrete_writer_output_metadata() -> None:
+    backend_kwargs = _viewer_stream_backend_kwargs()
+    output = Output(
+        path="/tmp/A01_z_index-1_timepoint-1_cell_bodies_step4.labels.tif",
+        content=np.zeros((8, 8), dtype=np.uint16),
+        metadata=ImagePayloadMetadata(
+            source_component_metadata={
+                "well": "A01",
+                "z_index": 1,
+                "timepoint": 1,
+            },
+            source_spatial_domain=SourceSpatialDomain(source_shape_yx=(8, 8)),
+        ),
+    )
+
+    [(_outputs, kwargs)] = backend_kwargs.filemanager_batches((output,))
+    stream_request = kwargs["stream_request"]
+
+    assert "channel" not in stream_request.display_config.COMPONENT_ORDER
+    assert stream_request.source.metadata.component_metadata_for_item(
+        output.path,
+        0,
+    ) == {
+        "well": "A01",
+        "z_index": 1,
+        "timepoint": 1,
+    }
 
 
 def _stream_component_metadata(saved_item):

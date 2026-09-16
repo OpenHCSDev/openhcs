@@ -26,7 +26,11 @@ from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
     ViewerStreamBackendKwargs,
 )
-from zmqruntime.viewer_protocol import ViewerWireField, ViewerWireValue
+from zmqruntime.viewer_protocol import (
+    ViewerComponentMetadataPayload,
+    ViewerWireField,
+    ViewerWireValue,
+)
 
 from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.artifacts import ArtifactMaterializationPayload
@@ -73,6 +77,8 @@ from openhcs.core.source_matching import (
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
+    StreamScopedDisplayConfig,
+    StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
 )
 from openhcs.processing.materialization.constants import (
@@ -1523,11 +1529,12 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         self,
         output: Output,
     ) -> dict:
-        output_fields = self._output_fields(output)
+        values = self._values_scoped_to_outputs((output,))
+        output_fields = self._output_fields(output, values=values)
         if output_fields is None:
-            return self.values.to_kwargs()
+            return values.to_kwargs()
         component_metadata, item_fields = output_fields
-        return self.values.with_single_item_source(
+        return values.with_single_item_source(
             component_metadata,
             item_fields,
         ).to_kwargs()
@@ -1536,6 +1543,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         self,
         outputs: Sequence[Output],
     ) -> tuple[tuple[tuple[Output, ...], dict], ...]:
+        values = self._values_scoped_to_outputs(outputs)
         grouped: list[
             tuple[
                 dict[str, ViewerWireValue],
@@ -1545,7 +1553,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         ] = []
         unprojected_outputs: list[Output] = []
         for output in outputs:
-            output_fields = self._output_fields(output)
+            output_fields = self._output_fields(output, values=values)
             if output_fields is None:
                 unprojected_outputs.append(output)
                 continue
@@ -1562,7 +1570,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
 
         batches: list[tuple[tuple[Output, ...], dict]] = []
         if unprojected_outputs:
-            batches.append((tuple(unprojected_outputs), self.values.to_kwargs()))
+            batches.append((tuple(unprojected_outputs), values.to_kwargs()))
         for item_fields, batch_outputs, component_metadata in grouped:
             metadata_by_path = dict(
                 zip(
@@ -1575,7 +1583,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 raise ValueError(
                     "Viewer materialization batch requires unique output paths."
                 )
-            stream_request = self.values.with_item_fields(item_fields).stream_request
+            stream_request = values.with_item_fields(item_fields).stream_request
             stream_request = replace(
                 stream_request,
                 source=replace(
@@ -1593,18 +1601,113 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
             )
         return tuple(batches)
 
+    def _values_scoped_to_outputs(
+        self,
+        outputs: Sequence[Output],
+    ) -> ViewerStreamBackendKwargs:
+        """Derive scalar viewer axes from the concrete writer outputs."""
+
+        metadata_items = StreamSourceComponentMetadataItems.from_values(
+            self._source_component_metadata(output, values=self.values)
+            for output in outputs
+            if output.viewer_stream_requires_source_metadata
+        )
+        if not metadata_items.values:
+            return self.values
+        stream_request = self.values.stream_request
+        component_order = stream_request.display_semantics.component_order
+        metadata_component_order = metadata_items.complete_component_order(
+            component_order
+        )
+        plane_components = frozenset(
+            component
+            for output in outputs
+            for component in self._plane_component_values(
+                self._output_item_fields(
+                    output,
+                    component_order=component_order,
+                )
+            )
+        )
+        complete_component_order = tuple(
+            component
+            for component in component_order
+            if component in metadata_component_order or component in plane_components
+        )
+        if complete_component_order == component_order:
+            return self.values
+
+        component_metadata = ViewerComponentMetadataPayload.from_optional_wire_mapping(
+            stream_request.message_extra or {}
+        )
+        message_extra = ViewerComponentMetadataPayload.strip_component_metadata(
+            stream_request.message_extra or {}
+        )
+        if component_metadata is not None:
+            message_extra.update(
+                component_metadata.scoped_to(complete_component_order).to_wire_mapping()
+            )
+        return ViewerStreamBackendKwargs(
+            replace(
+                stream_request,
+                display_config=StreamScopedDisplayConfig(
+                    base=stream_request.display_config,
+                    component_order=complete_component_order,
+                ),
+                message_extra=message_extra,
+            )
+        )
+
+    @staticmethod
+    def _source_component_metadata(
+        output: Output,
+        *,
+        values: ViewerStreamBackendKwargs,
+    ) -> SourceComponentMetadata | None:
+        source_identity = output.source_identity
+        if source_identity is None:
+            return None
+        return source_identity.with_parsed_path_components(
+            values.stream_request.source.identity.microscope_handler.parser
+        ).component_metadata
+
+    @staticmethod
+    def _output_item_fields(
+        output: Output,
+        *,
+        component_order: tuple[str, ...],
+    ) -> dict[str, ViewerWireValue]:
+        if output.variable_components:
+            return (
+                StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+                    output.metadata,
+                    output.variable_components,
+                )
+            )
+        return StreamImagePayloadMetadataProjector.item_fields(
+            output.metadata,
+            component_order,
+        )
+
+    @staticmethod
+    def _plane_component_values(
+        item_fields: Mapping[str, ViewerWireValue],
+    ) -> Mapping[str, ViewerWireValue]:
+        plane_component_values = item_fields.get(
+            ViewerWireField.PLANE_COMPONENT_VALUES.value,
+            {},
+        )
+        if not isinstance(plane_component_values, Mapping):
+            raise TypeError("Viewer stream plane_component_values must be a mapping.")
+        return plane_component_values
+
     def _output_fields(
         self,
         output: Output,
+        *,
+        values: ViewerStreamBackendKwargs,
     ) -> tuple[dict[str, MaterializationValue], dict[str, ViewerWireValue]] | None:
-        source_identity = output.source_identity
-        if source_identity is not None:
-            source_identity = source_identity.with_parsed_path_components(
-                self.values.stream_request.source.identity.microscope_handler.parser
-            )
-        component_metadata = (
-            source_identity.component_metadata if source_identity is not None else None
-        )
+        component_metadata = self._source_component_metadata(output, values=values)
         if component_metadata is None:
             if not output.viewer_stream_requires_source_metadata:
                 return None
@@ -1612,19 +1715,12 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 "Viewer stream materialization requires output metadata with "
                 "source_component_metadata."
             )
-        item_fields = (
-            StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-                output.metadata,
-                output.variable_components,
-            )
+        display_semantics = values.stream_request.display_semantics
+        item_fields = self._output_item_fields(
+            output,
+            component_order=display_semantics.component_order,
         )
-        plane_component_values = item_fields.get(
-            ViewerWireField.PLANE_COMPONENT_VALUES.value,
-            {},
-        )
-        if not isinstance(plane_component_values, Mapping):
-            raise TypeError("Viewer stream plane_component_values must be a mapping.")
-        display_semantics = self.values.stream_request.display_semantics
+        plane_component_values = self._plane_component_values(item_fields)
         projected_metadata = StreamViewerComponentMetadataProjector(
             tuple(
                 component
