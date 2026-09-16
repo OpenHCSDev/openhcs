@@ -1,0 +1,156 @@
+"""Persisted semantic image metadata across source-projection replay."""
+
+import json
+from pathlib import Path
+
+import numpy as np
+from polystore.virtual_workspace import SourcePixelRef
+
+from openhcs.constants.constants import AllComponents
+from openhcs.core.runtime_image_values import (
+    ImageMetadataPayload,
+    ImagePayloadMetadata,
+    image_payload_metadata,
+)
+from openhcs.core.source_image_provenance import (
+    SourceImageProvenance,
+    SourceImageProvenancePlanes,
+)
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress,
+    SourcePlaneProjection,
+    SourceProjectionSet,
+)
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspacePathLookup,
+    VirtualWorkspaceSourceProjection,
+)
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.serialization.json import to_jsonable
+
+VIRTUAL_PATH = "A01_s001_w1_z001_t001.tif"
+
+
+def _collapsed_metadata() -> ImagePayloadMetadata:
+    return ImagePayloadMetadata(
+        source_provenance=SourceImageProvenance(
+            source_component_metadata={
+                "well": "A01",
+                "channel": "1",
+                "z_index": "1",
+                "timepoint": "1",
+            },
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_contributor_components(
+                paths=("/source/site-1.tif", "/source/site-2.tif"),
+                component_metadata=({"site": "1"}, {"site": "2"}),
+            ),
+        ),
+        source_dtype="uint16",
+    )
+
+
+def _projection(
+    image_metadata: ImagePayloadMetadata | None,
+) -> SourcePlaneProjection:
+    return SourcePlaneProjection(
+        address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+        ref=SourcePixelRef("disk", VIRTUAL_PATH),
+        image_metadata=image_metadata,
+    )
+
+
+def _serialized_metadata(
+    image_metadata: ImagePayloadMetadata | None,
+) -> dict[str, object]:
+    projection_set = SourceProjectionSet((_projection(image_metadata),))
+    subdirectory = projection_set.metadata_dict(
+        parser=SourceSchemaFilenameParser(),
+        microscope_handler_name="openhcs",
+        source_filename_parser_name="SourceSchemaFilenameParser",
+        grid_dimensions=[1, 1],
+        pixel_size=1.0,
+    )
+    return json.loads(json.dumps({"subdirectories": {".": subdirectory}}))
+
+
+def test_image_payload_metadata_codec_preserves_collapsed_contributors() -> None:
+    metadata = _collapsed_metadata()
+
+    restored = ImagePayloadMetadata.from_mapping(to_jsonable(metadata))
+
+    assert restored == metadata
+    assert "site" not in restored.source_component_metadata
+    assert len(restored.source_provenance.represented_source_identities) == 2
+
+
+def test_source_projection_serialization_decodes_typed_image_metadata() -> None:
+    document = _serialized_metadata(_collapsed_metadata())
+    projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+        Path("/plate"), document
+    ).require_source_projection_for(
+        VirtualWorkspacePathLookup.from_paths(VIRTUAL_PATH, VIRTUAL_PATH)
+    )
+
+    assert projection.address.value_for(AllComponents.SITE) == "1"
+    assert projection.persisted_image_metadata() == _collapsed_metadata()
+
+
+def test_legacy_projection_replay_uses_complete_top_level_source_metadata() -> None:
+    document = _serialized_metadata(None)
+    workspace = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+        Path("/plate"), document
+    )
+    payload = ImageMetadataPayload(
+        np.zeros((3, 4), dtype=np.uint16),
+        ImagePayloadMetadata(source_path="/loaded/legacy.tif"),
+    )
+
+    projected = workspace.project_unbound_payload(
+        VirtualWorkspacePathLookup.from_paths(VIRTUAL_PATH, VIRTUAL_PATH), payload
+    )
+
+    assert image_payload_metadata(projected).source_component_metadata["site"] == "1"
+
+
+def test_site_collapsed_serialize_read_project_roundtrip_keeps_semantics() -> None:
+    document = _serialized_metadata(_collapsed_metadata())
+    subdirectory = document["subdirectories"]["."]
+    assert subdirectory["source_metadata"][VIRTUAL_PATH]["site"] == "1"
+    workspace = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+        Path("/plate"), document
+    )
+    payload = ImageMetadataPayload(
+        np.zeros((3, 4), dtype=np.uint16),
+        ImagePayloadMetadata(
+            source_path="/loaded/mosaic.tif",
+            source_component_metadata={
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "1",
+                "timepoint": "1",
+            },
+        ),
+    )
+
+    projected = workspace.project_unbound_payload(
+        VirtualWorkspacePathLookup.from_paths(VIRTUAL_PATH, VIRTUAL_PATH), payload
+    )
+    metadata = image_payload_metadata(projected)
+
+    assert dict(metadata.source_component_metadata) == {
+        "well": "A01",
+        "channel": "1",
+        "z_index": "1",
+        "timepoint": "1",
+    }
+    contributors = metadata.source_provenance.represented_source_identities
+    assert tuple(
+        contributor.component_metadata["site"] for contributor in contributors
+    ) == ("1", "2")
+    assert (
+        workspace.require_source_projection_for(
+            VirtualWorkspacePathLookup.from_paths(VIRTUAL_PATH, VIRTUAL_PATH)
+        ).address.value_for(AllComponents.SITE)
+        == "1"
+    )

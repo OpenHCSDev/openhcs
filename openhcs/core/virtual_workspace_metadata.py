@@ -13,8 +13,9 @@ from typing import Any, Callable, TypeAlias
 from polystore.atomic import LOCK_CONFIG, FileLockError, atomic_update_json
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.core.artifacts import ArtifactType
 from openhcs.constants.constants import AllComponents
+from openhcs.core.artifacts import ArtifactType
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
     SourceMetadataMapping,
@@ -26,6 +27,7 @@ from openhcs.core.source_projection import (
     SourceArtifactProjection,
     SourcePlaneProjection,
     SourceProjection,
+    SourceProjectionMetadataSerializer,
 )
 
 
@@ -118,6 +120,44 @@ class AtomicMetadataWriter:
             {METADATA_CONFIG.SUBDIRECTORIES_KEY: {}},
         )
 
+    def merge_source_projection_metadata(
+        self,
+        metadata_path: str | Path,
+        subdirectory_name: str,
+        serializer: SourceProjectionMetadataSerializer,
+        projection_paths: tuple[tuple[SourceProjection, str], ...],
+    ) -> None:
+        """Merge produced projection records without replacing plate metadata."""
+
+        def update(data: dict[str, Any] | None) -> dict[str, Any]:
+            data = self._ensure_subdirectories_structure(data)
+            subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
+                subdirectory_name, {}
+            )
+            existing_paths = dict(
+                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                    subdirectory
+                ).entries
+            )
+            existing_paths.update(
+                {path: projection for projection, path in projection_paths}
+            )
+            subdirectory.update(
+                serializer.projection_fields(
+                    tuple(
+                        (projection, path)
+                        for path, projection in existing_paths.items()
+                    )
+                )
+            )
+            return data
+
+        self._execute_update(
+            metadata_path,
+            update,
+            {METADATA_CONFIG.SUBDIRECTORIES_KEY: {}},
+        )
+
     def _execute_update(
         self,
         metadata_path: str | Path,
@@ -152,9 +192,10 @@ class OpenHCSMetadataFields:
     SUBDIRECTORIES: str = METADATA_CONFIG.SUBDIRECTORIES_KEY
     IMAGE_FILES: str = "image_files"
     AVAILABLE_BACKENDS: str = METADATA_CONFIG.AVAILABLE_BACKENDS_KEY
-    SOURCE_METADATA: str = "source_metadata"
+    SOURCE_METADATA: str = SourceProjectionMetadataSerializer.SOURCE_METADATA_FIELD
+    SOURCE_PROJECTION: str = SourceProjectionMetadataSerializer.SOURCE_PROJECTION_FIELD
     SOURCE_DIAGNOSTICS: str = "source_diagnostics"
-    WORKSPACE_MAPPING: str = "workspace_mapping"
+    WORKSPACE_MAPPING: str = SourceProjectionMetadataSerializer.WORKSPACE_MAPPING_FIELD
     GRID_DIMENSIONS: str = "grid_dimensions"
     PIXEL_SIZE: str = "pixel_size"
     SOURCE_FILENAME_PARSER_NAME: str = "source_filename_parser_name"
@@ -273,7 +314,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         cls,
         subdirectory: OpenHCSSubdirectoryPayload,
     ) -> "VirtualWorkspaceSourceProjectionEntries":
-        records = subdirectory.get("source_projection")
+        records = subdirectory.get(FIELDS.SOURCE_PROJECTION)
         if records is None:
             return cls(MappingProxyType({}))
         if not isinstance(records, Sequence) or isinstance(records, str):
@@ -325,12 +366,20 @@ class VirtualWorkspaceSourceProjectionEntries:
         component_labels = cls._optional_component_labels(record)
         source_alias = cls._optional_text(record, "source_alias")
         if projection_role is SourceProjectionRole.PRIMARY_PLANE:
+            image_metadata_value = record.get(
+                SourceProjectionMetadataSerializer.IMAGE_METADATA_FIELD
+            )
             projection: SourceProjection = SourcePlaneProjection(
                 address=address,
                 ref=ref,
                 source_alias=source_alias,
                 source_metadata=source_metadata,
                 component_labels=component_labels,
+                image_metadata=(
+                    None
+                    if image_metadata_value is None
+                    else ImagePayloadMetadata.from_mapping(image_metadata_value)
+                ),
             )
         else:
             if source_alias is None:

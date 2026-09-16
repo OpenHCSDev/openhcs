@@ -14,8 +14,9 @@ from urllib.parse import quote
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.components.component_values import OpenHCSComponentValues
 from openhcs.core.artifacts import ArtifactType, ImageArtifactType
+from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
@@ -37,6 +38,7 @@ from openhcs.core.source_metadata import (
     source_metadata_dict,
     source_metadata_scalar,
 )
+from openhcs.serialization.json import to_jsonable
 
 
 class SourceDatasetConflictError(ValueError):
@@ -636,6 +638,11 @@ class SourceProjection:
     def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
         """Add projection-specific fields to the nominal wire payload."""
 
+    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
+        """Return leaf-owned semantic image metadata when this is an image plane."""
+
+        return None
+
     def matches_binding(self, binding: NamedSourceBinding) -> bool:
         """Return whether this projection represents one exact source binding."""
 
@@ -662,9 +669,13 @@ class SourcePlaneProjection(SourceProjection):
     component_labels: Mapping[str, str | None] = field(
         default_factory=lambda: MappingProxyType({})
     )
+    image_metadata: ImagePayloadMetadata | None = None
 
     def __post_init__(self) -> None:
         _normalize_projection(self)
+
+    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
+        return self.image_metadata
 
     @property
     def payload_composition_alias(self) -> str | None:
@@ -841,6 +852,11 @@ class SourceProjectionSet:
 class SourceProjectionMetadataSerializer:
     """Serialize projection identity into OpenHCS metadata-compatible fields."""
 
+    WORKSPACE_MAPPING_FIELD: ClassVar[str] = "workspace_mapping"
+    SOURCE_METADATA_FIELD: ClassVar[str] = "source_metadata"
+    SOURCE_PROJECTION_FIELD: ClassVar[str] = "source_projection"
+    IMAGE_METADATA_FIELD: ClassVar[str] = "image_metadata"
+
     parser: Any
     image_extension: str = ".tif"
     path_prefix: str | None = None
@@ -885,18 +901,7 @@ class SourceProjectionMetadataSerializer:
                 if available_backends is not None
                 else self._available_backends(projection_set)
             ),
-            "workspace_mapping": {
-                path: projection.ref.to_workspace_mapping()
-                for projection, path in projection_paths
-            },
-            "source_metadata": {
-                path: self._source_metadata(projection)
-                for projection, path in projection_paths
-            },
-            "source_projection": [
-                self._source_projection_payload(projection, path)
-                for projection, path in projection_paths
-            ],
+            **self.projection_fields(projection_paths),
         }
         if main is not None:
             metadata["main"] = main
@@ -908,6 +913,27 @@ class SourceProjectionMetadataSerializer:
                 for diagnostic in projection_set.diagnostics
             ]
         return metadata
+
+    def projection_fields(
+        self,
+        projection_paths: tuple[tuple[SourceProjection, str], ...],
+    ) -> dict[str, Any]:
+        """Serialize the coherent path-keyed projection fields as one unit."""
+
+        return {
+            self.WORKSPACE_MAPPING_FIELD: {
+                path: projection.ref.to_workspace_mapping()
+                for projection, path in projection_paths
+            },
+            self.SOURCE_METADATA_FIELD: {
+                path: self._source_metadata(projection)
+                for projection, path in projection_paths
+            },
+            self.SOURCE_PROJECTION_FIELD: [
+                self._source_projection_payload(projection, path)
+                for projection, path in projection_paths
+            ],
+        }
 
     def projection_paths(
         self,
@@ -1069,6 +1095,9 @@ class SourceProjectionMetadataSerializer:
             )
         if projection.component_labels:
             payload["component_labels"] = dict(projection.component_labels)
+        image_metadata = projection.persisted_image_metadata()
+        if image_metadata is not None:
+            payload[self.IMAGE_METADATA_FIELD] = to_jsonable(image_metadata)
         projection.extend_serialized_payload(payload)
         return payload
 

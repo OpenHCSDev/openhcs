@@ -11,8 +11,9 @@ from pathlib import Path
 import numpy as np
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
+from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import Backend
+from openhcs.constants.constants import AllComponents, Backend
 from openhcs.core.axis_filter import step_axis_allows_config
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
@@ -29,6 +30,11 @@ from openhcs.core.runtime_slice_projection import (
 )
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
+)
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress,
+    SourcePlaneProjection,
+    SourceProjectionMetadataSerializer,
 )
 from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,
@@ -53,6 +59,10 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
     StreamImagePayloadMetadataProjector,
     StreamSourceComponentMetadataItems,
+)
+from openhcs.core.virtual_workspace_metadata import (
+    AtomicMetadataWriter,
+    get_metadata_path,
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 
@@ -731,7 +741,12 @@ class OpenHCSMetadataWriter:
                 )
             )
 
-        def write(self, context: ProcessingContext) -> None:
+        def write(
+            self,
+            context: ProcessingContext,
+            *,
+            produced_plan: CompiledStepPlan | None = None,
+        ) -> None:
             """Project the target's current storage state into plate metadata."""
 
             from openhcs.microscopes.openhcs import OpenHCSMetadataGenerator
@@ -747,6 +762,79 @@ class OpenHCSMetadataWriter:
                 sub_dir=self.sub_dir,
                 results_dir=self.results_dir,
             )
+            if produced_plan is not None:
+                self.write_produced_projection_metadata(context, produced_plan)
+
+        def write_produced_projection_metadata(
+            self,
+            context: ProcessingContext,
+            plan: CompiledStepPlan,
+        ) -> None:
+            """Atomically persist one plan's typed output projection records."""
+
+            projection_paths = self.produced_projection_paths(context, plan)
+            if not projection_paths:
+                return
+            parser_context = FunctionOutputParserContext.from_processing_context(
+                context
+            )
+            AtomicMetadataWriter().merge_source_projection_metadata(
+                get_metadata_path(self.plate_root),
+                self.sub_dir,
+                SourceProjectionMetadataSerializer(parser_context.parser),
+                projection_paths,
+            )
+
+        def produced_projection_paths(
+            self,
+            context: ProcessingContext,
+            plan: CompiledStepPlan,
+        ) -> tuple[tuple[SourcePlaneProjection, str], ...]:
+            """Project manifest-owned output semantics while they remain typed."""
+
+            if context.filemanager is None:
+                raise ValueError("OpenHCS metadata requires a file manager.")
+            expected_target = (
+                self.primary(plan) if self.is_main else self.materialized(plan)
+            )
+            if expected_target != self:
+                raise ValueError(
+                    "Produced metadata plan does not own this output target."
+                )
+            projections_with_paths: list[tuple[SourcePlaneProjection, str]] = []
+            for record in step_output_manifest(context).produced_records_for(plan):
+                if not record.is_image_payload:
+                    continue
+                filename_values = (
+                    record.filename_component_values
+                    if record.filename_component_values is not None
+                    else record.component_values
+                )
+                address = OpenHCSPlaneAddress(
+                    (component, filename_values[component.value])
+                    for component in AllComponents
+                )
+                virtual_path = (
+                    Path(self.sub_dir) / record.relative_output_path
+                ).as_posix()
+                semantic_metadata = record.image_metadata
+                source_metadata = record.component_metadata(
+                    None
+                    if semantic_metadata is None
+                    else semantic_metadata.source_component_metadata
+                )
+                projections_with_paths.append(
+                    (
+                        SourcePlaneProjection(
+                            address=address,
+                            ref=SourcePixelRef(self.backend, virtual_path),
+                            source_metadata=source_metadata,
+                            image_metadata=semantic_metadata,
+                        ),
+                        virtual_path,
+                    )
+                )
+            return tuple(projections_with_paths)
 
     @classmethod
     def write(
@@ -755,6 +843,12 @@ class OpenHCSMetadataWriter:
         plan: CompiledStepPlan,
     ) -> None:
         if not plan.create_openhcs_metadata:
+            for target in (
+                cls.OutputTarget.primary(plan),
+                cls.OutputTarget.materialized(plan),
+            ):
+                if target is not None:
+                    target.write_produced_projection_metadata(context, plan)
             return
         cls.write_primary_metadata(context, plan)
         cls.write_materialized_metadata(context, plan)
@@ -794,7 +888,7 @@ class OpenHCSMetadataWriter:
         target = OpenHCSMetadataWriter.OutputTarget.primary(plan)
         if target is None:
             return
-        target.write(context)
+        target.write(context, produced_plan=plan)
 
     @staticmethod
     def write_materialized_metadata(
@@ -804,7 +898,7 @@ class OpenHCSMetadataWriter:
         target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
         if target is None:
             return
-        target.write(context)
+        target.write(context, produced_plan=plan)
 
 
 class RuntimeArtifactMaterializationAuthority:

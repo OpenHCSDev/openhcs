@@ -32,12 +32,14 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
+    SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
 )
+from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
@@ -57,6 +59,7 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
 )
+from openhcs.core.virtual_workspace_metadata import FIELDS
 
 
 @pytest.mark.parametrize("backend", [Backend.ZARR.value, "custom-array-store"])
@@ -1256,6 +1259,83 @@ def test_metadata_writer_skips_owner_without_image_outputs():
     )
 
     OpenHCSMetadataWriter.write(context, plan)
+
+
+@pytest.mark.parametrize("metadata_writer", (False, True))
+def test_produced_projection_metadata_persists_typed_collapsed_semantics(
+    tmp_path, metadata_writer
+):
+    plate_root = tmp_path / "output_plate"
+    output_dir = plate_root / "images"
+    path = output_dir / "A01_s1_w1.tif"
+    output_dir.mkdir(parents=True)
+    path.write_bytes(b"produced image")
+    context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    context.metadata_cache = {
+        AllComponents.WELL: {"A01": None},
+        AllComponents.SITE: {"1": None},
+        AllComponents.CHANNEL: {"1": None},
+        AllComponents.Z_INDEX: {"1": None},
+        AllComponents.TIMEPOINT: {"1": None},
+    }
+    plan = function_step_plan("Mosaic")
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.write_backend = Backend.DISK.value
+    plan.create_openhcs_metadata = metadata_writer
+    metadata = ImagePayloadMetadata(
+        source_provenance=SourceImageProvenance(
+            source_component_metadata={
+                "well": "A01",
+                "channel": "1",
+                "z_index": "1",
+                "timepoint": "1",
+            },
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_contributor_components(
+                paths=("/source/site-1.tif", "/source/site-2.tif"),
+                component_metadata=({"site": "1"}, {"site": "2"}),
+            ),
+        )
+    )
+    record_output_path(
+        context,
+        plan,
+        path,
+        image_metadata=metadata,
+        identity=FunctionOutputIdentity(
+            component_values={
+                "well": "A01",
+                "channel": "1",
+                "z_index": "1",
+                "timepoint": "1",
+            },
+            filename_component_values={
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "1",
+                "timepoint": "1",
+            },
+            extension=".tif",
+            source="collapsed mosaic",
+        ),
+    )
+    OpenHCSMetadataWriter.write(context, plan)
+
+    subdirectory = json.loads(
+        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+    )[FIELDS.SUBDIRECTORIES]["images"]
+    record = subdirectory[FIELDS.SOURCE_PROJECTION][0]
+    restored = ImagePayloadMetadata.from_mapping(
+        record[SourceProjectionMetadataSerializer.IMAGE_METADATA_FIELD]
+    )
+    assert "site" not in restored.source_component_metadata
+    assert len(restored.source_provenance.represented_source_identities) == 2
+    assert record["address"]["site"] == "1"
+    assert "site" not in record["source_metadata"]
+    assert subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]["site"] == "1"
 
 
 def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(

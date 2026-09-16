@@ -5,16 +5,18 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import (
     Iterable,
+    Mapping,
     Sequence,
 )
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, TypeVar
+from typing import Any, TypeVar, get_type_hints
 
 import numpy as np
 from arraybridge import ArrayGeometry
+from python_introspect import dataclass_from_mapping
 
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.runtime_array_values import (
@@ -113,6 +115,30 @@ class ImagePayloadMetadata(
     mask_defines_border: bool | None = None
     source_channel_axis: int | None = None
     plane_axis: RuntimePlaneAxis | None = None
+
+    @classmethod
+    def from_mapping(cls, values: Mapping[str, object]) -> "ImagePayloadMetadata":
+        """Decode all declaration-owned image metadata fields."""
+
+        if not isinstance(values, Mapping):
+            raise TypeError("Image payload metadata requires a mapping.")
+        decoded = dict(values)
+        annotations = get_type_hints(cls)
+        provenance_fields = tuple(
+            declared.name
+            for declared in fields(cls)
+            if annotations[declared.name] is SourceImageProvenance
+        )
+        if len(provenance_fields) != 1:
+            raise ValueError(
+                "Image payload metadata requires one source provenance declaration."
+            )
+        provenance_field = provenance_fields[0]
+        if provenance_field in decoded:
+            decoded[provenance_field] = SourceImageProvenance.from_mapping(
+                decoded[provenance_field]
+            )
+        return dataclass_from_mapping(cls, decoded)
 
     @classmethod
     def for_array(

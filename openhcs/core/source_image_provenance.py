@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import InitVar, dataclass, field, replace
+from inspect import signature
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeVar, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import dataclass_from_mapping
+from python_introspect.validation import validate_annotation_value
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.source_metadata import (
-    SOURCE_PLANE_COUNT_FIELD,
-    SOURCE_PLANE_INDEX_FIELD,
-    SourceMetadataMapping,
-    SourceMetadataValue,
-)
 from openhcs.core.source_matching import (
     SourceImageSetIdentity,
     SourceImageSetIdentityPolicy,
@@ -26,6 +23,13 @@ from openhcs.core.source_matching import (
     source_metadata_value,
     with_source_component_metadata,
 )
+from openhcs.core.source_metadata import (
+    SOURCE_PLANE_COUNT_FIELD,
+    SOURCE_PLANE_INDEX_FIELD,
+    SourceMetadataMapping,
+    SourceMetadataValue,
+)
+from openhcs.serialization.json import to_jsonable
 
 SourceComponentMetadata = SourceMetadataMapping
 SourceImageProvenancePlanePathValues = tuple[str | None, ...]
@@ -647,6 +651,45 @@ class SourceImageProvenance:
         values: SourceProvenanceInitValues,
     ) -> "SourceImageProvenance":
         return cls(*values)
+
+    @classmethod
+    def from_mapping(cls, values: Mapping[str, object]) -> "SourceImageProvenance":
+        """Decode constructor-owned facts into nominal provenance values."""
+
+        if not isinstance(values, Mapping):
+            raise TypeError("Source image provenance requires a mapping.")
+        parameters = signature(cls).parameters
+        annotations = get_type_hints(cls.__init__)
+        unknown = set(values) - set(parameters)
+        if unknown:
+            raise ValueError(f"Unknown source provenance fields: {sorted(unknown)!r}.")
+        decoded = dict(values)
+        plane_fields = tuple(
+            name
+            for name in parameters
+            if annotations[name] == SourceImageProvenancePlanes | None
+        )
+        if len(plane_fields) != 1:
+            raise ValueError("Source image provenance requires one plane declaration.")
+        plane_field = plane_fields[0]
+        if plane_field in decoded:
+            plane_records = decoded[plane_field]
+            if not isinstance(plane_records, Sequence) or isinstance(
+                plane_records, (str, bytes)
+            ):
+                raise TypeError("Source image provenance planes require a sequence.")
+            decoded[plane_field] = SourceImageProvenancePlanes.from_records(
+                tuple(
+                    dataclass_from_mapping(SourceImageProvenancePlaneRecord, record)
+                    for record in plane_records
+                )
+            )
+        result = cls(**decoded)
+        for name in parameters:
+            validate_annotation_value(
+                annotations[name], getattr(result, name), path=f"{cls.__name__}.{name}"
+            )
+        return result
 
     @property
     def source_path(self) -> str | None:
@@ -1833,3 +1876,18 @@ class VariableComponentAxisProjection:
                 f"{component.value!r} must be numeric, got {current!r}."
             ) from exc
         return base_value + plane_index
+
+
+@to_jsonable.register(SourceImageProvenance)
+def _jsonable_source_provenance(value: SourceImageProvenance):
+    """Project the public constructor declaration, not cached internals."""
+
+    return {
+        name: to_jsonable(getattr(value, name))
+        for name in signature(SourceImageProvenance).parameters
+    }
+
+
+@to_jsonable.register(SourceImageProvenancePlanes)
+def _jsonable_source_provenance_planes(value: SourceImageProvenancePlanes):
+    return to_jsonable(value.records)

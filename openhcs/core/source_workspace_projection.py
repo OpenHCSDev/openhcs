@@ -9,24 +9,27 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, TypeVar
 
+from polystore.virtual_workspace import SourcePixelRef
+
 from openhcs.constants import Backend
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     SourceProjectionRole,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_matching import (
     source_component_metadata_values,
     source_metadata_value,
     source_metadata_values_equal,
 )
+from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.source_projection import SourceProjection
 from openhcs.core.virtual_workspace_metadata import (
@@ -34,16 +37,16 @@ from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories,
     OpenHCSSubdirectoryPayload,
     VirtualWorkspaceMapping,
-    VirtualWorkspaceSourceProjectionEntries,
     VirtualWorkspaceSourceMetadataEntries,
+    VirtualWorkspaceSourceProjectionEntries,
 )
-from polystore.virtual_workspace import SourcePixelRef
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.microscopes.microscope_interfaces import MetadataHandler
-    from openhcs.core.vfs_protocol import FileManagerLike
     from polystore.filemanager import FileManager
+
+    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.vfs_protocol import FileManagerLike
+    from openhcs.microscopes.microscope_interfaces import MetadataHandler
 
 
 LookupValueT = TypeVar("LookupValueT")
@@ -242,6 +245,7 @@ class VirtualWorkspaceSourceProjection:
             payload,
             source_metadata=source_metadata,
             source_alias=projection.source_alias,
+            persisted_metadata=projection.persisted_image_metadata(),
         )
 
     def project_unbound_payload(
@@ -252,6 +256,7 @@ class VirtualWorkspaceSourceProjection:
         """Carry workspace source metadata without requiring a step binding."""
 
         source_metadata = self.source_metadata_for(lookup)
+        projection = self.source_projection_for(lookup)
         source_alias = (
             None
             if source_metadata is None
@@ -264,6 +269,9 @@ class VirtualWorkspaceSourceProjection:
             payload,
             source_metadata=source_metadata,
             source_alias=source_alias,
+            persisted_metadata=(
+                None if projection is None else projection.persisted_image_metadata()
+            ),
         )
 
     @staticmethod
@@ -272,6 +280,7 @@ class VirtualWorkspaceSourceProjection:
         *,
         source_metadata: SourceMetadataMapping | None,
         source_alias: str | None,
+        persisted_metadata: ImagePayloadMetadata | None = None,
     ) -> RuntimeArrayData:
         """Apply component metadata and source-name provenance to one payload."""
 
@@ -283,8 +292,15 @@ class VirtualWorkspaceSourceProjection:
                     if field != SOURCE_BINDING_ALIAS_METADATA_FIELD
                 }
             )
-        metadata = image_payload_metadata(payload)
-        if source_metadata is not None:
+        current_metadata = image_payload_metadata(payload)
+        metadata = (
+            current_metadata
+            if persisted_metadata is None
+            else persisted_metadata.with_source_spatial_context_from(
+                current_metadata
+            ).with_missing_intensity_from(current_metadata)
+        )
+        if source_metadata is not None and persisted_metadata is None:
             metadata = metadata.with_source_component_metadata(source_metadata)
         if source_alias is not None:
             metadata = metadata.with_source_provenance(
