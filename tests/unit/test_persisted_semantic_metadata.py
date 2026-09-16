@@ -1,6 +1,9 @@
 """Persisted semantic image metadata across source-projection replay."""
 
+import concurrent.futures
 import json
+import multiprocessing
+from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +15,8 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_metadata,
 )
+from openhcs.core.source_binding_selection import SourcePatternResolutionContext
+from openhcs.core.source_bindings import SourceBindingRuntimeContext
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
@@ -51,18 +56,23 @@ def _collapsed_metadata() -> ImagePayloadMetadata:
 
 def _projection(
     image_metadata: ImagePayloadMetadata | None,
+    source_metadata: Mapping[str, object] | None = None,
 ) -> SourcePlaneProjection:
     return SourcePlaneProjection(
         address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
         ref=SourcePixelRef("disk", VIRTUAL_PATH),
         image_metadata=image_metadata,
+        source_metadata={} if source_metadata is None else source_metadata,
     )
 
 
 def _serialized_metadata(
     image_metadata: ImagePayloadMetadata | None,
+    source_metadata: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
-    projection_set = SourceProjectionSet((_projection(image_metadata),))
+    projection_set = SourceProjectionSet(
+        (_projection(image_metadata, source_metadata),)
+    )
     subdirectory = projection_set.metadata_dict(
         parser=SourceSchemaFilenameParser(),
         microscope_handler_name="openhcs",
@@ -71,6 +81,32 @@ def _serialized_metadata(
         pixel_size=1.0,
     )
     return json.loads(json.dumps({"subdirectories": {".": subdirectory}}))
+
+
+def _resolve_persisted_nested_metadata_in_spawned_runtime(
+    document: dict[str, object],
+) -> dict[str, object]:
+    """Exercise the worker's normalized metadata-to-selector path."""
+
+    projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+        Path("/plate"), document
+    )
+    runtime_context = SourceBindingRuntimeContext(
+        step_input_files=(VIRTUAL_PATH,),
+        step_input_source_paths={VIRTUAL_PATH: VIRTUAL_PATH},
+        source_metadata_by_path=projection.source_metadata_by_path,
+    )
+    selection_context = SourcePatternResolutionContext.from_runtime_context(
+        parser=SourceSchemaFilenameParser(),
+        runtime_context=runtime_context,
+    )
+    metadata = selection_context.metadata_for_path(VIRTUAL_PATH)
+    if metadata is None:
+        raise AssertionError("Persisted source metadata was not resolved.")
+    nested = metadata["source_tile_geometry"]
+    if not isinstance(nested, Mapping):
+        raise TypeError("Nested source metadata lost its mapping contract.")
+    return dict(nested)
 
 
 def test_image_payload_metadata_codec_preserves_collapsed_contributors() -> None:
@@ -154,3 +190,30 @@ def test_site_collapsed_serialize_read_project_roundtrip_keeps_semantics() -> No
         ).address.value_for(AllComponents.SITE)
         == "1"
     )
+
+
+def test_persisted_nested_source_metadata_matches_in_spawned_runtime() -> None:
+    tile_geometry = {
+        "x_pixels": -921.5,
+        "y_pixels": 17.25,
+        "row": 0,
+        "column": 1,
+        "width_pixels": 1024,
+        "height_pixels": 1024,
+    }
+    document = _serialized_metadata(
+        None,
+        source_metadata={"source_tile_geometry": tile_geometry},
+    )
+
+    context = multiprocessing.get_context("spawn")
+    with concurrent.futures.ProcessPoolExecutor(
+        max_workers=1,
+        mp_context=context,
+    ) as executor:
+        resolved = executor.submit(
+            _resolve_persisted_nested_metadata_in_spawned_runtime,
+            document,
+        ).result(timeout=30)
+
+    assert resolved == tile_geometry
