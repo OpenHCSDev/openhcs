@@ -323,7 +323,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "5ad3cf33ede0b94989ea90a370df794a9c83127d793a7767d17ad4740c0b504d",
+        "sha256": "a561e62e29af42630fa107b0929fc87b74007f7ed14ec8f0a6881c49070dc923",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -350,7 +350,8 @@
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "Sphinx resolved the pyqt-reactive intersphinx target backed by its current owner source",
       "Re-reviewed the public form-build completion, failure, and signal lifecycle against the complete dependent page and the updated pyqt-reactive owner documentation.",
-      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed."
+      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
+      "2026-09-16: Re-read the complete transition page against parameter_form_manager.py. The only owner delta is relocation to the canonical package-level flash trace; parameter-form lifecycle and value projection are unchanged. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -393,7 +394,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "5ad3cf33ede0b94989ea90a370df794a9c83127d793a7767d17ad4740c0b504d",
+        "sha256": "a561e62e29af42630fa107b0929fc87b74007f7ed14ec8f0a6881c49070dc923",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -410,7 +411,8 @@
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "Sphinx resolved the current owner-document target",
       "Re-reviewed the public form-build completion, failure, and signal lifecycle against the complete dependent page and the updated pyqt-reactive owner documentation.",
-      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed."
+      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
+      "2026-09-16: Re-read the complete transition page against parameter_form_manager.py. The flash-trace import relocation does not alter widget construction or form projection, so no prose revision was required. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1105,7 +1107,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "5ad3cf33ede0b94989ea90a370df794a9c83127d793a7767d17ad4740c0b504d",
+        "sha256": "a561e62e29af42630fa107b0929fc87b74007f7ed14ec8f0a6881c49070dc923",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -1122,7 +1124,8 @@
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "Sphinx resolved the current pyqt-reactive owner target",
       "Re-reviewed the public form-build completion, failure, and signal lifecycle against the complete dependent page and the updated pyqt-reactive owner documentation.",
-      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed."
+      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
+      "2026-09-16: Re-read the complete transition page against parameter_form_manager.py. The changed dependency is only the canonical flash-trace import; scope feedback ownership remains in pyqt-reactive. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1339,7 +1342,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "5ad3cf33ede0b94989ea90a370df794a9c83127d793a7767d17ad4740c0b504d",
+        "sha256": "a561e62e29af42630fa107b0929fc87b74007f7ed14ec8f0a6881c49070dc923",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -1363,7 +1366,8 @@
       "On 2026-08-28, re-read the complete explanation after the OpenHCS configuration route began deriving its title from GlobalConfigWindowIdentity; reusable form and window mechanics remain in pyqt-reactive and FunctionStep policy remains in OpenHCS.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
-      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed."
+      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
+      "2026-09-16: Re-read the complete integration page against parameter_form_manager.py. Relocating its flash-trace import does not change generic form/editor ownership or OpenHCS step-domain responsibilities. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1817,8 +1821,8 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/list_item_delegate.py",
-        "sha256": "d6f84397c81f8f568e4d7bfc3725f25c694dc31b213378bcdef1f61e04574044",
-        "role": "Owns per-row wrapping overrides, inherited view defaults and shared native/MCP toggling."
+        "sha256": "282c8fe0c88f9bfd51df7eb95c739a8d428d2e9d99478796bb073c698f5907a7",
+        "role": "Owns per-row wrapping overrides, inherited view defaults, shared native/MCP toggling, and delegate paint acknowledgement."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/styled_text_layout.py",
@@ -1837,8 +1841,8 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_list_preview_wrapping.py",
-        "sha256": "d454bc750b6b5b3f0871cecd2eb96f1e14ed009197dcf9797a50f70f7a97bc12",
-        "role": "Native Qt regressions prove arrows, default overrides, refresh/reorder preservation, repeated guides and structural action parity; combined row/future suite passed 25 tests."
+        "sha256": "60bfe5b16e9f17f3fed1f88213e69644ad2bcf278d7012b446689fbc75e181a2",
+        "role": "Native Qt regressions prove row wrapping, disclosure, refresh/reorder preservation, graphical guides, structural action parity, and delegate paint acknowledgement."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/core/deferred_callback.py",
@@ -1872,7 +1876,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Four hidden formatting fields gain declaration-owned help; visible fields/defaults are unchanged and the generated reference remains authoritative.",
       "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. Wrapped native style, background, flash, disclosure and text now share one row frame. Explicit wrapping choices, defaults, guides and MCP actions are unchanged. Screenshot regressions control pointer/focus state and retain exact QImage equality. The integrated renderer/test files are byte-identical to ee0c351, whose complete 12-job CI run passed, including three Windows lanes (release-agent evidence).",
-      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed."
+      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
+      "2026-09-16: Re-read the complete integration page against the list delegate and wrapping regression. Delegate painting now acknowledges actual flash frames, while preview policy, row-owned wrapping, deferred action, and OpenHCS composition claims remain accurate. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1886,7 +1891,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "5ad3cf33ede0b94989ea90a370df794a9c83127d793a7767d17ad4740c0b504d",
+        "sha256": "a561e62e29af42630fa107b0929fc87b74007f7ed14ec8f0a6881c49070dc923",
         "role": "Reusable parameter-form lifecycle and value projection."
       },
       {
@@ -1903,7 +1908,8 @@
       "scripts/validate_docs.py validated the final RST source and its concrete repository paths",
       "Sphinx resolved the current pyqt-reactive owner target",
       "Re-reviewed the public form-build completion, failure, and signal lifecycle against the complete dependent page and the updated pyqt-reactive owner documentation.",
-      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed."
+      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
+      "2026-09-16: Re-read the complete transition page against parameter_form_manager.py. Its package-level flash-trace import relocation does not change widget-protocol or parameter-form ownership. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -3477,7 +3483,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/forms/parameter_form_manager.py",
-        "sha256": "5ad3cf33ede0b94989ea90a370df794a9c83127d793a7767d17ad4740c0b504d",
+        "sha256": "a561e62e29af42630fa107b0929fc87b74007f7ed14ec8f0a6881c49070dc923",
         "role": "Reusable parameter-form lifecycle and value projection."
       }
     ],
@@ -3508,7 +3514,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
-      "2026-09-16: Re-read the complete orphaned compatibility page against the pyproject benchmark additions. The removed Textual boundary and current python-introspect/pyqt-reactive ownership claims are unaffected; no prose change was required."
+      "2026-09-16: Re-read the complete orphaned compatibility page against the pyproject benchmark additions. The removed Textual boundary and current python-introspect/pyqt-reactive ownership claims are unaffected; no prose change was required.",
+      "2026-09-16: Re-read the complete orphaned compatibility page against parameter_form_manager.py. The flash-trace import relocation does not change the historical Textual boundary or current python-introspect/pyqt-reactive ownership. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {

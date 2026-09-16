@@ -15,7 +15,7 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_widgets.py",
-        "sha256": "5a16099e8328851128c59a011a5b76619cb176d432d8cebeafbed85eb9598b79",
+        "sha256": "f24b7bace49d7c6ce5357d38e9b5362ba0625b9f4421222788ab661ae278ed19",
         "role": "Exercises the reusable pyqt-reactive widget behaviours referenced by the transition page."
       }
     ],
@@ -28,7 +28,8 @@
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
-      "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. The manager imports formatting declarations from their canonical module rather than a package re-export; documented ownership and behaviour are unchanged."
+      "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. The manager imports formatting declarations from their canonical module rather than a package re-export; documented ownership and behaviour are unchanged.",
+      "2026-09-16: Re-read the complete transition page against pyqt-reactive d751bf8..f246b58. Changes in test_widgets.py cover paint-acknowledged flash playback and label-widget mask invalidation, not manager lifecycle or ownership; the redirect remains accurate. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -47,7 +48,7 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_widgets.py",
-        "sha256": "5a16099e8328851128c59a011a5b76619cb176d432d8cebeafbed85eb9598b79",
+        "sha256": "f24b7bace49d7c6ce5357d38e9b5362ba0625b9f4421222788ab661ae278ed19",
         "role": "Covers the generic widget behaviour supplied by pyqt-reactive."
       }
     ],
@@ -58,7 +59,8 @@
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-16: Re-read the complete transition page against pyqt-reactive d751bf8..f246b58. The test_widgets.py delta exercises generic flash rendering and does not change table search, selection, filtering, or presentation ownership; no prose revision was required. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -435,7 +437,7 @@
   },
   {
     "path": "docs/source/architecture/code_ui_interconversion.rst",
-    "source_sha256": "295a9198608a3c5de853ada53173fc7aa85e36732666405e5779aeacd6abacdf",
+    "source_sha256": "e92fe7d1580b8cbc121dbf13023c64faf85150de3e4bca9a13f99513ef6e2cea",
     "audience": [
       "OpenHCS UI and agent-surface maintainers",
       "advanced attached-agent users"
@@ -520,8 +522,8 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/function_pattern_code_document.py",
-        "sha256": "bf1f8cc0581a4099f99110d30ec5eb722c4e332b1a759f6a129e81f620f4e23d",
-        "role": "Projects retained child parameter states into function-pattern code documents."
+        "sha256": "82064b60276644c63cf86d340db50efa76bdb8f3141cd6aeff67928a3315c4b3",
+        "role": "Projects child parameter states into function-pattern code documents, retaining a child only while its function authority and editable surface match."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/protocols/widget_adapters.py",
@@ -549,7 +551,8 @@
       "The page omitted the generic owner's dynamic writability and declaration-normalised no-op contracts.",
       "The field projection list omitted declaration-derived enum inputs exposed by ObjectState field help.",
       "The process boundary did not previously reject an MCP/UI pairing whose OpenHCS versions were incompatible despite sharing an older bridge protocol.",
-      "Explained signature-ordered parameter projection, retained child-state reconciliation, and generic numeric presentation ownership."
+      "Explained signature-ordered parameter projection, retained child-state reconciliation, and generic numeric presentation ownership.",
+      "Clarified that function child-state retention is conditional on an unchanged editable callable surface; explicit keyword surface changes rebuild the child at its stable scope."
     ],
     "disposition": "revise",
     "validation": [
@@ -567,7 +570,8 @@
       "2026-09-08: targeted 0.8.3 authority-delta review, retaining the earlier full-page review. Checked affected catalogue ownership, code round-trip, runtime-setting and endpoint lifecycle claims against the changed declarations. Updated the code-editing, dtype, callable-authoring and connection explanations where behaviour changed. Dependency and version changes do not alter the retained installation or package-ownership descriptions. Focused source/ObjectState round-trip and callable-contract checks passed 53 tests; this is not a new whole-document audit.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-16: Re-read the complete explanation against the changed function-pattern owner and its explicit-override regression. Revised child-state retention to distinguish same-surface value updates from explicit keyword additions/removals that rebuild the child at the same scope. The changed pyqt-reactive selection passed 180 tests and OpenHCS code/UI integration passed 112 tests."
     ]
   },
   {
@@ -958,7 +962,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/field_change_dispatcher.py",
-        "sha256": "631a3b54f629b89fb8738d0e05e6216b4e0ec17de8844dc5af2e4f93ece735c2",
+        "sha256": "0875f01a405b95de12cb0d4fc396d959a758d67a39c211d3056c512352d0f1c5",
         "role": "Implements generic change dispatch and subscription mechanics."
       }
     ],
@@ -968,7 +972,8 @@
     "disposition": "redirect",
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
-      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings."
+      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
+      "2026-09-16: Re-read the complete transition page against the field dispatcher delta. Only the canonical flash-trace import moved; dispatch, subscription, and cross-window update semantics are unchanged. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1014,7 +1019,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/window_manager.py",
-        "sha256": "e55d4a2b91ba20efe528f23d166c06662b4157752fb0720a69025ffe5168f48a",
+        "sha256": "84fff75ff74e59c5d7080f103ad1a4baa2c884aff3d2f87891a0afdae9a5c332",
         "role": "Implements live top-level window discovery plus generic registered window lifecycle, reuse, parentage, and cleanup."
       },
       {
@@ -1048,7 +1053,8 @@
       "On 2026-08-28, re-read the complete redirect after stable window strings moved to nominal identity declarations; OpenHCS still owns product identities while pyqt-reactive owns generic lifecycle.",
       "On 2026-08-28, re-read the complete reference redirect after stable window titles and family projection moved onto the nominal identity declarations; the documented OpenHCS and pyqt-reactive ownership boundary remains accurate.",
       "Focused stable-window registry projection test passed: 1 test.",
-      "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence."
+      "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
+      "2026-09-16: Re-read the complete transition page against the changed WindowManager. Deferred navigation now optionally reports terminal execution/exposure facts, while registration, live discovery, scope reuse, parentage, and cleanup remain unchanged; the owner redirect stays accurate. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1224,8 +1230,8 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/window_snapshot.py",
-        "sha256": "c2904b01af26724d6ad633109230d271504800a443680a65dd55bcd02415864d",
-        "role": "Owns safe Qt-rendered widget and window capture without native desktop sampling."
+        "sha256": "c21e85912ab6715cc9c97bc796b9e5ed03610bf96f786d923557f18a876081f9",
+        "role": "Owns safe Qt-rendered capture and optional bounded observations of actual flash-renderer frames."
       },
       {
         "path": "external/pyqt-reactive/docs/architecture/window_snapshot.rst",
@@ -1301,7 +1307,8 @@
       "2026-09-09: Reviewed the page sections affected by exact manager-item navigation, selection recovery guidance, and the pyqt-reactive dependency floor change from 0.3.20 to 0.3.21. Generic selection and deferred dispatch remain in pyqt-reactive; domain window identities stay in OpenHCS. Navigation acceptance does not replace action revision guards. Installation extras, Python support, code-document apply, and experimental/runtime semantics are unchanged by this batch. Updated the MCP architecture and basic-interface navigation explanations; retained existing setup/ownership links rather than duplicating a version catalogue. Only the reviewed navigation/dependency authorities were refreshed, excluding the scientific threshold patch. Final parent gates: 176 OpenHCS and 463 pyqt-reactive tests passed, including deferred target removal; full fresh-agent trial remains separate acceptance evidence.",
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
-      "2026-09-16: Re-read the complete reference against benchmark package discovery and the new console entry point in pyproject.toml. Extracted-package ownership, dependency constraints, and integration-page policy are unchanged; no prose change was required."
+      "2026-09-16: Re-read the complete reference against benchmark package discovery and the new console entry point in pyproject.toml. Extracted-package ownership, dependency constraints, and integration-page policy are unchanged; no prose change was required.",
+      "2026-09-16: Re-read the complete ownership catalog against pyqt-reactive d751bf8..f246b58. The package added paint-observed flash playback and bounded renderer-frame observation to its existing Qt snapshot owner; these remain generic pyqt-reactive mechanisms and do not move OpenHCS domain ownership. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1392,7 +1399,7 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/field_change_dispatcher.py",
-        "sha256": "631a3b54f629b89fb8738d0e05e6216b4e0ec17de8844dc5af2e4f93ece735c2",
+        "sha256": "0875f01a405b95de12cb0d4fc396d959a758d67a39c211d3056c512352d0f1c5",
         "role": "Implements generic field-change subscription, dispatch, and cleanup."
       },
       {
@@ -1407,7 +1414,8 @@
     "disposition": "redirect",
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
-      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings."
+      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
+      "2026-09-16: Re-read the complete transition page against the field dispatcher delta. Its flash-trace import moved to the package-level declaration; field-change subscription, dispatch, and cleanup behavior did not change. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1455,13 +1463,13 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/animation/flash_mixin.py",
-        "sha256": "42c572644096d141dac1b1af07920a03bad605cf13f363406fea04b1b3030e7c",
-        "role": "Implements reusable flash propagation and animation coordination."
+        "sha256": "e4bafddfd1063e6140014d5b0e4ab562dafdbfc50bd0b8036bb42c0d0cd2bf01",
+        "role": "Implements reusable flash propagation, widget-geometry masking, paint acknowledgement, and animation coordination."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/animation/flash_config.py",
-        "sha256": "d0ea00191db61e5934410fcc9d53aebdebf1cc2e93706fb1c8640809af4541fd",
-        "role": "Declares generic flash timing, colour, and animation configuration."
+        "sha256": "040a0d25e60517c210399a27356f496c98bf3e66f432d24f1397bb9afc9c9c76",
+        "role": "Declares generic flash phases, timing, colour, and paint-acknowledged playback."
       },
       {
         "path": "external/pyqt-reactive/tests/test_flash_destruction_lifetime.py",
@@ -1477,7 +1485,8 @@
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
       "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
       "On 2026-09-06, re-read the complete redirect and canonical pyqt-reactive flash page against the native widget raster surface, shared mask projection, resolved-change notification ownership and unchanged FlashConfig timing. The redirect still points to the package that owns these generic mechanisms. Native RGB/BGR coverage passed 240 checks across 100%, 125% and 150% scaling; 460 reactive tests, nine OpenHCS form integration tests and five real MCP reset/edit checks passed. Reactive main CI 34044272928 passed every platform job.",
-      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained."
+      "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
+      "2026-09-16: Re-read the complete transition page and changed flash owners. Playback now reaches its hold phase only after every visible renderer recipient acknowledges a maximum-alpha paint, and QLabel masks follow padded widget geometry rather than text bounds. Both remain package-owned generic mechanics, so the redirect needs no prose duplication. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1701,7 +1710,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/field_change_dispatcher.py",
-        "sha256": "631a3b54f629b89fb8738d0e05e6216b4e0ec17de8844dc5af2e4f93ece735c2",
+        "sha256": "0875f01a405b95de12cb0d4fc396d959a758d67a39c211d3056c512352d0f1c5",
         "role": "Implements coalesced generic update dispatch used by reactive forms."
       }
     ],
@@ -1711,7 +1720,8 @@
     "disposition": "redirect",
     "validation": [
       "Read the complete page and challenged accuracy, freshness, duplication, boundary, flow, and navigation against the listed current authorities.",
-      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings."
+      "python scripts/validate_docs.py docs/source/architecture passed, and .venv Sphinx -E -W --keep-going rendered all 152 active pages without warnings.",
+      "2026-09-16: Re-read the complete transition page against the field dispatcher delta. The changed import locates the canonical flash trace and does not change coalesced update dispatch or performance ownership. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1813,8 +1823,8 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/list_item_delegate.py",
-        "sha256": "d6f84397c81f8f568e4d7bfc3725f25c694dc31b213378bcdef1f61e04574044",
-        "role": "Owns per-row wrapping overrides, inherited view defaults and shared native/MCP toggling."
+        "sha256": "282c8fe0c88f9bfd51df7eb95c739a8d428d2e9d99478796bb073c698f5907a7",
+        "role": "Owns per-row wrapping overrides, inherited view defaults, shared native/MCP toggling, and delegate paint acknowledgement."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/styled_text_layout.py",
@@ -1833,8 +1843,8 @@
       },
       {
         "path": "external/pyqt-reactive/tests/test_list_preview_wrapping.py",
-        "sha256": "d454bc750b6b5b3f0871cecd2eb96f1e14ed009197dcf9797a50f70f7a97bc12",
-        "role": "Native Qt regressions prove arrows, default overrides, refresh/reorder preservation, repeated guides and structural action parity; combined row/future suite passed 25 tests."
+        "sha256": "60bfe5b16e9f17f3fed1f88213e69644ad2bcf278d7012b446689fbc75e181a2",
+        "role": "Native Qt regressions prove row wrapping, disclosure, refresh/reorder preservation, graphical guides, structural action parity, and delegate paint acknowledgement."
       }
     ],
     "findings": [
@@ -1851,7 +1861,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Four hidden formatting fields gain declaration-owned help; visible fields/defaults are unchanged and the generated reference remains authoritative.",
       "Final renderer review at pyqt-reactive 194119d48d3c6f0f0ce316409d6a48bd2de88f3b: reread the complete page and changed owner. Wrapped native style, background, flash, disclosure and text now share one row frame. Explicit wrapping choices, defaults, guides and MCP actions are unchanged. Screenshot regressions control pointer/focus state and retain exact QImage equality. The integrated renderer/test files are byte-identical to ee0c351, whose complete 12-job CI run passed, including three Windows lanes (release-agent evidence).",
-      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed."
+      "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
+      "2026-09-16: Re-read the complete integration page against the list delegate and wrapping-test delta. Delegate-painted rows now acknowledge their actual flash alpha to the shared playback owner; row wrapping defaults, explicit overrides, disclosure actions, refresh/reorder preservation, and OpenHCS preview policy remain unchanged. The changed pyqt-reactive regression selection passed 180 tests."
     ]
   },
   {
@@ -1981,8 +1992,8 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/window_snapshot.py",
-        "sha256": "c2904b01af26724d6ad633109230d271504800a443680a65dd55bcd02415864d",
-        "role": "Owns the two safe Qt-rendered capture scopes and the generic PNG artifact service."
+        "sha256": "c21e85912ab6715cc9c97bc796b9e5ed03610bf96f786d923557f18a876081f9",
+        "role": "Owns safe Qt-rendered capture and optional bounded observations of actual flash-renderer frames."
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_bridge_windows.py",
@@ -2021,8 +2032,8 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/window_navigation.py",
-        "sha256": "9477a6fb203a988eac40989ff00cbd9ee80e7df0e771a58cf318e6e55a294a71",
-        "role": "Owns typed target admission and the deferred exact-membership recheck."
+        "sha256": "88da77ed07ea220b7c6874e71029b5bd50805fb2c3048701f9df773fe17257f2",
+        "role": "Owns typed target admission, the deferred exact-membership recheck, and optional terminal execution/exposure facts."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/widgets/shared/manager_selection_controller.py",
@@ -2130,7 +2141,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Row actions delegate to generic declarations; automatic selection and explicit preview toggling share native item-model state.",
       "Final lifecycle review: reread the complete page against shared QObject-owned DeferredCallback, persistent-index item actions and anchored scope borders. Corrected acceptance/completion explanations; generic owner docs retain reusable contracts. Full generic 563 tests and root 13 UI plus 142 bridge/headless/config tests pass. The separate plain-Qt GC probe was classified as missing test-fixture ownership; the insufficient paintEvent experiment was withdrawn. Only reviewed authority digests were refreshed.",
-      "2026-09-16: Re-read the complete architecture page against the benchmark CLI, receipt/control contracts, capability declaration, lazy context service, and focused tests. Added the inspect-only benchmark boundary: the full expert surface can read an authorized existing run, while launch, resume, cancellation, rerun, and scientific validity remain outside the MCP capability. Focused benchmark/control tests passed and capability discovery does not import benchmark execution modules."
+      "2026-09-16: Re-read the complete architecture page against the benchmark CLI, receipt/control contracts, capability declaration, lazy context service, and focused tests. Added the inspect-only benchmark boundary: the full expert surface can read an authorized existing run, while launch, resume, cancellation, rerun, and scientific validity remain outside the MCP capability. Focused benchmark/control tests passed and capability discovery does not import benchmark execution modules.",
+      "2026-09-16: Re-read the complete distribution page against changed snapshot and navigation owners. pyqt-reactive added optional renderer-frame observation and terminal navigation completion/exposure callbacks, but current OpenHCS DTOs and bridge services project neither new option. Existing MCP snapshots remain immediate safe Qt captures, and accepted navigation still requires a fresh semantic read for completion. The changed pyqt-reactive regression selection passed 180 tests and OpenHCS bridge integration passed 112 tests."
     ]
   },
   {

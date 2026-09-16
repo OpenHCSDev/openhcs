@@ -76,10 +76,13 @@ value waiting for a separate Save button. A step or configuration editor that
 provides an explicit save action retains that smaller editor's normal dirty-state
 workflow.
 
-After applying step code, inspect its function fields directly: retained
-function occurrences update their existing parameter states. Changes made in
-a function form also appear when you reopen its Code view, including changes
-to a group that is not currently selected in the function list.
+After applying step code, inspect its function fields directly. An occurrence
+keeps its existing child state when its function and editable parameter surface
+are unchanged. Adding or removing an explicit keyword can change that surface;
+the child is then rebuilt at the same scope so the form does not retain a stale
+parameter schema. Changes made in a function form also appear when you reopen
+its Code view, including changes to a group that is not currently selected in
+the function list.
 
 .. openhcs-gallery:: lazy-inheritance
 
