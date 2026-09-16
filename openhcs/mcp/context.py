@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from openhcs.agent.path_policy import AgentPathPolicy
+from openhcs.agent.services.benchmark_control_service import BenchmarkControlService
 
 if TYPE_CHECKING:
     from openhcs.agent.services.architecture_projection_service import (
@@ -41,6 +42,7 @@ class OpenHCSAgentContext:
         "path_policy",
         "_architecture_service",
         "_authoring_context_service",
+        "_benchmark_control_service",
         "_config_service",
         "_execution_service",
         "_function_catalog",
@@ -62,6 +64,7 @@ class OpenHCSAgentContext:
         path_policy: AgentPathPolicy | None = None,
         architecture_service: "ArchitectureProjectionService | None" = None,
         authoring_context_service: "AgentAuthoringContextService | None" = None,
+        benchmark_control_service: "BenchmarkControlService | None" = None,
         config_service: "ConfigService | None" = None,
         execution_service: "ExecutionSessionService | None" = None,
         function_catalog: "FunctionCatalogServiceABC | None" = None,
@@ -79,6 +82,7 @@ class OpenHCSAgentContext:
         self.path_policy = path_policy or AgentPathPolicy.from_environment()
         self._architecture_service = architecture_service
         self._authoring_context_service = authoring_context_service
+        self._benchmark_control_service = benchmark_control_service
         self._config_service = config_service
         self._execution_service = execution_service
         self._function_catalog = function_catalog
@@ -102,6 +106,12 @@ class OpenHCSAgentContext:
 
             self._function_catalog = FunctionCatalogService()
         return self._function_catalog
+
+    @property
+    def benchmark_control_service(self) -> "BenchmarkControlService":
+        if self._benchmark_control_service is None:
+            self._benchmark_control_service = BenchmarkControlService(self.path_policy)
+        return self._benchmark_control_service
 
     @property
     def config_service(self) -> "ConfigService":

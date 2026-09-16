@@ -13,6 +13,10 @@ from typing import ClassVar, Generic, Self, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
+from benchmark.contracts.control import (
+    BenchmarkRunInspection,
+    BenchmarkRunInspectionRequest,
+)
 from openhcs.agent.dto.architecture import (
     ArchitectureTopic,
     ArchitectureTopicPage,
@@ -299,6 +303,7 @@ class CapabilityWorkflowGroup(Enum):
     UI_CONTROL = "ui_control"
     UI_STATE_EDITING = "ui_state_editing"
     VIEWER_REVIEW = "viewer_review"
+    BENCHMARKING = "benchmarking"
 
     @property
     def title(self) -> str:
@@ -340,6 +345,7 @@ class CapabilityTargetContext(Enum):
     UI_OBJECT_STATE = "ui_object_state"
     UI_CODE_DOCUMENT = "ui_code_document"
     VIEWER_WINDOW = "viewer_window"
+    BENCHMARK_RUN = "benchmark_run"
 
 
 class CapabilityVisibility(Enum):
@@ -1092,8 +1098,7 @@ class AgentCapabilitySearchRequest:
             raise ValueError("Capability search offset must be non-negative.")
         if not 1 <= self.limit <= self.MAXIMUM_LIMIT:
             raise ValueError(
-                "Capability search limit must be between 1 and "
-                f"{self.MAXIMUM_LIMIT}."
+                f"Capability search limit must be between 1 and {self.MAXIMUM_LIMIT}."
             )
 
     def matches(self, capability: AgentCapabilitySpec) -> bool:
@@ -1405,6 +1410,17 @@ class KnowledgeCapability(AgentCapabilityDeclaration):
         workflow_stage=CapabilityWorkflowStage.CONTEXT,
         target_context=CapabilityTargetContext.KNOWLEDGE_BASE,
         visibility=CapabilityVisibility.BEGINNER,
+    )
+
+
+class BenchmarkCapability(AgentCapabilityDeclaration):
+    """Expert capability for repository benchmark control and inspection."""
+
+    exposition = AgentCapabilityExposition(
+        workflow_group=CapabilityWorkflowGroup.BENCHMARKING,
+        workflow_stage=CapabilityWorkflowStage.INSPECTION,
+        target_context=CapabilityTargetContext.BENCHMARK_RUN,
+        visibility=CapabilityVisibility.EXPERT,
     )
 
 
@@ -1767,6 +1783,25 @@ class SearchCapabilitiesCapability(
     output_contract = AgentCapabilitySearchResult
     registry_request_invocation = AgentCapabilityRegistryRequestInvocation(
         method=AgentCapabilityRegistry.search,
+    )
+
+
+class InspectBenchmarkRunCapability(BenchmarkCapability):
+    name = "openhcs_inspect_benchmark_run"
+    kind = CapabilityKind.TOOL
+    title = "Inspect benchmark run"
+    description = (
+        "Returns the typed recorded rerun invocation and lifecycle status, "
+        "append-only observation progress, and discovered structured result "
+        "artifacts for one local output directory."
+    )
+    service = "benchmark_control"
+    data_exposure = ("local_benchmark_paths", "benchmark_result_artifacts")
+    input_contract = BenchmarkRunInspectionRequest
+    output_contract = BenchmarkRunInspection
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.benchmark_control_service,
+        method=lambda service, request: service.inspect_run(request),
     )
 
 

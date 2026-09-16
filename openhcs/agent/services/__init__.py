@@ -5,6 +5,7 @@
 from openhcs.agent.services.architecture_projection_service import (
     ArchitectureProjectionService,
 )
+from openhcs.agent.services.benchmark_control_service import BenchmarkControlService
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.endpoint_function_catalog_service import (
     ZMQFunctionCatalogService,

@@ -5,22 +5,24 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import ClassVar
 
-from openhcs.core.source_matching import is_image_path
-
 from metaclass_registry import AutoRegisterMeta
 
-from benchmark.datasets.cppipe_case_catalog import official_cp3_case_category
+from benchmark.contracts.run_artifacts import ComparisonRunArtifact
 from benchmark.datasets.cache import (
-    BenchmarkPathRootKind,
     CELLPROFILER_EXAMPLES_ROOT_ENV,
+    BenchmarkPathRootKind,
     resolve_benchmark_path_root,
 )
+from benchmark.datasets.cppipe_case_catalog import official_cp3_case_category
 from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime
+from openhcs.core.source_matching import is_image_path
 
 
 class BenchmarkCliCommand(ABC, metaclass=AutoRegisterMeta):
@@ -45,8 +47,11 @@ class BenchmarkCliCommand(ABC, metaclass=AutoRegisterMeta):
         )
 
     @abstractmethod
-    def configure(self, subparsers: argparse._SubParsersAction) -> None:
-        """Register command-specific argparse schema."""
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        """Register and return the command-specific argparse schema."""
 
     @abstractmethod
     def run(self, args: argparse.Namespace) -> int:
@@ -74,7 +79,10 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
     help_text = "Run benchmark cases."
     sort_order = 10
 
-    def configure(self, subparsers: argparse._SubParsersAction) -> None:
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
         parser.add_argument("--manifest", type=Path, required=True)
         parser.add_argument("--output-dir", type=Path, required=True)
@@ -134,6 +142,7 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
             type=Path,
             help="Directory for generated figures. Defaults to OUTPUT_DIR/figures.",
         )
+        return parser
 
     def run(self, args: argparse.Namespace) -> int:
         configure_headless_cpu_benchmark_runtime(args.log_level)
@@ -165,17 +174,20 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
                 collect_memory=not args.no_memory_metric,
             ),
             coverage_manifest_path=args.manifest,
+            rerun_command=args.cli_invocation,
+            rerun_working_directory=Path.cwd(),
         )
         print(f"suite_id={suite_id}")
         print(f"observations={len(observations)}")
-        print(f"summary_csv={args.output_dir / 'summary.csv'}")
+        summary_path = ComparisonRunArtifact.SUMMARY_CSV.path_in(args.output_dir)
+        print(f"summary_csv={summary_path}")
         print(
             "module_coverage_summary_json="
-            f"{args.output_dir / 'module_coverage_summary.json'}"
+            f"{ComparisonRunArtifact.MODULE_COVERAGE_SUMMARY.path_in(args.output_dir)}"
         )
         if args.figures:
             figures_output_dir = args.figures_output_dir or args.output_dir / "figures"
-            plot_summary(args.output_dir / "summary.csv", figures_output_dir)
+            plot_summary(summary_path, figures_output_dir)
             print(f"figures={figures_output_dir}")
         return 0
 
@@ -212,7 +224,10 @@ class OfficialCp3ManifestCommand(BenchmarkCliCommand):
     )
     sort_order = 20
 
-    def configure(self, subparsers: argparse._SubParsersAction) -> None:
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
         parser.add_argument(
             "--examples-root",
@@ -243,6 +258,7 @@ class OfficialCp3ManifestCommand(BenchmarkCliCommand):
                 "the official CP3 examples manifest."
             ),
         )
+        return parser
 
     def run(self, args: argparse.Namespace) -> int:
         configure_headless_cpu_benchmark_runtime(args.log_level)
@@ -309,10 +325,14 @@ class PlotBenchmarkCommand(BenchmarkCliCommand):
     help_text = "Plot benchmark CSV output."
     sort_order = 30
 
-    def configure(self, subparsers: argparse._SubParsersAction) -> None:
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
         parser.add_argument("--summary-csv", type=Path, required=True)
         parser.add_argument("--output-dir", type=Path, required=True)
+        return parser
 
     def run(self, args: argparse.Namespace) -> int:
         configure_headless_cpu_benchmark_runtime(args.log_level)
@@ -328,7 +348,10 @@ class PlotWellThroughputPresentationCommand(BenchmarkCliCommand):
     help_text = "Plot the reusable well-throughput presentation figure pack."
     sort_order = 35
 
-    def configure(self, subparsers: argparse._SubParsersAction) -> None:
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
         parser = self._parser(subparsers)
         parser.add_argument("--single-process-summary-csv", type=Path, required=True)
         parser.add_argument("--core-scaling-csv", type=Path, required=True)
@@ -357,6 +380,7 @@ class PlotWellThroughputPresentationCommand(BenchmarkCliCommand):
             ),
         )
         parser.add_argument("--output-dir", type=Path, required=True)
+        return parser
 
     def run(self, args: argparse.Namespace) -> int:
         configure_headless_cpu_benchmark_runtime(args.log_level)
@@ -404,7 +428,10 @@ class BioFormatsHcsValidationCommand(BenchmarkCliCommand):
     help_text = "Download and validate public Bio-Formats HCS sample datasets."
     sort_order = 40
 
-    def configure(self, subparsers: argparse._SubParsersAction) -> None:
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
         from benchmark.bioformats_hcs_validation import (
             bioformats_hcs_validation_specs,
         )
@@ -440,6 +467,7 @@ class BioFormatsHcsValidationCommand(BenchmarkCliCommand):
             help="Number of projected virtual planes to load per dataset.",
         )
         parser.add_argument("--continue-on-error", action="store_true")
+        return parser
 
     def run(self, args: argparse.Namespace) -> int:
         configure_headless_cpu_benchmark_runtime(args.log_level)
@@ -520,10 +548,41 @@ def _official_cellprofiler3_source_name_for_pipeline(
 
 def plot_summary(summary_csv: Path, output_dir: Path) -> None:
     """Create lab-meeting-ready runtime, speedup, parity, and memory figures."""
-    from benchmark.reports.cppipe_figures import SummarySource
-    from benchmark.reports.cppipe_figures import generate_cppipe_benchmark_figures
+    from benchmark.reports.cppipe_figures import (
+        SummarySource,
+        generate_cppipe_benchmark_figures,
+    )
 
     generate_cppipe_benchmark_figures(
         (SummarySource("OH1", summary_csv),),
         output_dir=output_dir,
     )
+
+
+def create_benchmark_argument_parser() -> argparse.ArgumentParser:
+    """Build the benchmark parser from registered command declarations."""
+
+    parser = argparse.ArgumentParser(
+        prog="openhcs-benchmark",
+        description="Generate CP-vs-OpenHCS runtime and parity benchmark artifacts.",
+    )
+    parser.set_defaults(cli_invocation=())
+    parser.add_argument(
+        "--log-level",
+        default=os.environ.get("OPENHCS_BENCHMARK_LOG_LEVEL", "WARNING"),
+        help="Python logging level for benchmark harness and OpenHCS runtime logs.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    for command in BenchmarkCliCommand.registered_commands():
+        command.configure(subparsers)
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run the registered benchmark CLI."""
+
+    arguments = tuple(sys.argv[1:] if argv is None else argv)
+    parser = create_benchmark_argument_parser()
+    parsed = parser.parse_args(arguments)
+    parsed.cli_invocation = ("openhcs-benchmark", *arguments)
+    return parsed.cli_command.run(parsed)

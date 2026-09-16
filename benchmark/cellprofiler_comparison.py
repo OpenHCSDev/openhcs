@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import csv
 import json
-import platform
 import shutil
 import statistics
-import sys
 import time
 import traceback
 from collections import defaultdict
@@ -16,8 +14,6 @@ from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from benchmark.contracts.tool_adapter import BenchmarkResult
-from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.adapters.cellprofiler import (
     CellProfilerAdapter,
     native_cellprofiler_reference_is_complete,
@@ -25,13 +21,22 @@ from benchmark.adapters.cellprofiler import (
     native_cellprofiler_reference_scope_slugs,
 )
 from benchmark.adapters.openhcs import OpenHCSAdapter
+from benchmark.contracts.comparison_manifest import ComparisonManifest
+from benchmark.contracts.metric import MetricCollector
+from benchmark.contracts.run_artifacts import ComparisonRunArtifact
+from benchmark.contracts.run_receipt import (
+    ComparisonSuiteRunDeclaration,
+    ComparisonSuiteRunReceipt,
+    ComparisonSuiteRunStatus,
+)
+from benchmark.contracts.tool_adapter import BenchmarkResult, ToolExecutionError
 from benchmark.datasets.visible_source import resolve_visible_source_path
 from benchmark.metrics.memory import MemoryMetric
 from benchmark.metrics.time import TimeMetric
-from benchmark.runner import CellProfilerCompatibilityResult
-from benchmark.runner import run_cellprofiler_cppipe_parity
-from benchmark.contracts.metric import MetricCollector
-from benchmark.contracts.comparison_manifest import ComparisonManifest
+from benchmark.runner import (
+    CellProfilerCompatibilityResult,
+    run_cellprofiler_cppipe_parity,
+)
 from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
 from openhcs.core.equivalence.outputs import image_paths, table_paths
 
@@ -93,10 +98,16 @@ PROCESSING_CONTRACT_FIELD = "processing_contract"
 EMITS_FUNCTION_STEP_FIELD = "emits_function_step"
 RESPECTS_MASKS_FIELD = "respects_masks"
 DEFAULT_SPEEDUP_TARGET = 5.0
-MODULE_COVERAGE_SUMMARY_JSON = "module_coverage_summary.json"
-MODULE_COVERAGE_CPPIPE_MODULES_CSV = "module_coverage_cppipe_modules.csv"
-MODULE_COVERAGE_CPPIPE_SETTINGS_CSV = "module_coverage_cppipe_settings.csv"
-MODULE_COVERAGE_ABSORBED_MODULES_CSV = "module_coverage_absorbed_modules.csv"
+MODULE_COVERAGE_SUMMARY_JSON = ComparisonRunArtifact.MODULE_COVERAGE_SUMMARY.value
+MODULE_COVERAGE_CPPIPE_MODULES_CSV = (
+    ComparisonRunArtifact.MODULE_COVERAGE_CPPIPE_MODULES.value
+)
+MODULE_COVERAGE_CPPIPE_SETTINGS_CSV = (
+    ComparisonRunArtifact.MODULE_COVERAGE_CPPIPE_SETTINGS.value
+)
+MODULE_COVERAGE_ABSORBED_MODULES_CSV = (
+    ComparisonRunArtifact.MODULE_COVERAGE_ABSORBED_MODULES.value
+)
 CsvRow = Mapping[str, object]
 CsvRowBuilder = Callable[
     [Sequence["CellProfilerComparisonObservation"]],
@@ -385,27 +396,33 @@ class ComparisonMetricPolicy:
         return collectors
 
 
-@dataclass(frozen=True, slots=True)
-class ComparisonSuiteRunContext:
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ComparisonSuiteRunContext(ComparisonSuiteRunDeclaration):
     """Shared execution/provenance context for one comparison suite run."""
 
-    suite_id: str
-    speedup_target: float
-    native_reference_root: Path | None
-    require_native_reference: bool
-    discard_openhcs_outputs: bool
-    continue_on_error: bool
-    metric_policy: ComparisonMetricPolicy
     openhcs_global_config: GlobalPipelineConfig
-    openhcs_execution_port: int | None = None
 
-    def validate(self) -> None:
-        if self.speedup_target <= 0:
-            raise ValueError("speedup_target must be positive.")
-        if self.openhcs_execution_port is not None and not (
-            1 <= self.openhcs_execution_port <= 65535
-        ):
-            raise ValueError("openhcs_execution_port must be between 1 and 65535.")
+    @property
+    def metric_policy(self) -> ComparisonMetricPolicy:
+        """Derive runtime collectors from the persisted memory-metric declaration."""
+
+        return ComparisonMetricPolicy(collect_memory=self.collect_memory_metric)
+
+    def run_receipt(
+        self,
+        *,
+        status: ComparisonSuiteRunStatus,
+        completed_observation_count: int,
+        updated_at_epoch_seconds: float,
+    ) -> ComparisonSuiteRunReceipt:
+        """Build the nominal receipt for the current lifecycle checkpoint."""
+
+        return ComparisonSuiteRunReceipt.from_declaration(
+            self,
+            status=status,
+            completed_observation_count=completed_observation_count,
+            updated_at_epoch_seconds=updated_at_epoch_seconds,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -753,10 +770,13 @@ def run_comparison_suite(
     coverage_manifest_path: Path | None = None,
     openhcs_global_config: GlobalPipelineConfig | None = None,
     openhcs_execution_port: int | None = None,
+    rerun_command: tuple[str, ...] = (),
+    rerun_working_directory: Path | None = None,
 ) -> tuple[CellProfilerComparisonObservation, ...]:
     """Run all cases and write raw benchmark observations."""
     if repeats < 1:
         raise ValueError("repeats must be at least 1.")
+    selected_cases = tuple(cases)
     context = ComparisonSuiteRunContext(
         suite_id=suite_id,
         speedup_target=speedup_target,
@@ -764,52 +784,86 @@ def run_comparison_suite(
         require_native_reference=require_native_reference,
         discard_openhcs_outputs=discard_openhcs_outputs,
         continue_on_error=continue_on_error,
-        metric_policy=metric_policy,
+        collect_memory_metric=metric_policy.collect_memory,
         openhcs_global_config=openhcs_global_config or GlobalPipelineConfig(),
         openhcs_execution_port=openhcs_execution_port,
+        manifest_path=coverage_manifest_path,
+        case_names=tuple(case.name for case in selected_cases),
+        repeats=repeats,
+        rerun_command=rerun_command,
+        rerun_working_directory=rerun_working_directory,
     )
-    context.validate()
     output_root.mkdir(parents=True, exist_ok=True)
     observations: list[CellProfilerComparisonObservation] = []
-    for repetition in range(1, repeats + 1):
-        for case in cases:
-            try:
-                result = _run_comparison_case(
-                    case,
-                    output_root=output_root,
-                    repetition=repetition,
+    metadata_path = ComparisonRunArtifact.SUITE_METADATA.path_in(output_root)
+    write_suite_metadata(
+        metadata_path,
+        context=context,
+        status=ComparisonSuiteRunStatus.RUNNING,
+        completed_observation_count=0,
+    )
+    try:
+        for repetition in range(1, repeats + 1):
+            for case in selected_cases:
+                try:
+                    result = _run_comparison_case(
+                        case,
+                        output_root=output_root,
+                        repetition=repetition,
+                        context=context,
+                    )
+                except Exception as exc:
+                    if not context.continue_on_error:
+                        raise
+                    result = _failed_comparison_observation(
+                        case,
+                        suite_id=context.suite_id,
+                        repetition=repetition,
+                        error=exc,
+                    )
+                observations.append(result)
+                append_observations_jsonl(
+                    ComparisonRunArtifact.OBSERVATIONS_JSONL.path_in(output_root),
+                    (result,),
+                )
+                write_observations_csv(
+                    ComparisonRunArtifact.OBSERVATIONS_CSV.path_in(output_root),
+                    observations,
+                )
+                write_phase_timing_csv(
+                    ComparisonRunArtifact.PHASE_TIMING_CSV.path_in(output_root),
+                    observations,
+                )
+                write_summary_csv(
+                    ComparisonRunArtifact.SUMMARY_CSV.path_in(output_root),
+                    observations,
+                    speedup_target=context.speedup_target,
+                )
+                write_suite_metadata(
+                    metadata_path,
                     context=context,
+                    status=ComparisonSuiteRunStatus.RUNNING,
+                    completed_observation_count=len(observations),
                 )
-            except Exception as exc:
-                if not context.continue_on_error:
-                    raise
-                result = _failed_comparison_observation(
-                    case,
-                    suite_id=context.suite_id,
-                    repetition=repetition,
-                    error=exc,
-                )
-            observations.append(result)
-            append_observations_jsonl(
-                output_root / "observations.jsonl",
-                (result,),
+        if coverage_manifest_path is not None:
+            write_module_coverage_artifacts(
+                output_root,
+                manifest_path=coverage_manifest_path,
             )
-            write_observations_csv(output_root / "observations.csv", observations)
-            write_phase_timing_csv(output_root / "phase_timing.csv", observations)
-            write_summary_csv(
-                output_root / "summary.csv",
-                observations,
-                speedup_target=context.speedup_target,
-            )
-            write_suite_metadata(
-                output_root / "suite_metadata.json",
-                context=context,
-            )
-    if coverage_manifest_path is not None:
-        write_module_coverage_artifacts(
-            output_root,
-            manifest_path=coverage_manifest_path,
+    except Exception:
+        write_suite_metadata(
+            metadata_path,
+            context=context,
+            status=ComparisonSuiteRunStatus.FAILED,
+            completed_observation_count=len(observations),
         )
+        raise
+    write_suite_metadata(
+        metadata_path,
+        context=context,
+        status=ComparisonSuiteRunStatus.COMPLETED,
+        completed_observation_count=len(observations),
+    )
     return tuple(observations)
 
 
@@ -1050,27 +1104,16 @@ def write_suite_metadata(
     path: Path,
     *,
     context: ComparisonSuiteRunContext,
+    status: ComparisonSuiteRunStatus,
+    completed_observation_count: int,
 ) -> None:
-    """Write reproducibility metadata for the benchmark suite."""
-    payload = {
-        "suite_id": context.suite_id,
-        "speedup_target": context.speedup_target,
-        "created_at_epoch_seconds": time.time(),
-        "python": sys.version,
-        "platform": platform.platform(),
-        "processor": platform.processor(),
-        "native_reference_root": (
-            str(context.native_reference_root)
-            if context.native_reference_root is not None
-            else None
-        ),
-        "require_native_reference": context.require_native_reference,
-        "discard_openhcs_outputs": context.discard_openhcs_outputs,
-        "continue_on_error": context.continue_on_error,
-        "collect_memory_metric": context.metric_policy.collect_memory,
-    }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    """Write the typed reproducibility receipt for the benchmark suite."""
+    updated_at_epoch_seconds = time.time()
+    context.run_receipt(
+        status=status,
+        completed_observation_count=completed_observation_count,
+        updated_at_epoch_seconds=updated_at_epoch_seconds,
+    ).write(path)
 
 
 def _run_comparison_case(
