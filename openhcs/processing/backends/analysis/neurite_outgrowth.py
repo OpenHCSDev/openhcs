@@ -2,7 +2,7 @@
 
 The public controls mirror the documented MetaXpress Neurite Outgrowth module.
 The opinionated implementation composes the existing CellProfiler-compatible
-segmentation and skeleton leaves behind one simple callable boundary.
+segmentation leaves and measures the final soma-rooted neurite topology.
 """
 
 from collections import Counter, defaultdict
@@ -48,7 +48,9 @@ from openhcs.core.runtime_spatial_graph import (
 )
 from openhcs.processing.materialization import (
     CsvOptions,
+    ImageFileOptions,
     MaterializationSpec,
+    MaterializedFilenameIdentity,
     ROIOptions,
     SpatialGraphROIOptions,
     SWCOptions,
@@ -68,7 +70,6 @@ from ..cellprofiler.feature_enhancement import (
 from ..cellprofiler.medial_axis import medialaxis
 from ..cellprofiler.primary_objects import identify_primary_objects
 from ..cellprofiler.secondary import SecondaryMethod, identify_secondary_objects
-from ..cellprofiler.skeleton import measure_object_skeleton
 from ..cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
     CellProfilerThresholdScope,
@@ -290,7 +291,15 @@ class NeuriteOutgrowthSummary:
 
 @dataclass(frozen=True)
 class NeuriteOutgrowthCellResult:
-    """MetaXpress-style cell-by-cell neurite measurements."""
+    """Cell measurements of the final soma-rooted neurite topology.
+
+    A process is the owned path partition reached from one soma-adjacent root.
+    Count, total, mean, median and maximum all describe those same process
+    lengths, including their branches. Distances use the supplied pixel size:
+    calibrated inputs yield micrometers; an uncalibrated unit pixel size yields
+    pixels despite the legacy ``_um`` column names. No independent seed-relative
+    skeleton measurement rescales them.
+    """
 
     slice_index: int
     cell: int
@@ -328,6 +337,14 @@ class NeuronalCellBodyResult:
     mean_cell_body_intensity: float
 
 
+NEURITE_OBJECT_LABEL_MATERIALIZATION = MaterializationSpec(
+    ROIOptions(),
+    ImageFileOptions(
+        filename_suffix=".labels.tif",
+        filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+    ),
+)
+
 NEURITE_SUMMARY_OUTPUT = ArtifactSpec.output(
     "neurite_outgrowth_summary",
     MeasurementsArtifactType,
@@ -337,13 +354,13 @@ NEURITE_SUMMARY_OUTPUT = ArtifactSpec.output(
 UNIFIED_NEURONS_OUTPUT = ArtifactSpec.output(
     "neurons",
     ObjectLabelsArtifactType,
-    materialization=MaterializationSpec(ROIOptions()),
+    materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
     relations=(ObjectArtifactMemberSubjectRelation(),),
 )
 CELL_BODIES_OUTPUT = ArtifactSpec.output(
     "cell_bodies",
     ObjectLabelsArtifactType,
-    materialization=MaterializationSpec(ROIOptions()),
+    materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
     relations=(
         ObjectArtifactMemberSubjectRelation(
             source=UNIFIED_NEURONS_OUTPUT.ref(),
@@ -365,7 +382,7 @@ NEURITE_CELLS_OUTPUT = ArtifactSpec.output(
 NEURITE_LABELS_OUTPUT = ArtifactSpec.output(
     "neurite_outgrowth",
     ObjectLabelsArtifactType,
-    materialization=MaterializationSpec(ROIOptions()),
+    materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
     relations=(
         ObjectArtifactMemberSubjectRelation(
             source=UNIFIED_NEURONS_OUTPUT.ref(),
@@ -376,7 +393,7 @@ NEURITE_LABELS_OUTPUT = ArtifactSpec.output(
 NUCLEI_OUTPUT = ArtifactSpec.output(
     "nuclei",
     ObjectLabelsArtifactType,
-    materialization=MaterializationSpec(ROIOptions()),
+    materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
 )
 NEURONAL_CELL_BODY_SUMMARY_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_body_summary",
@@ -387,7 +404,7 @@ NEURONAL_CELL_BODY_SUMMARY_OUTPUT = ArtifactSpec.output(
 NEURONAL_CELL_BODIES_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_bodies",
     ObjectLabelsArtifactType,
-    materialization=MaterializationSpec(ROIOptions()),
+    materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
 )
 NEURONAL_CELL_BODY_MEASUREMENTS_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_body_measurements",
@@ -428,7 +445,7 @@ class _TopologyResult:
     endpoint_group_coordinates: Mapping[int, tuple[float, float]]
     transitions: Mapping[int, tuple[int, ...]]
     root_paths_by_cell: Mapping[int, tuple[int, ...]]
-    branch_owner: Mapping[int, int]
+    branch_nodes_by_cell: Mapping[int, tuple[int, ...]]
     crossing_nodes: frozenset[int]
     crossing_paths: frozenset[int]
     crossing_core_paths: frozenset[int]
@@ -609,8 +626,9 @@ def neurite_outgrowth_metaxpress(
     ``(C, Y, X)`` and should be produced by a step whose variable component is
     ``CHANNEL``. Outgrowth detection is independent of the significant-growth
     threshold. CellProfiler-compatible primary-object, tubeness, adaptive Otsu,
-    medial-axis, and seed-relative skeleton measurements provide the opinionated
-    engine; disconnected traces are omitted from the rendered ownership mask.
+    and medial-axis leaves provide the opinionated segmentation engine. Final
+    soma-rooted path ownership determines both measurements and rendered masks;
+    disconnected traces are omitted from the rendered ownership mask.
 
     Args:
         neurite_channel_index: Zero-based channel containing neurite outgrowth.
@@ -630,7 +648,9 @@ def neurite_outgrowth_metaxpress(
         masks, followed by a rooted spatial morphology forest. The unified
         layer assigns each body and its owned outgrowth the same integer
         identity, while the graph preserves branch geometry and metrics for
-        direct table, ROI-path, and SWC inspection.
+        direct table, ROI-path, and SWC inspection. Object-label artifacts retain
+        complete integer masks as lossless TIFFs alongside contour ROI archives;
+        ROI area filtering does not remove pixels from those TIFFs.
     """
 
     image_array = np.asarray(image)
@@ -733,7 +753,7 @@ def neurite_outgrowth_metaxpress(
         outgrowth_binary,
         outgrowth_width_px,
     )
-    unified_neuron_labels = _identify_unified_neurons_cellprofiler(
+    secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
         neurite_image,
         cell_body_payload,
         body_width_px=cell_body.approximate_max_width / pixel_size_um,
@@ -746,12 +766,12 @@ def neurite_outgrowth_metaxpress(
         owner_skeleton = _adopt_secondary_owned_skeleton(
             outgrowth_skeleton,
             owner_skeleton,
-            unified_neuron_labels,
+            secondary_owner_regions,
         )
         cell_body_payload = _qualify_nuclear_cell_bodies(
             cell_body_payload,
             cell_body_labels,
-            unified_neuron_labels,
+            secondary_owner_regions,
         )
         cell_body_labels = object_label_dense_array(
             cell_body_payload,
@@ -767,7 +787,7 @@ def neurite_outgrowth_metaxpress(
             outgrowth_skeleton.shape,
             topology,
         )
-        unified_neuron_labels = _identify_unified_neurons_cellprofiler(
+        secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
             neurite_image,
             cell_body_payload,
             body_width_px=cell_body.approximate_max_width / pixel_size_um,
@@ -776,12 +796,12 @@ def neurite_outgrowth_metaxpress(
         owner_skeleton = _adopt_secondary_owned_skeleton(
             outgrowth_skeleton,
             owner_skeleton,
-            unified_neuron_labels,
+            secondary_owner_regions,
         )
         if nuclear_seeded_signal_body_mode:
             signal_cell_bodies = _derive_signal_cell_bodies(
                 cell_body_labels,
-                unified_neuron_labels,
+                secondary_owner_regions,
                 neurite_image,
                 cell_body,
                 pixel_size_um,
@@ -797,8 +817,8 @@ def neurite_outgrowth_metaxpress(
             keep_signal_body[0] = False
             cell_body_labels = _relabel(signal_cell_bodies, keep_signal_body)
             owner_skeleton = _relabel(owner_skeleton, keep_signal_body)
-            unified_neuron_labels = _relabel(
-                unified_neuron_labels,
+            secondary_owner_regions = _relabel(
+                secondary_owner_regions,
                 keep_signal_body,
             )
             cell_body_payload = object_label_value_with_dense_labels(
@@ -806,7 +826,7 @@ def neurite_outgrowth_metaxpress(
                 cell_body_labels,
                 domain_declaration=PresentObjectLabelIdsDomainDeclaration(),
             )
-            unified_neuron_labels = _identify_unified_neurons_cellprofiler(
+            secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
                 neurite_image,
                 cell_body_payload,
                 body_width_px=cell_body.approximate_max_width / pixel_size_um,
@@ -815,7 +835,7 @@ def neurite_outgrowth_metaxpress(
             owner_skeleton = _adopt_secondary_owned_skeleton(
                 outgrowth_skeleton,
                 owner_skeleton,
-                unified_neuron_labels,
+                secondary_owner_regions,
             )
     crossing_support = _render_crossing_support(
         outgrowth_skeleton.shape,
@@ -824,7 +844,7 @@ def neurite_outgrowth_metaxpress(
     owner_skeleton = _repair_signal_supported_skeleton(
         owner_skeleton,
         outgrowth_response,
-        unified_neuron_labels,
+        secondary_owner_regions,
         cell_body_labels,
         minimum_response=outgrowth.intensity_above_local_background,
     )
@@ -846,42 +866,21 @@ def neurite_outgrowth_metaxpress(
         neurite_skeleton.shape,
         topology,
     )
-    _, cp_measurement_rows = _raw_processing_leaf(measure_object_skeleton)(
-        neurite_skeleton,
-        seed_labels=cell_body_payload,
-        fill_small_holes=True,
-        maximum_hole_size=10,
-    )
-    cp_measurements = {
-        int(row["object_label"]): row for row in cp_measurement_rows.row_mappings()
-    }
-    keep_measured_skeleton = np.zeros(int(cell_body_labels.max()) + 1, dtype=bool)
-    for owner, measurements in cp_measurements.items():
-        keep_measured_skeleton[owner] = measurements["total_skeleton_length"] > 0
-    measured_neurite_skeleton = np.where(
-        keep_measured_skeleton[neurite_skeleton],
-        neurite_skeleton,
-        0,
-    ).astype(np.int32, copy=False)
-    if not np.array_equal(measured_neurite_skeleton, neurite_skeleton):
-        neurite_skeleton = measured_neurite_skeleton
-        topology = _analyze_topology(
-            neurite_skeleton > 0,
-            cell_body_labels,
-            pixel_size_um,
-            outgrowth_width_px,
-            assigned_path_labels=neurite_skeleton,
-        )
-        neurite_skeleton = _render_owned_skeleton(
-            neurite_skeleton.shape,
-            topology,
-        )
     owner_outgrowth = _expand_skeleton_ownership(
         neurite_skeleton,
         outgrowth_binary,
         outgrowth_width_px,
     )
     owner_outgrowth[cell_body_labels > 0] = 0
+    # Secondary propagation supplies foreground evidence during detection;
+    # final neuron ownership comes from the same rooted topology as its traces
+    # and measurements. Publishing the earlier propagation would reassign
+    # crossing arms independently of that topology.
+    unified_neuron_labels = np.where(
+        cell_body_labels > 0,
+        cell_body_labels,
+        owner_outgrowth,
+    ).astype(np.int32, copy=False)
 
     cell_results = _build_cell_results(
         cell_body_labels,
@@ -891,7 +890,6 @@ def neurite_outgrowth_metaxpress(
         outgrowth.minimum_cell_growth_to_log_as_significant,
         pixel_size_um,
         slice_index=body_channel_index,
-        cp_measurements=cp_measurements,
     )
     summary = _build_summary(
         cell_results,
@@ -922,7 +920,6 @@ def neurite_outgrowth_metaxpress(
         cell_body_labels,
         pixel_size_um=pixel_size_um,
         outgrowth_width_px=outgrowth_width_px,
-        assigned_path_labels=neurite_skeleton,
     )
     neurite_morphology = neurite_morphology.replace_fields(
         source_plane_index=neurite_channel_index
@@ -1203,14 +1200,14 @@ def _identify_neurites_cellprofiler(
     return outgrowth_mask, skeleton, response
 
 
-def _identify_unified_neurons_cellprofiler(
+def _identify_secondary_owner_regions_cellprofiler(
     image: np.ndarray,
     cell_body_payload,
     *,
     body_width_px: float,
     bright_objects: bool,
 ) -> np.ndarray:
-    """Return the same seed-propagated final labels as the modular CP workflow."""
+    """Return CP seed-propagated regions used as detection evidence."""
 
     *_, unified_payload = _raw_processing_leaf(identify_secondary_objects)(
         _cellprofiler_foreground_image(image, bright_objects=bright_objects),
@@ -1228,7 +1225,7 @@ def _identify_unified_neurons_cellprofiler(
 def _adopt_secondary_owned_skeleton(
     skeleton: np.ndarray,
     owner_skeleton: np.ndarray,
-    unified_neuron_labels: np.ndarray,
+    secondary_owner_regions: np.ndarray,
 ) -> np.ndarray:
     """Adopt a whole skeleton component when CP gives it one neuron identity."""
 
@@ -1243,7 +1240,7 @@ def _adopt_secondary_owned_skeleton(
             np.concatenate(
                 (
                     adopted[component_mask],
-                    unified_neuron_labels[component_mask],
+                    secondary_owner_regions[component_mask],
                 )
             )
         )
@@ -1256,7 +1253,7 @@ def _adopt_secondary_owned_skeleton(
 def _qualify_nuclear_cell_bodies(
     cell_body_payload,
     cell_body_labels: np.ndarray,
-    unified_neuron_labels: np.ndarray,
+    secondary_owner_regions: np.ndarray,
 ):
     """Keep DAPI candidates that expand into declared neuronal cytoplasm."""
 
@@ -1266,7 +1263,7 @@ def _qualify_nuclear_cell_bodies(
         minlength=label_count + 1,
     )
     secondary_areas = np.bincount(
-        unified_neuron_labels.ravel(),
+        secondary_owner_regions.ravel(),
         minlength=label_count + 1,
     )
     keep = np.zeros(label_count + 1, dtype=bool)
@@ -1280,7 +1277,7 @@ def _qualify_nuclear_cell_bodies(
 
 def _derive_signal_cell_bodies(
     nuclear_seed_labels: np.ndarray,
-    unified_neuron_labels: np.ndarray,
+    secondary_owner_regions: np.ndarray,
     neurite_image: np.ndarray,
     settings: MetaXpressCellBodySettings,
     pixel_size_um: float,
@@ -1290,10 +1287,10 @@ def _derive_signal_cell_bodies(
     """Fill bounded neuronal-cytoplasm bodies around qualified nuclear seeds."""
 
     seeds = np.asarray(nuclear_seed_labels, dtype=np.int32)
-    unified = np.asarray(unified_neuron_labels, dtype=np.int32)
+    unified = np.asarray(secondary_owner_regions, dtype=np.int32)
     if seeds.shape != unified.shape or seeds.shape != neurite_image.shape:
         raise ValueError(
-            "nuclear seeds, unified neurons, and neurite image must share a shape"
+            "nuclear seeds, secondary owner regions, and neurite image must share a shape"
         )
     maximum_radius_px = settings.approximate_max_width / (2.0 * pixel_size_um)
     minimum_area_px = settings.minimum_area / pixel_size_um**2
@@ -1525,6 +1522,14 @@ def _analyze_topology(
         raise ValueError(
             "assigned_path_labels must have the same shape as the skeleton"
         )
+    # A neurite path requires an edge, not merely a foreground pixel. Skan's
+    # full-neighborhood pixel graph has no paths for isolated vertices, and its
+    # constructor builds the path CSR before exposing n_paths.
+    neighborhood = ndi.generate_binary_structure(skeleton.ndim, skeleton.ndim)
+    neighborhood[(1,) * skeleton.ndim] = False
+    skeleton = np.asarray(skeleton, dtype=bool) & ndi.binary_dilation(
+        skeleton, structure=neighborhood
+    )
     if not skeleton.any():
         return _empty_topology()
 
@@ -1540,7 +1545,6 @@ def _analyze_topology(
     )
     path_lengths = branch_table["branch_distance"].to_numpy(dtype=float)
     path_euclidean_lengths = branch_table["euclidean_distance"].to_numpy(dtype=float)
-    path_branch_types = branch_table["branch_type"].to_numpy(dtype=np.int32)
     node_incidence: dict[int, list[int]] = defaultdict(list)
     node_endpoints: dict[int, list[tuple[int, int]]] = defaultdict(list)
     node_coordinates: dict[int, np.ndarray] = {}
@@ -1589,7 +1593,9 @@ def _analyze_topology(
         junction_nodes,
         path_endpoint_nodes,
         path_lengths,
-        maximum_internal_length=max(1.0, np.sqrt(2.0) * outgrowth_width_px),
+        maximum_internal_length=(
+            max(1.0, np.sqrt(2.0) * outgrowth_width_px) * pixel_size_um
+        ),
     ):
         external_endpoints = tuple(
             sorted(
@@ -1664,25 +1670,6 @@ def _analyze_topology(
                 transitions[first].add(second)
                 transitions[second].add(first)
 
-    crossing_paths = {
-        path_index for paths in crossing_paths_by_node.values() for path_index in paths
-    }
-    logical_endpoint_degrees = Counter(
-        group_id
-        for path_index, endpoint_groups in enumerate(path_endpoint_groups)
-        if path_index not in crossing_core_paths
-        for group_id in endpoint_groups
-    )
-    for path_index in crossing_paths:
-        source_group, destination_group = path_endpoint_groups[path_index]
-        if source_group == destination_group:
-            path_branch_types[path_index] = 3
-            continue
-        path_branch_types[path_index] = sum(
-            logical_endpoint_degrees[group_id] >= 3
-            for group_id in (source_group, destination_group)
-        )
-
     expanded_bodies = expand_labels(
         cell_body_labels,
         distance=max(1, int(np.ceil(outgrowth_width_px)) + 2),
@@ -1726,21 +1713,22 @@ def _analyze_topology(
         transitions,
         roots_by_cell,
     )
-
-    branch_owner: dict[int, int] = {}
-    for node in branch_nodes:
-        owned_paths = [
-            int(path_owners[path_index])
-            for path_index in node_incidence[node]
-            if path_owners[path_index] > 0
-        ]
-        if owned_paths:
-            branch_owner[node] = Counter(owned_paths).most_common(1)[0][0]
-    branch_owner = _merge_nearby_owned_nodes(
-        branch_owner,
-        node_coordinates,
-        radius=max(1.0, outgrowth_width_px),
+    path_branch_types = _owner_qualified_path_branch_types(
+        path_owners,
+        path_endpoint_groups,
+        crossing_core_paths,
     )
+
+    branch_nodes_by_cell: dict[int, list[int]] = defaultdict(list)
+    for node in branch_nodes:
+        owned_degrees = Counter(
+            int(path_owners[path_index])
+            for path_index in set(node_incidence[node])
+            if path_owners[path_index] > 0
+        )
+        for owner, degree in owned_degrees.items():
+            if degree >= 3:
+                branch_nodes_by_cell[owner].append(node)
 
     used_crossings = {
         node
@@ -1764,7 +1752,14 @@ def _analyze_topology(
         root_paths_by_cell={
             cell: tuple(sorted(set(paths))) for cell, paths in roots_by_cell.items()
         },
-        branch_owner=branch_owner,
+        branch_nodes_by_cell={
+            owner: _merge_nearby_nodes(
+                nodes,
+                node_coordinates,
+                radius=max(1.0, outgrowth_width_px),
+            )
+            for owner, nodes in branch_nodes_by_cell.items()
+        },
         crossing_nodes=frozenset(used_crossings),
         crossing_paths=frozenset(
             path_index
@@ -1779,19 +1774,18 @@ def _analyze_topology(
     )
 
 
-def _merge_nearby_owned_nodes(
-    node_owner: Mapping[int, int],
+def _merge_nearby_nodes(
+    nodes: Sequence[int],
     node_coordinates: Mapping[int, np.ndarray],
     *,
     radius: float,
-) -> dict[int, int]:
+) -> tuple[int, ...]:
     """Collapse multi-pixel junction neighborhoods into one branch event."""
 
-    remaining = set(node_owner)
-    merged: dict[int, int] = {}
+    remaining = set(nodes)
+    merged: list[int] = []
     while remaining:
         seed = min(remaining)
-        owner = node_owner[seed]
         cluster = {seed}
         frontier = [seed]
         remaining.remove(seed)
@@ -1800,8 +1794,7 @@ def _merge_nearby_owned_nodes(
             nearby = {
                 candidate
                 for candidate in remaining
-                if node_owner[candidate] == owner
-                and np.linalg.norm(
+                if np.linalg.norm(
                     node_coordinates[current] - node_coordinates[candidate]
                 )
                 <= radius
@@ -1809,8 +1802,8 @@ def _merge_nearby_owned_nodes(
             remaining.difference_update(nearby)
             cluster.update(nearby)
             frontier.extend(nearby)
-        merged[min(cluster)] = owner
-    return merged
+        merged.append(min(cluster))
+    return tuple(merged)
 
 
 def _empty_topology() -> _TopologyResult:
@@ -1825,7 +1818,7 @@ def _empty_topology() -> _TopologyResult:
         endpoint_group_coordinates={},
         transitions={},
         root_paths_by_cell={},
-        branch_owner={},
+        branch_nodes_by_cell={},
         crossing_nodes=frozenset(),
         crossing_paths=frozenset(),
         crossing_core_paths=frozenset(),
@@ -1949,6 +1942,35 @@ def _retain_soma_rooted_path_owners(
         path_distances[detached_paths] = np.inf
 
 
+def _owner_qualified_path_branch_types(
+    path_owners: np.ndarray,
+    path_endpoint_groups: Sequence[Sequence[int]],
+    crossing_core_paths: set[int],
+) -> np.ndarray:
+    """Classify paths from final owner-specific logical endpoint degrees."""
+
+    endpoint_degrees = Counter(
+        (int(path_owners[path_index]), group_id)
+        for path_index, endpoint_groups in enumerate(path_endpoint_groups)
+        if path_owners[path_index] > 0 and path_index not in crossing_core_paths
+        for group_id in endpoint_groups
+    )
+    branch_types = np.zeros(len(path_owners), dtype=np.int32)
+    for path_index, endpoint_groups in enumerate(path_endpoint_groups):
+        owner = int(path_owners[path_index])
+        if owner <= 0 or path_index in crossing_core_paths:
+            continue
+        source_group, destination_group = endpoint_groups
+        if source_group == destination_group:
+            branch_types[path_index] = 3
+            continue
+        branch_types[path_index] = sum(
+            endpoint_degrees[owner, group_id] >= 3
+            for group_id in endpoint_groups
+        )
+    return branch_types
+
+
 def _propagate_path_owners(
     path_lengths: np.ndarray,
     transitions: Mapping[int, Iterable[int]],
@@ -1984,31 +2006,15 @@ def _build_neurite_morphology_graph(
     *,
     pixel_size_um: float,
     outgrowth_width_px: float,
-    assigned_path_labels: np.ndarray | None = None,
 ) -> SpatialGraph:
     """Project owned Skan paths into deterministic soma-rooted forests."""
 
-    if assigned_path_labels is not None and assigned_path_labels.shape != (
-        cell_body_labels.shape
-    ):
-        raise ValueError(
-            "assigned_path_labels must have the same shape as cell_body_labels"
-        )
     paths_by_owner: dict[int, list[int]] = defaultdict(list)
-    for path_index, coordinates in enumerate(topology.path_coordinates):
+    for path_index, owner in enumerate(topology.path_owners):
         if path_index in topology.crossing_core_paths:
             continue
-        owner = int(topology.path_owners[path_index])
-        if assigned_path_labels is not None:
-            labels = assigned_path_labels[tuple(coordinates.T)]
-            labels = labels[labels > 0]
-            owner = (
-                Counter(int(label) for label in labels).most_common(1)[0][0]
-                if labels.size
-                else 0
-            )
         if owner > 0:
-            paths_by_owner[owner].append(path_index)
+            paths_by_owner[int(owner)].append(path_index)
 
     graph_nodes: list[SpatialGraphNode] = []
     graph_edges: list[SpatialGraphEdge] = []
@@ -2319,7 +2325,7 @@ def _expand_skeleton_ownership(
     nearest_owner = owner_skeleton[tuple(nearest)]
     radius = max(1.0, outgrowth_width_px / 2.0 + 0.5)
     return np.where(
-        outgrowth_binary & (distance <= radius),
+        (outgrowth_binary | (owner_skeleton > 0)) & (distance <= radius),
         nearest_owner,
         0,
     ).astype(np.int32, copy=False)
@@ -2334,7 +2340,6 @@ def _build_cell_results(
     pixel_size_um: float,
     *,
     slice_index: int,
-    cp_measurements: Mapping[int, Mapping[str, object]],
 ) -> list[NeuriteOutgrowthCellResult]:
     cell_count = int(cell_body_labels.max())
     body_areas = np.bincount(cell_body_labels.ravel(), minlength=cell_count + 1).astype(
@@ -2344,20 +2349,11 @@ def _build_cell_results(
     results = []
 
     for cell in range(1, cell_count + 1):
-        cp_measurement = cp_measurements[cell]
         path_indexes = np.flatnonzero(topology.path_owners == cell)
-        total_outgrowth = float(cp_measurement["total_skeleton_length"]) * pixel_size_um
         roots = topology.root_paths_by_cell.get(cell, ())
-        geometric_process_lengths = _measure_process_lengths(cell, roots, topology)
-        geometric_total = float(np.sum(geometric_process_lengths))
-        if geometric_total > 0 and total_outgrowth > 0:
-            process_lengths = [
-                length * total_outgrowth / geometric_total
-                for length in geometric_process_lengths
-            ]
-        else:
-            process_lengths = []
-        process_count = int(cp_measurement["number_trunks"])
+        process_lengths = _measure_process_lengths(cell, roots, topology)
+        total_outgrowth = float(np.sum(process_lengths))
+        process_count = len(process_lengths)
         curve_length = float(np.sum(topology.path_lengths[path_indexes]))
         euclidean_length = float(np.sum(topology.path_euclidean_lengths[path_indexes]))
         straightness = euclidean_length / curve_length if curve_length else 0.0
@@ -2382,7 +2378,7 @@ def _build_cell_results(
                 max_process_length_um=(
                     float(np.max(process_lengths)) if process_lengths else 0.0
                 ),
-                branches=int(cp_measurement["number_non_trunk_branches"]),
+                branches=len(topology.branch_nodes_by_cell.get(cell, ())),
                 straightness=straightness,
                 cell_body_area_um2=float(body_areas[cell]),
                 mean_outgrowth_intensity=mean_intensity,

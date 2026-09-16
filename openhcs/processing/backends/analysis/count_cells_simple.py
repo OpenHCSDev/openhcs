@@ -35,6 +35,7 @@ from scipy import ndimage as ndi
 from skimage.feature import peak_local_max
 from skimage.filters import threshold_otsu, threshold_li, threshold_yen
 from skimage.measure import regionprops
+from skimage.morphology import h_maxima
 from skimage.segmentation import expand_labels, watershed
 
 from .metaxpress_utils import HiddenPixelSize, local_background_response, odd_size
@@ -571,6 +572,7 @@ def segment_metaxpress_round_objects(
         watershed_max_size=None,
         watershed_min_distance=seed_spacing,
         watershed_footprint_size=seed_footprint,
+        watershed_peak_prominence=min_width_px / 2.0,
     )
 
     keep_mask = np.zeros(int(labeled.max()) + 1, dtype=bool)
@@ -681,6 +683,7 @@ def _label_binary_components(
     watershed_max_size: Optional[int],
     watershed_min_distance: int,
     watershed_footprint_size: int,
+    watershed_peak_prominence: float = 0.0,
 ) -> np.ndarray:
     """Label a binary mask and optionally split large connected components."""
 
@@ -692,6 +695,7 @@ def _label_binary_components(
             watershed_max_size=watershed_max_size,
             min_distance=watershed_min_distance,
             footprint_size=watershed_footprint_size,
+            peak_prominence=watershed_peak_prominence,
         )
     return labeled.astype(np.int32, copy=False)
 
@@ -752,6 +756,7 @@ def _watershed_large_objects(
     watershed_max_size: Optional[int],
     min_distance: int,
     footprint_size: int,
+    peak_prominence: float = 0.0,
 ) -> np.ndarray:
     """Split components above split_size and at or below watershed_max_size."""
     counts = np.bincount(labeled.ravel())
@@ -776,12 +781,22 @@ def _watershed_large_objects(
             continue
 
         component = labeled[component_slice] == label_id
-        distance = ndi.distance_transform_edt(component)
+        distance = ndi.distance_transform_edt(np.pad(component, 1))[1:-1, 1:-1]
+        # Width-based detection needs distinct object-scale peaks, not multiple
+        # pixel-scale maxima on the medial ridge of one elongated nucleus.
+        peak_support = (
+            h_maxima(distance, peak_prominence)
+            if peak_prominence > 0.0
+            else component
+        )
+        peak_components, _ = ndi.label(peak_support)
         seeds = peak_local_max(
             distance,
             min_distance=min_distance,
             footprint=footprint,
-            labels=component,
+            labels=peak_components,
+            num_peaks_per_label=1 if peak_prominence > 0.0 else np.inf,
+            exclude_border=False,
         )
 
         if len(seeds) <= 1:

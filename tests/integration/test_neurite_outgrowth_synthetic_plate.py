@@ -3,6 +3,7 @@
 import csv
 import io
 import logging
+from multiprocessing.shared_memory import SharedMemory
 from pathlib import Path
 import queue
 import time
@@ -13,6 +14,19 @@ import numpy as np
 import tifffile
 from objectstate import ObjectStateRegistry
 from polystore.roi import PolylineShape, load_rois_from_zip
+from polystore.napari_stream import NapariStreamingBackend
+from polystore.streaming import StreamingBatchMessageBuilder, StreamingBatchMessageRequest
+from polystore.streaming.identity import FixedStreamProducerIdentityKind, StreamProducerIdentity
+from polystore.streaming.viewer_transport import (
+    BatchViewerStreamSourceMetadata,
+    ViewerStreamBackendKwargs,
+    ViewerStreamProducer,
+    ViewerStreamRequest,
+    ViewerStreamSource,
+    ViewerStreamSourceIdentity,
+)
+from zmqruntime.viewer_protocol import ViewerTransportEndpoint
+from zmqruntime.config import TransportMode
 from skimage.draw import disk, line
 
 from objectstate.lazy_factory import ensure_global_config_context
@@ -24,14 +38,18 @@ from openhcs.core.config import (
     LazyProcessingConfig,
     LazyVFSConfig,
     MaterializationBackend,
+    NapariDisplayConfig,
     PathPlanningConfig,
     PipelineConfig,
     VFSConfig,
 )
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 from openhcs.core.progress import ProgressEvent, set_progress_queue
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.steps import FunctionStep
+from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.processing.materialization.core import Output, ViewerStreamBackendCallKwargs
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
@@ -60,10 +78,11 @@ def _write_known_neurite_images(plate_dir):
     for site in (1, 2):
         tifffile.imwrite(image_dir / f"A01_s{site:03d}_w1_z001_t001.tif", neurites)
         tifffile.imwrite(image_dir / f"A01_s{site:03d}_w2_z001_t001.tif", nuclei)
+    return np.stack((neurites, nuclei))
 
 
 def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
-    tmp_path, caplog
+    tmp_path, caplog, monkeypatch
 ):
     caplog.set_level(logging.CRITICAL)
     plate_dir = tmp_path / "synthetic_neurite_plate"
@@ -81,7 +100,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
             format="ImageXpress",
             random_seed=11,
         ).generate_dataset()
-    _write_known_neurite_images(plate_dir)
+    source_stack = _write_known_neurite_images(plate_dir)
 
     suffix = "_neurite_test"
     vfs_config = VFSConfig(materialization_backend=MaterializationBackend.DISK)
@@ -129,6 +148,16 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
 
     ObjectStateRegistry.clear()
     progress_queue = queue.Queue()
+    dense_outputs = {}
+    original_with_components = Output.with_variable_components
+
+    def observe_dense_output(output, components):
+        projected = original_with_components(output, components)
+        if projected.path.endswith(".labels.tif"):
+            dense_outputs[projected.path] = projected
+        return projected
+
+    monkeypatch.setattr(Output, "with_variable_components", observe_dense_output)
     try:
         ensure_global_config_context(GlobalPipelineConfig, global_config)
         orchestrator = PipelineOrchestrator(
@@ -146,6 +175,11 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         assert compiled_pattern is not None
         compiled_invocation = next(compiled_pattern.iter_invocations())
         assert compiled_invocation.kwargs_dict["pixel_size"] == 0.65
+        expected = CallableContract.from_callable(
+            neurite_outgrowth_metaxpress
+        ).resolve_raw_runtime_callable()(
+            source_stack, **compiled_invocation.kwargs_dict
+        )
 
         results = orchestrator.execute_compiled_plate(
             execution_bundle=compilation,
@@ -236,6 +270,79 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
         )
         assert all("_w2_" in path.name for path in roi_paths if "nuclei" in path.name)
         assert all(load_rois_from_zip(path) for path in roi_paths)
+
+        for artifact_name, expected_labels in zip(
+            ("cell_bodies", "neurite_outgrowth", "neurons", "nuclei"),
+            expected[3:7],
+            strict=True,
+        ):
+            label_paths = tuple(tmp_path.rglob(f"*_{artifact_name}_step0.labels.tif"))
+            assert len(label_paths) == 2
+            for label_path in label_paths:
+                retained = tifffile.imread(label_path)
+                assert retained.dtype == expected_labels.dtype
+                np.testing.assert_array_equal(retained, expected_labels)
+
+        # Exercise the real stream projection of the compiled writer outputs.
+        # Artifact storage axes are legitimately empty; source image planes are not.
+        assert len(dense_outputs) == 8
+        stream_kwargs = ViewerStreamBackendCallKwargs(
+            ViewerStreamBackendKwargs(
+                ViewerStreamRequest(
+                    viewer_transport=ViewerTransportEndpoint(
+                        host="localhost", port=5555, transport_mode=TransportMode.IPC
+                    ),
+                    display_config=NapariDisplayConfig(),
+                    source=ViewerStreamSource(
+                        identity=ViewerStreamSourceIdentity(
+                            microscope_handler=compiled_context.microscope_handler,
+                            plate_path=str(plate_dir),
+                        ),
+                        metadata=BatchViewerStreamSourceMetadata({}),
+                    ),
+                    producer=ViewerStreamProducer.from_identity(
+                        StreamProducerIdentity.fixed_output(
+                            FixedStreamProducerIdentityKind.DIRECT, "synthetic-retained-domain"
+                        )
+                    ),
+                )
+            )
+        )
+        backend = NapariStreamingBackend()
+        try:
+            for outputs, kwargs in stream_kwargs.filemanager_batches(tuple(dense_outputs.values())):
+                request = kwargs["stream_request"]
+                assert request.source.item_fields["plane_component_values"] == {
+                    "channel": ["1", "2"]
+                }
+                batch = StreamingBatchMessageBuilder.build(
+                    backend,
+                    StreamingBatchMessageRequest(
+                        data_list=[output.content for output in outputs],
+                        file_paths=[output.path for output in outputs],
+                        stream_request=request,
+                        component_names_request=backend.component_names_request(request),
+                        display_payload_extra=backend.display_payload_extra(request),
+                    ),
+                )
+                for output, item in zip(outputs, batch.batch_images, strict=True):
+                    assert output.variable_components == ()
+                    # This fixture injects physical pixel_size into the callable,
+                    # but does not declare voxel spacing on its runtime images.
+                    assert output.metadata.source_voxel_spacing == SourceVoxelSpacing()
+                    assert item["plane_component_values"] == {"channel": ["1", "2"]}
+                    assert "channel" not in request.source.metadata.component_metadata_for_item(output.path, 0)
+                    memory = SharedMemory(name=item["shm_name"])
+                    try:
+                        transmitted = np.ndarray(
+                            item["shape"], dtype=item["dtype"], buffer=memory.buf
+                        ).copy()
+                    finally:
+                        memory.close()
+                    np.testing.assert_array_equal(transmitted, output.content)
+                    np.testing.assert_array_equal(transmitted, tifffile.imread(output.path))
+        finally:
+            backend.cleanup()
 
         swc_paths = sorted(tmp_path.rglob("*neurite_morphology*.swc"))
         graph_roi_paths = sorted(tmp_path.rglob("*neurite_morphology*.graph.roi.zip"))

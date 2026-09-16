@@ -3,7 +3,8 @@ from dataclasses import fields, replace
 from inspect import signature, unwrap
 
 import numpy as np
-from skimage.draw import disk
+import pytest
+from skimage.draw import disk, ellipse
 
 from openhcs.core.artifacts import (
     MeasurementsArtifactType,
@@ -19,6 +20,7 @@ from openhcs.processing.backends.analysis.count_cells_simple import (
     ThresholdMethod,
     count_cells_simple,
     count_cells_simple_dual_channel,
+    segment_metaxpress_round_objects,
 )
 
 count_cells_simple_module = importlib.import_module(
@@ -377,6 +379,28 @@ def test_w2_nucleus_and_cytoplasm_scores_stain_outside_the_nucleus():
         "nucleus and cytoplasm"
     )
     assert set(np.unique(w2_labels[1])) == {0, 1}
+
+
+@pytest.mark.parametrize("rotation_degrees", range(0, 180, 15))
+def test_width_based_watershed_preserves_one_elongated_nucleus(rotation_degrees):
+    image = np.zeros((96, 96), dtype=np.float64)
+    rr, cc = ellipse(
+        48, 48, 15, 19, rotation=np.deg2rad(rotation_degrees), shape=image.shape
+    )
+    image[rr, cc] = 1000.0
+    settings = MetaXpressWavelengthSettings(
+        approx_min_width=5.0,
+        approx_max_width=32.0,
+        intensity_above_local_background=300.0,
+    )
+
+    labels = segment_metaxpress_round_objects(image, settings, 1.0)
+
+    # Its area exceeds the circular split trigger, but its short-axis width
+    # fits the declared range and its medial ridge belongs to one nucleus.
+    assert len(rr) > np.pi * (settings.approx_max_width / 2.0) ** 2
+    assert labels.max() == 1
+    assert labels[48, 48] == 1
 
 
 def test_width_settings_derive_watershed_for_touching_w1_nuclei():

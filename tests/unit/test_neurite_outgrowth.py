@@ -3,6 +3,9 @@ from inspect import signature
 
 import numpy as np
 import pytest
+import tifffile
+from polystore.disk import DiskStorageBackend
+from polystore.filemanager import FileManager
 from scipy import ndimage as ndi
 from skimage.draw import disk, line
 
@@ -12,10 +15,11 @@ from openhcs.core.artifacts import (
     SpatialGraphArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.measurement_row_materialization import (
-    DataclassMeasurementColumnarRows,
+from openhcs.core.runtime_object_labels import (
+    ObjectLabelPayload,
+    ObjectLabelVariantData,
+    object_label_dense_array,
 )
-from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.core.runtime_spatial_graph import SpatialGraph
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     identify_primary_objects,
@@ -23,24 +27,29 @@ from openhcs.processing.backends.cellprofiler.primary_objects import (
 from openhcs.processing.backends.cellprofiler.secondary import (
     identify_secondary_objects,
 )
-from openhcs.processing.backends.cellprofiler.skeleton import (
-    ObjectSkeletonMeasurement,
-)
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
     MetaXpressOutgrowthSettings,
+    NEURITE_OBJECT_LABEL_MATERIALIZATION,
     NeuriteIllumination,
     _TopologyResult,
     _analyze_topology,
     _build_neurite_morphology_graph,
+    _expand_skeleton_ownership,
     _identify_cell_bodies_cellprofiler,
     _repair_signal_supported_skeleton,
     count_neuronal_cell_bodies_metaxpress,
     neurite_outgrowth_metaxpress,
 )
-from openhcs.processing.materialization import SpatialGraphROIOptions, SWCOptions
+from openhcs.processing.materialization import (
+    ImageFileOptions,
+    ROIOptions,
+    SpatialGraphROIOptions,
+    SWCOptions,
+    materialize,
+)
 
 
 def _implementation():
@@ -166,6 +175,13 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         spec.artifact_type is ObjectLabelsArtifactType
         for spec in (body_spec, neurite_spec, neurons_spec, nuclei_spec)
     )
+    for spec in (body_spec, neurite_spec, neurons_spec, nuclei_spec):
+        assert spec.materialization is NEURITE_OBJECT_LABEL_MATERIALIZATION
+        assert tuple(type(output) for output in spec.materialization.outputs) == (
+            ROIOptions,
+            ImageFileOptions,
+        )
+        assert spec.materialization.primary == 0
     assert morphology_spec.artifact_type is SpatialGraphArtifactType
     morphology_subject = morphology_spec.relations[0].object_subject_binding()
     assert morphology_subject.source == neurons_spec.ref()
@@ -176,6 +192,30 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         SWCOptions,
         SpatialGraphROIOptions,
     )
+
+
+def test_neurite_label_materialization_preserves_exact_pixels_below_roi_area_cutoff(
+    tmp_path,
+):
+    labels = np.zeros((16, 24), dtype=np.int32)
+    labels[1, 2] = 70001
+    labels[5:9, 8:13] = 123
+    payload = ObjectLabelPayload(variant_data=ObjectLabelVariantData(labels=labels))
+    filemanager = FileManager({"disk": DiskStorageBackend()})
+    materialize(
+        NEURITE_OBJECT_LABEL_MATERIALIZATION,
+        data=payload,
+        path=str(tmp_path / "neurons.roi.zip"),
+        filemanager=filemanager,
+        backends=["disk"],
+        backend_kwargs={},
+    )
+    paths = tuple(tmp_path.glob("*.labels.tif"))
+    assert len(paths) == 1
+    retained = tifffile.imread(paths[0])
+    assert retained.dtype == labels.dtype
+    np.testing.assert_array_equal(retained, labels)
+    assert tuple(tmp_path.glob("*rois.roi.zip"))
 
 
 def test_cell_body_minimum_area_does_not_impose_hidden_roundness(monkeypatch):
@@ -328,7 +368,7 @@ def test_independent_counter_propagates_nuclear_seed_through_soma_signal(monkeyp
     assert result[3][0, 56, 46] == 1
 
 
-def test_cp_metrics_and_significant_threshold_is_scoring_only():
+def test_topology_metrics_and_significant_threshold_is_scoring_only():
     image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
     low_threshold = _implementation()(
         image,
@@ -392,6 +432,57 @@ def test_unrooted_crossing_arm_is_not_reported_as_a_branch():
     assert np.count_nonzero(neurite_mask[64, :]) > 80
 
 
+@pytest.mark.parametrize(
+    "coordinates",
+    ((), ((16, 16),), ((0, 0), (0, 32), (16, 16), (32, 32))),
+)
+def test_edgeless_skeleton_has_empty_topology(coordinates):
+    skeleton = np.zeros((33, 33), dtype=bool)
+    for coordinate in coordinates:
+        skeleton[coordinate] = True
+    original = skeleton.copy()
+    topology = _analyze_topology(skeleton, np.zeros(skeleton.shape, np.int32), 1.3556, 3.0)
+    assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
+    assert np.array_equal(skeleton, original)
+
+
+def test_sparse_owned_singleton_regression_has_no_neurite_paths():
+    import hashlib
+
+    skeleton = np.zeros((1024, 1024), dtype=bool)
+    skeleton[599, 168] = True
+    assert hashlib.sha256(skeleton.tobytes()).hexdigest() == "20dee1df23f3a7a23408e3d3091477e7cc57aedb726e232a2481fd89f8faa015"
+    cell_bodies = np.zeros(skeleton.shape, np.int32)
+    cell_bodies[599, 168] = 2
+    topology = _analyze_topology(
+        skeleton, cell_bodies, 1.3556, 4.0 / 1.3556,
+        assigned_path_labels=cell_bodies,
+    )
+    assert all(len(getattr(topology, field.name)) == 0 for field in fields(topology))
+
+
+@pytest.mark.parametrize("diagonal", (False, True))
+def test_isolated_pixels_do_not_change_connected_path_geometry_or_ownership(diagonal):
+    skeleton = np.zeros((33, 33), dtype=bool)
+    if diagonal:
+        skeleton[np.arange(8, 25), np.arange(8, 25)] = True
+    else:
+        skeleton[16, 8:25] = True
+    bodies = np.zeros(skeleton.shape, np.int32)
+    bodies[6:10, 6:10] = 1
+    bodies[14:19, 6:10] = 1
+    expected = _analyze_topology(skeleton, bodies, 1.3556, 3.0)
+    skeleton[0, 0] = skeleton[0, 32] = skeleton[32, 0] = True
+    actual = _analyze_topology(skeleton, bodies, 1.3556, 3.0)
+    assert np.array_equal(actual.path_lengths, expected.path_lengths)
+    assert np.array_equal(actual.path_owners, expected.path_owners)
+    assert np.array_equal(actual.path_distances, expected.path_distances)
+    assert actual.path_endpoint_groups == expected.path_endpoint_groups
+    assert actual.transitions == expected.transitions
+    assert len(actual.path_coordinates) == len(expected.path_coordinates) == 1
+    assert all(np.array_equal(left, right) for left, right in zip(actual.path_coordinates, expected.path_coordinates))
+
+
 def test_crossing_resolution_retains_two_logical_endpoint_groups():
     skeleton = np.zeros((65, 65), dtype=bool)
     skeleton[32, 5:60] = True
@@ -424,7 +515,8 @@ def test_crossing_resolution_retains_two_logical_endpoint_groups():
     assert np.all(topology.path_branch_types == 0)
 
 
-def test_short_two_junction_crossing_resolves_opposite_rooted_traces():
+@pytest.mark.parametrize("pixel_size_um", [0.5, 1.0, 1.3556, 2.0])
+def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_um):
     skeleton = np.zeros((70, 70), dtype=bool)
     first_junction = (32, 30)
     second_junction = (35, 34)
@@ -445,14 +537,14 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces():
     topology = _analyze_topology(
         skeleton,
         cell_bodies,
-        pixel_size_um=1.0,
+        pixel_size_um=pixel_size_um,
         outgrowth_width_px=8.0,
     )
 
     assert len(topology.crossing_nodes) == 1
     assert len(topology.crossing_core_paths) == 1
     assert len(topology.crossing_paths) == 4
-    assert topology.branch_owner == {}
+    assert topology.branch_nodes_by_cell == {}
     assert topology.path_owners[next(iter(topology.crossing_core_paths))] == 0
     terminal_owners = {
         tuple(coordinate): int(topology.path_owners[path_index])
@@ -478,7 +570,7 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces():
     morphology = _build_neurite_morphology_graph(
         topology,
         cell_bodies,
-        pixel_size_um=1.0,
+        pixel_size_um=pixel_size_um,
         outgrowth_width_px=8.0,
     )
     morphology.require_directed_forest()
@@ -487,6 +579,49 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces():
         1,
         2,
     }
+    assert {
+        edge.feature_mapping()["branch_type"] for edge in morphology.edges
+    } == {0}
+
+
+@pytest.mark.parametrize(
+    "arm_owners, expected_branch_cells",
+    [((1, 2, 3), ()), ((1, 1, 2), ()), ((1, 1, 1), (1,))],
+)
+@pytest.mark.parametrize("use_assigned_owners", [False, True])
+def test_branch_events_require_three_paths_of_the_same_final_owner(
+    arm_owners, expected_branch_cells, use_assigned_owners
+):
+    labels = np.zeros((41, 41), dtype=np.int32)
+    labels[20, 7:21] = arm_owners[0]
+    labels[20, 21:34] = arm_owners[1]
+    labels[21:34, 20] = arm_owners[2]
+    bodies = np.zeros(labels.shape, dtype=np.int32)
+    for owner, center in zip(arm_owners, ((20, 4), (20, 36), (36, 20))):
+        rows, columns = disk(center, radius=3, shape=bodies.shape)
+        bodies[rows, columns] = owner
+
+    topology = _analyze_topology(
+        labels > 0,
+        bodies,
+        pixel_size_um=1.0,
+        outgrowth_width_px=1.0,
+        assigned_path_labels=labels if use_assigned_owners else None,
+    )
+
+    assert tuple(sorted(topology.branch_nodes_by_cell)) == expected_branch_cells
+    assert all(len(nodes) == 1 for nodes in topology.branch_nodes_by_cell.values())
+    assert sorted(topology.path_owners) == sorted(arm_owners)
+    morphology = _build_neurite_morphology_graph(
+        topology,
+        bodies,
+        pixel_size_um=1.0,
+        outgrowth_width_px=1.0,
+    )
+    morphology.require_directed_forest()
+    assert {
+        edge.feature_mapping()["branch_type"] for edge in morphology.edges
+    } == ({1} if expected_branch_cells else {0})
 
 
 def test_nearby_nonopposite_junctions_remain_a_branch_event():
@@ -514,7 +649,7 @@ def test_nearby_nonopposite_junctions_remain_a_branch_event():
 
     assert topology.crossing_nodes == frozenset()
     assert topology.crossing_core_paths == frozenset()
-    assert len(topology.branch_owner) == 1
+    assert len(topology.branch_nodes_by_cell[1]) == 1
 
 
 def test_neurite_morphology_is_soma_rooted_feature_bearing_forest():
@@ -567,6 +702,50 @@ def test_neurite_morphology_is_soma_rooted_feature_bearing_forest():
         assert not np.any(cell_bodies[tuple(coordinates.T)] > 0)
 
 
+@pytest.mark.parametrize("branched", [False, True])
+@pytest.mark.parametrize("pixel_size", [0.5, 1.0, 1.3556])
+def test_cell_lengths_measure_the_published_owned_paths(branched, pixel_size):
+    image = _with_separate_body_channel(
+        _draw_fluorescent_neuron(branched=branched)
+    )
+    result = _implementation()(
+        image,
+        neurite_channel_index=1,
+        cell_body=MetaXpressCellBodySettings(
+            approximate_max_width=30.0 * pixel_size,
+            minimum_area=100.0 * pixel_size**2,
+            intensity_above_local_background=100.0,
+            channel_index=0,
+        ),
+        outgrowth=MetaXpressOutgrowthSettings(
+            maximum_width=3.0 * pixel_size,
+            intensity_above_local_background=100.0,
+            minimum_cell_growth_to_log_as_significant=20.0,
+        ),
+        pixel_size=pixel_size,
+    )
+    morphology = result[-1]
+    cells = _rows(result[2])
+    assert cells
+    for cell in cells:
+        owned_lengths = [
+            edge.feature_mapping()["branch_distance_um"]
+            for edge in morphology.edges
+            if edge.feature_mapping()["neuron_label"] == cell["cell"]
+        ]
+        assert owned_lengths
+        assert cell["total_outgrowth_um"] == pytest.approx(sum(owned_lengths))
+        assert cell["mean_process_length_um"] == pytest.approx(
+            cell["total_outgrowth_um"] / cell["processes"]
+        )
+        assert 0 <= cell["median_process_length_um"] <= cell["max_process_length_um"]
+        assert cell["max_process_length_um"] <= cell["total_outgrowth_um"]
+        # At least ceil(N / 2) nonnegative values are at least their median.
+        assert cell["median_process_length_um"] * ((cell["processes"] + 1) // 2) <= (
+            cell["total_outgrowth_um"] + 1e-8
+        )
+
+
 def test_neurite_morphology_provenance_selects_the_neurite_plane():
     image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
 
@@ -602,7 +781,7 @@ def test_neurite_morphology_breaks_cycle_without_dropping_path_geometry():
         },
         transitions={0: (1, 2), 1: (0, 2), 2: (0, 1)},
         root_paths_by_cell={1: (0, 2)},
-        branch_owner={},
+        branch_nodes_by_cell={},
         crossing_nodes=frozenset(),
         crossing_paths=frozenset(),
         crossing_core_paths=frozenset(),
@@ -659,7 +838,7 @@ def test_neurite_morphology_does_not_fabricate_links_between_components():
         },
         transitions={0: (), 1: ()},
         root_paths_by_cell={1: (0, 1)},
-        branch_owner={},
+        branch_nodes_by_cell={},
         crossing_nodes=frozenset(),
         crossing_paths=frozenset(),
         crossing_core_paths=frozenset(),
@@ -769,7 +948,51 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
     assert isinstance(morphology, SpatialGraph)
 
 
-def test_compact_final_neurons_equal_modular_cp_seed_propagation():
+def test_expanded_ownership_preserves_response_repaired_trace_support():
+    final_trace = np.zeros((11, 11), dtype=np.int32)
+    final_trace[5, 2:9] = 1
+    earlier_detector_foreground = final_trace > 0
+    earlier_detector_foreground[5, 4:7] = False
+
+    expanded = _expand_skeleton_ownership(
+        final_trace, earlier_detector_foreground, outgrowth_width_px=6.0
+    )
+
+    np.testing.assert_array_equal(
+        expanded[final_trace > 0], final_trace[final_trace > 0]
+    )
+    assert not np.any(expanded[~(earlier_detector_foreground | (final_trace > 0))])
+
+
+def test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces():
+    image = np.zeros((2, 128, 128), dtype=np.uint16)
+    for center in ((64, 20), (20, 75)):
+        rr, cc = disk(center, 9, shape=image.shape[1:])
+        image[:, rr, cc] = 1000
+    for start, end in (((64, 28), (64, 115)), ((28, 75), (115, 75))):
+        rr, cc = line(*start, *end)
+        image[1, rr, cc] = 700
+
+    result = _implementation()(
+        image,
+        neurite_channel_index=1,
+        cell_body=_cell_body_settings(channel_index=0),
+        outgrowth=_outgrowth_settings(),
+        pixel_size=1.0,
+    )
+    bodies, traces, neurons = result[3][0], result[4][1], result[5][1]
+    horizontal_owner = bodies[64, 20]
+    vertical_owner = bodies[20, 75]
+
+    assert horizontal_owner > 0 and vertical_owner > 0
+    assert horizontal_owner != vertical_owner
+    assert traces[64, 105] == horizontal_owner
+    assert traces[105, 75] == vertical_owner
+    np.testing.assert_array_equal(neurons[traces > 0], traces[traces > 0])
+    np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
+
+
+def test_final_neurons_project_rooted_trace_ownership_not_secondary_propagation():
     image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
     engine = CELLPROFILER_NEURITE_ENGINE_PROFILE
 
@@ -796,10 +1019,15 @@ def test_compact_final_neurons_equal_modular_cp_seed_propagation():
         **engine.secondary_kwargs(),
     )
 
-    np.testing.assert_array_equal(
-        result[5][1],
-        object_label_dense_array(expected_neuron_payload),
-    )
+    bodies = result[3][0]
+    traces = result[4][1]
+    neurons = result[5][1]
+    np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
+    np.testing.assert_array_equal(neurons[traces > 0], traces[traces > 0])
+    assert np.count_nonzero(neurons) > np.count_nonzero(traces)
+    # CP propagation is detection evidence, not an independently authoritative
+    # final labeling that may contradict corrected trace ownership.
+    assert not np.array_equal(neurons, object_label_dense_array(expected_neuron_payload))
 
 
 def test_overwide_nuclear_guided_foreground_is_not_a_cell_body():
@@ -854,31 +1082,17 @@ def test_transmission_mode_detects_dark_cell_and_neurite():
     assert _rows(cell_rows)[0]["total_outgrowth_um"] > 60.0
 
 
-def test_cell_rows_map_authoritative_cp_seed_measurements(monkeypatch):
+def test_cell_rows_do_not_remeasure_owned_paths_with_cp_seed_propagation(monkeypatch):
     image = _with_separate_body_channel(_draw_fluorescent_neuron())
 
-    def fixed_cp_measurements(skeleton, *, seed_labels, **kwargs):
-        del seed_labels, kwargs
-        return (
-            skeleton,
-            DataclassMeasurementColumnarRows(
-                (
-                    ObjectSkeletonMeasurement(
-                        slice_index=0,
-                        object_label=1,
-                        number_trunks=4,
-                        number_non_trunk_branches=2,
-                        number_branch_ends=5,
-                        total_skeleton_length=123.0,
-                    ),
-                ),
-                row_type=ObjectSkeletonMeasurement,
-            ),
+    def forbidden_remeasurement(*args, **kwargs):
+        raise AssertionError(
+            "Final owned topology must not be reassigned by seed propagation"
         )
 
     monkeypatch.setattr(
-        "openhcs.processing.backends.analysis.neurite_outgrowth.measure_object_skeleton",
-        fixed_cp_measurements,
+        "openhcs.processing.backends.cellprofiler.skeleton.measure_object_skeleton",
+        forbidden_remeasurement,
     )
     _, summary_rows, cell_rows, _, _, _, _, _ = _implementation()(
         image,
@@ -895,12 +1109,15 @@ def test_cell_rows_map_authoritative_cp_seed_measurements(monkeypatch):
 
     summary = _rows(summary_rows)[0]
     cell = _rows(cell_rows)[0]
-    assert cell["total_outgrowth_um"] == 123.0
-    assert cell["processes"] == 4
-    assert cell["branches"] == 2
-    assert summary["total_outgrowth_um"] == 123.0
-    assert summary["total_processes"] == 4
-    assert summary["total_branches"] == 2
+    assert cell["total_outgrowth_um"] > 60.0
+    assert cell["processes"] == 1
+    assert cell["mean_process_length_um"] == cell["median_process_length_um"]
+    assert cell["median_process_length_um"] == cell["max_process_length_um"]
+    assert cell["max_process_length_um"] == cell["total_outgrowth_um"]
+    assert cell["branches"] == 0
+    assert summary["total_outgrowth_um"] == cell["total_outgrowth_um"]
+    assert summary["total_processes"] == cell["processes"]
+    assert summary["total_branches"] == cell["branches"]
 
 
 def test_explicit_same_body_channel_remains_valid_and_bounds_are_checked():
@@ -1033,7 +1250,9 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell():
     assert cell_bodies[1].max() == 2
     assert nuclei[0].max() == 2
     assert np.count_nonzero(nuclei[1]) == 0
-    assert sorted(row["total_outgrowth_um"] for row in cell_rows) == [0.0, 42.0]
+    # The final owned path is 85 pixels long. Independent CP seed-relative
+    # remeasurement previously reported 42 for this same published path.
+    assert sorted(row["total_outgrowth_um"] for row in cell_rows) == [0.0, 85.0]
     zero_growth_cell = next(
         row["cell"] for row in cell_rows if row["total_outgrowth_um"] == 0.0
     )
@@ -1131,3 +1350,55 @@ def test_topology_discards_assigned_paths_detached_from_the_soma():
 def test_rejects_a_plain_2d_image_because_channels_must_be_explicit():
     with pytest.raises(ValueError, match="2D channel stack"):
         _implementation()(np.zeros((32, 32)), pixel_size=1.0)
+
+
+def test_morphology_retains_topology_owners_when_shared_endpoints_collide():
+    from openhcs.processing.backends.analysis.neurite_outgrowth import (
+        _render_owned_skeleton,
+    )
+
+    paths = (
+        np.array([[2, 2], [2, 3]], dtype=int),
+        np.array([[2, 2], [3, 2], [2, 3]], dtype=int),
+    )
+    topology = _TopologyResult(
+        path_owners=np.array([1, 2], dtype=np.int32),
+        path_distances=np.zeros(2),
+        path_lengths=np.array([1.0, 1.0 + np.sqrt(2.0)]),
+        path_euclidean_lengths=np.ones(2),
+        path_coordinates=paths,
+        path_endpoint_groups=((1, 2), (1, 2)),
+        path_branch_types=np.zeros(2, dtype=np.int32),
+        endpoint_group_coordinates={1: (2.0, 2.0), 2: (2.0, 3.0)},
+        transitions={0: (1,), 1: (0,)},
+        root_paths_by_cell={1: (0,), 2: (1,)},
+        branch_nodes_by_cell={},
+        crossing_nodes=frozenset(),
+        crossing_paths=frozenset(),
+        crossing_core_paths=frozenset(),
+    )
+    bodies = np.zeros((8, 8), dtype=np.int32)
+    bodies[1, 2] = 1
+    bodies[4, 2] = 2
+
+    # A scalar raster cannot encode both owners at their shared endpoints.
+    rendered = _render_owned_skeleton(bodies.shape, topology)
+    assert rendered[tuple(paths[1].T)].tolist() == [1, 2, 1]
+
+    graph = _build_neurite_morphology_graph(
+        topology, bodies, pixel_size_um=1.0, outgrowth_width_px=1.0
+    )
+    graph.require_directed_forest()
+    assert len(graph.edges) == 2
+    for owner, expected_length in ((1, 1.0), (2, 1.0 + np.sqrt(2.0))):
+        owned_edges = [
+            edge for edge in graph.edges
+            if edge.feature_mapping()["neuron_label"] == owner
+        ]
+        assert len(owned_edges) == 1
+        assert owned_edges[0].feature_mapping()["branch_distance_um"] == (
+            pytest.approx(expected_length)
+        )
+        assert np.asarray(owned_edges[0].coordinates) == pytest.approx(
+            paths[owner - 1]
+        )
