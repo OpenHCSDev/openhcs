@@ -25,6 +25,9 @@ from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from pyqt_reactive.services.window_navigation import (
+    RegisteredWindowNavigationRequest,
+)
 from python_introspect import dataclass_from_mapping
 
 from openhcs import __version__ as OPENHCS_VERSION
@@ -37,6 +40,7 @@ from openhcs.desktop_deployment import (
 from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
 from openhcs.mcp.bootstrap import MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE
 from openhcs.pyqt_gui.services.desktop_update_worker import DesktopUpdatePlan
+from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.serialization.json import to_jsonable
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
@@ -355,12 +359,28 @@ class DesktopRestartUiState:
         if selected_scope_id is None:
             return
         requested_paths = tuple(str(path) for path in plate_paths)
-        selection_changed = plate_manager.code_execution_workflow.reconcile_selection(
-            requested_paths,
-            preferred_path=selected_scope_id,
+        if selected_scope_id not in requested_paths:
+            raise DesktopUpdateError(
+                "Saved plate selection is absent from the restored document: "
+                f"{selected_scope_id!r}."
+            )
+
+        request = RegisteredWindowNavigationRequest(
+            window=plate_manager,
+            requested_scope_id=OpenHCSUiWindowId.plate_manager,
+            item_id=selected_scope_id,
         )
-        if selection_changed:
-            plate_manager.plate_selected.emit(selected_scope_id)
+        # Re-enter through the manager's selection owner so its semantic id,
+        # Qt row, and selection signal change as one operation. Updating only
+        # the semantic id lets the subsequent list refresh preserve the stale
+        # Qt row over the restored selection.
+        navigation = plate_manager.window_navigation_driver()
+        if not navigation.accepts(request):
+            raise DesktopUpdateError(
+                "Saved plate selection was not materialized in the restored manager: "
+                f"{selected_scope_id!r}."
+            )
+        navigation.execute(request)
 
 
 @dataclass(frozen=True, slots=True)
@@ -593,9 +613,7 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
 
         code_workflow.apply_payload(payload)
         ObjectStateRegistry.load_history_from_file(str(self.history_document))
-        with ObjectStateRegistry.atomic_success(
-            "restore captured session declaration"
-        ):
+        with ObjectStateRegistry.atomic_success("restore captured session declaration"):
             code_workflow.apply_payload(payload)
 
     def restore(self, main_window) -> DesktopRestartRestoreOutcomeABC:

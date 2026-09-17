@@ -1169,15 +1169,15 @@ def test_saved_session_restores_selected_plate_after_all_scope_payload(
         def apply_payload(self, restored_payload) -> None:
             calls.append(("payload", restored_payload))
 
-        def reconcile_selection(
-            self,
-            requested_paths,
-            *,
-            preferred_path=None,
-        ) -> bool:
-            calls.append(("selection", requested_paths, preferred_path))
-            plate_manager.selected_plate_path = preferred_path
-            return True
+    class Navigation:
+        def accepts(self, request) -> bool:
+            calls.append(("selection-accepted", request.item_id))
+            return request.item_id == selected_scope
+
+        def execute(self, request) -> None:
+            calls.append(("selection", request.item_id))
+            plate_manager.selected_plate_path = request.item_id
+            plate_manager.plate_selected.emit(request.item_id)
 
     plate_manager = SimpleNamespace(
         code_execution_workflow=Workflow(),
@@ -1186,6 +1186,7 @@ def test_saved_session_restores_selected_plate_after_all_scope_payload(
             emit=lambda scope_id: calls.append(("selected", scope_id))
         ),
         update_item_list=lambda: calls.append(("refresh", None)),
+        window_navigation_driver=Navigation,
     )
     main_window = SimpleNamespace(
         embedded_widgets=SimpleNamespace(
@@ -1204,12 +1205,11 @@ def test_saved_session_restores_selected_plate_after_all_scope_payload(
     consumed.restore(main_window)
 
     assert plate_manager.selected_plate_path == selected_scope
-    assert calls[3] == (
-        "selection",
-        (first_scope, selected_scope),
-        selected_scope,
-    )
-    assert calls[4] == ("selected", selected_scope)
+    assert calls[3:6] == [
+        ("selection-accepted", selected_scope),
+        ("selection", selected_scope),
+        ("selected", selected_scope),
+    ]
 
 
 def test_restart_reconciles_saved_document_after_history_materialization(
