@@ -52,6 +52,7 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
 )
 from openhcs.core.xdg_paths import get_openhcs_log_dir
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.viewer_controls import (
     ViewerLayerIsolationControlOptions as ViewerLayerIsolationControlOptions,
 )
@@ -864,7 +865,7 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
 
     def python_code(
         self,
-        python_path_root: Path,
+        import_authority: OpenHCSRuntimeImportAuthority,
         *,
         transport_mode: TransportMode,
         arguments: DetachedViewerPythonArguments,
@@ -884,7 +885,7 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
             "    except OSError:",
             "        pass",
             "",
-            f"sys.path.insert(0, {str(python_path_root)!r})",
+            f"sys.path.insert(0, {str(import_authority.import_root)!r})",
             "",
             "try:",
             f"    from {self.module_name} import {self.function_name}",
@@ -919,16 +920,19 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
         log_file: Path,
         cwd: Path | None = None,
         launch_context: ViewerLaunchContext | None = None,
+        import_authority: OpenHCSRuntimeImportAuthority | None = None,
     ) -> DetachedViewerLaunchRequest:
         if cwd is None:
             cwd = Path.cwd()
         if launch_context is None:
             launch_context = ViewerLaunchContext.inherited_graphical_session()
+        if import_authority is None:
+            import_authority = OpenHCSRuntimeImportAuthority.current()
         return DetachedViewerLaunchRequest(
             viewer_type=self.viewer_type,
             port=port,
             python_code=self.python_code(
-                cwd,
+                import_authority,
                 transport_mode=transport_mode,
                 arguments=arguments,
             ),
