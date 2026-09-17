@@ -63,6 +63,24 @@ class StreamImagePayloadMetadataProjector:
     """Project image-axis declarations into viewer batch-item fields."""
 
     @classmethod
+    def partition_indices(
+        cls,
+        metadata_items: Iterable[ImagePayloadMetadata | None],
+        component_order: tuple[str, ...],
+    ) -> tuple[tuple[int, ...], ...]:
+        """Group ordered items by the metadata common to one wire batch."""
+        partitions: list[tuple[dict[str, ViewerWireValue], list[int]]] = []
+        for index, metadata in enumerate(metadata_items):
+            item_fields = cls.item_fields(metadata, component_order)
+            for partition_fields, indices in partitions:
+                if partition_fields == item_fields:
+                    indices.append(index)
+                    break
+            else:
+                partitions.append((item_fields, [index]))
+        return tuple(tuple(indices) for _fields, indices in partitions)
+
+    @classmethod
     def item_fields(
         cls,
         metadata: ImagePayloadMetadata | None,
@@ -86,7 +104,7 @@ class StreamImagePayloadMetadataProjector:
         metadata: ImagePayloadMetadata | None,
         plane_components: tuple[AllComponents, ...],
     ) -> dict[str, ViewerWireValue]:
-        """Project metadata through exact compiler-owned plane components."""
+        """Project retained image planes, with compiler-owned singleton identity."""
 
         return cls._item_fields(
             metadata,
@@ -105,6 +123,9 @@ class StreamImagePayloadMetadataProjector:
         if metadata is None:
             return {}
         item_fields = metadata.source_spatial_domain.to_viewer_wire_mapping()
+        item_fields[ViewerWireField.IMAGE_METADATA.value] = (
+            metadata.to_viewer_image_metadata()
+        )
         if metadata.source_channel_axis is not None:
             item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = (
                 metadata.source_channel_axis
@@ -113,9 +134,7 @@ class StreamImagePayloadMetadataProjector:
             return item_fields
 
         item_fields[ViewerWireField.PLANE_AXIS.value] = metadata.plane_axis.value
-        plane_component_values = (
-            metadata.source_provenance.varying_plane_component_values(plane_components)
-        )
+        plane_component_values = metadata.retained_plane_component_values()
         if (
             not plane_component_values
             and metadata.source_provenance.source_plane_count == 1
@@ -329,8 +348,16 @@ class StreamSourceComponentMetadataItems:
             for identity in identities
         )
 
-    def domain_metadata_items(self) -> StreamComponentDomainMetadataItems:
-        return tuple(dict(metadata) for metadata in self.values if metadata is not None)
+    def domain_metadata_items(
+        self,
+        component_order: tuple[str, ...],
+    ) -> StreamComponentDomainMetadataItems:
+        projector = StreamViewerComponentMetadataProjector(component_order)
+        return tuple(
+            projector.project(metadata)
+            for metadata in self.values
+            if metadata is not None
+        )
 
     def viewer_source_metadata(
         self,
@@ -734,7 +761,9 @@ class StreamComponentMessageExtraAuthority:
     def metadata_items(self) -> StreamComponentDomainMetadataItems:
         return (
             *self.domain_providers.domain_metadata_items(),
-            *self.source_metadata_items.domain_metadata_items(),
+            *self.source_metadata_items.domain_metadata_items(
+                self.layout.component_order
+            ),
         )
 
     @property

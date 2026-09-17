@@ -128,6 +128,31 @@ class ObjectIntensityArrays(ObjectIntensityFeatureValues[np.ndarray]):
             max_intensity_z=max_intensity_z,
         )
 
+    def with_unmeasured_object_semantics(
+        self,
+        measured_counts: np.ndarray,
+    ) -> "ObjectIntensityArrays":
+        """Apply CellProfiler's NaN semantics to objects with no valid pixels."""
+
+        unmeasured = np.asarray(measured_counts) <= 0
+        if not bool(np.any(unmeasured)):
+            return self
+
+        def with_nan(values: np.ndarray) -> np.ndarray:
+            return np.where(unmeasured, np.nan, np.asarray(values, dtype=np.float64))
+
+        return replace(
+            self,
+            mean_intensity=with_nan(self.mean_intensity),
+            std_intensity=with_nan(self.std_intensity),
+            mean_intensity_edge=with_nan(self.mean_intensity_edge),
+            std_intensity_edge=with_nan(self.std_intensity_edge),
+            mass_displacement=with_nan(self.mass_displacement),
+            center_mass_intensity_x=with_nan(self.center_mass_intensity_x),
+            center_mass_intensity_y=with_nan(self.center_mass_intensity_y),
+            center_mass_intensity_z=with_nan(self.center_mass_intensity_z),
+        )
+
     @classmethod
     def from_3d_scan_result(
         cls,
@@ -161,7 +186,7 @@ class ObjectIntensityArrays(ObjectIntensityFeatureValues[np.ndarray]):
             max_intensity_x=np.zeros(object_labels.size, dtype=np.float64),
             max_intensity_y=np.zeros(object_labels.size, dtype=np.float64),
             max_intensity_z=np.zeros(object_labels.size, dtype=np.float64),
-        )
+        ).with_unmeasured_object_semantics(scan_result[0])
 
     @classmethod
     def from_3d_scan_batch_result(
@@ -251,6 +276,7 @@ class ObjectIntensityForegroundIndex:
         if volume <= 0:
             return 0.0
         return float(self.voxel_count) / float(volume)
+
 
 def _object_intensity_quantiles(
     image: np.ndarray,

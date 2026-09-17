@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from openhcs.agent import knowledge_manifest
@@ -6,7 +8,8 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentSummary,
     KnowledgeBaseSearchRequest,
 )
-from openhcs.agent.path_policy import AgentPathPolicy
+from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
+from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.serialization.json import to_jsonable
 from openhcs.agent.services.knowledge_base_service import (
     KnowledgeBaseDocumentSpec,
@@ -627,7 +630,7 @@ def test_knowledge_base_unknown_document_returns_structured_error():
     assert document.errors[0].code == "knowledge_document_unknown"
 
 
-def test_knowledge_base_uses_path_policy_root_for_active_checkout(tmp_path):
+def test_knowledge_base_accepts_explicit_custom_document_root(tmp_path):
     active_root = tmp_path / "active"
     doc_path = active_root / "docs" / "kb.md"
     doc_path.parent.mkdir(parents=True)
@@ -639,13 +642,8 @@ def test_knowledge_base_uses_path_policy_root_for_active_checkout(tmp_path):
             source_path="docs/kb.md",
         ),
     )
-    policy = AgentPathPolicy.with_roots(
-        readable_roots=(active_root,),
-        writable_roots=(tmp_path,),
-    )
-
-    service = KnowledgeBaseService.from_path_policy(
-        policy,
+    service = KnowledgeBaseService(
+        repo_root=active_root,
         document_specs=specs,
     )
     catalog = service.list_documents()
@@ -683,7 +681,7 @@ def test_default_knowledge_root_uses_packaged_projection_without_checkout_docs(
     )
 
 
-def test_knowledge_base_accepts_packaged_projection_within_readable_install_root(
+def test_knowledge_base_accepts_explicit_packaged_document_root(
     tmp_path,
     monkeypatch,
 ):
@@ -697,13 +695,7 @@ def test_knowledge_base_accepts_packaged_projection_within_readable_install_root
         "default_repo_root",
         lambda: packaged_root,
     )
-    policy = AgentPathPolicy.with_roots(
-        readable_roots=(install_root,),
-        writable_roots=(tmp_path,),
-    )
-
-    service = KnowledgeBaseService.from_path_policy(
-        policy,
+    service = KnowledgeBaseService(
         document_specs=(
             _document_spec(
                 document_id="packaged_kb",
@@ -718,9 +710,11 @@ def test_knowledge_base_accepts_packaged_projection_within_readable_install_root
     assert catalog.warnings == ()
 
 
+@pytest.mark.parametrize("include_install_root", [False, True])
 def test_packaged_knowledge_remains_available_with_explicit_data_roots(
     tmp_path,
     monkeypatch,
+    include_install_root,
 ):
     packaged_root = (
         tmp_path / "site-packages" / "openhcs" / "agent" / "resources" / "knowledge"
@@ -728,38 +722,57 @@ def test_packaged_knowledge_remains_available_with_explicit_data_roots(
     document_path = packaged_root / "docs" / "kb.md"
     document_path.parent.mkdir(parents=True)
     document_path.write_text("# Packaged KB\n\nInstalled docs.\n", encoding="utf-8")
+    source_root = tmp_path / "site-packages"
     monkeypatch.setattr(
-        knowledge_base_service_module,
-        "default_repo_root",
-        lambda: packaged_root,
+        knowledge_manifest,
+        "source_checkout_root",
+        lambda: source_root,
     )
     monkeypatch.setattr(
-        knowledge_base_service_module,
+        knowledge_manifest,
         "packaged_knowledge_base_root",
         lambda: packaged_root,
+    )
+    spec = _document_spec("packaged_kb", "Packaged KB", "docs/kb.md")
+    manifest_path = (
+        packaged_root / knowledge_manifest.DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH
+    )
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps({"documents": [to_jsonable(spec.document)]}), encoding="utf-8"
+    )
+    # Read this fixture's canonical manifest without retaining its specs in the
+    # process-global cache after monkeypatch restores the real installation.
+    monkeypatch.setattr(
+        knowledge_base_service_module,
+        "default_document_specs",
+        knowledge_base_service_module.default_document_specs.__wrapped__,
     )
     tenant_root = tmp_path / "tenant"
     tenant_root.mkdir()
     policy = AgentPathPolicy.with_roots(
-        readable_roots=(tenant_root,),
+        readable_roots=(
+            (tenant_root, source_root) if include_install_root else (tenant_root,)
+        ),
         writable_roots=(tenant_root,),
     )
 
-    service = KnowledgeBaseService.from_path_policy(
-        policy,
-        document_specs=(
-            _document_spec(
-                document_id="packaged_kb",
-                title="Packaged KB",
-                source_path="docs/kb.md",
-            ),
-        ),
+    context = OpenHCSAgentContext(path_policy=policy)
+    catalog = context.knowledge_base_service.list_documents()
+    assert catalog.documents[0].document_id == "packaged_kb"
+    assert catalog.warnings == ()
+    assert knowledge_manifest.default_repo_root() == packaged_root
+    assert knowledge_manifest.python_source_root(packaged_root) == source_root
+    assert knowledge_manifest.knowledge_base_source_paths_from_manifest() == (
+        manifest_path,
+        document_path,
     )
+    if not include_install_root:
+        with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
+            policy.assert_readable(document_path)
 
-    assert service.list_documents().documents[0].document_id == "packaged_kb"
 
-
-def test_knowledge_base_path_policy_does_not_fallback_to_installed_checkout(
+def test_explicit_custom_knowledge_root_does_not_select_another_checkout(
     tmp_path, monkeypatch
 ):
     checkout_root = tmp_path / "other-checkout"
@@ -773,10 +786,6 @@ def test_knowledge_base_path_policy_does_not_fallback_to_installed_checkout(
     )
     active_root = tmp_path / "active"
     active_root.mkdir()
-    policy = AgentPathPolicy.with_roots(
-        readable_roots=(active_root,),
-        writable_roots=(tmp_path,),
-    )
     specs = (
         _document_spec(
             document_id="installed_only",
@@ -785,8 +794,8 @@ def test_knowledge_base_path_policy_does_not_fallback_to_installed_checkout(
         ),
     )
 
-    service = KnowledgeBaseService.from_path_policy(
-        policy,
+    service = KnowledgeBaseService(
+        repo_root=active_root,
         document_specs=specs,
     )
     catalog = service.list_documents()
@@ -796,6 +805,43 @@ def test_knowledge_base_path_policy_does_not_fallback_to_installed_checkout(
     assert catalog.warnings[0].hint == (
         "docs/source/guide_for_biologists/domain_expert_onboarding.rst"
     )
+
+
+def test_context_knowledge_resources_do_not_expand_scientific_file_permissions(
+    tmp_path,
+):
+    data_root = tmp_path / "development"
+    data_root.mkdir()
+    private_trial = tmp_path / "private-trial" / "labels.json"
+    private_trial.parent.mkdir()
+    private_trial.write_text("{}", encoding="utf-8")
+    policy = AgentPathPolicy.with_roots(
+        readable_roots=(data_root,), writable_roots=(data_root,)
+    )
+    context = OpenHCSAgentContext(path_policy=policy)
+    catalog = context.knowledge_base_service.list_documents()
+    specs = knowledge_base_service_module.default_document_specs()
+    assert len(catalog.documents) == len(specs)
+    assert catalog.warnings == ()
+    source_paths = knowledge_manifest.knowledge_base_source_paths_from_manifest()
+    assert len(source_paths) == len(catalog.documents) + 1
+    assert all(path.is_file() for path in source_paths)
+    for document_id in ("openhcs_source_model", "openhcs_artifact_contract_system"):
+        result = context.knowledge_base_service.get_document(
+            KnowledgeBaseDocumentRequest.from_fields(document_id=document_id)
+        )
+        assert result.document is not None
+        assert result.content
+        assert result.errors == ()
+        document_path = context.knowledge_base_service.document_source_path(
+            result.document
+        )
+        with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
+            policy.assert_readable(document_path)
+    with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
+        policy.assert_readable(private_trial)
+    assert policy.readable_roots.roots == (data_root,)
+    assert policy.writable_roots.roots == (data_root,)
 
 
 def test_knowledge_base_reports_missing_allowlisted_documents(tmp_path):

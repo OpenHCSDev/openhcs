@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
+from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
 from openhcs.core.axis_filter import step_axis_allows_config
@@ -20,7 +21,26 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_data,
+    image_payload_metadata,
+    image_intensity_scale_for_dtype,
+)
+from openhcs.core.image_file_serialization import (
+    ImageFileFormat,
+    ImageFileSourceMetadata,
+)
+from openhcs.core.source_projection import (
+    OpenHCSPlaneAddress,
+    SourcePlaneProjection,
+    SourceProjectionSet,
+    SourceProjectionMetadataSerializer,
+)
+from openhcs.core.virtual_workspace_metadata import (
+    AtomicMetadataWriter,
+    METADATA_CONFIG,
+)
 from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_slice_projection import (
     RuntimeProjectedPayloadItem,
@@ -490,27 +510,16 @@ class StreamOutputBatch:
         component_order: tuple[str, ...],
     ) -> tuple[StreamOutputBatch, ...]:
         """Partition this producer projection into transport-homogeneous batches."""
-        partitions: list[tuple[dict, list[StreamOutputItem]]] = []
-        for item in self.items:
-            item_fields = StreamImagePayloadMetadataProjector.item_fields(
-                item.metadata,
-                component_order,
-            )
-            for partition_fields, partition_items in partitions:
-                if partition_fields == item_fields:
-                    partition_items.append(item)
-                    break
-            else:
-                partitions.append((item_fields, [item]))
-
         return tuple(
             type(self)(
-                items=tuple(partition_items),
+                items=tuple(self.items[index] for index in indices),
                 producer=ViewerStreamProducer.from_identities(
-                    tuple(item.producer_identity for item in partition_items)
+                    tuple(self.items[index].producer_identity for index in indices)
                 ),
             )
-            for _partition_fields, partition_items in partitions
+            for indices in StreamImagePayloadMetadataProjector.partition_indices(
+                (item.metadata for item in self.items), component_order
+            )
         )
 
     @staticmethod
@@ -731,7 +740,12 @@ class OpenHCSMetadataWriter:
                 )
             )
 
-        def write(self, context: ProcessingContext) -> None:
+        def write(
+            self,
+            context: ProcessingContext,
+            *,
+            produced_plan: CompiledStepPlan | None = None,
+        ) -> None:
             """Project the target's current storage state into plate metadata."""
 
             from openhcs.microscopes.openhcs import OpenHCSMetadataGenerator
@@ -746,6 +760,112 @@ class OpenHCSMetadataWriter:
                 plate_root=self.plate_root,
                 sub_dir=self.sub_dir,
                 results_dir=self.results_dir,
+            )
+            structured_metadata = self.produced_projection_metadata(
+                context, produced_plan
+            )
+            AtomicMetadataWriter().merge_source_projection_metadata(
+                METADATA_CONFIG.metadata_path(self.plate_root),
+                self.sub_dir,
+                structured_metadata,
+            )
+
+        def produced_projection_metadata(
+            self,
+            context: ProcessingContext,
+            plan: CompiledStepPlan | None,
+        ) -> Mapping[str, object] | None:
+            """Project the current saved plan while its typed memory outputs remain."""
+            if plan is None:
+                return None  # Plate reconciliation must not reload cleaned step memory.
+            if context.filemanager is None:
+                raise ValueError("OpenHCS metadata requires a file manager.")
+            target = self.primary(plan) if self.is_main else self.materialized(plan)
+            if target != self:
+                raise ValueError(
+                    "Produced metadata plan does not own this output target."
+                )
+            records = tuple(
+                record
+                for record in step_output_manifest(context).produced_records_for(plan)
+                if record.is_image_payload
+            )
+            if not records:
+                return None
+            payloads = context.filemanager.load_batch(
+                [
+                    ProducedMemoryPathsAuthority.memory_path(record, plan)
+                    for record in records
+                ],
+                Backend.MEMORY.value,
+            )
+            projection_paths = []
+            parser_context = FunctionOutputParserContext.from_processing_context(
+                context
+            )
+            for record, payload in zip(records, payloads, strict=True):
+                destination = record.path_under(self.output_dir)
+                virtual_path = str(Path(destination).relative_to(self.plate_root))
+                parsed = parser_context.parser.parse_filename(Path(destination).name)
+                if parsed is None:
+                    raise ValueError(
+                        f"Produced image has no declared filename address: {destination}."
+                    )
+                physical_path = context.filemanager.physical_source_path(
+                    destination,
+                    self.backend,
+                    base_path=self.output_dir,
+                )
+                if physical_path is None:
+                    native_dtype = context.filemanager.source_image_dtype(
+                        destination,
+                        self.backend,
+                        base_path=self.output_dir,
+                    )
+                    metadata = ImageFileSourceMetadata(
+                        source_dtype=native_dtype,
+                        intensity_scale=image_intensity_scale_for_dtype(native_dtype),
+                    ).project_image_metadata(
+                        image_payload_metadata(payload),
+                        values_preserved=context.filemanager.image_serialization_preserves_values(
+                            self.backend,
+                            image_payload_data(payload).dtype,
+                            native_dtype,
+                        ),
+                    )
+                else:
+                    metadata = ImageFileFormat.require_path(
+                        physical_path
+                    ).persisted_metadata(Path(physical_path), payload)
+                source_metadata = dict(
+                    record.component_metadata(metadata.source_component_metadata)
+                )
+                metadata.source_voxel_spacing.merge_into(
+                    source_metadata, path=destination
+                )
+                projection_paths.append(
+                    (
+                        SourcePlaneProjection(
+                            address=OpenHCSPlaneAddress(parsed.components.items()),
+                            ref=SourcePixelRef(self.backend, virtual_path),
+                            source_metadata=source_metadata,
+                            image_metadata=metadata,
+                        ),
+                        virtual_path,
+                    )
+                )
+            projection_set = SourceProjectionSet(
+                tuple(projection for projection, _path in projection_paths)
+            )
+            return SourceProjectionMetadataSerializer(
+                parser_context.parser
+            ).metadata_dict(
+                projection_set,
+                microscope_handler_name=parser_context.microscope_type,
+                source_filename_parser_name=parser_context.parser_name,
+                grid_dimensions=[],
+                pixel_size=1.0,
+                projection_paths=tuple(projection_paths),
             )
 
     @classmethod
@@ -794,7 +914,7 @@ class OpenHCSMetadataWriter:
         target = OpenHCSMetadataWriter.OutputTarget.primary(plan)
         if target is None:
             return
-        target.write(context)
+        target.write(context, produced_plan=plan)
 
     @staticmethod
     def write_materialized_metadata(
@@ -804,7 +924,7 @@ class OpenHCSMetadataWriter:
         target = OpenHCSMetadataWriter.OutputTarget.materialized(plan)
         if target is None:
             return
-        target.write(context)
+        target.write(context, produced_plan=plan)
 
 
 class RuntimeArtifactMaterializationAuthority:

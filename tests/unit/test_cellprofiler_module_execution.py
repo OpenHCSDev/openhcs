@@ -6937,6 +6937,74 @@ def test_measure_object_size_shape_outputs_basic_measurement_rows() -> None:
     assert rows[0]["Center_Y"] == 2.0
 
 
+def test_measure_object_size_shape_overlapping_rows_match_independent_objects() -> None:
+    y_coordinates, x_coordinates = np.mgrid[0:10, 0:20]
+    shared_region = (
+        (y_coordinates > 1)
+        & (y_coordinates < 9)
+        & (x_coordinates > 1)
+        & (x_coordinates < 19)
+    )
+    masks = (
+        shared_region & (y_coordinates < x_coordinates),
+        shared_region & (y_coordinates < 9 - x_coordinates),
+    )
+    sparse_rows = []
+    for object_label, mask in enumerate(masks, start=1):
+        object_y, object_x = np.nonzero(mask)
+        sparse_rows.extend(
+            zip(
+                object_y,
+                object_x,
+                np.full(object_y.shape, object_label),
+                strict=True,
+            )
+        )
+    overlapping_labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(
+            labels=SparseIJVLabelRows(np.asarray(sparse_rows, dtype=np.int32))
+        ),
+        representation=ObjectLabelRepresentation.SPARSE_IJV,
+        domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
+    )
+    image = np.zeros((10, 20), dtype=np.float32)
+
+    _image, overlapping_rows = measure_object_size_shape(
+        image,
+        overlapping_labels,
+        calculate_advanced=True,
+        calculate_zernikes=True,
+        dtype_config=DtypeConfig(),
+    )
+
+    assert len(overlapping_rows) == 2
+    for overlapping_row, mask in zip(overlapping_rows, masks, strict=True):
+        independent_labels = ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(labels=mask.astype(np.int32)),
+            domain=ObjectLabelDomain(declared_object_ids=(1,)),
+        )
+        _image, independent_rows = measure_object_size_shape(
+            image,
+            independent_labels,
+            calculate_advanced=True,
+            calculate_zernikes=True,
+            dtype_config=DtypeConfig(),
+        )
+        independent_row = independent_rows[0]
+        compared_features = tuple(
+            feature_name
+            for feature_name in overlapping_row
+            if feature_name not in {"slice_index", "object_label"}
+        )
+        np.testing.assert_allclose(
+            tuple(overlapping_row[name] for name in compared_features),
+            tuple(independent_row[name] for name in compared_features),
+            rtol=1e-12,
+            atol=1e-12,
+            equal_nan=True,
+        )
+
+
 def test_measure_object_size_shape_coordinates_remain_in_local_label_plane() -> None:
     image = np.ones((7, 7), dtype=np.float32)
     labels = np.zeros(image.shape, dtype=np.int32)
@@ -17803,6 +17871,9 @@ def test_measure_object_size_shape_payload_scoped_volume_rows_are_3d() -> None:
         assert rows[0]["MinorAxisLength"] == pytest.approx(
             4.0 * np.sqrt(inertia["inertia_tensor_eigvals-2"][0])
         )
+        assert rows[0]["Center_X"] == 2.0
+        assert rows[0]["Center_Y"] == 2.0
+        assert rows[0]["Center_Z"] == 0.5
         assert "BoundingBoxMinimum_Z" in rows[0]
         assert "Area" not in rows[0]
 

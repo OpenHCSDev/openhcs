@@ -674,11 +674,15 @@ class SourceStemAuthority(
         del selection
         return cls()
 
-    def required_source_stem(self, metadata: ImagePayloadMetadata) -> str:
+    def required_source_stem(
+        self,
+        metadata: ImagePayloadMetadata,
+        filename_identity: SourceImageIdentity | None = None,
+    ) -> str:
         source_stem = SourceStemResolutionPolicy.for_context(
             metadata,
             error_subject="source-stem metadata resolution",
-        ).source_stem(self, metadata)
+        ).source_stem(self, metadata, filename_identity)
         if source_stem is None:
             raise ValueError(
                 "ROI source-stem path policy requires metadata.source_path or "
@@ -719,6 +723,7 @@ class SourceStemAuthority(
     def source_component_metadata_stem(
         self,
         metadata: SourceComponentMetadata,
+        filename_identity: SourceImageIdentity | None = None,
     ) -> str:
         """Return the source stem for component-addressed metadata."""
 
@@ -734,6 +739,7 @@ class SourceStemResolutionPolicy(
         self,
         authority: SourceStemAuthority,
         metadata: ImagePayloadMetadata,
+        filename_identity: SourceImageIdentity | None,
     ) -> str | None:
         """Return this source-stem case's projection."""
 
@@ -750,8 +756,9 @@ class MissingSourceStemResolutionPolicy(
         self,
         authority: SourceStemAuthority,
         metadata: ImagePayloadMetadata,
+        filename_identity: SourceImageIdentity | None,
     ) -> str | None:
-        del authority, metadata
+        del authority, metadata, filename_identity
         return None
 
 
@@ -770,6 +777,7 @@ class ComponentMetadataSourceStemResolutionPolicy(MissingSourceStemResolutionPol
         self,
         authority: SourceStemAuthority,
         metadata: ImagePayloadMetadata,
+        filename_identity: SourceImageIdentity | None,
     ) -> str:
         component_metadata = (
             metadata.source_provenance.scalar_source_identity.component_metadata
@@ -779,7 +787,10 @@ class ComponentMetadataSourceStemResolutionPolicy(MissingSourceStemResolutionPol
                 "Component metadata source-stem policy requires scalar "
                 "source_component_metadata."
             )
-        return authority.source_component_metadata_stem(component_metadata)
+        return authority.source_component_metadata_stem(
+            component_metadata,
+            filename_identity,
+        )
 
 
 class SourcePathSourceStemResolutionPolicy(ComponentMetadataSourceStemResolutionPolicy):
@@ -794,8 +805,9 @@ class SourcePathSourceStemResolutionPolicy(ComponentMetadataSourceStemResolution
         self,
         authority: SourceStemAuthority,
         metadata: ImagePayloadMetadata,
+        filename_identity: SourceImageIdentity | None,
     ) -> str:
-        del authority
+        del authority, filename_identity
         return _cached_path_stem(metadata.source_provenance.scalar_source_identity.path)
 
 
@@ -811,8 +823,9 @@ class PathOnlySourceStemAuthority(
     def source_component_metadata_stem(
         self,
         metadata: SourceComponentMetadata,
+        filename_identity: SourceImageIdentity | None = None,
     ) -> str:
-        del metadata
+        del metadata, filename_identity
         raise ValueError(
             "Component-addressed ROI paths require a filename parser in the "
             "materialization context."
@@ -921,7 +934,20 @@ class ParserBackedSourceStemAuthority(PathOnlySourceStemAuthority):
     def source_component_metadata_stem(
         self,
         metadata: SourceComponentMetadata,
+        filename_identity: SourceImageIdentity | None = None,
     ) -> str:
+        if filename_identity is not None:
+            metadata = (
+                SourceImageIdentity(
+                    component_metadata=metadata,
+                )
+                .with_missing_from(filename_identity)
+                .component_metadata
+            )
+            if metadata is None:
+                raise RuntimeError(
+                    "Filename identity resolution lost source component metadata."
+                )
         return SourceComponentMetadataStemAuthority(self.parser).stem(
             metadata,
         )
@@ -1074,10 +1100,14 @@ class ROIPathAuthority:
         paths: PathHelper,
         options: ROIOptions,
         metadata: ImagePayloadMetadata,
+        filename_identity: SourceImageIdentity | None,
         reference_source_stem: str | None,
         reference_metadata: ImagePayloadMetadata | None,
     ) -> str:
-        source_stem = self.source_stem_authority.required_source_stem(metadata)
+        source_stem = self.source_stem_authority.required_source_stem(
+            metadata,
+            filename_identity,
+        )
         suffix = self.source_stem_authority.source_replacement_suffix(
             paths.name,
             metadata,
@@ -1107,6 +1137,7 @@ class ROIMaterializationTargetRequest(ROIRequestBase):
 
     materialization_input: MaterializationInput
     artifact_source_identity: SourceImageIdentity | None = None
+    artifact_filename_identity: SourceImageIdentity | None = None
     output_plan: ArtifactOutputPlan | None = None
     pipeline_position: int | None = None
 
@@ -1127,6 +1158,7 @@ class ROIMaterializationTargetRequest(ROIRequestBase):
                 data, options
             ),
             artifact_source_identity=context.artifact_source_identity,
+            artifact_filename_identity=context.artifact_filename_identity,
             output_plan=context.output_plan,
             pipeline_position=context.pipeline_position,
         )
@@ -1149,10 +1181,14 @@ class ROIMaterializationTargetRequest(ROIRequestBase):
                 paths=self.paths,
                 options=self.options,
                 metadata=metadata,
+                filename_identity=self.artifact_filename_identity,
                 reference_source_stem=reference_source_stem,
                 reference_metadata=reference_metadata,
             )
-        source_stem = self.source_stem_authority.required_source_stem(metadata)
+        source_stem = self.source_stem_authority.required_source_stem(
+            metadata,
+            self.artifact_filename_identity,
+        )
         return str(
             self.paths.parent
             / (
@@ -1686,6 +1722,7 @@ class MaterializationContext:
     extra_inputs: dict
     context: ProcessingContext | None = None
     artifact_source_identity: SourceImageIdentity | None = None
+    artifact_filename_identity: SourceImageIdentity | None = None
     variable_components: Sequence[VariableComponents] = field(default_factory=tuple)
     write_mode: WriteMode = WriteMode.OVERWRITE
     source_paths: tuple[str, ...] = ()
@@ -2711,7 +2748,10 @@ class ProjectedROIMaterializationTargetPolicy(CombinedROIMaterializationTargetPo
         request.source_identity_set.validate_projected_targeting()
         path_context = ROIMaterializationPathContext(
             source_stems=tuple(
-                request.source_stem_authority.required_source_stem(item.metadata)
+                request.source_stem_authority.required_source_stem(
+                    item.metadata,
+                    request.artifact_filename_identity,
+                )
                 for item in items
             ),
             metadata_items=tuple(item.metadata for item in items),
@@ -4019,6 +4059,7 @@ def materialization_outputs(
     extra_inputs: dict | None = None,
     *,
     artifact_source_identity: SourceImageIdentity | None = None,
+    artifact_filename_identity: SourceImageIdentity | None = None,
     variable_components: Sequence[VariableComponents] = (),
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
@@ -4039,6 +4080,7 @@ def materialization_outputs(
         extra_inputs={} if extra_inputs is None else extra_inputs,
         context=context,
         artifact_source_identity=artifact_source_identity,
+        artifact_filename_identity=artifact_filename_identity,
         variable_components=tuple(variable_components),
         write_mode=spec.write_mode,
         source_paths=tuple(str(p) for p in source_paths),
@@ -4068,6 +4110,7 @@ def materialize(
     extra_inputs: dict | None = None,
     *,
     artifact_source_identity: SourceImageIdentity | None = None,
+    artifact_filename_identity: SourceImageIdentity | None = None,
     variable_components: Sequence[VariableComponents] = (),
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
@@ -4091,6 +4134,7 @@ def materialize(
         extra_inputs=effective_extra_inputs,
         context=context,
         artifact_source_identity=artifact_source_identity,
+        artifact_filename_identity=artifact_filename_identity,
         variable_components=tuple(variable_components),
         write_mode=spec.write_mode,
         source_paths=tuple(str(p) for p in source_paths),

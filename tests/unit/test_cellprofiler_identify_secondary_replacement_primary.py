@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -186,6 +187,12 @@ def test_replacement_primary_active_topology_declares_exact_dependencies() -> No
     )
     assert selected is identify_secondary_objects_with_replacement_primary
     assert (
+        IdentifySecondaryObjectsModule.threshold_measurement_object_name(
+            SimpleNamespace(callable_contract=contract)
+        )
+        == "Cells"
+    )
+    assert (
         "discard_associated_primary_objects"
         not in inspect.signature(selected).parameters
     )
@@ -302,6 +309,34 @@ def test_replacement_primary_runtime_emits_typed_labels_and_relationships() -> N
         variantless_replacement.parent_image_source_voxel_spacing
         == primary_without_variants.parent_image_source_voxel_spacing
     )
+
+
+def test_secondary_edge_discard_preserves_touching_interior_object_identities() -> None:
+    image = np.zeros((9, 9), dtype=np.float32)
+    primary_array = np.zeros(image.shape, dtype=np.int32)
+    primary_array[4, 3] = 1
+    primary_array[4, 5] = 2
+    primary_array[0, 0] = 3
+    primary_labels = SourceImageObjectLabelBuildRequest(
+        image=image,
+        labels=primary_array,
+        declared_object_ids=(1, 2, 3),
+    ).payload()
+
+    result = identify_secondary_objects.__wrapped__(
+        image,
+        primary_labels,
+        method=SecondaryMethod.DISTANCE_N,
+        distance_to_dilate=2,
+        fill_holes=False,
+        discard_edge_objects=True,
+    )
+
+    secondary_array = object_label_dense_array(result[-1], dtype=np.int32)
+    assert set(np.unique(secondary_array)) == {0, 1, 2}
+    assert secondary_array[4, 3] == 1
+    assert secondary_array[4, 5] == 2
+    assert secondary_array[0, 0] == 0
 
 
 def test_public_replacement_callable_reconstructs_topology_without_hidden_kwarg() -> (

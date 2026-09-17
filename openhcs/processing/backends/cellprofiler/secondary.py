@@ -1080,7 +1080,7 @@ def _discard_edge_objects(
             labels_out[labels_out == edge_label] = 0
     if labels_out.max() == 0:
         return labels_out
-    relabeled, _count = morphology.connected_components(labels_out > 0, connectivity=2)
+    relabeled, _count = morphology.relabel_sequential(labels_out)
     return relabeled.astype(np.int32, copy=False)
 
 
@@ -1591,6 +1591,30 @@ class IdentifySecondaryObjectsModule(
         ),
     )
     ignored_settings = (discard_associated_primary_objects_setting,)
+
+    @classmethod
+    def threshold_measurement_object_name(cls, request) -> str:
+        """Qualify threshold rows by the secondary output declaration."""
+
+        secondary_outputs = tuple(
+            spec
+            for spec in request.callable_contract.artifact_outputs.of_artifact_type(
+                ObjectLabelsArtifactType
+            )
+            if not any(
+                isinstance(
+                    relation,
+                    IdentifySecondaryObjectsReplacementPrimarySourceRelation,
+                )
+                for relation in spec.relations
+            )
+        )
+        if len(secondary_outputs) != 1:
+            raise ValueError(
+                f"{cls.__name__} requires exactly one secondary object output, "
+                f"got {[spec.name for spec in secondary_outputs]!r}."
+            )
+        return secondary_outputs[0].name
 
     @classmethod
     def replacement_primary_output_active(cls, module: "ModuleBlock") -> bool:

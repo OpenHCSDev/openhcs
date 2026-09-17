@@ -1,5 +1,6 @@
 import json
 from functools import partial
+from multiprocessing.shared_memory import SharedMemory
 
 import numpy as np
 import pytest
@@ -29,7 +30,7 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamSourceIdentity,
 )
 from zmqruntime.config import TransportMode
-from zmqruntime.viewer_protocol import ViewerTransportEndpoint
+from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 
 import openhcs  # noqa: F401
 from openhcs.constants.constants import AllComponents, VariableComponents
@@ -42,15 +43,24 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
+from openhcs.core.runtime_object_label_building import (
+    SourceImageObjectLabelBuildRequest,
+)
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
+    ObjectLabelRepresentation,
+    ObjectLabelSet,
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+)
+from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import (
@@ -60,6 +70,7 @@ from openhcs.core.source_image_provenance import (
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
+    SourceVoxelSpacing,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
@@ -103,6 +114,142 @@ def _memory_materialize(spec, data, path, filemanager):
         backends=["memory"],
         backend_kwargs={},
     )
+
+
+def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_pixels():
+    labels = np.zeros((2, 8, 9), dtype=np.int32)
+    labels[0, 2:4, 3:5] = 70001
+    labels[1, 6, 7] = 2
+    spacing = SourceVoxelSpacing((1.3556, 1.3556))
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        source_voxel_spacing=spacing,
+        source_spatial_domain=SourceSpatialDomain(
+            origin_yx=(0, 0), source_shape_yx=(8, 9)
+        ),
+        source_component_metadata={
+            "well": "A01",
+            "site": 1,
+            "z_index": 1,
+            "timepoint": 1,
+        },
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=(
+                "/input/A01_s001_w1_z001_t001.tif",
+                "/input/A01_s001_w2_z001_t001.tif",
+            ),
+            component_metadata=tuple(
+                {
+                    "well": "A01",
+                    "site": 1,
+                    "channel": channel,
+                    "z_index": 1,
+                    "timepoint": 1,
+                }
+                for channel in (1, 2)
+            ),
+        ),
+    )
+    payload = SourceImageObjectLabelBuildRequest(
+        image=metadata.payload_with(np.zeros_like(labels)),
+        labels=labels,
+        plane_projection=RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
+        ),
+    ).payload()
+    filemanager = FileManager({"memory": MemoryStorageBackend()})
+    outputs = materialization_outputs(
+        MaterializationSpec(
+            ImageFileOptions(
+                filename_suffix=".labels.tif",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            )
+        ),
+        payload,
+        "/analysis/A01_labels",
+        filemanager,
+    )
+    assert len(outputs) == 1
+    output = outputs[0]
+    assert output.variable_components == ()
+    assert output.metadata.source_voxel_spacing == spacing
+    np.testing.assert_array_equal(output.content, labels)
+    batches = _viewer_stream_backend_kwargs().filemanager_batches(outputs)
+    assert len(batches) == 1
+    projected_outputs, kwargs = batches[0]
+    assert projected_outputs == outputs
+    request = kwargs["stream_request"]
+    assert request.source.item_fields["plane_component_values"] == {
+        "channel": ["1", "2"]
+    }
+    backend = NapariStreamingBackend()
+    try:
+        batch = StreamingBatchMessageBuilder.build(
+            backend,
+            StreamingBatchMessageRequest(
+                data_list=[output.content],
+                file_paths=[output.path],
+                stream_request=request,
+                component_names_request=backend.component_names_request(request),
+                display_payload_extra=backend.display_payload_extra(request),
+            ),
+        )
+        item = batch.batch_images[0]
+        memory = SharedMemory(name=item["shm_name"])
+        try:
+            transmitted = np.ndarray(
+                item["shape"], dtype=item["dtype"], buffer=memory.buf
+            ).copy()
+        finally:
+            memory.close()
+        assert transmitted.dtype == labels.dtype
+        np.testing.assert_array_equal(transmitted, labels)
+        assert output.metadata.source_voxel_spacing == spacing
+        assert payload.metadata.source_voxel_spacing == spacing
+    finally:
+        backend.cleanup()
+
+
+def test_image_file_materialization_densifies_sparse_named_object_labels() -> None:
+    labels = SparseIJVLabelRows(
+        np.array(
+            (
+                (1, 2, 7),
+                (3, 4, 9),
+            ),
+            dtype=np.int32,
+        )
+    )
+    payload = ObjectLabelSet(
+        name="Worms",
+        variant_data=ObjectLabelVariantData(labels=labels),
+        representation=ObjectLabelRepresentation.SPARSE_IJV,
+        source_spatial_domain=SourceSpatialDomain(
+            origin_yx=(0, 0),
+            source_shape_yx=(6, 8),
+        ),
+    )
+    filemanager = FileManager({"memory": MemoryStorageBackend()})
+
+    (output,) = materialization_outputs(
+        MaterializationSpec(
+            ImageFileOptions(
+                filename_suffix=".labels.tif",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            )
+        ),
+        payload,
+        "/analysis/A01_worms",
+        filemanager,
+        artifact_source_identity=SourceImageIdentity(
+            path="/input/A01_s001_w1_z001_t001.tif",
+        ),
+    )
+
+    assert isinstance(output.content, np.ndarray)
+    assert output.content.shape == (6, 8)
+    assert output.content[1, 2] == 7
+    assert output.content[3, 4] == 9
 
 
 def test_declared_path_selection_preserves_outputs_without_rendering_rois(monkeypatch):
@@ -1130,6 +1277,13 @@ def test_roi_viewer_stream_preserves_source_spatial_domain() -> None:
     assert stream_source.item_fields == {
         "spatial_origin_yx": [10, 20],
         "source_spatial_shape_yx": [100, 200],
+        ViewerWireField.IMAGE_METADATA.value: ImagePayloadMetadata(
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(10, 20),
+                source_shape_yx=(100, 200),
+                value_name="ROI materialization source image",
+            )
+        ).to_viewer_image_metadata(),
     }
 
 
@@ -1364,6 +1518,14 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component() -> Non
         "plane_component_values": {"site": ["1"]},
         "spatial_origin_yx": [0, 0],
         "source_spatial_shape_yx": [8, 8],
+        ViewerWireField.IMAGE_METADATA.value: ImagePayloadMetadata(
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(0, 0),
+                source_shape_yx=(8, 8),
+                value_name="ROI materialization source image",
+            ),
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        ).to_viewer_image_metadata(),
     }
 
     napari_backend = NapariStreamingBackend()
@@ -1556,6 +1718,82 @@ def test_roi_materialization_replaces_parser_equivalent_reference_source_prefix(
             "channel": 1,
             "z_index": 1,
             "timepoint": 1,
+        },
+    ]
+
+
+@pytest.mark.unit
+def test_roi_materialization_uses_filename_identity_without_restoring_collapsed_site() -> (
+    None
+):
+    filemanager = _RecordingFileManager()
+    payload = _addressable_roi_label_payload(
+        None,
+        None,
+        {
+            "well": "A01",
+            "channel": 1,
+            "z_index": 1,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+        {
+            "well": "A01",
+            "channel": 2,
+            "z_index": 1,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+    )
+
+    outputs = materialization_outputs(
+        MaterializationSpec(ROIOptions(min_area=0)),
+        data=payload,
+        path="/tmp/A01_neurons_step5.roi.zip",
+        filemanager=filemanager,
+        context=_SourceSchemaProcessingContext(),
+        artifact_source_identity=SourceImageIdentity(
+            component_metadata={
+                "well": "A01",
+                "z_index": 1,
+                "timepoint": 1,
+                "extension": ".tif",
+            }
+        ),
+        artifact_filename_identity=SourceImageIdentity(
+            path="/input/A01_s001_w1_z001_t001.tif",
+            component_metadata={
+                "well": "A01",
+                "site": 1,
+                "channel": 1,
+                "z_index": 1,
+                "timepoint": 1,
+                "extension": ".tif",
+            },
+        ),
+    )
+
+    roi_outputs = [output for output in outputs if output.path.endswith(".roi.zip")]
+    assert [output.path for output in roi_outputs] == [
+        "/tmp/A01_neurons_step5_A01_s001_w1_z001_t001_rois.roi.zip",
+        "/tmp/A01_neurons_step5_A01_s001_w2_z001_t001_rois.roi.zip",
+    ]
+    assert [
+        dict(output.metadata.source_component_metadata or {}) for output in roi_outputs
+    ] == [
+        {
+            "well": "A01",
+            "channel": 1,
+            "z_index": 1,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+        {
+            "well": "A01",
+            "channel": 2,
+            "z_index": 1,
+            "timepoint": 1,
+            "extension": ".tif",
         },
     ]
 

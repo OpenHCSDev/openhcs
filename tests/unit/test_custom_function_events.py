@@ -5,6 +5,7 @@ from __future__ import annotations
 import gc
 import weakref
 
+import pytest
 from PyQt6 import sip
 
 from openhcs.processing.custom_functions.events import (
@@ -98,6 +99,9 @@ def test_qt_adapter_is_not_retained_by_the_domain_event(qapp) -> None:
     adapter_reference = weakref.ref(adapter)
 
     del adapter
+    # No cyclic collector is needed to release a QObject projection: its
+    # destroyed cleanup owns only a weak subscription token, not bound self.
+    assert adapter_reference() is None
     gc.collect()
 
     assert adapter_reference() is None
@@ -115,3 +119,29 @@ def test_domain_event_releases_deleted_qt_adapter_with_live_python_wrapper(qapp)
     custom_function_changed.emit()
 
     assert observations == ["changed"]
+
+
+@pytest.mark.parametrize("first_index", (0, 25, 50, 75))
+def test_qt_adapter_mixed_native_lifetime_orders(qapp, first_index) -> None:
+    for index in range(first_index, first_index + 25):
+        adapter = CustomFunctionSignals()
+        live_adapter = CustomFunctionSignals()
+        observations = []
+        live_adapter.functions_changed.connect(lambda: observations.append("changed"))
+        adapter_reference = weakref.ref(adapter)
+        if index % 2:
+            sip.delete(adapter)
+            assert sip.isdeleted(adapter)
+            assert adapter_reference() is adapter
+            custom_function_changed.emit()
+            assert observations == ["changed"]
+            del adapter
+        else:
+            del adapter
+            assert adapter_reference() is None
+            gc.collect()
+            custom_function_changed.emit()
+            assert observations == ["changed"]
+        sip.delete(live_adapter)
+        del live_adapter
+        gc.collect()
