@@ -1,7 +1,8 @@
 """
 CPU implementation of image assembly functions with fixed blending.
 """
-from __future__ import annotations 
+
+from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, List, Tuple, Union
@@ -9,16 +10,19 @@ from typing import TYPE_CHECKING, List, Tuple, Union
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
-from openhcs.processing.backends.assemblers.blending import TileBlendMethod
+from openhcs.processing.backends.assemblers.blending import (
+    TileBlendMethod,
+    SubpixelTilePlacement,
+)
 
 # For type checking only
 if TYPE_CHECKING:
     import numpy as np
-    from scipy.ndimage import shift as subpixel_shift
+    from scipy.ndimage import affine_transform
 
 # Import NumPy
 import numpy as np  # type: ignore
-from scipy.ndimage import shift as subpixel_shift  # type: ignore
+from scipy.ndimage import affine_transform  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +53,11 @@ def _get_all_overlapping_pairs(positions: "np.ndarray", tile_shape: tuple) -> li
     x_overlap = np.maximum(0, np.minimum(right_i, right_j) - np.maximum(left_i, left_j))
     y_overlap = np.maximum(0, np.minimum(bottom_i, bottom_j) - np.maximum(top_i, top_j))
 
-    valid_overlap = (x_overlap > 0) & (y_overlap > 0) & (np.arange(N)[:, None] != np.arange(N)[None, :])
+    valid_overlap = (
+        (x_overlap > 0)
+        & (y_overlap > 0)
+        & (np.arange(N)[:, None] != np.arange(N)[None, :])
+    )
 
     edge_pairs = []
     overlapping_pairs = np.where(valid_overlap)
@@ -65,23 +73,21 @@ def _get_all_overlapping_pairs(positions: "np.ndarray", tile_shape: tuple) -> li
 
         if x_overlap_val > 0:
             if xj_val < xi_val:
-                edge_pairs.append((i, j, 'left', x_overlap_val))
+                edge_pairs.append((i, j, "left", x_overlap_val))
             elif xj_val > xi_val:
-                edge_pairs.append((i, j, 'right', x_overlap_val))
+                edge_pairs.append((i, j, "right", x_overlap_val))
 
         if y_overlap_val > 0:
             if yj_val < yi_val:
-                edge_pairs.append((i, j, 'top', y_overlap_val))
+                edge_pairs.append((i, j, "top", y_overlap_val))
             elif yj_val > yi_val:
-                edge_pairs.append((i, j, 'bottom', y_overlap_val))
+                edge_pairs.append((i, j, "bottom", y_overlap_val))
 
     return edge_pairs
 
 
 def _create_fixed_blend_mask(
-    tile_shape: tuple,
-    edge_overlaps: dict,
-    margin_ratio: float = 0.1
+    tile_shape: tuple, edge_overlaps: dict, margin_ratio: float = 0.1
 ) -> "np.ndarray":
     """
     Create blend mask with FIXED margin ratio using WORKING logic from old version.
@@ -99,16 +105,16 @@ def _create_fixed_blend_mask(
 
     # Apply gradients ONLY where there are overlaps (same as old working version)
     # CRITICAL: endpoint=False (this is what made the old version work!)
-    if 'top' in edge_overlaps and margin_pixels_y > 0:
+    if "top" in edge_overlaps and margin_pixels_y > 0:
         y_weight[:margin_pixels_y] = np.linspace(0, 1, margin_pixels_y, endpoint=False)
 
-    if 'bottom' in edge_overlaps and margin_pixels_y > 0:
+    if "bottom" in edge_overlaps and margin_pixels_y > 0:
         y_weight[-margin_pixels_y:] = np.linspace(1, 0, margin_pixels_y, endpoint=False)
 
-    if 'left' in edge_overlaps and margin_pixels_x > 0:
+    if "left" in edge_overlaps and margin_pixels_x > 0:
         x_weight[:margin_pixels_x] = np.linspace(0, 1, margin_pixels_x, endpoint=False)
 
-    if 'right' in edge_overlaps and margin_pixels_x > 0:
+    if "right" in edge_overlaps and margin_pixels_x > 0:
         x_weight[-margin_pixels_x:] = np.linspace(1, 0, margin_pixels_x, endpoint=False)
 
     # Use outer product (same as old working version)
@@ -117,9 +123,7 @@ def _create_fixed_blend_mask(
 
 
 def _create_dynamic_blend_mask(
-    tile_shape: tuple,
-    edge_overlaps: dict,
-    overlap_fraction: float = 1.0
+    tile_shape: tuple, edge_overlaps: dict, overlap_fraction: float = 1.0
 ) -> "np.ndarray":
     """
     Create blend mask based on actual overlap amounts using WORKING logic from old version.
@@ -133,25 +137,33 @@ def _create_dynamic_blend_mask(
 
     # Process each edge based on actual overlap (same as old working version)
     # CRITICAL: endpoint=False (this is what made the old version work!)
-    if 'top' in edge_overlaps:
-        overlap_pixels = int(edge_overlaps['top'] * overlap_fraction)
+    if "top" in edge_overlaps:
+        overlap_pixels = int(edge_overlaps["top"] * overlap_fraction)
         if overlap_pixels > 0:
-            y_weight[:overlap_pixels] = np.linspace(0, 1, overlap_pixels, endpoint=False)
+            y_weight[:overlap_pixels] = np.linspace(
+                0, 1, overlap_pixels, endpoint=False
+            )
 
-    if 'bottom' in edge_overlaps:
-        overlap_pixels = int(edge_overlaps['bottom'] * overlap_fraction)
+    if "bottom" in edge_overlaps:
+        overlap_pixels = int(edge_overlaps["bottom"] * overlap_fraction)
         if overlap_pixels > 0:
-            y_weight[-overlap_pixels:] = np.linspace(1, 0, overlap_pixels, endpoint=False)
+            y_weight[-overlap_pixels:] = np.linspace(
+                1, 0, overlap_pixels, endpoint=False
+            )
 
-    if 'left' in edge_overlaps:
-        overlap_pixels = int(edge_overlaps['left'] * overlap_fraction)
+    if "left" in edge_overlaps:
+        overlap_pixels = int(edge_overlaps["left"] * overlap_fraction)
         if overlap_pixels > 0:
-            x_weight[:overlap_pixels] = np.linspace(0, 1, overlap_pixels, endpoint=False)
+            x_weight[:overlap_pixels] = np.linspace(
+                0, 1, overlap_pixels, endpoint=False
+            )
 
-    if 'right' in edge_overlaps:
-        overlap_pixels = int(edge_overlaps['right'] * overlap_fraction)
+    if "right" in edge_overlaps:
+        overlap_pixels = int(edge_overlaps["right"] * overlap_fraction)
         if overlap_pixels > 0:
-            x_weight[-overlap_pixels:] = np.linspace(1, 0, overlap_pixels, endpoint=False)
+            x_weight[-overlap_pixels:] = np.linspace(
+                1, 0, overlap_pixels, endpoint=False
+            )
 
     # Use outer product (same as old working version)
     mask = np.outer(y_weight, x_weight)
@@ -165,11 +177,11 @@ def assemble_stack_cpu(
     positions: Union[List[Tuple[float, float]], "np.ndarray"],
     blend_method: TileBlendMethod = TileBlendMethod.FIXED,
     fixed_margin_ratio: float = 0.1,
-    overlap_blend_fraction: float = 1.0
+    overlap_blend_fraction: float = 1.0,
 ) -> "np.ndarray":
     """
     Stitch/assemble overlapping image tiles with simple blending.
-    
+
     Args:
         image_tiles: 3D array of tiles (N, H, W)
         positions: List of (x, y) tuples or 2D array [N, 2]
@@ -185,24 +197,33 @@ def assemble_stack_cpu(
             f"got {type(image_tiles).__name__} with shape "
             f"{getattr(image_tiles, 'shape', None)!r}."
         )
-    
+
     if image_tiles.shape[0] == 0:
         logger.warning("image_tiles array is empty (0 tiles).")
-        return np.array([[[]]], dtype=np.uint16)
+        return np.empty((0, 0), dtype=image_tiles.dtype)
 
     # Convert positions to numpy
     if isinstance(positions, list):
-        if not positions or not isinstance(positions[0], tuple) or len(positions[0]) != 2:
+        if (
+            not positions
+            or not isinstance(positions[0], tuple)
+            or len(positions[0]) != 2
+        ):
             raise TypeError("positions must be a list of (x, y) tuples.")
-        positions = np.array(positions, dtype=np.float32)
+        positions = np.array(positions, dtype=np.float64)
     else:
         if not isinstance(positions, np.ndarray):
             positions = to_numpy(positions)
         if positions.ndim != 2 or positions.shape[1] != 2:
             raise TypeError("positions must be an array of shape [N, 2].")
+        positions = positions.astype(np.float64, copy=False)
+    if not np.isfinite(positions).all():
+        raise ValueError("positions must contain finite XY pixel coordinates.")
 
     if image_tiles.shape[0] != positions.shape[0]:
-        raise ValueError(f"Mismatch: {image_tiles.shape[0]} tiles vs {positions.shape[0]} positions.")
+        raise ValueError(
+            f"Mismatch: {image_tiles.shape[0]} tiles vs {positions.shape[0]} positions."
+        )
 
     num_tiles, tile_h, tile_w = image_tiles.shape
     tile_shape = (tile_h, tile_w)
@@ -232,12 +253,12 @@ def assemble_stack_cpu(
     # --- 3. Create blend masks ---
     if blend_method is TileBlendMethod.NONE:
         blend_masks = [np.ones(tile_shape, dtype=np.float32) for _ in range(num_tiles)]
-        
+
     else:
         # Find overlaps
         edge_pairs = _get_all_overlapping_pairs(positions, tile_shape)
         tile_overlaps = [{} for _ in range(num_tiles)]
-        
+
         # Build overlap info per tile
         for tile_i, tile_j, edge_direction, pixel_overlap in edge_pairs:
             if edge_direction not in tile_overlaps[tile_i]:
@@ -247,21 +268,19 @@ def assemble_stack_cpu(
                 tile_overlaps[tile_i][edge_direction] = max(
                     tile_overlaps[tile_i][edge_direction], pixel_overlap
                 )
-        
+
         # Create masks using WORKING logic from old version
         blend_masks = []
         for i in range(num_tiles):
             if blend_method is TileBlendMethod.FIXED:
                 mask = _create_fixed_blend_mask(
-                    tile_shape,
-                    tile_overlaps[i],
-                    margin_ratio=fixed_margin_ratio
+                    tile_shape, tile_overlaps[i], margin_ratio=fixed_margin_ratio
                 )
             else:
                 mask = _create_dynamic_blend_mask(
                     tile_shape,
                     tile_overlaps[i],
-                    overlap_fraction=overlap_blend_fraction
+                    overlap_fraction=overlap_blend_fraction,
                 )
             blend_masks.append(mask)
 
@@ -274,38 +293,26 @@ def assemble_stack_cpu(
         target_x = pos_x - min_x
         target_y = pos_y - min_y
 
-        # Integer and fractional parts
-        x_int = int(np.floor(target_x))
-        y_int = int(np.floor(target_y))
-        x_frac = target_x - x_int
-        y_frac = target_y - y_int
-
-        # Subpixel shift
-        shift_x = -x_frac
-        shift_y = -y_frac
-        
-        shifted_tile = subpixel_shift(
-            tile, 
-            shift=(shift_y, shift_x), 
-            order=1, 
-            mode='constant', 
-            cval=0.0
+        placement = SubpixelTilePlacement(
+            (float(target_x), float(target_y)), tile_shape
         )
-
-        # Apply blend mask
-        blended_tile = shifted_tile * blend_masks[i]
+        y_int, x_int = placement.origin_yx
+        placed_h, placed_w = placement.output_shape_yx
+        blended_tile, placed_mask = placement.weighted_samples(
+            tile, blend_masks[i], affine_transform
+        )
 
         # Canvas bounds
         y_start = y_int
-        y_end = y_start + tile_h
+        y_end = y_start + placed_h
         x_start = x_int
-        x_end = x_start + tile_w
+        x_end = x_start + placed_w
 
         # Tile bounds (for edge cases)
         tile_y_start = 0
-        tile_y_end = tile_h
+        tile_y_end = placed_h
         tile_x_start = 0
-        tile_x_end = tile_w
+        tile_x_end = placed_w
 
         # Clip to canvas
         if y_start < 0:
@@ -315,32 +322,39 @@ def assemble_stack_cpu(
             tile_x_start = -x_start
             x_start = 0
         if y_end > canvas_height:
-            tile_y_end -= (y_end - canvas_height)
+            tile_y_end -= y_end - canvas_height
             y_end = canvas_height
         if x_end > canvas_width:
-            tile_x_end -= (x_end - canvas_width)
+            tile_x_end -= x_end - canvas_width
             x_end = canvas_width
 
         # Skip if out of bounds
-        if (tile_y_start >= tile_y_end or tile_x_start >= tile_x_end or
-            y_start >= y_end or x_start >= x_end):
+        if (
+            tile_y_start >= tile_y_end
+            or tile_x_start >= tile_x_end
+            or y_start >= y_end
+            or x_start >= x_end
+        ):
             continue
 
         # Accumulate
-        composite_accum[y_start:y_end, x_start:x_end] += \
-            blended_tile[tile_y_start:tile_y_end, tile_x_start:tile_x_end]
-        
-        weight_accum[y_start:y_end, x_start:x_end] += \
-            blend_masks[i][tile_y_start:tile_y_end, tile_x_start:tile_x_end]
+        composite_accum[y_start:y_end, x_start:x_end] += blended_tile[
+            tile_y_start:tile_y_end, tile_x_start:tile_x_end
+        ]
+
+        weight_accum[y_start:y_end, x_start:x_end] += placed_mask[
+            tile_y_start:tile_y_end, tile_x_start:tile_x_end
+        ]
 
     # --- 5. Normalize ---
-    epsilon = 1e-7
-    stitched = composite_accum / (weight_accum + epsilon)
+    stitched = composite_accum / np.where(weight_accum > 0, weight_accum, 1)
 
     # Convert back to input dtype, preserving the dtype
     if np.issubdtype(input_dtype, np.integer):
         dtype_info = np.iinfo(input_dtype)
-        stitched_output = np.clip(stitched, dtype_info.min, dtype_info.max).astype(input_dtype)
+        stitched_output = np.clip(
+            np.rint(stitched), dtype_info.min, dtype_info.max
+        ).astype(input_dtype)
     else:
         # For float dtypes, just convert directly
         stitched_output = stitched.astype(input_dtype)
@@ -350,12 +364,12 @@ def assemble_stack_cpu(
 
 def to_numpy(tensor):
     """Convert various tensor types to numpy"""
-    if hasattr(tensor, 'dtype') and tensor.__class__.__module__ == 'numpy':
+    if hasattr(tensor, "dtype") and tensor.__class__.__module__ == "numpy":
         return tensor
-    if hasattr(tensor, 'get'):  # CuPy
+    if hasattr(tensor, "get"):  # CuPy
         return tensor.get()
-    if hasattr(tensor, 'detach'):  # PyTorch
+    if hasattr(tensor, "detach"):  # PyTorch
         return tensor.detach().cpu().numpy()
-    if hasattr(tensor, 'numpy') and hasattr(tensor, 'device'):  # TF
+    if hasattr(tensor, "numpy") and hasattr(tensor, "device"):  # TF
         return tensor.numpy()
     raise ValueError(f"Unsupported tensor type: {type(tensor)}")

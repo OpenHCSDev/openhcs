@@ -12,14 +12,18 @@ from typing import TYPE_CHECKING, List, Tuple, Union
 
 from openhcs.core.memory import cupy as cupy_func
 from openhcs.core.pipeline.function_contracts import artifact_inputs
-from openhcs.processing.backends.assemblers.blending import TileBlendMethod
+from openhcs.processing.backends.assemblers.blending import (
+    TileBlendMethod,
+    SubpixelTilePlacement,
+)
+from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.utils.import_utils import optional_import_placeholder
 
 # For type checking only
 if TYPE_CHECKING:
     import cupy as cp
     from cupyx.scipy.ndimage import gaussian_filter
-    from cupyx.scipy.ndimage import shift as subpixel_shift
+    from cupyx.scipy.ndimage import affine_transform
 
 # Import CuPy as an optional dependency
 cp = optional_import_placeholder("cupy")
@@ -29,13 +33,13 @@ if cp:
     cupyx_scipy = optional_import_placeholder("cupyx.scipy.ndimage")
     if cupyx_scipy:
         gaussian_filter = cupyx_scipy.gaussian_filter
-        subpixel_shift = cupyx_scipy.shift
+        affine_transform = cupyx_scipy.affine_transform
     else:
         gaussian_filter = None
-        subpixel_shift = None
+        affine_transform = None
 else:
     gaussian_filter = None
-    subpixel_shift = None
+    affine_transform = None
 
 logger = logging.getLogger(__name__)
 
@@ -310,7 +314,7 @@ def _create_dynamic_blend_mask_gpu(
 
 
 @artifact_inputs("positions")  # The input name is "positions"
-@cupy_func
+@cupy_func(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
 def assemble_stack_cupy(
     image_tiles: "cp.ndarray",  # type: ignore
     positions: Union[List[Tuple[float, float]], "cp.ndarray"],  # type: ignore
@@ -329,7 +333,7 @@ def assemble_stack_cupy(
         overlap_blend_fraction: For dynamic mode, fraction of overlap to blend
 
     Returns:
-        3D CuPy array (1, H_canvas, W_canvas) with assembled image
+        2D CuPy array (H_canvas, W_canvas) with the source tile axis contracted
     """
     # The compiler will ensure this function is only called when CuPy is available
     # No need to check for CuPy availability here
@@ -340,7 +344,7 @@ def assemble_stack_cupy(
         logger.warning(
             "image_tiles array is empty (0 tiles). Returning an empty array."
         )
-        return cp.array([[[]]], dtype=cp.uint16)  # Shape (1,0,0) to indicate empty 3D
+        return cp.empty((0, 0), dtype=image_tiles.dtype)
 
     # Convert positions to CuPy array for GPU-native operations
     if isinstance(positions, list):
@@ -351,7 +355,7 @@ def assemble_stack_cupy(
             or len(positions[0]) != 2
         ):
             raise TypeError("positions must be a list of (x, y) tuples.")
-        positions = cp.array(positions, dtype=cp.float32)
+        positions = cp.array(positions, dtype=cp.float64)
     else:
         # Handle array input (backward compatibility)
         if (
@@ -362,7 +366,9 @@ def assemble_stack_cupy(
             raise TypeError(
                 "positions must be an array of shape [N, 2] or list of (x, y) tuples."
             )
-        positions = cp.asarray(positions)  # Convert to cupy for GPU operations
+        positions = cp.asarray(positions, dtype=cp.float64)
+    if not bool(cp.isfinite(positions).all()):
+        raise ValueError("positions must contain finite XY pixel coordinates.")
 
     # Debug: Print positions information
     print(
@@ -498,52 +504,39 @@ def assemble_stack_cupy(
     image_tiles_float = image_tiles.astype(cp.float32)
 
     # --- 3.6. VECTORIZED: Pre-calculate all position data ---
-    positions_array = cp.array(positions, dtype=cp.float32)  # Shape: (N, 2)
+    positions_array = cp.asarray(positions, dtype=cp.float64)  # Shape: (N, 2)
     target_canvas_positions = positions_array - cp.array(
-        [canvas_min_x, canvas_min_y], dtype=cp.float32
+        [canvas_min_x, canvas_min_y], dtype=cp.float64
     )
-
-    # Vectorized calculation of integer and fractional parts for all tiles
-    canvas_starts_int = cp.floor(target_canvas_positions).astype(
-        cp.int32
-    )  # Shape: (N, 2)
-    fractional_parts = target_canvas_positions - canvas_starts_int  # Shape: (N, 2)
-    subpixel_shifts = (
-        -fractional_parts
-    )  # Shape: (N, 2) - negative for scipy.ndimage.shift
 
     # --- 4. Place tiles with subpixel shifts (using pre-calculated values) ---
     for i in range(num_tiles):
         tile_float = image_tiles_float[i]
 
-        # Use pre-calculated values (vectorized above)
-        canvas_x_start_int = int(canvas_starts_int[i, 0].item())
-        canvas_y_start_int = int(canvas_starts_int[i, 1].item())
-        shift_x_subpixel = subpixel_shifts[i, 0]
-        shift_y_subpixel = subpixel_shifts[i, 1]
-
-        shifted_tile = subpixel_shift(
-            tile_float,
-            shift=(shift_y_subpixel, shift_x_subpixel),
-            order=1,
-            mode="constant",
-            cval=0.0,
+        placement = SubpixelTilePlacement(
+            (
+                float(target_canvas_positions[i, 0]),
+                float(target_canvas_positions[i, 1]),
+            ),
+            first_tile_shape,
         )
-
-        # Apply tile-specific blending mask
-        blended_tile = shifted_tile * blend_masks[i]
+        canvas_y_start_int, canvas_x_start_int = placement.origin_yx
+        placed_h, placed_w = placement.output_shape_yx
+        blended_tile, placed_mask = placement.weighted_samples(
+            tile_float, blend_masks[i], affine_transform
+        )
 
         # Define where this tile (and its mask) go on the canvas
         y_start_on_canvas = canvas_y_start_int
-        y_end_on_canvas = y_start_on_canvas + tile_h
+        y_end_on_canvas = y_start_on_canvas + placed_h
         x_start_on_canvas = canvas_x_start_int
-        x_end_on_canvas = x_start_on_canvas + tile_w
+        x_end_on_canvas = x_start_on_canvas + placed_w
 
         # Define what part of the tile to take (in case it goes off-canvas)
         tile_y_start_src = 0
-        tile_y_end_src = tile_h
+        tile_y_end_src = placed_h
         tile_x_start_src = 0
-        tile_x_end_src = tile_w
+        tile_x_end_src = placed_w
 
         # Adjust for tile parts that are off the canvas (negative start)
         if y_start_on_canvas < 0:
@@ -576,25 +569,22 @@ def assemble_stack_cupy(
 
         weight_accum[
             y_start_on_canvas:y_end_on_canvas, x_start_on_canvas:x_end_on_canvas
-        ] += blend_masks[i][
+        ] += placed_mask[
             tile_y_start_src:tile_y_end_src, tile_x_start_src:tile_x_end_src
         ]
 
     # --- 5. Normalize + cast ---
-    epsilon = 1e-7  # To avoid division by zero
-    stitched_image_float = composite_accum / (weight_accum + epsilon)
+    stitched_image_float = composite_accum / cp.where(weight_accum > 0, weight_accum, 1)
 
     # Convert back to input dtype, preserving the dtype
     if cp.issubdtype(input_dtype, cp.integer):
         dtype_info = cp.iinfo(input_dtype)
         stitched_output = cp.clip(
-            stitched_image_float, dtype_info.min, dtype_info.max
+            cp.rint(stitched_image_float), dtype_info.min, dtype_info.max
         ).astype(input_dtype)
     else:
         # For float dtypes, just convert directly
         stitched_output = stitched_image_float.astype(input_dtype)
 
-    # Return as a 3D array with a single Z-slice
-    return stitched_output.reshape(
-        1, canvas_height.item(), canvas_width.item()
-    )  # .item() to convert 0-dim cupy array to scalar
+    # The volumetric-to-slice contract contracts the tile axis, just like CPU.
+    return stitched_output

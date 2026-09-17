@@ -9,27 +9,24 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, TypeVar
 
-from polystore.virtual_workspace import SourcePixelRef
-
 from openhcs.constants import Backend
-from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     SourceProjectionRole,
 )
+from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_matching import (
     source_component_metadata_values,
     source_metadata_value,
     source_metadata_values_equal,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.source_projection import SourceProjection
 from openhcs.core.virtual_workspace_metadata import (
@@ -37,16 +34,16 @@ from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories,
     OpenHCSSubdirectoryPayload,
     VirtualWorkspaceMapping,
-    VirtualWorkspaceSourceMetadataEntries,
     VirtualWorkspaceSourceProjectionEntries,
+    VirtualWorkspaceSourceMetadataEntries,
 )
+from polystore.virtual_workspace import SourcePixelRef
 
 if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.vfs_protocol import FileManagerLike
     from openhcs.microscopes.microscope_interfaces import MetadataHandler
+    from openhcs.core.vfs_protocol import FileManagerLike
+    from polystore.filemanager import FileManager
 
 
 LookupValueT = TypeVar("LookupValueT")
@@ -245,7 +242,7 @@ class VirtualWorkspaceSourceProjection:
             payload,
             source_metadata=source_metadata,
             source_alias=projection.source_alias,
-            persisted_metadata=projection.persisted_image_metadata(),
+            persisted_metadata=projection.image_metadata,
         )
 
     def project_unbound_payload(
@@ -270,7 +267,7 @@ class VirtualWorkspaceSourceProjection:
             source_metadata=source_metadata,
             source_alias=source_alias,
             persisted_metadata=(
-                None if projection is None else projection.persisted_image_metadata()
+                None if projection is None else projection.image_metadata
             ),
         )
 
@@ -296,9 +293,15 @@ class VirtualWorkspaceSourceProjection:
         metadata = (
             current_metadata
             if persisted_metadata is None
-            else persisted_metadata.with_source_spatial_context_from(
-                current_metadata
-            ).with_missing_intensity_from(current_metadata)
+            else persisted_metadata.with_source_context_from(current_metadata)
+        )
+        metadata = metadata.replace_fields(
+            source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
+                current_metadata.source_spatial_domain,
+                image_shape_yx=current_metadata.spatial_shape_yx(
+                    image_payload_data(payload)
+                ),
+            )
         )
         if source_metadata is not None and persisted_metadata is None:
             metadata = metadata.with_source_component_metadata(source_metadata)
@@ -578,22 +581,13 @@ class VirtualWorkspaceSourceProjectionAxisCacheKey:
     axis_id: str | None
 
 
-@dataclass(frozen=True, slots=True)
-class VirtualWorkspaceSourceProjectionCacheEntry:
-    """One projection bound to the exact metadata document that produced it."""
-
-    metadata: OpenHCSMetadataPayload
-    projection: VirtualWorkspaceSourceProjection
-
-
 @dataclass(slots=True)
 class VirtualWorkspaceSourceProjectionCache:
-    """Process-local cache for projections keyed by metadata object identity."""
+    """Process-local cache for source-workspace projections keyed by plate path."""
 
-    projections_by_plate_path: dict[
-        str,
-        VirtualWorkspaceSourceProjectionCacheEntry,
-    ] = field(default_factory=dict)
+    projections_by_plate_path: dict[str, VirtualWorkspaceSourceProjection] = field(
+        default_factory=dict
+    )
     axis_filtered_projections: dict[
         VirtualWorkspaceSourceProjectionAxisCacheKey,
         VirtualWorkspaceSourceProjection,
@@ -605,18 +599,14 @@ class VirtualWorkspaceSourceProjectionCache:
         metadata: OpenHCSMetadataPayload,
     ) -> VirtualWorkspaceSourceProjection:
         plate_key = str(plate_path)
-        cached = self.projections_by_plate_path.get(plate_key)
-        if cached is None or cached.metadata is not metadata:
+        projection = self.projections_by_plate_path.get(plate_key)
+        if projection is None:
             projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
                 plate_path,
                 metadata,
             )
-            self.axis_filtered_projections.clear()
-            self.projections_by_plate_path[plate_key] = (
-                VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
-            )
-            return projection
-        return cached.projection
+            self.projections_by_plate_path[plate_key] = projection
+        return projection
 
     def filtered_by_axis(
         self,

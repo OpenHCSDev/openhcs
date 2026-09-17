@@ -24,6 +24,9 @@ from openhcs.processing.backends.pos_gen.ashlar_config import (
     AshlarAlignmentConfig,
     AshlarPositionRequest,
 )
+from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
+    TILE_POSITIONS_OUTPUT,
+)
 from openhcs.utils.import_utils import optional_import_placeholder
 
 # Import CuPy using the established optional import pattern
@@ -852,7 +855,7 @@ def _convert_ashlar_positions_to_openhcs_gpu(
 
 
 @artifact_inputs("grid_dimensions")
-@artifact_outputs("positions")
+@artifact_outputs(TILE_POSITIONS_OUTPUT)
 @cupy_func
 def ashlar_compute_tile_positions_gpu(
     image_stack,

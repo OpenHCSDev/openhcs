@@ -210,16 +210,11 @@ class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
         plate_path: Path,
         filemanager: FileManager,
     ) -> Path:
-        plate_root = Path(plate_path)
-        self._write_dataset(
-            plate_root,
-            self.source_metadata_handler.source_dataset(plate_root),
+        return self._prepare_workspace(
+            Path(plate_path),
             filemanager,
+            refresh_dataset=True,
         )
-        self.metadata_handler = OpenHCSMetadataHandler(filemanager)
-        self.register_workspace_backends(plate_root, filemanager)
-        self.plate_folder = plate_root
-        return plate_root
 
     def get_available_backends(
         self,
@@ -234,15 +229,31 @@ class BioFormatsHandler(BroadMicroscopeDetector, MicroscopeHandler):
         filemanager: FileManager,
         skip_preparation: bool = False,
     ) -> Path:
-        plate_root = Path(plate_path)
-        if not skip_preparation:
+        return self._prepare_workspace(
+            Path(plate_path),
+            filemanager,
+            refresh_dataset=not skip_preparation,
+        )
+
+    def _prepare_workspace(
+        self,
+        plate_root: Path,
+        filemanager: FileManager,
+        *,
+        refresh_dataset: bool,
+    ) -> Path:
+        """Prepare source readers before deriving the virtual workspace."""
+
+        self.register_source_backends(filemanager)
+        if refresh_dataset:
             self._write_dataset(
                 plate_root,
                 self.source_metadata_handler.source_dataset(plate_root),
                 filemanager,
             )
         self.metadata_handler = OpenHCSMetadataHandler(filemanager)
-        self.register_workspace_backends(plate_root, filemanager)
+        self._register_virtual_workspace_backend(plate_root, filemanager)
+        self.plate_folder = plate_root
         return plate_root
 
     def _write_dataset(
