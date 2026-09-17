@@ -448,10 +448,9 @@ def source_bindings_for_validation(
         imported_metadata_tables=(
             ImportedMetadataTable(
                 location="source_manifest.csv",
-                joins=(
-                    ImportedMetadataJoin("well", "well"),
-                    ImportedMetadataJoin("site", "site"),
-                    ImportedMetadataJoin("channel", "channel"),
+                joins=tuple(
+                    ImportedMetadataJoin(field, field)
+                    for field in validation.source_identity_fields
                 ),
             ),
         ),

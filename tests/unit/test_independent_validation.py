@@ -121,10 +121,27 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
 
     assert tuple(binding.alias for binding in bindings.bindings) == ("dna",)
     assert bindings.grouping_metadata_fields == ("plate", "well")
+    assert tuple(
+        join.image_metadata_field for join in bindings.imported_metadata_tables[0].joins
+    ) == ("plate", "well", "site")
     assert contract.source_components == ("plate", "well", "site", "channel")
     assert contract.grouping_fields == ("plate", "well")
     assert contract.variable_components == ("site",)
     assert contract.source_set_count == 2
+
+
+def test_paired_source_bindings_do_not_join_consumed_channel_component():
+    validation = get_dataset_spec("BBBC007_cell_boundaries").independent_validation
+    assert validation is not None
+
+    bindings = source_bindings_for_validation(validation)
+
+    assert tuple(
+        join.image_metadata_field for join in bindings.imported_metadata_tables[0].joins
+    ) == validation.source_identity_fields == ("well", "site")
+    assert tuple(
+        binding.selector.metadata[0].value for binding in bindings.bindings
+    ) == ("DNA", "ACTIN")
 
 
 def test_pipeline_freeze_fails_closed_after_bytes_change(tmp_path):
