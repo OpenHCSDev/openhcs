@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
+
+from benchmark.contracts.validation import IndependentValidationSpec
 
 
 class ArchiveFormat(Enum):
@@ -115,6 +117,9 @@ class DatasetSpec:
 
     tags: frozenset[BenchmarkDatasetTag] = frozenset()
     """Semantic tags for dataset subsets that share benchmark workflows."""
+
+    independent_validation: IndependentValidationSpec | None = None
+    """Independent-reference validation contract, when this dataset supplies one."""
 
     def acquisition_source(self) -> DatasetSourceSpec:
         """Return the normalized acquisition source for this dataset."""
