@@ -597,7 +597,7 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
         }
     )
     expected_existing = {
-        "QT_QPA_PLATFORM": "offscreen",
+        "QT_QPA_PLATFORM": "xcb",
         "QT_X11_NO_MITSHM": "1",
         "vblank_mode": "0",
     }
@@ -612,6 +612,18 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
         expected_existing["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
     assert linux_existing == expected_existing
 
+    linux_custom = ViewerQtEnvironmentPolicy(ViewerProcessPlatform.LINUX).apply_to(
+        {"QT_QPA_PLATFORM": "wayland"}
+    )
+    expected_custom = {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_X11_NO_MITSHM": "1",
+        "vblank_mode": "0",
+    }
+    if plugin_path is not None:
+        expected_custom["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
+    assert linux_custom == expected_custom
+
     darwin_env = ViewerQtEnvironmentPolicy(ViewerProcessPlatform.DARWIN).apply_to({})
     expected_darwin = {"QT_QPA_PLATFORM": "cocoa"}
     if plugin_path is not None:
@@ -623,6 +635,21 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
     if plugin_path is not None:
         expected_windows["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
     assert windows_env == expected_windows
+
+
+def test_projected_graphical_viewer_replaces_noninteractive_qt_platform():
+    launch_context = ViewerLaunchContext.projected_graphical_session(
+        {
+            "DISPLAY": ":23",
+            "QT_QPA_PLATFORM": "offscreen",
+        }
+    )
+
+    environment = launch_context.child_environment({"QT_QPA_PLATFORM": "offscreen"})
+    ViewerQtEnvironmentPolicy(ViewerProcessPlatform.LINUX).apply_to(environment)
+
+    assert environment["DISPLAY"] == ":23"
+    assert environment["QT_QPA_PLATFORM"] == "xcb"
 
 
 def test_detached_viewer_entrypoint_generates_public_process_call(tmp_path):

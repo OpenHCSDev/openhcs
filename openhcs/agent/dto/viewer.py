@@ -9,9 +9,18 @@ from typing import ClassVar, Self, cast
 
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.identity import StreamProducerIdentity
+from polystore.streaming_constants import StreamingDataType
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureScope,
     WindowSnapshotCaptureSpec,
+)
+from python_introspect import dataclass_from_mapping
+from zmqruntime.viewer_protocol import (
+    ViewerImageIntensityControlOptions,
+    ViewerNativeImageIntensityPresentation,
+    ViewerNativeLayerTransform,
+    ViewerNativeViewportPresentation,
+    ViewerSourceSpatialDomainPayload,
 )
 
 from openhcs.agent.dto.common import (
@@ -114,6 +123,39 @@ class ViewerWindowControlRequest(ExecutionConnectionProjection):
         if self.timeout_ms != VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT:
             payload["timeout_ms"] = self.timeout_ms
         return payload
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowCloseRequest(ViewerWindowControlRequest):
+    """Explicitly confirmed request to close one running viewer process."""
+
+    confirmed: bool
+
+    def __post_init__(self) -> None:
+        if type(self.confirmed) is not bool:
+            raise TypeError("Viewer close confirmation must be a boolean.")
+        if not self.confirmed:
+            raise ValueError("Viewer close requires confirmed=true.")
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        connection: ExecutionConnectionSpec,
+        confirmed: bool,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(
+            connection=connection,
+            timeout_ms=timeout_ms,
+            confirmed=confirmed,
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {
+            **self.connection_tool_arguments(),
+            "confirmed": self.confirmed,
+        }
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -287,6 +329,58 @@ class ViewerWindowPayloadRequest(ViewerWindowControlRequest):
             )
         )
         payload["include_response"] = self.include_response
+        return payload
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowViewportRequest(ViewerWindowControlRequest):
+    """Apply native 2D camera properties without changing layer or pixel state."""
+
+    presentation: ViewerNativeViewportPresentation
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        connection: ExecutionConnectionSpec,
+        presentation: ViewerNativeViewportPresentation,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(
+            connection=connection, timeout_ms=timeout_ms, presentation=presentation
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {
+            **self.connection_tool_arguments(),
+            "presentation": to_jsonable(self.presentation),
+        }
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowImageIntensityRequest(ViewerWindowControlRequest):
+    """Apply a complete native presentation to one mounted image route."""
+
+    intensity: ViewerImageIntensityControlOptions
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        connection: ExecutionConnectionSpec,
+        route_key: str,
+        presentation: ViewerNativeImageIntensityPresentation,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(
+            connection=connection,
+            timeout_ms=timeout_ms,
+            intensity=ViewerImageIntensityControlOptions(route_key, presentation),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        payload = self.connection_tool_arguments()
+        payload.update(to_jsonable(self.intensity))
         return payload
 
 
@@ -681,7 +775,10 @@ class ViewerWindowLayerState(ViewerWindowLayerDescriptor):
     axis_component_values: JsonObject = field(default_factory=dict)
     routed_component_values: JsonObject = field(default_factory=dict)
     data_shape: tuple[int, ...] = ()
-    translate: tuple[float, ...] = ()
+    native_transform: ViewerNativeLayerTransform = field(
+        default_factory=ViewerNativeLayerTransform
+    )
+    native_intensity: ViewerNativeImageIntensityPresentation | None = None
     visible: bool = False
     selected: bool = False
     feature_row_count: int = 0
@@ -825,7 +922,91 @@ class ViewerWindowStateResult(
     axis_labels: tuple[str, ...] = ()
     component_group_count: int = 0
     component_item_count: int = 0
+    native_viewport: ViewerNativeViewportPresentation | None = None
     response: JsonObject = field(default_factory=dict)
+
+    @classmethod
+    def from_mapping(cls, values: JsonObject) -> "ViewerWindowStateResult":
+        """Decode a canonical state resource through its declared wire fields."""
+        return dataclass_from_mapping(cls, values)
+
+    def image_payload_binding_for(
+        self, path: str
+    ) -> tuple["ViewerWindowPayloadRecord", StreamProducerIdentity]:
+        """Admit one exact, fully observed image binding for presentation replay.
+
+        A state resource establishes a historical binding, not the identity of a
+        new producer. Legacy resources without physical calibration only support
+        their explicit identity, uncropped pixel placement.
+        """
+        if not self.observed or self.errors or self.viewer is None:
+            raise ValueError("Image receipt requires a successfully observed viewer.")
+        matches = tuple(
+            (layer, summary)
+            for layer in self.layers
+            for summary in layer.payload_summaries
+            if summary.get("path") == path
+        )
+        if len(matches) != 1:
+            raise ValueError("Image receipt requires exactly one matching source path.")
+        layer, summary = matches[0]
+        if (
+            not layer.mounted
+            or layer.pending_update
+            or layer.payload_summaries_truncated
+            or layer.payload_summary_count != len(layer.payload_summaries)
+            or layer.item_count != len(layer.payload_summaries)
+            or len(layer.producer_identities) != 1
+            or summary.get("data_type") != StreamingDataType.IMAGE.value
+        ):
+            raise ValueError(
+                "Image receipt has incomplete or non-image payload evidence."
+            )
+        transform = layer.native_transform
+        if (
+            len(transform.scale) != self.viewer_ndim
+            or len(transform.translate) != self.viewer_ndim
+            or not transform.scale
+            or any(value != 1.0 for value in transform.scale)
+            or any(value != 0.0 for value in transform.translate)
+        ):
+            raise ValueError(
+                "Image receipt requires explicit identity pixel placement."
+            )
+        domain = ViewerSourceSpatialDomainPayload.from_wire_mapping(
+            summary, source_label="image receipt"
+        )
+        if any(
+            type(value) is not int
+            for wire_field in domain.to_wire_mapping()
+            for value in summary[wire_field]
+        ):
+            raise ValueError("Image receipt window coordinates require exact integers.")
+        shape = summary.get("shape")
+        if (
+            not isinstance(shape, (tuple, list))
+            or len(shape) != 3
+            or any(type(value) is not int or value <= 0 for value in shape)
+            or domain.origin_yx != (0, 0)
+            or domain.source_shape_yx != tuple(shape[-2:])
+        ):
+            raise ValueError(
+                "Image receipt requires an explicit full three-axis image window."
+            )
+        projected = {
+            member.name: summary[member.name]
+            for member in dataclass_fields(ViewerWindowPayloadRecord)
+            if member.name in summary
+        }
+        projected.update(route_key=layer.route_key, summary=summary)
+        return (
+            dataclass_from_mapping(ViewerWindowPayloadRecord, projected),
+            layer.producer_identities[0],
+        )
+
+    def image_payload_record_for(self, path: str) -> "ViewerWindowPayloadRecord":
+        """Return the payload record from one exact admitted image binding."""
+        return self.image_payload_binding_for(path)[0]
 
 
 @dataclass(frozen=True, slots=True)
@@ -860,6 +1041,33 @@ class ViewerWindowPayloadResult(
     layer_count: int = 0
     layers: tuple[ViewerWindowLayerPayloads, ...] = ()
     response: JsonObject = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowViewportResult(
+    ViewerWindowObservedErrorResultMixin,
+    AgentResultEnvelope,
+    ExecutionConnectionProjection,
+):
+    registry_key: ClassVar[str] = "viewport"
+
+    observed: bool
+    applied: bool = False
+    native_viewport: ViewerNativeViewportPresentation | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowImageIntensityResult(
+    ViewerWindowObservedErrorResultMixin,
+    AgentResultEnvelope,
+    ExecutionConnectionProjection,
+):
+    registry_key: ClassVar[str] = "image_intensity"
+
+    observed: bool
+    applied: bool = False
+    route_key: str | None = None
+    native_intensity: ViewerNativeImageIntensityPresentation | None = None
 
 
 @dataclass(frozen=True, slots=True)

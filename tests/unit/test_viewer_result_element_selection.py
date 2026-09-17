@@ -29,19 +29,21 @@ from openhcs.runtime.napari_streaming_handlers import (
 from openhcs.runtime.napari_viewer_server import (
     NapariLayerIsolationControlMessageAction,
     NapariNavigationControlMessageAction,
+    NapariResultElementSelectionAuthority,
     NapariResultSelectionController,
+    NapariResultSelectionGroupBinding,
     NapariResultSelectionSurface,
     NapariViewerServer,
-)
-from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
-    ViewerComponentLayout,
-    ViewerLayerAxisProjection,
 )
 from openhcs.runtime.viewer_controls import (
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
     ViewerResultElementCoordinateAuthority,
+)
+from openhcs.runtime.viewer_component_system import (
+    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentLayout,
+    ViewerLayerAxisProjection,
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponseField,
@@ -50,6 +52,15 @@ from openhcs.runtime.viewer_protocol import (
 
 
 class _NavigationResponseGateway(ViewerWindowGatewayABC):
+    def close_window(self, request):
+        raise AssertionError(request)
+
+    def viewport(self, request):
+        raise AssertionError(request)
+
+    def image_intensity(self, request):
+        raise AssertionError(request)
+
     def __init__(self, response: dict[str, object]) -> None:
         self.response = response
 
@@ -68,9 +79,6 @@ class _NavigationResponseGateway(ViewerWindowGatewayABC):
     def isolate_layers(self, request):
         del request
         return self.response
-
-    def apply_intensity_window(self, request):
-        raise AssertionError(request)
 
 
 class _DimensionLabelOverlay:
@@ -126,7 +134,7 @@ class _ViewerServerHarness(SimpleNamespace):
         NapariViewerServer.raise_result_selection_surface(self)
 
 
-def _viewer_server(viewer, layer, route_key: str = "result-rois"):
+def _viewer_server(viewer, layer, route_key: str = "result-rois", group_binding=None):
     route_state = NapariLayerRouteStateStore.empty()
     route_state.set_title(route_key, "Result ROIs")
     route_state.set_layer(route_key, layer)
@@ -145,7 +153,75 @@ def _viewer_server(viewer, layer, route_key: str = "result-rois"):
         ),
     )
     server.result_selection_controller = NapariResultSelectionController(server)
+    if NapariResultElementSelectionAuthority.state(layer).supported:
+        server.result_selection_controller.bind(layer, group_binding=group_binding)
     return server, overlay, result_selection_dock, qt_window
+
+
+def test_native_navigation_acknowledges_exact_bound_linked_selection(qtbot):
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    paths = [np.asarray([[i, i], [i + 1, i + 1]], dtype=float) for i in range(3)]
+    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
+    linked = viewer.add_shapes(paths[:2], shape_type="path", features={"owner": [8, 9]})
+    # This is an explicitly bound semantic subject, not a hardcoded neuron feature.
+    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
+    server.result_selection_controller.bind(linked, group_binding=binding)
+    original_data = [coordinates.copy() for coordinates in layer.data]
+    response = NapariNavigationControlMessageAction().handle(
+        server,
+        {
+            "payload": ViewerNavigationControlOptions(
+                route_key="result-rois", data_index=1, visible=True, selected=True
+            )
+        },
+    )
+    assert response["status"] == "success", response
+    assert response["layers"][0]["selected_data_indices"] == (0, 1)
+    assert layer.selected_data == {0, 1}
+    assert linked.selected_data == {0}
+    for before, after in zip(original_data, layer.data, strict=True):
+        np.testing.assert_array_equal(before, after)
+
+
+def test_singleton_selection_stays_strict_with_bound_group(qtbot):
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    paths = [np.asarray([[i, i], [i + 1, i + 1]], dtype=float) for i in range(3)]
+    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
+    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    _viewer_server(viewer, layer, group_binding=binding)
+    with pytest.raises(RuntimeError, match="requested native data selection"):
+        NapariResultElementSelectionAuthority.select(layer, 1)
+    assert layer.selected_data == {0, 1}
+
+
+def test_bound_selection_rejects_unrelated_native_members(qtbot):
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    paths = [np.asarray([[i, i], [i + 1, i + 1]], dtype=float) for i in range(3)]
+    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
+    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
+    mutating = False
+
+    def add_unrelated_member(_event):
+        nonlocal mutating
+        if mutating:
+            return
+        mutating = True
+        try:
+            layer.selected_data = {0, 1, 2}
+        finally:
+            mutating = False
+
+    layer.events.highlight.connect(add_unrelated_member)
+    with pytest.raises(RuntimeError, match="canonical linked result selection"):
+        server.result_selection_controller.select(layer, 1)
 
 
 @pytest.mark.parametrize("invalid_index", (True, "1", -1))
@@ -161,7 +237,6 @@ def test_viewer_navigation_rejects_invalid_data_index(invalid_index: object) -> 
 
 def test_napari_navigation_selects_native_feature_row_and_projects_evidence(qtbot):
     from napari.components import ViewerModel
-
     from openhcs.napari_roi_manager import QRoiManager
 
     viewer = ViewerModel()
@@ -370,7 +445,6 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
         projected_axis_components=("channel", "z"),
         component_values={"channel": [0, 1, 2], "z": [0, 1, 2, 3]},
         routed_component_values={"channel": [0, 2], "z": [1, 3]},
-        routed_component_coordinates=((0, 1), (0, 3), (2, 1), (2, 3)),
         axis_offsets=(0, 0),
     )
     semantics = ViewerComponentAxisSemanticsAuthority.empty()

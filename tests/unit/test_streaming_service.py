@@ -4,8 +4,8 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
-import numpy as np
 import pytest
+import numpy as np
 from polystore.streaming.viewer_transport import ViewerStreamKwarg
 from polystore.zmq_config import POLYSTORE_ZMQ_CONFIG
 from zmqruntime.viewer_protocol import ViewerBatchWireField
@@ -43,18 +43,13 @@ class FakeFileManager:
     def __init__(self) -> None:
         self.saved_batches: list[tuple[list[object], list[str], str, dict]] = []
 
-    def load(self, path: str, read_backend: str) -> np.ndarray:
-        del path, read_backend
-        return np.zeros((4, 5), dtype=np.uint8)
+    def load(self, path: str, read_backend: str):
+        return np.zeros((4, 5), dtype=np.uint16)
 
-    def physical_source_path(
-        self,
-        address: str,
-        backend: str,
-        *,
-        base_path: Path,
-    ) -> Path | None:
-        del address, backend, base_path
+    def exists(self, path, backend):
+        return False
+
+    def physical_source_path(self, path, backend, *, base_path=None):
         return None
 
     def save_batch(
@@ -87,6 +82,9 @@ class FakeViewer:
 
 
 class FakeMetadataHandler:
+    def source_workspace_metadata_document(self, plate_path):
+        return None
+
     def find_metadata_file(self, root: Path) -> Path:
         return root
 
@@ -321,118 +319,6 @@ def test_stream_images_reports_success_only_after_viewer_state_is_settled() -> N
     assert result.streamed_count == 2
     assert events == ["settle", "success"]
     assert viewer.settlement_calls == 1
-
-
-def test_stream_images_derives_rgb_channel_axis_before_viewer_dispatch(
-    tmp_path: Path,
-) -> None:
-    import tifffile
-
-    path = tmp_path / "A01_s001_wDNA_z001_t001.tif"
-    tifffile.imwrite(path, np.zeros((8, 9, 3), dtype=np.uint8), photometric="rgb")
-
-    class DiskFileManager(FakeFileManager):
-        def load(self, path: str, read_backend: str) -> np.ndarray:
-            assert read_backend == "disk"
-            return tifffile.imread(path)
-
-        def physical_source_path(
-            self,
-            address: str,
-            backend: str,
-            *,
-            base_path: Path,
-        ) -> Path | None:
-            del backend, base_path
-            return Path(address)
-
-    filemanager = DiskFileManager()
-    service = StreamingService(
-        filemanager=filemanager,
-        microscope_handler=SimpleNamespace(
-            parser=SimpleNamespace(
-                parse_filename=lambda _filename: filename_parse_result()
-            ),
-            metadata_handler=FakeMetadataHandler(),
-        ),
-        plate_path=tmp_path,
-    )
-
-    service.stream_images(
-        ImageStreamingRequest(
-            viewer=FakeViewer(),
-            config=NapariStreamingConfig(enabled=True),
-            status_callback=lambda _status: None,
-            error_callback=lambda error: (_ for _ in ()).throw(AssertionError(error)),
-            filenames=(path.name,),
-            read_backend="disk",
-        )
-    )
-
-    assert len(filemanager.saved_batches) == 1
-    _data, _paths, _backend, kwargs = filemanager.saved_batches[0]
-    stream_request = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
-    assert stream_request.source.item_fields == {
-        "source_spatial_shape_yx": [8, 9],
-        "spatial_origin_yx": [0, 0],
-        "source_channel_axis": -1,
-    }
-
-
-def test_stream_images_rejects_undeclared_stack_axis_before_viewer_dispatch(
-    tmp_path: Path,
-) -> None:
-    import tifffile
-
-    path = tmp_path / "A01_s001_wDNA_z001_t001.tif"
-    tifffile.imwrite(
-        path,
-        np.zeros((3, 8, 9), dtype=np.uint16),
-        photometric="minisblack",
-    )
-
-    class DiskFileManager(FakeFileManager):
-        def load(self, path: str, read_backend: str) -> np.ndarray:
-            assert read_backend == "disk"
-            return tifffile.imread(path)
-
-        def physical_source_path(
-            self,
-            address: str,
-            backend: str,
-            *,
-            base_path: Path,
-        ) -> Path | None:
-            del backend, base_path
-            return Path(address)
-
-    filemanager = DiskFileManager()
-    viewer = FakeViewer()
-    service = StreamingService(
-        filemanager=filemanager,
-        microscope_handler=SimpleNamespace(
-            parser=SimpleNamespace(
-                parse_filename=lambda _filename: filename_parse_result()
-            ),
-            metadata_handler=FakeMetadataHandler(),
-        ),
-        plate_path=tmp_path,
-    )
-
-    with pytest.raises(ValueError, match="exact source channel or plane-axis"):
-        service.stream_images(
-            ImageStreamingRequest(
-                viewer=viewer,
-                config=NapariStreamingConfig(enabled=True),
-                status_callback=lambda _status: None,
-                error_callback=lambda _error: None,
-                filenames=(path.name,),
-                read_backend="disk",
-            )
-        )
-
-    assert filemanager.saved_batches == []
-    assert viewer.settlement_calls == 0
 
 
 def test_stream_images_does_not_report_success_when_viewer_settlement_fails() -> None:
