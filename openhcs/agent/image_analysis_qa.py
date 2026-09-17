@@ -83,6 +83,11 @@ class ImageQaPrecondition(Enum):
         "from the physical container before viewer dispatch and refuse undeclared "
         "non-spatial axes; never infer a biological plane axis from array rank"
     )
+    SOURCE_LAYOUT_SPLIT_REPRESENTATIVENESS = (
+        "before freezing, verify without reading hidden labels or scores that the "
+        "development and held-out splits cover the same declared source carrier, "
+        "rank, dtype, and channel-axis contract classes"
+    )
 
 
 class ImageQaVisualizationRule(Enum):
