@@ -34,8 +34,10 @@ from pyqt_reactive.animation import WindowFlashOverlay
 from pyqt_reactive.animation.flash_overlay_opengl import WindowFlashOverlayGL
 from pyqt_reactive.services.tab_identity import TabLabelDeclarationMixin
 from pyqt_reactive.services.widget_tree_projection import WidgetActionKind
+from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
 from python_introspect import dataclass_from_mapping
 
+from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.ui_bridge import (
     UiActionCatalog,
     UiActionInvokeRequest,
@@ -53,9 +55,15 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowNavigateRequest,
     UiWindowNavigateResult,
     UiWindowSnapshotRequest,
+    UiWindowSnapshotResult,
+)
+from openhcs.agent.dto.viewer import (
+    ViewerWindowSnapshotRequest,
+    ViewerWindowSnapshotResult,
 )
 from openhcs.agent.services.ui_bridge_service import UiBridgeService
-from openhcs.mcp.control_timeout import McpUiBridgeTimeoutPolicy
+from openhcs.agent.services.viewer_window_service import ViewerWindowService
+from openhcs.mcp.control_timeout import McpUiBridgeTimeoutPolicy, McpViewerTimeoutPolicy
 from openhcs.serialization.json import to_jsonable
 from scripts.gallery_catalog import (
     SOURCE_CAPTURE_EVIDENCE_RECORD_NAME,
@@ -73,6 +81,7 @@ from scripts.gallery_catalog import (
     SystemMonitorActionWindowCaptureTarget,
     UiBridgeWindowCaptureTarget,
     UiWindowReferenceGalleryScenario,
+    ViewerWindowCaptureTargetABC,
     gallery_scenarios,
     read_gallery_source_evidence,
     synchronize_gallery_release_record_for_asset_root,
@@ -1124,43 +1133,87 @@ class GalleryUiBridgeSession:
             create_if_missing=create_if_missing,
         )
         response = self._service.snapshot_window(snapshot_request, self.connection)
-        if not response.captured or response.errors:
-            raise MediaGalleryError(f"UI window snapshot failed: {response!r}")
-        if response.resource is None or response.resource.path is None:
-            raise MediaGalleryError("UI snapshot response contains no local resource.")
-        if response.resource.sha256 is None:
-            raise MediaGalleryError("UI snapshot resource contains no SHA-256.")
-        if response.width is None or response.width <= 0:
-            raise MediaGalleryError("UI snapshot response contains no valid width.")
-        if response.height is None or response.height <= 0:
-            raise MediaGalleryError("UI snapshot response contains no valid height.")
-        snapshot_path = Path(response.resource.path).resolve()
-        if snapshot_path.parent != target_path.parent.resolve():
-            raise MediaGalleryError(
-                "UI snapshot resource escaped the requested capture directory: "
-                f"{snapshot_path}"
-            )
-        if snapshot_path.suffix.lower() != ".png":
-            raise MediaGalleryError(
-                f"UI snapshot resource is not a lossless PNG: {snapshot_path}"
-            )
-        if not snapshot_path.is_file():
-            raise MediaGalleryError(
-                f"UI snapshot resource does not exist: {snapshot_path}"
-            )
-        actual_sha256 = sha256_file(snapshot_path)
-        if actual_sha256 != response.resource.sha256:
-            raise MediaGalleryError(
-                "UI snapshot resource changed before gallery ingestion."
-            )
-        os.replace(snapshot_path, target_path)
-        return GallerySourceCaptureResult(
-            path=str(self.request.output),
-            sha256=actual_sha256,
-            width=response.width,
-            height=response.height,
-            format="PNG",
+        return retain_native_snapshot_source(self.request, response)
+
+
+def retain_native_snapshot_source(
+    request: GallerySourceCaptureRequest,
+    response: UiWindowSnapshotResult | ViewerWindowSnapshotResult,
+) -> GallerySourceCaptureResult:
+    """Ingest an existing native snapshot resource without another rendering."""
+
+    target_path = _capture_target(request.source_root, request.output, ".png")
+    if not response.captured or response.errors:
+        raise MediaGalleryError(f"Native window snapshot failed: {response!r}")
+    if response.resource is None or response.resource.path is None:
+        raise MediaGalleryError("Native snapshot response contains no local resource.")
+    if response.resource.sha256 is None:
+        raise MediaGalleryError("Native snapshot resource contains no SHA-256.")
+    if response.width is None or response.width <= 0:
+        raise MediaGalleryError("Native snapshot response contains no valid width.")
+    if response.height is None or response.height <= 0:
+        raise MediaGalleryError("Native snapshot response contains no valid height.")
+    snapshot_path = Path(response.resource.path).resolve()
+    if snapshot_path.parent != target_path.parent.resolve():
+        raise MediaGalleryError(
+            "Native snapshot resource escaped the requested capture directory: "
+            f"{snapshot_path}"
         )
+    if snapshot_path.suffix.lower() != ".png":
+        raise MediaGalleryError(
+            f"Native snapshot resource is not a lossless PNG: {snapshot_path}"
+        )
+    if not snapshot_path.is_file():
+        raise MediaGalleryError(
+            f"Native snapshot resource does not exist: {snapshot_path}"
+        )
+    actual_sha256 = sha256_file(snapshot_path)
+    if actual_sha256 != response.resource.sha256:
+        raise MediaGalleryError(
+            "Native snapshot resource changed before gallery ingestion."
+        )
+    os.replace(snapshot_path, target_path)
+    return GallerySourceCaptureResult(
+        path=str(request.output),
+        sha256=actual_sha256,
+        width=response.width,
+        height=response.height,
+        format="PNG",
+    )
+
+
+def capture_viewer_window_source(
+    target: ViewerWindowCaptureTargetABC,
+    request: GallerySourceCaptureRequest,
+) -> GallerySourceCaptureResult:
+    """Capture an explicitly connected viewer through its native Qt endpoint."""
+
+    connection = request.viewer_connection
+    if connection is None:
+        raise MediaGalleryError(
+            "Native viewer capture requires an explicit viewer connection."
+        )
+    try:
+        connection.require_port("Native viewer capture")
+    except ValueError as error:
+        raise MediaGalleryError(str(error)) from error
+    target_path = _capture_target(request.source_root, request.output, ".png")
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    response = ViewerWindowService().snapshot_window(
+        ViewerWindowSnapshotRequest.from_connection(
+            connection=connection,
+            timeout_ms=McpViewerTimeoutPolicy.resolve(request.timeout_ms),
+            output_dir_path=str(target_path.parent),
+            capture_scope=WindowSnapshotCaptureScope.WINDOW.value,
+        )
+    )
+    if response.captured and (
+        response.viewer is None or response.viewer.viewer_type is not target.viewer_type
+    ):
+        raise MediaGalleryError(
+            f"Native viewer snapshot did not identify the declared {target.viewer_type.value} target."
+        )
+    return retain_native_snapshot_source(request, response)
 
 
 def capture_ui_bridge_window_source(
@@ -2033,6 +2086,7 @@ def capture_scenario_still(
     *,
     descriptor_file_path: Path | None = None,
     timeout_ms: int | None = None,
+    viewer_connection: ExecutionConnectionSpec | None = None,
 ) -> GallerySourceCaptureResult:
     """Capture one still scenario through its nominal live-surface target."""
 
@@ -2043,6 +2097,7 @@ def capture_scenario_still(
             output=output,
             descriptor_file_path=descriptor_file_path,
             timeout_ms=timeout_ms,
+            viewer_connection=viewer_connection,
         )
         return scenario.capture_source(request)
     except GalleryCatalogError as error:
@@ -2072,6 +2127,7 @@ def _capture_ui_reference_stills(
     record_stem: str,
     descriptor_file_path: Path | None = None,
     timeout_ms: int | None = None,
+    viewer_connection: ExecutionConnectionSpec | None = None,
     force: bool = False,
     fixture: UiContextFixturePreparationResult | None = None,
 ) -> UiWindowReferenceCaptureResult:
@@ -2089,6 +2145,7 @@ def _capture_ui_reference_stills(
                 output=source,
                 descriptor_file_path=descriptor_file_path,
                 timeout_ms=timeout_ms,
+                viewer_connection=viewer_connection,
             )
         )
         records.append(
@@ -2133,6 +2190,35 @@ def _capture_ui_reference_stills(
     )
     _write_json_file(evidence_path, result)
     return result
+
+
+def capture_scenario_still_release(
+    source_root: Path,
+    output_root: Path,
+    scenario_id: str,
+    *,
+    descriptor_file_path: Path | None = None,
+    timeout_ms: int | None = None,
+    viewer_connection: ExecutionConnectionSpec | None = None,
+    force: bool = False,
+) -> UiWindowReferenceCaptureResult:
+    """Capture and publish one declaration-selected still gallery scenario."""
+
+    scenario = OpenHCSGalleryScenarioCatalog.for_id(scenario_id)
+    if not isinstance(scenario, StillGalleryScenarioABC):
+        raise MediaGalleryError(
+            f"Gallery scenario {scenario_id!r} is not a still-media scenario."
+        )
+    return _capture_ui_reference_stills(
+        (scenario,),
+        source_root,
+        output_root,
+        record_stem=scenario.scenario_id,
+        descriptor_file_path=descriptor_file_path,
+        timeout_ms=timeout_ms,
+        viewer_connection=viewer_connection,
+        force=force,
+    )
 
 
 def capture_ui_window_reference_stills(
@@ -2327,7 +2413,31 @@ def _capture_scenario_still_operation(
         arguments.scenario_id,
         descriptor_file_path=arguments.descriptor_file_path,
         timeout_ms=arguments.timeout_ms,
+        viewer_connection=arguments.viewer_connection,
     )
+
+
+def _publish_scenario_still_operation(
+    arguments: argparse.Namespace,
+) -> UiWindowReferenceCaptureResult:
+    return capture_scenario_still_release(
+        arguments.source_root,
+        arguments.output_root,
+        arguments.scenario_id,
+        descriptor_file_path=arguments.descriptor_file_path,
+        timeout_ms=arguments.timeout_ms,
+        viewer_connection=arguments.viewer_connection,
+        force=arguments.force,
+    )
+
+
+def _viewer_connection_argument(value: str) -> ExecutionConnectionSpec:
+    """Decode the existing connection declaration at the CLI JSON boundary."""
+
+    try:
+        return dataclass_from_mapping(ExecutionConnectionSpec, json.loads(value))
+    except (TypeError, ValueError) as error:
+        raise argparse.ArgumentTypeError(str(error)) from error
 
 
 def _capture_ui_window_references_operation(
@@ -2454,7 +2564,37 @@ def build_parser() -> argparse.ArgumentParser:
     scenario_still_parser.add_argument("--output", type=Path, required=True)
     scenario_still_parser.add_argument("--descriptor-file-path", type=Path)
     scenario_still_parser.add_argument("--timeout-ms", type=int)
+    scenario_still_parser.add_argument(
+        "--viewer-connection-json",
+        dest="viewer_connection",
+        type=_viewer_connection_argument,
+        help="Explicit viewer connection as the existing ExecutionConnectionSpec JSON.",
+    )
     scenario_still_parser.set_defaults(operation=_capture_scenario_still_operation)
+
+    publish_scenario_still_parser = subparsers.add_parser(
+        "publish-scenario-still",
+        help="Capture, derive, and publish one declared still gallery scenario.",
+    )
+    publish_scenario_still_parser.add_argument("scenario_id")
+    publish_scenario_still_parser.add_argument("--source-root", type=Path, required=True)
+    publish_scenario_still_parser.add_argument("--output-root", type=Path, required=True)
+    publish_scenario_still_parser.add_argument("--descriptor-file-path", type=Path)
+    publish_scenario_still_parser.add_argument("--timeout-ms", type=int)
+    publish_scenario_still_parser.add_argument(
+        "--viewer-connection-json",
+        dest="viewer_connection",
+        type=_viewer_connection_argument,
+        help="Explicit viewer connection as the existing ExecutionConnectionSpec JSON.",
+    )
+    publish_scenario_still_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Atomically replace existing derivatives, never source captures.",
+    )
+    publish_scenario_still_parser.set_defaults(
+        operation=_publish_scenario_still_operation
+    )
 
     ui_reference_parser = subparsers.add_parser(
         "capture-ui-window-references",

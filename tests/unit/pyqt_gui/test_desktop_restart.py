@@ -76,6 +76,7 @@ def test_version_restart_capture_omits_update_only_assets(
     plate_manager = SimpleNamespace(
         is_any_plate_running=lambda: False,
         require_pipeline_definition_mutation_allowed=lambda: None,
+        selected_plate_path="",
         orchestrator_code_document_context=lambda **_kwargs: SimpleNamespace(
             source="plate_paths = []"
         ),

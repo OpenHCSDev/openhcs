@@ -345,7 +345,10 @@ class DraftPipelineStepCommandSpec(McpDevCommandSpec):
         self,
         session: McpDevStdioSession,
         args: argparse.Namespace,
+        *,
+        prepared_calls: tuple[McpDevToolCall, ...] | None = None,
     ) -> McpDevToolBatchResponse:
+        del prepared_calls
         timeout_seconds = self.timeout_seconds(args)
         create_result = await call_mcp_tool(
             session,
@@ -533,7 +536,10 @@ class ExecuteSourceCommandSpec(McpDevCommandSpec):
         self,
         session: McpDevStdioSession,
         args: argparse.Namespace,
+        *,
+        prepared_calls: tuple[McpDevToolCall, ...] | None = None,
     ) -> McpDevToolBatchResponse:
+        del prepared_calls
         timeout_seconds = self.timeout_seconds(args)
         create_result = await call_mcp_tool(
             session,

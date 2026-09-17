@@ -6,6 +6,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
@@ -35,6 +36,8 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.dto.functions import FunctionParameterSource
 from openhcs.agent.dto.pipeline import CreatePipelineRequest
 from openhcs.agent.dto.viewer import (
+    ViewerWindowIntensityPayloadIdentity,
+    ViewerWindowIntensityWindowRequest,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerVisibilityRecord,
     ViewerWindowNavigationRequest,
@@ -111,6 +114,7 @@ from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProje
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
+    ViewerControlMessageType,
     ViewerLayerIsolationField,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
@@ -980,6 +984,31 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
         response[ViewerLayerIsolationField.MISSING_ROUTE_KEYS.value] = missing_routes
         return response
 
+    def apply_intensity_window(self, request):
+        self.requests.append(request)
+        controls = request.intensity_window
+        return {
+            "status": "success",
+            "route_key": controls.route_key,
+            "axis_indices": dict(controls.axis_indices),
+            "requested_percentiles": (
+                controls.low_percentile,
+                controls.high_percentile,
+            ),
+            "resolved_limits": (12.0, 240.0),
+            "matched_payload_count": 1,
+            "matched_payload_identities": (
+                {
+                    "path": "/tmp/A14.tif",
+                    "components": {"well": "A14", "site": 0},
+                    "axis_indices": (0, 0, 0),
+                    "aggregate_axis_indices": (),
+                },
+            ),
+            "contributing_payload_count": 1,
+            "contributing_pixel_count": 256,
+        }
+
 
 class _UnmountedRouteViewerWindowGateway(_FakeViewerWindowGateway):
     def window_state(self, request):
@@ -1021,6 +1050,10 @@ class _MalformedViewerWindowGateway(ViewerWindowGatewayABC):
         del request
         return {"status": "success", "layers": ()}
 
+    def apply_intensity_window(self, request):
+        del request
+        return {"status": "success"}
+
 
 class _CompactStateViewerWindowGateway(_FakeViewerWindowGateway):
     def window_state(self, request):
@@ -1036,10 +1069,25 @@ class _CompactStateViewerWindowGateway(_FakeViewerWindowGateway):
         return state
 
 
-class _CoordinateGapViewerWindowGateway(_FakeViewerWindowGateway):
+class _SparseCoordinateViewerWindowGateway(_FakeViewerWindowGateway):
     def window_state(self, request):
         state = super().window_state(request)
         layer = dict(state["layers"][0])
+        component_values = list(layer["component_values"])
+        component_values[1] = {
+            **component_values[1],
+            "channel": 2,
+        }
+        layer["component_values"] = tuple(component_values)
+        payload_summaries = list(layer["payload_summaries"])
+        payload_summaries[1] = {
+            **payload_summaries[1],
+            "components": {
+                **payload_summaries[1]["components"],
+                "channel": 2,
+            },
+        }
+        layer["payload_summaries"] = tuple(payload_summaries)
         layer["axis_component_values"] = {
             "well": ("A14", "B13"),
             "site": (1,),
@@ -1184,6 +1232,7 @@ class _SilentZMQSocket:
     def __init__(self) -> None:
         self.closed = False
         self.sent_flags = []
+        self.sent_payload = None
 
     def setsockopt(self, option, value) -> None:
         del option, value
@@ -1192,7 +1241,7 @@ class _SilentZMQSocket:
         self.control_url = control_url
 
     def send(self, payload: bytes, *, flags: int = 0) -> None:
-        del payload
+        self.sent_payload = payload
         self.sent_flags.append(flags)
 
     def recv(self, *, flags: int = 0):
@@ -1235,6 +1284,11 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     context = _SilentZMQContext(socket)
     poller = _SilentZMQPoller()
     monkeypatch.setattr(viewer_window_service_module.zmq, "Poller", lambda: poller)
+    monkeypatch.setattr(
+        viewer_window_service_module.ViewerRuntimeEndpoint,
+        "application_compatibility",
+        lambda _endpoint, *, timeout_ms: SimpleNamespace(require_match=lambda: None),
+    )
     gateway = ZMQViewerWindowGateway(context_factory=lambda: context)
     service = ViewerWindowService(gateway=gateway)
 
@@ -1247,8 +1301,38 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert "timed out after 25ms" in result.errors[0].message
     assert poller.poll_timeouts == [25]
     assert socket.sent_flags == [viewer_window_service_module.zmq.DONTWAIT]
+    decoded_request = viewer_window_service_module.pickle.loads(socket.sent_payload)
+    assert decoded_request["type"] == "state"
+    assert type(next(iter(decoded_request))) is str
     assert socket.closed is True
     assert context.destroy_linger == 0
+
+
+def test_viewer_window_zmq_gateway_rejects_stale_viewer_before_control_dispatch(
+    monkeypatch,
+):
+    def reject_stale_viewer() -> None:
+        raise ValueError("stale viewer application")
+
+    def unexpected_context():
+        raise AssertionError("stale viewer must fail before opening a control context")
+
+    monkeypatch.setattr(
+        viewer_window_service_module.ViewerRuntimeEndpoint,
+        "application_compatibility",
+        lambda _endpoint, *, timeout_ms: SimpleNamespace(
+            require_match=reject_stale_viewer
+        ),
+    )
+    gateway = ZMQViewerWindowGateway(context_factory=unexpected_context)
+
+    result = ViewerWindowService(gateway=gateway).probe_window(
+        ViewerWindowStateRequest(connection=_viewer_connection(), timeout_ms=25)
+    )
+
+    assert result.reachable is False
+    assert result.errors[0].code == "viewer_window_state_failed"
+    assert result.errors[0].message == "stale viewer application"
 
 
 def test_function_catalog_search_and_describe_use_registry_ids(monkeypatch):
@@ -2156,6 +2240,66 @@ def test_viewer_window_service_navigates_running_viewer_window():
     assert gateway.requests[0].navigation.axis_indices == {"well": 1, "channel": 0}
 
 
+def test_viewer_window_service_applies_typed_intensity_window_result():
+    gateway = _FakeViewerWindowGateway()
+    service = ViewerWindowService(gateway=gateway)
+    request = ViewerWindowIntensityWindowRequest.from_fields(
+        connection=_viewer_connection(),
+        route_key="IdentifyPrimaryObjects|image",
+        axis_indices={"well": 0, "site": 0},
+        low_percentile=2.0,
+        high_percentile=98.0,
+    )
+
+    result = service.apply_intensity_window(request)
+
+    assert result.applied is True
+    assert result.route_key == "IdentifyPrimaryObjects|image"
+    assert result.axis_indices == {"well": 0, "site": 0}
+    assert result.requested_percentiles == (2.0, 98.0)
+    assert result.resolved_limits == (12.0, 240.0)
+    assert result.matched_payload_count == 1
+    assert result.matched_payload_identities == (
+        ViewerWindowIntensityPayloadIdentity(
+            path="/tmp/A14.tif",
+            components={"well": "A14", "site": 0},
+            axis_indices=(0, 0, 0),
+            aggregate_axis_indices=(),
+        ),
+    )
+    assert result.contributing_payload_count == 1
+    assert result.contributing_pixel_count == 256
+    assert request.as_tool_arguments()["axis_indices"] == {"well": 0, "site": 0}
+
+
+def test_viewer_window_zmq_gateway_projects_intensity_control_owner(monkeypatch):
+    request = ViewerWindowIntensityWindowRequest.from_fields(
+        connection=_viewer_connection(),
+        route_key="image-route",
+        axis_indices={"site": 2},
+        low_percentile=5.0,
+        high_percentile=95.0,
+    )
+    gateway = ZMQViewerWindowGateway()
+    calls = []
+
+    def send_control_message(projected_request, message_type, payload):
+        calls.append((projected_request, message_type, payload))
+        return {"status": "error", "message": "test"}
+
+    monkeypatch.setattr(gateway, "_send_control_message", send_control_message)
+
+    gateway.apply_intensity_window(request)
+
+    assert calls == [
+        (
+            request,
+            ViewerControlMessageType.APPLY_INTENSITY_WINDOW,
+            request.intensity_window,
+        )
+    ]
+
+
 def test_viewer_window_service_isolates_only_mounted_layers() -> None:
     gateway = _UnmountedRouteViewerWindowGateway()
     service = ViewerWindowService(gateway=gateway)
@@ -2388,17 +2532,16 @@ def test_viewer_window_service_validation_reports_axis_and_count_mismatch():
     ]
 
 
-def test_viewer_window_service_validation_reports_coordinate_gaps():
+def test_viewer_window_service_validation_accepts_sparse_routed_coordinates():
     result = ViewerWindowService(
-        gateway=_CoordinateGapViewerWindowGateway()
+        gateway=_SparseCoordinateViewerWindowGateway()
     ).validation_summary(ViewerWindowValidationRequest(connection=_viewer_connection()))
 
-    assert result.valid is False
-    assert result.layer_summaries[0].coordinate_gap_count == 2
-    assert result.layer_summaries[0].missing_payload_coordinate_count == 2
+    assert result.valid is True
+    assert result.layer_summaries[0].coordinate_gap_count == 4
+    assert result.layer_summaries[0].missing_payload_coordinate_count == 0
     assert [warning.code for warning in result.warnings] == [
         "viewer_layer_coordinate_gaps",
-        "viewer_payload_coordinates_missing",
     ]
 
 

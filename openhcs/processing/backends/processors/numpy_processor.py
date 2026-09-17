@@ -254,6 +254,45 @@ def percentile_normalize(
 
 
 @numpy_func
+def percentile_normalize_plane(
+    image: np.ndarray,
+    plane_index: int = 0,
+    low_percentile: PercentileLowerEndpointInput = 1.0,
+    high_percentile: PercentileUpperEndpointInput = 99.0,
+    target_min: NormalizationTargetMinimumInput = 0.0,
+    target_max: NormalizationTargetMaximumInput = 65535.0,
+) -> np.ndarray:
+    """Normalize one declared leading-axis plane and preserve every other plane.
+
+    Use this when one process channel needs contrast normalization but another
+    plane in the same transported stack supplies reference semantics such as a
+    nuclear stain, calibration image, or mask. The returned array is a copy;
+    every unselected plane remains byte-for-byte identical to the input.
+
+    Validate:
+        Compare the selected plane before and after normalization, and prove
+        array equality for every unselected reference plane.
+
+    Args:
+        plane_index: Leading-axis plane to normalize; zero selects the first plane.
+    """
+
+    _validate_3d_array(image)
+    if not 0 <= plane_index < image.shape[0]:
+        raise ValueError("plane_index is outside the input stack")
+
+    normalized = np.asarray(image).copy()
+    normalized[plane_index : plane_index + 1] = percentile_normalize(
+        image[plane_index : plane_index + 1],
+        low_percentile=low_percentile,
+        high_percentile=high_percentile,
+        target_min=target_min,
+        target_max=target_max,
+    )
+    return normalized
+
+
+@numpy_func
 def stack_percentile_normalize(
     stack: np.ndarray,
     low_percentile: PercentileLowerEndpointInput = 1.0,

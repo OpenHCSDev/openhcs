@@ -103,6 +103,7 @@ class LooseOperaPhenixNeuriteInputs:
     hoechst: SemanticImageSource
     map2: SemanticImageSource | None
     smi312: SemanticImageSource
+    neurite_candidate_threshold_correction_factor: float = 0.05
 
     @property
     def cell_body_source(self) -> SemanticImageSource:
@@ -255,7 +256,11 @@ def build_loose_operaphenix_neurite_pipeline(
             name="NeuriteForeground",
             func=(
                 threshold,
-                engine.threshold_kwargs(),
+                engine.threshold_kwargs(
+                    correction_factor=(
+                        inputs.neurite_candidate_threshold_correction_factor
+                    ),
+                ),
             ),
             step_materialization_config=_qc_checkpoint(
                 output_root,

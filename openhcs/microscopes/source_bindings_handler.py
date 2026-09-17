@@ -137,13 +137,21 @@ class SourceBindingsHandler(MicroscopeHandler):
             metadata = self.metadata_handler.source_workspace_metadata_document(
                 plate_root
             )
-            projection = (
-                VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
+            workspace_metadata = self.metadata_handler.workspace_mapping_metadata(
+                plate_root
+            )
+            if (
+                workspace_metadata is not None
+                and workspace_metadata.get(
+                    FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY
+                )
+                == self._source_bindings_config.declaration_identity()
+                and VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
                     plate_root,
                     metadata,
                 )
-            )
-            if projection is not None:
+                is not None
+            ):
                 self._register_virtual_workspace_backend(plate_root, filemanager)
                 return plate_root
         materialize_source_binding_workspace(

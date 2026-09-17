@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, fields, is_dataclass, replace
 from pathlib import Path
-from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_type_hints
 
 from objectstate import DataclassFieldAccess
@@ -15,9 +15,9 @@ from openhcs.core.pipeline.step_snapshot import (
     StepSnapshot,
     build_step_snapshots,
 )
-from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.vfs_protocol import (
     FileManagerLike,
     PlatePathDeclaration,
@@ -25,6 +25,7 @@ from openhcs.core.vfs_protocol import (
 
 if TYPE_CHECKING:
     from objectstate import ObjectState
+
     from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
@@ -302,6 +303,28 @@ class CompilationSession:
             raise ValueError(
                 f"Missing compiled plan for step {index} ({snapshot.step.name})."
             ) from exc
+
+    def main_flow_plan_ancestry(
+        self,
+        index: int,
+    ) -> tuple[CompiledStepPlan, ...]:
+        """Return one compiled plan and its main-flow producer ancestry."""
+
+        ancestry: list[CompiledStepPlan] = []
+        visited: set[int] = set()
+        current_index = index
+        while True:
+            if current_index in visited:
+                raise ValueError(
+                    f"Compiled main-flow dependency cycle includes step {current_index}."
+                )
+            visited.add(current_index)
+            current = self.plan(current_index)
+            ancestry.append(current)
+            source_step_index = current.main_input_dependency.predecessor_step_index()
+            if source_step_index is None:
+                return tuple(ancestry)
+            current_index = source_step_index
 
 
 @dataclass(frozen=True, slots=True)

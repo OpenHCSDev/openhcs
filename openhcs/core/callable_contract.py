@@ -17,7 +17,16 @@ from functools import lru_cache, wraps
 from pathlib import Path
 from threading import Lock
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, ClassVar, Mapping, get_type_hints
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Mapping,
+    TypeVar,
+    cast,
+    get_type_hints,
+    overload,
+)
 
 from arraybridge import MemoryContractAttribute, MemoryType
 from python_introspect import (
@@ -43,6 +52,7 @@ from openhcs.core.variable_component_stack_requirement import (
 
 if TYPE_CHECKING:
     from openhcs.core.function_reference import FunctionReference
+    from openhcs.core.image_file_serialization import ImageFileSourceMetadata
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
     from openhcs.core.runtime_adapters import RuntimeAdapterSpec
     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
@@ -53,6 +63,7 @@ if TYPE_CHECKING:
 
 
 CallableNamespace = Mapping[str, Any]
+_EnumT = TypeVar("_EnumT", bound=Enum)
 _prepared_callable_keys: set[tuple[str, str, Hashable]] = set()
 _prepared_callable_lock = Lock()
 
@@ -181,6 +192,64 @@ class ImagePayloadConsumption(str, Enum):
     COMPOSED = "composed"
 
 
+class PrimaryImageCarrierRequirement(str, Enum):
+    """Compile-time carrier evidence required by a callable's primary image."""
+
+    SOURCE_CHANNEL_AXIS = "source_channel_axis"
+
+    def validate_source_metadata(
+        self,
+        metadata: ImageFileSourceMetadata,
+        *,
+        source_path: Path,
+        load_as_monochrome: bool,
+    ) -> None:
+        """Validate one exact source after source-binding transformations."""
+
+        source_channel_axis = (
+            None
+            if load_as_monochrome
+            else metadata.pixel_semantics.channel_axis
+        )
+        if self is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS:
+            if source_channel_axis is None:
+                raise ValueError(
+                    "Primary image carrier requires a declared source channel "
+                    f"axis, but {source_path} has none after source-binding "
+                    "transformations."
+                )
+            return
+        raise AssertionError(f"Unhandled primary image carrier requirement {self!r}.")
+
+
+class PrimaryImageCarrierTransition(str, Enum):
+    """Declared effect of a callable on its primary-image carrier semantics."""
+
+    PRESERVE = "preserve"
+
+    def proves(self, requirement: PrimaryImageCarrierRequirement) -> bool:
+        """Return whether this transition preserves the requested evidence."""
+
+        if self is PrimaryImageCarrierTransition.PRESERVE:
+            return True
+        raise AssertionError(f"Unhandled primary image carrier transition {self!r}.")
+
+
+def _validate_optional_enum(
+    value: object,
+    enum_type: type[Enum],
+    *,
+    owner: str,
+) -> None:
+    """Validate one optional enum at a declaration boundary."""
+
+    if value is not None and not isinstance(value, enum_type):
+        raise TypeError(
+            f"{owner} must be {enum_type.__name__} or None, got "
+            f"{type(value).__name__}."
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class CallableMetadata:
     """Compiler-visible metadata declared by one processing callable."""
@@ -207,6 +276,8 @@ class CallableMetadata:
     image_payload_consumption: ImagePayloadConsumption = ImagePayloadConsumption.NATURAL
     request_binding: "CallableRequestBinding | None" = None
     prepare: Callable[..., object] | None = None
+    primary_image_carrier_requirement: PrimaryImageCarrierRequirement | None = None
+    primary_image_carrier_transition: PrimaryImageCarrierTransition | None = None
 
     def __post_init__(self) -> None:
         """Normalize the generic artifact-fed callable parameter declaration."""
@@ -240,6 +311,16 @@ class CallableMetadata:
         if not normalized:
             normalized = spec_parameter_names
         object.__setattr__(self, "artifact_input_parameter_names", normalized)
+        _validate_optional_enum(
+            self.primary_image_carrier_requirement,
+            PrimaryImageCarrierRequirement,
+            owner="CallableMetadata.primary_image_carrier_requirement",
+        )
+        _validate_optional_enum(
+            self.primary_image_carrier_transition,
+            PrimaryImageCarrierTransition,
+            owner="CallableMetadata.primary_image_carrier_transition",
+        )
 
     @property
     def declared_memory_types(self) -> frozenset[MemoryType]:
@@ -334,6 +415,18 @@ class CallableMetadata:
                 FunctionContractAttribute.runtime_image_execution_mode,
             ),
             image_payload_consumption=reader.image_payload_consumption(),
+            primary_image_carrier_requirement=(
+                reader.optional_enum(
+                    FunctionContractAttribute.primary_image_carrier_requirement,
+                    PrimaryImageCarrierRequirement,
+                )
+            ),
+            primary_image_carrier_transition=(
+                reader.optional_enum(
+                    FunctionContractAttribute.primary_image_carrier_transition,
+                    PrimaryImageCarrierTransition,
+                )
+            ),
             request_binding=reader.optional_request_binding(
                 FunctionContractAttribute.callable_request_binding,
             ),
@@ -421,6 +514,14 @@ class CallableMetadata:
             namespace[FunctionContractAttribute.image_payload_consumption] = (
                 self.image_payload_consumption
             )
+        if self.primary_image_carrier_requirement is not None:
+            namespace[
+                FunctionContractAttribute.primary_image_carrier_requirement
+            ] = self.primary_image_carrier_requirement
+        if self.primary_image_carrier_transition is not None:
+            namespace[
+                FunctionContractAttribute.primary_image_carrier_transition
+            ] = self.primary_image_carrier_transition
         if self.request_binding is not None:
             namespace[FunctionContractAttribute.callable_request_binding] = (
                 self.request_binding
@@ -834,6 +935,22 @@ class CallableContract(ArtifactPlanKeySelector):
     def image_payload_consumption(self) -> ImagePayloadConsumption:
         """Declared primary-image payload consumption."""
         return self.metadata.image_payload_consumption
+
+    @property
+    def primary_image_carrier_requirement(
+        self,
+    ) -> PrimaryImageCarrierRequirement | None:
+        """Declared compile-time requirement for the primary image carrier."""
+
+        return self.metadata.primary_image_carrier_requirement
+
+    @property
+    def primary_image_carrier_transition(
+        self,
+    ) -> PrimaryImageCarrierTransition | None:
+        """Declared effect on primary-image carrier semantics."""
+
+        return self.metadata.primary_image_carrier_transition
 
     @property
     def request_binding(self) -> "CallableRequestBinding | None":
@@ -1281,6 +1398,25 @@ def _public_defaults_mapping(
     )
 
 
+def _attach_optional_enum_metadata(
+    func: Any,
+    *,
+    field_name: str,
+    value: object,
+    enum_type: type[Enum],
+) -> None:
+    """Validate and attach one optional enum declaration."""
+
+    if value is None:
+        return
+    _validate_optional_enum(
+        value,
+        enum_type,
+        owner=field_name,
+    )
+    _mutable_callable_namespace(func)[field_name] = value
+
+
 def attach_callable_contract_metadata(
     func: Any,
     *,
@@ -1289,6 +1425,8 @@ def attach_callable_contract_metadata(
     prepare: Any | None = None,
     runtime_image_execution_mode: ImagePayloadExecutionMode | None = None,
     runtime_bound_parameters: tuple[type[RuntimeParameterDeclarationABC], ...] = (),
+    primary_image_carrier_requirement: PrimaryImageCarrierRequirement | None = None,
+    primary_image_carrier_transition: PrimaryImageCarrierTransition | None = None,
 ) -> None:
     """Attach OpenHCS callable metadata used by compiler/runtime phases."""
     if declared_processing_contract is not None:
@@ -1346,6 +1484,18 @@ def attach_callable_contract_metadata(
         _mutable_callable_namespace(func)[
             FunctionContractAttribute.runtime_image_execution_mode
         ] = runtime_image_execution_mode
+    _attach_optional_enum_metadata(
+        func,
+        field_name=FunctionContractAttribute.primary_image_carrier_requirement,
+        value=primary_image_carrier_requirement,
+        enum_type=PrimaryImageCarrierRequirement,
+    )
+    _attach_optional_enum_metadata(
+        func,
+        field_name=FunctionContractAttribute.primary_image_carrier_transition,
+        value=primary_image_carrier_transition,
+        enum_type=PrimaryImageCarrierTransition,
+    )
 
     _project_runtime_owned_parameter_exclusions(func)
 
@@ -1477,6 +1627,38 @@ def runtime_image_execution_mode(
         return func
 
     return decorator
+
+
+def requires_primary_image_carrier(
+    requirement: PrimaryImageCarrierRequirement,
+) -> Any:
+    """Declare carrier evidence that must be proved before callable execution."""
+
+    if not isinstance(requirement, PrimaryImageCarrierRequirement):
+        raise TypeError(
+            "requires_primary_image_carrier requirement must be "
+            "PrimaryImageCarrierRequirement, got "
+            f"{type(requirement).__name__}."
+        )
+
+    def decorator(func: Any) -> Any:
+        attach_callable_contract_metadata(
+            func,
+            primary_image_carrier_requirement=requirement,
+        )
+        return func
+
+    return decorator
+
+
+def preserves_primary_image_carrier(func: Any) -> Any:
+    """Declare that a callable preserves its primary-image carrier semantics."""
+
+    attach_callable_contract_metadata(
+        func,
+        primary_image_carrier_transition=PrimaryImageCarrierTransition.PRESERVE,
+    )
+    return func
 
 
 def prepare_processing_callable(func: Any) -> None:
@@ -1841,8 +2023,24 @@ class CallableMetadataReader:
             )
         return value
 
-    def optional_enum(self, field_name: str) -> Enum | None:
-        """Return an optional enum metadata field."""
+    @overload
+    def optional_enum(self, field_name: str, enum_type: None = None) -> Enum | None:
+        ...
+
+    @overload
+    def optional_enum(
+        self,
+        field_name: str,
+        enum_type: type[_EnumT],
+    ) -> _EnumT | None:
+        ...
+
+    def optional_enum(
+        self,
+        field_name: str,
+        enum_type: type[_EnumT] | None = None,
+    ) -> Enum | _EnumT | None:
+        """Return an optional enum, optionally constrained to one enum family."""
         value = self.namespace.get(field_name)
         if value is None:
             return None
@@ -1851,7 +2049,14 @@ class CallableMetadataReader:
                 f"{self.function_name!r}.{field_name} must be Enum, "
                 f"got {type(value).__name__}."
             )
-        return value
+        if enum_type is not None and not isinstance(value, enum_type):
+            raise TypeError(
+                f"{self.function_name!r}.{field_name} must be "
+                f"{enum_type.__name__}, got {type(value).__name__}."
+            )
+        if enum_type is None:
+            return value
+        return cast(_EnumT, value)
 
     def optional_callable(
         self,

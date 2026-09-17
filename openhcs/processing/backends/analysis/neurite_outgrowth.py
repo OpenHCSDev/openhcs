@@ -5,20 +5,20 @@ The opinionated implementation composes the existing CellProfiler-compatible
 segmentation leaves and measures the final soma-rooted neurite topology.
 """
 
+import heapq
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from enum import Enum
-import heapq
 from itertools import combinations
 from typing import Iterable, Mapping, Sequence
 
 import numpy as np
 from scipy import ndimage as ndi
 from scipy.spatial import cKDTree
+from skan import Skeleton, summarize
 from skimage.graph import MCP_Geometric
 from skimage.measure import regionprops
 from skimage.segmentation import expand_labels
-from skan import Skeleton, summarize
 
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
@@ -31,10 +31,10 @@ from openhcs.core.artifacts import (
     SpatialGraphArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.memory import numpy
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
+from openhcs.core.memory import numpy
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_object_label_building import (
@@ -62,11 +62,6 @@ from openhcs.processing.materialization import (
     SWCOptions,
 )
 
-from .count_cells_simple import (
-    MetaXpressWavelengthSettings,
-    segment_metaxpress_round_objects,
-)
-from .metaxpress_utils import HiddenPixelSize, local_background_response
 from ..cellprofiler.feature_enhancement import (
     EnhanceMethod,
     NeuriteMethod,
@@ -85,6 +80,11 @@ from ..cellprofiler.thresholding import (
     CellProfilerThresholdScope,
     threshold,
 )
+from .count_cells_simple import (
+    MetaXpressWavelengthSettings,
+    segment_metaxpress_round_objects,
+)
+from .metaxpress_utils import HiddenPixelSize, local_background_response
 
 
 class NeuriteIllumination(str, Enum):
@@ -103,7 +103,8 @@ class CellProfilerNeuriteEngineProfile:
     body_max_diameter_px: int = 100
     adaptive_window_size_px: int = 64
     tubeness_smoothing_px: float = 1.5
-    threshold_correction_factor: float = 0.85
+    neurite_candidate_threshold_correction_factor: float = 0.85
+    secondary_ownership_threshold_correction_factor: float = 0.85
     threshold_smoothing_px: float = 1.0
     secondary_regularization_factor: float = 0.05
 
@@ -165,11 +166,16 @@ class CellProfilerNeuriteEngineProfile:
         *,
         window_size: int | None = None,
         smoothing: float | None = None,
+        correction_factor: float | None = None,
     ) -> dict[str, object]:
         return {
             "threshold_scope": CellProfilerThresholdScope.ADAPTIVE,
             "threshold_method": CellProfilerThresholdMethod.OTSU,
-            "threshold_correction_factor": self.threshold_correction_factor,
+            "threshold_correction_factor": (
+                self.neurite_candidate_threshold_correction_factor
+                if correction_factor is None
+                else correction_factor
+            ),
             "window_size": (
                 self.adaptive_window_size_px if window_size is None else window_size
             ),
@@ -187,7 +193,9 @@ class CellProfilerNeuriteEngineProfile:
             "method": SecondaryMethod.PROPAGATION,
             "threshold_scope": CellProfilerThresholdScope.ADAPTIVE,
             "threshold_method": CellProfilerThresholdMethod.OTSU,
-            "threshold_correction_factor": self.threshold_correction_factor,
+            "threshold_correction_factor": (
+                self.secondary_ownership_threshold_correction_factor
+            ),
             "adaptive_window_size": (
                 self.adaptive_window_size_px
                 if adaptive_window_size is None
@@ -252,6 +260,14 @@ class MetaXpressOutgrowthSettings:
     minimum_cell_growth_to_log_as_significant: float = 10.0
     """Scoring-only total outgrowth threshold in micrometers."""
 
+    candidate_threshold_correction_factor: float = (
+        CELLPROFILER_NEURITE_ENGINE_PROFILE.neurite_candidate_threshold_correction_factor
+    )
+    """Adaptive foreground sensitivity; lower values admit dimmer candidates."""
+
+    candidate_hysteresis_seed_correction_factor: float | None = None
+    """Optional stricter seed threshold retaining connected dim candidates."""
+
     def validate(self) -> None:
         if not np.isfinite(self.maximum_width) or self.maximum_width <= 0:
             raise ValueError("outgrowth.maximum_width must be > 0")
@@ -267,6 +283,25 @@ class MetaXpressOutgrowthSettings:
             raise ValueError(
                 "outgrowth.minimum_cell_growth_to_log_as_significant must be >= 0"
             )
+        if (
+            not np.isfinite(self.candidate_threshold_correction_factor)
+            or self.candidate_threshold_correction_factor <= 0
+        ):
+            raise ValueError(
+                "outgrowth.candidate_threshold_correction_factor must be > 0"
+            )
+        if self.candidate_hysteresis_seed_correction_factor is not None:
+            seed_factor = self.candidate_hysteresis_seed_correction_factor
+            if not np.isfinite(seed_factor) or seed_factor <= 0:
+                raise ValueError(
+                    "outgrowth.candidate_hysteresis_seed_correction_factor must "
+                    "be > 0 when set"
+                )
+            if seed_factor < self.candidate_threshold_correction_factor:
+                raise ValueError(
+                    "outgrowth.candidate_hysteresis_seed_correction_factor must "
+                    "be >= outgrowth.candidate_threshold_correction_factor"
+                )
 
 
 @dataclass(frozen=True)
@@ -718,10 +753,27 @@ def neurite_outgrowth_metaxpress(
         else body_channel_index
     )
     body_image = image_array[body_detection_channel_index]
+    neurite_image = image_array[neurite_channel_index]
     if nuclear_seeded_signal_body_mode:
+        signal_cell_bodies = _derive_signal_cell_bodies(
+            nuclei_labels,
+            neurite_image,
+            cell_body,
+            pixel_size_um,
+            bright_objects=bright_objects,
+        )
+        keep_signal_body = (
+            np.bincount(
+                signal_cell_bodies.ravel(),
+                minlength=int(nuclei_labels.max()) + 1,
+            )
+            > 0
+        )
+        keep_signal_body[0] = False
+        cell_body_labels = _relabel(signal_cell_bodies, keep_signal_body)
         cell_body_payload = SourceImageObjectLabelBuildRequest(
-            image=body_image,
-            labels=nuclei_labels,
+            image=neurite_image,
+            labels=cell_body_labels,
         ).payload()
     else:
         cell_body_payload = _identify_cell_bodies_cellprofiler(
@@ -731,12 +783,11 @@ def neurite_outgrowth_metaxpress(
             bright_objects=bright_objects,
             nuclei_labels=nuclei_labels if use_nuclear_stain else None,
         )
-    cell_body_labels = object_label_dense_array(
-        cell_body_payload,
-        dtype=np.int32,
-    )
+        cell_body_labels = object_label_dense_array(
+            cell_body_payload,
+            dtype=np.int32,
+        )
 
-    neurite_image = image_array[neurite_channel_index]
     outgrowth_binary, outgrowth_skeleton, outgrowth_response = (
         _identify_neurites_cellprofiler(
             neurite_image,
@@ -747,16 +798,23 @@ def neurite_outgrowth_metaxpress(
         )
     )
     outgrowth_width_px = outgrowth.maximum_width / pixel_size_um
-    secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
-        neurite_image,
-        cell_body_payload,
-        body_width_px=cell_body.approximate_max_width / pixel_size_um,
-        bright_objects=bright_objects,
-    )
     nuclear_seed_mode = use_nuclear_stain and body_detection_channel_index == int(
         nuclear_stain.channel_index
     )
-    if nuclear_seed_mode:
+    if nuclear_seeded_signal_body_mode:
+        secondary_owner_regions = _propagate_neurite_owner_regions(
+            outgrowth_response,
+            cell_body_labels,
+            minimum_response=outgrowth.intensity_above_local_background,
+        )
+    else:
+        secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
+            neurite_image,
+            cell_body_payload,
+            body_width_px=cell_body.approximate_max_width / pixel_size_um,
+            bright_objects=bright_objects,
+        )
+    if nuclear_seed_mode and not nuclear_seeded_signal_body_mode:
         cell_body_payload = _qualify_nuclear_cell_bodies(
             cell_body_payload,
             cell_body_labels,
@@ -765,6 +823,12 @@ def neurite_outgrowth_metaxpress(
         cell_body_labels = object_label_dense_array(
             cell_body_payload,
             dtype=np.int32,
+        )
+        secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
+            neurite_image,
+            cell_body_payload,
+            body_width_px=cell_body.approximate_max_width / pixel_size_um,
+            bright_objects=bright_objects,
         )
 
     topology = _analyze_topology(
@@ -778,50 +842,11 @@ def neurite_outgrowth_metaxpress(
         topology,
     )
     if nuclear_seed_mode:
-        secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
-            neurite_image,
-            cell_body_payload,
-            body_width_px=cell_body.approximate_max_width / pixel_size_um,
-            bright_objects=bright_objects,
-        )
         owner_skeleton = _adopt_secondary_owned_skeleton(
             outgrowth_skeleton,
             owner_skeleton,
             secondary_owner_regions,
         )
-        if nuclear_seeded_signal_body_mode:
-            signal_cell_bodies = _derive_signal_cell_bodies(
-                cell_body_labels,
-                secondary_owner_regions,
-                neurite_image,
-                cell_body,
-                pixel_size_um,
-                bright_objects=bright_objects,
-            )
-            keep_signal_body = (
-                np.bincount(
-                    signal_cell_bodies.ravel(),
-                    minlength=int(cell_body_labels.max()) + 1,
-                )
-                > 0
-            )
-            keep_signal_body[0] = False
-            cell_body_labels = _relabel(signal_cell_bodies, keep_signal_body)
-            owner_skeleton = _relabel(owner_skeleton, keep_signal_body)
-            secondary_owner_regions = _relabel(
-                secondary_owner_regions,
-                keep_signal_body,
-            )
-            secondary_owner_regions = _propagate_neurite_owner_regions(
-                outgrowth_response,
-                cell_body_labels,
-                minimum_response=outgrowth.intensity_above_local_background,
-            )
-            owner_skeleton = _adopt_secondary_owned_skeleton(
-                outgrowth_skeleton,
-                owner_skeleton,
-                secondary_owner_regions,
-            )
     crossing_support = _render_crossing_support(
         outgrowth_skeleton.shape,
         topology,
@@ -1177,9 +1202,26 @@ def _identify_neurites_cellprofiler(
         **CELLPROFILER_NEURITE_ENGINE_PROFILE.threshold_kwargs(
             window_size=_cellprofiler_adaptive_window(body_width_px, image.shape),
             smoothing=max(0.0, 0.25 * outgrowth_width_px),
+            correction_factor=settings.candidate_threshold_correction_factor,
         ),
     )
     cp_mask = np.asarray(image_payload_data(cp_mask_payload)) > 0
+    if settings.candidate_hysteresis_seed_correction_factor is not None:
+        seed_mask_payload, _ = _raw_processing_leaf(threshold)(
+            enhanced,
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.threshold_kwargs(
+                window_size=_cellprofiler_adaptive_window(
+                    body_width_px,
+                    image.shape,
+                ),
+                smoothing=max(0.0, 0.25 * outgrowth_width_px),
+                correction_factor=(
+                    settings.candidate_hysteresis_seed_correction_factor
+                ),
+            ),
+        )
+        seed_mask = np.asarray(image_payload_data(seed_mask_payload)) > 0
+        cp_mask = _seeded_candidate_components(cp_mask, seed_mask)
     response = local_background_response(
         image,
         object_width_px=outgrowth_width_px,
@@ -1191,6 +1233,29 @@ def _identify_neurites_cellprofiler(
     )
     skeleton = np.asarray(image_payload_data(skeleton_payload)) > 0
     return outgrowth_mask, skeleton, response
+
+
+def _seeded_candidate_components(
+    candidate_mask: np.ndarray,
+    seed_mask: np.ndarray,
+) -> np.ndarray:
+    """Retain permissive connected components containing stricter seed pixels."""
+
+    candidates = np.asarray(candidate_mask, dtype=bool)
+    seeds = np.asarray(seed_mask, dtype=bool)
+    if candidates.shape != seeds.shape:
+        raise ValueError("candidate_mask and seed_mask must have the same shape")
+    candidate_labels, candidate_count = ndi.label(
+        candidates,
+        structure=np.ones((3, 3), dtype=bool),
+    )
+    if candidate_count == 0:
+        return np.zeros(candidates.shape, dtype=bool)
+    seeded_labels = np.unique(candidate_labels[seeds & candidates])
+    keep = np.zeros(candidate_count + 1, dtype=bool)
+    keep[seeded_labels] = True
+    keep[0] = False
+    return keep[candidate_labels]
 
 
 def _identify_secondary_owner_regions_cellprofiler(
@@ -1309,21 +1374,17 @@ def _qualify_nuclear_cell_bodies(
 
 def _derive_signal_cell_bodies(
     nuclear_seed_labels: np.ndarray,
-    secondary_owner_regions: np.ndarray,
     neurite_image: np.ndarray,
     settings: MetaXpressCellBodySettings,
     pixel_size_um: float,
     *,
     bright_objects: bool,
 ) -> np.ndarray:
-    """Fill bounded neuronal-cytoplasm bodies around qualified nuclear seeds."""
+    """Fill bounded soma signal assigned to its nearest nuclear seed."""
 
     seeds = np.asarray(nuclear_seed_labels, dtype=np.int32)
-    unified = np.asarray(secondary_owner_regions, dtype=np.int32)
-    if seeds.shape != unified.shape or seeds.shape != neurite_image.shape:
-        raise ValueError(
-            "nuclear seeds, secondary owner regions, and neurite image must share a shape"
-        )
+    if seeds.shape != neurite_image.shape:
+        raise ValueError("nuclear seeds and neurite image must share a shape")
     maximum_radius_px = settings.approximate_max_width / (2.0 * pixel_size_um)
     minimum_area_px = settings.minimum_area / pixel_size_um**2
     response = local_background_response(
@@ -1362,11 +1423,16 @@ def _derive_signal_cell_bodies(
         if local_foreground_width > settings.approximate_max_width / pixel_size_um:
             continue
         distance_from_seed = ndi.distance_transform_edt(~seed)
-        local_unified = unified[owner_slice]
+        distance_to_nearest_seed, nearest_seed_coordinates = ndi.distance_transform_edt(
+            local_seeds == 0,
+            return_indices=True,
+        )
+        nearest_seed = local_seeds[tuple(nearest_seed_coordinates)]
         local_body_foreground = body_foreground[owner_slice]
         candidate = (
-            (local_unified == owner)
+            (nearest_seed == owner)
             & (distance_from_seed <= maximum_radius_px)
+            & (distance_to_nearest_seed <= maximum_radius_px)
             & local_body_foreground
         )
         components, component_count = ndi.label(candidate, structure=connectivity)

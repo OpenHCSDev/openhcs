@@ -110,6 +110,10 @@ class PipelineAuthoringRulesContext(AuthoringContextDeclaration):
     """Sections that describe pipeline authoring syntax and schema hints."""
 
 
+class ImageAnalysisWorkflowContext(AuthoringContextDeclaration):
+    """Sections that own image-analysis assembly and validation guidance."""
+
+
 class CustomFunctionAuthoringRulesContext(AuthoringContextDeclaration):
     """Sections that describe custom function authoring and registration."""
 
@@ -243,6 +247,27 @@ class PipelineAuthoringContext(
             KnowledgeBaseDocumentTarget("openhcs_processing_semantics"),
             KnowledgeBaseDocumentTarget("openhcs_artifact_contract_system"),
             KnowledgeBaseDocumentTarget("openhcs_official30_benchmark_recipes"),
+        ),
+    )
+
+
+class ImageAnalysisWorkflowAuthoringContext(
+    ImageAnalysisWorkflowContext,
+    AuthoringContextDeclaration,
+):
+    kind = "image_analysis_workflow"
+    route = AuthoringContextRoute(
+        title="Design and validate an image-analysis workflow",
+        use_when=(
+            "an analysis needs multisite assembly, registration, normalisation, "
+            "mosaic quality control, segmentation review, or image-result provenance"
+        ),
+        knowledge_targets=(
+            KnowledgeBaseDocumentTarget("openhcs_example_corpus_map"),
+            KnowledgeBaseDocumentTarget("openhcs_data_dimensions"),
+            KnowledgeBaseDocumentTarget("openhcs_function_patterns"),
+            KnowledgeBaseDocumentTarget("openhcs_processing_semantics"),
+            KnowledgeBaseDocumentTarget("openhcs_viewer_management"),
         ),
     )
 

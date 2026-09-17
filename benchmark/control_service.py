@@ -1,4 +1,4 @@
-"""Agent service for read-only benchmark command and artifact inspection."""
+"""Agent-facing benchmark control service owned by the benchmark extension."""
 
 from __future__ import annotations
 

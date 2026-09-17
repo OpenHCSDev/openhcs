@@ -240,11 +240,17 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
         self,
         session: McpDevStdioSession,
         args: argparse.Namespace,
+        *,
+        prepared_calls: tuple[McpDevToolCall, ...] | None = None,
     ) -> McpDevToolBatchResponse:
         if not args.poll_state:
             return cast(
                 McpDevToolBatchResponse,
-                await super().run_session(session, args),
+                await super().run_session(
+                    session,
+                    args,
+                    prepared_calls=prepared_calls,
+                ),
             )
 
         timeout_seconds = self.timeout_seconds(args)
@@ -262,12 +268,14 @@ class SelectedWorkflowCommandSpec(CapabilityBackedCommandSpec):
         baseline_timed_out = baseline_result.has_only_agent_error_code(
             UiBridgeGatewayTimeoutError.agent_error_code
         )
+        workflow_call = (
+            self.calls_from_args(args)[0]
+            if prepared_calls is None
+            else prepared_calls[0]
+        )
         workflow_result = await call_mcp_tool(
             session,
-            McpDevToolCall(
-                self.capability.name,
-                selected_workflow_tool_arguments(args),
-            ),
+            workflow_call,
             timeout_seconds,
         )
         results = (

@@ -7,16 +7,14 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from dataclasses import fields as dataclass_fields
 from enum import Enum
+from functools import cache
+from importlib.metadata import distributions
 from inspect import getdoc
 from math import isfinite
 from typing import ClassVar, Generic, Self, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from benchmark.contracts.control import (
-    BenchmarkRunInspection,
-    BenchmarkRunInspectionRequest,
-)
 from openhcs.agent.dto.architecture import (
     ArchitectureTopic,
     ArchitectureTopicPage,
@@ -159,6 +157,8 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.dto.viewer import (
     ViewerWindowImageSampleRequest,
     ViewerWindowImageSampleResult,
+    ViewerWindowIntensityWindowRequest,
+    ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
     ViewerWindowNavigationRequest,
@@ -209,6 +209,9 @@ class LocalStdioCapabilityTransportSemantics(CapabilityTransportSemanticsABC):
             f"{agent_capabilities.get_authoring_context.name} with kind='first_use' before choosing "
             "tools. That context is a compact orientation and intent router: follow it with the one "
             "task-specific context relevant to the request instead of loading every guide. "
+            "For multisite image assembly or image-result quality control, use the registered "
+            "image_analysis_workflow context as the canonical operating guide rather than "
+            "reconstructing its rules from onboarding text. "
             "Return to these operating guides after a handoff or when the task changes; "
             "they are useful beyond first use. Then call "
             f"{agent_capabilities.search_capabilities.name} with task-relevant workflow, target, "
@@ -1413,17 +1416,6 @@ class KnowledgeCapability(AgentCapabilityDeclaration):
     )
 
 
-class BenchmarkCapability(AgentCapabilityDeclaration):
-    """Expert capability for repository benchmark control and inspection."""
-
-    exposition = AgentCapabilityExposition(
-        workflow_group=CapabilityWorkflowGroup.BENCHMARKING,
-        workflow_stage=CapabilityWorkflowStage.INSPECTION,
-        target_context=CapabilityTargetContext.BENCHMARK_RUN,
-        visibility=CapabilityVisibility.EXPERT,
-    )
-
-
 class ArchitectureCapability(
     HostedTransportCapabilityMixin,
     KnowledgeCapability,
@@ -1661,14 +1653,28 @@ class AgentCapabilityRegistry:
 class AgentCapabilityNamespace:
     """Attribute namespace generated from declared capability ABI names."""
 
-    def __init__(self, capabilities: tuple[AgentCapabilitySpec, ...]) -> None:
-        object.__setattr__(self, "_capabilities", capabilities)
-        for capability in capabilities:
-            object.__setattr__(
-                self,
-                _capability_attribute_name(capability.name),
-                capability,
-            )
+    _capability_projection: Callable[[], tuple[AgentCapabilitySpec, ...]]
+
+    def __init__(
+        self,
+        capability_projection: Callable[[], tuple[AgentCapabilitySpec, ...]],
+    ) -> None:
+        object.__setattr__(self, "_capability_projection", capability_projection)
+
+    @property
+    def capabilities(self) -> tuple[AgentCapabilitySpec, ...]:
+        """Return the current declaration-owned capability projection."""
+        return self._capability_projection()
+
+    def __getattr__(self, name: str) -> AgentCapabilitySpec:
+        """Resolve one generated name from the current declaration projection."""
+        _load_capability_extensions()
+        for declaration in AgentCapabilityDeclaration.__registry__.values():
+            if declaration.name is not None and _capability_attribute_name(
+                declaration.name
+            ) == name:
+                return declaration.to_spec()
+        raise AttributeError(f"Unknown OpenHCS agent capability attribute: {name}")
 
     def __setattr__(self, name: str, value: object) -> None:
         raise AttributeError(f"{type(self).__name__} is immutable.")
@@ -1783,25 +1789,6 @@ class SearchCapabilitiesCapability(
     output_contract = AgentCapabilitySearchResult
     registry_request_invocation = AgentCapabilityRegistryRequestInvocation(
         method=AgentCapabilityRegistry.search,
-    )
-
-
-class InspectBenchmarkRunCapability(BenchmarkCapability):
-    name = "openhcs_inspect_benchmark_run"
-    kind = CapabilityKind.TOOL
-    title = "Inspect benchmark run"
-    description = (
-        "Returns the typed recorded rerun invocation and lifecycle status, "
-        "append-only observation progress, and discovered structured result "
-        "artifacts for one local output directory."
-    )
-    service = "benchmark_control"
-    data_exposure = ("local_benchmark_paths", "benchmark_result_artifacts")
-    input_contract = BenchmarkRunInspectionRequest
-    output_contract = BenchmarkRunInspection
-    request_invocation = AgentDataclassRequestServiceInvocation(
-        service=lambda context: context.benchmark_control_service,
-        method=lambda service, request: service.inspect_run(request),
     )
 
 
@@ -2898,6 +2885,34 @@ class IsolateViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):
     )
 
 
+class ApplyViewerIntensityWindowCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_apply_viewer_intensity_window"
+    cli_command = "viewer-intensity-window"
+    kind = CapabilityKind.TOOL
+    title = "Apply viewer intensity window"
+    description = (
+        "Computes one finite percentile window over the actual routed image "
+        "payload records matching a semantic route coordinate and applies the "
+        "resolved absolute limits to the native Napari image layer. Omitted "
+        "axis_indices select every real payload coordinate on the route; sparse "
+        "display padding is never sampled."
+    )
+    service = "viewer_window"
+    mutating = True
+    side_effects = ("mutates_viewer_window_contrast",)
+    runtime_requirements = ("running_openhcs_viewer_server",)
+    data_exposure = (
+        "viewer_payload_identities",
+        "viewer_image_intensity_statistics",
+    )
+    input_contract = ViewerWindowIntensityWindowRequest
+    output_contract = ViewerWindowIntensityWindowResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.apply_intensity_window(request),
+    )
+
+
 class ProbeViewerWindowCapability(ViewerWindowCliConnectionCapability):
     name = "openhcs_probe_viewer_window"
     cli_command = "probe-viewer"
@@ -3629,6 +3644,7 @@ class UiWaitForOperationReceiptCapability(UiBridgeCliConnectionCapability):
 
 
 def agent_capability_declarations() -> tuple[type[AgentCapabilityDeclaration], ...]:
+    _load_capability_extensions()
     return tuple(AgentCapabilityDeclaration.__registry__.values())
 
 
@@ -3636,6 +3652,28 @@ def _declared_capabilities() -> tuple[AgentCapabilitySpec, ...]:
     return tuple(
         declaration.to_spec() for declaration in agent_capability_declarations()
     )
+
+
+_CAPABILITY_EXTENSION_ENTRY_POINT_GROUP = "openhcs.agent.capability_extensions"
+
+
+@cache
+def _load_capability_extensions() -> None:
+    """Load optional capability declarations from the package-owned boundary."""
+    extensions = tuple(
+        extension
+        for distribution in distributions()
+        for extension in distribution.entry_points
+        if extension.group == _CAPABILITY_EXTENSION_ENTRY_POINT_GROUP
+    )
+    for extension in extensions:
+        try:
+            extension.load()
+        except ModuleNotFoundError as error:
+            extension_root = extension.module.partition(".")[0]
+            missing_root = (error.name or "").partition(".")[0]
+            if missing_root != extension_root:
+                raise
 
 
 def _capability_groups(
@@ -3671,9 +3709,6 @@ def _capability_groups(
     return tuple(groups)
 
 
-CAPABILITIES: tuple[AgentCapabilitySpec, ...] = _declared_capabilities()
-
-
 def _capability_attribute_name(name: str) -> str:
     """Return a Python attribute generated from one final capability ABI name."""
     if name.startswith("openhcs://"):
@@ -3683,7 +3718,7 @@ def _capability_attribute_name(name: str) -> str:
     return name.replace("/", "_").replace("-", "_").replace(":", "_")
 
 
-agent_capabilities = AgentCapabilityNamespace(CAPABILITIES)
+agent_capabilities = AgentCapabilityNamespace(_declared_capabilities)
 
 
 def get_capability_registry(
@@ -3691,7 +3726,8 @@ def get_capability_registry(
     capability_surface_profile: LocalCapabilitySurfaceProfile | None = None,
 ) -> AgentCapabilityRegistry:
     """Return the canonical registry projected through transport and visibility."""
-    validate_capability_registry(CAPABILITIES)
+    capabilities = _declared_capabilities()
+    validate_capability_registry(capabilities)
     selection = AgentCapabilitySurfaceSelection(
         transport=capability_transport,
         local_profile=(
@@ -3700,13 +3736,13 @@ def get_capability_registry(
             else capability_surface_profile
         ),
     )
-    capabilities = tuple(
-        capability for capability in CAPABILITIES if selection.includes(capability)
+    selected_capabilities = tuple(
+        capability for capability in capabilities if selection.includes(capability)
     )
     return AgentCapabilityRegistry(
         schema_version=SCHEMA_VERSION,
-        capabilities=capabilities,
-        groups=_capability_groups(capabilities),
+        capabilities=selected_capabilities,
+        groups=_capability_groups(selected_capabilities),
         surface_profile=selection.local_profile.name,
     )
 
@@ -3720,6 +3756,7 @@ def get_agent_capability_declaration(
     name: str,
 ) -> type[AgentCapabilityDeclaration]:
     """Return the declaration that owns one final MCP/resource ABI name."""
+    _load_capability_extensions()
     try:
         return AgentCapabilityDeclaration.__registry__[name]
     except KeyError as exc:
@@ -3727,9 +3764,11 @@ def get_agent_capability_declaration(
 
 
 def validate_capability_registry(
-    capabilities: tuple[AgentCapabilitySpec, ...] = CAPABILITIES,
+    capabilities: tuple[AgentCapabilitySpec, ...] | None = None,
 ) -> None:
     """Assert static capability metadata is complete enough for policy checks."""
+    if capabilities is None:
+        capabilities = _declared_capabilities()
     seen: set[str] = set()
     for capability in capabilities:
         if capability.name in seen:

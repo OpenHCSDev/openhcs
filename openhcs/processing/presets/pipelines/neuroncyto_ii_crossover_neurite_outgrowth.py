@@ -23,9 +23,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
-import numpy as np
 from polystore.streaming.identity import StreamProducerIdentity
-from skimage.exposure import adjust_gamma
 
 from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
 from openhcs.constants.input_source import InputSource
@@ -37,7 +35,6 @@ from openhcs.core.config import (
     LazyWellFilterConfig,
     PipelineConfig,
 )
-from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.source_bindings import (
     ComponentSelector,
     LazySourceBindingsConfig,
@@ -59,7 +56,9 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     NeuriteIllumination,
     neurite_outgrowth_metaxpress,
 )
-from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
+from openhcs.processing.backends.processors.numpy_processor import (
+    percentile_normalize_plane,
+)
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
 
 
@@ -73,31 +72,6 @@ class NeuronCytoIICrossoverInputs:
     neurite_filename: str
     soma_nuclei_filename: str
     viewer_port: int = 5888
-
-
-@numpy_func
-def enhance_neurite_channel_gamma(
-    image: np.ndarray,
-    channel_index: int = 0,
-    gamma: float = 0.6,
-) -> np.ndarray:
-    """Reveal dim processes on one declared neurite plane only."""
-
-    image_array = np.asarray(image)
-    if image_array.ndim != 3:
-        raise ValueError(
-            f"Expected a channel stack with shape (C, Y, X), got {image_array.shape}"
-        )
-    if not 0 <= channel_index < image_array.shape[0]:
-        raise ValueError("channel_index is outside the input stack")
-    if not np.isfinite(gamma) or gamma <= 0:
-        raise ValueError("gamma must be finite and > 0")
-    enhanced = image_array.copy()
-    enhanced[channel_index] = adjust_gamma(
-        image_array[channel_index],
-        gamma=float(gamma),
-    )
-    return enhanced
 
 
 def _exact_source_binding(
@@ -169,22 +143,24 @@ def build_neuroncyto_ii_crossover_demo(
                 "neurite_channel_index": 0,
                 "illumination": NeuriteIllumination.FLUORESCENCE,
                 "cell_body": MetaXpressCellBodySettings(
-                    approximate_max_width=30.0,
-                    minimum_area=20.0,
+                    approximate_max_width=36.0,
+                    minimum_area=45.0,
                     intensity_above_local_background=20.0,
-                    channel_index=1,
+                    channel_index=0,
                 ),
                 "outgrowth": MetaXpressOutgrowthSettings(
-                    maximum_width=3.0,
-                    intensity_above_local_background=2.0,
-                    minimum_cell_growth_to_log_as_significant=10.0,
+                    maximum_width=5.0,
+                    intensity_above_local_background=8.0,
+                    minimum_cell_growth_to_log_as_significant=8.0,
+                    candidate_threshold_correction_factor=0.22,
+                    candidate_hysteresis_seed_correction_factor=0.25,
                 ),
                 "use_nuclear_stain": True,
                 "nuclear_stain": MetaXpressNuclearSettings(
                     channel_index=1,
-                    approx_min_width=3.0,
-                    approx_max_width=30.0,
-                    intensity_above_local_background=20.0,
+                    approx_min_width=5.0,
+                    approx_max_width=32.0,
+                    intensity_above_local_background=24.0,
                 ),
             },
         ),
@@ -275,12 +251,13 @@ def neuroncyto_ii_crossover_demo_contribution(
         viewer_port=5888,
     )
     pipeline_config, compact_steps = build_neuroncyto_ii_crossover_demo(inputs)
-    contrast_step_name = "Percentile-normalized raw neuron signals"
+    contrast_step_name = "Percentile-normalized neurite signal"
     contrast_step = FunctionStep(
         name=contrast_step_name,
         func=(
-            percentile_normalize,
+            percentile_normalize_plane,
             {
+                "plane_index": 0,
                 "low_percentile": 1.0,
                 "high_percentile": 99.8,
                 "target_max": 255.0,
@@ -290,24 +267,6 @@ def neuroncyto_ii_crossover_demo_contribution(
             variable_components=[VariableComponents.CHANNEL],
             group_by=GroupBy.NONE,
             input_source=InputSource.PIPELINE_START,
-        ),
-        napari_streaming_config=LazyNapariStreamingConfig(
-            enabled=True,
-            persistent=True,
-            port=inputs.viewer_port,
-            colormap="magma",
-        ),
-    )
-    enhancement_step = FunctionStep(
-        name="Neurite-channel gamma enhancement",
-        func=(
-            enhance_neurite_channel_gamma,
-            {"channel_index": 0, "gamma": 0.6},
-        ),
-        processing_config=LazyProcessingConfig(
-            variable_components=[VariableComponents.CHANNEL],
-            group_by=GroupBy.NONE,
-            input_source=InputSource.PREVIOUS_STEP,
         ),
         napari_streaming_config=LazyNapariStreamingConfig(
             enabled=True,
@@ -327,7 +286,7 @@ def neuroncyto_ii_crossover_demo_contribution(
         ),
         napari_streaming_config=compact_step.napari_streaming_config,
     )
-    pipeline_steps = [contrast_step, enhancement_step, analysis_step]
+    pipeline_steps = [contrast_step, analysis_step]
     return PipelineDemoContribution(
         demo_id=demo_id,
         title="NeuronCyto II crossover neurite morphology",
@@ -349,7 +308,7 @@ def neuroncyto_ii_crossover_demo_contribution(
                 output_kind=AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND,
                 output_key=AlignedImageSliceContext.ANONYMOUS_MAIN_FLOW_OUTPUT_KEY,
                 projection_key=AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND,
-                step_name=enhancement_step.name,
+                step_name=contrast_step.name,
                 pipeline_position=None,
             ),
         ),

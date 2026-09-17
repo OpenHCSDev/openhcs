@@ -32,6 +32,9 @@ from openhcs.core.source_bindings import (
     SourceSetRole,
     SourceSelector,
 )
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjectionCache,
+)
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
 from openhcs.microscopes.openhcs import (
@@ -1159,6 +1162,82 @@ def test_source_bindings_handler_does_not_reinterpret_prepared_workspace(tmp_pat
     assert (
         dict(SourceMetadataRoleView(second_metadata).original_items())["Compound"]
         == "First"
+    )
+
+
+def test_source_bindings_handler_reprojects_when_declaration_changes(tmp_path):
+    image = tmp_path / "A01_DNA.tif"
+    image.touch()
+    table = tmp_path / "plate.csv"
+    table.write_text("WellID,Compound\nA01,First\n", encoding="utf-8")
+    shared_declarations = {
+        "metadata_rules": (
+            MetadataExtractionRule(
+                MetadataSource.FILE_NAME,
+                r"^(?P<Well>[A-Z][0-9]+)_DNA\.tif$",
+            ),
+        ),
+        "bindings": (NamedSourceBinding(alias="DNA"),),
+    }
+    with_imported_metadata = SourceBindingsConfig(
+        **shared_declarations,
+        imported_metadata_tables=(
+            ImportedMetadataTable(
+                location="plate.csv",
+                joins=(ImportedMetadataJoin("Well", "WellID"),),
+            ),
+        ),
+    )
+    without_imported_metadata = SourceBindingsConfig(**shared_declarations)
+    filemanager = _filemanager()
+
+    first_handler = SourceBindingsHandler(
+        filemanager,
+        source_bindings_config=with_imported_metadata,
+    )
+    first_handler.initialize_workspace(tmp_path, filemanager)
+    metadata_path = tmp_path / "openhcs_metadata.json"
+    first_document = json.loads(metadata_path.read_text())
+    first_metadata = first_document["subdirectories"][FIELDS.DEFAULT_SUBDIRECTORY]
+    first_source_metadata = next(iter(first_metadata[FIELDS.SOURCE_METADATA].values()))
+    assert (
+        dict(SourceMetadataRoleView(first_source_metadata).original_items())["Compound"]
+        == "First"
+    )
+    assert first_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY] == (
+        with_imported_metadata.declaration_identity()
+    )
+
+    projection_cache = VirtualWorkspaceSourceProjectionCache()
+    first_projection = projection_cache.projection_for(tmp_path, first_document)
+
+    second_handler = SourceBindingsHandler(
+        filemanager,
+        source_bindings_config=without_imported_metadata,
+    )
+    second_handler.initialize_workspace(tmp_path, filemanager)
+    second_document = json.loads(metadata_path.read_text())
+    second_metadata = second_document["subdirectories"][FIELDS.DEFAULT_SUBDIRECTORY]
+    second_source_metadata = next(
+        iter(second_metadata[FIELDS.SOURCE_METADATA].values())
+    )
+
+    assert "Compound" not in dict(
+        SourceMetadataRoleView(second_source_metadata).original_items()
+    )
+    assert second_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY] == (
+        without_imported_metadata.declaration_identity()
+    )
+    assert first_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY] != (
+        second_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY]
+    )
+
+    second_projection = projection_cache.projection_for(tmp_path, second_document)
+    assert second_projection is not first_projection
+    assert "Compound" not in dict(
+        SourceMetadataRoleView(
+            next(iter(second_projection.source_metadata_by_path.values()))
+        ).original_items()
     )
 
 

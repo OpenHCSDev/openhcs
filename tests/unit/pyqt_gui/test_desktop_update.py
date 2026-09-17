@@ -6,24 +6,35 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from objectstate import ObjectStateRegistry
 from packaging.version import Version
 from PyQt6.QtNetwork import QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox, QWidget
 from pyqt_reactive.process_launch import BackgroundProcessPlatform
+from pyqt_reactive.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
 import openhcs.pyqt_gui.main as main_module
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.desktop_deployment import (
     DESKTOP_RESTART_EXECUTABLE_ENVIRONMENT_VARIABLE,
 )
 from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
+from openhcs.processing.backends.assemblers.assemble_stack_cpu import (
+    assemble_stack_cpu,
+)
+from openhcs.processing.backends.assemblers.blending import TileBlendMethod
+from openhcs.processing.backends.processors.numpy_processor import (
+    stack_percentile_normalize,
+)
 from openhcs.pyqt_gui.services.desktop_update import (
     LATEST_RELEASE_API_URL,
     DesktopRestartPurpose,
     DesktopRestartRestoreOutcomeABC,
     DesktopRestartSession,
+    DesktopRestartUiState,
     DesktopRuntimeEnvironment,
     DesktopUpdateCheckFailure,
     DesktopUpdateCheckOrigin,
@@ -37,6 +48,9 @@ from openhcs.pyqt_gui.services.desktop_update import (
 from openhcs.pyqt_gui.services.desktop_update_worker import (
     DesktopUpdatePlan,
     DesktopUpdateProgressTheme,
+)
+from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+    PipelineObjectStateBinding,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
 from openhcs.resources.brand import BrandAsset, brand_asset_bytes
@@ -992,6 +1006,7 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
     plate_manager = SimpleNamespace(
         is_any_plate_running=lambda: False,
         require_pipeline_definition_mutation_allowed=lambda: None,
+        selected_plate_path="/plates/selected",
         orchestrator_code_document_context=lambda **_kwargs: SimpleNamespace(
             source="canonical session source"
         ),
@@ -1024,6 +1039,9 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
         "canonical session source"
     )
     assert session.history_document.read_text(encoding="utf-8") == ("canonical history")
+    assert DesktopRestartUiState.read(session.ui_state_document) == (
+        DesktopRestartUiState(selected_plate_scope_id="/plates/selected")
+    )
     assert session.purpose is DesktopRestartPurpose.UPDATE
     assert session.worker_document.read_text(encoding="utf-8").startswith(
         '"""Out-of-process OpenHCS environment update'
@@ -1093,11 +1111,212 @@ def test_saved_update_session_restores_through_existing_authorities(
     assert calls == [
         ("payload", payload),
         ("history", str(consumed.history_document)),
+        ("payload", payload),
         ("history-ui", None),
         ("refresh", None),
     ]
     assert not session.directory.exists()
     assert not consumed.directory.exists()
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        "{}",
+        "[]",
+        '{"selected_plate_scope_id": 7}',
+        '{"selected_plate_scope_id": null, "extra": true}',
+        "{",
+    ),
+)
+def test_desktop_restart_ui_state_rejects_malformed_payloads(
+    tmp_path: Path,
+    source: str,
+) -> None:
+    state_document = tmp_path / "ui-state.json"
+    state_document.write_text(source, encoding="utf-8")
+
+    with pytest.raises(DesktopUpdateError, match="UI state is invalid"):
+        DesktopRestartUiState.read(state_document)
+
+
+def test_saved_session_restores_selected_plate_after_all_scope_payload(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    first_scope = "/plates/P002"
+    selected_scope = "/plates/P001"
+    session = DesktopRestartSession(tmp_path / "pending")
+    session.directory.mkdir()
+    payload = PlateManagerCodeDocumentAuthority.from_values(
+        plate_paths=(first_scope, selected_scope),
+        global_pipeline_config=GlobalPipelineConfig(),
+        per_plate_configs={
+            first_scope: PipelineConfig(),
+            selected_scope: PipelineConfig(),
+        },
+        pipeline_data={first_scope: [], selected_scope: []},
+    )
+    session.session_document.write_text(
+        PlateManagerCodeDocumentAuthority.render(payload),
+        encoding="utf-8",
+    )
+    session.history_document.write_text("{}", encoding="utf-8")
+    DesktopRestartUiState(selected_scope).write(session.ui_state_document)
+    calls = []
+
+    class Workflow:
+        def apply_payload(self, restored_payload) -> None:
+            calls.append(("payload", restored_payload))
+
+    class Navigation:
+        def accepts(self, request) -> bool:
+            calls.append(("selection-accepted", request.item_id))
+            return request.item_id == selected_scope
+
+        def execute(self, request) -> None:
+            calls.append(("selection", request.item_id))
+            plate_manager.selected_plate_path = request.item_id
+            plate_manager.plate_selected.emit(request.item_id)
+
+    plate_manager = SimpleNamespace(
+        code_execution_workflow=Workflow(),
+        selected_plate_path=first_scope,
+        plate_selected=SimpleNamespace(
+            emit=lambda scope_id: calls.append(("selected", scope_id))
+        ),
+        update_item_list=lambda: calls.append(("refresh", None)),
+        window_navigation_driver=Navigation,
+    )
+    main_window = SimpleNamespace(
+        embedded_widgets=SimpleNamespace(
+            require_plate_manager=lambda: plate_manager,
+        ),
+        time_travel_widget=SimpleNamespace(
+            refresh=lambda: calls.append(("history-ui", None))
+        ),
+    )
+    monkeypatch.setattr(
+        "objectstate.object_state.ObjectStateRegistry.load_history_from_file",
+        lambda path: calls.append(("history", path)),
+    )
+
+    consumed = session.consume()
+    consumed.restore(main_window)
+
+    assert plate_manager.selected_plate_path == selected_scope
+    assert calls[3:6] == [
+        ("selection-accepted", selected_scope),
+        ("selection", selected_scope),
+        ("selected", selected_scope),
+    ]
+
+
+def test_restart_reconciles_saved_document_after_history_materialization(
+    tmp_path: Path,
+) -> None:
+    """The captured declaration remains authoritative across fresh token owners."""
+
+    plate_scope = "/plate"
+    initial_steps = [
+        FunctionStep(
+            name="Process",
+            func=(
+                assemble_stack_cpu,
+                {"blend_method": TileBlendMethod.DYNAMIC},
+            ),
+        )
+    ]
+    captured_steps = [
+        FunctionStep(
+            name="Process",
+            func=[
+                (stack_percentile_normalize, {"target_max": 255.0}),
+                (
+                    assemble_stack_cpu,
+                    {"blend_method": TileBlendMethod.DYNAMIC},
+                ),
+            ],
+        )
+    ]
+    payload = PlateManagerCodeDocumentAuthority.from_values(
+        plate_paths=(plate_scope,),
+        global_pipeline_config=GlobalPipelineConfig(),
+        per_plate_configs={plate_scope: PipelineConfig()},
+        pipeline_data={plate_scope: captured_steps},
+    )
+    session = DesktopRestartSession(tmp_path / "pending")
+    session.directory.mkdir()
+    session.session_document.write_text(
+        PlateManagerCodeDocumentAuthority.render(payload),
+        encoding="utf-8",
+    )
+
+    ObjectStateRegistry.clear()
+    ScopeTokenService.clear_scope(plate_scope)
+    try:
+        with ObjectStateRegistry.atomic_success("initial pipeline"):
+            PipelineObjectStateBinding.update_plate_steps(
+                plate_scope,
+                initial_steps,
+            )
+        with ObjectStateRegistry.atomic_success("captured pipeline"):
+            PipelineObjectStateBinding.update_plate_steps(
+                plate_scope,
+                captured_steps,
+            )
+        [expected_step] = PipelineObjectStateBinding.steps_for_plate(plate_scope)
+        ObjectStateRegistry.save_history_to_file(str(session.history_document))
+        latest_declaration = expected_step.declaration_parameters()
+        latest_declaration["name"] = "Latest Process"
+        expected_step = FunctionStep(**latest_declaration)
+        session.session_document.write_text(
+            PlateManagerCodeDocumentAuthority.render(
+                PlateManagerCodeDocumentAuthority.from_values(
+                    plate_paths=(plate_scope,),
+                    global_pipeline_config=GlobalPipelineConfig(),
+                    per_plate_configs={plate_scope: PipelineConfig()},
+                    pipeline_data={plate_scope: [expected_step]},
+                )
+            ),
+            encoding="utf-8",
+        )
+
+        # A restarted process derives occurrence tokens afresh from declaration order.
+        ObjectStateRegistry.clear()
+        ScopeTokenService.clear_scope(plate_scope)
+
+        def apply_payload(restored_payload) -> None:
+            PipelineObjectStateBinding.update_plate_steps(
+                plate_scope,
+                restored_payload.pipeline_data[plate_scope],
+            )
+
+        plate_manager = SimpleNamespace(
+            code_execution_workflow=SimpleNamespace(apply_payload=apply_payload),
+            update_item_list=lambda: None,
+        )
+        main_window = SimpleNamespace(
+            embedded_widgets=SimpleNamespace(
+                require_plate_manager=lambda: plate_manager,
+            ),
+            time_travel_widget=SimpleNamespace(refresh=lambda: None),
+        )
+
+        session.consume().restore(main_window)
+
+        [restored_step] = PipelineObjectStateBinding.steps_for_plate(plate_scope)
+        assert isinstance(restored_step.func, list)
+        assert restored_step.same_declaration(expected_step)
+        assert restored_step.name == "Latest Process"
+        restored_entries = restored_step.func
+        assert restored_entries[0][1]["target_max"] == 255.0
+        assert restored_entries[1][1]["blend_method"] is TileBlendMethod.DYNAMIC
+        assert "blend_method" not in restored_entries[0][1]
+        assert "target_max" not in restored_entries[1][1]
+    finally:
+        ObjectStateRegistry.clear()
+        ScopeTokenService.clear_scope(plate_scope)
 
 
 def test_restored_session_outcome_leaves_own_dialog_presentation() -> None:

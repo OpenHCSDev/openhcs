@@ -1,12 +1,15 @@
 import numpy as np
 import pytest
+import tifffile
 
 from openhcs.core.image_file_serialization import (
     ImageFileFormat,
     NumpyImageFileFormat,
     PngImageFileFormat,
     TiffImageFileFormat,
+    image_file_source_metadata,
     prepare_disk_image_payloads,
+    require_image_file_source_metadata,
 )
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
@@ -147,6 +150,34 @@ def test_tiff_source_metadata_reads_rgb_semantics_without_generic_reopen(
     assert metadata.pixel_semantics.validated_channel_axis(
         tifffile.imread(path)
     ) == -1
+
+
+def test_tiff_required_source_metadata_fails_closed_for_unreadable_header(
+    tmp_path,
+) -> None:
+    path = tmp_path / "broken.tif"
+    path.write_bytes(b"not a tiff")
+
+    with pytest.raises(tifffile.TiffFileError):
+        TiffImageFileFormat().require_source_metadata(path)
+
+    assert TiffImageFileFormat().source_metadata(path).source_dtype is None
+
+
+def test_required_source_metadata_does_not_reuse_replaced_header(
+    tmp_path,
+) -> None:
+    path = tmp_path / "replaceable.tif"
+    tifffile.imwrite(path, np.zeros((4, 5, 3), dtype=np.uint8), photometric="rgb")
+    assert (
+        require_image_file_source_metadata(path).pixel_semantics.channel_axis == -1
+    )
+    assert image_file_source_metadata(path).pixel_semantics.channel_axis == -1
+
+    tifffile.imwrite(path, np.zeros((4, 5), dtype=np.uint8))
+
+    assert require_image_file_source_metadata(path).pixel_semantics.channel_axis is None
+    assert image_file_source_metadata(path).pixel_semantics.channel_axis is None
 
 
 def test_tiff_source_metadata_uses_declared_planar_sample_axis(tmp_path) -> None:

@@ -31,8 +31,9 @@ from benchmark.contracts.run_receipt import (
     ComparisonSuiteRunReceipt,
     ComparisonSuiteRunStatus,
 )
+from benchmark.control_service import BenchmarkControlService
+from openhcs.agent.capabilities import agent_capabilities, get_capability_registry
 from openhcs.agent.path_policy import AgentPathPolicy
-from openhcs.agent.services.benchmark_control_service import BenchmarkControlService
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
 
@@ -282,6 +283,80 @@ def test_benchmark_capability_uses_generated_mcp_request_binding(
     assert metadata_artifact["declared_identity"] == (
         ComparisonRunArtifact.SUITE_METADATA.value
     )
+
+
+def test_benchmark_extension_projects_its_declared_capability() -> None:
+    capabilities = get_capability_registry().capabilities
+
+    assert "openhcs_inspect_benchmark_run" in {
+        capability.name for capability in capabilities
+    }
+    assert agent_capabilities.inspect_benchmark_run.name == (
+        "openhcs_inspect_benchmark_run"
+    )
+
+
+def test_direct_benchmark_capability_lookup_loads_extension_first() -> None:
+    repository_root = Path(__file__).resolve().parents[2]
+    probe = subprocess.run(
+        (
+            sys.executable,
+            "-c",
+            (
+                "from openhcs.agent.capabilities import "
+                "get_agent_capability_declaration; "
+                "declaration = get_agent_capability_declaration("
+                "'openhcs_inspect_benchmark_run'); "
+                "assert declaration.name == 'openhcs_inspect_benchmark_run'"
+            ),
+        ),
+        cwd=repository_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert probe.returncode == 0, probe.stderr or probe.stdout
+
+
+def test_product_imports_without_benchmark_package() -> None:
+    repository_root = Path(__file__).resolve().parents[2]
+    probe_source = """
+import sys
+
+
+class BlockBenchmark:
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == "benchmark" or fullname.startswith("benchmark."):
+            raise ModuleNotFoundError(fullname, name=fullname)
+
+
+sys.meta_path.insert(0, BlockBenchmark())
+import openhcs.agent.capabilities
+import openhcs.mcp.context
+import openhcs.mcp.server
+from openhcs.agent.capabilities import get_capability_registry
+
+assert "openhcs_inspect_benchmark_run" not in {
+    capability.name for capability in get_capability_registry().capabilities
+}
+assert not any(
+    name == "benchmark" or name.startswith("benchmark.") for name in sys.modules
+)
+"""
+    probe = subprocess.run(
+        (
+            sys.executable,
+            "-c",
+            probe_source,
+        ),
+        cwd=repository_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert probe.returncode == 0, probe.stderr or probe.stdout
 
 
 def test_capability_discovery_does_not_import_benchmark_execution_modules() -> None:

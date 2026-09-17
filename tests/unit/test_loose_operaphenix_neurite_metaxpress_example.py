@@ -3,12 +3,12 @@ from multiprocessing import SimpleQueue
 from pathlib import Path
 
 import numpy as np
-from objectstate import ObjectStateRegistry
 import tifffile
+from objectstate import ObjectStateRegistry
+from objectstate.lazy_factory import ensure_global_config_context
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants import GroupBy, Microscope, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import GlobalPipelineConfig
@@ -106,6 +106,9 @@ def test_compact_example_uses_owned_channel_order_and_one_function_step(
         maximum_width=4.0,
         intensity_above_local_background=50.0,
         minimum_cell_growth_to_log_as_significant=10.0,
+        candidate_threshold_correction_factor=(
+            inputs.neurite_candidate_threshold_correction_factor
+        ),
     )
     assert kwargs["use_nuclear_stain"] is True
     assert kwargs["nuclear_stain"] == MetaXpressNuclearSettings(

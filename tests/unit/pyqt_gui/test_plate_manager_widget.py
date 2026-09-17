@@ -71,6 +71,7 @@ from openhcs.pyqt_gui.config import get_default_ui_config
 from openhcs.pyqt_gui.services.desktop_update import (
     DesktopRestartSession,
     DesktopRestartSucceeded,
+    DesktopRestartUiState,
 )
 from openhcs.pyqt_gui.services.main_window_workflows import MainWindowPipelineActions
 from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
@@ -460,6 +461,39 @@ def test_embedded_manager_navigation_selects_exact_live_row(tmp_path: Path) -> N
     finally:
         manager.cleanup()
         main_window.close()
+        ObjectStateRegistry.clear()
+
+
+def test_restart_selection_remains_aligned_after_manager_list_refresh(
+    tmp_path: Path,
+) -> None:
+    app = QtApplicationHarness.app()
+    ObjectStateRegistry.clear()
+    manager = PlateManagerWidget(
+        PlateManagerServiceStub(), gui_config=get_default_ui_config()
+    )
+    try:
+        paths = tuple(str(tmp_path / name) for name in ("P002", "P001"))
+        for path in paths:
+            manager._create_orchestrator_for_plate(path)
+        manager._ensure_root_state().update_parameter(
+            "orchestrator_scope_ids", list(paths)
+        )
+        manager.update_item_list()
+        app.processEvents()
+        assert [row.scope_id for row in manager.get_selected_items()] == [paths[0]]
+
+        selected = []
+        manager.plate_selected.connect(selected.append)
+        DesktopRestartUiState(paths[1]).restore(manager, plate_paths=paths)
+        manager.update_item_list()
+        app.processEvents()
+
+        assert manager.selected_plate_path == paths[1]
+        assert [row.scope_id for row in manager.get_selected_items()] == [paths[1]]
+        assert selected == [paths[1]]
+    finally:
+        manager.cleanup()
         ObjectStateRegistry.clear()
 
 

@@ -21,20 +21,13 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.runtime_spatial_graph import SpatialGraph
-from openhcs.processing.backends.cellprofiler.primary_objects import (
-    identify_primary_objects,
-)
-from openhcs.processing.backends.cellprofiler.secondary import (
-    identify_secondary_objects,
-)
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
+    NEURITE_OBJECT_LABEL_MATERIALIZATION,
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
     MetaXpressOutgrowthSettings,
-    NEURITE_OBJECT_LABEL_MATERIALIZATION,
     NeuriteIllumination,
-    _TopologyResult,
     _adopt_secondary_owned_skeleton,
     _analyze_topology,
     _build_neurite_morphology_graph,
@@ -42,9 +35,10 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     _derive_signal_cell_bodies,
     _expand_skeleton_ownership,
     _identify_cell_bodies_cellprofiler,
-    _identify_secondary_owner_regions_cellprofiler,
     _propagate_neurite_owner_regions,
     _repair_signal_supported_skeleton,
+    _seeded_candidate_components,
+    _TopologyResult,
     count_neuronal_cell_bodies_metaxpress,
     neurite_outgrowth_metaxpress,
 )
@@ -143,6 +137,8 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "maximum_width",
         "intensity_above_local_background",
         "minimum_cell_growth_to_log_as_significant",
+        "candidate_threshold_correction_factor",
+        "candidate_hysteresis_seed_correction_factor",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",
@@ -1004,9 +1000,18 @@ def test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces():
     np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
 
 
-def test_final_neurons_project_rooted_trace_ownership_not_secondary_propagation():
+def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
     image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
-    engine = CELLPROFILER_NEURITE_ENGINE_PROFILE
+
+    def broad_secondary_ownership(source_image, primary_labels, **_kwargs):
+        del primary_labels
+        return np.ones(source_image.shape, dtype=np.int32)
+
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.neurite_outgrowth."
+        "_identify_secondary_owner_regions_cellprofiler",
+        broad_secondary_ownership,
+    )
 
     result = _implementation()(
         image,
@@ -1016,32 +1021,95 @@ def test_final_neurons_project_rooted_trace_ownership_not_secondary_propagation(
         pixel_size=1.0,
     )
 
-    *_, detected_body_payload = CallableContract.from_callable(
-        identify_primary_objects
-    ).resolve_raw_runtime_callable()(
-        image[0],
-        **engine.compact_body_detection_kwargs(adaptive_window_size=64),
-    )
-    accepted_body_payload = detected_body_payload.with_replacement_labels(result[3][0])
-    *_, expected_neuron_payload = CallableContract.from_callable(
-        identify_secondary_objects
-    ).resolve_raw_runtime_callable()(
-        image[1],
-        primary_labels=accepted_body_payload,
-        **engine.secondary_kwargs(),
-    )
-
     bodies = result[3][0]
     traces = result[4][1]
     neurons = result[5][1]
     np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
     np.testing.assert_array_equal(neurons[traces > 0], traces[traces > 0])
     assert np.count_nonzero(neurons) > np.count_nonzero(traces)
-    # CP propagation is detection evidence, not an independently authoritative
-    # final labeling that may contradict corrected trace ownership.
-    assert not np.array_equal(
-        neurons, object_label_dense_array(expected_neuron_payload)
+    expected_owners = set(np.unique(bodies)) | set(np.unique(traces))
+    assert set(np.unique(neurons)) == expected_owners
+    # Deliberately broad secondary propagation is detection evidence only. The
+    # published neuron labels remain bounded to soma-rooted trace ownership.
+    assert np.count_nonzero(neurons) < neurons.size
+
+
+def test_neurite_candidate_and_secondary_ownership_thresholds_are_independent():
+    engine = CELLPROFILER_NEURITE_ENGINE_PROFILE
+    permissive_candidate_factor = 0.05
+
+    assert (
+        engine.threshold_kwargs(
+            correction_factor=permissive_candidate_factor,
+        )["threshold_correction_factor"]
+        == permissive_candidate_factor
     )
+    assert (
+        engine.secondary_kwargs()["threshold_correction_factor"]
+        == engine.secondary_ownership_threshold_correction_factor
+    )
+    assert permissive_candidate_factor < (
+        engine.secondary_ownership_threshold_correction_factor
+    )
+
+
+@pytest.mark.parametrize("correction_factor", [0.0, -0.1, np.inf, np.nan])
+def test_outgrowth_settings_reject_invalid_candidate_threshold_correction_factor(
+    correction_factor,
+):
+    settings = MetaXpressOutgrowthSettings(
+        candidate_threshold_correction_factor=correction_factor,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candidate_threshold_correction_factor must be > 0",
+    ):
+        settings.validate()
+
+
+@pytest.mark.parametrize("seed_factor", [0.0, -0.1, np.inf, np.nan])
+def test_outgrowth_settings_reject_invalid_hysteresis_seed_factor(seed_factor):
+    settings = MetaXpressOutgrowthSettings(
+        candidate_hysteresis_seed_correction_factor=seed_factor,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candidate_hysteresis_seed_correction_factor must be > 0",
+    ):
+        settings.validate()
+
+
+def test_outgrowth_settings_reject_seed_more_permissive_than_candidates():
+    settings = MetaXpressOutgrowthSettings(
+        candidate_threshold_correction_factor=0.25,
+        candidate_hysteresis_seed_correction_factor=0.20,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="seed_correction_factor must be >=",
+    ):
+        settings.validate()
+
+
+def test_seeded_candidate_components_keep_only_components_with_strict_seeds():
+    candidates = np.zeros((24, 32), dtype=bool)
+    candidates[4, 3:14] = True
+    candidates[12, 3:14] = True
+    candidates[20, 3:14] = True
+    seeds = np.zeros(candidates.shape, dtype=bool)
+    seeds[4, 8] = True
+    seeds[20, 8] = True
+    seeds[0, 0] = True
+
+    retained = _seeded_candidate_components(candidates, seeds)
+
+    assert np.all(retained[4, 3:14])
+    assert not np.any(retained[12, 3:14])
+    assert np.all(retained[20, 3:14])
+    assert not retained[0, 0]
 
 
 def test_overwide_nuclear_guided_foreground_is_not_a_cell_body():
@@ -1249,16 +1317,16 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell(
         "_identify_cell_bodies_cellprofiler",
         reject_discarded_body_segmentation,
     )
-    secondary_calls = []
 
-    def record_secondary_call(*args, **kwargs):
-        secondary_calls.append(None)
-        return _identify_secondary_owner_regions_cellprofiler(*args, **kwargs)
+    def reject_hidden_secondary_threshold(*args, **kwargs):
+        raise AssertionError(
+            "nuclear-seeded soma admission must use the declared body contract"
+        )
 
     monkeypatch.setattr(
         "openhcs.processing.backends.analysis.neurite_outgrowth."
         "_identify_secondary_owner_regions_cellprofiler",
-        record_secondary_call,
+        reject_hidden_secondary_threshold,
     )
 
     result = _implementation()(
@@ -1298,7 +1366,6 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell(
     }
     assert not np.any((cell_bodies[1] > 0) & (neurites[1] > 0))
     assert result[5][1, 35, 140] == 0
-    assert len(secondary_calls) == 2
 
 
 def test_neurite_owner_regions_propagate_only_through_declared_signal_support():
@@ -1325,17 +1392,15 @@ def test_neurite_owner_regions_propagate_only_through_declared_signal_support():
 def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch):
     shape = (512, 512)
     seeds = np.zeros(shape, dtype=np.int32)
-    unified = np.zeros(shape, dtype=np.int32)
     image = np.zeros(shape, dtype=np.uint16)
-    for owner, center, region_slice in (
-        (1, (80, 80), (slice(0, 256), slice(0, 256))),
-        (2, (430, 430), (slice(256, 512), slice(256, 512))),
+    for owner, center in (
+        (1, (80, 80)),
+        (2, (430, 430)),
     ):
         rows, columns = disk(center, 4, shape=shape)
         seeds[rows, columns] = owner
         rows, columns = disk(center, 12, shape=shape)
         image[rows, columns] = 1200
-        unified[region_slice] = owner
 
     observed_shapes = []
     distance_transform = ndi.distance_transform_edt
@@ -1352,7 +1417,6 @@ def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch)
 
     bodies = _derive_signal_cell_bodies(
         seeds,
-        unified,
         image,
         _cell_body_settings(channel_index=1),
         1.0,
@@ -1361,10 +1425,35 @@ def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch)
 
     assert set(np.unique(bodies)) == {0, 1, 2}
     assert observed_shapes[0] == shape
-    assert len(observed_shapes) == 3
+    assert len(observed_shapes) == 5
     assert all(
         rows < shape[0] and columns < shape[1] for rows, columns in observed_shapes[1:]
     )
+
+
+def test_signal_body_derivation_partitions_shared_signal_by_nearest_nucleus():
+    shape = (72, 72)
+    seeds = np.zeros(shape, dtype=np.int32)
+    for owner, center in ((1, (36, 25)), (2, (36, 47))):
+        rows, columns = disk(center, 4, shape=shape)
+        seeds[rows, columns] = owner
+    image = np.zeros(shape, dtype=np.uint16)
+    rows, columns = disk((36, 36), 20, shape=shape)
+    image[rows, columns] = 1200
+
+    bodies = _derive_signal_cell_bodies(
+        seeds,
+        image,
+        _cell_body_settings(channel_index=1),
+        1.0,
+        bright_objects=True,
+    )
+
+    assert set(np.unique(bodies)) == {0, 1, 2}
+    assert bodies[36, 28] == 1
+    assert bodies[36, 44] == 2
+    assert np.count_nonzero(bodies == 1) > 100
+    assert np.count_nonzero(bodies == 2) > 100
 
 
 def test_cell_body_contract_bounds_each_object_distance_transform(monkeypatch):

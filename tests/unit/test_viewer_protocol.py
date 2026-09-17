@@ -6,14 +6,22 @@ import pytest
 from polystore import cleanup_backend_connections
 from polystore.streaming.viewer_transport import ViewerTransportEndpoint
 from zmqruntime.config import TransportMode
-from zmqruntime.messages import ControlMessageType
+from zmqruntime.messages import (
+    ControlMessageType,
+    EndpointApplication,
+    PongResponse,
+    ServerRole,
+)
 from zmqruntime.transport import TransportEndpoint
 
 import openhcs.runtime.viewer_protocol as viewer_protocol
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
-from openhcs.runtime.viewer_controls import ViewerStateControlOptions
+from openhcs.runtime.viewer_controls import (
+    ViewerIntensityWindowControlOptions,
+    ViewerStateControlOptions,
+)
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchLog,
     DetachedViewerLaunchRequest,
@@ -35,6 +43,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerSettleProgress,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
 
 @pytest.fixture(autouse=True)
@@ -52,6 +61,21 @@ def preserve_managed_viewer_registry():
 
 def test_managed_viewer_lifecycle_implements_nominal_execution_contract():
     assert issubclass(ManagedViewerLifecycleMixin, ExecutionVisualizerABC)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        {"route_key": ""},
+        {"route_key": "image", "low_percentile": -1.0},
+        {"route_key": "image", "high_percentile": float("inf")},
+        {"route_key": "image", "low_percentile": 50.0, "high_percentile": 50.0},
+        {"route_key": "image", "axis_indices": {"site": -1}},
+    ),
+)
+def test_viewer_intensity_window_controls_fail_closed(overrides):
+    with pytest.raises((TypeError, ValueError)):
+        ViewerIntensityWindowControlOptions(**overrides)
 
 
 def test_viewer_control_ping_request_owns_quick_and_ready_projection(monkeypatch):
@@ -120,6 +144,60 @@ def test_viewer_control_ping_request_owns_quick_and_ready_projection(monkeypatch
             },
         ),
     ]
+
+
+def test_viewer_control_message_request_projects_primitive_wire_fields():
+    controls = ViewerStateControlOptions()
+    request = ViewerControlMessageRequest(
+        endpoint=ViewerRuntimeEndpoint(
+            transport=ViewerTransportEndpoint(
+                port=55,
+                host="localhost",
+                transport_mode=TransportMode.IPC,
+            ),
+            config=OPENHCS_ZMQ_CONFIG,
+        ),
+        message_type=ViewerControlMessageType.STATE.value,
+        payload=controls,
+    )
+
+    wire = request.to_wire_mapping()
+
+    assert wire == {"type": "state", "payload": controls}
+    assert all(type(field_name) is str for field_name in wire)
+
+
+def test_viewer_endpoint_compatibility_uses_declared_heartbeat_identity(
+    monkeypatch,
+):
+    endpoint = ViewerRuntimeEndpoint(
+        transport=ViewerTransportEndpoint(
+            port=55,
+            host="localhost",
+            transport_mode=TransportMode.IPC,
+        ),
+        config=OPENHCS_ZMQ_CONFIG,
+    )
+    heartbeat = PongResponse(
+        port=endpoint.port,
+        control_port=endpoint.control_port,
+        ready=True,
+        server="NapariViewerServer",
+        server_role=ServerRole.VIEWER,
+        application=OPENHCS_ENDPOINT_APPLICATION,
+    )
+    calls = []
+
+    def ping(transport_endpoint, config, *, timeout_ms):
+        calls.append((transport_endpoint, config, timeout_ms))
+        return heartbeat
+
+    monkeypatch.setattr(TransportEndpoint, "ping", ping)
+
+    compatibility = endpoint.application_compatibility(timeout_ms=37)
+
+    assert compatibility.matches
+    assert calls == [(endpoint.transport, OPENHCS_ZMQ_CONFIG, 37)]
 
 
 def test_viewer_endpoint_delegates_stale_cleanup_to_transport_owner(
@@ -234,9 +312,68 @@ def test_managed_viewer_readiness_uses_endpoint_binding_authority(monkeypatch):
         return True
 
     monkeypatch.setattr(ViewerRuntimeEndpoint, "wait_ready", wait_ready)
+    monkeypatch.setattr(
+        ViewerRuntimeEndpoint,
+        "application_compatibility",
+        lambda _endpoint, *, timeout_ms, require_ready=True: (
+            OPENHCS_ENDPOINT_APPLICATION.compatibility_with(
+                OPENHCS_ENDPOINT_APPLICATION
+            )
+        ),
+    )
 
     assert ProbeViewer().wait_for_ready(timeout=0.5)
     assert calls == [(0.5, True)]
+
+
+def test_managed_viewer_reuses_only_matching_application(monkeypatch):
+    class ProbeViewer(ManagedViewerLifecycleMixin):
+        viewer_process_label = "Probe"
+        detached_server_entrypoint = DetachedViewerServerEntrypointSpec(
+            viewer_type=ViewerType.NAPARI,
+            module_name="tests.fake_viewer",
+            function_name="run",
+        )
+
+        def start_viewer(self, async_mode: bool = False) -> None:
+            raise AssertionError("test does not launch a process")
+
+        def detached_server_arguments(
+            self,
+            *,
+            log_file,
+        ) -> DetachedViewerPythonArguments:
+            return DetachedViewerPythonArguments.from_literals(str(log_file))
+
+    viewer = ProbeViewer(
+        runtime_config=StreamingViewerRuntimeConfig(
+            transport_endpoint=ViewerTransportEndpoint(
+                port=42,
+                host="localhost",
+                transport_mode=TransportMode.IPC,
+            ),
+            persistent=True,
+            viewer_type=ViewerType.NAPARI,
+        )
+    )
+    observed_application = OPENHCS_ENDPOINT_APPLICATION
+
+    def compatibility(_endpoint, *, timeout_ms, require_ready=True):
+        return OPENHCS_ENDPOINT_APPLICATION.compatibility_with(observed_application)
+
+    monkeypatch.setattr(
+        ViewerRuntimeEndpoint,
+        "application_compatibility",
+        compatibility,
+    )
+
+    assert viewer.existing_viewer_is_ready()
+
+    observed_application = EndpointApplication(
+        identifier="openhcs",
+        version="stale",
+    )
+    assert not viewer.existing_viewer_is_ready()
 
 
 def test_managed_viewer_lifecycle_reads_state_through_typed_control_request(

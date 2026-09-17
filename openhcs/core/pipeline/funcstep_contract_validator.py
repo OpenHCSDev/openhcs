@@ -671,9 +671,9 @@ class FuncStepContractValidator:
             contracts,
             step_name,
         )
-        FuncStepContractValidator.validate_processing_contract_variable_components(
+        FuncStepContractValidator.validate_processing_contract_chain(
             variable_components,
-            invocations,
+            tuple(group.invocations for group in compiled_pattern.groups),
             step_name,
         )
         FuncStepContractValidator.validate_allowed_group_by(
@@ -787,9 +787,9 @@ class FuncStepContractValidator:
             contracts,
             step_name,
         )
-        FuncStepContractValidator.validate_processing_contract_variable_components(
+        FuncStepContractValidator.validate_processing_contract_chain(
             variable_components,
-            tuple(normalized.iter_items()),
+            tuple(group.items for group in normalized.groups),
             step_name,
         )
         FuncStepContractValidator.validate_allowed_group_by(
@@ -1186,35 +1186,74 @@ class FuncStepContractValidator:
         step_name: str,
     ) -> None:
         """Validate declared stack semantics against resolved axes."""
-        resolved_components = tuple(variable_components or ())
-        if resolved_components:
-            return
+        FuncStepContractValidator.validate_processing_contract_chain(
+            variable_components,
+            (tuple(invocations),),
+            step_name,
+        )
 
-        for invocation in invocations:
-            requirement = invocation.contract.variable_component_stack_requirement
-            if requirement is None:
-                continue
-            func = invocation.contract.func if callable(invocation.contract.func) else None
-            if not requirement.is_required(
-                VariableComponentStackRequirementRequest(
-                    func=func,
-                    kwargs=invocation.kwargs_dict,
+    @staticmethod
+    def validate_processing_contract_chain(
+        variable_components,
+        invocation_groups: Sequence[Sequence[NormalizedFunctionItem]],
+        step_name: str,
+    ) -> None:
+        """Validate stack requirements against prior transforms in each chain.
+
+        ``variable_components`` proves that each chain starts with a leading
+        stack axis.  Processing-contract declarations then own how that proof
+        changes as the chain executes: a volumetric-to-slice invocation consumes
+        the axis, while each invocation's stack requirement declares whether the
+        axis must still be present at that position.
+        """
+
+        starts_with_stack = bool(tuple(variable_components or ()))
+        for invocations in invocation_groups:
+            stack_available = starts_with_stack
+            collapsed_by: NormalizedFunctionItem | None = None
+            for invocation in invocations:
+                requirement = invocation.contract.variable_component_stack_requirement
+                func = (
+                    invocation.contract.func
+                    if callable(invocation.contract.func)
+                    else None
                 )
-            ):
-                continue
-            processing_contract = invocation.contract.processing_contract
-            contract_label = (
-                processing_contract.name
-                if isinstance(processing_contract, Enum)
-                else type(requirement).__name__
-            )
-            raise ValueError(
-                f"Step '{step_name}' callable '{invocation.contract.function_name}' "
-                f"uses {contract_label} stack semantics but resolved "
-                "variable_components none. Full-stack processing contracts require "
-                "at least one variable component so each invocation receives a real "
-                "stack axis."
-            )
+                requires_stack = requirement is not None and requirement.is_required(
+                    VariableComponentStackRequirementRequest(
+                        func=func,
+                        kwargs=invocation.kwargs_dict,
+                    )
+                )
+                if requires_stack and not stack_available:
+                    if collapsed_by is not None:
+                        raise ValueError(
+                            f"Step '{step_name}' callable "
+                            f"'{invocation.contract.function_name}' requires a real "
+                            "variable-component stack, but earlier callable "
+                            f"'{collapsed_by.contract.function_name}' collapsed the "
+                            "leading plane axis. Reorder the callable chain or enable "
+                            "the callable's declared slice-by-slice mode."
+                        )
+                    processing_contract = invocation.contract.processing_contract
+                    contract_label = (
+                        processing_contract.name
+                        if isinstance(processing_contract, Enum)
+                        else type(requirement).__name__
+                    )
+                    raise ValueError(
+                        f"Step '{step_name}' callable "
+                        f"'{invocation.contract.function_name}' uses "
+                        f"{contract_label} stack semantics but resolved "
+                        "variable_components none. Full-stack processing contracts "
+                        "require at least one variable component so each invocation "
+                        "receives a real stack axis."
+                    )
+                if (
+                    invocation.contract.collapses_input_plane_axis
+                    and not invocation.contract.preserves_input_main_flow()
+                ):
+                    stack_available = False
+                    collapsed_by = invocation
 
     @staticmethod
     def validate_allowed_group_by(

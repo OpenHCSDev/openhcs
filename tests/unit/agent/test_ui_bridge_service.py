@@ -1399,6 +1399,133 @@ def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):
     assert all(sent.auth_token == "token" for sent in gateway.connections)
 
 
+def test_widget_action_resolves_accepted_receipt_to_terminal_invocation(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
+    gateway = _FakeUiBridgeGateway()
+    status_requests: list[UiBridgeOperationStatusRequest] = []
+
+    def invoke_widget_action(connection, request):
+        gateway.connections.append(connection)
+        gateway.widget_action_requests.append(request)
+        return UiWidgetActionInvokeResult(
+            schema_version=SCHEMA_VERSION,
+            window_id=request.window_id,
+            path_id=request.path_id,
+            action_kind=request.action_kind,
+            invoked=False,
+            receipt=UiMutationReceipt.accepted_for(
+                request.request_token,
+                bridge_operation_id="widget-op-1",
+            ),
+        )
+
+    def get_operation_status(connection, request):
+        gateway.connections.append(connection)
+        status_requests.append(request)
+        return UiBridgeOperationRef(
+            schema_version=SCHEMA_VERSION,
+            identity=UiBridgeOperationIdentity(
+                operation_id=request.operation_id,
+                route=UiBridgeOperationRoute(operation_name="invoke_widget_action"),
+            ),
+            status=UiBridgeOperationStatus.COMPLETED.value,
+            started_at_unix=1.0,
+            completed_at_unix=2.0,
+            outcome="invoked",
+        )
+
+    monkeypatch.setattr(gateway, "invoke_widget_action", invoke_widget_action)
+    monkeypatch.setattr(gateway, "get_operation_status", get_operation_status)
+    service = UiBridgeService(gateway=gateway)
+    connection = service.connection_from_args(
+        host="127.0.0.1",
+        port=9999,
+        auth_token="token",
+        timeout_ms=250,
+    )
+    request = UiWidgetActionInvokeRequest(
+        window_id=WINDOW_ID,
+        open_policy=UiWindowOpenPolicy(create_if_missing=False),
+        path_id="2.0",
+        action_kind="button",
+    )
+
+    result = service.invoke_widget_action(request, connection)
+
+    assert result.invoked is True
+    assert result.outcome.value == "invoked"
+    assert result.receipt.bridge_operation_id == "widget-op-1"
+    assert result.errors == ()
+    assert status_requests == [UiBridgeOperationStatusRequest("widget-op-1")]
+
+
+def test_widget_action_projects_terminal_operation_failure(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
+    gateway = _FakeUiBridgeGateway()
+    operation_error = AgentError(
+        code="unknown_ui_widget",
+        message="The projected widget disappeared before invocation.",
+    )
+
+    def invoke_widget_action(connection, request):
+        gateway.connections.append(connection)
+        return UiWidgetActionInvokeResult(
+            schema_version=SCHEMA_VERSION,
+            window_id=request.window_id,
+            path_id=request.path_id,
+            action_kind=request.action_kind,
+            invoked=False,
+            receipt=UiMutationReceipt.accepted_for(
+                request.request_token,
+                bridge_operation_id="widget-op-2",
+            ),
+        )
+
+    def get_operation_status(connection, request):
+        gateway.connections.append(connection)
+        return UiBridgeOperationRef(
+            schema_version=SCHEMA_VERSION,
+            identity=UiBridgeOperationIdentity(
+                operation_id=request.operation_id,
+                route=UiBridgeOperationRoute(operation_name="invoke_widget_action"),
+            ),
+            status=UiBridgeOperationStatus.FAILED.value,
+            started_at_unix=1.0,
+            completed_at_unix=2.0,
+            outcome="error",
+            errors=(operation_error,),
+        )
+
+    monkeypatch.setattr(gateway, "invoke_widget_action", invoke_widget_action)
+    monkeypatch.setattr(gateway, "get_operation_status", get_operation_status)
+    service = UiBridgeService(gateway=gateway)
+    connection = service.connection_from_args(
+        host="127.0.0.1",
+        port=9999,
+        auth_token="token",
+    )
+
+    result = service.invoke_widget_action(
+        UiWidgetActionInvokeRequest(
+            window_id=WINDOW_ID,
+            open_policy=UiWindowOpenPolicy(create_if_missing=False),
+            path_id="2.0",
+            action_kind="button",
+        ),
+        connection,
+    )
+
+    assert result.invoked is False
+    assert result.outcome.value == "not_invoked"
+    assert result.errors == (operation_error,)
+
+
 def test_list_object_state_scopes_filters_requested_scope_ids(monkeypatch, tmp_path):
     monkeypatch.setenv("OPENHCS_UI_BRIDGE_DESCRIPTOR_DIR", str(tmp_path))
 

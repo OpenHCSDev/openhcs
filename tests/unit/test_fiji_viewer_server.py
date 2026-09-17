@@ -7,8 +7,12 @@ import numpy as np
 import tifffile
 from zmqruntime.streaming import StreamingVisualizerServer
 
-from openhcs.runtime import fiji_viewer_server as fiji_viewer_server_module
 from openhcs.core.config import FijiDisplayConfig, FijiStreamingConfig
+from openhcs.runtime import fiji_viewer_server as fiji_viewer_server_module
+from openhcs.runtime.fiji_macro_runtime import (
+    FijiMacroExecutionRequest,
+    FijiMacroExecutionResponse,
+)
 from openhcs.runtime.fiji_viewer_server import (
     FijiBatchSettlementState,
     FijiBatchWireParser,
@@ -22,8 +26,8 @@ from openhcs.runtime.fiji_viewer_server import (
     FijiImagePayload,
     FijiImagePlaneLookup,
     FijiImageStackBuilder,
-    FijiPlaneGeometry,
     FijiPayloadHandlerRequest,
+    FijiPlaneGeometry,
     FijiRoiPayloadHandler,
     FijiSettleControlPlan,
     FijiSharedMemoryItemCopier,
@@ -33,21 +37,17 @@ from openhcs.runtime.fiji_viewer_server import (
     FijiWindowRegistry,
     FijiWireItem,
 )
-from openhcs.runtime.fiji_macro_runtime import (
-    FijiMacroExecutionRequest,
-    FijiMacroExecutionResponse,
+from openhcs.runtime.viewer_component_system import (
+    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentNameMetadata,
+    ViewerComponentValueDomainPayload,
+    ViewerObjectDisplayConfigInput,
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
     ViewerControlResponse,
     ViewerSettlePhase,
     ViewerSettleProgress,
-)
-from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
-    ViewerComponentNameMetadata,
-    ViewerComponentValueDomainPayload,
-    ViewerObjectDisplayConfigInput,
 )
 
 PRODUCER_IDENTITY = {
@@ -205,6 +205,22 @@ def test_fiji_control_dispatch_registry_is_module_local_and_eager() -> None:
         is FijiClearStateControlPlan
     )
     assert registry[ViewerControlMessageType.SETTLE.value] is FijiSettleControlPlan
+
+
+def test_fiji_intensity_window_control_fails_closed_as_unsupported() -> None:
+    response = FijiControlMessageAuthority(
+        FijiControlRequestContext(
+            FijiWindowRegistry(),
+            object(),
+            FijiBatchSettlementState(),
+        )
+    ).response_for(
+        {"type": ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value}
+    )
+
+    wire_response = response.to_wire_mapping()
+    assert wire_response["status"] == "error"
+    assert "supported only by Napari" in wire_response["message"]
 
 
 def test_fiji_settlement_reports_typed_terminal_progress() -> None:
