@@ -350,6 +350,9 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "SOURCE-BINDING WORKFLOW" not in viewer
     assert "view one specific step" in viewer
     assert "step_materialization_config persists" in viewer
+    assert "does not override an artifact output's own materialization declaration" in viewer
+    assert "automatically streamed object-label ROI projection can be streaming-only" in viewer
+    assert "verify the reported paths exist before freezing the pipeline" in viewer
     assert "pipeline_config.well_filter_config" in viewer
     assert "path_planning_config.well_filter=0" in viewer
     assert "Start from the user's scientific question" in viewer
