@@ -1,6 +1,7 @@
 from openhcs.agent.image_analysis_qa import (
     CandidateRejectionReason,
     ImageAnalysisQaPolicy,
+    ImageQaEvidenceRule,
     ImageQaMissStage,
     ImageQaPrecondition,
     ReferenceEvidenceRule,
@@ -27,6 +28,8 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
         assert disposition.value in guidance
     for precondition in ImageQaPrecondition:
         assert precondition.value in guidance
+    for rule in ImageQaEvidenceRule:
+        assert rule.value in guidance
     for rule in ReferenceEvidenceRule:
         assert rule.value in guidance
     for stage in ImageQaMissStage:
@@ -60,11 +63,16 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "Aggregate length or object-count agreement alone" in guidance
     assert "derive color-channel semantics from the physical container" in guidance
     assert "never infer a biological plane axis from array rank" in guidance
-    assert "development and held-out splits cover the same declared source carrier" in guidance
-    assert "without reading hidden labels or scores" in guidance
+    assert "every held-out layout class to be represented in development" in guidance
+    assert "without opening hidden labels or scoring references" in guidance
     assert "label-ID sets to be identical" in guidance
     assert "equal object counts alone do not prove seed identity conservation" in guidance
     assert "primary-seed pixel lies inside the secondary mask" in guidance
+    assert "applied numeric limits" in guidance
+    assert "route-local semantic coordinate" in guidance
+    assert "black, empty, stale, or mismatched capture" in guidance
+    assert "verify every claimed durable label or measurement path exists" in guidance
+    assert "same-identity containment" in guidance
 
 
 def test_trace_growth_requires_more_root_connected_continuity() -> None:

@@ -11,7 +11,12 @@ class ImageQaMeasure(Enum):
     """Measurements used to distinguish admission, continuity, and ownership."""
 
     OBJECT_COUNT = "admitted-object count"
+    OBJECT_AREA_DISTRIBUTION = "per-object area distribution"
+    FOREGROUND_FRACTION = "accepted foreground fraction"
     SOURCE_TARGET_MATCH_COUNT = "accepted source-to-target match count"
+    SOURCE_TARGET_CONTAINMENT_VIOLATION_PIXELS = (
+        "source-label pixels outside the same-identity target object"
+    )
     ADMISSION_DELTA_OBJECTS = (
         "source objects added or removed by an adjacent admission setting"
     )
@@ -84,14 +89,15 @@ class ImageQaPrecondition(Enum):
         "non-spatial axes; never infer a biological plane axis from array rank"
     )
     SOURCE_LAYOUT_SPLIT_REPRESENTATIVENESS = (
-        "before freezing, verify without reading hidden labels or scores that the "
-        "development and held-out splits cover the same declared source carrier, "
-        "rank, dtype, and channel-axis contract classes"
+        "before public authoring, derive source carrier, rank, dtype, and channel-axis "
+        "contract classes for development and held-out inputs without opening hidden "
+        "labels or scoring references; require every held-out layout class to be "
+        "represented in development or declared unsupported before pipeline freeze"
     )
 
 
-class ImageQaVisualizationRule(Enum):
-    """Rules for trustworthy live and materialized image inspection."""
+class ImageQaEvidenceRule(Enum):
+    """Auditable evidence rules applied before accepting image-analysis QA."""
 
     ROUTED_PAYLOAD_PERCENTILES = (
         "derive live-view percentile limits from real routed payload values at the "
@@ -100,6 +106,30 @@ class ImageQaVisualizationRule(Enum):
     MULTIPLE_WINDOWS = (
         "inspect the same source coordinates under multiple declared weak and strong "
         "percentile windows"
+    )
+    FIXED_COORDINATE_MULTI_WINDOW = (
+        "preserve each percentile pair with its applied numeric limits while keeping "
+        "raw/result coordinates, crop, scale, and overlay identical"
+    )
+    ROUTE_LOCAL_VIEWER_IDENTITY = (
+        "aggregate viewer indices are not necessarily a route-local semantic "
+        "coordinate because routes can have distinct component domains and axis "
+        "offsets; derive navigation from the target route's typed component values "
+        "and positional indices, then re-read viewer state"
+    )
+    REJECT_INVALID_CAPTURE = (
+        "reject a black, empty, stale, or mismatched capture when its active route, "
+        "component values, or routed payload identity do not match the intended evidence"
+    )
+    DURABLE_ARTIFACT_EXISTENCE = (
+        "before freezing, verify every claimed durable label or measurement path exists "
+        "and preserves the typed artifact identity rather than inferring persistence "
+        "from a streamed viewer payload"
+    )
+    LABEL_CARDINALITY_AND_CONTAINMENT = (
+        "reconcile source and target label cardinality, same-identity containment, "
+        "foreground fraction, and per-object area distributions; equal counts alone "
+        "do not establish spatial concordance"
     )
 
 
@@ -192,7 +222,10 @@ class SemanticGate(Enum):
         "decides whether a source object enters the analysis",
         (
             ImageQaMeasure.OBJECT_COUNT,
+            ImageQaMeasure.OBJECT_AREA_DISTRIBUTION,
+            ImageQaMeasure.FOREGROUND_FRACTION,
             ImageQaMeasure.SOURCE_TARGET_MATCH_COUNT,
+            ImageQaMeasure.SOURCE_TARGET_CONTAINMENT_VIOLATION_PIXELS,
             ImageQaMeasure.ADMISSION_DELTA_OBJECTS,
             ImageQaMeasure.REFERENCE_OBJECT_COUNT_DELTA,
             ImageQaMeasure.ACCEPTED_BODY_PIXELS,
@@ -372,9 +405,7 @@ class ImageAnalysisQaPolicy:
         seeded_segmentation_text = "; ".join(
             rule.value for rule in SeededSegmentationRule
         )
-        visualization_rule_text = "; ".join(
-            rule.value for rule in ImageQaVisualizationRule
-        )
+        evidence_rule_text = "; ".join(rule.value for rule in ImageQaEvidenceRule)
         gate_text = "; ".join(
             (
                 f"{gate.value} {gate.description}; measure "
@@ -390,61 +421,39 @@ class ImageAnalysisQaPolicy:
         )
         return (
             f"Before tuning, require that each precondition holds: {precondition_text}. "
-            f"For visual inspection: {visualization_rule_text}. "
+            f"Accept visual or artifact evidence only when: {evidence_rule_text}. "
             f"When a reference exists: {reference_evidence_text}. "
             f"For seeded secondary segmentation: {seeded_segmentation_text}. "
             "Classify the current-output "
             f"miss by stage: {miss_stage_text}. Then classify each residual miss: "
             f"{gate_text}. Sweep exactly one declaration-owned gate per attempt. "
-            "Compare revisions at identical coordinates under declared weak and "
-            "strong percentile windows. Inspect missed source objects (including "
-            "somata when they are the admitted roots) and faint processes without "
-            "reclassifying amplified background as biology. "
-            "For every thin-structure miss, preserve a fixed-coordinate four-panel "
-            "view of raw signal, candidate skeleton, rooted result, and candidate-only "
-            "residual; this separates detection failure from post-detection loss. "
-            "For source-assisted admission, enumerate source objects not mapped to "
-            "accepted bodies (for example nuclei without a nearby accepted soma) "
-            "and rank same-coordinate crops by nearby body-channel response/support. "
-            "When a source object or body appears missing, sweep source admission and "
-            "target-body response as separate attempts. Compare the source-object, "
-            "accepted-body, and source-to-target match counts at identical coordinates; "
-            "an added source object is a supported recovery only when it maps to a "
-            "plausible target body rather than splitting an already admitted source. "
-            "Do not assume an admission threshold is monotone after object partitioning: "
-            "a stricter threshold can split a merged object and a permissive threshold "
-            "can merge neighbors, so inspect the spatial added/removed mask and source-to-"
-            "target matches for every threshold delta. "
+            "For thin structures, retain a fixed-coordinate four-panel view: raw, "
+            "candidate, rooted, and candidate-only residual. For source-assisted "
+            "admission, rank nuclei without a nearby accepted soma by same-coordinate "
+            "body-channel support. Test source admission and target-body response as "
+            "separate attempts; accept a recovered source only when it maps plausibly, "
+            "rather than splitting an already admitted source. Threshold effects need "
+            "spatial deltas: a stricter threshold can split a merged object, while a "
+            "permissive one can merge neighbors. "
             "Inspect the source channel (for example DAPI), target or process channel "
-            "(for example FITC), response image, accepted-label overlay, bodies, and "
-            "traces under the same multiple percentile windows; record the rejection "
-            f"reason ({rejection_reasons}) for every candidate. Rank signal-supported "
-            "residual processes that remain unowned or unrooted and classify each as "
-            f"{residual_dispositions}. Change only the implicated admission, path, or "
-            "ownership criterion. When a miss remains unexplained, make one adjacent "
-            "higher-sensitivity diagnostic attempt, subtract the accepted candidate "
-            "mask from the permissive mask, split the delta into connected components, "
-            "and rank those additions by raw-signal support and connection to a valid "
-            "source object. Treat the permissive result as diagnostic evidence rather "
-            "than an automatic replacement. Accept a recovery only when local signal "
-            "support, "
-            "connectivity, and topology evidence agree. "
-            "When signal is present in the current candidate skeleton but absent from the "
-            "rooted result, report candidate pixels, rooted-candidate yield, and owner "
-            "cardinality per connected component. A loss concentrated in components that "
-            "touch multiple owners implicates ownership or crossover resolution; lowering "
-            "the detection threshold cannot repair it. "
-            "If a permissive setting helps the target dataset but fragments a reference "
-            "image or adds unsupported structure, keep the conservative shared default "
-            "and declare the permissive value only on the dataset or preset that needs it. "
+            "(for example FITC), response, accepted-label overlay, bodies, and traces; "
+            f"record candidate reasons ({rejection_reasons}) and residual dispositions "
+            f"({residual_dispositions}). For an unexplained miss, make one adjacent "
+            "higher-sensitivity diagnostic attempt, subtract the accepted candidate mask, "
+            "rank connected additions by signal/root support, and treat the permissive "
+            "result as diagnostic evidence rather than an automatic replacement. Accept "
+            "only signal-supported, connected, plausible topology. If candidate signal is "
+            "lost from the rooted result, report candidate pixels, rooted-candidate yield, "
+            "and owner cardinality per connected component; multi-owner loss implicates "
+            "ownership, so lowering the detection threshold cannot repair it. If a "
+            "permissive setting harms a reference, declare the permissive value only on "
+            "the dataset or preset that needs it. "
             "For thin-structure endpoint continuation, require every proposed path "
             f"to be {continuation_constraint_text}; distance, ownership, and response "
-            "alone are insufficient because they can admit source-object-edge "
-            "decorations. "
+            "alone are insufficient. "
             "When faint signal motivates monotone, ridge, or contrast preprocessing, "
             f"require the transform to {signal_transform_constraint_text}. Aggregate "
-            "length or object-count agreement alone cannot accept a transform. "
-            "Reject mask growth that does not increase root-connected continuity, "
-            "and preserve rejected parameter changes as well as accepted ones, with "
-            "the recovered-candidate evidence for each decision."
+            "length or object-count agreement alone cannot accept it. Reject growth "
+            "without root-connected continuity, and preserve rejected parameter changes "
+            "with the evidence for each decision."
         )
