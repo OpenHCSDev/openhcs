@@ -88,7 +88,9 @@ class SourceBindingsHandler(MicroscopeHandler):
             parser=parser,
             metadata_handler=OpenHCSMetadataHandler(filemanager),
         )
-        from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
+        from openhcs.core.source_binding_workspace import (
+            SourceBindingWorkspaceProjector,
+        )
 
         self._source_bindings_config = source_bindings_config
         self._projector = SourceBindingWorkspaceProjector(
