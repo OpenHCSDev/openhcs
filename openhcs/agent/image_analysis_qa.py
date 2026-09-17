@@ -22,6 +22,15 @@ class ImageQaMeasure(Enum):
         "local signal support for unowned or unrooted residual structures"
     )
     RESIDUAL_STRUCTURE_DISPOSITION = "residual-structure disposition distribution"
+    SENSITIVITY_DELTA_COMPONENTS = (
+        "connected components added by an adjacent sensitivity setting"
+    )
+    SENSITIVITY_DELTA_ROOTED_YIELD = (
+        "root-connected continuity recovered by the sensitivity delta"
+    )
+    SENSITIVITY_DELTA_BACKGROUND_GROWTH = (
+        "unsupported background growth in the sensitivity delta"
+    )
     TOTAL_TRACE_PIXELS = "total trace pixels"
     ROOTED_TRACE_PIXELS = "root-connected trace pixels"
     UNROOTED_TRACE_PIXELS = "unrooted trace pixels"
@@ -57,6 +66,9 @@ class SemanticGate(Enum):
             ImageQaMeasure.RESIDUAL_STRUCTURE_COUNT,
             ImageQaMeasure.RESIDUAL_STRUCTURE_SIGNAL_SUPPORT,
             ImageQaMeasure.RESIDUAL_STRUCTURE_DISPOSITION,
+            ImageQaMeasure.SENSITIVITY_DELTA_COMPONENTS,
+            ImageQaMeasure.SENSITIVITY_DELTA_ROOTED_YIELD,
+            ImageQaMeasure.SENSITIVITY_DELTA_BACKGROUND_GROWTH,
             ImageQaMeasure.LOCAL_BACKGROUND_SUPPORT,
             ImageQaMeasure.TOPOLOGY_PLAUSIBILITY,
         ),
@@ -222,7 +234,13 @@ class ImageAnalysisQaPolicy:
             f"reason ({rejection_reasons}) for every candidate. Rank signal-supported "
             "residual processes that remain unowned or unrooted and classify each as "
             f"{residual_dispositions}. Change only the implicated admission, path, or "
-            "ownership criterion. Accept a recovery only when local signal support, "
+            "ownership criterion. When a miss remains unexplained, make one adjacent "
+            "higher-sensitivity diagnostic attempt, subtract the accepted candidate "
+            "mask from the permissive mask, split the delta into connected components, "
+            "and rank those additions by raw-signal support and connection to a valid "
+            "source object. Treat the permissive result as diagnostic evidence rather "
+            "than an automatic replacement. Accept a recovery only when local signal "
+            "support, "
             "connectivity, and topology evidence agree. "
             "Reject mask growth that does not increase root-connected continuity, "
             "and preserve rejected parameter changes as well as accepted ones, with "

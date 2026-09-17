@@ -36,10 +36,14 @@ For each attempt:
    those coordinates.
 4. Preserve ranked rejected-source candidates and signal-supported unowned or
    unrooted residual structures in the attempt observation when applicable.
-5. State one falsifiable hypothesis and change one declaration-owned semantic
+5. For an unexplained miss, make one adjacent higher-sensitivity diagnostic
+   attempt, subtract the accepted candidate mask, and rank the added connected
+   components by raw-signal support and valid-root connectivity. The permissive
+   result is evidence; it is not automatically the replacement result.
+6. State one falsifiable hypothesis and change one declaration-owned semantic
    gate.
-6. Compile, run a bounded public case, and inspect the materialised outputs.
-7. Finalise an `AttemptObservation`; never replace a prior attempt directory.
+7. Compile, run a bounded public case, and inspect the materialised outputs.
+8. Finalise an `AttemptObservation`; never replace a prior attempt directory.
 
 Use the image-analysis workflow guidance returned by OpenHCS as the canonical
 QA procedure. Its gate and measurement wording is generated from
