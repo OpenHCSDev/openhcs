@@ -446,6 +446,15 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         """
         pass
 
+    def get_metadata_grid_dimensions(self, plate_path: Union[str, Path]) -> list[int]:
+        """Project grid dimensions for metadata serialization.
+
+        Grid-consuming artifacts must use the strict ``get_grid_dimensions``
+        contract. Metadata can preserve a format-specific unknown-layout value
+        without claiming that a rectangular acquisition grid exists.
+        """
+        return list(self.get_grid_dimensions(plate_path))
+
     @abstractmethod
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
         """
@@ -532,7 +541,7 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         from openhcs.microscopes.openhcs import OpenHCSMetadata
 
         component_values = self.component_value_set(plate_path)
-        grid_dims = self.get_grid_dimensions(plate_path)
+        grid_dims = self.get_metadata_grid_dimensions(plate_path)
         pixel_size = self.get_pixel_size(plate_path)
         image_files = self.get_image_files(plate_path)
 

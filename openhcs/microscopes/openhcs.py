@@ -320,6 +320,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
             )
         return tuple(dims)
 
+    def get_metadata_grid_dimensions(self, plate_path: Union[str, Path]) -> list[int]:
+        """Preserve an explicitly unknown source layout without inventing a grid."""
+        dims = self._load_metadata(plate_path).get(FIELDS.GRID_DIMENSIONS)
+        if dims == []:
+            return []
+        return list(self.get_grid_dimensions(plate_path))
+
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
         """Get pixel size from OpenHCS metadata."""
         pixel_size = self._load_metadata(plate_path).get(FIELDS.PIXEL_SIZE)
@@ -1116,7 +1123,7 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
             )  # Just the directory name, not full path
 
         if request.grid_dimensions is None:
-            grid_dimensions = handler.metadata_handler.get_grid_dimensions(
+            grid_dimensions = handler.metadata_handler.get_metadata_grid_dimensions(
                 context.input_dir
             )
             pixel_size = handler.metadata_handler.get_pixel_size(context.input_dir)
