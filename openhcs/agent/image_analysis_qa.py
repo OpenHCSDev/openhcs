@@ -11,6 +11,12 @@ class ImageQaMeasure(Enum):
     """Measurements used to distinguish admission, continuity, and ownership."""
 
     OBJECT_COUNT = "admitted-object count"
+    SOURCE_TARGET_MATCH_COUNT = "accepted source-to-target match count"
+    ADMISSION_DELTA_OBJECTS = (
+        "source objects added or removed by an adjacent admission setting"
+    )
+    REFERENCE_OBJECT_COUNT_DELTA = "detected-versus-reference object-count delta"
+    PER_OBJECT_REFERENCE_DELTA = "spatially matched per-object measurement delta"
     ACCEPTED_BODY_PIXELS = "accepted body pixels"
     REJECTED_CANDIDATE_COUNT = "rejected source-candidate count"
     REJECTED_CANDIDATE_SIGNAL_SUPPORT = (
@@ -59,6 +65,29 @@ class ImageQaPrecondition(Enum):
     )
 
 
+class ReferenceEvidenceRule(Enum):
+    """How external references constrain, but do not replace, spatial QA."""
+
+    COUNT_CONSTRAINS_ADMISSION = (
+        "compare detected and reference object counts before changing object admission"
+    )
+    COUNT_DOES_NOT_PROVE_IDENTITY = (
+        "treat count agreement as an admission constraint, not proof that the same "
+        "objects were detected"
+    )
+    IDENTITY_REQUIRES_SPATIAL_CORRESPONDENCE = (
+        "require coordinates, labels, or annotations before claiming object identity"
+    )
+    AGGREGATE_DOES_NOT_PROVE_PER_OBJECT_COMPLETENESS = (
+        "treat aggregate measurement agreement as insufficient evidence of per-object "
+        "trace completeness"
+    )
+    VALUE_ONLY_ASSIGNMENT_IS_DIAGNOSTIC = (
+        "use value-only object assignment to prioritise review, never to establish "
+        "spatial identity"
+    )
+
+
 class ImageQaMissStage(Enum):
     """Stage attribution derived from nested current-output masks."""
 
@@ -91,6 +120,9 @@ class SemanticGate(Enum):
         "decides whether a source object enters the analysis",
         (
             ImageQaMeasure.OBJECT_COUNT,
+            ImageQaMeasure.SOURCE_TARGET_MATCH_COUNT,
+            ImageQaMeasure.ADMISSION_DELTA_OBJECTS,
+            ImageQaMeasure.REFERENCE_OBJECT_COUNT_DELTA,
             ImageQaMeasure.ACCEPTED_BODY_PIXELS,
             ImageQaMeasure.REJECTED_CANDIDATE_COUNT,
             ImageQaMeasure.REJECTED_CANDIDATE_SIGNAL_SUPPORT,
@@ -112,6 +144,7 @@ class SemanticGate(Enum):
             ImageQaMeasure.SENSITIVITY_DELTA_BACKGROUND_GROWTH,
             ImageQaMeasure.LOCAL_BACKGROUND_SUPPORT,
             ImageQaMeasure.TOPOLOGY_PLAUSIBILITY,
+            ImageQaMeasure.PER_OBJECT_REFERENCE_DELTA,
         ),
     )
     OWNERSHIP = (
@@ -255,6 +288,9 @@ class ImageAnalysisQaPolicy:
         continuation_constraint_text = ", ".join(
             constraint.value for constraint in ThinStructureContinuationConstraint
         )
+        reference_evidence_text = "; ".join(
+            rule.value for rule in ReferenceEvidenceRule
+        )
         gate_text = "; ".join(
             (
                 f"{gate.value} {gate.description}; measure "
@@ -270,6 +306,7 @@ class ImageAnalysisQaPolicy:
         )
         return (
             f"Before tuning, require that each precondition holds: {precondition_text}. "
+            f"When a reference exists: {reference_evidence_text}. "
             "Classify the current-output "
             f"miss by stage: {miss_stage_text}. Then classify each residual miss: "
             f"{gate_text}. Sweep exactly one declaration-owned gate per attempt. "
@@ -280,6 +317,11 @@ class ImageAnalysisQaPolicy:
             "For source-assisted admission, enumerate source objects not mapped to "
             "accepted bodies (for example nuclei without a nearby accepted soma) "
             "and rank same-coordinate crops by nearby body-channel response/support. "
+            "When a source object or body appears missing, sweep source admission and "
+            "target-body response as separate attempts. Compare the source-object, "
+            "accepted-body, and source-to-target match counts at identical coordinates; "
+            "an added source object is a supported recovery only when it maps to a "
+            "plausible target body rather than splitting an already admitted source. "
             "Inspect the source channel (for example DAPI), target or process channel "
             "(for example FITC), response image, accepted-label overlay, bodies, and "
             "traces under the same multiple percentile windows; record the rejection "

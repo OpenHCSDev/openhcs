@@ -40,9 +40,14 @@ For each attempt:
 3. Inspect raw data at the same coordinates under at least three declared
    percentile windows, including weak and strong clipping.
 4. Compare raw, normalised, mask or ROI, overlay, and measurement evidence at
-   those coordinates.
+   those coordinates. If an external reference exists, apply the canonical
+   reference-evidence rules before changing admission or continuity.
 5. Preserve ranked rejected-source candidates and signal-supported unowned or
    unrooted residual structures in the attempt observation when applicable.
+   If a source object or body appears missing, vary source-object admission and
+   target-body response in separate attempts, then compare source, accepted-body,
+   and matched source-to-target counts at the same coordinates. Reject apparent
+   recoveries that only split an already admitted source object.
 6. For an unexplained miss, make one adjacent higher-sensitivity diagnostic
    attempt, subtract the accepted candidate mask, and rank the added connected
    components by raw-signal support and valid-root connectivity. The permissive
