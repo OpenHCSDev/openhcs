@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Self
 
 from objectstate.object_state import ObjectState, ObjectStateRegistry
+from objectstate.construction_binding import StateScopeOwner
 from openhcs.core.steps.function_step import FunctionEntry, FunctionSpec, FunctionStep
 from openhcs.pyqt_gui.services.plate_manager_root_state import (
     root_orchestrator_scope_ids,
@@ -20,7 +21,6 @@ from openhcs.pyqt_gui.services.step_scope_identity import (
     SCOPE_SEGMENT_SEPARATOR,
 )
 from pyqt_reactive.services.function_pattern_code_document import (
-    EditableFunctionPatternCallable,
     FunctionPatternCodeDocumentService,
     FunctionPatternValue,
     function_pattern_authority,
@@ -38,12 +38,16 @@ FunctionPatternTokenTree = list[str] | dict[str, "FunctionPatternTokenTree"] | N
 
 
 @dataclass(frozen=True, slots=True)
-class PipelineEditorStateRoot:
+class PipelineEditorStateRoot(StateScopeOwner):
     """GUI-only text and child-scope state for one pipeline editor."""
 
     name: str
     description: str | None
     step_scope_ids: tuple[str, ...]
+
+    @property
+    def owned_scope_ids(self) -> tuple[str, ...]:
+        return self.step_scope_ids
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,8 +268,14 @@ class PipelineObjectStateBinding:
             token = FunctionStepScopeToken.from_segment(
                 scope_id.rsplit(SCOPE_SEGMENT_SEPARATOR, 1)[-1]
             )
-            if state is None or token is None:
-                continue
+            if state is None:
+                raise ValueError(
+                    f"Pipeline editor declares missing ObjectState scope {scope_id!r}."
+                )
+            if token is None:
+                raise ValueError(
+                    f"Pipeline editor declares invalid step scope {scope_id!r}."
+                )
             previous_steps.append(self._step_from_state(state))
             previous_tokens.append(token.raw)
 
@@ -306,12 +316,6 @@ class PipelineObjectStateBinding:
         for state in to_register:
             ObjectStateRegistry.register(state)
 
-        removed_step_scope_ids = set(existing_step_scope_ids).difference(step_scope_ids)
-        for removed_scope_id in removed_step_scope_ids:
-            ObjectStateRegistry.unregister_scope_and_descendants(
-                removed_scope_id,
-                _skip_snapshot=True,
-            )
         self.state.update_object_instance(
             PipelineEditorStateRoot(
                 name=editor_state.name,
@@ -319,6 +323,14 @@ class PipelineObjectStateBinding:
                 step_scope_ids=tuple(step_scope_ids),
             )
         )
+        # Publish the complete new ownership list before removal callbacks.
+        # Subscribers must never observe a root that declares a removed scope.
+        removed_step_scope_ids = set(existing_step_scope_ids).difference(step_scope_ids)
+        for removed_scope_id in removed_step_scope_ids:
+            ObjectStateRegistry.unregister_scope_and_descendants(
+                removed_scope_id,
+                _skip_snapshot=True,
+            )
 
     def _editor_state(self) -> PipelineEditorStateRoot:
         """Return the reconstructed GUI-only editor root."""
@@ -337,8 +349,11 @@ class PipelineObjectStateBinding:
         steps: list[FunctionStep] = []
         for scope_id in self._editor_state().step_scope_ids:
             step_state = ObjectStateRegistry.get_by_scope(scope_id)
-            if step_state is not None:
-                steps.append(self._step_from_state(step_state))
+            if step_state is None:
+                raise ValueError(
+                    f"Pipeline editor declares missing ObjectState scope {scope_id!r}."
+                )
+            steps.append(self._step_from_state(step_state))
         return steps
 
     @staticmethod
@@ -398,50 +413,19 @@ class PipelineObjectStateBinding:
             func_scope_id = f"{scope_id}{SCOPE_SEGMENT_SEPARATOR}{token}"
             existing_func_state = ObjectStateRegistry.get_by_scope(func_scope_id)
             if existing_func_state is not None:
-                if function_service.same_function_authority(
-                    existing_func_state.object_instance,
-                    func_obj,
-                ):
-                    FunctionPatternCodeDocumentService.apply_kwargs_to_state(
+                existing_func_state = (
+                    FunctionPatternCodeDocumentService.synchronize_existing_function_state(
                         state=existing_func_state,
-                        previous_kwargs=(
-                            FunctionPatternCodeDocumentService.reconstruct_kwargs_from_state(
-                                existing_func_state
-                            )
-                        ),
-                        next_kwargs=kwargs,
-                    )
-                else:
-                    FunctionPatternCodeDocumentService.replace_function_state(
-                        scope_id=func_scope_id,
                         parent_state=step_state,
                         entry=FunctionPatternValue(func_obj, kwargs),
                     )
-                    existing_func_state = ObjectStateRegistry.get_by_scope(
-                        func_scope_id
-                    )
-                    if existing_func_state is None:
-                        raise RuntimeError(
-                            "Function-pattern state replacement did not register "
-                            f"{func_scope_id!r}."
-                        )
+                )
                 function_states[func_scope_id] = existing_func_state
                 continue
-            editable_func = EditableFunctionPatternCallable.for_entry(
-                func_obj,
-                kwargs,
-            )
-            exclude_params = (
-                FunctionPatternCodeDocumentService.reserved_parameter_names(
-                    editable_func
-                )
-            )
-            function_state = ObjectState(
-                object_instance=editable_func,
+            function_state = FunctionPatternCodeDocumentService.create_function_state(
                 scope_id=func_scope_id,
                 parent_state=step_state,
-                exclude_params=exclude_params,
-                initial_values=dict(kwargs),
+                entry=FunctionPatternValue(func_obj, kwargs),
             )
             function_states[func_scope_id] = function_state
             to_register.append(function_state)

@@ -36,6 +36,7 @@ from openhcs.desktop_deployment import (
 from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
 from openhcs.mcp.bootstrap import MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE
 from openhcs.pyqt_gui.services.desktop_update_worker import DesktopUpdatePlan
+from openhcs.pyqt_gui.services.history_migration import DesktopHistoryUpgrade
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
@@ -545,7 +546,9 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
         )
         plate_manager = main_window.embedded_widgets.require_plate_manager()
         plate_manager.code_execution_workflow.apply_payload(payload)
-        ObjectStateRegistry.load_history_from_file(str(self.history_document))
+        ObjectStateRegistry.load_history_from_file(
+            str(self.history_document), migration=DesktopHistoryUpgrade()
+        )
         main_window.time_travel_widget.refresh()
         plate_manager.update_item_list()
         outcome = DesktopRestartRestoreOutcomeABC.from_restoration(

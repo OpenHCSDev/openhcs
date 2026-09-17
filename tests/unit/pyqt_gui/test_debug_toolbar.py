@@ -373,6 +373,7 @@ class PlateManagerDebugHarness:
     """Minimal plate-manager state used by paused-worker UX tests."""
 
     plate_has_active_work = PlateManagerWidget.plate_has_active_work
+    plate_has_pending_definition_work = PlateManagerWidget.plate_has_pending_definition_work
     require_pipeline_definition_mutation_allowed = (
         PlateManagerWidget.require_pipeline_definition_mutation_allowed
     )
