@@ -94,6 +94,11 @@ class ImageQaPrecondition(Enum):
         "labels or scoring references; require every held-out layout class to be "
         "represented in development or declared unsupported before pipeline freeze"
     )
+    MIXED_COLOR_CARRIER_NORMALIZATION = (
+        "when one biological plane may arrive in either grayscale or RGB containers, "
+        "declare NamedSourceBinding(load_as_monochrome=True) at the source boundary; "
+        "do not apply unconditional color_to_gray downstream"
+    )
 
 
 class ImageQaEvidenceRule(Enum):
