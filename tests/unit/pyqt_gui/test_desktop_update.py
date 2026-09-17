@@ -34,6 +34,7 @@ from openhcs.pyqt_gui.services.desktop_update import (
     DesktopRestartPurpose,
     DesktopRestartRestoreOutcomeABC,
     DesktopRestartSession,
+    DesktopRestartUiState,
     DesktopRuntimeEnvironment,
     DesktopUpdateCheckFailure,
     DesktopUpdateCheckOrigin,
@@ -1005,6 +1006,7 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
     plate_manager = SimpleNamespace(
         is_any_plate_running=lambda: False,
         require_pipeline_definition_mutation_allowed=lambda: None,
+        selected_plate_path="/plates/selected",
         orchestrator_code_document_context=lambda **_kwargs: SimpleNamespace(
             source="canonical session source"
         ),
@@ -1037,6 +1039,9 @@ def test_capture_uses_canonical_plate_source_and_objectstate_history(
         "canonical session source"
     )
     assert session.history_document.read_text(encoding="utf-8") == ("canonical history")
+    assert DesktopRestartUiState.read(session.ui_state_document) == (
+        DesktopRestartUiState(selected_plate_scope_id="/plates/selected")
+    )
     assert session.purpose is DesktopRestartPurpose.UPDATE
     assert session.worker_document.read_text(encoding="utf-8").startswith(
         '"""Out-of-process OpenHCS environment update'
@@ -1112,6 +1117,78 @@ def test_saved_update_session_restores_through_existing_authorities(
     ]
     assert not session.directory.exists()
     assert not consumed.directory.exists()
+
+
+def test_saved_session_restores_selected_plate_after_all_scope_payload(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    first_scope = "/plates/P002"
+    selected_scope = "/plates/P001"
+    session = DesktopRestartSession(tmp_path / "pending")
+    session.directory.mkdir()
+    payload = PlateManagerCodeDocumentAuthority.from_values(
+        plate_paths=(first_scope, selected_scope),
+        global_pipeline_config=GlobalPipelineConfig(),
+        per_plate_configs={
+            first_scope: PipelineConfig(),
+            selected_scope: PipelineConfig(),
+        },
+        pipeline_data={first_scope: [], selected_scope: []},
+    )
+    session.session_document.write_text(
+        PlateManagerCodeDocumentAuthority.render(payload),
+        encoding="utf-8",
+    )
+    session.history_document.write_text("{}", encoding="utf-8")
+    DesktopRestartUiState(selected_scope).write(session.ui_state_document)
+    calls = []
+
+    class Workflow:
+        def apply_payload(self, restored_payload) -> None:
+            calls.append(("payload", restored_payload))
+
+        def reconcile_selection(
+            self,
+            requested_paths,
+            *,
+            preferred_path=None,
+        ) -> bool:
+            calls.append(("selection", requested_paths, preferred_path))
+            plate_manager.selected_plate_path = preferred_path
+            return True
+
+    plate_manager = SimpleNamespace(
+        code_execution_workflow=Workflow(),
+        selected_plate_path=first_scope,
+        plate_selected=SimpleNamespace(
+            emit=lambda scope_id: calls.append(("selected", scope_id))
+        ),
+        update_item_list=lambda: calls.append(("refresh", None)),
+    )
+    main_window = SimpleNamespace(
+        embedded_widgets=SimpleNamespace(
+            require_plate_manager=lambda: plate_manager,
+        ),
+        time_travel_widget=SimpleNamespace(
+            refresh=lambda: calls.append(("history-ui", None))
+        ),
+    )
+    monkeypatch.setattr(
+        "objectstate.object_state.ObjectStateRegistry.load_history_from_file",
+        lambda path: calls.append(("history", path)),
+    )
+
+    consumed = session.consume()
+    consumed.restore(main_window)
+
+    assert plate_manager.selected_plate_path == selected_scope
+    assert calls[3] == (
+        "selection",
+        (first_scope, selected_scope),
+        selected_scope,
+    )
+    assert calls[4] == ("selected", selected_scope)
 
 
 def test_restart_reconciles_saved_document_after_history_materialization(

@@ -269,10 +269,25 @@ class PlateManagerCodeWorkflow(ManagerCodeExecutionWorkflow):
         self.manager.status_message.emit(status_message)
         logger.info(status_message)
 
-    def reconcile_selection(self, requested_paths: tuple[str, ...]) -> bool:
+    def reconcile_selection(
+        self,
+        requested_paths: tuple[str, ...],
+        *,
+        preferred_path: str | None = None,
+    ) -> bool:
         """Align semantic selection with the applied plate document."""
         current_selection = self.manager.selected_plate_path
         if requested_paths:
+            if preferred_path is not None:
+                if preferred_path not in requested_paths:
+                    raise ValueError(
+                        "Preferred plate selection is absent from the applied "
+                        f"document: {preferred_path!r}."
+                    )
+                if current_selection == preferred_path:
+                    return False
+                self.manager.selected_plate_path = preferred_path
+                return True
             if current_selection in requested_paths:
                 return False
             self.manager.selected_plate_path = requested_paths[0]

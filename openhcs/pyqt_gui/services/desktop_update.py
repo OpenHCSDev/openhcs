@@ -56,6 +56,7 @@ _PROGRESS_THEME_DOCUMENT_NAME = "desktop-update-theme.json"
 _PROGRESS_BRAND_DOCUMENT_NAME = "desktop-update-brand.png"
 _UPDATE_ERROR_NAME = "update-error.txt"
 _SESSION_PURPOSE_NAME = "restart-purpose.txt"
+_SESSION_UI_STATE_NAME = "ui-state.json"
 UPDATE_SESSION_ARGUMENT = "--restore-update-session"
 
 
@@ -318,6 +319,53 @@ def _without_update_session_arguments(arguments: list[str]) -> tuple[str, ...]:
 
 
 @dataclass(frozen=True, slots=True)
+class DesktopRestartUiState:
+    """Typed non-declaration UI state preserved by a desktop restart."""
+
+    selected_plate_scope_id: str | None
+
+    @classmethod
+    def capture(cls, plate_manager) -> DesktopRestartUiState:
+        selected_scope_id = plate_manager.selected_plate_path or None
+        return cls(selected_plate_scope_id=selected_scope_id)
+
+    @classmethod
+    def read(cls, path: Path) -> DesktopRestartUiState:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise DesktopUpdateError("Saved desktop UI state must be a JSON object.")
+        selected_scope_id = payload.get("selected_plate_scope_id")
+        if selected_scope_id is not None and not isinstance(selected_scope_id, str):
+            raise DesktopUpdateError(
+                "Saved desktop plate selection must be a string or null."
+            )
+        return cls(selected_plate_scope_id=selected_scope_id)
+
+    def write(self, path: Path) -> None:
+        path.write_text(
+            json.dumps(
+                {"selected_plate_scope_id": self.selected_plate_scope_id},
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    def restore(self, plate_manager, *, plate_paths: tuple[str, ...]) -> None:
+        selected_scope_id = self.selected_plate_scope_id
+        if selected_scope_id is None:
+            return
+        requested_paths = tuple(str(path) for path in plate_paths)
+        selection_changed = plate_manager.code_execution_workflow.reconcile_selection(
+            requested_paths,
+            preferred_path=selected_scope_id,
+        )
+        if selection_changed:
+            plate_manager.plate_selected.emit(selected_scope_id)
+
+
+@dataclass(frozen=True, slots=True)
 class DesktopRestartSession:
     """Canonical plate-manager source plus ObjectState history for one restart."""
 
@@ -354,6 +402,10 @@ class DesktopRestartSession:
     @property
     def purpose_document(self) -> Path:
         return self.directory / _SESSION_PURPOSE_NAME
+
+    @property
+    def ui_state_document(self) -> Path:
+        return self.directory / _SESSION_UI_STATE_NAME
 
     @property
     def purpose(self) -> DesktopRestartPurpose:
@@ -419,6 +471,9 @@ class DesktopRestartSession:
         try:
             session.session_document.write_text(context.source, encoding="utf-8")
             ObjectStateRegistry.save_history_to_file(str(session.history_document))
+            DesktopRestartUiState.capture(plate_manager).write(
+                session.ui_state_document
+            )
             session.purpose_document.write_text(purpose.value, encoding="utf-8")
             if purpose.requires_update_assets:
                 shutil.copyfile(
@@ -566,6 +621,11 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
             plate_manager.code_execution_workflow,
             payload,
         )
+        if self.ui_state_document.is_file():
+            DesktopRestartUiState.read(self.ui_state_document).restore(
+                plate_manager,
+                plate_paths=payload.plate_paths,
+            )
         main_window.time_travel_widget.refresh()
         plate_manager.update_item_list()
         outcome = DesktopRestartRestoreOutcomeABC.from_restoration(
