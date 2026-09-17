@@ -1729,6 +1729,7 @@ class PathPlannerArtifactStage:
                         self.planner.future_artifact_inputs[sid],
                     )
                 ),
+                viewer_streaming=spec.viewer_streaming,
                 sidecar_role=spec.sidecar_role,
                 relations=spec.relations,
                 group_scope_sources_by_group=(

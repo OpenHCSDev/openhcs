@@ -23,6 +23,7 @@ from skan import Skeleton, summarize
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
     ArtifactSpec,
+    ArtifactViewerStreaming,
     MeasurementsArtifactType,
     ObjectArtifactMemberSubjectRelation,
     ObjectLabelsArtifactType,
@@ -370,6 +371,7 @@ CELL_BODIES_OUTPUT = ArtifactSpec.output(
     "cell_bodies",
     ObjectLabelsArtifactType,
     materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
+    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
     relations=(
         ObjectArtifactMemberSubjectRelation(
             source=UNIFIED_NEURONS_OUTPUT.ref(),
@@ -392,6 +394,7 @@ NEURITE_LABELS_OUTPUT = ArtifactSpec.output(
     "neurite_outgrowth",
     ObjectLabelsArtifactType,
     materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
+    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
     relations=(
         ObjectArtifactMemberSubjectRelation(
             source=UNIFIED_NEURONS_OUTPUT.ref(),
@@ -403,6 +406,7 @@ NUCLEI_OUTPUT = ArtifactSpec.output(
     "nuclei",
     ObjectLabelsArtifactType,
     materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
+    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
 )
 NEURONAL_CELL_BODY_SUMMARY_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_body_summary",
@@ -414,6 +418,7 @@ NEURONAL_CELL_BODIES_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_bodies",
     ObjectLabelsArtifactType,
     materialization=NEURITE_OBJECT_LABEL_MATERIALIZATION,
+    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
 )
 NEURONAL_CELL_BODY_MEASUREMENTS_OUTPUT = ArtifactSpec.output(
     "neuronal_cell_body_measurements",

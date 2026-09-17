@@ -135,6 +135,7 @@ class RuntimeArtifactExecutionExpectation:
                     output.name,
                     output.artifact_type,
                     materialization=output.materialization,
+                    viewer_streaming=output.viewer_streaming,
                     sidecar_role=output.sidecar_role,
                 )
                 for context in compiled_contexts.values()

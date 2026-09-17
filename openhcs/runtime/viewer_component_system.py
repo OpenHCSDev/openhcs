@@ -1037,75 +1037,6 @@ class ViewerRouteComponentValueTracker(ViewerComponentValueDomain):
         return (route_key, tuple(axis_components))
 
 
-class ViewerDisplayAxisDomainContract(ABC):
-    """Axis-domain contract observed by viewer layer projection."""
-
-    @abstractmethod
-    def record_display_axis_values(
-        self,
-        axis_components: Sequence[str],
-        layer_items: Sequence[ViewerComponentAddressedItem],
-    ) -> None:
-        """Record observed values for the shared viewer axis domain."""
-
-    @abstractmethod
-    def record_display_component_values(
-        self,
-        axis_components: Sequence[str],
-        component_values: ComponentValues,
-    ) -> None:
-        """Record declared values represented by aggregate payload axes."""
-
-    @abstractmethod
-    def display_axis_values_for(
-        self,
-        axis_components: Sequence[str],
-    ) -> ComponentValues:
-        """Return observed values for the shared viewer axis domain."""
-
-
-@dataclass(slots=True)
-class ViewerDisplayAxisDomain(
-    ViewerComponentValueDomain,
-    ViewerDisplayAxisDomainContract,
-):
-    """Track shared viewer axis values for one stack-component layout."""
-
-    def record_display_axis_values(
-        self,
-        axis_components: Sequence[str],
-        layer_items: Sequence[ViewerComponentAddressedItem],
-    ) -> None:
-        ViewerComponentValueDomain.update(
-            self,
-            tuple(axis_components),
-            axis_components,
-            layer_items,
-        )
-
-    def record_display_component_values(
-        self,
-        axis_components: Sequence[str],
-        component_values: ComponentValues,
-    ) -> None:
-        ViewerComponentValueDomain.update_component_values(
-            self,
-            tuple(axis_components),
-            axis_components,
-            component_values,
-        )
-
-    def display_axis_values_for(
-        self,
-        axis_components: Sequence[str],
-    ) -> ComponentValues:
-        return ViewerComponentValueDomain.values_for(
-            self,
-            tuple(axis_components),
-            axis_components,
-        )
-
-
 @dataclass(frozen=True, slots=True)
 class ViewerLayerAxisProjection:
     """Route-local component axes projected into a shared viewer coordinate domain."""
@@ -1357,27 +1288,29 @@ class ViewerLayerAxisProjectionRequestAuthority:
         component_axis_semantics: ViewerComponentAxisSemantics,
         layer_items: Sequence[ViewerComponentAddressedItem],
         route_value_tracker: ViewerRouteComponentValueTracker,
-        display_axis_domain: ViewerDisplayAxisDomainContract,
+        aggregate_component_values: ComponentValues,
     ) -> ViewerLayerAxisProjectionRequest:
         axis_components = component_axis_semantics.layout.components_for_mode(
             ViewerComponentMode.STACK
         )
         route_value_tracker.update(route_key, axis_components, layer_items)
-        display_axis_domain.record_display_axis_values(axis_components, layer_items)
+        if aggregate_component_values:
+            route_value_tracker.update_component_values(
+                route_key,
+                axis_components,
+                aggregate_component_values,
+            )
+        declared_component_values = component_axis_semantics.required_component_values(
+            axis_components
+        )
         return ViewerLayerAxisProjectionRequest.from_component_values(
             projected_axis_components=axis_components,
             route_component_values=route_value_tracker.values_for(
                 route_value_tracker.domain_key(route_key, axis_components),
                 axis_components,
             ),
-            viewer_component_values=display_axis_domain.display_axis_values_for(
-                axis_components
-            ),
-            declared_component_values=(
-                component_axis_semantics.required_component_values(
-                    axis_components
-                )
-            ),
+            viewer_component_values=declared_component_values,
+            declared_component_values=declared_component_values,
         )
 
 

@@ -374,7 +374,8 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         materialization: "RuntimeArtifactMaterialization",
     ) -> ArtifactMaterializationBackendPlan:
         streams_artifact = (
-            not plan.compiled_function_pattern.publishes_output_to_main_flow(
+            materialization.output_plan.viewer_streaming.automatically_streams
+            and not plan.compiled_function_pattern.publishes_output_to_main_flow(
                 materialization.output_plan,
                 materialization.record.key.scope.value_text,
             )

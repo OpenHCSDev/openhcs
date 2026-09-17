@@ -78,6 +78,7 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpec,
+    ArtifactViewerStreaming,
     ObjectLabelsArtifactType,
     SpecialArtifactType,
 )
@@ -1355,6 +1356,10 @@ def test_function_catalog_projects_canonical_callable_artifact_specs(monkeypatch
     )
     assert tuple(spec.name for spec in runtime_contract.artifact_outputs) == (
         "objects",
+    )
+    assert (
+        runtime_contract.artifact_outputs[0].viewer_streaming
+        is ArtifactViewerStreaming.AUTOMATIC
     )
     assert runtime_contract.source_binding_rule is not None
     assert "canonical CallableContract artifact_inputs" in (

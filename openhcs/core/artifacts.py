@@ -940,6 +940,34 @@ class ArtifactSidecarRole(str, Enum):
         return f"{normalized}{separator}{self.value}"
 
 
+class ArtifactViewerStreaming(str, Enum):
+    """Whether a declared artifact joins automatic viewer streaming.
+
+    Every artifact remains available for explicit, on-demand streaming from its
+    materialized outputs.  This declaration only controls the automatic viewer
+    projection performed as part of pipeline execution.
+    """
+
+    AUTOMATIC = ("automatic", True)
+    ON_DEMAND = ("on_demand", False)
+
+    def __new__(
+        cls,
+        wire_value: str,
+        automatically_streams: bool,
+    ) -> "ArtifactViewerStreaming":
+        member = str.__new__(cls, wire_value)
+        member._value_ = wire_value
+        member._automatically_streams = automatically_streams
+        return member
+
+    @property
+    def automatically_streams(self) -> bool:
+        """Return this member's declaration-owned automatic-stream policy."""
+
+        return self._automatically_streams
+
+
 class ArtifactMaterializationPayload(ABC):
     """Nominal marker for rich artifact materialization metadata."""
 
@@ -1455,6 +1483,7 @@ class ArtifactSpec:
     artifact_type: type[ArtifactType]
     parameter_name: str | None = field(default=None, compare=False)
     materialization: ArtifactMaterializationPayload | None = None
+    viewer_streaming: ArtifactViewerStreaming = ArtifactViewerStreaming.AUTOMATIC
     required: bool = True
     sidecar_role: ArtifactSidecarRole | None = None
     relations: tuple[ArtifactSpecRelation, ...] = ()
@@ -1465,6 +1494,11 @@ class ArtifactSpec:
     )
 
     def __post_init__(self) -> None:
+        if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
+            raise TypeError(
+                "ArtifactSpec.viewer_streaming requires ArtifactViewerStreaming, "
+                f"got {type(self.viewer_streaming).__name__}."
+            )
         if self.parameter_name is not None and not self.parameter_name:
             raise ValueError("ArtifactSpec.parameter_name cannot be empty.")
         object.__setattr__(
@@ -1526,6 +1560,7 @@ class ArtifactSpec:
                 self.name,
                 self.artifact_type,
                 _artifact_spec_hash_value(self.materialization),
+                self.viewer_streaming,
                 self.required,
                 self.sidecar_role,
                 self.relations,
@@ -2456,6 +2491,7 @@ class ArtifactOutputPlan(ArtifactPlan):
     _missing_group_uses_default_path: ClassVar[bool] = True
 
     materialization: ArtifactMaterializationPayload | None = None
+    viewer_streaming: ArtifactViewerStreaming = ArtifactViewerStreaming.AUTOMATIC
     relations: tuple[ArtifactSpecRelation, ...] = ()
     group_scope_sources_by_group: Mapping[
         str | None,
@@ -2467,6 +2503,11 @@ class ArtifactOutputPlan(ArtifactPlan):
 
     def __post_init__(self) -> None:
         super().__post_init__()
+        if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
+            raise TypeError(
+                "ArtifactOutputPlan.viewer_streaming requires "
+                f"ArtifactViewerStreaming, got {type(self.viewer_streaming).__name__}."
+            )
         declared_group_scope_sources = tuple(
             dict.fromkeys(
                 source

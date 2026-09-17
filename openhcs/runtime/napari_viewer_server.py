@@ -15,7 +15,7 @@ import sys
 import threading
 import weakref
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from itertools import product
@@ -93,10 +93,9 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentMetadataPayload,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
-    ViewerDisplayAxisDomain,
     ViewerDisplayBatchContext,
     ViewerLayerAxisProjection,
-    ViewerLayerAxisProjectionRequest,
+    ViewerLayerAxisProjectionRequestAuthority,
     ViewerLayerAxisProjector,
     ViewerMappingDisplayConfigInput,
     ViewerObjectDisplayConfigInput,
@@ -1987,43 +1986,14 @@ class NapariLayerDisplayPipeline:
         if aggregate_axis_bindings is None:
             aggregate_axis_bindings = NapariAggregateAxisBindingSet()
 
-        axis_components = component_axis_semantics.layout.components_for_mode(
-            ViewerComponentMode.STACK
-        )
-        self.server.component_values.update(
-            layer_key,
-            axis_components,
-            layer_items,
-        )
-        self.server.display_axis_domain.record_display_axis_values(
-            axis_components,
-            layer_items,
-        )
-
-        aggregate_component_values = aggregate_axis_bindings.component_values
-        if aggregate_component_values:
-            self.server.component_values.update_component_values(
-                layer_key,
-                axis_components,
-                aggregate_component_values,
+        projection_request = (
+            ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
+                route_key=layer_key,
+                component_axis_semantics=component_axis_semantics,
+                layer_items=layer_items,
+                route_value_tracker=self.server.component_values,
+                aggregate_component_values=aggregate_axis_bindings.component_values,
             )
-            self.server.display_axis_domain.record_display_component_values(
-                axis_components,
-                aggregate_component_values,
-            )
-
-        projection_request = ViewerLayerAxisProjectionRequest.from_component_values(
-            projected_axis_components=axis_components,
-            route_component_values=self.server.component_values.values_for(
-                self.server.component_values.domain_key(layer_key, axis_components),
-                axis_components,
-            ),
-            viewer_component_values=self.server.display_axis_domain.display_axis_values_for(
-                axis_components
-            ),
-            declared_component_values=component_axis_semantics.required_component_values(
-                axis_components
-            ),
         )
         return self.axis_projector.project(projection_request)
 
@@ -2784,11 +2754,27 @@ class NapariResultElementSelectionAuthority:
         layer: NapariLayerHandle,
         data_index: int,
     ) -> NapariResultElementSelectionState:
-        cls.require_data_index(layer, data_index)
+        return cls.select_indices(layer, (data_index,))
+
+    @classmethod
+    def select_indices(
+        cls,
+        layer: NapariLayerHandle,
+        data_indices: Iterable[int],
+    ) -> NapariResultElementSelectionState:
+        """Select one exact, validated set of native feature rows."""
+
+        indices = tuple(sorted(set(data_indices)))
+        if not indices:
+            raise ValueError("Napari result selection must contain at least one row.")
+        for data_index in indices:
+            if isinstance(data_index, bool) or not isinstance(data_index, Integral):
+                raise TypeError("Napari result selection indices must be integers.")
+            cls.require_data_index(layer, int(data_index))
         selectable_layer = cast(NapariShapesLayerHandle, layer)
-        selectable_layer.selected_data = {data_index}
+        selectable_layer.selected_data = set(indices)
         observed = cls.state(layer)
-        if observed.selected_data_indices != (data_index,):
+        if observed.selected_data_indices != indices:
             raise RuntimeError(
                 "Napari did not retain the requested native data selection."
             )
@@ -3106,14 +3092,25 @@ class NapariResultSelectionController:
         self._synchronizing_group_selection = True
         try:
             for candidate, member_indices in linked:
-                cast(NapariShapesLayerHandle, candidate).selected_data = set(
-                    member_indices
+                NapariResultElementSelectionAuthority.select_indices(
+                    candidate,
+                    member_indices,
                 )
                 self._observed_indices[candidate] = member_indices
         finally:
             self._synchronizing_group_selection = False
         self._notify_selection_observers()
         return linked
+
+    def select_result_element(
+        self,
+        layer: NapariLayerHandle,
+        data_index: int,
+    ) -> tuple[tuple[NapariLayerHandle, tuple[int, ...]], ...]:
+        """Select the complete declared result subject containing one row."""
+
+        NapariResultElementSelectionAuthority.require_data_index(layer, data_index)
+        return self._synchronize_linked_group(layer, data_index)
 
     def _apply_selection(
         self,
@@ -4336,7 +4333,7 @@ class NapariNavigationControlMessageAction(NapariControlMessageAction):
         ):
             server.viewer.layers.selection.active = None
         if request.data_index is not None:
-            NapariResultElementSelectionAuthority.select(
+            server.result_selection_controller.select_result_element(
                 layer,
                 request.data_index,
             )
@@ -4934,7 +4931,6 @@ class NapariViewerServer(StreamingVisualizerServer):
         self.component_name_metadata = ViewerComponentNameMetadata.empty()
 
         self.component_values = ViewerRouteComponentValueTracker()
-        self.display_axis_domain = ViewerDisplayAxisDomain()
         # Debouncing + locking for layer updates to prevent race conditions
         self.layer_update_lock = threading.Lock()  # Prevent concurrent updates
         self.layer_batch_processor_debounce_policy = NapariLayerBatchDebouncePolicy()
@@ -5076,7 +5072,6 @@ class NapariViewerServer(StreamingVisualizerServer):
             )
         self.component_groups.clear()
         self.component_values = ViewerRouteComponentValueTracker()
-        self.display_axis_domain = ViewerDisplayAxisDomain()
         self.component_name_metadata.clear()
         self.layer_route_state.clear_update_errors()
         self.batch_processors = NapariBatchProcessorStore(

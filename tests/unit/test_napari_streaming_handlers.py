@@ -63,7 +63,6 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
     ViewerComponentCoordinateAuthority,
-    ViewerDisplayAxisDomain,
     ViewerLayerAxisProjection,
     ViewerLayerAxisProjectionRequest,
     ViewerLayerAxisProjector,
@@ -783,7 +782,6 @@ class _FakeNapariServer:
             {"channel": {"1": "DAPI"}}
         )
         self.component_values = ViewerRouteComponentValueTracker()
-        self.display_axis_domain = ViewerDisplayAxisDomain()
         self.transport_failure = None
 
     def bind_result_selection_layer(self, _layer):
@@ -1314,7 +1312,7 @@ def test_napari_display_pipeline_projects_route_axes_locally():
     assert second.translate() == (3.0, 0.0, 0.0, 0.0)
 
 
-def test_napari_display_pipeline_aligns_derived_route_to_observed_source_domain():
+def test_napari_display_pipeline_uses_declared_domain_independent_of_arrival_order():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
     component_axis_semantics = (
@@ -1329,6 +1327,11 @@ def test_napari_display_pipeline_aligns_derived_route_to_observed_source_domain(
         )
     )
 
+    derived = pipeline.display_axis_projection(
+        "derived",
+        component_axis_semantics,
+        [_layer_item({"channel": 4})],
+    )
     source = pipeline.display_axis_projection(
         "source",
         component_axis_semantics,
@@ -1337,17 +1340,12 @@ def test_napari_display_pipeline_aligns_derived_route_to_observed_source_domain(
             _layer_item({"channel": 4}),
         ],
     )
-    derived = pipeline.display_axis_projection(
-        "derived",
-        component_axis_semantics,
-        [_layer_item({"channel": 4})],
-    )
 
-    assert source.component_values == {"channel": [1, 4]}
+    assert source.component_values == {"channel": [1, 2, 4]}
     assert source.axis_offsets == (0,)
     assert derived.component_values == {"channel": [4]}
-    assert derived.axis_offsets == (1,)
-    assert derived.translate() == (1.0, 0.0, 0.0)
+    assert derived.axis_offsets == (2,)
+    assert derived.translate() == (2.0, 0.0, 0.0)
 
 
 def test_napari_display_pipeline_projects_aggregate_payload_axes_into_route_domain():
@@ -2511,11 +2509,6 @@ def test_napari_viewer_clear_state_resets_accumulated_axis_domains():
     server.component_groups.items_for("old").append(_layer_item({"well": "A14"}))
     server.component_values = ViewerRouteComponentValueTracker()
     server.component_values.update("old", ["well"], [_layer_item({"well": "A14"})])
-    server.display_axis_domain = ViewerDisplayAxisDomain()
-    server.display_axis_domain.record_display_axis_values(
-        ["well"],
-        [_layer_item({"well": "A14"})],
-    )
     server.component_name_metadata = _component_name_metadata({"well": {"A14": "A14"}})
     server.layer_batch_processor_debounce_policy = NapariLayerBatchDebouncePolicy(
         delay_ms=123
@@ -2531,7 +2524,6 @@ def test_napari_viewer_clear_state_resets_accumulated_axis_domains():
     assert server.component_values.values_for(("old", ("well",)), ["well"]) == {
         "well": []
     }
-    assert server.display_axis_domain.display_axis_values_for(["well"]) == {"well": []}
     assert server.component_name_metadata.to_wire_mapping() == {}
     assert server.batch_processors.debounce_policy.delay_ms == 123
     assert pending_timer.stopped is True
@@ -3044,12 +3036,9 @@ def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(qtbot)
     )
     original_order = tuple(viewer.layers)
 
-    graph_layer.selected_data = {1}
-    qtbot.waitUntil(
-        lambda: graph_layer.selected_data == {0, 1}
-        and metrics_layer.selected_data == {0},
-        timeout=2_000,
-    )
+    server.result_selection_controller.select_result_element(graph_layer, 1)
+    assert graph_layer.selected_data == {0, 1}
+    assert metrics_layer.selected_data == {0}
     server.result_selection_controller.set_result_group_color(
         graph_layer,
         (1.0, 0.5, 0.0, 1.0),
@@ -4407,50 +4396,6 @@ def test_napari_component_value_tracker_tracks_observed_axis_values_by_route():
         "well": ["A01"],
     }
     assert tracker.values_for(("main", ("site",)), ["site"]) == {"site": []}
-
-
-def test_napari_display_axis_domain_tracks_shared_active_axis_values():
-    domain = ViewerDisplayAxisDomain()
-    projected_axis_components = ["site", "timepoint", "channel", "z_index", "well"]
-
-    domain.record_display_axis_values(
-        projected_axis_components,
-        [
-            _layer_item(
-                {
-                    "site": site,
-                    "timepoint": 1,
-                    "channel": channel,
-                    "z_index": 1,
-                    "well": "A01",
-                }
-            )
-            for site in [1, 2]
-            for channel in [1, 2, 3, 4, 5]
-        ],
-    )
-    domain.record_display_axis_values(
-        projected_axis_components,
-        [
-            _layer_item(
-                {
-                    "site": 1,
-                    "timepoint": 1,
-                    "channel": 1,
-                    "z_index": 1,
-                    "well": "A01",
-                }
-            )
-        ],
-    )
-
-    assert domain.display_axis_values_for(projected_axis_components) == {
-        "site": [1, 2],
-        "timepoint": [1],
-        "channel": [1, 2, 3, 4, 5],
-        "z_index": [1],
-        "well": ["A01"],
-    }
 
 
 def test_viewer_component_value_ordering_sorts_unpadded_indices_numerically():

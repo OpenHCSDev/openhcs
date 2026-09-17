@@ -14,6 +14,7 @@ from zmqruntime.messages import MessageFields, ResponseType
 from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResultEnvelope
+from openhcs.core.artifacts import ArtifactViewerStreaming
 from openhcs.core.function_reference import FunctionReference
 
 DEFAULT_FUNCTION_DETAIL_DOC_CHARS = 6_000
@@ -213,6 +214,14 @@ class FunctionArtifactSpec:
     required: bool = True
     sidecar_role: str | None = None
     materialization_uses_source_identity_filename: bool = False
+    viewer_streaming: ArtifactViewerStreaming = ArtifactViewerStreaming.AUTOMATIC
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
+            raise TypeError(
+                "FunctionArtifactSpec.viewer_streaming requires "
+                f"ArtifactViewerStreaming, got {type(self.viewer_streaming).__name__}."
+            )
 
 
 @dataclass(frozen=True, slots=True)

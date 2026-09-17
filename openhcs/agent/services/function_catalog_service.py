@@ -1050,6 +1050,7 @@ def _artifact_spec(spec: ArtifactSpec) -> FunctionArtifactSpec:
         required=spec.required,
         sidecar_role=None if spec.sidecar_role is None else spec.sidecar_role.value,
         materialization_uses_source_identity_filename=spec.materialization_uses_source_identity_filename(),
+        viewer_streaming=spec.viewer_streaming,
     )
 
 

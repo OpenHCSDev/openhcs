@@ -29,6 +29,7 @@ from openhcs.runtime.napari_streaming_handlers import (
 from openhcs.runtime.napari_viewer_server import (
     NapariLayerIsolationControlMessageAction,
     NapariNavigationControlMessageAction,
+    NapariResultSelectionController,
     NapariResultSelectionSurface,
     NapariViewerServer,
 )
@@ -140,6 +141,7 @@ def _viewer_server(viewer, layer, route_key: str = "result-rois"):
             manager=SimpleNamespace(),
         ),
     )
+    server.result_selection_controller = NapariResultSelectionController(server)
     return server, overlay, result_selection_dock, qt_window
 
 

@@ -21,6 +21,7 @@ from openhcs.constants.constants import AllComponents, GroupBy, VariableComponen
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
+    ArtifactViewerStreaming,
     GroupLineageSourceRelation,
     ImageArtifactType,
     MaterializationSourceIdentityRelation,
@@ -499,6 +500,34 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
     included = target.backend_plan(plan, context, materialization)
 
     assert tuple(included.streaming_viewer_surfaces) == ("napari_stream",)
+
+
+def test_on_demand_artifact_is_persisted_without_automatic_viewer_streaming():
+    output_plan = ArtifactOutputPlan(
+        name="diagnostic_labels",
+        path="/memory/diagnostic_labels.pkl",
+        artifact_type=ObjectLabelsArtifactType,
+        materialization=roi_zip(),
+        viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+    )
+    config = streaming_config_stub()
+    plan = _plan(output_plan, streaming_configs={"napari_stream": config})
+    context = _context(FileManagerStub())
+    materialization = SimpleNamespace(
+        output_plan=output_plan,
+        record=SimpleNamespace(
+            key=SimpleNamespace(scope=SimpleNamespace(value_text=None))
+        ),
+    )
+
+    backend_plan = PersistentArtifactMaterializationTargetPlan("disk").backend_plan(
+        plan,
+        context,
+        materialization,
+    )
+
+    assert tuple(backend_plan.persistent_backend_kwargs) == ("disk",)
+    assert backend_plan.streaming_viewer_surfaces == {}
 
 
 def test_viewer_output_expectation_omits_empty_stream_payload() -> None:

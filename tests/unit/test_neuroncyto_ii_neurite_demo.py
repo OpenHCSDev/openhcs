@@ -12,6 +12,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants import AllComponents, GroupBy, Microscope, VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.artifacts import ArtifactViewerStreaming
 from openhcs.core.config import GlobalPipelineConfig, LazyNapariStreamingConfig
 from openhcs.core.function_patterns import get_core_callable
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -112,9 +113,10 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         approx_max_width=30.0,
         intensity_above_local_background=20.0,
     )
-    assert CallableContract.from_callable(
+    artifact_outputs = CallableContract.from_callable(
         neurite_outgrowth_metaxpress
-    ).artifact_outputs.names() == (
+    ).artifact_outputs
+    assert artifact_outputs.names() == (
         "neurite_outgrowth_summary",
         "neurite_outgrowth_cells",
         "cell_bodies",
@@ -123,6 +125,15 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
         "nuclei",
         "neurite_morphology",
     )
+    assert {spec.name: spec.viewer_streaming for spec in artifact_outputs} == {
+        "neurite_outgrowth_summary": ArtifactViewerStreaming.AUTOMATIC,
+        "neurite_outgrowth_cells": ArtifactViewerStreaming.AUTOMATIC,
+        "cell_bodies": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_outgrowth": ArtifactViewerStreaming.ON_DEMAND,
+        "neurons": ArtifactViewerStreaming.AUTOMATIC,
+        "nuclei": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
+    }
 
 
 def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
@@ -160,6 +171,18 @@ def test_neuroncyto_demo_compiles_exact_loose_tiff_pair(tmp_path: Path) -> None:
     assert plan.step_name == "NeuronCyto II Crossover Neurite Outgrowth"
     assert tuple(plan.variable_components) == (VariableComponents.CHANNEL,)
     assert plan.compiled_function_pattern is not None
+    assert {
+        output.name: output.viewer_streaming
+        for output in plan.artifact_outputs.values()
+    } == {
+        "neurite_outgrowth_summary": ArtifactViewerStreaming.AUTOMATIC,
+        "neurite_outgrowth_cells": ArtifactViewerStreaming.AUTOMATIC,
+        "cell_bodies": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_outgrowth": ArtifactViewerStreaming.ON_DEMAND,
+        "neurons": ArtifactViewerStreaming.AUTOMATIC,
+        "nuclei": ArtifactViewerStreaming.ON_DEMAND,
+        "neurite_morphology": ArtifactViewerStreaming.AUTOMATIC,
+    }
 
 
 def test_neuroncyto_demo_executes_numeric_biological_well_identity(
