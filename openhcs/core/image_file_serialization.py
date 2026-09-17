@@ -12,8 +12,10 @@ from typing import Any, ClassVar, Sequence
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
+from openhcs.constants.constants import FileFormat
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
     image_payload_data,
     image_payload_metadata,
@@ -68,6 +70,42 @@ class ImageFileSourceMetadata:
     intensity_scale: float | None = None
     pixel_semantics: SourceImagePixelSemantics = SourceImagePixelSemantics()
 
+    def project_image_metadata(
+        self, metadata: ImagePayloadMetadata, *, values_preserved: bool
+    ) -> ImagePayloadMetadata:
+        """Combine current native pixels with retained typed acquisition facts."""
+        if self.source_dtype is None:
+            raise ValueError("Saved image metadata requires an actual native dtype.")
+        native_scale_governs = self.intensity_scale is not None or not values_preserved
+        if not values_preserved:
+            metadata = metadata.without_unit_interval_intensity_scale().replace_fields(
+                physical_border_edges_yx=None,
+                mask_defines_border=None,
+            )
+        return metadata.replace_fields(
+            source_dtype=str(self.source_dtype),
+            intensity_scale=(
+                self.intensity_scale
+                if native_scale_governs
+                else metadata.intensity_scale
+            ),
+            source_plane_dtypes=tuple(
+                str(self.source_dtype) for _ in metadata.source_plane_dtypes
+            ),
+            source_plane_intensity_scales=(
+                tuple(
+                    self.intensity_scale for _ in metadata.source_plane_intensity_scales
+                )
+                if native_scale_governs
+                else metadata.source_plane_intensity_scales
+            ),
+            source_channel_axis=(
+                metadata.source_channel_axis
+                if values_preserved and self.pixel_semantics.channel_axis is None
+                else self.pixel_semantics.channel_axis
+            ),
+        )
+
 
 class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
     """Nominal owner of image-file source and serialization semantics."""
@@ -76,6 +114,7 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
     __skip_if_no_key__ = True
     format_key: ClassVar[str | None] = None
     suffixes: ClassVar[tuple[str, ...]] = ()
+    browser_file_format: ClassVar[FileFormat] = FileFormat.TIFF
 
     @classmethod
     def matches_path(cls, path: str | Path) -> bool:
@@ -142,6 +181,23 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
             pixel_semantics=self.pixel_semantics(path),
         )
 
+    def preserves_pixel_values(self, source_dtype: Any) -> bool:
+        """Whether serialization retains authored pixel-value proofs."""
+        del source_dtype
+        return False
+
+    def persisted_metadata(self, path: Path, payload: Any) -> ImagePayloadMetadata:
+        """Describe saved native pixels while retaining their semantic lineage."""
+        header = self.source_metadata(path)
+        if header.source_dtype is None:
+            raise ValueError(f"Cannot establish saved image metadata for {path}.")
+        return header.project_image_metadata(
+            image_payload_metadata(payload),
+            values_preserved=self.preserves_pixel_values(
+                image_payload_data(payload).dtype
+            ),
+        )
+
     def requires_plane_store_decoder(self, path: Path) -> bool:
         """Return whether embedded metadata requires a richer plane decoder."""
         del path
@@ -176,6 +232,11 @@ class NumpyImageFileFormat(ImageFileFormat):
 
     format_key = "numpy"
     suffixes = (".npy",)
+    browser_file_format = FileFormat.NUMPY
+
+    def preserves_pixel_values(self, source_dtype: Any) -> bool:
+        del source_dtype
+        return True
 
     def prepare(self, payload: Any) -> Any:
         return image_payload_data(payload)
@@ -186,12 +247,23 @@ class NumpyImageFileFormat(ImageFileFormat):
     def write(self, path: str | Path, payload: Any) -> None:
         np.save(path, self.prepare(payload), allow_pickle=False)
 
+    def source_metadata(self, path: Path) -> ImageFileSourceMetadata:
+        array = np.load(path, mmap_mode="r", allow_pickle=False)
+        return ImageFileSourceMetadata(
+            source_dtype=array.dtype,
+            intensity_scale=image_intensity_scale_for_dtype(array.dtype),
+        )
+
 
 class TiffImageFileFormat(ImageFileFormat):
     """TIFF preserves dtype and may declare a physical maximum sample value."""
 
     format_key = "tiff"
     suffixes = (".tif", ".tiff")
+
+    def preserves_pixel_values(self, source_dtype: Any) -> bool:
+        del source_dtype
+        return True
 
     def prepare(self, payload: Any) -> Any:
         return image_payload_data(payload)
@@ -222,9 +294,7 @@ class TiffImageFileFormat(ImageFileFormat):
                 return ImageFileSourceMetadata()
             declared_scale = self._declared_intensity_scale_from_page(tif.pages[0])
             sample_axis = series.axes.find("S")
-            sample_count = (
-                int(series.shape[sample_axis]) if sample_axis >= 0 else None
-            )
+            sample_count = int(series.shape[sample_axis]) if sample_axis >= 0 else None
             pixel_semantics = SourceImagePixelSemantics()
             if sample_count is not None and sample_count > 1:
                 pixel_semantics = SourceImagePixelSemantics(
@@ -235,9 +305,7 @@ class TiffImageFileFormat(ImageFileFormat):
                 )
         return ImageFileSourceMetadata(
             source_dtype=dtype,
-            intensity_scale=(
-                declared_scale or image_intensity_scale_for_dtype(dtype)
-            ),
+            intensity_scale=(declared_scale or image_intensity_scale_for_dtype(dtype)),
             pixel_semantics=pixel_semantics,
         )
 
@@ -263,11 +331,37 @@ class TiffImageFileFormat(ImageFileFormat):
 class EightBitRasterImageFileFormat(ImageFileFormat):
     """Raster formats that require 8-bit file-compatible image arrays."""
 
-    format_key = "eight_bit_raster"
-    suffixes = (".bmp", ".gif", ".jpeg", ".jpg")
+    format_key = None
+    suffixes = ()
 
     def prepare(self, payload: Any) -> Any:
         return image_payload_as_uint8(require_single_image_payload(payload))
+
+    def preserves_pixel_values(self, source_dtype: Any) -> bool:
+        del source_dtype
+        return False
+
+
+class BmpImageFileFormat(EightBitRasterImageFileFormat):
+    format_key = "bmp"
+    suffixes = (".bmp",)
+
+    def preserves_pixel_values(self, source_dtype: Any) -> bool:
+        return np.dtype(source_dtype) == np.dtype(np.uint8)
+
+
+class GifImageFileFormat(EightBitRasterImageFileFormat):
+    """Palette conversion has no general exact-pixel preservation proof."""
+
+    format_key = "gif"
+    suffixes = (".gif",)
+
+
+class JpegImageFileFormat(EightBitRasterImageFileFormat):
+    """Lossy compression invalidates authored exact-value and border proofs."""
+
+    format_key = "jpeg"
+    suffixes = (".jpeg", ".jpg")
 
 
 class PngImageFileFormat(ImageFileFormat):
@@ -281,6 +375,9 @@ class PngImageFileFormat(ImageFileFormat):
         if array.dtype == np.uint8 or array.dtype == np.uint16:
             return array
         return image_payload_as_uint8(array)
+
+    def preserves_pixel_values(self, source_dtype: Any) -> bool:
+        return np.dtype(source_dtype) in (np.dtype(np.uint8), np.dtype(np.uint16))
 
 
 class ImagePayloadUint8Strategy(

@@ -37,6 +37,7 @@ from openhcs.core.source_metadata import (
     SourceComponentProjectionStrategy,
     path_metadata_values_equivalent,
     source_metadata_field_identity,
+    source_metadata_dict,
     source_metadata_scalar,
 )
 from openhcs.core.source_path_identity import source_path_identity_key
@@ -605,8 +606,7 @@ class SourceImageSetIdentityCompatibility(SourceImageSetIdentityPairPredicate):
             return record_components == current_components
         shared_keys = set(record_components) & set(current_components)
         return bool(shared_keys) and all(
-            record_components[key] == current_components[key]
-            for key in shared_keys
+            record_components[key] == current_components[key] for key in shared_keys
         )
 
 
@@ -646,7 +646,7 @@ def merge_source_metadata(
             ).merge_into(target, path=path)
             continue
         existing = target.get(key)
-        normalized_value = source_metadata_scalar(value)
+        normalized_value = source_metadata_dict({key: value})[key]
         component = source_metadata_component(key)
         canonical_component_values_match = (
             component is not None
@@ -707,7 +707,10 @@ def overlay_source_metadata(
             overlaid[field] = source_metadata_scalar(value)
 
     for field, value in additions.items():
-        if field in {ORIGINAL_SOURCE_METADATA_FIELD, SOURCE_FILTER_PATHS_METADATA_FIELD}:
+        if field in {
+            ORIGINAL_SOURCE_METADATA_FIELD,
+            SOURCE_FILTER_PATHS_METADATA_FIELD,
+        }:
             continue
         if isinstance(value, Mapping):
             overlaid[field] = {
@@ -728,6 +731,7 @@ def overlay_source_metadata(
             path=path,
         ).merge_into(overlaid, path=path)
     return overlaid
+
 
 def with_original_source_metadata(
     metadata: SourceMetadataMapping,
@@ -924,9 +928,7 @@ class SourceAxisMetadataScope:
         """Return the stable worker-axis partition of this runtime scope."""
         from openhcs.constants.constants import get_multiprocessing_axis
 
-        multiprocessing_axis = ComponentSet.coerce_component(
-            get_multiprocessing_axis()
-        )
+        multiprocessing_axis = ComponentSet.coerce_component(get_multiprocessing_axis())
         return type(self).from_component_values(
             tuple(
                 (component, value)

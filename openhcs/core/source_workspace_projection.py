@@ -242,6 +242,7 @@ class VirtualWorkspaceSourceProjection:
             payload,
             source_metadata=source_metadata,
             source_alias=projection.source_alias,
+            persisted_metadata=projection.image_metadata,
         )
 
     def project_unbound_payload(
@@ -252,6 +253,7 @@ class VirtualWorkspaceSourceProjection:
         """Carry workspace source metadata without requiring a step binding."""
 
         source_metadata = self.source_metadata_for(lookup)
+        projection = self.source_projection_for(lookup)
         source_alias = (
             None
             if source_metadata is None
@@ -264,6 +266,9 @@ class VirtualWorkspaceSourceProjection:
             payload,
             source_metadata=source_metadata,
             source_alias=source_alias,
+            persisted_metadata=(
+                None if projection is None else projection.image_metadata
+            ),
         )
 
     @staticmethod
@@ -272,6 +277,7 @@ class VirtualWorkspaceSourceProjection:
         *,
         source_metadata: SourceMetadataMapping | None,
         source_alias: str | None,
+        persisted_metadata: ImagePayloadMetadata | None = None,
     ) -> RuntimeArrayData:
         """Apply component metadata and source-name provenance to one payload."""
 
@@ -283,8 +289,21 @@ class VirtualWorkspaceSourceProjection:
                     if field != SOURCE_BINDING_ALIAS_METADATA_FIELD
                 }
             )
-        metadata = image_payload_metadata(payload)
-        if source_metadata is not None:
+        current_metadata = image_payload_metadata(payload)
+        metadata = (
+            current_metadata
+            if persisted_metadata is None
+            else persisted_metadata.with_source_context_from(current_metadata)
+        )
+        metadata = metadata.replace_fields(
+            source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
+                current_metadata.source_spatial_domain,
+                image_shape_yx=current_metadata.spatial_shape_yx(
+                    image_payload_data(payload)
+                ),
+            )
+        )
+        if source_metadata is not None and persisted_metadata is None:
             metadata = metadata.with_source_component_metadata(source_metadata)
         if source_alias is not None:
             metadata = metadata.with_source_provenance(

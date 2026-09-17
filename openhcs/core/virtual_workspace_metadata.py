@@ -14,6 +14,7 @@ from polystore.atomic import LOCK_CONFIG, FileLockError, atomic_update_json
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.artifacts import ArtifactType
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.constants.constants import AllComponents
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
@@ -26,7 +27,10 @@ from openhcs.core.source_projection import (
     SourceArtifactProjection,
     SourcePlaneProjection,
     SourceProjection,
+    SourceProjectionSet,
 )
+from openhcs.core.source_tile_geometry import SourceTileLayout
+from openhcs.core.source_metadata import SourceVoxelSpacing
 
 
 @dataclass(frozen=True)
@@ -40,6 +44,14 @@ class OpenHCSMetadataConfig:
     SUBDIRECTORIES_KEY: str = "subdirectories"
     AVAILABLE_BACKENDS_KEY: str = "available_backends"
     DEFAULT_TIMEOUT: float = LOCK_CONFIG.DEFAULT_TIMEOUT
+
+    def metadata_path(self, plate_root: str | Path) -> Path:
+        return Path(plate_root) / self.METADATA_FILENAME
+
+    def managed_paths(self, plate_root: str | Path) -> tuple[Path, Path]:
+        """Files this metadata transaction owns, not scientific source artifacts."""
+        path = self.metadata_path(plate_root)
+        return path, LOCK_CONFIG.lock_path(path)
 
 
 METADATA_CONFIG = OpenHCSMetadataConfig()
@@ -118,6 +130,60 @@ class AtomicMetadataWriter:
             {METADATA_CONFIG.SUBDIRECTORIES_KEY: {}},
         )
 
+    def merge_source_projection_metadata(
+        self,
+        metadata_path: str | Path,
+        subdirectory_name: str,
+        projection_metadata: Mapping[str, Any] | None = None,
+    ) -> None:
+        """Merge exact produced paths under one lock, preserving other wells."""
+
+        def update(data):
+            data = self._ensure_subdirectories_structure(data)
+            subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
+                subdirectory_name, {}
+            )
+            for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
+                subdirectory[key] = {
+                    **subdirectory.get(key, {}),
+                    **({} if projection_metadata is None else projection_metadata[key]),
+                }
+            entries = {
+                record["virtual_path"]: record
+                for record in subdirectory.get(FIELDS.SOURCE_PROJECTION, [])
+            }
+            if projection_metadata is not None:
+                entries.update(
+                    {
+                        record["virtual_path"]: record
+                        for record in projection_metadata[FIELDS.SOURCE_PROJECTION]
+                    }
+                )
+            subdirectory[FIELDS.SOURCE_PROJECTION] = list(entries.values())
+            if entries:
+                projections = SourceProjectionSet(
+                    tuple(
+                        VirtualWorkspaceSourceProjectionEntries._projection_record(
+                            record
+                        )[1]
+                        for record in entries.values()
+                    )
+                )
+                subdirectory[FIELDS.GRID_DIMENSIONS] = (
+                    SourceTileLayout.metadata_grid_dimensions(projections)
+                )
+                subdirectory[FIELDS.PIXEL_SIZE] = (
+                    SourceVoxelSpacing.metadata_pixel_size(
+                        SourceVoxelSpacing.from_source_metadata(
+                            projection.source_metadata
+                        )
+                        for projection in projections.plane_projections
+                    )
+                )
+            return data
+
+        self._execute_update(metadata_path, update)
+
     def _execute_update(
         self,
         metadata_path: str | Path,
@@ -142,7 +208,7 @@ class AtomicMetadataWriter:
 def get_metadata_path(plate_root: str | Path) -> Path:
     """Return the canonical metadata path for one OpenHCS plate root."""
 
-    return Path(plate_root) / METADATA_CONFIG.METADATA_FILENAME
+    return METADATA_CONFIG.metadata_path(plate_root)
 
 
 @dataclass(frozen=True)
@@ -153,6 +219,7 @@ class OpenHCSMetadataFields:
     IMAGE_FILES: str = "image_files"
     AVAILABLE_BACKENDS: str = METADATA_CONFIG.AVAILABLE_BACKENDS_KEY
     SOURCE_METADATA: str = "source_metadata"
+    SOURCE_PROJECTION: str = "source_projection"
     SOURCE_DIAGNOSTICS: str = "source_diagnostics"
     WORKSPACE_MAPPING: str = "workspace_mapping"
     GRID_DIMENSIONS: str = "grid_dimensions"
@@ -325,12 +392,20 @@ class VirtualWorkspaceSourceProjectionEntries:
         component_labels = cls._optional_component_labels(record)
         source_alias = cls._optional_text(record, "source_alias")
         if projection_role is SourceProjectionRole.PRIMARY_PLANE:
+            image_metadata_value = record.get(
+                SourcePlaneProjection.image_metadata_wire_field()
+            )
             projection: SourceProjection = SourcePlaneProjection(
                 address=address,
                 ref=ref,
                 source_alias=source_alias,
                 source_metadata=source_metadata,
                 component_labels=component_labels,
+                image_metadata=(
+                    None
+                    if image_metadata_value is None
+                    else ImagePayloadMetadata.from_mapping(image_metadata_value)
+                ),
             )
         else:
             if source_alias is None:

@@ -446,6 +446,24 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         """
         pass
 
+    def get_metadata_grid_dimensions(self, plate_path: Union[str, Path]) -> list[int]:
+        """Serialization view: an empty list preserves genuinely unknown layout.
+
+        Grid-consuming artifacts must still use strict ``get_grid_dimensions``.
+        Metadata presentation and ordinary output writing do not establish or
+        require a rectangular acquisition layout.
+        """
+        return list(self.get_grid_dimensions(plate_path))
+
+    def get_metadata_pixel_size(self, plate_path: Union[str, Path]) -> float:
+        """Numeric serialization view, including a format's legacy unit default.
+
+        This is not a request for physical calibration. Formats carrying relative
+        or anisotropic source coordinates can preserve their numeric compatibility
+        view without supplying the physical scalar artifact.
+        """
+        return self.get_pixel_size(plate_path)
+
     @abstractmethod
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
         """
@@ -532,8 +550,8 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         from openhcs.microscopes.openhcs import OpenHCSMetadata
 
         component_values = self.component_value_set(plate_path)
-        grid_dims = self.get_grid_dimensions(plate_path)
-        pixel_size = self.get_pixel_size(plate_path)
+        grid_dims = self.get_metadata_grid_dimensions(plate_path)
+        pixel_size = self.get_metadata_pixel_size(plate_path)
         image_files = self.get_image_files(plate_path)
 
         parser = microscope_handler.parser
