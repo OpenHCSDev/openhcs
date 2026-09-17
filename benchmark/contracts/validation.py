@@ -365,4 +365,5 @@ class PreparedValidationCorpus:
     scoring_root: Path
     source_manifest_path: Path
     source_bindings_path: Path
+    pipeline_template_path: Path
     provenance_path: Path

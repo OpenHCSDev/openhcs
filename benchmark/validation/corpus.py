@@ -32,7 +32,8 @@ from benchmark.datasets.acquire import (
 from benchmark.datasets.registry import get_dataset_spec
 from benchmark.validation.layouts import ValidationCorpusLayoutStrategy
 from benchmark.validation.references import ValidationReferenceStrategy
-from openhcs.constants import AllComponents
+from openhcs.constants import AllComponents, Microscope
+from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
 from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
@@ -144,6 +145,11 @@ class ValidationCorpusPreparer:
         source_bindings = source_bindings_for_validation(validation)
         source_bindings_path = authoring_root / "source_bindings.py"
         self._write_source_bindings(source_bindings_path, source_bindings)
+        pipeline_template_path = authoring_root / "pipeline_template.py"
+        self._write_pipeline_template(
+            pipeline_template_path,
+            source_bindings,
+        )
         self._write_source_bindings(
             held_out_root / "source_bindings.py",
             source_bindings,
@@ -211,6 +217,9 @@ class ValidationCorpusPreparer:
                             "source_bindings_sha256": _sha256(
                                 authoring_root / "source_bindings.py"
                             ),
+                            "pipeline_template_sha256": _sha256(
+                                authoring_root / "pipeline_template.py"
+                            ),
                         },
                         "frozen_execution": {
                             "source_manifest_sha256": _sha256(
@@ -257,6 +266,7 @@ class ValidationCorpusPreparer:
             scoring_root=scoring_root,
             source_manifest_path=source_manifest_path,
             source_bindings_path=source_bindings_path,
+            pipeline_template_path=pipeline_template_path,
             provenance_path=provenance_path,
         )
 
@@ -408,6 +418,47 @@ class ValidationCorpusPreparer:
         )
 
     @staticmethod
+    def _write_pipeline_template(
+        path: Path,
+        config: SourceBindingsConfig,
+    ) -> None:
+        """Write a self-contained pipeline declaration for isolated runtimes."""
+
+        from pycodify import Assignment, BlankLine, CodeBlock, generate_python_source
+
+        import openhcs.serialization.pycodify_formatters  # noqa: F401
+
+        lazy_config = LazySourceBindingsConfig(
+            metadata_rules=config.metadata_rules,
+            match_plan=config.match_plan,
+            source_filters=config.source_filters,
+            bindings=config.bindings,
+            imported_metadata_tables=config.imported_metadata_tables,
+            grouping_metadata_fields=config.grouping_metadata_fields,
+        )
+        pipeline_config = PipelineConfig(
+            microscope=Microscope.SOURCE_BINDINGS,
+            source_bindings_config=lazy_config,
+        )
+        path.write_text(
+            generate_python_source(
+                CodeBlock.from_items(
+                    (
+                        Assignment("pipeline_config", pipeline_config),
+                        BlankLine(),
+                        Assignment("pipeline_steps", []),
+                    )
+                ),
+                header=(
+                    "# Derived OpenHCS pipeline template; add typed FunctionStep "
+                    "declarations below"
+                ),
+                clean_mode=True,
+            ),
+            encoding="utf-8",
+        )
+
+    @staticmethod
     def _write_authoring_guide(
         path: Path,
         spec: DatasetSpec,
@@ -437,7 +488,11 @@ deliberately outside this tree.
 - Variable components: {", ".join(dsl_contract.variable_components) or "none"}
 - Source sets: {dsl_contract.source_set_count}
 - Source planes: {dsl_contract.source_plane_count}
-- Source bindings: import `source_bindings_config` from `source_bindings.py`.
+- Source-binding projection: inspect `source_bindings_config` in
+  `source_bindings.py`; do not import it from the runnable pipeline.
+- Runnable source: start from `pipeline_template.py`; it embeds the same derived
+  source-binding declaration so compiler, UI and execution-server processes do
+  not depend on a shared Python import working directory.
 - Preserve typed artifacts and materialization declarations in the frozen pipeline.
 
 The compiled dimensional transitions expected from the source declaration are:

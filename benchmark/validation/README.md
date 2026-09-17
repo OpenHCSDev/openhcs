@@ -53,6 +53,7 @@ Preparation verifies byte size and SHA-256 before extraction. It writes:
 │   ├── images/                  # declared development source sets only
 │   ├── source_manifest.csv
 │   ├── source_bindings.py
+│   ├── pipeline_template.py     # self-contained derived runnable declaration
 │   └── OPENHCS_AUTHORING.md
 ├── frozen_execution/
 │   ├── images/                  # disclosed only after pipeline freeze
@@ -79,6 +80,12 @@ evaluator receives `trusted_scoring/`. Run the authoring process in a container
 or sandbox that mounts no parent directory and no acquisition cache. Directory
 naming alone is not an access-control boundary against an unrestricted
 same-user shell.
+
+Authoring starts from `pipeline_template.py`. The generator embeds the same
+declaration-owned lazy source-binding configuration in that source document, so
+the compiler, UI and separate execution-server process do not require a sibling
+module on a shared `PYTHONPATH`. `source_bindings.py` remains the inspectable
+standalone projection of that declaration.
 
 ## OpenHCS reasoning being evaluated
 

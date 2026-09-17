@@ -76,11 +76,15 @@ done
 
 Each provenance record binds the exact split declaration, selected source-set
 identities, and SHA-256 digests of the generated source manifests and source
-bindings. For a blind run, mount only `<run>/<dataset>/authoring` while the
-agent authors and validates the pipeline. Freeze the final pipeline hash before
-mounting `frozen_execution`; keep `trusted_scoring` evaluator-only. A same-user
-unrestricted shell can traverse sibling paths, so actual filesystem blindness
-requires a container or sandbox mount boundary.
+bindings. The authoring surface also contains a self-contained, SHA-bound
+`pipeline_template.py` derived from the same source-binding declaration; this
+avoids relying on a shared import working directory across compiler, UI and
+execution-server processes. For a blind run, mount only
+`<run>/<dataset>/authoring` while the agent authors and validates the pipeline.
+Freeze the final pipeline hash before mounting `frozen_execution`; keep
+`trusted_scoring` evaluator-only. A same-user unrestricted shell can traverse
+sibling paths, so actual filesystem blindness requires a container or sandbox
+mount boundary.
 
 ## Remaining execution work
 

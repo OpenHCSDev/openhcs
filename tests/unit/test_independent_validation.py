@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import runpy
 from pathlib import Path
 
 import imageio.v3 as iio
@@ -15,6 +16,7 @@ from benchmark.contracts.validation import (
 )
 from benchmark.datasets.registry import get_dataset_spec
 from benchmark.validation.corpus import (
+    ValidationCorpusPreparer,
     derive_validation_dsl_contract,
     freeze_pipeline,
     source_bindings_for_validation,
@@ -131,6 +133,28 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
     assert contract.grouping_fields == ("plate", "well")
     assert contract.variable_components == ("site",)
     assert contract.source_set_count == 2
+
+
+def test_generated_pipeline_template_is_self_contained(tmp_path):
+    validation = get_dataset_spec("BBBC039_nuclei_segmentation").independent_validation
+    assert validation is not None
+    template = tmp_path / "pipeline_template.py"
+
+    ValidationCorpusPreparer._write_pipeline_template(
+        template,
+        source_bindings_for_validation(validation),
+    )
+
+    source = template.read_text(encoding="utf-8")
+    namespace = runpy.run_path(str(template))
+    assert "from source_bindings import" not in source
+    assert namespace["pipeline_steps"] == []
+    assert tuple(
+        join.image_metadata_field
+        for join in namespace["pipeline_config"]
+        .source_bindings_config.imported_metadata_tables[0]
+        .joins
+    ) == ("plate", "well", "site", "channel")
 
 
 def test_trial_splits_are_declaration_owned_disjoint_and_counted():
