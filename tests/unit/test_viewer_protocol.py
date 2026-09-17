@@ -14,7 +14,10 @@ from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
-from openhcs.runtime.viewer_controls import ViewerStateControlOptions
+from openhcs.runtime.viewer_controls import (
+    ViewerIntensityWindowControlOptions,
+    ViewerStateControlOptions,
+)
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchLog,
     DetachedViewerLaunchRequest,
@@ -53,6 +56,21 @@ def preserve_managed_viewer_registry():
 
 def test_managed_viewer_lifecycle_implements_nominal_execution_contract():
     assert issubclass(ManagedViewerLifecycleMixin, ExecutionVisualizerABC)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        {"route_key": ""},
+        {"route_key": "image", "low_percentile": -1.0},
+        {"route_key": "image", "high_percentile": float("inf")},
+        {"route_key": "image", "low_percentile": 50.0, "high_percentile": 50.0},
+        {"route_key": "image", "axis_indices": {"site": -1}},
+    ),
+)
+def test_viewer_intensity_window_controls_fail_closed(overrides):
+    with pytest.raises((TypeError, ValueError)):
+        ViewerIntensityWindowControlOptions(**overrides)
 
 
 def test_viewer_control_ping_request_owns_quick_and_ready_projection(monkeypatch):

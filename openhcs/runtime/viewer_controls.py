@@ -404,6 +404,65 @@ class ViewerStateControlOptions:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerIntensityWindowControlOptions:
+    """Route-global image contrast derived from caller-declared percentiles.
+
+    Semantic ``axis_indices`` select every real payload record matching those
+    coordinates. An empty mapping deliberately selects every real payload
+    coordinate on the route; display-array padding is outside this contract.
+    """
+
+    route_key: str
+    axis_indices: Mapping[str, int] = field(default_factory=dict)
+    low_percentile: float = 1.0
+    high_percentile: float = 99.0
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.route_key, str) or not self.route_key:
+            raise ValueError(
+                "Viewer intensity-window route_key must be a non-empty string."
+            )
+        ViewerPayloadControlOptions._validate_axis_indices(dict(self.axis_indices))
+        low = self._percentile(self.low_percentile, "low_percentile")
+        high = self._percentile(self.high_percentile, "high_percentile")
+        if low >= high:
+            raise ValueError(
+                "Viewer intensity-window percentiles must satisfy "
+                "low_percentile < high_percentile."
+            )
+
+    @classmethod
+    def from_overrides(
+        cls,
+        *,
+        route_key: str,
+        axis_indices: Mapping[str, int] | None = None,
+        low_percentile: float = 1.0,
+        high_percentile: float = 99.0,
+    ) -> Self:
+        return cls(
+            route_key=route_key,
+            axis_indices={} if axis_indices is None else dict(axis_indices),
+            low_percentile=low_percentile,
+            high_percentile=high_percentile,
+        )
+
+    @staticmethod
+    def _percentile(value: object, field_name: str) -> float:
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise TypeError(
+                f"Viewer intensity-window {field_name} must be a real number."
+            )
+        numeric = float(value)
+        if not isfinite(numeric) or not 0.0 <= numeric <= 100.0:
+            raise ValueError(
+                f"Viewer intensity-window {field_name} must be finite and within "
+                "[0, 100]."
+            )
+        return numeric
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerNavigationControlOptions:
     """Formal viewer navigation controls shared by agent and viewer runtimes."""
 
