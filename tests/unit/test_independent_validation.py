@@ -128,7 +128,7 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
     assert bindings.grouping_metadata_fields == ("plate", "well")
     assert tuple(
         join.image_metadata_field for join in bindings.imported_metadata_tables[0].joins
-    ) == ("plate", "well", "site", "channel")
+    ) == ("plate", "well", "site")
     assert contract.source_components == ("plate", "well", "site", "channel")
     assert contract.grouping_fields == ("plate", "well")
     assert contract.variable_components == ("site",)
@@ -154,7 +154,21 @@ def test_generated_pipeline_template_is_self_contained(tmp_path):
         for join in namespace["pipeline_config"]
         .source_bindings_config.imported_metadata_tables[0]
         .joins
-    ) == ("plate", "well", "site", "channel")
+    ) == ("plate", "well", "site")
+
+
+def test_paired_source_bindings_do_not_join_consumed_channel_component():
+    validation = get_dataset_spec("BBBC007_cell_boundaries").independent_validation
+    assert validation is not None
+
+    bindings = source_bindings_for_validation(validation)
+
+    assert tuple(
+        join.image_metadata_field for join in bindings.imported_metadata_tables[0].joins
+    ) == validation.source_identity_fields == ("well", "site")
+    assert tuple(
+        binding.selector.metadata[0].value for binding in bindings.bindings
+    ) == ("DNA", "ACTIN")
 
 
 def test_trial_splits_are_declaration_owned_disjoint_and_counted():

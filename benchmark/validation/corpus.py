@@ -580,7 +580,7 @@ def source_bindings_for_validation(
                 location="source_manifest.csv",
                 joins=tuple(
                     ImportedMetadataJoin(field, field)
-                    for field in (*validation.source_identity_fields, "channel")
+                    for field in validation.source_identity_fields
                 ),
             ),
         ),
