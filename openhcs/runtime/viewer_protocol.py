@@ -1095,6 +1095,22 @@ class ViewerControlMessageRequest:
     payload: object | None = None
     timeout: float = 2.0
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.message_type, str) or not self.message_type:
+            raise ValueError("Viewer control message_type must be a non-empty string.")
+        if self.timeout <= 0:
+            raise ValueError("Viewer control timeout must be positive.")
+
+    def to_wire_mapping(self) -> dict[str, object]:
+        """Project this typed request to primitive wire fields."""
+
+        request: dict[str, object] = {
+            ViewerControlResponseField.TYPE.value: self.message_type
+        }
+        if self.payload is not None:
+            request[ViewerControlResponseField.PAYLOAD.value] = self.payload
+        return request
+
     def send(self) -> ViewerControlResponse:
         import pickle
 
@@ -1108,12 +1124,7 @@ class ViewerControlMessageRequest:
             socket.setsockopt(zmq.LINGER, 0)
             socket.setsockopt(zmq.RCVTIMEO, int(self.timeout * 1000))
             socket.connect(self.endpoint.control_url())
-            request: dict[str, object] = {
-                ViewerControlResponseField.TYPE.value: self.message_type
-            }
-            if self.payload is not None:
-                request[ViewerControlResponseField.PAYLOAD.value] = self.payload
-            socket.send(pickle.dumps(request))
+            socket.send(pickle.dumps(self.to_wire_mapping()))
             payload = pickle.loads(socket.recv())
             if not isinstance(payload, Mapping):
                 raise TypeError(

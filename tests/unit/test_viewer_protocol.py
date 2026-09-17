@@ -122,6 +122,27 @@ def test_viewer_control_ping_request_owns_quick_and_ready_projection(monkeypatch
     ]
 
 
+def test_viewer_control_message_request_projects_primitive_wire_fields():
+    controls = ViewerStateControlOptions()
+    request = ViewerControlMessageRequest(
+        endpoint=ViewerRuntimeEndpoint(
+            transport=ViewerTransportEndpoint(
+                port=55,
+                host="localhost",
+                transport_mode=TransportMode.IPC,
+            ),
+            config=OPENHCS_ZMQ_CONFIG,
+        ),
+        message_type=ViewerControlMessageType.STATE.value,
+        payload=controls,
+    )
+
+    wire = request.to_wire_mapping()
+
+    assert wire == {"type": "state", "payload": controls}
+    assert all(type(field_name) is str for field_name in wire)
+
+
 def test_viewer_endpoint_delegates_stale_cleanup_to_transport_owner(
     monkeypatch,
 ):

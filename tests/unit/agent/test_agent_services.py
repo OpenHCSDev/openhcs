@@ -1184,6 +1184,7 @@ class _SilentZMQSocket:
     def __init__(self) -> None:
         self.closed = False
         self.sent_flags = []
+        self.sent_payload = None
 
     def setsockopt(self, option, value) -> None:
         del option, value
@@ -1192,7 +1193,7 @@ class _SilentZMQSocket:
         self.control_url = control_url
 
     def send(self, payload: bytes, *, flags: int = 0) -> None:
-        del payload
+        self.sent_payload = payload
         self.sent_flags.append(flags)
 
     def recv(self, *, flags: int = 0):
@@ -1247,6 +1248,9 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert "timed out after 25ms" in result.errors[0].message
     assert poller.poll_timeouts == [25]
     assert socket.sent_flags == [viewer_window_service_module.zmq.DONTWAIT]
+    decoded_request = viewer_window_service_module.pickle.loads(socket.sent_payload)
+    assert decoded_request["type"] == "state"
+    assert type(next(iter(decoded_request))) is str
     assert socket.closed is True
     assert context.destroy_linger == 0
 

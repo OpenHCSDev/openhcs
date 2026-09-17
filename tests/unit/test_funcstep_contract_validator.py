@@ -46,6 +46,12 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.config import LazyProcessingConfig
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.backends.assemblers.assemble_stack_cpu import (
+    assemble_stack_cpu,
+)
+from openhcs.processing.backends.processors.numpy_processor import (
+    stack_percentile_normalize,
+)
 
 
 _TRANSPORTED_FLEXIBLE_CALL_SHAPES: list[tuple[int, ...]] = []
@@ -399,6 +405,96 @@ def test_validate_processing_contract_uses_flexible_signature_default():
         tuple(_compiled_pattern(flexible_2d_default).iter_invocations()),
         "flexible",
     )
+
+
+def test_validate_processing_contract_chain_rejects_stack_consumer_after_collapse():
+    @numpy(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+    def collapse_stack(image):
+        return image[0]
+
+    @numpy(contract=ProcessingContract.FLEXIBLE)
+    def consume_stack(image):
+        return image
+
+    pattern = _compiled_pattern([collapse_stack, consume_stack])
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "consume_stack.*requires a real variable-component stack.*"
+            "collapse_stack.*collapsed the leading plane axis"
+        ),
+    ):
+        FuncStepContractValidator.validate_processing_contract_chain(
+            (VariableComponents.SITE,),
+            tuple(group.invocations for group in pattern.groups),
+            "ordered_chain",
+        )
+
+
+def test_validate_processing_contract_chain_rejects_assembly_before_stack_normalize():
+    pattern = _compiled_pattern(
+        [assemble_stack_cpu, stack_percentile_normalize]
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "stack_percentile_normalize.*requires a real variable-component "
+            "stack.*assemble_stack_cpu.*collapsed the leading plane axis"
+        ),
+    ):
+        FuncStepContractValidator.validate_processing_contract_chain(
+            (VariableComponents.SITE,),
+            tuple(group.invocations for group in pattern.groups),
+            "normalize_and_stitch",
+        )
+
+
+def test_validate_processing_contract_chain_allows_slice_consumer_after_collapse():
+    @numpy(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+    def collapse_stack(image):
+        return image[0]
+
+    @numpy(contract=ProcessingContract.FLEXIBLE)
+    def consume_slice(image):
+        return image
+
+    pattern = _compiled_pattern(
+        [collapse_stack, (consume_slice, {"slice_by_slice": True})]
+    )
+
+    FuncStepContractValidator.validate_processing_contract_chain(
+        (VariableComponents.SITE,),
+        tuple(group.invocations for group in pattern.groups),
+        "ordered_chain",
+    )
+
+
+def test_compiled_step_rejects_stack_consumer_after_prior_axis_collapse():
+    @numpy(contract=ProcessingContract.VOLUMETRIC_TO_SLICE)
+    def collapse_stack(image):
+        return image[0]
+
+    @numpy(contract=ProcessingContract.FLEXIBLE)
+    def consume_stack(image):
+        return image
+
+    pattern = [collapse_stack, consume_stack]
+    step_plan = CompiledStepPlan(
+        step_index=0,
+        step_name="ordered_chain",
+        step_type="FunctionStep",
+        axis_id="A01",
+        input_memory_type="numpy",
+        output_memory_type="numpy",
+        variable_components=(VariableComponents.SITE,),
+        func=pattern,
+        compiled_function_pattern=_compiled_pattern(pattern),
+    )
+
+    with pytest.raises(ValueError, match="collapsed the leading plane axis"):
+        FuncStepContractValidator.validate_compiled_step_plan(step_plan)
 
 
 def test_transport_preserves_decorator_owned_flexible_default():

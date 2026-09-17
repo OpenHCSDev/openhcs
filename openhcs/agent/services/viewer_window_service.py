@@ -63,6 +63,7 @@ from openhcs.runtime.viewer_component_system import (
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlField,
+    ViewerControlMessageRequest,
     ViewerControlMessageType,
     ViewerControlResponseField,
     ViewerDescriptorField,
@@ -70,6 +71,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerLayerField,
     ViewerPayloadField,
     ViewerPayloadSummaryField,
+    ViewerRuntimeEndpoint,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
@@ -1045,41 +1047,39 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         self._context_factory = context_factory
 
     def snapshot_window(self, request: ViewerWindowSnapshotRequest) -> JsonObject:
-        message = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.SCREENSHOT.value,
-            ViewerControlResponseField.PAYLOAD.value: request,
-        }
-        return self._send_control_message(request, message)
+        return self._send_control_message(
+            request,
+            ViewerControlMessageType.SCREENSHOT,
+            request,
+        )
 
     def window_state(self, request: ViewerWindowStateRequest) -> JsonObject:
-        message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.STATE.value,
-            ViewerControlResponseField.PAYLOAD.value: request.state_controls,
-        }
-        return self._send_control_message(request, message)
+        return self._send_control_message(
+            request,
+            ViewerControlMessageType.STATE,
+            request.state_controls,
+        )
 
     def window_payloads(self, request: ViewerWindowPayloadRequest) -> JsonObject:
-        message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.PAYLOADS.value,
-            ViewerControlResponseField.PAYLOAD.value: request.payload_projection,
-        }
-        return self._send_control_message(request, message)
+        return self._send_control_message(
+            request,
+            ViewerControlMessageType.PAYLOADS,
+            request.payload_projection,
+        )
 
     def navigate_window(self, request: ViewerWindowNavigationRequest) -> JsonObject:
-        message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.NAVIGATE.value,
-            ViewerControlResponseField.PAYLOAD.value: request.navigation,
-        }
-        return self._send_control_message(request, message)
+        return self._send_control_message(
+            request,
+            ViewerControlMessageType.NAVIGATE,
+            request.navigation,
+        )
 
     def isolate_layers(self, request: ViewerWindowLayerIsolationRequest) -> JsonObject:
-        message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: (
-                ViewerControlMessageType.ISOLATE_LAYERS.value
-            ),
-            ViewerControlResponseField.PAYLOAD.value: request.isolation,
-        }
-        return self._send_control_message(request, message)
+        return self._send_control_message(
+            request,
+            ViewerControlMessageType.ISOLATE_LAYERS,
+            request.isolation,
+        )
 
     def _send_control_message(
         self,
@@ -1090,25 +1090,39 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
             | ViewerWindowNavigationRequest
             | ViewerWindowLayerIsolationRequest
         ),
-        message: Mapping[str, object],
+        message_type: ViewerControlMessageType,
+        payload: object,
     ) -> JsonObject:
         connection = request.connection
-        control_url = connection.zmq_control_url(OPENHCS_ZMQ_CONFIG)
+        message = ViewerControlMessageRequest(
+            endpoint=ViewerRuntimeEndpoint(
+                transport=connection.transport_endpoint(),
+                config=OPENHCS_ZMQ_CONFIG,
+            ),
+            message_type=message_type.value,
+            payload=payload,
+            timeout=request.timeout_ms / 1000,
+        )
+        control_url = message.endpoint.control_url()
+        timeout_ms = int(message.timeout * 1000)
         context = self._context_factory()
         socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.LINGER, 0)
-        socket.setsockopt(zmq.RCVTIMEO, request.timeout_ms)
-        socket.setsockopt(zmq.SNDTIMEO, request.timeout_ms)
+        socket.setsockopt(zmq.RCVTIMEO, timeout_ms)
+        socket.setsockopt(zmq.SNDTIMEO, timeout_ms)
         poller = zmq.Poller()
         try:
             socket.connect(control_url)
-            socket.send(pickle.dumps(message), flags=zmq.DONTWAIT)
+            socket.send(
+                pickle.dumps(message.to_wire_mapping()),
+                flags=zmq.DONTWAIT,
+            )
             poller.register(socket, zmq.POLLIN)
-            events = dict(poller.poll(request.timeout_ms))
+            events = dict(poller.poll(timeout_ms))
             if events.get(socket) != zmq.POLLIN:
                 raise TimeoutError(
                     "Viewer control request timed out after "
-                    f"{request.timeout_ms}ms waiting for {control_url}."
+                    f"{timeout_ms}ms waiting for {control_url}."
                 )
             response = pickle.loads(socket.recv(flags=zmq.DONTWAIT))
         finally:
