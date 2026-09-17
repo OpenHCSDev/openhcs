@@ -18,6 +18,10 @@ from openhcs.core.function_reference import (
 )
 from openhcs.core.function_step_document import FunctionStepDocumentAuthority
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.processing.backends.analysis.neurite_outgrowth import (
+    MetaXpressOutgrowthSettings,
+    neurite_outgrowth_metaxpress,
+)
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
@@ -172,6 +176,65 @@ def test_explicit_function_dtype_override_survives_object_state_round_trip():
         assert (
             reparsed.func[1]["dtype_config"].default_dtype_conversion
             is DtypeConversion.UINT16
+        )
+    finally:
+        ObjectStateRegistry.clear()
+
+
+def test_added_nested_dataclass_field_survives_pipeline_code_round_trip():
+    """A stale restored field schema cannot discard a newly declared value."""
+
+    plate_scope = "/tmp/nested-schema-plate"
+    ObjectStateRegistry.clear()
+    try:
+        initial = FunctionStep(
+            func=(
+                neurite_outgrowth_metaxpress,
+                {
+                    "outgrowth": MetaXpressOutgrowthSettings(
+                        candidate_threshold_correction_factor=0.85,
+                    )
+                },
+            ),
+        )
+        PipelineObjectStateBinding.update_plate_steps(plate_scope, [initial])
+        [step_scope] = PipelineObjectStateBinding.editor_state_for_plate(
+            plate_scope
+        ).step_scope_ids
+        function_state = ObjectStateRegistry.get_by_scope(f"{step_scope}::func_0")
+        assert function_state is not None
+
+        # Model a persisted ObjectState captured before the nested declaration
+        # gained ``correction_factor`` while retaining the current container.
+        stale_path = "outgrowth.candidate_threshold_correction_factor"
+        function_state.parameters.pop(stale_path)
+        function_state._saved_parameters.pop(stale_path)
+
+        edited = FunctionStep(
+            func=(
+                neurite_outgrowth_metaxpress,
+                {
+                    "outgrowth": MetaXpressOutgrowthSettings(
+                        candidate_threshold_correction_factor=0.5,
+                    )
+                },
+            ),
+        )
+        PipelineObjectStateBinding.update_plate_steps(plate_scope, [edited])
+
+        [reconstructed] = PipelineObjectStateBinding.steps_for_plate(plate_scope)
+        assert reconstructed.func[1]["outgrowth"] == MetaXpressOutgrowthSettings(
+            candidate_threshold_correction_factor=0.5,
+        )
+        rendered = FunctionStepDocumentAuthority.render(
+            FunctionStepDocumentAuthority.from_value(reconstructed)
+        )
+        assert "correction_factor=0.5" in rendered
+        assert (
+            FunctionStepDocumentAuthority.from_source(rendered)
+            .step.func[1]["outgrowth"]
+            .candidate_threshold_correction_factor
+            == 0.5
         )
     finally:
         ObjectStateRegistry.clear()
