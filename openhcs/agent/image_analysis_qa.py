@@ -11,7 +11,12 @@ class ImageQaMeasure(Enum):
     """Measurements used to distinguish admission, continuity, and ownership."""
 
     OBJECT_COUNT = "admitted-object count"
+    OBJECT_AREA_DISTRIBUTION = "per-object area distribution"
+    FOREGROUND_FRACTION = "accepted foreground fraction"
     SOURCE_TARGET_MATCH_COUNT = "accepted source-to-target match count"
+    SOURCE_TARGET_CONTAINMENT_VIOLATION_PIXELS = (
+        "source-label pixels outside the same-identity target object"
+    )
     ADMISSION_DELTA_OBJECTS = (
         "source objects added or removed by an adjacent admission setting"
     )
@@ -68,6 +73,43 @@ class ImageQaPrecondition(Enum):
         "declared callable contract; when a color axis is not a biological plane "
         "axis, collapse it explicitly with a registered typed transform before "
         "segmentation"
+    )
+    SPLIT_SOURCE_LAYOUT_REPRESENTATIVENESS = (
+        "before public authoring, derive source carrier and axis-layout classes for "
+        "the declared development and held-out inputs without opening hidden labels "
+        "or scoring references; require every held-out layout class to be represented "
+        "in development or declare it unsupported before pipeline freeze"
+    )
+
+
+class ImageQaEvidenceRule(Enum):
+    """Auditable evidence rules applied before accepting image-analysis QA."""
+
+    FIXED_COORDINATE_MULTI_WINDOW = (
+        "compare the exact raw/result coordinate, crop, scale, and overlay under "
+        "multiple declared percentile windows and preserve each percentile pair "
+        "with its applied numeric limits"
+    )
+    ROUTE_LOCAL_VIEWER_IDENTITY = (
+        "aggregate viewer indices are not necessarily a route-local semantic "
+        "coordinate because routes can have distinct component domains and axis "
+        "offsets; derive navigation from the target route's typed component values "
+        "and positional indices, then re-read viewer state"
+    )
+    REJECT_INVALID_CAPTURE = (
+        "reject a black, empty, stale, or mismatched capture when its active route, "
+        "component values, or routed payload identity do not match the intended "
+        "evidence"
+    )
+    DURABLE_ARTIFACT_EXISTENCE = (
+        "before freezing, verify every claimed durable label or measurement path "
+        "exists and preserves the typed artifact identity rather than inferring "
+        "persistence from a streamed viewer payload"
+    )
+    LABEL_CARDINALITY_AND_CONTAINMENT = (
+        "reconcile source and target label cardinality, same-identity containment, "
+        "foreground fraction, and per-object area distributions; equal counts alone "
+        "do not establish spatial concordance"
     )
 
 
@@ -126,7 +168,10 @@ class SemanticGate(Enum):
         "decides whether a source object enters the analysis",
         (
             ImageQaMeasure.OBJECT_COUNT,
+            ImageQaMeasure.OBJECT_AREA_DISTRIBUTION,
+            ImageQaMeasure.FOREGROUND_FRACTION,
             ImageQaMeasure.SOURCE_TARGET_MATCH_COUNT,
+            ImageQaMeasure.SOURCE_TARGET_CONTAINMENT_VIOLATION_PIXELS,
             ImageQaMeasure.ADMISSION_DELTA_OBJECTS,
             ImageQaMeasure.REFERENCE_OBJECT_COUNT_DELTA,
             ImageQaMeasure.ACCEPTED_BODY_PIXELS,
@@ -297,6 +342,7 @@ class ImageAnalysisQaPolicy:
         reference_evidence_text = "; ".join(
             rule.value for rule in ReferenceEvidenceRule
         )
+        evidence_rule_text = "; ".join(rule.value for rule in ImageQaEvidenceRule)
         gate_text = "; ".join(
             (
                 f"{gate.value} {gate.description}; measure "
@@ -312,6 +358,7 @@ class ImageAnalysisQaPolicy:
         )
         return (
             f"Before tuning, require that each precondition holds: {precondition_text}. "
+            f"Accept visual or artifact evidence only when: {evidence_rule_text}. "
             f"When a reference exists: {reference_evidence_text}. "
             "Classify the current-output "
             f"miss by stage: {miss_stage_text}. Then classify each residual miss: "

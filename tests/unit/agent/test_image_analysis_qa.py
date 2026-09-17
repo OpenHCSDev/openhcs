@@ -1,6 +1,7 @@
 from openhcs.agent.image_analysis_qa import (
     CandidateRejectionReason,
     ImageAnalysisQaPolicy,
+    ImageQaEvidenceRule,
     ImageQaMissStage,
     ImageQaPrecondition,
     ReferenceEvidenceRule,
@@ -26,6 +27,8 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
         assert disposition.value in guidance
     for precondition in ImageQaPrecondition:
         assert precondition.value in guidance
+    for rule in ImageQaEvidenceRule:
+        assert rule.value in guidance
     for rule in ReferenceEvidenceRule:
         assert rule.value in guidance
     for stage in ImageQaMissStage:
@@ -46,6 +49,13 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "diagnostic evidence rather than an automatic replacement" in guidance
     assert "declare the permissive value only on the dataset or preset" in guidance
     assert "distance, ownership, and response alone are insufficient" in guidance
+    assert "multiple declared percentile windows" in guidance
+    assert "route-local semantic coordinate" in guidance
+    assert "black, empty, stale, or mismatched capture" in guidance
+    assert "verify every claimed durable label or measurement path exists" in guidance
+    assert "same-identity containment" in guidance
+    assert "every held-out layout class to be represented in development" in guidance
+    assert "without opening hidden labels or scoring references" in guidance
 
 
 def test_trace_growth_requires_more_root_connected_continuity() -> None:

@@ -368,7 +368,7 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "Review one current execution in raw-evidence order" in viewer
     assert "Aggregate viewer indices are not necessarily a route-local semantic coordinate" in viewer
     assert "distinct component domains and axis offsets" in viewer
-    assert "active route or component values do not match the routed payload identity" in viewer
+    assert "black, empty, stale, or mismatched capture" in viewer
     assert f'kind="{ImageAnalysisWorkflowAuthoringContext.require_kind()}"' in viewer
     assert "canonical operating guide" in viewer
     assert "percentile-clipped histogram views" not in viewer
