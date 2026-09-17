@@ -121,6 +121,19 @@ class ReferenceEvidenceRule(Enum):
     )
 
 
+class SeededSegmentationRule(Enum):
+    """Identity evidence for primary-seed to secondary-object segmentation."""
+
+    LABEL_ID_BIJECTION = (
+        "require the primary-seed and secondary-object label-ID sets to be identical; "
+        "equal object counts alone do not prove seed identity conservation"
+    )
+    SAME_ID_CONTAINMENT = (
+        "verify that every primary-seed pixel lies inside the secondary mask carrying "
+        "the same label ID"
+    )
+
+
 class ImageQaMissStage(Enum):
     """Stage attribution derived from nested current-output masks."""
 
@@ -351,6 +364,9 @@ class ImageAnalysisQaPolicy:
         reference_evidence_text = "; ".join(
             rule.value for rule in ReferenceEvidenceRule
         )
+        seeded_segmentation_text = "; ".join(
+            rule.value for rule in SeededSegmentationRule
+        )
         visualization_rule_text = "; ".join(
             rule.value for rule in ImageQaVisualizationRule
         )
@@ -371,6 +387,7 @@ class ImageAnalysisQaPolicy:
             f"Before tuning, require that each precondition holds: {precondition_text}. "
             f"For visual inspection: {visualization_rule_text}. "
             f"When a reference exists: {reference_evidence_text}. "
+            f"For seeded secondary segmentation: {seeded_segmentation_text}. "
             "Classify the current-output "
             f"miss by stage: {miss_stage_text}. Then classify each residual miss: "
             f"{gate_text}. Sweep exactly one declaration-owned gate per attempt. "
