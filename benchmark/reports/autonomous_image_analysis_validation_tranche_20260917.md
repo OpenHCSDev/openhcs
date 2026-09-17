@@ -103,9 +103,16 @@ reference masks; they do not infer truth from display colours.
 The canonical typed QA policy also ranks rejected source candidates by nearby
 signal support and records area, width, response, connectivity, border, debris
 and already-owned dispositions. It separately ranks signal-supported residual
-processes that remain unowned or unrooted. Missed-object review is therefore an
-admission/path/ownership audit rather than a reason to lower a global threshold
-blindly; rejected parameter changes remain evidence too.
+processes that remain unowned or unrooted. A cited screenshot must first be
+localized to source coordinates and reproduced from current artifacts. Nested
+current masks then attribute the miss: no accepted body is admission,
+permissive-candidate-only is detection, current-candidate-only is rooted
+connectivity, and an evidenced identity discontinuity is ownership. An adjacent
+higher-sensitivity mask may nominate connected delta components for inspection,
+but cannot become the replacement merely because it contains more pixels.
+Missed-object review is therefore an admission/detection/connectivity/ownership
+audit rather than a reason to lower a global threshold blindly; rejected
+parameter changes remain evidence too.
 
 DSL evidence is not a self-reported checklist. Each claimed obligation points
 to a preserved MCP, UI, compiler, runtime or artifact record and includes the
@@ -158,3 +165,26 @@ The next tranche is operational:
 
 The corpus therefore establishes the blind boundary and scoring substrate, but
 does not yet constitute a completed cross-model benchmark.
+
+## Current-source neurite QA proof
+
+The corrected nuclear-seeded neurite implementation was independently executed
+through the restored OpenHCS UI, a freshly replaced execution server and a
+freshly replaced compatible napari viewer. The UI run completed against the
+declared A01 nine-site mosaic in 134.3 s: 59.977 s in the neurite function and
+52.411 s finalizing its image, ROI, graph and table artifacts. The current-source
+materialized body and trace label arrays were byte-identical to the separately
+computed accepted A029 arrays. They contained 1,238 body labels and 131,909
+rooted-trace pixels.
+
+A screenshot that appeared to show three conspicuously missed neurons was
+localized to mosaic source coordinate `(1432, 1405)` at one-third scale. Its
+normalized template correlation was about 0.894. Re-rendering that exact region
+from A029 showed accepted bodies and rooted traces for all three neurons; the
+reported defect was stale output rather than a current miss. The remaining
+ranked evidence contains short faint terminal fragments and two small current
+candidate fragments of 11 and 6 pixels that remain outside the rooted result.
+It does not justify lowering source-object admission or the candidate threshold
+globally. The supported next algorithmic question is bounded same-owner endpoint
+continuation under declared local-response, gap-width, topology and foreign-owner
+constraints.
