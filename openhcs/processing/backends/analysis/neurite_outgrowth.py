@@ -103,7 +103,8 @@ class CellProfilerNeuriteEngineProfile:
     body_max_diameter_px: int = 100
     adaptive_window_size_px: int = 64
     tubeness_smoothing_px: float = 1.5
-    threshold_correction_factor: float = 0.85
+    neurite_candidate_threshold_correction_factor: float = 0.3
+    secondary_ownership_threshold_correction_factor: float = 0.85
     threshold_smoothing_px: float = 1.0
     secondary_regularization_factor: float = 0.05
 
@@ -169,7 +170,9 @@ class CellProfilerNeuriteEngineProfile:
         return {
             "threshold_scope": CellProfilerThresholdScope.ADAPTIVE,
             "threshold_method": CellProfilerThresholdMethod.OTSU,
-            "threshold_correction_factor": self.threshold_correction_factor,
+            "threshold_correction_factor": (
+                self.neurite_candidate_threshold_correction_factor
+            ),
             "window_size": (
                 self.adaptive_window_size_px if window_size is None else window_size
             ),
@@ -187,7 +190,9 @@ class CellProfilerNeuriteEngineProfile:
             "method": SecondaryMethod.PROPAGATION,
             "threshold_scope": CellProfilerThresholdScope.ADAPTIVE,
             "threshold_method": CellProfilerThresholdMethod.OTSU,
-            "threshold_correction_factor": self.threshold_correction_factor,
+            "threshold_correction_factor": (
+                self.secondary_ownership_threshold_correction_factor
+            ),
             "adaptive_window_size": (
                 self.adaptive_window_size_px
                 if adaptive_window_size is None

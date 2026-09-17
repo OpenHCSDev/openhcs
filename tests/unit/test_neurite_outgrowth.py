@@ -21,12 +21,6 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.runtime_spatial_graph import SpatialGraph
-from openhcs.processing.backends.cellprofiler.primary_objects import (
-    identify_primary_objects,
-)
-from openhcs.processing.backends.cellprofiler.secondary import (
-    identify_secondary_objects,
-)
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
     MetaXpressCellBodySettings,
@@ -1004,9 +998,18 @@ def test_filled_two_neuron_crossing_keeps_the_same_owners_as_final_traces():
     np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
 
 
-def test_final_neurons_project_rooted_trace_ownership_not_secondary_propagation():
+def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
     image = _with_separate_body_channel(_draw_fluorescent_neuron(branched=True))
-    engine = CELLPROFILER_NEURITE_ENGINE_PROFILE
+
+    def broad_secondary_ownership(source_image, primary_labels, **_kwargs):
+        del primary_labels
+        return np.ones(source_image.shape, dtype=np.int32)
+
+    monkeypatch.setattr(
+        "openhcs.processing.backends.analysis.neurite_outgrowth."
+        "_identify_secondary_owner_regions_cellprofiler",
+        broad_secondary_ownership,
+    )
 
     result = _implementation()(
         image,
@@ -1016,31 +1019,33 @@ def test_final_neurons_project_rooted_trace_ownership_not_secondary_propagation(
         pixel_size=1.0,
     )
 
-    *_, detected_body_payload = CallableContract.from_callable(
-        identify_primary_objects
-    ).resolve_raw_runtime_callable()(
-        image[0],
-        **engine.compact_body_detection_kwargs(adaptive_window_size=64),
-    )
-    accepted_body_payload = detected_body_payload.with_replacement_labels(result[3][0])
-    *_, expected_neuron_payload = CallableContract.from_callable(
-        identify_secondary_objects
-    ).resolve_raw_runtime_callable()(
-        image[1],
-        primary_labels=accepted_body_payload,
-        **engine.secondary_kwargs(),
-    )
-
     bodies = result[3][0]
     traces = result[4][1]
     neurons = result[5][1]
     np.testing.assert_array_equal(neurons[bodies > 0], bodies[bodies > 0])
     np.testing.assert_array_equal(neurons[traces > 0], traces[traces > 0])
     assert np.count_nonzero(neurons) > np.count_nonzero(traces)
-    # CP propagation is detection evidence, not an independently authoritative
-    # final labeling that may contradict corrected trace ownership.
-    assert not np.array_equal(
-        neurons, object_label_dense_array(expected_neuron_payload)
+    expected_owners = set(np.unique(bodies)) | set(np.unique(traces))
+    assert set(np.unique(neurons)) == expected_owners
+    # Deliberately broad secondary propagation is detection evidence only. The
+    # published neuron labels remain bounded to soma-rooted trace ownership.
+    assert np.count_nonzero(neurons) < neurons.size
+
+
+def test_neurite_candidate_and_secondary_ownership_thresholds_are_independent():
+    engine = CELLPROFILER_NEURITE_ENGINE_PROFILE
+
+    assert (
+        engine.threshold_kwargs()["threshold_correction_factor"]
+        == engine.neurite_candidate_threshold_correction_factor
+    )
+    assert (
+        engine.secondary_kwargs()["threshold_correction_factor"]
+        == engine.secondary_ownership_threshold_correction_factor
+    )
+    assert (
+        engine.neurite_candidate_threshold_correction_factor
+        < engine.secondary_ownership_threshold_correction_factor
     )
 
 
