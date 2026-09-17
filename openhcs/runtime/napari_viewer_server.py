@@ -4238,10 +4238,11 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
         contributing_payload_count = 0
         contributing_pixel_count = 0
         matched_payload_identities: list[dict[str, object]] = []
-        for item, data, axis_indices, aggregate_indices in records:
+        for item, data, components, axis_indices, aggregate_indices in records:
             matched_payload_identities.append(
                 {
                     ViewerPayloadField.PATH.value: item.address.path,
+                    ViewerPayloadField.COMPONENTS.value: components,
                     ViewerPayloadField.AXIS_INDICES.value: axis_indices,
                     ViewerPayloadField.AGGREGATE_AXIS_INDICES.value: aggregate_indices,
                 }
@@ -4327,7 +4328,13 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
         dimension_state: NapariDimensionLayerState,
         request: ViewerIntensityWindowControlOptions,
     ) -> tuple[
-        tuple[NapariStreamLayerItem, LayerData, tuple[int, ...], tuple[int, ...]],
+        tuple[
+            NapariStreamLayerItem,
+            LayerData,
+            dict[str, ComponentValue],
+            tuple[int, ...],
+            tuple[int, ...],
+        ],
         ...,
     ]:
         presentation = dimension_state.presentation
@@ -4337,7 +4344,10 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
                     "Viewer intensity-window axis_indices require a route with "
                     "semantic axis projection."
                 )
-            return tuple((item, item.data, (), ()) for item in items)
+            return tuple(
+                (item, item.data, dict(item.address.components), (), ())
+                for item in items
+            )
 
         axis_labels = presentation.projection.projected_axis_components
         unknown_axes = tuple(
@@ -4378,6 +4388,7 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
                             item.data,
                             aggregate_indices,
                         ),
+                        dict(components),
                         axis_indices,
                         aggregate_indices,
                     )

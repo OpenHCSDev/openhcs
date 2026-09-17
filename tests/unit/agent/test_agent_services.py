@@ -1000,6 +1000,7 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
             "matched_payload_identities": (
                 {
                     "path": "/tmp/A14.tif",
+                    "components": {"well": "A14", "site": 0},
                     "axis_indices": (0, 0, 0),
                     "aggregate_axis_indices": (),
                 },
@@ -2261,6 +2262,7 @@ def test_viewer_window_service_applies_typed_intensity_window_result():
     assert result.matched_payload_identities == (
         ViewerWindowIntensityPayloadIdentity(
             path="/tmp/A14.tif",
+            components={"well": "A14", "site": 0},
             axis_indices=(0, 0, 0),
             aggregate_axis_indices=(),
         ),

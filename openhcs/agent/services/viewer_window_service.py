@@ -1624,6 +1624,9 @@ class ViewerWindowService:
             path=self._required_scalar(
                 payload, ViewerPayloadField.PATH, str, "a string"
             ),
+            components=self._required_mapping(
+                payload, ViewerPayloadField.COMPONENTS
+            ),
             axis_indices=self._required_typed_tuple(
                 payload, ViewerPayloadField.AXIS_INDICES, int
             ),

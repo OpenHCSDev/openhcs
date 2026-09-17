@@ -903,6 +903,10 @@ def test_napari_intensity_window_uses_matching_raw_payloads_not_sparse_padding()
     assert tuple(
         identity["path"] for identity in response["matched_payload_identities"]
     ) == ("A01.tif", "B01.tif")
+    assert tuple(
+        identity["components"]["well"]
+        for identity in response["matched_payload_identities"]
+    ) == ("A01", "B01")
     assert layer.contrast_limits == (10.0, 60.0)
 
     all_coordinates_response = (

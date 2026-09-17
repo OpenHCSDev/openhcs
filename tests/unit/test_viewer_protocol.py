@@ -18,7 +18,6 @@ import openhcs.runtime.viewer_protocol as viewer_protocol
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
-from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.viewer_controls import (
     ViewerIntensityWindowControlOptions,
     ViewerStateControlOptions,

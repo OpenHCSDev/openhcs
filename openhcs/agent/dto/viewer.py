@@ -920,6 +920,7 @@ class ViewerWindowIntensityPayloadIdentity:
     """Auditable routed payload record used for an intensity window."""
 
     path: str
+    components: JsonObject = field(default_factory=dict)
     axis_indices: tuple[int, ...] = ()
     aggregate_axis_indices: tuple[int, ...] = ()
 
