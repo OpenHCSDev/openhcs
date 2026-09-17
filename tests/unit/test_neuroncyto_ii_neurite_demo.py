@@ -28,12 +28,13 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressOutgrowthSettings,
     neurite_outgrowth_metaxpress,
 )
-from openhcs.processing.backends.processors.numpy_processor import percentile_normalize
+from openhcs.processing.backends.processors.numpy_processor import (
+    percentile_normalize_plane,
+)
 from openhcs.processing.presets.demo_contribution import PipelineDemoContribution
 from openhcs.processing.presets.pipelines.neuroncyto_ii_crossover_neurite_outgrowth import (  # noqa: E501
     NeuronCytoIICrossoverInputs,
     build_neuroncyto_ii_crossover_demo,
-    enhance_neurite_channel_gamma,
     neuroncyto_ii_crossover_demo_contribution,
 )
 from polystore.base import ensure_storage_registry, storage_registry
@@ -96,22 +97,24 @@ def test_neuroncyto_demo_declares_exact_crossover_channel_semantics(
     kwargs = step.func[1]
     assert kwargs["neurite_channel_index"] == 0
     assert kwargs["cell_body"] == MetaXpressCellBodySettings(
-        approximate_max_width=30.0,
-        minimum_area=20.0,
+        approximate_max_width=36.0,
+        minimum_area=45.0,
         intensity_above_local_background=20.0,
-        channel_index=1,
+        channel_index=0,
     )
     assert kwargs["outgrowth"] == MetaXpressOutgrowthSettings(
-        maximum_width=3.0,
-        intensity_above_local_background=2.0,
-        minimum_cell_growth_to_log_as_significant=10.0,
+        maximum_width=5.0,
+        intensity_above_local_background=8.0,
+        minimum_cell_growth_to_log_as_significant=8.0,
+        candidate_threshold_correction_factor=0.22,
+        candidate_hysteresis_seed_correction_factor=0.25,
     )
     assert kwargs["use_nuclear_stain"] is True
     assert kwargs["nuclear_stain"] == MetaXpressNuclearSettings(
         channel_index=1,
-        approx_min_width=3.0,
-        approx_max_width=30.0,
-        intensity_above_local_background=20.0,
+        approx_min_width=5.0,
+        approx_max_width=32.0,
+        intensity_above_local_background=24.0,
     )
     artifact_outputs = CallableContract.from_callable(
         neurite_outgrowth_metaxpress
@@ -315,13 +318,10 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
     assert contribution.plate_path.name == (
         "NeuronCyto II crossover neurite morphology"
     )
-    assert len(contribution.pipeline_steps) == 3
-    contrast_step, enhancement_step, analysis_step = contribution.pipeline_steps
-    assert get_core_callable(contrast_step.func) is percentile_normalize
+    assert len(contribution.pipeline_steps) == 2
+    contrast_step, analysis_step = contribution.pipeline_steps
+    assert get_core_callable(contrast_step.func) is percentile_normalize_plane
     assert contrast_step.processing_config.input_source is InputSource.PIPELINE_START
-    assert get_core_callable(enhancement_step.func) is enhance_neurite_channel_gamma
-    assert enhancement_step.processing_config.input_source is InputSource.PREVIOUS_STEP
-    assert enhancement_step.func[1] == {"channel_index": 0, "gamma": 0.6}
     assert get_core_callable(analysis_step.func) is neurite_outgrowth_metaxpress
     assert analysis_step.processing_config.input_source is InputSource.PREVIOUS_STEP
     assert contribution.presentation_identity.output_key == "neurite_morphology"
@@ -331,10 +331,11 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
     supporting = contribution.supporting_presentation_identities[0]
     assert supporting.output_kind == "main"
     assert supporting.output_key == "main"
-    assert supporting.step_name == enhancement_step.name
+    assert supporting.step_name == contrast_step.name
     contrast_callable, contrast_kwargs = contrast_step.func
-    assert contrast_callable.__name__ == "percentile_normalize"
+    assert contrast_callable.__name__ == "percentile_normalize_plane"
     assert contrast_kwargs == {
+        "plane_index": 0,
         "low_percentile": 1.0,
         "high_percentile": 99.8,
         "target_max": 255.0,
@@ -371,13 +372,12 @@ def test_neuroncyto_demo_contributor_prepares_only_declared_pair(
     assert [
         context.step_plans[index].step_name for index in range(len(context.step_plans))
     ] == [
-        "Percentile-normalized raw neuron signals",
-        "Neurite-channel gamma enhancement",
+        "Percentile-normalized neurite signal",
         "NeuronCyto II Crossover Neurite Outgrowth",
     ]
 
 
-def test_neuroncyto_gamma_enhancement_changes_only_declared_neurite_channel() -> None:
+def test_neuroncyto_percentile_normalization_changes_only_declared_plane() -> None:
     image = np.array(
         [
             [[0, 16], [64, 255]],
@@ -386,9 +386,14 @@ def test_neuroncyto_gamma_enhancement_changes_only_declared_neurite_channel() ->
         dtype=np.uint8,
     )
 
-    enhanced = enhance_neurite_channel_gamma(image, channel_index=0, gamma=0.6)
+    enhanced = percentile_normalize_plane(
+        image,
+        plane_index=0,
+        low_percentile=25.0,
+        high_percentile=75.0,
+        target_max=255.0,
+    )
 
     assert enhanced.dtype == image.dtype
     assert np.array_equal(enhanced[1], image[1])
-    assert np.all(enhanced[0] >= image[0])
-    assert np.any(enhanced[0] > image[0])
+    assert not np.array_equal(enhanced[0], image[0])

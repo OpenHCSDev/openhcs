@@ -39,6 +39,11 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "nuclei without a nearby accepted soma" in guidance
     assert "source admission and target-body response as separate attempts" in guidance
     assert "splitting an already admitted source" in guidance
+    assert "stricter threshold can split a merged object" in guidance
+    assert "fixed-coordinate four-panel view" in guidance
+    assert "candidate-only residual" in guidance
+    assert "real routed payload values" in guidance
+    assert "excluding sparse display padding" in guidance
     assert "not proof that the same objects were detected" in guidance
     assert "never to establish spatial identity" in guidance
     assert "for example DAPI" in guidance
@@ -47,6 +52,8 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "higher-sensitivity diagnostic attempt" in guidance
     assert "subtract the accepted candidate mask" in guidance
     assert "diagnostic evidence rather than an automatic replacement" in guidance
+    assert "owner cardinality per connected component" in guidance
+    assert "lowering the detection threshold cannot repair it" in guidance
     assert "declare the permissive value only on the dataset or preset" in guidance
     assert "distance, ownership, and response alone are insufficient" in guidance
     assert "monotone, ridge, or contrast preprocessing" in guidance

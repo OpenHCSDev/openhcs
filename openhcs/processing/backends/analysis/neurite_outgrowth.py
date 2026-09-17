@@ -265,6 +265,9 @@ class MetaXpressOutgrowthSettings:
     )
     """Adaptive foreground sensitivity; lower values admit dimmer candidates."""
 
+    candidate_hysteresis_seed_correction_factor: float | None = None
+    """Optional stricter seed threshold retaining connected dim candidates."""
+
     def validate(self) -> None:
         if not np.isfinite(self.maximum_width) or self.maximum_width <= 0:
             raise ValueError("outgrowth.maximum_width must be > 0")
@@ -287,6 +290,18 @@ class MetaXpressOutgrowthSettings:
             raise ValueError(
                 "outgrowth.candidate_threshold_correction_factor must be > 0"
             )
+        if self.candidate_hysteresis_seed_correction_factor is not None:
+            seed_factor = self.candidate_hysteresis_seed_correction_factor
+            if not np.isfinite(seed_factor) or seed_factor <= 0:
+                raise ValueError(
+                    "outgrowth.candidate_hysteresis_seed_correction_factor must "
+                    "be > 0 when set"
+                )
+            if seed_factor < self.candidate_threshold_correction_factor:
+                raise ValueError(
+                    "outgrowth.candidate_hysteresis_seed_correction_factor must "
+                    "be >= outgrowth.candidate_threshold_correction_factor"
+                )
 
 
 @dataclass(frozen=True)
@@ -1191,6 +1206,22 @@ def _identify_neurites_cellprofiler(
         ),
     )
     cp_mask = np.asarray(image_payload_data(cp_mask_payload)) > 0
+    if settings.candidate_hysteresis_seed_correction_factor is not None:
+        seed_mask_payload, _ = _raw_processing_leaf(threshold)(
+            enhanced,
+            **CELLPROFILER_NEURITE_ENGINE_PROFILE.threshold_kwargs(
+                window_size=_cellprofiler_adaptive_window(
+                    body_width_px,
+                    image.shape,
+                ),
+                smoothing=max(0.0, 0.25 * outgrowth_width_px),
+                correction_factor=(
+                    settings.candidate_hysteresis_seed_correction_factor
+                ),
+            ),
+        )
+        seed_mask = np.asarray(image_payload_data(seed_mask_payload)) > 0
+        cp_mask = _seeded_candidate_components(cp_mask, seed_mask)
     response = local_background_response(
         image,
         object_width_px=outgrowth_width_px,
@@ -1202,6 +1233,29 @@ def _identify_neurites_cellprofiler(
     )
     skeleton = np.asarray(image_payload_data(skeleton_payload)) > 0
     return outgrowth_mask, skeleton, response
+
+
+def _seeded_candidate_components(
+    candidate_mask: np.ndarray,
+    seed_mask: np.ndarray,
+) -> np.ndarray:
+    """Retain permissive connected components containing stricter seed pixels."""
+
+    candidates = np.asarray(candidate_mask, dtype=bool)
+    seeds = np.asarray(seed_mask, dtype=bool)
+    if candidates.shape != seeds.shape:
+        raise ValueError("candidate_mask and seed_mask must have the same shape")
+    candidate_labels, candidate_count = ndi.label(
+        candidates,
+        structure=np.ones((3, 3), dtype=bool),
+    )
+    if candidate_count == 0:
+        return np.zeros(candidates.shape, dtype=bool)
+    seeded_labels = np.unique(candidate_labels[seeds & candidates])
+    keep = np.zeros(candidate_count + 1, dtype=bool)
+    keep[seeded_labels] = True
+    keep[0] = False
+    return keep[candidate_labels]
 
 
 def _identify_secondary_owner_regions_cellprofiler(

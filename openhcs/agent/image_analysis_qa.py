@@ -37,10 +37,15 @@ class ImageQaMeasure(Enum):
     SENSITIVITY_DELTA_BACKGROUND_GROWTH = (
         "unsupported background growth in the sensitivity delta"
     )
+    CANDIDATE_TRACE_PIXELS = "current candidate-skeleton pixels"
+    ROOTED_CANDIDATE_YIELD = "fraction of candidate-skeleton pixels retained as rooted"
     TOTAL_TRACE_PIXELS = "total trace pixels"
     ROOTED_TRACE_PIXELS = "root-connected trace pixels"
     UNROOTED_TRACE_PIXELS = "unrooted trace pixels"
     OWNERSHIP_CROSSOVER_COMPONENTS = "components touching multiple owners"
+    CANDIDATE_COMPONENT_OWNER_CARDINALITY = (
+        "number of owner identities touching each candidate component"
+    )
     LOCAL_BACKGROUND_SUPPORT = "new-pixel support above local background"
     TOPOLOGY_PLAUSIBILITY = "topology plausibility"
 
@@ -59,9 +64,32 @@ class ImageQaPrecondition(Enum):
     NESTED_MASK_STAGE_ATTRIBUTION = (
         "attribute the miss with nested masks before changing a semantic gate"
     )
+    FIXED_COORDINATE_STAGE_MONTAGE = (
+        "render raw signal, candidate skeleton, rooted result, and candidate-only "
+        "residual side by side at fixed coordinates"
+    )
     DECLARATION_SCOPE = (
         "apply dataset-specific sensitivity through the pipeline declaration, "
         "not by changing the shared engine default"
+    )
+    SOURCE_LAYOUT_CONTRACT = (
+        "verify that the routed source rank and channel-axis semantics satisfy the "
+        "declared callable contract; when a color axis is not a biological plane "
+        "axis, collapse it explicitly with a registered typed transform before "
+        "segmentation"
+    )
+
+
+class ImageQaVisualizationRule(Enum):
+    """Rules for trustworthy live and materialized image inspection."""
+
+    ROUTED_PAYLOAD_PERCENTILES = (
+        "derive live-view percentile limits from real routed payload values at the "
+        "selected semantic coordinates, excluding sparse display padding"
+    )
+    MULTIPLE_WINDOWS = (
+        "inspect the same source coordinates under multiple declared weak and strong "
+        "percentile windows"
     )
 
 
@@ -154,6 +182,8 @@ class SemanticGate(Enum):
         "path_continuity",
         "decides how much signal remains connected to an admitted root",
         (
+            ImageQaMeasure.CANDIDATE_TRACE_PIXELS,
+            ImageQaMeasure.ROOTED_CANDIDATE_YIELD,
             ImageQaMeasure.TOTAL_TRACE_PIXELS,
             ImageQaMeasure.ROOTED_TRACE_PIXELS,
             ImageQaMeasure.UNROOTED_TRACE_PIXELS,
@@ -173,6 +203,7 @@ class SemanticGate(Enum):
         "decides which admitted root owns a path through crossings",
         (
             ImageQaMeasure.OWNERSHIP_CROSSOVER_COMPONENTS,
+            ImageQaMeasure.CANDIDATE_COMPONENT_OWNER_CARDINALITY,
             ImageQaMeasure.TOPOLOGY_PLAUSIBILITY,
         ),
     )
@@ -315,6 +346,9 @@ class ImageAnalysisQaPolicy:
         reference_evidence_text = "; ".join(
             rule.value for rule in ReferenceEvidenceRule
         )
+        visualization_rule_text = "; ".join(
+            rule.value for rule in ImageQaVisualizationRule
+        )
         gate_text = "; ".join(
             (
                 f"{gate.value} {gate.description}; measure "
@@ -330,6 +364,7 @@ class ImageAnalysisQaPolicy:
         )
         return (
             f"Before tuning, require that each precondition holds: {precondition_text}. "
+            f"For visual inspection: {visualization_rule_text}. "
             f"When a reference exists: {reference_evidence_text}. "
             "Classify the current-output "
             f"miss by stage: {miss_stage_text}. Then classify each residual miss: "
@@ -338,6 +373,9 @@ class ImageAnalysisQaPolicy:
             "strong percentile windows. Inspect missed source objects (including "
             "somata when they are the admitted roots) and faint processes without "
             "reclassifying amplified background as biology. "
+            "For every thin-structure miss, preserve a fixed-coordinate four-panel "
+            "view of raw signal, candidate skeleton, rooted result, and candidate-only "
+            "residual; this separates detection failure from post-detection loss. "
             "For source-assisted admission, enumerate source objects not mapped to "
             "accepted bodies (for example nuclei without a nearby accepted soma) "
             "and rank same-coordinate crops by nearby body-channel response/support. "
@@ -346,6 +384,10 @@ class ImageAnalysisQaPolicy:
             "accepted-body, and source-to-target match counts at identical coordinates; "
             "an added source object is a supported recovery only when it maps to a "
             "plausible target body rather than splitting an already admitted source. "
+            "Do not assume an admission threshold is monotone after object partitioning: "
+            "a stricter threshold can split a merged object and a permissive threshold "
+            "can merge neighbors, so inspect the spatial added/removed mask and source-to-"
+            "target matches for every threshold delta. "
             "Inspect the source channel (for example DAPI), target or process channel "
             "(for example FITC), response image, accepted-label overlay, bodies, and "
             "traces under the same multiple percentile windows; record the rejection "
@@ -360,6 +402,11 @@ class ImageAnalysisQaPolicy:
             "than an automatic replacement. Accept a recovery only when local signal "
             "support, "
             "connectivity, and topology evidence agree. "
+            "When signal is present in the current candidate skeleton but absent from the "
+            "rooted result, report candidate pixels, rooted-candidate yield, and owner "
+            "cardinality per connected component. A loss concentrated in components that "
+            "touch multiple owners implicates ownership or crossover resolution; lowering "
+            "the detection threshold cannot repair it. "
             "If a permissive setting helps the target dataset but fragments a reference "
             "image or adds unsupported structure, keep the conservative shared default "
             "and declare the permissive value only on the dataset or preset that needs it. "

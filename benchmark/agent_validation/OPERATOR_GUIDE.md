@@ -36,9 +36,14 @@ For each attempt:
 2. Attribute each current miss with nested masks: no accepted source/body is
    admission; permissive-candidate-only is detection; current-candidate-only is
    rooted connectivity; and an evidenced rooted identity discontinuity is
-   ownership. Ambiguous crossings remain ambiguous.
+   ownership. Preserve a fixed-coordinate four-panel view of raw signal,
+   candidate skeleton, rooted result, and candidate-only residual. Ambiguous
+   crossings remain ambiguous.
 3. Inspect raw data at the same coordinates under at least three declared
-   percentile windows, including weak and strong clipping.
+   percentile windows, including weak and strong clipping. For live Napari
+   inspection, use the route-global viewer intensity-window capability so the
+   percentiles come from real routed payload values at the selected semantic
+   coordinates, not sparse display padding.
 4. Compare raw, normalised, mask or ROI, overlay, and measurement evidence at
    those coordinates. If an external reference exists, apply the canonical
    reference-evidence rules before changing admission or continuity.
@@ -47,11 +52,18 @@ For each attempt:
    If a source object or body appears missing, vary source-object admission and
    target-body response in separate attempts, then compare source, accepted-body,
    and matched source-to-target counts at the same coordinates. Reject apparent
-   recoveries that only split an already admitted source object.
+   recoveries that only split an already admitted source object. Do not assume
+   object admission is monotone after partitioning: stricter thresholds can
+   split merged objects and permissive thresholds can merge neighbors, so
+   inspect the spatial added/removed mask for every threshold delta.
 6. For an unexplained miss, make one adjacent higher-sensitivity diagnostic
    attempt, subtract the accepted candidate mask, and rank the added connected
    components by raw-signal support and valid-root connectivity. The permissive
-   result is evidence; it is not automatically the replacement result.
+   result is evidence; it is not automatically the replacement result. If
+   signal is already in the current candidate skeleton but absent from the
+   rooted result, measure rooted-candidate yield and the number of owners
+   touching each candidate component. Multi-owner concentration implicates
+   ownership or crossover resolution, not candidate sensitivity.
 7. For proposed thin-structure endpoint continuation, require terminal-direction
    alignment and source-object/body exclusion in addition to a bounded,
    response-supported, single-owner path. Distance, ownership, and response alone

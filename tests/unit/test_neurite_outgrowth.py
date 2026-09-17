@@ -37,6 +37,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     _identify_cell_bodies_cellprofiler,
     _propagate_neurite_owner_regions,
     _repair_signal_supported_skeleton,
+    _seeded_candidate_components,
     _TopologyResult,
     count_neuronal_cell_bodies_metaxpress,
     neurite_outgrowth_metaxpress,
@@ -137,6 +138,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "intensity_above_local_background",
         "minimum_cell_growth_to_log_as_significant",
         "candidate_threshold_correction_factor",
+        "candidate_hysteresis_seed_correction_factor",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",
@@ -1064,6 +1066,50 @@ def test_outgrowth_settings_reject_invalid_candidate_threshold_correction_factor
         match="candidate_threshold_correction_factor must be > 0",
     ):
         settings.validate()
+
+
+@pytest.mark.parametrize("seed_factor", [0.0, -0.1, np.inf, np.nan])
+def test_outgrowth_settings_reject_invalid_hysteresis_seed_factor(seed_factor):
+    settings = MetaXpressOutgrowthSettings(
+        candidate_hysteresis_seed_correction_factor=seed_factor,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candidate_hysteresis_seed_correction_factor must be > 0",
+    ):
+        settings.validate()
+
+
+def test_outgrowth_settings_reject_seed_more_permissive_than_candidates():
+    settings = MetaXpressOutgrowthSettings(
+        candidate_threshold_correction_factor=0.25,
+        candidate_hysteresis_seed_correction_factor=0.20,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="seed_correction_factor must be >=",
+    ):
+        settings.validate()
+
+
+def test_seeded_candidate_components_keep_only_components_with_strict_seeds():
+    candidates = np.zeros((24, 32), dtype=bool)
+    candidates[4, 3:14] = True
+    candidates[12, 3:14] = True
+    candidates[20, 3:14] = True
+    seeds = np.zeros(candidates.shape, dtype=bool)
+    seeds[4, 8] = True
+    seeds[20, 8] = True
+    seeds[0, 0] = True
+
+    retained = _seeded_candidate_components(candidates, seeds)
+
+    assert np.all(retained[4, 3:14])
+    assert not np.any(retained[12, 3:14])
+    assert np.all(retained[20, 3:14])
+    assert not retained[0, 0]
 
 
 def test_overwide_nuclear_guided_foreground_is_not_a_cell_body():
