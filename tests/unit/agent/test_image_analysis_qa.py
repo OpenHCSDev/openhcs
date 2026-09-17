@@ -1,0 +1,74 @@
+from openhcs.agent.image_analysis_qa import (
+    CandidateRejectionReason,
+    ImageAnalysisQaPolicy,
+    RejectedCandidateObservation,
+    ResidualStructureDisposition,
+    ResidualStructureObservation,
+    RootedContinuityObservation,
+    SemanticGate,
+)
+
+
+def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
+    guidance = ImageAnalysisQaPolicy.repair_guidance()
+    for gate in SemanticGate:
+        assert gate.value in guidance
+        assert gate.description in guidance
+        for measure in gate.measures:
+            assert measure.value in guidance
+    for reason in CandidateRejectionReason:
+        assert reason.value in guidance
+    for disposition in ResidualStructureDisposition:
+        assert disposition.value in guidance
+    assert "nuclei without a nearby accepted soma" in guidance
+    assert "for example DAPI" in guidance
+    assert "accepted-label overlay" in guidance
+    assert "rejected parameter changes" in guidance
+
+
+def test_trace_growth_requires_more_root_connected_continuity() -> None:
+    baseline = RootedContinuityObservation(1, 20, 100, 80, 20, 0)
+    unsupported_growth = RootedContinuityObservation(1, 20, 120, 80, 40, 0)
+    rooted_growth = RootedContinuityObservation(1, 20, 120, 95, 25, 0)
+    assert not unsupported_growth.accepts_growth_from(baseline)
+    assert rooted_growth.accepts_growth_from(baseline)
+
+
+def test_rejected_candidates_are_ranked_by_local_signal_support() -> None:
+    candidates = (
+        RejectedCandidateObservation(
+            source_id=2,
+            coordinate=(20, 30),
+            nearby_signal_support=0.25,
+            reason=CandidateRejectionReason.RESPONSE,
+        ),
+        RejectedCandidateObservation(
+            source_id=1,
+            coordinate=(10, 15),
+            nearby_signal_support=0.8,
+            reason=CandidateRejectionReason.CONNECTIVITY,
+        ),
+    )
+    ranked = RejectedCandidateObservation.rank_by_signal_support(candidates)
+    assert tuple(candidate.source_id for candidate in ranked) == (1, 2)
+
+
+def test_residual_structures_are_ranked_before_threshold_changes() -> None:
+    structures = (
+        ResidualStructureObservation(
+            structure_id=4,
+            coordinate=(5, 6),
+            local_signal_support=0.4,
+            disposition=ResidualStructureDisposition.UNROOTED,
+            topology_plausible=True,
+        ),
+        ResidualStructureObservation(
+            structure_id=7,
+            coordinate=(8, 9),
+            local_signal_support=0.9,
+            disposition=ResidualStructureDisposition.UNOWNED,
+            topology_plausible=True,
+        ),
+    )
+    ranked = ResidualStructureObservation.rank_by_signal_support(structures)
+    assert tuple(structure.structure_id for structure in ranked) == (7, 4)
