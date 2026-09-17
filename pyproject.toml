@@ -319,6 +319,9 @@ openhcs-gui = "openhcs.pyqt_gui.__main__:main"
 [project.entry-points."napari.manifest"]
 openhcs = "openhcs:napari.yaml"
 
+[project.entry-points."openhcs.agent.capability_extensions"]
+benchmark = "benchmark.mcp_extension"
+
 [tool.setuptools]
 # Automatically find all packages under openhcs/
 zip-safe = false
