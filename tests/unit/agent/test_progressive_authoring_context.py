@@ -304,6 +304,12 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "blinded, spatially distributed representative set" in image_analysis
     assert "Tune only on the declared development subset" in image_analysis
     assert "Score held-out fields once" in image_analysis
+    assert "one explicit hypothesis" in image_analysis
+    assert "multiple simultaneous changes make repair quality unscoreable" in image_analysis
+    assert "same reflected signature and defaults" in image_analysis
+    assert "unregistered callable is not an OpenHCS pipeline result" in image_analysis
+    assert "Do not preprocess scientific inputs in an external script" in image_analysis
+    assert "behind the MCP surface" in image_analysis
     assert "control ordering remain stable" in image_analysis
     assert "Escalate rather than declare success" in image_analysis
     assert "unexplained tile/quadrant drift" in image_analysis
