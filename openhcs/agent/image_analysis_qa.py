@@ -252,7 +252,8 @@ class ImageAnalysisQaPolicy:
             disposition.value for disposition in ResidualStructureDisposition
         )
         return (
-            f"Before tuning, require {precondition_text}. Classify the current-output "
+            f"Before tuning, require that each precondition holds: {precondition_text}. "
+            "Classify the current-output "
             f"miss by stage: {miss_stage_text}. Then classify each residual miss: "
             f"{gate_text}. Sweep exactly one declaration-owned gate per attempt. "
             "Compare revisions at identical coordinates under declared weak and "
