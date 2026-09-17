@@ -2598,6 +2598,70 @@ def test_measure_object_intensity_measures_3d_objects_as_single_volume_domain():
     assert measurements[0].max_intensity_z == 2.0
 
 
+def test_measure_object_intensity_honors_3d_mask_and_empty_object_semantics():
+    from skimage.measure import label
+
+    from openhcs.processing.backends.cellprofiler.intensity import (
+        measure_object_intensity,
+    )
+
+    image = np.zeros((11, 11, 20), dtype=np.float64)
+    z, y, x = np.mgrid[-5:6, -5:6, -5:15]
+    image[z**2 + y**2 + x**2 <= 25] = 0.5
+    image[z**2 + y**2 + x**2 <= 16] = 0.25
+    image[z**2 + y**2 + x**2 == 0] = 1.0
+    z, y, x = np.mgrid[-5:6, -5:6, -15:5]
+    image[z**2 + y**2 + x**2 <= 9] = 0.5
+    image[z**2 + y**2 + x**2 <= 4] = 0.75
+    image[z**2 + y**2 + x**2 == 0] = 1.0
+    labels = label(image > 0).astype(np.int32, copy=False)
+    mask = np.ones(image.shape, dtype=bool)
+    mask[:, :, 11:] = False
+    payload = MaskedImagePayload(data=image, mask=mask)
+
+    output, measurements = measure_object_intensity(
+        payload,
+        ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(labels=labels),
+            domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
+        ),
+        dtype_config=DtypeConfig(),
+    )
+
+    assert output is payload
+    expected_by_field = {
+        "integrated_intensity": (194.0, 0.0),
+        "mean_intensity": (0.37669902912621361, np.nan),
+        "std_intensity": (0.12786816898600722, np.nan),
+        "min_intensity": (0.25, 0.0),
+        "max_intensity": (1.0, 0.0),
+        "integrated_intensity_edge": (111.0, 0.0),
+        "mean_intensity_edge": (0.5, np.nan),
+        "std_intensity_edge": (0.0, np.nan),
+        "min_intensity_edge": (0.5, 0.0),
+        "max_intensity_edge": (0.5, 0.0),
+        "mass_displacement": (0.0, np.nan),
+        "lower_quartile_intensity": (0.25, 0.0),
+        "median_intensity": (0.5, 0.0),
+        "mad_intensity": (0.0, 0.0),
+        "upper_quartile_intensity": (0.5, 0.0),
+        "center_mass_intensity_x": (5.0, np.nan),
+        "center_mass_intensity_y": (5.0, np.nan),
+        "center_mass_intensity_z": (5.0, np.nan),
+        "max_intensity_x": (5.0, 5.0),
+        "max_intensity_y": (5.0, 5.0),
+        "max_intensity_z": (5.0, 0.0),
+    }
+    for field_name, expected in expected_by_field.items():
+        np.testing.assert_allclose(
+            tuple(getattr(measurement, field_name) for measurement in measurements),
+            expected,
+            rtol=1e-12,
+            atol=1e-12,
+            equal_nan=True,
+        )
+
+
 def test_measure_object_intensity_preserves_sparse_object_ids_without_dense_lookup():
     from openhcs.processing.backends.cellprofiler.intensity import (
         measure_object_intensity,

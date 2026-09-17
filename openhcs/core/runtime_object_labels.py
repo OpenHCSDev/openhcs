@@ -324,6 +324,10 @@ class ObjectLabelValue(
     def __array__(self, dtype: Any | None = None) -> Any:
         return np.asarray(self.labels, dtype=dtype)
 
+    def image_data(self) -> np.ndarray:
+        """Return dense categorical pixels for image-domain consumers."""
+        return object_label_dense_array(self)
+
     def array_payload_data(self) -> Any:
         return self.labels
 

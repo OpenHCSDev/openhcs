@@ -19,6 +19,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementColumnarRowsView,
+    MeasurementRowOwnership,
     MeasurementRowsAxisProjection,
     columnar_row_values,
     measurement_row_object_name,
@@ -42,9 +43,20 @@ from openhcs.core.process_local_cache import (
     identity_owner_tuples_match,
     named_identity_owner_tuples_match,
 )
-from openhcs.core.runtime_measurements import MeasurementRowAxisField, MeasurementSubject, MeasurementScope, ObjectLabelMeasurementValues
-from openhcs.core.runtime_object_label_domains import ObjectLabelPlaneDomainStrategy, dense_object_label_id_domain
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxisProjector, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_measurements import (
+    MeasurementRowAxisField,
+    MeasurementSubject,
+    MeasurementScope,
+    ObjectLabelMeasurementValues,
+)
+from openhcs.core.runtime_object_label_domains import (
+    ObjectLabelPlaneDomainStrategy,
+    dense_object_label_id_domain,
+)
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxisProjector,
+    RuntimePlaneAxisValueProjection,
+)
 from openhcs.core.runtime_tabular_values import measurement_row_mapping
 from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
@@ -158,7 +170,21 @@ class MeasurementTableUnion:
 
         return MeasurementTable(
             name=self.name,
-            rows=self.rows(),
+            rows=ConcatenatedColumnarRows(
+                tuple(
+                    cast(
+                        ColumnarRows,
+                        MeasurementRowOwnership(
+                            object_name=table.subject.object_name,
+                            source_image_name=(
+                                table.source_image_name
+                                or table.subject.source_image_name
+                            ),
+                        ).annotate_rows(table.rows),
+                    )
+                    for table in self.tables
+                )
+            ),
             subject=MeasurementSubject(MeasurementScope.ARTIFACT, self.name),
             source_provenance=self.source_metadata().source_provenance,
         )
@@ -188,9 +214,9 @@ class MeasurementTableUnion:
             )
 
         table_domains = tuple(
-            MeasurementRowsAxisProjection.from_rows(
-                table.rows
-            ).present_axis_values(slice_axis.value)
+            MeasurementRowsAxisProjection.from_rows(table.rows).present_axis_values(
+                slice_axis.value
+            )
             for table in self.tables
         )
         declared_plane_counts = tuple(
@@ -205,9 +231,7 @@ class MeasurementTableUnion:
                 f"source-plane counts {distinct_plane_counts!r}."
             )
         axis_size = (
-            distinct_plane_counts[0]
-            if distinct_plane_counts
-            else max(axis_domain) + 1
+            distinct_plane_counts[0] if distinct_plane_counts else max(axis_domain) + 1
         )
         if max(axis_domain) >= axis_size:
             raise ValueError(
@@ -255,8 +279,7 @@ class MeasurementTableUnion:
                 plane_metadata.append(
                     ImagePayloadMetadata.compose(
                         tuple(
-                            metadata.payload_with((0,))
-                            for metadata in source_metadata
+                            metadata.payload_with((0,)) for metadata in source_metadata
                         ),
                         mode=ImagePayloadMetadataCompositionMode.BUNDLE,
                     ).without_leading_plane_axis()
@@ -274,8 +297,7 @@ class MeasurementTableUnion:
         """Return one exact row-axis domain, or ``None`` for an axisless union."""
 
         projections = tuple(
-            MeasurementRowsAxisProjection.from_rows(table.rows)
-            for table in self.tables
+            MeasurementRowsAxisProjection.from_rows(table.rows) for table in self.tables
         )
         declarations = tuple(
             projection.declares_axis_field(axis)
@@ -301,15 +323,8 @@ class MeasurementTableUnion:
                     f"axisless {axis.value!r} row domains; table {table.name!r} "
                     "declares no concrete axis value."
                 )
-        return tuple(
-            sorted(
-                {
-                    value
-                    for domain in domains
-                    for value in domain
-                }
-            )
-        )
+        return tuple(sorted({value for domain in domains for value in domain}))
+
 
 @dataclass(frozen=True, slots=True)
 class RuntimeArtifactQueryContext:
@@ -359,6 +374,7 @@ class RuntimeArtifactQueryContext:
                 f"'{self.axis_id}': {runtime_record_locations(records)}."
             )
         return records[0]
+
 
 def runtime_record_locations(records: Sequence[StoredRuntimeValue]) -> tuple[str, ...]:
     """Return compact runtime-record identities without formatting payload data."""
@@ -504,9 +520,7 @@ class MeasurementTableAxisProjection(MeasurementAxisValueProjection):
         rows = target_table.rows
         if self.field_name not in {field.name for field in rows.fields}:
             return target_table
-        axis_mask = self.mask(
-            columnar_row_values(rows, self.field_name)
-        )
+        axis_mask = self.mask(columnar_row_values(rows, self.field_name))
         if bool(np.all(axis_mask)):
             return target_table
         return target_table.replace_fields(
@@ -537,6 +551,7 @@ class MeasurementTableAxisProjection(MeasurementAxisValueProjection):
                 "projection was not constructed with one."
             )
         return target_table
+
 
 def measurement_table_slice_indices(table: MeasurementTable) -> set[int]:
     """Return runtime slice indexes declared by one measurement table."""
@@ -605,9 +620,8 @@ class MeasurementLabelSliceAxisSelection:
         unexpected_values = tuple(
             value
             for value in observed_values
-            if value not in (
-                full_axis_values if selects_one_plane else self.row_axis_values
-            )
+            if value
+            not in (full_axis_values if selects_one_plane else self.row_axis_values)
         )
         if missing_values or unexpected_values:
             raise ValueError(
@@ -672,8 +686,7 @@ class MeasurementLabelSliceFeatureQuery(MeasurementTableFeatureQuery):
 
         label_planes = self.label_planes(labels)
         label_domains = tuple(
-            dense_object_label_id_domain(label_plane)
-            for label_plane in label_planes
+            dense_object_label_id_domain(label_plane) for label_plane in label_planes
         )
         if not any(label_domains):
             return tuple(
@@ -774,11 +787,7 @@ class MeasurementLabelSliceFeatureQuery(MeasurementTableFeatureQuery):
             values_by_axis,
         )
         return tuple(
-            (
-                values_by_axis[axis_value]
-                if axis_value in values_by_axis
-                else ({}, [])
-            )
+            (values_by_axis[axis_value] if axis_value in values_by_axis else ({}, []))
             for axis_value in axis_selection.row_axis_values
         )
 
@@ -1031,6 +1040,7 @@ class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
                 values_by_object,
             ),
         )[2]
+
 
 def _merge_measurement_value_index(
     target: MeasurementValueIndexResult,

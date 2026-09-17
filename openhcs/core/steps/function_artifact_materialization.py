@@ -1137,6 +1137,22 @@ def materialized_artifact_output_paths(
     return tuple(
         Path(output.path)
         for materialization in runtime_artifact_materializations(plan, context)
+        if materialization.spec.participates_in_persistent_materialization()
+        for output in materialization.outputs(plan, context)
+    )
+
+
+def runtime_export_artifact_output_paths(
+    plan: CompiledStepPlan,
+    context: "ProcessingContext",
+) -> tuple[Path, ...]:
+    """Derive exact pipeline-declared export paths from runtime materializations."""
+
+    if not plan.runtime_artifact_materialization.has_persistent_target:
+        return ()
+    return tuple(
+        Path(output.path)
+        for materialization in runtime_artifact_materializations(plan, context)
         if materialization.spec.participates_in_runtime_export_observation()
         for output in materialization.outputs(plan, context)
     )
@@ -1179,7 +1195,7 @@ def observed_materialized_artifact_locations_by_address(
         context,
         records,
     ):
-        if not materialization.spec.participates_in_runtime_export_observation():
+        if not materialization.spec.participates_in_persistent_materialization():
             continue
         address = RuntimeArtifactAddress.from_record(materialization.record)
         locations_by_address[address] = tuple(

@@ -972,11 +972,6 @@ class PipelineOrchestrator:
             previous_source_bindings is not None
             and previous_source_bindings != current_source_bindings
         )
-        if source_bindings_changed and self.state is OrchestratorState.EXECUTING:
-            raise RuntimeError(
-                "Source bindings cannot change while the plate is executing."
-            )
-
         # Temporarily disable auto-sync to prevent recursion
         self._auto_sync_enabled = False
         try:

@@ -55,6 +55,59 @@ def test_register_rejects_multi_declaration_source_without_partial_publication(
     assert "first_probe" not in vars(custom_functions)
 
 
+@pytest.mark.parametrize(
+    "decorator",
+    [
+        "numpy",
+        "numpy(contract=ProcessingContract.PURE_2D)",
+        "cpu(contract=ProcessingContract.PURE_2D)",
+        "decorators.numpy(contract=ProcessingContract.PURE_2D)",
+    ],
+)
+def test_custom_registration_uses_callable_contract_not_decorator_spelling(
+    isolated_custom_runtime,
+    decorator,
+) -> None:
+    from openhcs.core.callable_contract import CallableContract
+    from openhcs.processing.backends.lib_registry.unified_registry import (
+        ProcessingContract,
+    )
+
+    source = (
+        "from openhcs.core.memory.decorators import numpy as cpu\n"
+        "from openhcs.core.memory import decorators\n"
+        "from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract\n"
+        f"@{decorator}\ndef contract_probe(image):\n    return image + 1\n"
+    )
+    [function] = CustomFunctionManager().register_from_code(source)
+    contract = CallableContract.from_callable(function)
+    assert contract.input_memory_type == MemoryType.NUMPY.value
+    assert contract.output_memory_type == MemoryType.NUMPY.value
+    if "contract=" in decorator:
+        assert contract.declared_processing_contract == ProcessingContract.PURE_2D.name
+    assert np.array_equal(function(np.asarray([[3]])), [[4]])
+    assert (isolated_custom_runtime / "contract_probe.py").read_text() == source
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "def undecorated_probe(image):\n    return image\n",
+        "def numpy(function):\n    return function\n@numpy\ndef fake_probe(image):\n    return image\n",
+        "from openhcs.core.memory.decorators import numpy\nclass Container:\n    def numpy(image):\n        return image\n",
+        "@numpy\nasync def async_probe(image):\n    return image\n",
+    ],
+)
+def test_custom_registration_rejects_missing_real_declaration_without_publication(
+    isolated_custom_runtime,
+    source,
+) -> None:
+    with pytest.raises(ValidationError, match="exactly one decorated"):
+        CustomFunctionManager().register_from_code(source)
+    assert CustomFunctionRuntimeRegistry.metadata_by_name() == {}
+    assert not tuple(isolated_custom_runtime.glob("*.py"))
+
+
 def test_invalid_update_preserves_file_and_runtime_identity(
     isolated_custom_runtime,
 ) -> None:

@@ -4149,6 +4149,7 @@ def test_compiled_group_by_preserves_dynamic_execution_scope():
     assert planner.plans[3].execution_group_scope == PathPlannerGroupScope.dynamic(
         AllComponents.CHANNEL
     )
+    assert planner.plans[3].analysis_results_dir == "/data/plate1_generated/analysis"
 
 
 def test_artifact_input_plan_requires_an_exact_producer_kind():

@@ -1,5 +1,6 @@
 import json
 from functools import partial
+from multiprocessing.shared_memory import SharedMemory
 
 import numpy as np
 import pytest
@@ -29,7 +30,7 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamSourceIdentity,
 )
 from zmqruntime.config import TransportMode
-from zmqruntime.viewer_protocol import ViewerTransportEndpoint
+from zmqruntime.viewer_protocol import ViewerTransportEndpoint, ViewerWireField
 
 import openhcs  # noqa: F401
 from openhcs.constants.constants import AllComponents, VariableComponents
@@ -42,15 +43,24 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     ImagePayloadMetadata,
 )
+from openhcs.core.runtime_object_label_building import (
+    SourceImageObjectLabelBuildRequest,
+)
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
     ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
+    ObjectLabelRepresentation,
+    ObjectLabelSet,
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+)
+from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import (
@@ -60,12 +70,10 @@ from openhcs.core.source_image_provenance import (
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
+    SourceVoxelSpacing,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
-from openhcs.processing.backends.analysis.consolidate_analysis_results import (
-    analysis_file_path_is_included,
-)
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
@@ -77,12 +85,14 @@ from openhcs.processing.materialization import (
     csv_only,
     json_materializer,
     json_only,
-    materialization_outputs,
     materialize,
-    materialize_with_result,
+    materialization_outputs,
     tabular_field_names_from_materialization,
     text_only,
     tiff_stack,
+)
+from openhcs.processing.backends.analysis.consolidate_analysis_results import (
+    analysis_file_path_is_included,
 )
 from openhcs.processing.materialization.core import (
     MaterializationInputItem,
@@ -106,21 +116,140 @@ def _memory_materialize(spec, data, path, filemanager):
     )
 
 
-def test_materialization_result_reports_exact_backend_writes():
+def test_retained_full_stack_stream_preserves_absolute_calibration_and_integer_pixels():
+    labels = np.zeros((2, 8, 9), dtype=np.int32)
+    labels[0, 2:4, 3:5] = 70001
+    labels[1, 6, 7] = 2
+    spacing = SourceVoxelSpacing((1.3556, 1.3556))
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        source_voxel_spacing=spacing,
+        source_spatial_domain=SourceSpatialDomain(
+            origin_yx=(0, 0), source_shape_yx=(8, 9)
+        ),
+        source_component_metadata={
+            "well": "A01",
+            "site": 1,
+            "z_index": 1,
+            "timepoint": 1,
+        },
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=(
+                "/input/A01_s001_w1_z001_t001.tif",
+                "/input/A01_s001_w2_z001_t001.tif",
+            ),
+            component_metadata=tuple(
+                {
+                    "well": "A01",
+                    "site": 1,
+                    "channel": channel,
+                    "z_index": 1,
+                    "timepoint": 1,
+                }
+                for channel in (1, 2)
+            ),
+        ),
+    )
+    payload = SourceImageObjectLabelBuildRequest(
+        image=metadata.payload_with(np.zeros_like(labels)),
+        labels=labels,
+        plane_projection=RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
+        ),
+    ).payload()
+    filemanager = FileManager({"memory": MemoryStorageBackend()})
+    outputs = materialization_outputs(
+        MaterializationSpec(
+            ImageFileOptions(
+                filename_suffix=".labels.tif",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            )
+        ),
+        payload,
+        "/analysis/A01_labels",
+        filemanager,
+    )
+    assert len(outputs) == 1
+    output = outputs[0]
+    assert output.variable_components == ()
+    assert output.metadata.source_voxel_spacing == spacing
+    np.testing.assert_array_equal(output.content, labels)
+    batches = _viewer_stream_backend_kwargs().filemanager_batches(outputs)
+    assert len(batches) == 1
+    projected_outputs, kwargs = batches[0]
+    assert projected_outputs == outputs
+    request = kwargs["stream_request"]
+    assert request.source.item_fields["plane_component_values"] == {
+        "channel": ["1", "2"]
+    }
+    backend = NapariStreamingBackend()
+    try:
+        batch = StreamingBatchMessageBuilder.build(
+            backend,
+            StreamingBatchMessageRequest(
+                data_list=[output.content],
+                file_paths=[output.path],
+                stream_request=request,
+                component_names_request=backend.component_names_request(request),
+                display_payload_extra=backend.display_payload_extra(request),
+            ),
+        )
+        item = batch.batch_images[0]
+        memory = SharedMemory(name=item["shm_name"])
+        try:
+            transmitted = np.ndarray(
+                item["shape"], dtype=item["dtype"], buffer=memory.buf
+            ).copy()
+        finally:
+            memory.close()
+        assert transmitted.dtype == labels.dtype
+        np.testing.assert_array_equal(transmitted, labels)
+        assert output.metadata.source_voxel_spacing == spacing
+        assert payload.metadata.source_voxel_spacing == spacing
+    finally:
+        backend.cleanup()
+
+
+def test_image_file_materialization_densifies_sparse_named_object_labels() -> None:
+    labels = SparseIJVLabelRows(
+        np.array(
+            (
+                (1, 2, 7),
+                (3, 4, 9),
+            ),
+            dtype=np.int32,
+        )
+    )
+    payload = ObjectLabelSet(
+        name="Worms",
+        variant_data=ObjectLabelVariantData(labels=labels),
+        representation=ObjectLabelRepresentation.SPARSE_IJV,
+        source_spatial_domain=SourceSpatialDomain(
+            origin_yx=(0, 0),
+            source_shape_yx=(6, 8),
+        ),
+    )
     filemanager = FileManager({"memory": MemoryStorageBackend()})
 
-    result = materialize_with_result(
-        json_only(),
-        {"count": 3},
-        "/analysis/counts",
+    (output,) = materialization_outputs(
+        MaterializationSpec(
+            ImageFileOptions(
+                filename_suffix=".labels.tif",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            )
+        ),
+        payload,
+        "/analysis/A01_worms",
         filemanager,
-        ["memory"],
+        artifact_source_identity=SourceImageIdentity(
+            path="/input/A01_s001_w1_z001_t001.tif",
+        ),
     )
 
-    assert result.primary_path == "/analysis/counts.json"
-    assert tuple(
-        (saved.backend, saved.output.path) for saved in result.saved_outputs
-    ) == (("memory", "/analysis/counts.json"),)
+    assert isinstance(output.content, np.ndarray)
+    assert output.content.shape == (6, 8)
+    assert output.content[1, 2] == 7
+    assert output.content[3, 4] == 9
 
 
 def test_declared_path_selection_preserves_outputs_without_rendering_rois(monkeypatch):
@@ -293,35 +422,6 @@ def _viewer_stream_backend_kwargs_for_display(display_config):
         ),
     )
     return ViewerStreamBackendCallKwargs(ViewerStreamBackendKwargs(request))
-
-
-def test_viewer_backend_scopes_axes_to_concrete_writer_output_metadata() -> None:
-    backend_kwargs = _viewer_stream_backend_kwargs()
-    output = Output(
-        path="/tmp/A01_z_index-1_timepoint-1_cell_bodies_step4.labels.tif",
-        content=np.zeros((8, 8), dtype=np.uint16),
-        metadata=ImagePayloadMetadata(
-            source_component_metadata={
-                "well": "A01",
-                "z_index": 1,
-                "timepoint": 1,
-            },
-            source_spatial_domain=SourceSpatialDomain(source_shape_yx=(8, 8)),
-        ),
-    )
-
-    [(_outputs, kwargs)] = backend_kwargs.filemanager_batches((output,))
-    stream_request = kwargs["stream_request"]
-
-    assert "channel" not in stream_request.display_config.COMPONENT_ORDER
-    assert stream_request.source.metadata.component_metadata_for_item(
-        output.path,
-        0,
-    ) == {
-        "well": "A01",
-        "z_index": 1,
-        "timepoint": 1,
-    }
 
 
 def _stream_component_metadata(saved_item):
@@ -1177,6 +1277,13 @@ def test_roi_viewer_stream_preserves_source_spatial_domain() -> None:
     assert stream_source.item_fields == {
         "spatial_origin_yx": [10, 20],
         "source_spatial_shape_yx": [100, 200],
+        ViewerWireField.IMAGE_METADATA.value: ImagePayloadMetadata(
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(10, 20),
+                source_shape_yx=(100, 200),
+                value_name="ROI materialization source image",
+            )
+        ).to_viewer_image_metadata(),
     }
 
 
@@ -1411,6 +1518,14 @@ def test_roi_streaming_maps_singleton_plane_from_exact_output_component() -> Non
         "plane_component_values": {"site": ["1"]},
         "spatial_origin_yx": [0, 0],
         "source_spatial_shape_yx": [8, 8],
+        ViewerWireField.IMAGE_METADATA.value: ImagePayloadMetadata(
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(0, 0),
+                source_shape_yx=(8, 8),
+                value_name="ROI materialization source image",
+            ),
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        ).to_viewer_image_metadata(),
     }
 
     napari_backend = NapariStreamingBackend()

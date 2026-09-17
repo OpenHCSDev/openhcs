@@ -291,6 +291,29 @@ def test_installed_wheel_integration_uses_headless_qt_platform() -> None:
     assert "MPLBACKEND: Agg" in wheel_job
 
 
+def test_official30_ci_runs_one_canonical_value_comparison_suite() -> None:
+    workflow = yaml.safe_load(
+        (WORKFLOW_ROOT / "integration-tests.yml").read_text(encoding="utf-8")
+    )
+    job = workflow["jobs"]["official30-headless-parity"]
+    assert job["env"]["OPENHCS_CP_NATIVE_REFERENCE_ROOT"].endswith(
+        "/benchmark/native_refs/official30_scoped_rows"
+    )
+    assert job["env"]["OPENHCS_REFERENCE_EXPORT_PIPELINES_ROOT"].endswith(
+        "/benchmark/reference_exports/official30_value_completion_20260914"
+    )
+    parity_step = next(
+        step
+        for step in job["steps"]
+        if step.get("name") == "Run all 30 value-comparison cases over ZMQ"
+    )
+    assert (
+        "test_official30_compile_execute_and_match_native_references_over_zmq"
+        in parity_step["run"]
+    )
+    assert parity_step["run"].count("test_cellprofiler_official30_zmq.py::") == 1
+
+
 def test_unit_gate_supplies_native_opengl_for_real_napari_images() -> None:
     workflow = yaml.safe_load(
         (WORKFLOW_ROOT / "integration-tests.yml").read_text(encoding="utf-8")

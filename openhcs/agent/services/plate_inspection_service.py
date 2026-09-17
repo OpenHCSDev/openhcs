@@ -1021,6 +1021,10 @@ class PlateInspectionService:
         """Resolve and validate a local plate path without creating a handler."""
         return self._resolve_plate_path(plate_path)
 
+    def resolve_readable_path(self, path: str) -> Path:
+        """Resolve a readable resource through this service's injected policy."""
+        return self._path_policy.assert_readable(path)
+
     def _open_context(
         self,
         request: PlatePathInspectionRequest,
@@ -1068,7 +1072,7 @@ class PlateInspectionService:
         self, plate_path: str
     ) -> tuple[Path | None, tuple[AgentError, ...]]:
         try:
-            resolved_path = self._path_policy.assert_readable(plate_path)
+            resolved_path = self.resolve_readable_path(plate_path)
             if not resolved_path.is_dir():
                 return None, (
                     AgentError(

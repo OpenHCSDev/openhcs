@@ -203,7 +203,7 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
     )
     monkeypatch.setattr(
         "openhcs.core.steps.function_artifact_materialization."
-        "materialized_artifact_output_paths",
+        "runtime_export_artifact_output_paths",
         lambda _plan, _context: (contracted_output,),
     )
 
@@ -484,7 +484,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
 
     monkeypatch.setattr(
         "openhcs.core.steps.function_artifact_materialization."
-        "materialized_artifact_output_paths",
+        "runtime_export_artifact_output_paths",
         output_paths,
     )
 

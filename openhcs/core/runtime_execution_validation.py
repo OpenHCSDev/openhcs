@@ -273,7 +273,7 @@ class RuntimeArtifactExecutionObservation:
         execution_contexts: Mapping[str, ProcessingContext],
     ) -> "RuntimeArtifactExecutionObservation":
         from openhcs.core.steps.function_artifact_materialization import (
-            materialized_artifact_output_paths,
+            runtime_export_artifact_output_paths,
         )
 
         identity_policies = frozenset(
@@ -293,7 +293,7 @@ class RuntimeArtifactExecutionObservation:
                     for context in execution_contexts.values()
                     for plan in context.step_plans.values()
                     if plan.owns_runtime_outputs
-                    for path in materialized_artifact_output_paths(plan, context)
+                    for path in runtime_export_artifact_output_paths(plan, context)
                 )
             ),
             source_image_set_identity_policy=next(

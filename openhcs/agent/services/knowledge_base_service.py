@@ -16,7 +16,6 @@ from openhcs.agent.knowledge_manifest import (
     DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH,
     KnowledgeBaseManifestField,
     default_repo_root,
-    packaged_knowledge_base_root,
     python_source_root,
 )
 from openhcs.agent.dto.common import (
@@ -39,7 +38,6 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseSectionSummary,
     KnowledgeBaseSourceSpan,
 )
-from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.config_reference_service import (
     expand_config_reference_directives,
 )
@@ -354,50 +352,6 @@ class _ParsedDocument:
 
 
 @dataclass(frozen=True, slots=True)
-class KnowledgeBaseRootPolicy:
-    path_policy: AgentPathPolicy
-    document_specs: tuple[KnowledgeBaseDocumentSpec, ...]
-
-    def repo_root(self) -> Path:
-        candidate_roots = tuple(
-            root.resolve() for root in self.path_policy.readable_roots.roots
-        )
-        if not candidate_roots:
-            raise ValueError("Knowledge base requires at least one readable root")
-        default_root = default_repo_root().resolve()
-        packaged_root = packaged_knowledge_base_root().resolve()
-        if default_root == packaged_root:
-            candidate_roots = tuple(dict.fromkeys((default_root, *candidate_roots)))
-        elif default_root not in candidate_roots and any(
-            default_root == candidate_root
-            or default_root.is_relative_to(candidate_root)
-            for candidate_root in candidate_roots
-        ):
-            candidate_roots = (*candidate_roots, default_root)
-        canonical_root = self._canonical_document_root(candidate_roots)
-        if canonical_root is not None:
-            return canonical_root
-        return candidate_roots[0]
-
-    def _canonical_document_root(
-        self,
-        candidate_roots: tuple[Path, ...],
-    ) -> Path | None:
-        canonical_document = self.document_specs[0].document
-        for candidate_root in candidate_roots:
-            try:
-                source_path = KnowledgeBaseService.resolve_source_path(
-                    candidate_root,
-                    canonical_document,
-                )
-            except ValueError:
-                continue
-            if source_path.is_file():
-                return candidate_root
-        return None
-
-
-@dataclass(frozen=True, slots=True)
 class KnowledgeBaseSearchQuery:
     raw: str
     normalized: str
@@ -547,7 +501,7 @@ class KnowledgeBaseService:
         repo_root: Path | None = None,
         document_specs: tuple[KnowledgeBaseDocumentSpec, ...] | None = None,
     ) -> None:
-        self._repo_root = (repo_root or _default_repo_root()).resolve()
+        self._repo_root = (repo_root or default_repo_root()).resolve()
         document_specs = document_specs or default_document_specs()
         self._document_specs = document_specs
         self._specs_by_id = {spec.document.document_id: spec for spec in document_specs}
@@ -558,24 +512,8 @@ class KnowledgeBaseService:
             raise ValueError("Duplicate knowledge-base document source path")
 
     @classmethod
-    def from_path_policy(
-        cls,
-        path_policy: AgentPathPolicy,
-        *,
-        document_specs: tuple[KnowledgeBaseDocumentSpec, ...] | None = None,
-    ) -> "KnowledgeBaseService":
-        document_specs = document_specs or default_document_specs()
-        return cls(
-            repo_root=KnowledgeBaseRootPolicy(
-                path_policy=path_policy,
-                document_specs=document_specs,
-            ).repo_root(),
-            document_specs=document_specs,
-        )
-
-    @classmethod
     def default_source_paths(cls) -> tuple[Path, ...]:
-        repo_root = _default_repo_root()
+        repo_root = default_repo_root()
         return tuple(
             path
             for path in (
@@ -1431,10 +1369,6 @@ _RST_UNDERLINE_LEVELS = {
     '"': 5,
     "'": 6,
 }
-
-
-def _default_repo_root() -> Path:
-    return default_repo_root()
 
 
 def _official30_public_source(

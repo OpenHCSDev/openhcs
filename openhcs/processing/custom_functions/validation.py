@@ -11,15 +11,12 @@ exec(). Custom functions execute with full Python privileges.
 
 import ast
 import inspect
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable
 
-from arraybridge import MemoryContractAttribute, MemoryType
+from arraybridge import MemoryContractAttribute
 
 from openhcs.core.callable_contract import CallableMetadata
-
-
-MEMORY_DECORATOR_NAMES = frozenset(memory_type.value for memory_type in MemoryType)
 
 
 class ValidationError(Exception):
@@ -77,9 +74,16 @@ def validate_syntax(code: str) -> ValidationResult:
         ValidationResult with syntax validation results
     """
     try:
-        ast.parse(code)
+        tree = ast.parse(code)
         return ValidationResult(
-            is_valid=True, errors=[], warnings=[], function_names=[]
+            is_valid=True,
+            errors=[],
+            warnings=[],
+            function_names=[
+                declaration.name
+                for declaration in tree.body
+                if isinstance(declaration, ast.FunctionDef)
+            ],
         )
     except SyntaxError as e:
         error_msg = f"Syntax error: {e.msg}"
@@ -148,75 +152,6 @@ def validate_imports(code: str) -> ValidationResult:
     is_valid = len(errors) == 0
     return ValidationResult(
         is_valid=is_valid, errors=errors, warnings=warnings, function_names=[]
-    )
-
-
-def validate_decorator(code: str) -> ValidationResult:
-    """
-    Validate that at least one function has a memory type decorator.
-
-    Args:
-        code: Python code string to validate
-
-    Returns:
-        ValidationResult with decorator validation results
-    """
-    errors: list[str] = []
-    warnings: list[str] = []
-    function_names: list[str] = []
-
-    try:
-        tree = ast.parse(code)
-    except SyntaxError:
-        # Syntax errors will be caught by validate_syntax
-        return ValidationResult(
-            is_valid=True, errors=[], warnings=[], function_names=[]
-        )
-
-    # Find all function definitions
-    functions_with_decorators: list[str] = []
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef):
-            function_names.append(node.name)
-
-            # Check if function has memory type decorator
-            has_memory_decorator = False
-            for decorator in node.decorator_list:
-                # Handle simple decorator: @numpy
-                if isinstance(decorator, ast.Name):
-                    if decorator.id in MEMORY_DECORATOR_NAMES:
-                        has_memory_decorator = True
-                        functions_with_decorators.append(node.name)
-                        break
-
-                # Handle attribute decorator: @decorators.numpy
-                elif isinstance(decorator, ast.Attribute):
-                    if decorator.attr in MEMORY_DECORATOR_NAMES:
-                        has_memory_decorator = True
-                        functions_with_decorators.append(node.name)
-                        break
-
-            if not has_memory_decorator and not node.name.startswith("_"):
-                warnings.append(
-                    f"Function '{node.name}' lacks memory type decorator. "
-                    "Must be decorated with one of: "
-                    + ", ".join(f"@{name}" for name in MEMORY_DECORATOR_NAMES)
-                )
-
-    if not functions_with_decorators:
-        errors.append(
-            "No valid functions found with memory type decorators. "
-            "Functions must be decorated with one of: "
-            + ", ".join(f"@{name}" for name in MEMORY_DECORATOR_NAMES)
-        )
-
-    is_valid = len(errors) == 0
-    return ValidationResult(
-        is_valid=is_valid,
-        errors=errors,
-        warnings=warnings,
-        function_names=function_names,
     )
 
 
@@ -305,8 +240,9 @@ def validate_code(code: str) -> ValidationResult:
     """
     Run all code validations before exec().
 
-    Performs syntax, import, and decorator validation in sequence.
-    Returns at first validation failure.
+    Performs syntax and import validation and identifies source declarations.
+    Memory and processing semantics are checked on the executed callable by
+    CustomFunctionManager, not inferred from decorator names or syntax.
 
     Args:
         code: Python code string to validate
@@ -315,21 +251,16 @@ def validate_code(code: str) -> ValidationResult:
         ValidationResult with combined validation results
     """
     # Validate syntax first
-    result = validate_syntax(code)
-    if not result.is_valid:
-        return result
+    syntax_result = validate_syntax(code)
+    if not syntax_result.is_valid:
+        return syntax_result
 
     # Validate imports
     result = validate_imports(code)
     if not result.is_valid:
         return result
 
-    # Validate decorators
-    result = validate_decorator(code)
-    if not result.is_valid:
-        return result
-
-    return result
+    return replace(result, function_names=syntax_result.function_names)
 
 
 def validate_function(func: Callable) -> ValidationResult:
