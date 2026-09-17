@@ -492,6 +492,8 @@ class NativeReferenceArtifactProfile:
 
     table_count: int
     image_count: int
+    database_count: int
+    database_property_count: int
 
     @classmethod
     def from_reference_output_dir(
@@ -499,10 +501,28 @@ class NativeReferenceArtifactProfile:
         reference_output_dir: Path | None,
     ) -> "NativeReferenceArtifactProfile":
         if reference_output_dir is None:
-            return cls(table_count=0, image_count=0)
+            return cls(
+                table_count=0,
+                image_count=0,
+                database_count=0,
+                database_property_count=0,
+            )
+        reference_root = Path(reference_output_dir)
         return cls(
-            table_count=len(table_paths(reference_output_dir)),
-            image_count=len(image_paths(reference_output_dir)),
+            table_count=len(table_paths(reference_root)),
+            image_count=len(image_paths(reference_root)),
+            database_count=len(tuple(reference_root.rglob("*.db"))),
+            database_property_count=len(tuple(reference_root.rglob("*.properties"))),
+        )
+
+    @property
+    def comparison_artifact_count(self) -> int:
+        """Return the number of retained artifacts covered by equivalence checks."""
+        return (
+            self.table_count
+            + self.image_count
+            + self.database_count
+            + self.database_property_count
         )
 
     @property
@@ -1155,6 +1175,15 @@ def _run_comparison_case(
         raise FileNotFoundError(
             "Required cached native CellProfiler reference is missing or incomplete"
             f" for case {case.name!r}: {expected_reference}"
+        )
+    if (
+        context.require_native_reference
+        and native_reference_profile.comparison_artifact_count == 0
+    ):
+        raise ValueError(
+            "Required cached native CellProfiler reference has no comparable "
+            f"artifacts for case {case.name!r}: "
+            f"{native_reference.reference_output_dir}"
         )
     tool_output_root = output_root / "tool_outputs"
     result = run_cellprofiler_cppipe_parity(

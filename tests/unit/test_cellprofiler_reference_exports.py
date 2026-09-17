@@ -180,6 +180,46 @@ def test_reference_export_plan_compares_exact_declared_inventory(
     with pytest.raises(ValueError, match="candidate output inventory differs"):
         plan.compare_output_roots(reference_root, candidate_root)
 
+    (candidate_root / "extra.tiff").unlink()
+    (candidate_root / artifact.output_filename).unlink()
+    with pytest.raises(ValueError, match="candidate output inventory differs"):
+        plan.compare_output_roots(reference_root, candidate_root)
+
+
+def test_reference_export_plan_selects_declared_runtime_observation_paths(
+    tmp_path: Path,
+) -> None:
+    artifact = CellProfilerReferenceExportArtifact(
+        artifact_name="Labels",
+        artifact_type="ObjectLabelsArtifactType",
+        semantic_kind=ReferenceExportSemanticKind.CATEGORICAL_OBJECT_LABELS,
+        output_filename="labels.tiff",
+        comparison="integer label pixels: exact equality",
+    )
+    plan = CellProfilerReferenceExportPlan(
+        source_pipeline_name="source.cppipe",
+        source_sha256="source",
+        artifacts=(artifact,),
+    )
+    reference_root = tmp_path / "reference"
+    runtime_root = tmp_path / "runtime"
+    reference_root.mkdir()
+    runtime_root.mkdir()
+    labels = np.asarray([[0, 1], [2, 0]], dtype=np.uint16)
+    reference_path = reference_root / artifact.output_filename
+    candidate_path = runtime_root / artifact.output_filename
+    unrelated_path = runtime_root / "intermediate.tiff"
+    imageio.imwrite(reference_path, labels)
+    imageio.imwrite(candidate_path, labels[np.newaxis, ...])
+    imageio.imwrite(unrelated_path, labels)
+
+    (comparison,) = plan.compare_observed_outputs(
+        reference_root,
+        (unrelated_path, candidate_path),
+    )
+
+    assert comparison.equivalent is True
+
 
 @pytest.mark.parametrize("case_name", tuple(EMPTY_PROFILE_PIPELINES))
 def test_reference_export_plan_derives_terminal_artifacts_from_declarations(
