@@ -58,6 +58,9 @@ from openhcs.core.streaming_config_factory import (
 )
 from openhcs.core.xdg_paths import get_openhcs_log_dir
 from openhcs.runtime.viewer_controls import (
+    ViewerIntensityWindowControlOptions as ViewerIntensityWindowControlOptions,
+)
+from openhcs.runtime.viewer_controls import (
     ViewerLayerIsolationControlOptions as ViewerLayerIsolationControlOptions,
 )
 from openhcs.runtime.viewer_controls import (
@@ -97,6 +100,7 @@ class ViewerControlMessageType(Enum):
     PAYLOADS = "payloads"
     NAVIGATE = "navigate"
     ISOLATE_LAYERS = "isolate_layers"
+    APPLY_INTENSITY_WINDOW = "apply_intensity_window"
 
 
 class ViewerSettlePhase(str, Enum):
@@ -149,6 +153,19 @@ class ViewerLayerIsolationField(str, Enum):
     APPLIED = "applied"
     CHANGED_ROUTE_COUNT = "changed_route_count"
     MISSING_ROUTE_KEYS = "missing_route_keys"
+
+
+class ViewerIntensityWindowField(str, Enum):
+    """Route-global image intensity-window response fields."""
+
+    ROUTE_KEY = "route_key"
+    REQUESTED_PERCENTILES = "requested_percentiles"
+    AXIS_INDICES = "axis_indices"
+    RESOLVED_LIMITS = "resolved_limits"
+    MATCHED_PAYLOAD_COUNT = "matched_payload_count"
+    MATCHED_PAYLOAD_IDENTITIES = "matched_payload_identities"
+    CONTRIBUTING_PAYLOAD_COUNT = "contributing_payload_count"
+    CONTRIBUTING_PIXEL_COUNT = "contributing_pixel_count"
 
 
 class ViewerLayerField(str, Enum):

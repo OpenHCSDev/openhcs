@@ -7,9 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 from napari.layers.shapes._shapes_constants import ShapeType
-
-from polystore.streaming_constants import StreamingDataType
 from polystore.streaming.identity import StreamProducerIdentity
+from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerComponentMode
 
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
@@ -17,59 +16,60 @@ from openhcs.core.config import (
     NapariDisplayConfig,
     NapariVariableSizeHandling,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.runtime.viewer_protocol import (
-    NapariLayerKind,
-    ViewerControlMessageType,
-    ViewerControlResponseField,
-    ViewerNavigationControlOptions,
-    ViewerPayloadControlOptions,
-    ViewerPayloadProjectionOptions,
-    ViewerShapePayloadProjection,
-    ViewerProtocolStatus,
-    ViewerSettlePhase,
-    ViewerSettleProgress,
-    ViewerControlResponse,
-    ViewerStateControlOptions,
-    ViewerComponentValueOrdering,
-)
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAggregateAxisBinding,
     NapariAggregateAxisBindingAuthority,
     NapariAggregateAxisBindingSet,
-    NapariBatchProcessorStore,
     NapariAxisPresentation,
+    NapariBatchProcessorStore,
     NapariComponentGroupStore,
     NapariDimensionLayerState,
     NapariImageLayerPresentationPolicy,
     NapariLayerBatchDebouncePolicy,
-    NapariPendingLayerUpdate,
-    NapariLayerUpdateAuthority,
     NapariLayerRouteStateStore,
+    NapariLayerUpdateAuthority,
+    NapariPendingLayerUpdate,
     NapariShapeFeatureColumns,
     NapariShapeLayerPayload,
     NapariStreamLayerAddress,
     NapariStreamLayerItem,
 )
-from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemantics,
     ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentCoordinateAuthority,
     ViewerComponentLayout,
     ViewerComponentMetadataNormalizer,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
-    ViewerComponentCoordinateAuthority,
     ViewerLayerAxisProjection,
     ViewerLayerAxisProjectionRequest,
     ViewerLayerAxisProjector,
     ViewerMappingDisplayConfigInput,
     ViewerRouteComponentValueTracker,
 )
+from openhcs.runtime.viewer_protocol import (
+    NapariLayerKind,
+    ViewerComponentValueOrdering,
+    ViewerControlMessageType,
+    ViewerControlResponse,
+    ViewerControlResponseField,
+    ViewerIntensityWindowControlOptions,
+    ViewerNavigationControlOptions,
+    ViewerPayloadControlOptions,
+    ViewerPayloadProjectionOptions,
+    ViewerProtocolStatus,
+    ViewerSettlePhase,
+    ViewerSettleProgress,
+    ViewerShapePayloadProjection,
+    ViewerStateControlOptions,
+)
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
 def _component_name_metadata(payload, context="test component metadata"):
@@ -809,6 +809,194 @@ class _FakeNapariServer:
 
     def bind_result_selection_layer(self, _layer):
         """Accept Shapes binding without modeling native Qt selection events."""
+
+
+def test_napari_intensity_window_uses_matching_raw_payloads_not_sparse_padding():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    route_key = "image-route"
+    viewer = _FakeViewer()
+    layer = type(
+        "ImageLayer",
+        (),
+        {
+            "data": np.array(
+                [
+                    [[0, 0, 0], [0, 10, 20]],
+                    [[30, 40, 50], [60, 0, 0]],
+                ],
+                dtype=np.float32,
+            ),
+            "contrast_limits": (0.0, 1.0),
+        },
+    )()
+    viewer.layers.append(layer)
+    server = type(
+        "Server",
+        (),
+        {
+            "viewer": viewer,
+            "layer_route_state": NapariLayerRouteStateStore.empty(),
+            "component_groups": NapariComponentGroupStore(),
+        },
+    )()
+    server.layer_route_state.set_title(route_key, "Images")
+    server.layer_route_state.set_layer(route_key, layer)
+    server.layer_route_state.set_dimension_state(
+        route_key,
+        NapariDimensionLayerState(
+            labels={},
+            presentation=_axis_presentation(
+                layer_key=route_key,
+                projected_axis_components=("well", "site"),
+                component_values={
+                    "well": ["A01", "B01", "C01"],
+                    "site": [1, 2],
+                },
+                routed_component_coordinates=(
+                    ("A01", 1),
+                    ("B01", 1),
+                    ("C01", 2),
+                ),
+            ),
+        ),
+    )
+    first = _layer_item(
+        {"well": "A01", "site": 1},
+        data=np.array([[10.0, 20.0]]),
+    )
+    second = _layer_item(
+        {"well": "B01", "site": 1},
+        data=np.array([[30.0, 40.0], [50.0, 60.0]]),
+    )
+    excluded = _layer_item(
+        {"well": "C01", "site": 2},
+        data=np.array([[-1000.0, 1000.0]]),
+    )
+    first = replace(first, address=replace(first.address, path="A01.tif"))
+    second = replace(second, address=replace(second.address, path="B01.tif"))
+    excluded = replace(
+        excluded,
+        address=replace(excluded.address, path="C01.tif"),
+    )
+    server.component_groups.items_for(route_key).extend((first, second, excluded))
+
+    response = napari_viewer_server.NapariIntensityWindowControlMessageAction().handle(
+        server,
+        {
+            ViewerControlResponseField.PAYLOAD.value: (
+                ViewerIntensityWindowControlOptions(
+                    route_key=route_key,
+                    axis_indices={"site": 0},
+                    low_percentile=0.0,
+                    high_percentile=100.0,
+                )
+            )
+        },
+    )
+
+    assert response["status"] == "success"
+    assert response["resolved_limits"] == (10.0, 60.0)
+    assert response["matched_payload_count"] == 2
+    assert response["contributing_payload_count"] == 2
+    assert response["contributing_pixel_count"] == 6
+    assert response["axis_indices"] == {"site": 0}
+    assert tuple(
+        identity["path"] for identity in response["matched_payload_identities"]
+    ) == ("A01.tif", "B01.tif")
+    assert layer.contrast_limits == (10.0, 60.0)
+
+    all_coordinates_response = (
+        napari_viewer_server.NapariIntensityWindowControlMessageAction().handle(
+            server,
+            {
+                ViewerControlResponseField.PAYLOAD.value: (
+                    ViewerIntensityWindowControlOptions(
+                        route_key=route_key,
+                        low_percentile=0.0,
+                        high_percentile=100.0,
+                    )
+                )
+            },
+        )
+    )
+
+    assert all_coordinates_response["axis_indices"] == {}
+    assert all_coordinates_response["matched_payload_count"] == 3
+    assert all_coordinates_response["contributing_pixel_count"] == 8
+    assert all_coordinates_response["resolved_limits"] == (-1000.0, 1000.0)
+
+
+@pytest.mark.parametrize(
+    ("items", "axis_indices", "message_fragment"),
+    (
+        (
+            (_layer_item({}, data=np.array([[np.nan, np.inf]])),),
+            {},
+            "no finite pixel data",
+        ),
+        (
+            (
+                _layer_item(
+                    {},
+                    data=[],
+                    stream_layer_data_type=StreamingDataType.SHAPES,
+                ),
+            ),
+            {},
+            "not an image route",
+        ),
+        (
+            (_layer_item({}, data=np.array([[1.0, 2.0]])),),
+            {"unknown": 0},
+            "require a route with semantic axis projection",
+        ),
+        (
+            (_layer_item({}, data=np.ones((2, 2), dtype=np.float32)),),
+            {},
+            "strictly increasing",
+        ),
+    ),
+)
+def test_napari_intensity_window_fails_closed(
+    items,
+    axis_indices,
+    message_fragment,
+):
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    route_key = "route"
+    viewer = _FakeViewer()
+    layer = type("Layer", (), {"contrast_limits": (0.0, 1.0)})()
+    viewer.layers.append(layer)
+    server = type(
+        "Server",
+        (),
+        {
+            "viewer": viewer,
+            "layer_route_state": NapariLayerRouteStateStore.empty(),
+            "component_groups": NapariComponentGroupStore(),
+        },
+    )()
+    server.layer_route_state.set_title(route_key, "Route")
+    server.layer_route_state.set_layer(route_key, layer)
+    server.component_groups.items_for(route_key).extend(items)
+
+    response = napari_viewer_server.NapariIntensityWindowControlMessageAction().handle(
+        server,
+        {
+            ViewerControlResponseField.PAYLOAD.value: (
+                ViewerIntensityWindowControlOptions(
+                    route_key=route_key,
+                    axis_indices=axis_indices,
+                    low_percentile=0.0,
+                    high_percentile=100.0,
+                )
+            )
+        },
+    )
+
+    assert response["status"] == "error"
+    assert message_fragment in response["message"]
+    assert layer.contrast_limits == (0.0, 1.0)
 
 
 def test_napari_layer_update_authority_replaces_existing_image_without_global_axis_labels():
@@ -2940,6 +3128,7 @@ def test_napari_runtime_launch_carries_the_projected_scope_accent():
 
 def test_napari_roi_manager_selects_authoritative_shapes_members(qtbot):
     from napari.components import ViewerModel
+
     from openhcs.napari_roi_manager import QRoiManager
 
     viewer = ViewerModel()
@@ -3101,6 +3290,7 @@ def test_roi_manager_selection_reveals_3d_roi_on_its_exact_slice(qtbot, monkeypa
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     from napari.components import ViewerModel
     from napari.settings import get_settings
+
     from openhcs.napari_roi_manager import QRoiManager
 
     settings = get_settings()
@@ -3515,6 +3705,9 @@ def test_napari_control_dispatch_registry_is_module_local_and_eager():
     assert type(registry) is dict
     assert registry[ViewerControlMessageType.CLEAR_STATE.value] is (
         napari_viewer_server.NapariClearStateControlMessageAction
+    )
+    assert registry[ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value] is (
+        napari_viewer_server.NapariIntensityWindowControlMessageAction
     )
 
 

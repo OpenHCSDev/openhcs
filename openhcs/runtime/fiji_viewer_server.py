@@ -6,46 +6,36 @@ via PyImageJ. Inherits from ZMQServer ABC for ping/pong handshake and dual-chann
 """
 
 import logging
-import time
 import threading
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import ClassVar, TypeAlias
 
 import numpy as np
-
 from metaclass_registry import AutoRegisterMeta
 from polystore.imagej_runtime import FIJI_IMAGEJ_RUNTIME
 from polystore.streaming import StreamingSharedMemoryAuthority
-from polystore.streaming_constants import StreamingDataType
 from polystore.streaming.receivers.core import (
     DebouncedBatchEngine,
     GroupedWindowItems,
     WindowProjectionPayloadProvider,
 )
+from polystore.streaming_constants import StreamingDataType
+from zmqruntime.config import TransportMode, ZMQConfig
+from zmqruntime.streaming import StreamingVisualizerServer
+
 from openhcs.core.config import FijiDisplayConfig
 from openhcs.core.streaming_config_declarations import ViewerType
-from openhcs.runtime.viewer_protocol import (
-    FijiPayloadKind,
-    ViewerBatchMessageType,
-    ViewerBatchContextWireField,
-    ViewerBatchWireField,
-    ViewerControlMessageType,
-    ViewerControlResponseField,
-    ViewerControlReplyHeader,
-    ViewerControlReplyPayload,
-    ViewerComponentValueOrdering,
-    ViewerProtocolStatus,
-    ViewerSettlePhase,
-    ViewerSettleProgress,
-    ViewerServerLaunchRequest,
-    OpenHCSViewerServerABC,
+from openhcs.runtime.fiji_macro_runtime import (
+    FijiMacroExecutionRequest,
+    FijiMacroExecutionResponse,
 )
 from openhcs.runtime.viewer_component_system import (
     ComponentValue,
-    ViewerComponentAxisSemantics,
     ViewerBatchPayloadFields,
+    ViewerComponentAxisSemantics,
     ViewerComponentMetadataPayload,
     ViewerComponentNameMetadata,
     ViewerDimensionValueAuthority,
@@ -54,12 +44,23 @@ from openhcs.runtime.viewer_component_system import (
     ViewerStreamingDataTypeHandler,
     ViewerStreamingDataTypeHandlerMeta,
 )
-from openhcs.runtime.fiji_macro_runtime import (
-    FijiMacroExecutionRequest,
-    FijiMacroExecutionResponse,
+from openhcs.runtime.viewer_protocol import (
+    FijiPayloadKind,
+    ViewerBatchContextWireField,
+    ViewerBatchMessageType,
+    ViewerBatchWireField,
+    ViewerComponentValueOrdering,
+    ViewerControlMessageType,
+    ViewerControlReplyHeader,
+    ViewerControlReplyPayload,
+    ViewerControlResponseField,
+    ViewerProtocolStatus,
+    OpenHCSViewerServerABC,
+    ViewerServerLaunchRequest,
+    ViewerSettlePhase,
+    ViewerSettleProgress,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
-from zmqruntime.config import TransportMode, ZMQConfig
 
 logger = logging.getLogger(__name__)
 _ACK_ERROR = ViewerProtocolStatus.ERROR.value
@@ -1255,6 +1256,30 @@ class FijiUnsupportedPayloadsControlPlan(FijiControlMessagePlan):
         )
 
 
+@dataclass(frozen=True, slots=True)
+class FijiUnsupportedIntensityWindowControlPlan(FijiControlMessagePlan):
+    """Fail closed because Fiji lacks routed native layer contrast authority."""
+
+    wire_value = ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
+
+    def response(
+        self,
+        context: FijiControlRequestContext,
+        payload: object | None,
+    ) -> FijiControlMessageResponse:
+        del context, payload
+        return FijiControlMessageResponse(
+            ViewerControlReplyHeader(
+                ViewerProtocolStatus.ERROR,
+                response_type="intensity_window_ack",
+                message=(
+                    "Viewer intensity-window control is supported only by Napari; "
+                    "Fiji has no routed native image-layer contrast authority."
+                ),
+            ),
+        )
+
+
 class FijiRunMacroControlPlan(FijiControlMessagePlan):
     """Execute an ImageJ macro inside the managed PyImageJ process."""
 
@@ -1847,6 +1872,7 @@ class FijiViewerServer(OpenHCSViewerServerABC):
             True if UI is ready, False if timeout
         """
         import time
+
         import scyjava as sj
 
         start_time = time.time()
@@ -1885,8 +1911,8 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         # Initialize PyImageJ before publishing transport endpoints. A bound
         # control socket means this process can service control requests.
         try:
-            import scyjava as sj
             import imagej
+            import scyjava as sj
 
             logger.info("🔬 FIJI SERVER: Initializing PyImageJ...")
 
@@ -2384,8 +2410,8 @@ class FijiViewerServer(OpenHCSViewerServerABC):
         Uses AdjustmentListener on the StackWindow scrollbars to detect dimension changes.
         Based on ImageJ source: ij.gui.StackWindow implements AdjustmentListener for its scrollbars.
         """
-        import scyjava as sj
         import jpype
+        import scyjava as sj
 
         try:
 
@@ -2906,8 +2932,8 @@ class FijiRoiPayloadHandler(FijiPayloadHandler):
     def handle(self, request: FijiPayloadHandlerRequest) -> None:
         from pathlib import Path
 
-        from polystore.roi_converters import FijiROIConverter
         import scyjava as sj
+        from polystore.roi_converters import FijiROIConverter
 
         roi_manager = self.roi_manager_provider.manager()
         group_id = request.server.windows.group_id(request.window_key)
