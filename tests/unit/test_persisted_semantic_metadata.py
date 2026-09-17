@@ -128,7 +128,7 @@ def test_source_projection_serialization_decodes_typed_image_metadata() -> None:
     )
 
     assert projection.address.value_for(AllComponents.SITE) == "1"
-    assert projection.persisted_image_metadata() == _collapsed_metadata()
+    assert projection.image_metadata == _collapsed_metadata()
 
 
 def test_legacy_projection_replay_uses_complete_top_level_source_metadata() -> None:

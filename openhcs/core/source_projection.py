@@ -864,6 +864,11 @@ class SourceProjectionSet:
 class SourceProjectionMetadataSerializer:
     """Serialize projection identity into OpenHCS metadata-compatible fields."""
 
+    WORKSPACE_MAPPING_FIELD: ClassVar[str] = "workspace_mapping"
+    SOURCE_METADATA_FIELD: ClassVar[str] = "source_metadata"
+    SOURCE_PROJECTION_FIELD: ClassVar[str] = "source_projection"
+    IMAGE_METADATA_FIELD: ClassVar[str] = "image_metadata"
+
     parser: Any
     image_extension: str = ".tif"
     path_prefix: str | None = None
@@ -910,18 +915,7 @@ class SourceProjectionMetadataSerializer:
                 if available_backends is not None
                 else self._available_backends(projection_set)
             ),
-            "workspace_mapping": {
-                path: projection.ref.to_workspace_mapping()
-                for projection, path in projection_paths
-            },
-            "source_metadata": {
-                path: self._source_metadata(projection)
-                for projection, path in projection_paths
-            },
-            "source_projection": [
-                self._source_projection_payload(projection, path)
-                for projection, path in projection_paths
-            ],
+            **self.projection_fields(projection_paths),
         }
         if main is not None:
             metadata["main"] = main
@@ -933,6 +927,27 @@ class SourceProjectionMetadataSerializer:
                 for diagnostic in projection_set.diagnostics
             ]
         return metadata
+
+    def projection_fields(
+        self,
+        projection_paths: tuple[tuple[SourceProjection, str], ...],
+    ) -> dict[str, Any]:
+        """Serialize the coherent path-keyed projection fields as one unit."""
+
+        return {
+            self.WORKSPACE_MAPPING_FIELD: {
+                path: projection.ref.to_workspace_mapping()
+                for projection, path in projection_paths
+            },
+            self.SOURCE_METADATA_FIELD: {
+                path: self._source_metadata(projection)
+                for projection, path in projection_paths
+            },
+            self.SOURCE_PROJECTION_FIELD: [
+                self._source_projection_payload(projection, path)
+                for projection, path in projection_paths
+            ],
+        }
 
     def projection_paths(
         self,

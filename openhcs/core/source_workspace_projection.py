@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from openhcs.constants import Backend
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
     image_payload_data,
     image_payload_mask,
@@ -293,7 +294,9 @@ class VirtualWorkspaceSourceProjection:
         metadata = (
             current_metadata
             if persisted_metadata is None
-            else persisted_metadata.with_source_context_from(current_metadata)
+            else persisted_metadata.with_source_spatial_context_from(
+                current_metadata
+            ).with_missing_intensity_from(current_metadata)
         )
         metadata = metadata.replace_fields(
             source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(

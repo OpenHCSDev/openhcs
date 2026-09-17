@@ -27,6 +27,7 @@ from openhcs.core.source_projection import (
     SourceArtifactProjection,
     SourcePlaneProjection,
     SourceProjection,
+    SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
 from openhcs.core.source_tile_geometry import SourceTileLayout
@@ -103,6 +104,7 @@ class AtomicMetadataWriter:
                         }
                     else:
                         subdirectory[key] = value
+                self._update_projection_geometry(subdirectory)
             return data
 
         self._execute_update(
@@ -134,55 +136,56 @@ class AtomicMetadataWriter:
         self,
         metadata_path: str | Path,
         subdirectory_name: str,
-        projection_metadata: Mapping[str, Any] | None = None,
+        serializer: SourceProjectionMetadataSerializer,
+        projection_paths: tuple[tuple[SourceProjection, str], ...],
     ) -> None:
-        """Merge exact produced paths under one lock, preserving other wells."""
+        """Merge produced projection records without replacing plate metadata."""
 
-        def update(data):
+        def update(data: dict[str, Any] | None) -> dict[str, Any]:
             data = self._ensure_subdirectories_structure(data)
             subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
                 subdirectory_name, {}
             )
-            for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
-                subdirectory[key] = {
-                    **subdirectory.get(key, {}),
-                    **({} if projection_metadata is None else projection_metadata[key]),
-                }
-            entries = {
-                record["virtual_path"]: record
-                for record in subdirectory.get(FIELDS.SOURCE_PROJECTION, [])
-            }
-            if projection_metadata is not None:
-                entries.update(
-                    {
-                        record["virtual_path"]: record
-                        for record in projection_metadata[FIELDS.SOURCE_PROJECTION]
-                    }
-                )
-            subdirectory[FIELDS.SOURCE_PROJECTION] = list(entries.values())
-            if entries:
-                projections = SourceProjectionSet(
+            existing_paths = dict(
+                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                    subdirectory
+                ).entries
+            )
+            existing_paths.update(
+                {path: projection for projection, path in projection_paths}
+            )
+            subdirectory.update(
+                serializer.projection_fields(
                     tuple(
-                        VirtualWorkspaceSourceProjectionEntries._projection_record(
-                            record
-                        )[1]
-                        for record in entries.values()
+                        (projection, path)
+                        for path, projection in existing_paths.items()
                     )
                 )
-                subdirectory[FIELDS.GRID_DIMENSIONS] = (
-                    SourceTileLayout.metadata_grid_dimensions(projections)
-                )
-                subdirectory[FIELDS.PIXEL_SIZE] = (
-                    SourceVoxelSpacing.metadata_pixel_size(
-                        SourceVoxelSpacing.from_source_metadata(
-                            projection.source_metadata
-                        )
-                        for projection in projections.plane_projections
-                    )
-                )
+            )
+            self._update_projection_geometry(subdirectory)
             return data
 
-        self._execute_update(metadata_path, update)
+        self._execute_update(
+            metadata_path,
+            update,
+            {METADATA_CONFIG.SUBDIRECTORIES_KEY: {}},
+        )
+
+    @staticmethod
+    def _update_projection_geometry(subdirectory: dict[str, Any]) -> None:
+        entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+            subdirectory
+        ).entries
+        if not entries:
+            return
+        projections = SourceProjectionSet(tuple(entries.values()))
+        subdirectory[FIELDS.GRID_DIMENSIONS] = (
+            SourceTileLayout.metadata_grid_dimensions(projections)
+        )
+        subdirectory[FIELDS.PIXEL_SIZE] = SourceVoxelSpacing.metadata_pixel_size(
+            SourceVoxelSpacing.from_source_metadata(projection.source_metadata)
+            for projection in projections.plane_projections
+        )
 
     def _execute_update(
         self,
@@ -221,6 +224,7 @@ class OpenHCSMetadataFields:
     SOURCE_METADATA: str = "source_metadata"
     SOURCE_PROJECTION: str = "source_projection"
     SOURCE_DIAGNOSTICS: str = "source_diagnostics"
+    SOURCE_BINDINGS_DECLARATION_IDENTITY: str = "source_bindings_declaration_identity"
     WORKSPACE_MAPPING: str = "workspace_mapping"
     GRID_DIMENSIONS: str = "grid_dimensions"
     PIXEL_SIZE: str = "pixel_size"
