@@ -2295,7 +2295,7 @@ class UiBridgeService:
     ) -> UiWidgetActionInvokeResult:
         return self._dispatch_gateway(
             connection=connection,
-            call=lambda resolution: self._gateway.invoke_widget_action(
+            call=lambda resolution: self._resolved_widget_action(
                 resolution,
                 request,
             ),
@@ -2304,6 +2304,27 @@ class UiBridgeService:
                 errors,
             ),
         )
+
+    def _resolved_widget_action(
+        self,
+        connection: UiBridgeConnectionResolution,
+        request: UiWidgetActionInvokeRequest,
+    ) -> UiWidgetActionInvokeResult:
+        """Return the terminal fact represented by an accepted action receipt."""
+
+        result = self._gateway.invoke_widget_action(connection, request)
+        operation_id = result.receipt.bridge_operation_id
+        if result.invoked or not result.receipt.accepted or operation_id is None:
+            return result
+        operation = self._gateway.wait_for_operation_receipt(
+            connection,
+            UiBridgeOperationWaitRequest(
+                operation_id=operation_id,
+                timeout_seconds=min(connection.timeout_ms / 1000.0, 120.0),
+                poll_interval_seconds=0.05,
+            ),
+        )
+        return result.resolve_operation(operation)
 
     def validate_document(
         self,

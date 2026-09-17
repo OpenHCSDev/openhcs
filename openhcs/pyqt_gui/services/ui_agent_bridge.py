@@ -969,9 +969,7 @@ class UiWidgetActionInvokeOutcomeProjector(UiBridgeMutationOutcomeProjector):
         result: UiBridgeMutationResult,
     ) -> str:
         assert isinstance(result, UiWidgetActionInvokeResult)
-        if result.invoked:
-            return "invoked"
-        return "not_invoked"
+        return result.outcome.value
 
     def errors(
         self,

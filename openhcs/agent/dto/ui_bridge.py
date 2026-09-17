@@ -994,6 +994,29 @@ class UiActionInvocationStatus(str, Enum):
     UNAVAILABLE = "unavailable"
 
 
+class UiWidgetActionInvocationOutcome(str, Enum):
+    """Closed terminal outcomes for one projected-widget action."""
+
+    invoked: bool
+
+    INVOKED = ("invoked", True)
+    NOT_INVOKED = ("not_invoked", False)
+
+    def __new__(
+        cls,
+        value: str,
+        invoked: bool,
+    ) -> "UiWidgetActionInvocationOutcome":
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member.invoked = invoked
+        return member
+
+    @classmethod
+    def from_invoked(cls, invoked: bool) -> "UiWidgetActionInvocationOutcome":
+        return cls.INVOKED if invoked else cls.NOT_INVOKED
+
+
 @dataclass(frozen=True, slots=True)
 class UiMutationRequestToken:
     value: str | None = None
@@ -1747,6 +1770,7 @@ class UiWidgetActionIssueCode(str, Enum):
     DISABLED = "ui_widget_disabled"
     NOT_CLICKABLE = "ui_widget_not_clickable"
     ACTION_KIND_UNAVAILABLE = "ui_widget_action_kind_unavailable"
+    OPERATION_OUTCOME_INVALID = "ui_widget_action_operation_outcome_invalid"
 
 
 @dataclass(frozen=True, slots=True)
@@ -1759,6 +1783,54 @@ class UiWidgetActionInvokeResult(
     invoked: bool
     receipt: UiMutationReceipt
     summary: UiWidgetActionSummary | None = None
+
+    @property
+    def outcome(self) -> UiWidgetActionInvocationOutcome:
+        """Project the terminal operation outcome from the invocation fact."""
+
+        return UiWidgetActionInvocationOutcome.from_invoked(self.invoked)
+
+    def resolve_operation(
+        self,
+        operation: "UiBridgeOperationRef",
+    ) -> "UiWidgetActionInvokeResult":
+        """Resolve an accepted placeholder from its authoritative operation."""
+
+        try:
+            status = UiBridgeOperationStatus(operation.status)
+        except ValueError:
+            status = UiBridgeOperationStatus.UNAVAILABLE
+        try:
+            outcome = (
+                UiWidgetActionInvocationOutcome(operation.outcome)
+                if operation.outcome is not None
+                else None
+            )
+        except ValueError:
+            outcome = None
+        errors = operation.errors
+        if status is UiBridgeOperationStatus.COMPLETED and outcome is None:
+            errors = (
+                *errors,
+                AgentError(
+                    code=UiWidgetActionIssueCode.OPERATION_OUTCOME_INVALID.value,
+                    message=(
+                        "The widget action operation completed without a declared "
+                        f"terminal outcome: {operation.outcome!r}."
+                    ),
+                ),
+            )
+        invoked = (
+            outcome.invoked
+            if status is UiBridgeOperationStatus.COMPLETED and outcome is not None
+            else False
+        )
+        return replace(
+            self,
+            invoked=invoked,
+            errors=errors,
+            warnings=operation.warnings,
+        )
 
 
 @dataclass(frozen=True, slots=True)
