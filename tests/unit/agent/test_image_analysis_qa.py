@@ -58,6 +58,8 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "distance, ownership, and response alone are insufficient" in guidance
     assert "monotone, ridge, or contrast preprocessing" in guidance
     assert "Aggregate length or object-count agreement alone" in guidance
+    assert "derive color-channel semantics from the physical container" in guidance
+    assert "never infer a biological plane axis from array rank" in guidance
 
 
 def test_trace_growth_requires_more_root_connected_continuity() -> None:

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import ClassVar, TypeAlias
+from typing import Any, ClassVar, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
@@ -30,7 +30,10 @@ from zmqruntime.viewer_protocol import (
 
 from openhcs.constants.constants import AllComponents, get_multiprocessing_axis
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_geometry,
+)
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
@@ -60,6 +63,27 @@ StreamComponentDomainMetadataItems: TypeAlias = tuple[dict[str, ComponentValue],
 
 class StreamImagePayloadMetadataProjector:
     """Project image-axis declarations into viewer batch-item fields."""
+
+    @classmethod
+    def item_fields_for_payload(
+        cls,
+        payload: Any,
+        metadata: ImagePayloadMetadata,
+        component_order: tuple[str, ...],
+    ) -> dict[str, ViewerWireValue]:
+        """Project and validate one loaded payload before viewer dispatch."""
+
+        fields = cls._item_fields(
+            metadata,
+            tuple(
+                component
+                for component_name in component_order
+                if (component := AllComponents.from_value(component_name)) is not None
+            ),
+            project_singleton=True,
+        )
+        cls._validate_payload_axes(payload, metadata, fields)
+        return fields
 
     @classmethod
     def item_fields(
@@ -164,6 +188,65 @@ class StreamImagePayloadMetadataProjector:
                 f"{tuple(values)!r} from {plane_components!r}."
             )
         return values
+
+    @staticmethod
+    def _validate_payload_axes(
+        payload: Any,
+        metadata: ImagePayloadMetadata,
+        item_fields: Mapping[str, ViewerWireValue],
+    ) -> None:
+        """Require every non-spatial payload axis to have one declared meaning."""
+
+        geometry = image_payload_geometry(
+            payload,
+            value_name="Viewer stream image payload",
+        )
+        spatial_axes = metadata.spatial_axes_yx(payload)
+        if spatial_axes is None:
+            raise ValueError(
+                "Viewer stream image payload requires two declared spatial axes."
+            )
+        channel_axis = metadata.normalized_source_channel_axis(payload)
+        aggregate_axes = tuple(
+            axis
+            for axis in range(geometry.ndim)
+            if axis not in spatial_axes and axis != channel_axis
+        )
+        plane_domain = ViewerComponentValueDomainPayload.from_wire_mapping(
+            item_fields.get(ViewerWireField.PLANE_COMPONENT_VALUES.value, {}),
+            context="Viewer stream image plane component values",
+        )
+        if not aggregate_axes:
+            if metadata.plane_axis is not None or plane_domain:
+                raise ValueError(
+                    "Viewer stream image payload declares a plane axis without a "
+                    "payload-local aggregate axis."
+                )
+            return
+        if metadata.plane_axis is None:
+            raise ValueError(
+                "Viewer stream image payload exposes non-spatial axes without an "
+                "exact source channel or plane-axis declaration: "
+                f"{aggregate_axes!r}."
+            )
+        if aggregate_axes != (0,):
+            raise ValueError(
+                "Viewer stream image payload supports one declared leading plane "
+                f"axis, got payload axes {aggregate_axes!r}."
+            )
+        if len(plane_domain.entries) != 1:
+            raise ValueError(
+                "Viewer stream aggregate payload axis requires exactly one "
+                "plane_component_values declaration."
+            )
+        plane_entry = plane_domain.entries[0]
+        plane_extent = geometry.shape[0]
+        if len(plane_entry.values) != plane_extent:
+            raise ValueError(
+                "Viewer stream aggregate payload component axis cardinality "
+                f"mismatch: {plane_entry.component!r} declares "
+                f"{len(plane_entry.values)} value(s) for extent {plane_extent}."
+            )
 
 
 class StreamComponentNameMetadata(dict[str, dict[str, ComponentDisplayName]]):

@@ -78,6 +78,11 @@ class ImageQaPrecondition(Enum):
         "axis, collapse it explicitly with a registered typed transform before "
         "segmentation"
     )
+    VIEWER_FILE_AXIS_PROJECTION = (
+        "when streaming an existing image file for QA, derive color-channel semantics "
+        "from the physical container before viewer dispatch and refuse undeclared "
+        "non-spatial axes; never infer a biological plane axis from array rank"
+    )
 
 
 class ImageQaVisualizationRule(Enum):
