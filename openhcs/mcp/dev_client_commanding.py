@@ -130,7 +130,8 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         args: argparse.Namespace,
     ) -> McpDevToolBatchResponse | McpDevToolListResponse:
         """Execute this command through one freshly initialized stdio session."""
-        for call in self.calls_from_args(args):
+        prepared_calls = self.calls_from_args(args)
+        for call in prepared_calls:
             call.require_surface_profile(server_spec.surface_profile)
         phase = McpDevClientPhase.START_SERVER
         with tempfile.TemporaryFile(
@@ -143,7 +144,11 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
                     phase = McpDevClientPhase.INITIALIZE
                     await session.initialize(timeout_seconds=self.timeout_seconds(args))
                     phase = self.execution_phase
-                    payload = await self.run_session(session, args)
+                    payload = await self.run_session(
+                        session,
+                        args,
+                        prepared_calls=prepared_calls,
+                    )
                     phase = McpDevClientPhase.TEARDOWN
                     return payload
             except McpDevCliUsageError:
@@ -160,11 +165,17 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         self,
         session: McpDevStdioSession,
         args: argparse.Namespace,
+        *,
+        prepared_calls: tuple[McpDevToolCall, ...] | None = None,
     ) -> McpDevToolBatchResponse | McpDevToolListResponse:
         """Execute this command through an already initialized stdio session."""
         return await call_mcp_session(
             session,
-            self.calls_from_args(args),
+            (
+                self.calls_from_args(args)
+                if prepared_calls is None
+                else prepared_calls
+            ),
             timeout_seconds=self.timeout_seconds(args),
         )
 
@@ -321,7 +332,10 @@ class ToolsCommandSpec(McpDevCommandSpec):
         self,
         session: McpDevStdioSession,
         args: argparse.Namespace,
+        *,
+        prepared_calls: tuple[McpDevToolCall, ...] | None = None,
     ) -> McpDevToolListResponse:
+        del prepared_calls
         return await list_mcp_session_tools(
             session,
             timeout_seconds=self.timeout_seconds(args),

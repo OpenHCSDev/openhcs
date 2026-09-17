@@ -158,9 +158,14 @@ class McpDevClient:
         command_spec: McpDevCommandSpec,
         args: argparse.Namespace,
     ) -> McpDevToolBatchResponse | McpDevToolListResponse:
-        for call in command_spec.calls_from_args(args):
+        prepared_calls = command_spec.calls_from_args(args)
+        for call in prepared_calls:
             call.require_surface_profile(self.server_spec.surface_profile)
-        return await command_spec.run_session(self._session, args)
+        return await command_spec.run_session(
+            self._session,
+            args,
+            prepared_calls=prepared_calls,
+        )
 
     def execute(
         self,

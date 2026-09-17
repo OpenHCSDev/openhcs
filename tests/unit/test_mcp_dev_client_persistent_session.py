@@ -157,6 +157,57 @@ def test_persistent_client_initializes_once_for_distinct_command_specs(
     )
 
 
+def test_persistent_client_reuses_stdin_backed_code_document_call(monkeypatch) -> None:
+    source = "pipeline_steps = []\n"
+    observed_arguments = []
+
+    class FakeMcpDevStdioSession:
+        def __init__(self, server_spec, server_stderr) -> None:
+            del server_stderr
+            self.server_spec = server_spec
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+            del exc_type, exc_value, traceback
+
+        async def initialize(self, *, timeout_seconds: float) -> None:
+            del timeout_seconds
+
+        async def call_tool(self, name, arguments, *, timeout_seconds: float):
+            del name, timeout_seconds
+            observed_arguments.append(arguments)
+            return {
+                "isError": False,
+                "structuredContent": {"status": "accepted"},
+            }
+
+    monkeypatch.setattr(
+        dev_client,
+        "McpDevStdioSession",
+        FakeMcpDevStdioSession,
+    )
+    monkeypatch.setattr(sys, "stdin", io.StringIO(source))
+
+    with dev_client.McpDevClient(sys.executable) as client:
+        client.execute(
+            (
+                "apply-code-document",
+                "window_code_document:pipeline_editor",
+                "--source-file",
+                "-",
+                "--base-revision-token",
+                "rev-123",
+                "--no-confirmation",
+                "--json",
+            )
+        )
+
+    assert len(observed_arguments) == 1
+    assert observed_arguments[0]["source"] == source
+
+
 def test_persistent_client_does_not_close_caller_owned_server_stderr() -> None:
     server_stderr = io.StringIO()
     client = dev_client.McpDevClient(

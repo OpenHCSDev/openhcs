@@ -8558,6 +8558,70 @@ def test_mcp_dev_client_apply_code_document_projects_guarded_mutation(tmp_path):
     }
 
 
+def test_mcp_dev_client_apply_code_document_reads_stdin_once(monkeypatch):
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    import io
+
+    import openhcs.mcp.dev_client as dev_client
+    import openhcs.mcp.dev_client_commanding as dev_client_commanding
+
+    source = "pipeline_steps = []\n"
+    observed_arguments = []
+
+    class FakeMcpDevStdioSession:
+        def __init__(self, server_spec, server_stderr) -> None:
+            del server_stderr
+            self.server_spec = server_spec
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+            del exc_type, exc_value, traceback
+
+        async def initialize(self, *, timeout_seconds: float) -> None:
+            del timeout_seconds
+
+        async def call_tool(self, name, arguments, *, timeout_seconds: float):
+            del name, timeout_seconds
+            observed_arguments.append(arguments)
+            return {
+                "isError": False,
+                "structuredContent": {"status": "accepted"},
+            }
+
+    monkeypatch.setattr(
+        dev_client_commanding,
+        "McpDevStdioSession",
+        FakeMcpDevStdioSession,
+    )
+    monkeypatch.setattr(sys, "stdin", io.StringIO(source))
+    parser = dev_client._build_parser()
+    args = parser.parse_args(
+        (
+            "apply-code-document",
+            "window_code_document:pipeline_editor",
+            "--source-file",
+            "-",
+            "--base-revision-token",
+            "rev-123",
+            "--no-confirmation",
+        )
+    )
+
+    asyncio.run(
+        dev_client.McpDevCommandSpec.for_name("apply-code-document").run(
+            dev_client.McpDevServerSpec(sys.executable),
+            args,
+        )
+    )
+
+    assert len(observed_arguments) == 1
+    assert observed_arguments[0]["source"] == source
+
+
 def test_mcp_dev_client_apply_code_document_defaults_to_confirmation_guard():
     if importlib.util.find_spec("mcp") is None:
         return
