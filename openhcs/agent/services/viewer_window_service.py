@@ -214,10 +214,6 @@ class ViewerLayerPayloadCoordinateSet:
         payload_projection = ViewerPayloadComponentProjection.from_summary(
             payload_summary
         )
-        projected_values = tuple(
-            payload_projection.projected_values(component)
-            for component in projection.projected_axis_components
-        )
         return tuple(
             projection.coordinate_index(
                 payload_projection.coordinate_components(
@@ -226,8 +222,22 @@ class ViewerLayerPayloadCoordinateSet:
                 ),
                 context="viewer payload summary",
             )
-            for coordinate_values in product(*projected_values)
+            for coordinate_values in cls._payload_coordinates(
+                projection.projected_axis_components,
+                payload_projection,
+            )
         )
+
+    @staticmethod
+    def _payload_coordinates(
+        projected_axis_components: Sequence[str],
+        payload_projection: ViewerPayloadComponentProjection,
+    ) -> tuple[tuple[ComponentValue, ...], ...]:
+        projected_values = tuple(
+            payload_projection.projected_values(component)
+            for component in projected_axis_components
+        )
+        return tuple(product(*projected_values))
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,6 +264,14 @@ class ViewerLayerValidationProjection:
         cls,
         layer: ViewerWindowLayerState,
     ) -> "ViewerLayerValidationProjection":
+        routed_component_coordinates = tuple(
+            coordinate
+            for payload_summary in layer.payload_summaries
+            for coordinate in ViewerLayerPayloadCoordinateSet._payload_coordinates(
+                layer.stack_axes,
+                ViewerPayloadComponentProjection.from_summary(payload_summary),
+            )
+        )
         return cls(
             projection=ViewerLayerAxisProjection(
                 projected_axis_components=layer.stack_axes,
@@ -266,6 +284,9 @@ class ViewerLayerValidationProjection:
                     layer.routed_component_values,
                     layer.stack_axes,
                     context="viewer layer routed domains",
+                ),
+                routed_component_coordinates=tuple(
+                    dict.fromkeys(routed_component_coordinates)
                 ),
                 axis_offsets=layer.axis_offsets,
             )

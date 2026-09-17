@@ -366,6 +366,7 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
         projected_axis_components=("channel", "z"),
         component_values={"channel": [0, 1, 2], "z": [0, 1, 2, 3]},
         routed_component_values={"channel": [0, 2], "z": [1, 3]},
+        routed_component_coordinates=((0, 1), (0, 3), (2, 1), (2, 3)),
         axis_offsets=(0, 0),
     )
     semantics = ViewerComponentAxisSemanticsAuthority.empty()

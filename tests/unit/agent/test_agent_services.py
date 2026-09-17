@@ -1037,10 +1037,25 @@ class _CompactStateViewerWindowGateway(_FakeViewerWindowGateway):
         return state
 
 
-class _CoordinateGapViewerWindowGateway(_FakeViewerWindowGateway):
+class _SparseCoordinateViewerWindowGateway(_FakeViewerWindowGateway):
     def window_state(self, request):
         state = super().window_state(request)
         layer = dict(state["layers"][0])
+        component_values = list(layer["component_values"])
+        component_values[1] = {
+            **component_values[1],
+            "channel": 2,
+        }
+        layer["component_values"] = tuple(component_values)
+        payload_summaries = list(layer["payload_summaries"])
+        payload_summaries[1] = {
+            **payload_summaries[1],
+            "components": {
+                **payload_summaries[1]["components"],
+                "channel": 2,
+            },
+        }
+        layer["payload_summaries"] = tuple(payload_summaries)
         layer["axis_component_values"] = {
             "well": ("A14", "B13"),
             "site": (1,),
@@ -2425,17 +2440,16 @@ def test_viewer_window_service_validation_reports_axis_and_count_mismatch():
     ]
 
 
-def test_viewer_window_service_validation_reports_coordinate_gaps():
+def test_viewer_window_service_validation_accepts_sparse_routed_coordinates():
     result = ViewerWindowService(
-        gateway=_CoordinateGapViewerWindowGateway()
+        gateway=_SparseCoordinateViewerWindowGateway()
     ).validation_summary(ViewerWindowValidationRequest(connection=_viewer_connection()))
 
-    assert result.valid is False
-    assert result.layer_summaries[0].coordinate_gap_count == 2
-    assert result.layer_summaries[0].missing_payload_coordinate_count == 2
+    assert result.valid is True
+    assert result.layer_summaries[0].coordinate_gap_count == 4
+    assert result.layer_summaries[0].missing_payload_coordinate_count == 0
     assert [warning.code for warning in result.warnings] == [
         "viewer_layer_coordinate_gaps",
-        "viewer_payload_coordinates_missing",
     ]
 
 

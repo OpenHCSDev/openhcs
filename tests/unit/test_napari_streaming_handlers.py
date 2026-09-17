@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from itertools import product
 from pathlib import Path
 
 import numpy as np
@@ -167,6 +168,7 @@ def _axis_presentation(
     axis_offsets: tuple[int, ...] | None = None,
     scalar_component_values: dict | None = None,
     display_axis_components: tuple[str, ...] | None = None,
+    routed_component_coordinates: tuple[tuple, ...] | None = None,
 ) -> NapariAxisPresentation:
     if component_values is None:
         component_values = {component: [1] for component in projected_axis_components}
@@ -176,6 +178,15 @@ def _axis_presentation(
         scalar_component_values = {}
     if display_axis_components is None:
         display_axis_components = projected_axis_components
+    if routed_component_coordinates is None:
+        routed_component_coordinates = tuple(
+            product(
+                *(
+                    component_values[component]
+                    for component in projected_axis_components
+                )
+            )
+        )
     component_axis_semantics = ViewerComponentAxisSemanticsAuthority.empty()
     component_layout = ViewerComponentLayout.from_parts(
         component_modes={
@@ -192,6 +203,7 @@ def _axis_presentation(
             projected_axis_components=projected_axis_components,
             component_values=component_values,
             routed_component_values=component_values,
+            routed_component_coordinates=routed_component_coordinates,
             axis_offsets=axis_offsets,
             scalar_component_values=scalar_component_values,
         ),
@@ -203,13 +215,24 @@ def _axis_projection(
     projected_axis_components,
     component_values,
     scalar_component_values=None,
+    routed_component_coordinates=None,
 ) -> ViewerLayerAxisProjection:
     if scalar_component_values is None:
         scalar_component_values = {}
+    if routed_component_coordinates is None:
+        routed_component_coordinates = tuple(
+            product(
+                *(
+                    component_values[component]
+                    for component in projected_axis_components
+                )
+            )
+        )
     return ViewerLayerAxisProjection(
         projected_axis_components=tuple(projected_axis_components),
         component_values=component_values,
         routed_component_values=component_values,
+        routed_component_coordinates=routed_component_coordinates,
         axis_offsets=tuple(0 for _ in projected_axis_components),
         scalar_component_values=scalar_component_values,
     )
@@ -483,14 +506,14 @@ def test_napari_viewer_payload_projection_filters_semantic_axis_index():
             presentation=_axis_presentation(
                 layer_key=route_key,
                 projected_axis_components=("channel",),
-                component_values={"channel": [1, 2]},
+                component_values={"channel": [4, 7]},
             ),
         ),
     )
     server.component_groups.items_for(route_key).extend(
         (
-            _layer_item({"channel": 1}, data=np.zeros((2, 2), dtype=np.uint16)),
-            _layer_item({"channel": 2}, data=np.ones((2, 2), dtype=np.uint16)),
+            _layer_item({"channel": 4}, data=np.zeros((2, 2), dtype=np.uint16)),
+            _layer_item({"channel": 7}, data=np.ones((2, 2), dtype=np.uint16)),
         )
     )
 
@@ -510,7 +533,7 @@ def test_napari_viewer_payload_projection_filters_semantic_axis_index():
     layer = payload["layers"][0]
     assert len(layer["payloads"]) == 1
     record = layer["payloads"][0]
-    assert record["components"] == {"channel": 2}
+    assert record["components"] == {"channel": 7}
     assert record["axis_indices"] == (1,)
 
 
@@ -1389,6 +1412,7 @@ def test_napari_axis_projector_validates_declared_domain_and_drops_route_singlet
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
             projected_axis_components=("channel", "z_index"),
+            route_component_coordinates=((4, 1),),
             route_component_values={"channel": [4], "z_index": [1]},
             viewer_component_values={"channel": [4], "z_index": [1]},
             declared_component_values={
@@ -1414,6 +1438,7 @@ def test_napari_axis_projector_rejects_missing_declared_singleton_component():
         ViewerLayerAxisProjector().project(
             ViewerLayerAxisProjectionRequest.from_component_values(
                 projected_axis_components=("timepoint", "well", "channel"),
+                route_component_coordinates=(),
                 route_component_values={
                     "timepoint": [],
                     "well": ["A01"],
@@ -1442,6 +1467,7 @@ def test_napari_axis_projector_rejects_missing_empty_declared_component():
         ViewerLayerAxisProjector().project(
             ViewerLayerAxisProjectionRequest.from_component_values(
                 projected_axis_components=("timepoint", "well", "channel"),
+                route_component_coordinates=(),
                 route_component_values={
                     "timepoint": [],
                     "well": ["A01"],
@@ -1470,6 +1496,7 @@ def test_napari_axis_projector_rejects_missing_non_singleton_component():
         ViewerLayerAxisProjector().project(
             ViewerLayerAxisProjectionRequest.from_component_values(
                 projected_axis_components=("timepoint", "channel"),
+                route_component_coordinates=(),
                 route_component_values={"timepoint": [], "channel": [1]},
                 viewer_component_values={"timepoint": [], "channel": [1]},
                 declared_component_values={"timepoint": [1, 2], "channel": [1]},
@@ -1483,6 +1510,7 @@ def test_napari_axis_projector_keeps_singleton_route_in_shared_viewer_domain():
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
             projected_axis_components=("site", "channel"),
+            route_component_coordinates=((1, 4), (2, 4)),
             route_component_values={"site": [1, 2], "channel": [4]},
             viewer_component_values={"site": [1, 2], "channel": [1, 2, 3, 4, 5]},
             declared_component_values={"site": [1, 2], "channel": [1, 2, 3, 4, 5]},
@@ -1502,6 +1530,7 @@ def test_napari_axis_projector_preserves_route_offset_in_shared_viewer_domain():
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
             projected_axis_components=("site", "channel"),
+            route_component_coordinates=((1, 4), (1, 5), (2, 4), (2, 5)),
             route_component_values={"site": [1, 2], "channel": [4, 5]},
             viewer_component_values={"site": [1, 2], "channel": [1, 2, 3, 4, 5]},
             declared_component_values={"site": [1, 2], "channel": [1, 2, 3, 4, 5]},
@@ -1520,6 +1549,7 @@ def test_napari_axis_projector_uses_route_domain_for_noncontiguous_routes():
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
             projected_axis_components=("channel",),
+            route_component_coordinates=((1,), (3,)),
             route_component_values={"channel": [1, 3]},
             viewer_component_values={"channel": [1, 3]},
             declared_component_values={"channel": [1, 2, 3, 4, 5]},
@@ -1539,6 +1569,7 @@ def test_napari_axis_projector_keeps_route_domain_for_noncontiguous_shared_axis(
     projection = ViewerLayerAxisProjector().project(
         ViewerLayerAxisProjectionRequest.from_component_values(
             projected_axis_components=("channel",),
+            route_component_coordinates=((1,), (2,), (3,), (5,)),
             route_component_values={"channel": [1, 2, 3, 5]},
             viewer_component_values={"channel": [1, 2, 3, 4, 5]},
             declared_component_values={"channel": [1, 2, 3, 4, 5]},
@@ -1559,6 +1590,7 @@ def test_napari_axis_projector_requires_declared_domain():
         ViewerLayerAxisProjector().project(
             ViewerLayerAxisProjectionRequest.from_component_values(
                 projected_axis_components=("channel",),
+                route_component_coordinates=((4,),),
                 route_component_values={"channel": [4]},
                 viewer_component_values={"channel": [4]},
                 declared_component_values={},
@@ -3505,6 +3537,15 @@ def test_napari_axis_projector_drops_only_globally_singleton_axes():
                 "z_index",
                 "well",
             ),
+            route_component_coordinates=tuple(
+                product(
+                    component_values["site"],
+                    component_values["timepoint"],
+                    component_values["channel"],
+                    component_values["z_index"],
+                    component_values["well"],
+                )
+            ),
             route_component_values=component_values,
             viewer_component_values=component_values,
             declared_component_values=component_values,
@@ -4319,6 +4360,86 @@ def test_napari_image_stack_builder_preserves_route_local_collapsed_channels():
     assert image.shape == (2, 2, 2)
     assert np.all(image[0] == 1)
     assert np.all(image[1] == 2)
+
+
+def test_napari_image_stack_builder_preserves_sparse_routed_component_pairs():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    component_values = {
+        "well": ["A02", "B04", "B12", "B17"],
+        "site": [1, 2, 4, 7],
+    }
+    routed_coordinates = (
+        ("A02", 1),
+        ("B04", 4),
+        ("B12", 2),
+        ("B17", 7),
+    )
+
+    image = napari_viewer_server._build_nd_image_array(
+        [
+            _layer_item(
+                {"well": well, "site": site},
+                data=np.full((2, 2), value, dtype=np.uint16),
+            )
+            for value, (well, site) in enumerate(routed_coordinates, start=1)
+        ],
+        _axis_projection(
+            ["well", "site"],
+            component_values,
+            routed_component_coordinates=routed_coordinates,
+        ),
+    )
+
+    assert image.shape == (4, 4, 2, 2)
+    assert np.count_nonzero(np.any(image != 0, axis=(-2, -1))) == 4
+    assert np.all(image[0, 0] == 1)
+    assert np.all(image[1, 2] == 2)
+    assert np.all(image[2, 1] == 3)
+    assert np.all(image[3, 3] == 4)
+
+
+def test_napari_display_projection_derives_sparse_coordinates_from_routed_items():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    pipeline = napari_viewer_server.NapariLayerDisplayPipeline(_FakeNapariServer())
+    component_values = {
+        "well": ["A02", "B04", "B12", "B17"],
+        "site": [1, 2, 4, 7],
+    }
+    component_axis_semantics = (
+        ViewerComponentAxisSemanticsAuthority.from_display_config(
+            ViewerMappingDisplayConfigInput(
+                {
+                    "component_modes": {"well": "stack", "site": "stack"},
+                    "component_order": ["well", "site"],
+                }
+            ),
+            _component_value_domain(component_values),
+        )
+    )
+
+    projection = pipeline.display_axis_projection(
+        "sparse-fields",
+        component_axis_semantics,
+        [
+            _layer_item({"well": "A02", "site": 1}),
+            _layer_item({"well": "B04", "site": 4}),
+            _layer_item({"well": "B12", "site": 2}),
+            _layer_item({"well": "B17", "site": 7}),
+        ],
+    )
+
+    assert projection.routed_component_coordinates == (
+        ("A02", 1),
+        ("B04", 4),
+        ("B12", 2),
+        ("B17", 7),
+    )
+    assert projection.expected_indices() == {
+        (0, 0),
+        (1, 2),
+        (2, 1),
+        (3, 3),
+    }
 
 
 def test_napari_image_stack_builder_consumes_aggregate_payload_axis_as_stack_component():

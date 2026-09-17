@@ -118,6 +118,7 @@ def test_napari_viewer_state_keeps_numeric_channel_and_declared_display_label():
             projected_axis_components=("site",),
             component_values={"site": [1, 2]},
             routed_component_values={"site": [1, 2]},
+            routed_component_coordinates=((1,), (2,)),
             axis_offsets=(0,),
             scalar_component_values={"channel": [1]},
         ),
