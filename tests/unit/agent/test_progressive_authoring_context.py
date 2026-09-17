@@ -5,11 +5,12 @@ from pathlib import Path
 from openhcs.agent.authoring_contexts import (
     AuthoringContextDeclaration,
     AuthoringContextRoute,
+    ImageAnalysisWorkflowAuthoringContext,
     PipelineAuthoringContext,
     UiVisibleWorkflowAuthoringContext,
     ViewerReviewAuthoringContext,
 )
-from openhcs.agent.capabilities import agent_capabilities
+from openhcs.agent.capabilities import CapabilityTransport, agent_capabilities
 from openhcs.agent.dto.authoring import AuthoringContextRequest
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.config import ConfigFieldSchema, ConfigSchema
@@ -97,6 +98,7 @@ def test_context_registry_orders_ui_ownership_before_headless_routes() -> None:
         "domain_expert_assisted_setup",
         "folder_onboarding",
         "pipeline",
+        "image_analysis_workflow",
         "custom_function",
         "headless_execution",
         "debugging",
@@ -191,6 +193,7 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     ui = service.get_authoring_context("ui_visible_workflow").content
     folder = service.get_authoring_context("folder_onboarding").content
     pipeline = service.get_authoring_context("pipeline").content
+    image_analysis = service.get_authoring_context("image_analysis_workflow").content
     custom = service.get_authoring_context("custom_function").content
     debugging = service.get_authoring_context("debugging").content
     viewer = service.get_authoring_context("viewer_review").content
@@ -268,6 +271,33 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "do not infer that BaSiCPy is usable" in pipeline
     assert "MetaXpress neurite outgrowth can still follow" in pipeline
     assert "more explicit module-by-module reference" in pipeline
+    assert f'kind="{ImageAnalysisWorkflowAuthoringContext.require_kind()}"' in pipeline
+
+    assert "IMAGE-ANALYSIS WORKFLOW" in image_analysis
+    assert "variable_components=[SITE]" in image_analysis
+    assert "group_by=CHANNEL" in image_analysis
+    assert "one SITE stack per channel" in image_analysis
+    assert "one low/high percentile pair over every site" in image_analysis
+    assert "must not fit a separate percentile pair per field" in image_analysis
+    assert "Treat registration as a separate branch" in image_analysis
+    assert "calculate one position set" in image_analysis
+    assert "input_source=PIPELINE_START" in image_analysis
+    assert "reuse that same position set by consuming its artifact" in image_analysis
+    assert "raw channel stacks" in image_analysis
+    assert (
+        "analytical normalisation was explicitly fitted across all sites"
+        in image_analysis
+    )
+    assert (
+        "placement coordinates, crop, scale, and result overlays identical"
+        in image_analysis
+    )
+    assert "Compare channel histograms, clipped fractions" in image_analysis
+    assert "across tile interiors and boundaries" in image_analysis
+    assert "Display normalisation changes presentation only" in image_analysis
+    assert "representative dim structures, bright structures" in image_analysis
+    assert "artifact provenance" in image_analysis
+    assert "dispatch on function-name strings" in image_analysis
 
     assert "A reviewed custom function becomes an ordinary registry-described" in custom
     assert "openhcs_search_functions" in custom
@@ -319,8 +349,9 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "user-controlled presentation state" in viewer
     assert "raw route payloads, label identities" in viewer
     assert "Review one current execution in raw-evidence order" in viewer
-    assert "percentile-clipped histogram views" in viewer
-    assert "computed intensity bounds as QC provenance" in viewer
+    assert f'kind="{ImageAnalysisWorkflowAuthoringContext.require_kind()}"' in viewer
+    assert "canonical operating guide" in viewer
+    assert "percentile-clipped histogram views" not in viewer
     assert "structural evidence only" in viewer
     assert "cannot establish pixel-level segmentation or tracing completeness" in viewer
     assert "explicit array slices and array values" in viewer
@@ -348,6 +379,33 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
 
     assert "derives stack axes, post-stack grouping" in cellprofiler
     assert "does not choose native OpenHCS viewer" in cellprofiler
+
+
+def test_onboarding_surfaces_link_to_the_canonical_image_analysis_context() -> None:
+    repository_root = Path(__file__).resolve().parents[3]
+    skill = (
+        repository_root
+        / "packaging/codex/openhcs/skills/use-openhcs/SKILL.md"
+    ).read_text(encoding="utf-8")
+    default_prompt = (
+        repository_root
+        / "packaging/codex/openhcs/skills/use-openhcs/agents/openai.yaml"
+    ).read_text(encoding="utf-8")
+    client_guide = (
+        repository_root / "docs/source/user_guide/mcp_clients.rst"
+    ).read_text(encoding="utf-8")
+    server_instructions = CapabilityTransport.LOCAL_STDIO.server_instructions()
+
+    context_kind = ImageAnalysisWorkflowAuthoringContext.require_kind()
+    for surface in (skill, default_prompt, client_guide, server_instructions):
+        assert context_kind in surface
+
+    canonical_rule = "must not fit a separate percentile pair per field"
+    assert canonical_rule in AgentAuthoringContextService().get_authoring_context(
+        context_kind
+    ).content
+    for linked_surface in (skill, default_prompt, client_guide, server_instructions):
+        assert canonical_rule not in linked_surface
 
 
 def test_viewer_array_capabilities_expose_value_opt_in_and_bounded_tiling() -> None:

@@ -81,6 +81,14 @@ The bundled Codex plugin reinforces the same handshake through its
 ``use-openhcs`` skill. Claude Desktop and other MCP clients receive the server
 instructions directly from the MCP process.
 
+Image-analysis agents should request
+``openhcs_get_authoring_context(kind="image_analysis_workflow")`` before
+designing multisite assembly, registration, normalisation, segmentation
+review, or mosaic quality control. That registered context is the canonical
+operating guide shared by clients. The initialization instructions, bundled
+Codex skill, and viewer-review context link to it rather than maintaining
+parallel copies of its rules.
+
 Before trusting a new client with a real experiment, ask it:
 
 .. code-block:: text

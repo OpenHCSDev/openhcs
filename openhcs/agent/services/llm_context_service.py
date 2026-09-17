@@ -20,6 +20,8 @@ from openhcs.agent.authoring_contexts import (
     FirstUseWorkflowContext,
     FolderOnboardingContext,
     HeadlessExecutionContext,
+    ImageAnalysisWorkflowAuthoringContext,
+    ImageAnalysisWorkflowContext,
     ObjectStateEditingContext,
     PipelineAuthoringContext,
     PipelineAuthoringRulesContext,
@@ -27,8 +29,8 @@ from openhcs.agent.authoring_contexts import (
     RuntimeUiCoordinationContext,
     SourceBindingWorkflowContext,
     StateCodeRoundtripContext,
-    UiVisibleWorkflowContext,
     UiVisibleWorkflowAuthoringContext,
+    UiVisibleWorkflowContext,
     ViewerReviewAuthoringContext,
     ViewerReviewContext,
 )
@@ -286,6 +288,7 @@ class PipelineRulesSection(
         del service
         return f"""=== PIPELINE AUTHORING WORKFLOW ===
 - Search {agent_capabilities.search_functions.name} from the user's biological or processing intent, then call {agent_capabilities.describe_function.name} for each candidate before supplying non-default parameters. Do not start from an arbitrary function dump.
+- For multisite assembly, registration, analytical normalisation, segmentation review, or mosaic quality control, request kind="{ImageAnalysisWorkflowAuthoringContext.require_kind()}" before finalising the pipeline. That context owns the image-analysis operating rules; this pipeline context owns declaration syntax and compilation.
 - Pipeline composition is registry- and contract-driven, not limited to named recipes or presets. Any registered callable, including one registered through the reviewed custom-function route, can participate when its reflected CallableContract is compatible with the step's array shape, ProcessingContract, memory type, runtime-bound parameters, and artifact flow. Compose compatible preprocessing as ordered FunctionSteps, or as a regular-callable list chain only when the described contracts permit it, before the analysis callable.
 - Search CLAHE, median denoising, background subtraction, and flat-field correction as processing intents, then describe the exact candidates returned by the live registry. These examples do not promise that a particular backend or package is installed. If no exact compatible candidate is returned, request the custom_function context and register a reviewed implementation rather than substituting a similar search hit.
 - Before choosing among normalization, local background removal, illumination correction, or denoising, search the knowledge base for ``preprocessing method selection validation`` and apply that source-backed guidance to the exact registry candidate. The assay expert still owns expected biology and acceptable measurement changes.
@@ -296,6 +299,23 @@ class PipelineRulesSection(
 - Reflect the relevant nested config path before editing. A lazy raw None usually means inherit; do not copy fields from examples or flatten pipeline, step, source, materialization, and streaming scopes.
 - Validate with {agent_capabilities.validate_pipeline.name}, then render reviewed Python with {agent_capabilities.render_pipeline_source.name}. PipelineDocument source requires the ordered pipeline_steps list and may omit pipeline_config only to select PipelineConfig(); never send config through a parallel side channel.
 - Before execution, inspect the compiled artifact and materialization plans. Callable declarations own semantic image, label, measurement, relationship, table, grid, and external-resource contracts; filenames and tuple positions do not. Confirm separately which runtime values are only available during execution and which outputs have persistent targets."""
+
+
+class ImageAnalysisWorkflowSection(
+    StaticAuthoringContextSection,
+    ImageAnalysisWorkflowContext,
+):
+    """Canonical operating guide for multisite image-analysis workflows."""
+
+    section_id = "image_analysis_workflow"
+    content = f"""=== IMAGE-ANALYSIS WORKFLOW ===
+- Begin from declarations and evidence, not a remembered recipe. Search the example corpus for the closest biological operation, retrieve its complete generated OpenHCS Python, then describe each candidate through the live function registry. Reuse structural patterns from those declarations and callable docstrings; do not dispatch on function-name strings or create a second function, preset, or capability catalogue.
+- Keep assembly and grouping distinct. `variable_components=[SITE]` assembles all selected sites along the callable stack axis. With `group_by=CHANNEL`, the compiled invocation is one SITE stack per channel. When the live backend declaration confirms that `stack_percentile_normalize` implements percentile fitting, applying it to that grouped pattern computes one low/high percentile pair over every site in each channel stack. It must not fit a separate percentile pair per field. Confirm the exact backend callable and its reflected contract with {agent_capabilities.search_functions.name} and {agent_capabilities.describe_function.name} before authoring; do not assume identically named backend functions have identical semantics.
+- Treat registration as a separate branch. Build its reference from the declared source planes, using a projection or composite only when that is the intentional registration signal; calculate one position set and retain it as the typed registration artifact. Restart the assembly branch from the corresponding declared sources with `input_source=PIPELINE_START` when the previous main-flow value is the registration reference, reuse that same position set by consuming its artifact, and assemble either the raw channel stacks or channel stacks whose analytical normalisation was explicitly fitted across all sites. Never recalculate positions independently for each channel, display window, or downstream result.
+- Preserve correspondence across every QC view. Inspect the raw mosaics at several percentile clipping windows, including the full range and progressively stronger low/high pairs, while keeping placement coordinates, crop, scale, and result overlays identical. Record each percentile pair and its computed intensity bounds. Compare channel histograms, clipped fractions, and segmentation coverage across tile interiors and boundaries; look explicitly for seams, field-dependent thresholds, and missing or excess objects near joins.
+- Display normalisation changes presentation only. It must never become analytical preprocessing unless an explicit compiled FunctionStep owns it. Conversely, analytically normalised data must retain its function parameters, source identities, group identity, assembled SITE axis, position-artifact identity, and output artifact provenance; a visually similar viewer layer is not a substitute for that record.
+- Validate both intensity extremes and the requested result. Inspect representative dim structures, bright structures, background, saturated pixels, and strong unassigned residuals in native coordinates. Reconcile image/label or graph artifacts with schema-bearing measurements and ROIs, including identities and cardinalities. A completed execution, plausible aggregate, smooth mosaic, or non-empty layer proves neither spatially uniform segmentation nor scientific completeness.
+- Use the corpus as a pattern source, not an authority shortcut. High-value reusable patterns include source-bound preprocessing followed by typed analysis, a registration-reference branch followed by raw-data assembly with the same position artifact, diagnostic intermediate artifacts followed by one biologically interpretable final artifact, and bounded validation before plate-scale execution. The current source bindings, function contracts, compiler plan, runtime routes, and artifact provenance remain the authorities for the pipeline being run."""
 
 
 class ConfigSchemaHintsSection(AuthoringContextSection, PipelineAuthoringRulesContext):
@@ -517,7 +537,7 @@ class ViewerReviewStepsSection(StaticAuthoringContextSection, ViewerReviewContex
     content = f"""=== VIEWER REVIEW WORKFLOW ===
 - Start from the user's scientific question and define what the final view must let them conclude. Intermediate source, mask, segmentation, and skeleton layers are diagnostic evidence; they do not replace a final result layer that communicates the biological output.
 - Review one current execution in raw-evidence order: confirm execution and route identity plus resolved source order; inspect bounded source/output arrays and statistics; inspect typed label IDs and ROI payloads; reconcile schema-bearing per-object measurement rows with those objects; only then interpret the visualization with the biologist.
-- Treat percentile-clipped histogram views as bread-and-butter visual QC for every image analysis. Inspect the unchanged raw channel at multiple display-only clipping levels, including an unclipped range and progressively stronger low/high percentile pairs, so faint signal, bright outliers, background structure, and saturation are each visible. Record every percentile pair and its computed intensity bounds as QC provenance; never feed a display-normalized view back into the analysis unless normalization is an explicitly compiled pipeline step. Compare the analysis mask, paths, or ROIs against each view in identical native coordinates before accepting concordance.
+- For multisite assembly, registration, analytical normalisation, percentile-window QC, tile-boundary review, and image-result provenance, request kind="{ImageAnalysisWorkflowAuthoringContext.require_kind()}". That context is the canonical operating guide; apply it before interpreting viewer presentation.
 - Viewer state, payload summaries, ROI counts, bounds, nonzero counts, and layer existence are structural evidence only. They cannot establish pixel-level segmentation or tracing completeness. Before making a completeness claim, retrieve exact native-resolution source and result values: call {agent_capabilities.sample_viewer_window_image.name} with `include_array_values=true` and an adequate `max_array_elements`, scanning tiles when necessary; or call {agent_capabilities.get_viewer_window_payloads.name} with explicit array slices and array values. Request exact shape payloads for ROI results and compare or rasterize them in the same spatial coordinates as the source signal.
 - Do not wait for the user to find a missed region by zooming. For segmentation or tracing, compare the final mask/ROI coverage against the relevant raw channel across the claimed field, rank strong unassigned residual components, and inspect representative residual tiles. Report the evidence threshold and uncertain signal; do not silently equate every nonzero source pixel with a true object.
 - When measurements are a primary biological result, follow the declared {PlateManagerAction.VIEW_RESULTS.value!r} action's `related_state_surface_ids` and read the quantitative-results surface, then invoke that Plate Manager Results action so the user can inspect the retained table. The surface supplies bounded raw rows and provenance; the table is the human view of the same data. Do not select by title substring or substitute screenshots or widget-tree cell scraping for either one.

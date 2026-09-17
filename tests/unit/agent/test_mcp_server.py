@@ -4303,6 +4303,7 @@ def test_mcp_dev_client_authoring_context_kind_choices_are_explicit(capsys):
     help_text = capsys.readouterr().out
     for kind in (
         "pipeline",
+        "image_analysis_workflow",
         "custom_function",
         "first_use",
         "folder_onboarding",
