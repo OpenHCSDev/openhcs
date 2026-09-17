@@ -100,6 +100,29 @@ class SourceCandidateWheelhouse:
     local_projects: tuple[ReleaseCandidate, ...]
     root_wheel: Path
 
+    def dependency_requirements(
+        self, wheel_directory: Path, extras: tuple[str, ...] = ()
+    ) -> tuple[str, ...]:
+        extras_suffix = f"[{','.join(extras)}]" if extras else ""
+        wheels = tuple(
+            (wheel, parse_wheel_filename(wheel.name))
+            for wheel in sorted(wheel_directory.glob("*.whl"))
+        )
+        requirements = []
+        for project in self.local_projects:
+            matches = tuple(
+                wheel
+                for wheel, (name, version, _build, _tags) in wheels
+                if name == project.canonical_name and version == project.version
+            )
+            if len(matches) != 1:
+                raise RuntimeError(
+                    f"Expected exactly one built wheel for {project.name}=={project.version}, "
+                    f"found {[wheel.name for wheel in matches]}"
+                )
+            requirements.append(f"{matches[0].resolve()}{extras_suffix}")
+        return tuple(requirements)
+
 
 def build_source_candidate_wheelhouse(
     *,
@@ -146,6 +169,9 @@ def build_and_install_candidate(
         )
         local_projects = wheelhouse.local_projects
         root_wheel = wheelhouse.root_wheel
+        dependency_requirements = wheelhouse.dependency_requirements(
+            wheel_directory, local_project_extras
+        )
     elif not published_wheel_requirements:
         raise RuntimeError(
             "PyPI candidate installation requires the readiness job's "
@@ -188,24 +214,6 @@ def build_and_install_candidate(
     )
 
     if dependency_source is CandidateDependencySource.SUBMODULES:
-        if local_project_extras:
-            extras_suffix = f"[{','.join(local_project_extras)}]"
-            subprocess.run(
-                (
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "install",
-                    "--find-links",
-                    str(wheel_directory),
-                    *(
-                        f"{project.name}{extras_suffix}=={project.version}"
-                        for project in local_projects
-                    ),
-                ),
-                check=True,
-                cwd=wheel_directory,
-            )
         mismatches = tuple(
             f"{project.name}: installed {installed_version(project.name)}, "
             f"candidate {project.version}"

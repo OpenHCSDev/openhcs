@@ -149,6 +149,71 @@ def test_source_candidate_wheelhouse_builds_metadata_discovered_projects(
     assert built_projects == [candidate.path.parent, installer.REPO_ROOT]
 
 
+@pytest.mark.parametrize("local_extras", [(), ("dev",)])
+def test_source_install_requires_exact_built_dependency_wheels(
+    monkeypatch, tmp_path: Path, local_extras
+) -> None:
+    candidate = ReleaseCandidate(
+        name="example-package",
+        version=Version("1.2.3"),
+        dependencies=(),
+        path=tmp_path / "external" / "example" / "pyproject.toml",
+    )
+    wheel_directory = tmp_path / "wheels"
+    wheel_directory.mkdir()
+    dependency_wheel = wheel_directory / "example_package-1.2.3-py3-none-any.whl"
+    dependency_wheel.touch()
+    root_wheel = tmp_path / "openhcs-0.7.21-py3-none-any.whl"
+    root_wheel.touch()
+    commands = []
+    monkeypatch.setattr(
+        installer,
+        "build_source_candidate_wheelhouse",
+        lambda **kwargs: installer.SourceCandidateWheelhouse((candidate,), root_wheel),
+    )
+    monkeypatch.setattr(installer, "installed_version", lambda name: "1.2.3")
+    monkeypatch.setattr(
+        installer.subprocess,
+        "run",
+        lambda command, **kwargs: commands.append(command),
+    )
+
+    installer.build_and_install_candidate(
+        extras=("dev",),
+        dependency_source=installer.CandidateDependencySource.SUBMODULES,
+        wheel_directory=wheel_directory,
+        additional_requirements=(),
+        local_project_extras=local_extras,
+        published_wheel_requirements=(),
+        candidate_wheel=root_wheel,
+    )
+
+    suffix = "[dev]" if local_extras else ""
+    assert f"{dependency_wheel.resolve()}{suffix}" in commands[0]
+    assert f"{root_wheel}[dev]" in commands[0]
+    assert len(commands) == 2
+
+
+@pytest.mark.parametrize("wheel_count", [0, 2])
+def test_source_install_rejects_missing_or_ambiguous_dependency_wheels(
+    tmp_path: Path, wheel_count
+) -> None:
+    candidate = ReleaseCandidate(
+        name="example-package",
+        version=Version("1.2.3"),
+        dependencies=(),
+        path=tmp_path / "external" / "example" / "pyproject.toml",
+    )
+    for index in range(wheel_count):
+        (tmp_path / f"example_package-1.2.3-{index}-py3-none-any.whl").touch()
+    wheelhouse = installer.SourceCandidateWheelhouse(
+        (candidate,), tmp_path / "openhcs-0.7.21-py3-none-any.whl"
+    )
+
+    with pytest.raises(RuntimeError, match="Expected exactly one built wheel"):
+        wheelhouse.dependency_requirements(tmp_path)
+
+
 def test_build_only_cli_rejects_installation_requirements(
     monkeypatch,
     tmp_path: Path,
