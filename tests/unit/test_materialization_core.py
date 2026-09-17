@@ -79,6 +79,7 @@ from openhcs.processing.materialization import (
     json_only,
     materialization_outputs,
     materialize,
+    materialize_with_result,
     tabular_field_names_from_materialization,
     text_only,
     tiff_stack,
@@ -103,6 +104,23 @@ def _memory_materialize(spec, data, path, filemanager):
         backends=["memory"],
         backend_kwargs={},
     )
+
+
+def test_materialization_result_reports_exact_backend_writes():
+    filemanager = FileManager({"memory": MemoryStorageBackend()})
+
+    result = materialize_with_result(
+        json_only(),
+        {"count": 3},
+        "/analysis/counts",
+        filemanager,
+        ["memory"],
+    )
+
+    assert result.primary_path == "/analysis/counts.json"
+    assert tuple(
+        (saved.backend, saved.output.path) for saved in result.saved_outputs
+    ) == (("memory", "/analysis/counts.json"),)
 
 
 def test_declared_path_selection_preserves_outputs_without_rendering_rois(monkeypatch):

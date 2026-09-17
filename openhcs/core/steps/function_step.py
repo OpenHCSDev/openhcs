@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Callable, TypeAlias, cast
 from objectstate import mark_ui_special_fields, semantic_values_equal
 from python_introspect import callable_declaration_kwargs
 
-from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_execution import FunctionStepExecutor
 
 if TYPE_CHECKING:
@@ -38,8 +38,12 @@ class FunctionStep(AbstractStep):
         super().__init__(**kwargs)
         self.func = function_spec
 
-    def process(self, context: "ProcessingContext", step_index: int) -> None:
-        FunctionStepExecutor.execute(context, step_index)
+    def process(
+        self,
+        context: "ProcessingContext",
+        step_index: int,
+    ) -> StepExecutionObservation:
+        return FunctionStepExecutor.execute(context, step_index)
 
     def function_spec(self) -> FunctionSpec | None:
         """Return the declaration function spec, or None after compile stripping."""

@@ -49,9 +49,9 @@ from openhcs.core.progress.runtime_artifacts import (
     runtime_artifact_context_for_records,
 )
 from openhcs.core.runtime_stores import StoredRuntimeValue
-from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
-    observed_materialized_artifact_locations_by_address,
+    replayed_step_execution_observation,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -64,6 +64,7 @@ def _runtime_observation_progress_context(
     *,
     plan: CompiledStepPlan,
     context: ProcessingContext,
+    step_observation: StepExecutionObservation,
 ) -> dict | None:
     """Project one RuntimeValueStore observation delta through owned payloads."""
 
@@ -71,11 +72,7 @@ def _runtime_observation_progress_context(
     live_measurements = live_measurement_context_for_records(
         records,
         materialized_locations_by_address=(
-            observed_materialized_artifact_locations_by_address(
-                plan,
-                context,
-                records,
-            )
+            step_observation.materialized_locations_by_address
         ),
     )
     if runtime_artifacts is None:
@@ -964,6 +961,11 @@ def _execute_single_axis_static(
                     observed_records,
                     plan=step_plan,
                     context=frozen_context,
+                    step_observation=(
+                        replayed_step_execution_observation(
+                            step_plan, frozen_context, observed_records
+                        )
+                    ),
                 )
                 emit(
                     execution_id=lane_context.execution_id,
@@ -997,12 +999,13 @@ def _execute_single_axis_static(
         )
 
         observation_cursor = runtime_value_store.observation_cursor()
-        step.process(frozen_context, step_index)
+        step_observation = step.process(frozen_context, step_index)
         observed_records = runtime_value_store.observed_values_after(observation_cursor)
         runtime_progress_context = _runtime_observation_progress_context(
             observed_records,
             plan=step_plan,
             context=frozen_context,
+            step_observation=step_observation,
         )
 
         emit(

@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from collections.abc import Callable, Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import cast, ClassVar, TYPE_CHECKING
 
 from metaclass_registry import AutoRegisterMeta
@@ -44,6 +45,7 @@ from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.source_matching import (
     with_source_component_metadata,
 )
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     FunctionOutputIdentityAuthority,
@@ -67,6 +69,7 @@ from openhcs.processing.materialization.core import (
     Output,
     RawBackendKwargs,
     ViewerStreamBackendCallKwargs,
+    materialize_with_result,
     materialization_outputs,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -1186,6 +1189,26 @@ def observed_materialized_artifact_locations_by_address(
     return locations_by_address
 
 
+def replayed_step_execution_observation(
+    plan: CompiledStepPlan,
+    context: "ProcessingContext",
+    records: tuple[StoredRuntimeValue, ...],
+) -> StepExecutionObservation:
+    """Reconstruct prior write locations for explicitly replayed step outputs."""
+
+    return StepExecutionObservation(
+        MappingProxyType(
+            dict(
+                observed_materialized_artifact_locations_by_address(
+                    plan,
+                    context,
+                    records,
+                )
+            )
+        )
+    )
+
+
 def planned_materialization_preview(
     *,
     context: "ProcessingContext",
@@ -1252,11 +1275,13 @@ def materialize_artifact_outputs(
     plan: CompiledStepPlan,
     target_plan: ArtifactMaterializationTargetPlan,
     context: "ProcessingContext",
-) -> None:
+) -> StepExecutionObservation:
     """Materialize planned artifact outputs to persistent and streaming backends."""
-    from openhcs.processing.materialization import materialize
-
     images_dir = plan.artifact_images_dir
+    locations_by_address: dict[
+        RuntimeArtifactAddress,
+        tuple[RuntimeArtifactLocation, ...],
+    ] = {}
 
     for materialization in runtime_artifact_materializations(plan, context):
         backend_plan = target_plan.backend_plan(plan, context, materialization)
@@ -1273,7 +1298,7 @@ def materialize_artifact_outputs(
         )
         if not backends:
             continue
-        materialize(
+        result = materialize_with_result(
             materialization.spec,
             data,
             str(materialization.base_path),
@@ -1303,3 +1328,25 @@ def materialize_artifact_outputs(
             pipeline_position=plan.pipeline_position,
             output_plan=materialization.output_plan,
         )
+        if not materialization.spec.participates_in_runtime_export_observation():
+            continue
+        persistent_backends = backend_plan.persistent_backend_kwargs
+        persistent_locations = tuple(
+            RuntimeArtifactLocation(
+                path=saved_output.output.path,
+                backend=saved_output.backend,
+            )
+            for saved_output in result.saved_outputs
+            if saved_output.backend in persistent_backends
+        )
+        if not persistent_locations:
+            continue
+        address = RuntimeArtifactAddress.from_record(record)
+        locations_by_address[address] = (
+            *locations_by_address.get(address, ()),
+            *persistent_locations,
+        )
+
+    return StepExecutionObservation(
+        MappingProxyType(locations_by_address)
+    )

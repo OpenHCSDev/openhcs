@@ -51,6 +51,7 @@ from openhcs.core.steps.function_output_manifest import (
     StepOutputManifestStore,
     step_output_manifest,
 )
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_outputs import finalize_function_step_outputs
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
@@ -681,12 +682,16 @@ class FunctionStepExecutor:
         )
 
     @classmethod
-    def execute(cls, context: ProcessingContext, step_index: int) -> None:
+    def execute(
+        cls,
+        context: ProcessingContext,
+        step_index: int,
+    ) -> StepExecutionObservation:
         step_name = f"step_{step_index}"
         try:
             executor = cls(context, step_index)
             step_name = executor.plan.step_name or step_name
-            executor.run()
+            return executor.run()
         except Exception as error:
             full_traceback = traceback.format_exc()
             logger.error(
@@ -704,7 +709,7 @@ class FunctionStepExecutor:
             )
             raise
 
-    def run(self) -> None:
+    def run(self) -> StepExecutionObservation:
         plan = self.plan
         step_started_at = time.perf_counter()
         self._log_execution_start()
@@ -757,7 +762,10 @@ class FunctionStepExecutor:
             execution_elapsed,
         )
         finalization_started_at = time.perf_counter()
-        finalize_function_step_outputs(self.context, plan)
+        step_observation = finalize_function_step_outputs(
+            self.context,
+            plan,
+        )
         finalization_elapsed = time.perf_counter() - finalization_started_at
         logger.info(
             "FunctionStep %s (%s) completed for axis %s in %.3fs "
@@ -769,6 +777,7 @@ class FunctionStepExecutor:
             execution_elapsed,
             finalization_elapsed,
         )
+        return step_observation
 
     def _log_execution_start(self) -> None:
         plan = self.plan

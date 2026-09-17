@@ -8,7 +8,9 @@ validation, and state management.
 
 import abc
 import inspect
-from dataclasses import is_dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, is_dataclass
+from types import MappingProxyType
 from typing import TYPE_CHECKING, get_type_hints
 
 from objectstate import get_base_type_for_lazy, semantic_values_equal
@@ -23,10 +25,28 @@ from openhcs.core.config import LazyStepSourceBindingsConfig
 from openhcs.core.source_bindings import (
     StepSourceBindingsConfig,
 )
+from openhcs.core.runtime_stores import (
+    RuntimeArtifactAddress,
+    RuntimeArtifactLocation,
+)
 
 # ProcessingContext is used in type hints
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
+
+
+@dataclass(frozen=True, slots=True)
+class StepExecutionObservation:
+    """Execution facts emitted by one step's authoritative side effects."""
+
+    materialized_locations_by_address: Mapping[
+        RuntimeArtifactAddress,
+        tuple[RuntimeArtifactLocation, ...],
+    ]
+
+    @classmethod
+    def empty(cls) -> 'StepExecutionObservation':
+        return cls(MappingProxyType({}))
 
 
 #def get_step_id(step: 'AbstractStep') -> str:
@@ -230,7 +250,11 @@ class AbstractStep(abc.ABC):
 #        self.step_id = str(id(self))
 
     @abc.abstractmethod
-    def process(self, context: 'ProcessingContext', step_index: int) -> None:
+    def process(
+        self,
+        context: 'ProcessingContext',
+        step_index: int,
+    ) -> 'StepExecutionObservation':
         """
         Process the step with the given context and step index.
 
@@ -239,7 +263,8 @@ class AbstractStep(abc.ABC):
         configuration and paths are retrieved from context.step_plans[self.step_id].
         The context itself is frozen and must not be modified.
         Outputs are written to VFS via context.filemanager based on the steps plan.
-        This method returns None.
+        The returned observation reports the exact persistent artifact writes
+        performed during this step execution.
 
         Args:
             context: The frozen ProcessingContext containing all required fields,

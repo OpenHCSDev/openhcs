@@ -7,6 +7,7 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypeVar
 
 import numpy as np
 from polystore.streaming.identity import StreamProducerIdentity
@@ -41,6 +42,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     StreamingOnlyArtifactMaterializationTargetPlan,
     materialize_artifact_outputs,
 )
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_io import (
     prepare_storage_image_payloads,
     save_materialized_data,
@@ -68,6 +70,7 @@ from openhcs.microscopes.microscope_interfaces import FilenameParser
 
 logger = logging.getLogger(__name__)
 StreamPayload = RuntimeArrayData
+ProfiledResult = TypeVar("ProfiledResult")
 
 
 def stream_payload_summary(payload: StreamPayload) -> str:
@@ -115,15 +118,14 @@ class ProducedMemoryPathsAuthority:
 def finalize_function_step_outputs(
     context: ProcessingContext,
     plan: CompiledStepPlan,
-) -> None:
+) -> StepExecutionObservation:
     """Persist images, streams, metadata, and non-image artifacts for one step."""
     if not RuntimeProfileLogger.enabled():
         MemoryOutputWriter.write_if_needed(context, plan)
         MaterializedImageOutputWriter.write_if_needed(context, plan)
         StreamOutputsAuthority.stream_outputs(context, plan)
         OpenHCSMetadataWriter.write(context, plan)
-        RuntimeArtifactMaterializationAuthority.materialize(context, plan)
-        return
+        return RuntimeArtifactMaterializationAuthority.materialize(context, plan)
 
     _profile_finalization_phase(
         "finalize_memory_outputs",
@@ -145,7 +147,7 @@ def finalize_function_step_outputs(
         lambda: OpenHCSMetadataWriter.write(context, plan),
         plan,
     )
-    _profile_finalization_phase(
+    return _profile_finalization_phase(
         "finalize_runtime_artifacts",
         lambda: RuntimeArtifactMaterializationAuthority.materialize(context, plan),
         plan,
@@ -154,11 +156,11 @@ def finalize_function_step_outputs(
 
 def _profile_finalization_phase(
     label: str,
-    operation: Callable[[], None],
+    operation: Callable[[], ProfiledResult],
     plan: CompiledStepPlan,
-) -> None:
+) -> ProfiledResult:
     started_at = time.perf_counter()
-    operation()
+    result = operation()
     RuntimeProfileLogger.log(
         logger,
         label,
@@ -167,6 +169,7 @@ def _profile_finalization_phase(
         step_name=plan.step_name,
         axis_id=plan.axis_id,
     )
+    return result
 
 
 class MemoryOutputWriter:
@@ -909,27 +912,28 @@ class RuntimeArtifactMaterializationAuthority:
         cls,
         context: ProcessingContext,
         plan: CompiledStepPlan,
-    ) -> None:
+    ) -> StepExecutionObservation:
         if not plan.artifact_outputs:
-            return
+            return StepExecutionObservation.empty()
         materialization_plan = plan.runtime_artifact_materialization
         has_persistent_target = materialization_plan.has_persistent_target
         has_streaming_target = bool(plan.streaming_configs)
         if not has_persistent_target and not has_streaming_target:
             logger.info("Skipping runtime artifact materialization and streaming")
-            return
+            return StepExecutionObservation.empty()
 
         logger.info(
             "Starting materialization for %s artifact outputs",
             len(plan.artifact_outputs),
         )
-        materialize_artifact_outputs(
+        observation = materialize_artifact_outputs(
             context.filemanager,
             plan,
             cls.target_plan(materialization_plan),
             context,
         )
         logger.info("Completed artifact materialization")
+        return observation
 
     @staticmethod
     def target_plan(
