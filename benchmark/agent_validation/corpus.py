@@ -6,10 +6,12 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import tifffile
 
+from benchmark.agent_validation import tasks as _task_declarations  # noqa: F401
 from benchmark.agent_validation.contracts import (
     AssertionResult,
     AttemptRecord,
@@ -19,19 +21,16 @@ from benchmark.agent_validation.contracts import (
     InputFileRecord,
     OutputKind,
     ScoringCase,
-    TaskBundleRecord,
     TaskAuthoringSpec,
+    TaskBundleRecord,
     TaskCaseRecord,
     TaskParameterRecord,
     TaskScore,
 )
 from benchmark.agent_validation.declarations import ValidationTaskDeclaration
 from benchmark.agent_validation.perturbations import DiagnosticPerturbationDeclaration
-from benchmark.agent_validation import tasks as _task_declarations  # noqa: F401
-from benchmark.agent_validation import (
-    perturbations as _perturbation_declarations,
-)  # noqa: F401
 from benchmark.agent_validation.scoring import AttemptJournalScorer
+from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.serialization.json import to_jsonable
 
 
@@ -44,7 +43,7 @@ class FrozenPipeline:
     sha256: str
 
     @classmethod
-    def capture(cls, task_id: str, pipeline_path: Path) -> "FrozenPipeline":
+    def capture(cls, task_id: str, pipeline_path: Path) -> FrozenPipeline:
         """Hash a reviewed pipeline at the freeze boundary."""
 
         return cls(task_id, pipeline_path, _sha256_file(pipeline_path))
@@ -103,6 +102,16 @@ class AgentValidationCorpus:
             case_rows = cls._write_inputs(task, input_root)
             candidate_path = probe_root / "candidate.npy"
             np.save(candidate_path, perturbation.perturb(case), allow_pickle=False)
+            pipeline_document = perturbation.flawed_pipeline_document()
+            pipeline_source_path = None
+            pipeline_sha256 = None
+            if pipeline_document is not None:
+                pipeline_source_path = probe_root / "pipeline.py"
+                pipeline_source_path.write_text(
+                    PipelineDocumentAuthority.render(pipeline_document),
+                    encoding="utf-8",
+                )
+                pipeline_sha256 = _sha256_file(pipeline_source_path)
             _write_json(
                 probe_root / "challenge.json",
                 DiagnosticChallengeRecord(
@@ -115,6 +124,12 @@ class AgentValidationCorpus:
                         "Diagnose the candidate from raw/result evidence, record one "
                         "hypothesis, repair one semantic boundary, rerun, and verify."
                     ),
+                    pipeline_source_path=(
+                        None
+                        if pipeline_source_path is None
+                        else Path(pipeline_source_path.name)
+                    ),
+                    pipeline_sha256=pipeline_sha256,
                 ),
             )
             probe_ids.append(perturbation.probe_id)

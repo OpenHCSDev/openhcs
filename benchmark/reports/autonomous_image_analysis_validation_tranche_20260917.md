@@ -35,32 +35,13 @@ it does not import or execute the upstream evaluation harness. A provenance
 audit against the pinned checkout passed for all eight notebooks and all eight
 check cells.
 
-## How to prepare a blind run
+## Blind boundary and operator protocol
 
-Clone the pinned evidence separately and verify it:
-
-```bash
-git clone https://github.com/haesleinhuepf/human-eval-bia.git /tmp/human-eval-bia
-git -C /tmp/human-eval-bia checkout --detach f6edaa15545e84951f5428d07e16db04155f2266
-python -m benchmark.agent_validation verify-upstream /tmp/human-eval-bia
-```
-
-Create an answer-free authoring bundle in a new directory:
-
-```bash
-python -m benchmark.agent_validation build /path/to/run/authoring
-```
-
-Create the separate diagnostic-repair track with opaque probe identifiers:
-
-```bash
-python -m benchmark.agent_validation build-diagnostics /path/to/run/diagnostics
-```
-
-Give the authoring agent only that directory, the running OpenHCS UI/MCP
-surface, the model/run identity, and the same bounded instructions used for
-every model. Do not give it this source package, a scorer process, upstream
-`check` cells, accepted output arrays, or a prior agent's pipeline.
+The reproducible operator procedure is separate from this evidence report in
+[`benchmark/agent_validation/OPERATOR_GUIDE.md`](../agent_validation/OPERATOR_GUIDE.md).
+It pins and verifies the upstream checkout, creates fresh public bundles,
+preserves every attempt, freezes the final pipeline and only then admits it to
+held-out scoring.
 
 The authoring bundle contains one HCS-shaped input folder and one `task.json`
 per task. Its JSON states the processing objective, evidence obligations,
@@ -68,38 +49,41 @@ upstream provenance and source files. It contains no expected result or hidden
 assertion. Multi-plane projection inputs are emitted as Z planes. Multi-input
 measurement cases are emitted as channels so the agent must use source
 bindings rather than recover roles from local filenames inside a callable.
-The diagnostic bundle currently contains four independently scored candidate
+The diagnostic bundle currently contains five independently scored candidate
 failures: missing foreground, a disconnected skeleton, a split label and a
-merged label. Their public records expose only opaque probe identifiers; the
-failure classes remain declaration-owned scorer evidence.
+merged label, plus one complete but semantically flawed label-expansion
+pipeline. Their public records expose only opaque probe identifiers; the
+failure classes remain declaration-owned scorer evidence. The complete
+pipeline is rendered from a typed `PipelineDocument`, declares NumPy/PURE_2D
+execution and disk materialization, and has passed a real compiler artifact-plan
+inspection. The injected failure classification remains scorer-owned even
+though the public source necessarily exposes the parameter value to diagnose.
 
-## Required attempt loop
+The public authoring bundle contains HCS-shaped input folders and answer-free
+task records. The diagnostic bundle uses opaque probe identities and withholds
+the injected failure classes. Rejected attempts remain evidence. Final parity,
+diagnostic coverage and DSL fluency are scored separately after the frozen
+pipeline boundary.
 
-For every task, preserve each attempt under a distinct identifier and record:
+## MCP-derived attempt receipts
 
-1. the observed failure and one falsifiable hypothesis;
-2. one declaration-owned semantic change;
-3. the complete pipeline hash and compile result;
-4. bounded runtime and peak resident memory;
-5. raw, normalized, mask/ROI and measurement views at identical coordinates;
-6. at least three declared percentile windows with their computed intensity
-   bounds;
-7. requested missed-signal, unsupported-mask, split, merge, disconnected-path,
-   crossing/ownership, tile-seam, saturation, count, area and foreground checks;
-8. evidence for the task's `variable_components`, `group_by`, function-pattern,
-   source-binding, artifact/materialization and compile/run obligations.
+`McpAttemptRecorder` wraps one persistent `McpDevClient` session and writes
+every complete MCP payload once, with SHA-256 identity, elapsed time and peak
+process-tree RSS. It resolves each tool through the nominal capability
+declaration and derives DSL evidence from successful typed responses:
 
-Rejected attempts remain part of the run. A later attempt must name exactly one
-semantic change and have a different pipeline identity. A final candidate is
-admitted to scoring only after the pipeline is frozen. The held-out result is
-then produced once unless a preregistered infrastructure failure invalidates
-the execution.
+- rendered `PipelineDocument` values prove `variable_components`, `group_by`
+  and ordered function patterns;
+- compiler artifact-plan results prove materialization planning;
+- distinct successful compile and run job receipts with terminal statuses prove
+  the compile/run boundary;
+- registration, function detail, pipeline projection and UI code-document
+  receipts jointly prove signature-derived exposure.
 
-For custom-function tasks, the run record must show that the agent searched the
-live catalogue, identified the exact gap, registered a typed function through
-OpenHCS, and observed the same signature/defaults in function detail, generated
-code, the parameter form, and MCP. A standalone script can be useful during
-private reasoning, but it does not satisfy the task.
+Failed commands are preserved but cannot create semantic evidence. Current-MCP
+executions made outside the recorder can be imported with their measured
+runtime/RSS, which keeps the evidence projection usable when the running UI is
+newer than an isolated benchmark checkout.
 
 ## What the scorer separates
 
@@ -116,6 +100,13 @@ count, area quartiles, reference splits and merges, disconnected labels, and
 quadrant foreground fractions. These measurements accept explicit signal and
 reference masks; they do not infer truth from display colours.
 
+The canonical typed QA policy also ranks rejected source candidates by nearby
+signal support and records area, width, response, connectivity, border, debris
+and already-owned dispositions. It separately ranks signal-supported residual
+processes that remain unowned or unrooted. Missed-object review is therefore an
+admission/path/ownership audit rather than a reason to lower a global threshold
+blindly; rejected parameter changes remain evidence too.
+
 DSL evidence is not a self-reported checklist. Each claimed obligation points
 to a preserved MCP, UI, compiler, runtime or artifact record and includes the
 agent's explanation of the observed semantics. The scorer penalizes direct
@@ -128,17 +119,36 @@ result pixels happen to match.
 
 The local implementation has passed its focused unit suite, reference
 implementations pass all transcribed assertions, the answer-free bundle builds,
-and the pinned upstream provenance audit passes. No autonomous model result is
-claimed yet.
+and the pinned upstream provenance audit passes.
+
+One fresh blind Sol diagnostic pilot is preserved at
+`/tmp/openhcs-agent-validation-pilot-OtZEcG/sol-pilot`. The agent inspected the
+live catalogue and contracts, registered a NumPy/PURE_2D custom function,
+compiled and executed the public radius-zero candidate, inspected identical
+coordinates under three percentile windows, stated one hypothesis, and changed
+only `FunctionStep` radius from zero to one. Foreground increased from 7 to 19
+pixels while all three label identities and every original labelled pixel were
+preserved. The frozen pipeline SHA-256 is
+`08c6cd0ff1e827c69393a2d8ee6b068616dc6422e0beb3418d363713511d2acb`.
+After that freeze, an independent comparison against the held-out task
+declaration passed exact array equality with zero mismatched pixels.
+
+The pilot contains 79 immutable command/MCP ledger entries, raw payloads,
+viewer snapshots, per-command timing/RSS, one baseline attempt and one frozen
+attempt. Importing the current MCP receipts through `McpAttemptRecorder`
+automatically proved artifact materialization and the compile/run boundary.
+It deliberately did not award signature-derived UI exposure: the running UI
+and current MCP resolved different custom-function module namespaces, so the
+challenge pipeline could not be applied to the UI. The recorded no-op UI
+round-trip concerned an unrelated existing pipeline. Variable/group evidence
+also remains unawarded because this pilot did not obtain an MCP-rendered source
+receipt. These are platform/evidence gaps, not silently completed obligations.
 
 The next tranche is operational:
 
-- add the MCP-derived attempt recorder so compile plans, runtime observations,
-  UI/code round trips and materialized artifacts populate `AttemptRecord`
-  without agent self-report;
-- run the eight tasks through fresh bounded Sol sessions, preserving all
-  attempts;
-- extend the four array-level perturbations into complete deliberately flawed
+- run the remaining tasks through fresh bounded model sessions, preserving all
+  attempts and eliminating the UI/MCP custom-module skew;
+- extend the remaining four array-level perturbations into complete deliberately flawed
   pipeline declarations so repair can be scored at the authored semantic
   boundary as well as at the resulting pixels;
 - score diagnostic action quality as well as repair success;

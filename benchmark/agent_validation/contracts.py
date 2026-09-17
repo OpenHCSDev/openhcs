@@ -5,8 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Self
 
 import numpy as np
+
+from openhcs.agent.image_analysis_qa import (
+    RejectedCandidateObservation,
+    ResidualStructureObservation,
+    RootedContinuityObservation,
+    SemanticGate,
+)
 
 TaskParameterValue = str | int | float | bool
 ExpectedValue = np.ndarray | int | float | tuple[str, ...] | None
@@ -52,6 +60,10 @@ class DiagnosticCheck(Enum):
     COUNT_DISTRIBUTION = "count_distribution"
     AREA_DISTRIBUTION = "area_distribution"
     FOREGROUND_DISTRIBUTION = "foreground_distribution"
+    OBJECT_ADMISSION = "object_admission"
+    PATH_CONTINUITY = "path_continuity"
+    ROOTED_TRACE_CONTINUITY = "rooted_trace_continuity"
+    REJECTED_CANDIDATE_RANKING = "rejected_candidate_ranking"
 
 
 class DslRequirement(Enum):
@@ -81,7 +93,7 @@ class ArchitectureViolation(Enum):
         value: str,
         penalty: float,
         disqualifying: bool,
-    ) -> "ArchitectureViolation":
+    ) -> Self:
         member = object.__new__(cls)
         member._value_ = value
         member.penalty = penalty
@@ -153,6 +165,7 @@ class SemanticChange:
     before: str
     after: str
     hypothesis: str
+    gate: SemanticGate | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,6 +221,9 @@ class AttemptRecord:
     architecture_violations: frozenset[ArchitectureViolation]
     runtime: RuntimeObservation | None
     change: SemanticChange | None = None
+    continuity: RootedContinuityObservation | None = None
+    rejected_candidates: tuple[RejectedCandidateObservation, ...] = ()
+    residual_structures: tuple[ResidualStructureObservation, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -283,6 +299,8 @@ class DiagnosticChallengeRecord:
     candidate_path: Path
     cases: tuple[TaskCaseRecord, ...]
     required_action: str
+    pipeline_source_path: Path | None = None
+    pipeline_sha256: str | None = None
     expected_failure_hidden: bool = True
 
 

@@ -10,12 +10,12 @@ from scipy import ndimage
 from skimage import filters, measure, morphology, segmentation
 
 from benchmark.agent_validation.contracts import (
+    ArchitectureViolation,
     AttemptPhase,
     AttemptRecord,
-    ArchitectureViolation,
-    DiagnosticCheck,
     DslEvidenceArtifact,
     PercentileWindow,
+    RootedContinuityObservation,
     RuntimeObservation,
     SemanticChange,
     ValidationView,
@@ -28,6 +28,7 @@ from benchmark.agent_validation.perturbations import DiagnosticPerturbationDecla
 from benchmark.agent_validation.scoring import (
     AttemptJournalScorer,
     MaskDiagnosticMetrics,
+    RootedContinuityMetrics,
 )
 
 
@@ -59,12 +60,21 @@ def test_diagnostic_bundle_hides_failure_labels_and_preserves_opaque_probes(
 ) -> None:
     root = tmp_path / "diagnostics"
     probe_ids = AgentValidationCorpus.build_diagnostic_bundle(root)
-    assert probe_ids == ("probe-001", "probe-002", "probe-003", "probe-004")
+    assert probe_ids == (
+        "probe-001",
+        "probe-002",
+        "probe-003",
+        "probe-004",
+        "probe-005",
+    )
     public_text = "\n".join(path.read_text() for path in root.rglob("*.json"))
     assert '"failure_labels_included": false' in public_text
     assert "disconnected_trace" not in public_text
     assert '"expected_failure_hidden": true' in public_text
     assert all((root / probe_id / "candidate.npy").is_file() for probe_id in probe_ids)
+    complete_pipeline = root / "probe-005" / "pipeline.py"
+    assert complete_pipeline.is_file()
+    assert "radius': 0" in complete_pipeline.read_text()
 
 
 @pytest.mark.parametrize("task", AgentValidationCorpus.task_declarations())
@@ -88,6 +98,21 @@ def test_mask_diagnostics_identify_split_merge_and_disconnection() -> None:
     assert metrics.reference_merges == 1
     assert metrics.disconnected_labels == 1
     assert metrics.missed_signal_fraction > 0
+
+
+def test_rooted_continuity_separates_admission_from_path_and_ownership() -> None:
+    labels = np.zeros((9, 12), dtype=np.uint16)
+    labels[4, 1] = 1
+    labels[4, 10] = 2
+    trace = np.zeros_like(labels, dtype=bool)
+    trace[4, 1:11] = True
+    trace[1, 4:7] = True
+    metrics = RootedContinuityMetrics.measure(labels, trace)
+    assert metrics.object_count == 2
+    assert metrics.accepted_body_pixels == 2
+    assert metrics.rooted_trace_pixels == 10
+    assert metrics.unrooted_trace_pixels == 3
+    assert metrics.ownership_crossover_components == 1
 
 
 def test_declared_perturbations_induce_their_reference_visible_failures() -> None:
@@ -245,6 +270,21 @@ def test_attempt_journal_scores_visual_and_dsl_axes_separately(tmp_path: Path) -
         ),
     )
     assert bypassed.dsl_fraction == 0.0
+
+    unrooted_growth = AttemptJournalScorer.score(
+        task,
+        (
+            replace(
+                first,
+                continuity=RootedContinuityObservation(1, 10, 20, 15, 5, 0),
+            ),
+            replace(
+                second,
+                continuity=RootedContinuityObservation(1, 10, 30, 15, 15, 0),
+            ),
+        ),
+    )
+    assert not unrooted_growth.lifecycle_passed
 
     journal = AttemptJournal(tmp_path / "attempts")
     receipt = journal.preserve(first)

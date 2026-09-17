@@ -8,14 +8,25 @@ from typing import ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
+from benchmark.agent_validation.challenge_functions import (
+    expand_labels_without_overlap,
+)
 from benchmark.agent_validation.contracts import DiagnosticCheck, ScoringCase
 from benchmark.agent_validation.declarations import ValidationTaskDeclaration
+from openhcs.constants import GroupBy
+from openhcs.core.config import (
+    LazyProcessingConfig,
+    LazyStepMaterializationConfig,
+    PipelineConfig,
+)
+from openhcs.core.pipeline_document import PipelineDocument, PipelineDocumentAuthority
+from openhcs.core.steps.function_step import FunctionStep
 
 
 class DiagnosticPerturbationDeclaration(ABC, metaclass=AutoRegisterMeta):
     """One hidden failure injected into a deterministic reference output."""
 
-    __registry__: ClassVar[dict[str, type["DiagnosticPerturbationDeclaration"]]] = {}
+    __registry__: ClassVar[dict[str, type[DiagnosticPerturbationDeclaration]]] = {}
     __registry_key__ = "probe_id"
     __skip_if_no_key__ = True
 
@@ -33,9 +44,15 @@ class DiagnosticPerturbationDeclaration(ABC, metaclass=AutoRegisterMeta):
         """Return the intentionally flawed candidate output."""
 
     @classmethod
+    def flawed_pipeline_document(cls) -> PipelineDocument | None:
+        """Return a complete flawed pipeline when this probe tests authoring."""
+
+        return None
+
+    @classmethod
     def declarations(
         cls,
-    ) -> tuple[type["DiagnosticPerturbationDeclaration"], ...]:
+    ) -> tuple[type[DiagnosticPerturbationDeclaration], ...]:
         return tuple(cls.__registry__[key] for key in sorted(cls.__registry__))
 
 
@@ -112,3 +129,42 @@ class ExpandLabelsMergeProbe(DiagnosticPerturbationDeclaration):
         result = np.asarray(case.expected).copy()
         result[result == 3] = 1
         return result
+
+
+class ExpandLabelsInsufficientGrowthProbe(DiagnosticPerturbationDeclaration):
+    """A runnable declaration whose radius prevents the requested expansion."""
+
+    probe_id = "probe-005"
+    expected_diagnostics = frozenset(
+        {DiagnosticCheck.MISSED_SIGNAL, DiagnosticCheck.AREA_DISTRIBUTION}
+    )
+
+    @classmethod
+    def task_type(cls) -> type[ValidationTaskDeclaration]:
+        from benchmark.agent_validation.tasks import ExpandLabelsTask
+
+        return ExpandLabelsTask
+
+    @classmethod
+    def perturb(cls, case: ScoringCase) -> np.ndarray:
+        return np.asarray(case.inputs[0].array).copy()
+
+    @classmethod
+    def flawed_pipeline_document(cls) -> PipelineDocument:
+        return PipelineDocumentAuthority.from_values(
+            pipeline_config=PipelineConfig(),
+            pipeline_steps=[
+                FunctionStep(
+                    func=(expand_labels_without_overlap, {"radius": 0}),
+                    name="Expand labels without overlap",
+                    processing_config=LazyProcessingConfig(
+                        variable_components=[],
+                        group_by=GroupBy.NONE,
+                    ),
+                    step_materialization_config=LazyStepMaterializationConfig(
+                        enabled=True,
+                        sub_dir="agent_validation",
+                    ),
+                )
+            ],
+        )

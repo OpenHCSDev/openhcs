@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import pairwise
 
 import numpy as np
 from scipy import ndimage
@@ -15,6 +16,7 @@ from benchmark.agent_validation.contracts import (
     ViewKind,
 )
 from benchmark.agent_validation.declarations import ValidationTaskDeclaration
+from openhcs.agent.image_analysis_qa import RootedContinuityObservation
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +48,7 @@ class MaskDiagnosticMetrics:
         signal_support: np.ndarray,
         candidate: np.ndarray,
         reference: np.ndarray,
-    ) -> "MaskDiagnosticMetrics":
+    ) -> MaskDiagnosticMetrics:
         """Measure common visual failure classes without display heuristics."""
 
         support = np.asarray(signal_support, dtype=bool)
@@ -83,6 +85,44 @@ class MaskDiagnosticMetrics:
         )
 
 
+class RootedContinuityMetrics:
+    """Measure object admission separately from soma-rooted path continuity."""
+
+    @classmethod
+    def measure(
+        cls,
+        object_labels: np.ndarray,
+        trace_mask: np.ndarray,
+    ) -> RootedContinuityObservation:
+        labels = np.asarray(object_labels).astype(np.int64, copy=False)
+        traces = np.asarray(trace_mask, dtype=bool)
+        if labels.shape != traces.shape:
+            raise ValueError("object labels and trace mask must have identical shape.")
+        accepted_body_pixels = int(np.count_nonzero(labels))
+        object_ids = np.unique(labels[labels > 0])
+        trace_components, component_count = ndimage.label(traces)
+        contact_labels = ndimage.grey_dilation(labels, size=(3,) * labels.ndim)
+        rooted_trace_pixels = 0
+        ownership_crossover_components = 0
+        for component_id in range(1, component_count + 1):
+            component = trace_components == component_id
+            owners = np.unique(contact_labels[component])
+            owners = owners[owners > 0]
+            if owners.size:
+                rooted_trace_pixels += int(np.count_nonzero(component))
+            if owners.size > 1:
+                ownership_crossover_components += 1
+        total_trace_pixels = int(np.count_nonzero(traces))
+        return RootedContinuityObservation(
+            object_count=int(object_ids.size),
+            accepted_body_pixels=accepted_body_pixels,
+            total_trace_pixels=total_trace_pixels,
+            rooted_trace_pixels=rooted_trace_pixels,
+            unrooted_trace_pixels=total_trace_pixels - rooted_trace_pixels,
+            ownership_crossover_components=ownership_crossover_components,
+        )
+
+
 class AttemptJournalScorer:
     """Score the observable diagnose-edit-rerun-verify protocol."""
 
@@ -102,7 +142,11 @@ class AttemptJournalScorer:
         )
         hashes_follow_changes = all(
             current.pipeline_sha256 != previous.pipeline_sha256
-            for previous, current in zip(attempts, attempts[1:])
+            for previous, current in pairwise(attempts)
+        )
+        rooted_repairs_are_causal = all(
+            _does_not_add_unrooted_foreground(previous, current)
+            for previous, current in pairwise(attempts)
         )
         final = attempts[-1]
         visual_passed = cls._visual_evidence_passed(task, final)
@@ -119,6 +163,7 @@ class AttemptJournalScorer:
                 unique_ids,
                 one_change_per_revision,
                 hashes_follow_changes,
+                rooted_repairs_are_causal,
                 final.phase is AttemptPhase.FROZEN,
                 visual_passed,
                 runtime_passed,
@@ -128,6 +173,13 @@ class AttemptJournalScorer:
         observed_diagnostics = frozenset().union(
             *(attempt.diagnostic_checks for attempt in attempts)
         )
+        if any(
+            attempt.rejected_candidates or attempt.residual_structures
+            for attempt in attempts
+        ):
+            observed_diagnostics = observed_diagnostics | {
+                DiagnosticCheck.REJECTED_CANDIDATE_RANKING
+            }
         observed_dsl = frozenset(
             evidence.requirement
             for attempt in attempts
@@ -186,6 +238,17 @@ def _coverage_fraction(required: frozenset, observed: frozenset) -> float:
     if not required:
         return 1.0
     return len(required & observed) / len(required)
+
+
+def _does_not_add_unrooted_foreground(
+    previous: AttemptRecord,
+    current: AttemptRecord,
+) -> bool:
+    """Reject larger masks that do not improve soma-rooted continuity."""
+
+    if previous.continuity is None or current.continuity is None:
+        return True
+    return current.continuity.accepts_growth_from(previous.continuity)
 
 
 def _as_labels(image: np.ndarray) -> np.ndarray:
