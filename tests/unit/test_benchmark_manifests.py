@@ -21,6 +21,7 @@ def test_official30_portable_manifest_declares_roots_without_absolute_cases(
         "axis_one_subsets",
         "cellprofiler_examples",
         "dataset_cache",
+        "reference_export_pipelines",
     }
     assert payload["path_roots"]["cellprofiler_examples"]["acquisition"] == {
         "git_ref": "4972b59e670a4ae96c3d453803c92eeff378d054",
