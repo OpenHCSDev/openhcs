@@ -23,12 +23,11 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_spatial_graph import SpatialGraph
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
+    NEURITE_OBJECT_LABEL_MATERIALIZATION,
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
     MetaXpressOutgrowthSettings,
-    NEURITE_OBJECT_LABEL_MATERIALIZATION,
     NeuriteIllumination,
-    _TopologyResult,
     _adopt_secondary_owned_skeleton,
     _analyze_topology,
     _build_neurite_morphology_graph,
@@ -36,9 +35,9 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     _derive_signal_cell_bodies,
     _expand_skeleton_ownership,
     _identify_cell_bodies_cellprofiler,
-    _identify_secondary_owner_regions_cellprofiler,
     _propagate_neurite_owner_regions,
     _repair_signal_supported_skeleton,
+    _TopologyResult,
     count_neuronal_cell_bodies_metaxpress,
     neurite_outgrowth_metaxpress,
 )
@@ -1254,16 +1253,16 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell(
         "_identify_cell_bodies_cellprofiler",
         reject_discarded_body_segmentation,
     )
-    secondary_calls = []
 
-    def record_secondary_call(*args, **kwargs):
-        secondary_calls.append(None)
-        return _identify_secondary_owner_regions_cellprofiler(*args, **kwargs)
+    def reject_hidden_secondary_threshold(*args, **kwargs):
+        raise AssertionError(
+            "nuclear-seeded soma admission must use the declared body contract"
+        )
 
     monkeypatch.setattr(
         "openhcs.processing.backends.analysis.neurite_outgrowth."
         "_identify_secondary_owner_regions_cellprofiler",
-        record_secondary_call,
+        reject_hidden_secondary_threshold,
     )
 
     result = _implementation()(
@@ -1303,7 +1302,6 @@ def test_nuclear_seeds_fill_bounded_signal_bodies_and_keep_zero_growth_cell(
     }
     assert not np.any((cell_bodies[1] > 0) & (neurites[1] > 0))
     assert result[5][1, 35, 140] == 0
-    assert len(secondary_calls) == 2
 
 
 def test_neurite_owner_regions_propagate_only_through_declared_signal_support():
@@ -1330,17 +1328,15 @@ def test_neurite_owner_regions_propagate_only_through_declared_signal_support():
 def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch):
     shape = (512, 512)
     seeds = np.zeros(shape, dtype=np.int32)
-    unified = np.zeros(shape, dtype=np.int32)
     image = np.zeros(shape, dtype=np.uint16)
-    for owner, center, region_slice in (
-        (1, (80, 80), (slice(0, 256), slice(0, 256))),
-        (2, (430, 430), (slice(256, 512), slice(256, 512))),
+    for owner, center in (
+        (1, (80, 80)),
+        (2, (430, 430)),
     ):
         rows, columns = disk(center, 4, shape=shape)
         seeds[rows, columns] = owner
         rows, columns = disk(center, 12, shape=shape)
         image[rows, columns] = 1200
-        unified[region_slice] = owner
 
     observed_shapes = []
     distance_transform = ndi.distance_transform_edt
@@ -1357,7 +1353,6 @@ def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch)
 
     bodies = _derive_signal_cell_bodies(
         seeds,
-        unified,
         image,
         _cell_body_settings(channel_index=1),
         1.0,
@@ -1366,10 +1361,35 @@ def test_signal_body_derivation_bounds_each_seed_distance_transform(monkeypatch)
 
     assert set(np.unique(bodies)) == {0, 1, 2}
     assert observed_shapes[0] == shape
-    assert len(observed_shapes) == 3
+    assert len(observed_shapes) == 5
     assert all(
         rows < shape[0] and columns < shape[1] for rows, columns in observed_shapes[1:]
     )
+
+
+def test_signal_body_derivation_partitions_shared_signal_by_nearest_nucleus():
+    shape = (72, 72)
+    seeds = np.zeros(shape, dtype=np.int32)
+    for owner, center in ((1, (36, 25)), (2, (36, 47))):
+        rows, columns = disk(center, 4, shape=shape)
+        seeds[rows, columns] = owner
+    image = np.zeros(shape, dtype=np.uint16)
+    rows, columns = disk((36, 36), 20, shape=shape)
+    image[rows, columns] = 1200
+
+    bodies = _derive_signal_cell_bodies(
+        seeds,
+        image,
+        _cell_body_settings(channel_index=1),
+        1.0,
+        bright_objects=True,
+    )
+
+    assert set(np.unique(bodies)) == {0, 1, 2}
+    assert bodies[36, 28] == 1
+    assert bodies[36, 44] == 2
+    assert np.count_nonzero(bodies == 1) > 100
+    assert np.count_nonzero(bodies == 2) > 100
 
 
 def test_cell_body_contract_bounds_each_object_distance_transform(monkeypatch):
