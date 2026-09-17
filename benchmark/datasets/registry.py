@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import ClassVar
 from pathlib import Path
+from typing import ClassVar
 
 from metaclass_registry import AutoRegisterMeta
-from openhcs.constants.constants import Microscope
 
 from benchmark.contracts.dataset import (
     ArchiveFormat,
@@ -19,6 +18,21 @@ from benchmark.contracts.dataset import (
     DatasetSpec,
     DatasetValidationRule,
 )
+from benchmark.contracts.validation import (
+    IndependentValidationSpec,
+    PublishedAssayReference,
+    ValidationArtifactKind,
+    ValidationArtifactRole,
+    ValidationArtifactSpec,
+    ValidationAuthoringTrack,
+    ValidationChannelSpec,
+    ValidationDatasetLayout,
+    ValidationEvidenceKind,
+    ValidationFunctionSurface,
+    ValidationMetricProfile,
+    ValidationRepositorySource,
+)
+from openhcs.constants.constants import Microscope
 
 CELLPROFILER_TUTORIALS_REPO = "https://github.com/CellProfiler/tutorials.git"
 CELLPROFILER_TUTORIALS_REVISION = "264a8155da21a2d468051f78211bed2e580a8934"
@@ -28,6 +42,247 @@ CP4_BENCHMARK_SUPPLEMENT_REPO = (
 CP4_BENCHMARK_SUPPLEMENT_REVISION = "40abc2e600fd46b74c213999dd25c5245048dc92"
 CELL_ORIENTATION_REPO = "https://github.com/rgomez-AI/CellOrientation.git"
 CHROMTRANS_REPO = "https://github.com/rgomez-AI/3DChromTrans.git"
+
+
+BBBC039_INDEPENDENT_VALIDATION = IndependentValidationSpec(
+    record_url="https://bbbc.broadinstitute.org/BBBC039",
+    licence_name="CC0 1.0",
+    licence_url="https://creativecommons.org/publicdomain/zero/1.0/",
+    evidence_kind=ValidationEvidenceKind.INSTANCE_MASKS,
+    layout=ValidationDatasetLayout.PARTITIONED_INSTANCE_MASKS,
+    metric_profile=ValidationMetricProfile.INSTANCE_SEGMENTATION,
+    artifacts=(
+        ValidationArtifactSpec(
+            name="images.zip",
+            url="https://data.broadinstitute.org/bbbc/BBBC039/images.zip",
+            sha256="6f30a5d4fe38c928ded972704f085975f8dc0d65d9aa366df00e5a9d449fddd7",
+            size_bytes=77_915_748,
+            kind=ValidationArtifactKind.ZIP_ARCHIVE,
+            role=ValidationArtifactRole.INPUT,
+        ),
+        ValidationArtifactSpec(
+            name="masks.zip",
+            url="https://data.broadinstitute.org/bbbc/BBBC039/masks.zip",
+            sha256="f9e6043d8ca56344a4886f96a700d804d6ee982f31e2b2cd3194af2a053c2710",
+            size_bytes=2_753_811,
+            kind=ValidationArtifactKind.ZIP_ARCHIVE,
+            role=ValidationArtifactRole.REFERENCE,
+        ),
+        ValidationArtifactSpec(
+            name="metadata.zip",
+            url="https://data.broadinstitute.org/bbbc/BBBC039/metadata.zip",
+            sha256="a2c1f900bed9ba92a99553efd4c2ae98598433691c7401d818653ab61110deb2",
+            size_bytes=17_816,
+            kind=ValidationArtifactKind.ZIP_ARCHIVE,
+            role=ValidationArtifactRole.METADATA,
+        ),
+    ),
+    channels=(ValidationChannelSpec(alias="dna", value="DNA"),),
+    expected_input_planes=200,
+    source_identity_fields=("plate", "well", "site"),
+    execution_group_fields=("plate", "well"),
+    reference_decoder_url=(
+        "https://gist.github.com/jccaicedo/15e811722fca51e3ae90e8b43057f075"
+    ),
+    reference_decoder_revision="2dd780afdbde1d5410ed57030a011b2000cfc658",
+    authoring_tracks=(
+        ValidationAuthoringTrack(
+            name="catalog_instance_segmentation",
+            function_surface=ValidationFunctionSurface.CATALOG,
+            objective=(
+                "Author and visually debug a catalogue-only DNA instance-segmentation "
+                "pipeline, then materialize one label image and object table per field."
+            ),
+            expected_artifacts=("instance_labels", "object_measurements"),
+        ),
+    ),
+)
+
+
+BBBC007_INDEPENDENT_VALIDATION = IndependentValidationSpec(
+    record_url="https://bbbc.broadinstitute.org/BBBC007",
+    licence_name="CC0 / rights waived",
+    licence_url="https://creativecommons.org/publicdomain/zero/1.0/",
+    evidence_kind=ValidationEvidenceKind.MANUAL_OUTLINES,
+    layout=ValidationDatasetLayout.PAIRED_MANUAL_OUTLINES,
+    metric_profile=ValidationMetricProfile.BOUNDARY_AND_INSTANCE,
+    artifacts=(
+        ValidationArtifactSpec(
+            name="BBBC007_v1_images.zip",
+            url="https://data.broadinstitute.org/bbbc/BBBC007/BBBC007_v1_images.zip",
+            sha256="b7009e2fce0a3152a5c9adda916eaa699d09696f4bd02a7d05d12d041e30c6d1",
+            size_bytes=6_435_776,
+            kind=ValidationArtifactKind.ZIP_ARCHIVE,
+            role=ValidationArtifactRole.INPUT,
+        ),
+        ValidationArtifactSpec(
+            name="BBBC007_v1_outlines.zip",
+            url="https://data.broadinstitute.org/bbbc/BBBC007/BBBC007_v1_outlines.zip",
+            sha256="6a5246f9a9d743d22eafdb409fae638a8461af97e9ff9c4a92f25eba236224d3",
+            size_bytes=652_531,
+            kind=ValidationArtifactKind.ZIP_ARCHIVE,
+            role=ValidationArtifactRole.REFERENCE,
+        ),
+    ),
+    channels=(
+        ValidationChannelSpec(alias="dna", value="DNA"),
+        ValidationChannelSpec(alias="actin", value="ACTIN"),
+    ),
+    expected_input_planes=32,
+    repository_sources=(
+        ValidationRepositorySource(
+            name="Haase sparse BBBC007 tutorial subset",
+            url="https://github.com/haesleinhuepf/BioImageAnalysisNotebooks.git",
+            revision="68845a1afaf53bf601958a3fa7d86f3cf8a43219",
+            licence_name="BSD-3-Clause code / CC BY 4.0 book; BBBC007 data CC0",
+            materialized_size_bytes=2_406_250,
+            paths=(
+                "docs/29_algorithm_validation/segmentation_quality_estimation.ipynb",
+                "data/BBBC007_batch",
+                "data/BBBC007_sparse_instance_annotation",
+            ),
+        ),
+    ),
+    authoring_tracks=(
+        ValidationAuthoringTrack(
+            name="catalog_seeded_cell_segmentation",
+            function_surface=ValidationFunctionSurface.CATALOG,
+            objective=(
+                "Use paired DNA and actin bindings to segment nuclei and seeded cells "
+                "with catalogue functions and materialize both label sets."
+            ),
+            expected_artifacts=("nucleus_labels", "cell_labels"),
+        ),
+        ValidationAuthoringTrack(
+            name="typed_sparse_jaccard_extension",
+            function_surface=ValidationFunctionSurface.REGISTERED_CUSTOM,
+            objective=(
+                "Register a typed sparse-reference comparison function, expose it through "
+                "the same reflected UI/MCP catalogue, and materialize its metric table."
+            ),
+            expected_artifacts=("sparse_metric_table",),
+        ),
+    ),
+)
+
+
+BBBC013_INDEPENDENT_VALIDATION = IndependentValidationSpec(
+    record_url="https://bbbc.broadinstitute.org/BBBC013",
+    licence_name="CC BY 3.0",
+    licence_url="https://creativecommons.org/licenses/by/3.0/",
+    evidence_kind=ValidationEvidenceKind.PLATE_BIOLOGY,
+    layout=ValidationDatasetLayout.TRANSLOCATION_PLATE,
+    metric_profile=ValidationMetricProfile.TRANSLOCATION_ASSAY,
+    artifacts=(
+        ValidationArtifactSpec(
+            name="BBBC013_v1_images_bmp.zip",
+            url="https://data.broadinstitute.org/bbbc/BBBC013/BBBC013_v1_images_bmp.zip",
+            sha256="c059b569d96f70ad5626fad144867e6ece4353622119c46a8af8f9794f1e7985",
+            size_bytes=32_404_692,
+            kind=ValidationArtifactKind.ZIP_ARCHIVE,
+            role=ValidationArtifactRole.INPUT,
+        ),
+        ValidationArtifactSpec(
+            name="BBBC013_reproduce_logan.zip",
+            url="https://data.broadinstitute.org/bbbc/BBBC013/BBBC013_reproduce_logan.zip",
+            sha256="5ab59bbaddf75fee08436d2d7cfc7460ebfdaa6fdf1b8adb71274c7c27f885f3",
+            size_bytes=5_557_596,
+            kind=ValidationArtifactKind.ZIP_ARCHIVE,
+            role=ValidationArtifactRole.REPRODUCTION,
+        ),
+        ValidationArtifactSpec(
+            name="BBBC013_v1_platemap_all.txt",
+            url="https://data.broadinstitute.org/bbbc/BBBC013/BBBC013_v1_platemap_all.txt",
+            sha256="e8db6666271d47962fa7d2abfa3ea965352b8e87bee461f2983d0f667bc7ff08",
+            size_bytes=513,
+            kind=ValidationArtifactKind.FILE,
+            role=ValidationArtifactRole.METADATA,
+        ),
+        ValidationArtifactSpec(
+            name="BBBC013_v1_platemap_wortmannin.txt",
+            url="https://data.broadinstitute.org/bbbc/BBBC013/BBBC013_v1_platemap_wortmannin.txt",
+            sha256="c833784cb9f797562c07b3c5d21b03739fb88436ff31847d408528aebf00f59b",
+            size_bytes=318,
+            kind=ValidationArtifactKind.FILE,
+            role=ValidationArtifactRole.METADATA,
+        ),
+        ValidationArtifactSpec(
+            name="BBBC013_v1_platemap_ly294002.txt",
+            url="https://data.broadinstitute.org/bbbc/BBBC013/BBBC013_v1_platemap_ly294002.txt",
+            sha256="1dcdee3cd49ab7c5b4f6fc9fbe3e10034df3aa3cbae6c83c25a5b457aabf6834",
+            size_bytes=279,
+            kind=ValidationArtifactKind.FILE,
+            role=ValidationArtifactRole.METADATA,
+        ),
+    ),
+    channels=(
+        ValidationChannelSpec(alias="gfp", value="GFP"),
+        ValidationChannelSpec(alias="dna", value="DNA"),
+    ),
+    expected_input_planes=192,
+    published_assay_references=(
+        PublishedAssayReference(
+            name="carpenter_2006_z_prime_both_drugs",
+            value=0.91,
+            citation_url="https://doi.org/10.1186/gb-2006-7-10-r100",
+        ),
+        PublishedAssayReference(
+            name="carpenter_2006_v_factor_wortmannin",
+            value=0.86,
+            citation_url="https://doi.org/10.1186/gb-2006-7-10-r100",
+        ),
+        PublishedAssayReference(
+            name="carpenter_2006_v_factor_ly294002",
+            value=0.84,
+            citation_url="https://doi.org/10.1186/gb-2006-7-10-r100",
+        ),
+        PublishedAssayReference(
+            name="logan_2010_z_prime_wortmannin",
+            value=0.94,
+            citation_url="https://doi.org/10.1177/1087057110370895",
+        ),
+        PublishedAssayReference(
+            name="logan_2010_z_prime_ly294002",
+            value=0.90,
+            citation_url="https://doi.org/10.1177/1087057110370895",
+        ),
+        PublishedAssayReference(
+            name="logan_2010_v_factor_wortmannin",
+            value=0.86,
+            citation_url="https://doi.org/10.1177/1087057110370895",
+        ),
+        PublishedAssayReference(
+            name="logan_2010_v_factor_ly294002",
+            value=0.88,
+            citation_url="https://doi.org/10.1177/1087057110370895",
+        ),
+    ),
+    authoring_tracks=(
+        ValidationAuthoringTrack(
+            name="catalog_translocation_measurement",
+            function_surface=ValidationFunctionSurface.CATALOG,
+            objective=(
+                "Segment nuclei/cells from paired DNA and GFP planes, measure nuclear "
+                "versus cytoplasmic GFP, and materialize per-cell and per-well tables."
+            ),
+            expected_artifacts=(
+                "nucleus_labels",
+                "cell_labels",
+                "cell_table",
+                "well_table",
+            ),
+        ),
+        ValidationAuthoringTrack(
+            name="typed_plate_statistics_extension",
+            function_surface=ValidationFunctionSurface.REGISTERED_CUSTOM,
+            objective=(
+                "Register a typed plate-statistics function over the per-well table and "
+                "materialize dose-response, Z-prime and replicate-SD V-factor outputs."
+            ),
+            expected_artifacts=("assay_statistics", "dose_response_table"),
+        ),
+    ),
+)
 
 
 class BenchmarkDatasetDeclaration(ABC, metaclass=AutoRegisterMeta):
@@ -50,6 +305,7 @@ class BenchmarkDatasetDeclaration(ABC, metaclass=AutoRegisterMeta):
     source: ClassVar[DatasetSourceSpec | None] = None
     benchmark_cases: ClassVar[tuple[CellProfilerBenchmarkCaseSpec, ...]] = ()
     tags: ClassVar[frozenset[BenchmarkDatasetTag]] = frozenset()
+    independent_validation: ClassVar[IndependentValidationSpec | None] = None
 
     @classmethod
     def to_spec(cls) -> DatasetSpec:
@@ -69,6 +325,7 @@ class BenchmarkDatasetDeclaration(ABC, metaclass=AutoRegisterMeta):
             source=cls.source,
             benchmark_cases=cls.benchmark_cases,
             tags=cls.tags,
+            independent_validation=cls.independent_validation,
         )
 
 
@@ -219,14 +476,38 @@ class Bbbc013U2osTranslocationDataset(
 
     id = "BBBC013_u2os_translocation_bmp"
     public_alias = "BBBC013_U2OS_TRANSLOCATION"
-    urls = (
-        "https://data.broadinstitute.org/bbbc/BBBC013/BBBC013_v1_images_bmp.zip",
-        "https://data.broadinstitute.org/bbbc/BBBC013/BBBC013_reproduce_logan.zip",
+    independent_validation = BBBC013_INDEPENDENT_VALIDATION
+    urls = tuple(
+        artifact.url
+        for artifact in independent_validation.artifacts
+        if artifact.kind is ValidationArtifactKind.ZIP_ARCHIVE
     )
-    size_bytes = 37962288
-    reference_cppipe_urls = (
-        "https://data.broadinstitute.org/bbbc/BBBC013/BBBC013_reproduce_logan.zip",
+    size_bytes = independent_validation.archive_size_bytes
+    reference_cppipe_urls = tuple(
+        artifact.url
+        for artifact in independent_validation.artifacts_for(
+            ValidationArtifactRole.REPRODUCTION
+        )
     )
+
+
+class Bbbc007CellBoundaryDataset(
+    ImageCountValidatedDatasetMixin,
+    SourceBindingsDatasetMixin,
+    BenchmarkDatasetDeclaration,
+):
+    """Dataset declaration for BBBC007 manual nucleus/cell outlines."""
+
+    id = "BBBC007_cell_boundaries"
+    public_alias = "BBBC007_CELL_BOUNDARIES"
+    independent_validation = BBBC007_INDEPENDENT_VALIDATION
+    urls = tuple(
+        artifact.url
+        for artifact in independent_validation.artifacts
+        if artifact.kind is ValidationArtifactKind.ZIP_ARCHIVE
+    )
+    size_bytes = independent_validation.archive_size_bytes
+    expected_count = 64
 
 
 class Bbbc038FullDataset(
@@ -256,12 +537,13 @@ class Bbbc039NucleiSegmentationDataset(
 
     id = "BBBC039_nuclei_segmentation"
     public_alias = "BBBC039_NUCLEI_SEGMENTATION"
-    urls = (
-        "https://data.broadinstitute.org/bbbc/BBBC039/images.zip",
-        "https://data.broadinstitute.org/bbbc/BBBC039/masks.zip",
-        "https://data.broadinstitute.org/bbbc/BBBC039/metadata.zip",
+    independent_validation = BBBC039_INDEPENDENT_VALIDATION
+    urls = tuple(
+        artifact.url
+        for artifact in independent_validation.artifacts
+        if artifact.kind is ValidationArtifactKind.ZIP_ARCHIVE
     )
-    size_bytes = 80687375
+    size_bytes = independent_validation.archive_size_bytes
     expected_count = 800
 
 
