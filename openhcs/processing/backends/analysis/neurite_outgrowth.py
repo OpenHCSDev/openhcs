@@ -103,7 +103,7 @@ class CellProfilerNeuriteEngineProfile:
     body_max_diameter_px: int = 100
     adaptive_window_size_px: int = 64
     tubeness_smoothing_px: float = 1.5
-    neurite_candidate_threshold_correction_factor: float = 0.05
+    neurite_candidate_threshold_correction_factor: float = 0.85
     secondary_ownership_threshold_correction_factor: float = 0.85
     threshold_smoothing_px: float = 1.0
     secondary_regularization_factor: float = 0.05
@@ -166,12 +166,15 @@ class CellProfilerNeuriteEngineProfile:
         *,
         window_size: int | None = None,
         smoothing: float | None = None,
+        correction_factor: float | None = None,
     ) -> dict[str, object]:
         return {
             "threshold_scope": CellProfilerThresholdScope.ADAPTIVE,
             "threshold_method": CellProfilerThresholdMethod.OTSU,
             "threshold_correction_factor": (
                 self.neurite_candidate_threshold_correction_factor
+                if correction_factor is None
+                else correction_factor
             ),
             "window_size": (
                 self.adaptive_window_size_px if window_size is None else window_size
@@ -257,6 +260,11 @@ class MetaXpressOutgrowthSettings:
     minimum_cell_growth_to_log_as_significant: float = 10.0
     """Scoring-only total outgrowth threshold in micrometers."""
 
+    candidate_threshold_correction_factor: float = (
+        CELLPROFILER_NEURITE_ENGINE_PROFILE.neurite_candidate_threshold_correction_factor
+    )
+    """Adaptive foreground sensitivity; lower values admit dimmer candidates."""
+
     def validate(self) -> None:
         if not np.isfinite(self.maximum_width) or self.maximum_width <= 0:
             raise ValueError("outgrowth.maximum_width must be > 0")
@@ -271,6 +279,13 @@ class MetaXpressOutgrowthSettings:
         ):
             raise ValueError(
                 "outgrowth.minimum_cell_growth_to_log_as_significant must be >= 0"
+            )
+        if (
+            not np.isfinite(self.candidate_threshold_correction_factor)
+            or self.candidate_threshold_correction_factor <= 0
+        ):
+            raise ValueError(
+                "outgrowth.candidate_threshold_correction_factor must be > 0"
             )
 
 
@@ -1172,6 +1187,7 @@ def _identify_neurites_cellprofiler(
         **CELLPROFILER_NEURITE_ENGINE_PROFILE.threshold_kwargs(
             window_size=_cellprofiler_adaptive_window(body_width_px, image.shape),
             smoothing=max(0.0, 0.25 * outgrowth_width_px),
+            correction_factor=settings.candidate_threshold_correction_factor,
         ),
     )
     cp_mask = np.asarray(image_payload_data(cp_mask_payload)) > 0

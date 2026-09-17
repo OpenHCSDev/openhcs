@@ -53,6 +53,10 @@ class ImageQaPrecondition(Enum):
     NESTED_MASK_STAGE_ATTRIBUTION = (
         "attribute the miss with nested masks before changing a semantic gate"
     )
+    DECLARATION_SCOPE = (
+        "apply dataset-specific sensitivity through the pipeline declaration, "
+        "not by changing the shared engine default"
+    )
 
 
 class ImageQaMissStage(Enum):
@@ -290,6 +294,9 @@ class ImageAnalysisQaPolicy:
             "than an automatic replacement. Accept a recovery only when local signal "
             "support, "
             "connectivity, and topology evidence agree. "
+            "If a permissive setting helps the target dataset but fragments a reference "
+            "image or adds unsupported structure, keep the conservative shared default "
+            "and declare the permissive value only on the dataset or preset that needs it. "
             "For thin-structure endpoint continuation, require every proposed path "
             f"to be {continuation_constraint_text}; distance, ownership, and response "
             "alone are insufficient because they can admit source-object-edge "

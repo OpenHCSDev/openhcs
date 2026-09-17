@@ -52,7 +52,8 @@ For each attempt:
    response-supported, single-owner path. Distance, ownership, and response alone
    can admit soma-edge decorations.
 8. State one falsifiable hypothesis and change one declaration-owned semantic
-   gate.
+   gate. If a permissive setting is dataset-specific, declare it on that pipeline
+   or preset; do not weaken the shared engine default.
 9. Compile, run a bounded public case, and inspect the materialised outputs.
 10. Finalise an `AttemptObservation`; never replace a prior attempt directory.
 

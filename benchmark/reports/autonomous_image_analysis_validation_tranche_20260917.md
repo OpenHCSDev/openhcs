@@ -197,3 +197,11 @@ adds a QA constraint rather than an algorithmic mechanism: any future
 thin-structure continuation must also exclude the accepted body neighborhood and
 follow the existing terminal direction before its biological usefulness is
 evaluated.
+
+A later public-reference replay exposed a second scope constraint. A permissive
+candidate threshold that admitted faint axotomy signal also fragmented the
+NeuronCyto II reference into many short paths when installed as a shared engine
+default. Sensitivity is therefore a pipeline declaration: the conservative
+default remains shared, while a permissive value is explicit only in the loose
+faint-signal preset. Visual review must include at least one reference image as
+well as the target dataset before accepting that setting.

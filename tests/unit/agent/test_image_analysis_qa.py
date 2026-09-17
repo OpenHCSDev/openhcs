@@ -37,6 +37,7 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "higher-sensitivity diagnostic attempt" in guidance
     assert "subtract the accepted candidate mask" in guidance
     assert "diagnostic evidence rather than an automatic replacement" in guidance
+    assert "declare the permissive value only on the dataset or preset" in guidance
     assert "distance, ownership, and response alone are insufficient" in guidance
 
 

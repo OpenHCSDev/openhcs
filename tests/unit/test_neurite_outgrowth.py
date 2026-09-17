@@ -136,6 +136,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "maximum_width",
         "intensity_above_local_background",
         "minimum_cell_growth_to_log_as_significant",
+        "candidate_threshold_correction_factor",
     ]
     assert [field.name for field in fields(MetaXpressNuclearSettings)] == [
         "channel_index",
@@ -1033,19 +1034,36 @@ def test_final_neurons_project_rooted_trace_ownership(monkeypatch):
 
 def test_neurite_candidate_and_secondary_ownership_thresholds_are_independent():
     engine = CELLPROFILER_NEURITE_ENGINE_PROFILE
+    permissive_candidate_factor = 0.05
 
     assert (
-        engine.threshold_kwargs()["threshold_correction_factor"]
-        == engine.neurite_candidate_threshold_correction_factor
+        engine.threshold_kwargs(
+            correction_factor=permissive_candidate_factor,
+        )["threshold_correction_factor"]
+        == permissive_candidate_factor
     )
     assert (
         engine.secondary_kwargs()["threshold_correction_factor"]
         == engine.secondary_ownership_threshold_correction_factor
     )
-    assert (
-        engine.neurite_candidate_threshold_correction_factor
-        < engine.secondary_ownership_threshold_correction_factor
+    assert permissive_candidate_factor < (
+        engine.secondary_ownership_threshold_correction_factor
     )
+
+
+@pytest.mark.parametrize("correction_factor", [0.0, -0.1, np.inf, np.nan])
+def test_outgrowth_settings_reject_invalid_candidate_threshold_correction_factor(
+    correction_factor,
+):
+    settings = MetaXpressOutgrowthSettings(
+        candidate_threshold_correction_factor=correction_factor,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="candidate_threshold_correction_factor must be > 0",
+    ):
+        settings.validate()
 
 
 def test_overwide_nuclear_guided_foreground_is_not_a_cell_body():

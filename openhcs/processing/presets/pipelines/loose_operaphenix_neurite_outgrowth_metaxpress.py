@@ -59,6 +59,9 @@ def build_loose_operaphenix_neurite_metaxpress_pipeline(
                     maximum_width=4.0,
                     intensity_above_local_background=50.0,
                     minimum_cell_growth_to_log_as_significant=10.0,
+                    candidate_threshold_correction_factor=(
+                        inputs.neurite_candidate_threshold_correction_factor
+                    ),
                 ),
                 "use_nuclear_stain": True,
                 "nuclear_stain": MetaXpressNuclearSettings(
