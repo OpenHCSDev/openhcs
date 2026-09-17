@@ -1,6 +1,8 @@
 from openhcs.agent.image_analysis_qa import (
     CandidateRejectionReason,
     ImageAnalysisQaPolicy,
+    ImageQaMissStage,
+    ImageQaPrecondition,
     RejectedCandidateObservation,
     ResidualStructureDisposition,
     ResidualStructureObservation,
@@ -20,6 +22,11 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
         assert reason.value in guidance
     for disposition in ResidualStructureDisposition:
         assert disposition.value in guidance
+    for precondition in ImageQaPrecondition:
+        assert precondition.value in guidance
+    for stage in ImageQaMissStage:
+        assert stage.name.lower() in guidance
+        assert stage.value in guidance
     assert "nuclei without a nearby accepted soma" in guidance
     assert "for example DAPI" in guidance
     assert "accepted-label overlay" in guidance

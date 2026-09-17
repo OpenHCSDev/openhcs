@@ -39,6 +39,33 @@ class ImageQaMeasure(Enum):
     TOPOLOGY_PLAUSIBILITY = "topology plausibility"
 
 
+class ImageQaPrecondition(Enum):
+    """Evidence required before a reported miss can justify parameter tuning."""
+
+    CURRENT_OUTPUT_CONCORDANCE = (
+        "localize the reported view to source coordinates and reproduce it from "
+        "the current raw and output artifacts"
+    )
+    IDENTICAL_COORDINATES = (
+        "compare raw, source, candidate, rooted, and owner views at identical "
+        "coordinates"
+    )
+    NESTED_MASK_STAGE_ATTRIBUTION = (
+        "attribute the miss with nested masks before changing a semantic gate"
+    )
+
+
+class ImageQaMissStage(Enum):
+    """Stage attribution derived from nested current-output masks."""
+
+    OBJECT_ADMISSION = "no accepted source object or body"
+    CANDIDATE_DETECTION = "present only in the permissive candidate mask"
+    ROOTED_CONNECTIVITY = (
+        "present in the current candidate mask but not the rooted result"
+    )
+    OWNERSHIP = "present in the rooted result with an evidenced identity discontinuity"
+
+
 class SemanticGate(Enum):
     """Independent semantic gates changed by one diagnostic experiment."""
 
@@ -205,6 +232,12 @@ class ImageAnalysisQaPolicy:
 
     @classmethod
     def repair_guidance(cls) -> str:
+        precondition_text = "; ".join(
+            precondition.value for precondition in ImageQaPrecondition
+        )
+        miss_stage_text = "; ".join(
+            f"{stage.name.lower()} means {stage.value}" for stage in ImageQaMissStage
+        )
         gate_text = "; ".join(
             (
                 f"{gate.value} {gate.description}; measure "
@@ -219,7 +252,8 @@ class ImageAnalysisQaPolicy:
             disposition.value for disposition in ResidualStructureDisposition
         )
         return (
-            "Classify each residual miss before tuning: "
+            f"Before tuning, require {precondition_text}. Classify the current-output "
+            f"miss by stage: {miss_stage_text}. Then classify each residual miss: "
             f"{gate_text}. Sweep exactly one declaration-owned gate per attempt. "
             "Compare revisions at identical coordinates under declared weak and "
             "strong percentile windows. Inspect missed source objects (including "

@@ -29,21 +29,28 @@ compiler, catalogue, runtime, artifact, and UI authorities.
 
 For each attempt:
 
-1. Read the task and current pipeline through MCP.
-2. Inspect raw data at the same coordinates under at least three declared
+1. Read the task and current pipeline through MCP. If the task cites a prior
+   screenshot or result, localise it to source coordinates and reproduce the
+   same view from current raw and output artifacts before treating it as a
+   current defect.
+2. Attribute each current miss with nested masks: no accepted source/body is
+   admission; permissive-candidate-only is detection; current-candidate-only is
+   rooted connectivity; and an evidenced rooted identity discontinuity is
+   ownership. Ambiguous crossings remain ambiguous.
+3. Inspect raw data at the same coordinates under at least three declared
    percentile windows, including weak and strong clipping.
-3. Compare raw, normalised, mask or ROI, overlay, and measurement evidence at
+4. Compare raw, normalised, mask or ROI, overlay, and measurement evidence at
    those coordinates.
-4. Preserve ranked rejected-source candidates and signal-supported unowned or
+5. Preserve ranked rejected-source candidates and signal-supported unowned or
    unrooted residual structures in the attempt observation when applicable.
-5. For an unexplained miss, make one adjacent higher-sensitivity diagnostic
+6. For an unexplained miss, make one adjacent higher-sensitivity diagnostic
    attempt, subtract the accepted candidate mask, and rank the added connected
    components by raw-signal support and valid-root connectivity. The permissive
    result is evidence; it is not automatically the replacement result.
-6. State one falsifiable hypothesis and change one declaration-owned semantic
+7. State one falsifiable hypothesis and change one declaration-owned semantic
    gate.
-7. Compile, run a bounded public case, and inspect the materialised outputs.
-8. Finalise an `AttemptObservation`; never replace a prior attempt directory.
+8. Compile, run a bounded public case, and inspect the materialised outputs.
+9. Finalise an `AttemptObservation`; never replace a prior attempt directory.
 
 Use the image-analysis workflow guidance returned by OpenHCS as the canonical
 QA procedure. Its gate and measurement wording is generated from
