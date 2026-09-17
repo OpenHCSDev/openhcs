@@ -11,6 +11,12 @@ class ImageQaMeasure(Enum):
     """Measurements used to distinguish admission, continuity, and ownership."""
 
     OBJECT_COUNT = "admitted-object count"
+    SOURCE_TARGET_MATCH_COUNT = "accepted source-to-target match count"
+    ADMISSION_DELTA_OBJECTS = (
+        "source objects added or removed by an adjacent admission setting"
+    )
+    REFERENCE_OBJECT_COUNT_DELTA = "detected-versus-reference object-count delta"
+    PER_OBJECT_REFERENCE_DELTA = "spatially matched per-object measurement delta"
     ACCEPTED_BODY_PIXELS = "accepted body pixels"
     REJECTED_CANDIDATE_COUNT = "rejected source-candidate count"
     REJECTED_CANDIDATE_SIGNAL_SUPPORT = (
@@ -22,12 +28,85 @@ class ImageQaMeasure(Enum):
         "local signal support for unowned or unrooted residual structures"
     )
     RESIDUAL_STRUCTURE_DISPOSITION = "residual-structure disposition distribution"
+    SENSITIVITY_DELTA_COMPONENTS = (
+        "connected components added by an adjacent sensitivity setting"
+    )
+    SENSITIVITY_DELTA_ROOTED_YIELD = (
+        "root-connected continuity recovered by the sensitivity delta"
+    )
+    SENSITIVITY_DELTA_BACKGROUND_GROWTH = (
+        "unsupported background growth in the sensitivity delta"
+    )
     TOTAL_TRACE_PIXELS = "total trace pixels"
     ROOTED_TRACE_PIXELS = "root-connected trace pixels"
     UNROOTED_TRACE_PIXELS = "unrooted trace pixels"
     OWNERSHIP_CROSSOVER_COMPONENTS = "components touching multiple owners"
     LOCAL_BACKGROUND_SUPPORT = "new-pixel support above local background"
     TOPOLOGY_PLAUSIBILITY = "topology plausibility"
+
+
+class ImageQaPrecondition(Enum):
+    """Evidence required before a reported miss can justify parameter tuning."""
+
+    CURRENT_OUTPUT_CONCORDANCE = (
+        "localize the reported view to source coordinates and reproduce it from "
+        "the current raw and output artifacts"
+    )
+    IDENTICAL_COORDINATES = (
+        "compare raw, source, candidate, rooted, and owner views at identical "
+        "coordinates"
+    )
+    NESTED_MASK_STAGE_ATTRIBUTION = (
+        "attribute the miss with nested masks before changing a semantic gate"
+    )
+    DECLARATION_SCOPE = (
+        "apply dataset-specific sensitivity through the pipeline declaration, "
+        "not by changing the shared engine default"
+    )
+
+
+class ReferenceEvidenceRule(Enum):
+    """How external references constrain, but do not replace, spatial QA."""
+
+    COUNT_CONSTRAINS_ADMISSION = (
+        "compare detected and reference object counts before changing object admission"
+    )
+    COUNT_DOES_NOT_PROVE_IDENTITY = (
+        "treat count agreement as an admission constraint, not proof that the same "
+        "objects were detected"
+    )
+    IDENTITY_REQUIRES_SPATIAL_CORRESPONDENCE = (
+        "require coordinates, labels, or annotations before claiming object identity"
+    )
+    AGGREGATE_DOES_NOT_PROVE_PER_OBJECT_COMPLETENESS = (
+        "treat aggregate measurement agreement as insufficient evidence of per-object "
+        "trace completeness"
+    )
+    VALUE_ONLY_ASSIGNMENT_IS_DIAGNOSTIC = (
+        "use value-only object assignment to prioritise review, never to establish "
+        "spatial identity"
+    )
+
+
+class ImageQaMissStage(Enum):
+    """Stage attribution derived from nested current-output masks."""
+
+    OBJECT_ADMISSION = "no accepted source object or body"
+    CANDIDATE_DETECTION = "present only in the permissive candidate mask"
+    ROOTED_CONNECTIVITY = (
+        "present in the current candidate mask but not the rooted result"
+    )
+    OWNERSHIP = "present in the rooted result with an evidenced identity discontinuity"
+
+
+class ThinStructureContinuationConstraint(Enum):
+    """Evidence required before extending a rooted thin structure."""
+
+    TERMINAL_DIRECTION = "aligned with the existing terminal direction"
+    BODY_EXCLUSION = "outside the accepted source-object or body neighborhood"
+    LOCAL_SIGNAL_SUPPORT = "supported by the declared local-response gate"
+    BOUNDED_GAP = "bounded by a declared physical-width-derived gap"
+    OWNER_CONSISTENCY = "contained within one owner region without a foreign crossing"
 
 
 class SemanticGate(Enum):
@@ -41,6 +120,9 @@ class SemanticGate(Enum):
         "decides whether a source object enters the analysis",
         (
             ImageQaMeasure.OBJECT_COUNT,
+            ImageQaMeasure.SOURCE_TARGET_MATCH_COUNT,
+            ImageQaMeasure.ADMISSION_DELTA_OBJECTS,
+            ImageQaMeasure.REFERENCE_OBJECT_COUNT_DELTA,
             ImageQaMeasure.ACCEPTED_BODY_PIXELS,
             ImageQaMeasure.REJECTED_CANDIDATE_COUNT,
             ImageQaMeasure.REJECTED_CANDIDATE_SIGNAL_SUPPORT,
@@ -57,8 +139,12 @@ class SemanticGate(Enum):
             ImageQaMeasure.RESIDUAL_STRUCTURE_COUNT,
             ImageQaMeasure.RESIDUAL_STRUCTURE_SIGNAL_SUPPORT,
             ImageQaMeasure.RESIDUAL_STRUCTURE_DISPOSITION,
+            ImageQaMeasure.SENSITIVITY_DELTA_COMPONENTS,
+            ImageQaMeasure.SENSITIVITY_DELTA_ROOTED_YIELD,
+            ImageQaMeasure.SENSITIVITY_DELTA_BACKGROUND_GROWTH,
             ImageQaMeasure.LOCAL_BACKGROUND_SUPPORT,
             ImageQaMeasure.TOPOLOGY_PLAUSIBILITY,
+            ImageQaMeasure.PER_OBJECT_REFERENCE_DELTA,
         ),
     )
     OWNERSHIP = (
@@ -193,6 +279,18 @@ class ImageAnalysisQaPolicy:
 
     @classmethod
     def repair_guidance(cls) -> str:
+        precondition_text = "; ".join(
+            precondition.value for precondition in ImageQaPrecondition
+        )
+        miss_stage_text = "; ".join(
+            f"{stage.name.lower()} means {stage.value}" for stage in ImageQaMissStage
+        )
+        continuation_constraint_text = ", ".join(
+            constraint.value for constraint in ThinStructureContinuationConstraint
+        )
+        reference_evidence_text = "; ".join(
+            rule.value for rule in ReferenceEvidenceRule
+        )
         gate_text = "; ".join(
             (
                 f"{gate.value} {gate.description}; measure "
@@ -207,7 +305,10 @@ class ImageAnalysisQaPolicy:
             disposition.value for disposition in ResidualStructureDisposition
         )
         return (
-            "Classify each residual miss before tuning: "
+            f"Before tuning, require that each precondition holds: {precondition_text}. "
+            f"When a reference exists: {reference_evidence_text}. "
+            "Classify the current-output "
+            f"miss by stage: {miss_stage_text}. Then classify each residual miss: "
             f"{gate_text}. Sweep exactly one declaration-owned gate per attempt. "
             "Compare revisions at identical coordinates under declared weak and "
             "strong percentile windows. Inspect missed source objects (including "
@@ -216,14 +317,32 @@ class ImageAnalysisQaPolicy:
             "For source-assisted admission, enumerate source objects not mapped to "
             "accepted bodies (for example nuclei without a nearby accepted soma) "
             "and rank same-coordinate crops by nearby body-channel response/support. "
+            "When a source object or body appears missing, sweep source admission and "
+            "target-body response as separate attempts. Compare the source-object, "
+            "accepted-body, and source-to-target match counts at identical coordinates; "
+            "an added source object is a supported recovery only when it maps to a "
+            "plausible target body rather than splitting an already admitted source. "
             "Inspect the source channel (for example DAPI), target or process channel "
             "(for example FITC), response image, accepted-label overlay, bodies, and "
             "traces under the same multiple percentile windows; record the rejection "
             f"reason ({rejection_reasons}) for every candidate. Rank signal-supported "
             "residual processes that remain unowned or unrooted and classify each as "
             f"{residual_dispositions}. Change only the implicated admission, path, or "
-            "ownership criterion. Accept a recovery only when local signal support, "
+            "ownership criterion. When a miss remains unexplained, make one adjacent "
+            "higher-sensitivity diagnostic attempt, subtract the accepted candidate "
+            "mask from the permissive mask, split the delta into connected components, "
+            "and rank those additions by raw-signal support and connection to a valid "
+            "source object. Treat the permissive result as diagnostic evidence rather "
+            "than an automatic replacement. Accept a recovery only when local signal "
+            "support, "
             "connectivity, and topology evidence agree. "
+            "If a permissive setting helps the target dataset but fragments a reference "
+            "image or adds unsupported structure, keep the conservative shared default "
+            "and declare the permissive value only on the dataset or preset that needs it. "
+            "For thin-structure endpoint continuation, require every proposed path "
+            f"to be {continuation_constraint_text}; distance, ownership, and response "
+            "alone are insufficient because they can admit source-object-edge "
+            "decorations. "
             "Reject mask growth that does not increase root-connected continuity, "
             "and preserve rejected parameter changes as well as accepted ones, with "
             "the recovered-candidate evidence for each decision."
