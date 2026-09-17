@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 import tempfile
@@ -1822,6 +1823,20 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
         """Source filters explicitly declared on this plan."""
 
         return tuple(self.source_filters or ())
+
+    def declaration_identity(self) -> str:
+        """Return a stable identity for this complete source declaration."""
+
+        from openhcs.serialization.json import to_jsonable
+
+        declaration = to_jsonable(self)
+        if not isinstance(declaration, Mapping):
+            raise TypeError(
+                "SourceBindingsConfig serialization must produce a mapping, got "
+                f"{type(declaration).__name__}."
+            )
+        canonical = json.dumps(declaration, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     def resolved_source_locations(self, source_root: Path) -> Self:
         """Return this config with every path-bearing declaration resolved."""

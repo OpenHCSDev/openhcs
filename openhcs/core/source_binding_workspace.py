@@ -790,6 +790,9 @@ class SourceBindingWorkspaceProjector:
             pixel_size=1.0,
             main=True,
         )
+        primary_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY] = (
+            self.source_bindings.declaration_identity()
+        )
         metadata_path = get_metadata_path(workspace_root)
         AtomicMetadataWriter().replace_subdirectory_metadata(
             metadata_path,
