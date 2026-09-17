@@ -341,7 +341,10 @@ def validate_compiled_plate_execution(
         plate_id=request.plate_id,
         pipeline_definition=pipeline_definition,
         compiled_contexts=compiled_contexts,
-        actual_max_workers=actual_max_workers(runtime_environment, request.max_workers),
+        actual_max_workers=actual_max_workers(
+            request.execution_bundle,
+            request.max_workers,
+        ),
         progress_queue=request.progress_queue,
         runtime_environment=runtime_environment,
     )
@@ -828,14 +831,21 @@ def _records_with_output(
 
 
 def actual_max_workers(
-    runtime_environment: CompiledRuntimeEnvironmentPlan,
+    execution_bundle: CompiledExecutionBundle,
     max_workers: Optional[int],
 ) -> int:
-    """Resolve the worker count from call override or compiled environment."""
+    """Resolve execution capacity from the compiled lane assignment plan."""
 
-    configured_workers = runtime_environment.configured_num_workers
-    requested_workers = max_workers if max_workers is not None else configured_workers
-    return max(requested_workers, 1)
+    active_lane_count = sum(
+        bool(axis_ids) for axis_ids in execution_bundle.worker_assignments.values()
+    )
+    if not active_lane_count:
+        active_lane_count = min(
+            len(execution_bundle.axis_ids),
+            execution_bundle.runtime_environment.configured_num_workers,
+        )
+    requested_workers = max_workers if max_workers is not None else active_lane_count
+    return max(min(requested_workers, active_lane_count), 1)
 
 
 def bootstrap_execution_visualizers(
@@ -1060,6 +1070,18 @@ class ViewerSettlementProgressObserver:
         )
 
 
+def execution_owned_visualizers(
+    visualizers: list[ExecutionVisualizerABC],
+) -> tuple[ExecutionVisualizerABC, ...]:
+    """Project viewers whose lifetime is owned by this execution session."""
+
+    return tuple(
+        visualizer
+        for visualizer in visualizers
+        if visualizer.persistence_mode.execution_session_owns_process
+    )
+
+
 def settle_viewer_state(
     visualizers: list[ExecutionVisualizerABC],
     *,
@@ -1073,7 +1095,8 @@ def settle_viewer_state(
             "Viewer settlement progress requires both queue and execution context."
         )
 
-    for vis in visualizers:
+    owned_visualizers = execution_owned_visualizers(visualizers)
+    for vis in owned_visualizers:
         observer = (
             None
             if progress_queue is None or progress_context is None
@@ -1094,9 +1117,7 @@ def settle_viewer_state(
             )
 
     viewer_states: dict[int, ViewerControlResponse] = {}
-    for vis in visualizers:
-        if vis.persistent:
-            continue
+    for vis in owned_visualizers:
         if vis.port in viewer_states:
             raise RuntimeError(
                 f"Multiple execution viewers declared the same port {vis.port}."
@@ -1108,9 +1129,7 @@ def settle_viewer_state(
 def stop_execution_visualizers(visualizers: list[ExecutionVisualizerABC]) -> None:
     """Stop auto-created non-persistent visualizers after execution."""
 
-    for vis in visualizers:
-        if vis.persistent:
-            continue
+    for vis in execution_owned_visualizers(visualizers):
         vis.force_stop()
         if vis.is_running:
             raise RuntimeError(

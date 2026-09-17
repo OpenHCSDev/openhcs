@@ -46,6 +46,8 @@ from openhcs.core.debug import (
     NoOpDebugExecutionPolicy,
 )
 from openhcs.core.progress import ProgressExecutionContext
+from openhcs.core.viewer_streaming_service import StreamingViewerLifecycle
+from openhcs.runtime.viewer_protocol import ViewerPersistenceMode
 from polystore.filemanager import FileManager
 
 if TYPE_CHECKING:
@@ -274,14 +276,14 @@ class PipelineOrchestrator:
         # Streaming configs should be managed by the centralized ViewerStateManager
         if isinstance(config, StreamingConfig):
             key = (config.viewer_type, config.port)
-            from openhcs.core.viewer_streaming_service import StreamingViewerLifecycle
+            persistence_mode = ViewerPersistenceMode.from_flag(config.persistent)
 
             viewer = StreamingViewerLifecycle.get_or_create_visualizer(
                 filemanager=self.filemanager,
                 config=config,
                 visualizer_config=vis_config,
                 transport_config=self.transport_config,
-                fresh=True,
+                fresh=persistence_mode.execution_session_owns_process,
                 ready_timeout=30.0,
             )
 

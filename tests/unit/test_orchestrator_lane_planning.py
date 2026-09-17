@@ -9,7 +9,7 @@ from openhcs.core.compiled_execution import (
     CompiledRuntimeEnvironmentPlan,
     CompiledWorkerStartPlan,
 )
-from openhcs.core.config import MultiprocessingStartMethod
+from openhcs.core.config import MultiprocessingStartMethod, NapariStreamingConfig
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.orchestrator import (
@@ -61,6 +61,7 @@ from openhcs.core.orchestrator.worker_lanes import (
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext, ProgressPhase
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponse,
+    ViewerPersistenceMode,
     ViewerSettlePhase,
     ViewerSettleProgress,
 )
@@ -95,7 +96,7 @@ def _runtime_environment(
 
 
 def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
-    context = SimpleNamespace(step_plans={})
+    context = _compiled_context("A01")
     runtime_environment = _runtime_environment(
         use_threading=True,
         start_method=MultiprocessingStartMethod.SPAWN,
@@ -105,7 +106,7 @@ def _execute_with_visualizer(monkeypatch, visualizer, *, progress_queue=None):
         pipeline_definition=("step",),
         runtime_contexts={"A01": context},
         transport_contexts={"A01": context},
-        worker_assignments=None,
+        worker_assignments={},
         runtime_environment=runtime_environment,
     )
     request = CompiledPlateExecutionRequest(
@@ -266,7 +267,7 @@ def test_compiled_plate_execution_request_uses_bundle_as_runtime_authority():
     assert validated.pipeline_definition == ["step"]
     assert validated.compiled_contexts == {"A01": context}
     assert validated.runtime_environment is runtime_environment
-    assert validated.actual_max_workers == 7
+    assert validated.actual_max_workers == 1
 
 
 def test_plate_scope_rejects_omitted_runtime_observations(monkeypatch):
@@ -916,13 +917,51 @@ def test_execution_state_projector_maps_success_and_failure():
     assert orchestrator._state is orchestrator_module.OrchestratorState.EXEC_FAILED
 
 
+@pytest.mark.parametrize(
+    ("persistent", "expected_fresh"),
+    ((True, False), (False, True)),
+)
+def test_orchestrator_derives_viewer_acquisition_from_persistence_mode(
+    monkeypatch,
+    persistent,
+    expected_fresh,
+):
+    observed = {}
+    viewer = object()
+
+    def acquire(**kwargs):
+        observed.update(kwargs)
+        return viewer
+
+    monkeypatch.setattr(
+        orchestrator_module.StreamingViewerLifecycle,
+        "get_or_create_visualizer",
+        acquire,
+    )
+    orchestrator = SimpleNamespace(
+        filemanager=object(),
+        transport_config=object(),
+        _visualizers={},
+    )
+    config = NapariStreamingConfig(persistent=persistent)
+
+    result = orchestrator_module.PipelineOrchestrator.get_or_create_visualizer(
+        orchestrator,
+        config,
+    )
+
+    assert result is viewer
+    assert observed["fresh"] is expected_fresh
+
+
 def test_execution_visualizer_cleanup_stops_only_non_persistent_visualizers():
     stopped = []
     persistent = SimpleNamespace(
-        persistent=True, force_stop=lambda: stopped.append("p")
+        persistence_mode=ViewerPersistenceMode.PERSISTENT,
+        force_stop=lambda: stopped.append("p"),
     )
     transient = SimpleNamespace(
-        persistent=False,
+        persistence_mode=ViewerPersistenceMode.NON_PERSISTENT,
         port=5563,
         is_running=False,
         force_stop=lambda: stopped.append("t"),
@@ -935,7 +974,7 @@ def test_execution_visualizer_cleanup_stops_only_non_persistent_visualizers():
 
 def test_execution_visualizer_cleanup_rejects_active_non_persistent_viewer():
     transient = SimpleNamespace(
-        persistent=False,
+        persistence_mode=ViewerPersistenceMode.NON_PERSISTENT,
         port=5563,
         is_running=True,
         force_stop=lambda: None,
@@ -1045,7 +1084,7 @@ def test_execution_visualizer_state_clear_failure_is_fatal():
 def test_execution_visualizer_settle_failure_is_fatal():
     visualizer = SimpleNamespace(
         port=5563,
-        persistent=False,
+        persistence_mode=ViewerPersistenceMode.NON_PERSISTENT,
         settle_viewer_state=lambda: False,
     )
 
@@ -1079,7 +1118,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
 
     class TransientViewer:
         port = 5563
-        persistent = False
+        persistence_mode = ViewerPersistenceMode.NON_PERSISTENT
 
         def __init__(self):
             self.running = True
@@ -1156,7 +1195,7 @@ def test_viewer_settlement_progress_throttles_unchanged_active_observations(
 
     class Viewer:
         port = 5563
-        persistent = False
+        persistence_mode = ViewerPersistenceMode.NON_PERSISTENT
 
         def settle_viewer_state(self, *, progress_callback=None):
             assert progress_callback is not None
@@ -1193,7 +1232,7 @@ def test_compiled_execution_cleans_up_after_viewer_state_capture_failure(monkeyp
 
     class FailingTransientViewer:
         port = 5563
-        persistent = False
+        persistence_mode = ViewerPersistenceMode.NON_PERSISTENT
 
         def __init__(self):
             self.running = True
@@ -1225,7 +1264,7 @@ def test_persistent_execution_viewer_is_settled_without_capture_or_cleanup():
     events = []
     persistent = SimpleNamespace(
         port=5564,
-        persistent=True,
+        persistence_mode=ViewerPersistenceMode.PERSISTENT,
         settle_viewer_state=lambda: events.append("settle") or True,
         read_viewer_state=lambda: events.append("capture"),
         force_stop=lambda: events.append("stop"),
@@ -1235,7 +1274,7 @@ def test_persistent_execution_viewer_is_settled_without_capture_or_cleanup():
     stop_execution_visualizers([persistent])
 
     assert viewer_states == {}
-    assert events == ["settle"]
+    assert events == []
 
 
 def test_execution_visualizer_readiness_timeout_is_fatal(monkeypatch):
