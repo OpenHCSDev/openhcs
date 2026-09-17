@@ -109,6 +109,27 @@ class ThinStructureContinuationConstraint(Enum):
     OWNER_CONSISTENCY = "contained within one owner region without a foreign crossing"
 
 
+class SignalTransformConstraint(Enum):
+    """Evidence required when preprocessing is used to reveal faint signal."""
+
+    TARGET_CHANNEL_ONLY = "transform only the declared target or process channel"
+    REFERENCE_CHANNEL_IDENTITY = (
+        "prove that source, nuclear, and other reference channels remain unchanged"
+    )
+    ONE_PARAMETER_PER_ATTEMPT = (
+        "change one transform parameter per diagnostic attempt"
+    )
+    SAME_COORDINATE_DELTA = (
+        "compare added and removed rooted paths at identical source coordinates"
+    )
+    ROOTED_RECOVERY = (
+        "require recovered signal-supported rooted continuity rather than aggregate growth"
+    )
+    FRAGMENTATION_CONTROL = (
+        "reject gains accompanied by unsupported background or topology fragmentation"
+    )
+
+
 class SemanticGate(Enum):
     """Independent semantic gates changed by one diagnostic experiment."""
 
@@ -288,6 +309,9 @@ class ImageAnalysisQaPolicy:
         continuation_constraint_text = ", ".join(
             constraint.value for constraint in ThinStructureContinuationConstraint
         )
+        signal_transform_constraint_text = ", ".join(
+            constraint.value for constraint in SignalTransformConstraint
+        )
         reference_evidence_text = "; ".join(
             rule.value for rule in ReferenceEvidenceRule
         )
@@ -343,6 +367,9 @@ class ImageAnalysisQaPolicy:
             f"to be {continuation_constraint_text}; distance, ownership, and response "
             "alone are insufficient because they can admit source-object-edge "
             "decorations. "
+            "When faint signal motivates monotone, ridge, or contrast preprocessing, "
+            f"require the transform to {signal_transform_constraint_text}. Aggregate "
+            "length or object-count agreement alone cannot accept a transform. "
             "Reject mask growth that does not increase root-connected continuity, "
             "and preserve rejected parameter changes as well as accepted ones, with "
             "the recovered-candidate evidence for each decision."

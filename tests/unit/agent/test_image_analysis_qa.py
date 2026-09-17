@@ -9,6 +9,7 @@ from openhcs.agent.image_analysis_qa import (
     ResidualStructureObservation,
     RootedContinuityObservation,
     SemanticGate,
+    SignalTransformConstraint,
     ThinStructureContinuationConstraint,
 )
 
@@ -33,6 +34,8 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
         assert stage.value in guidance
     for constraint in ThinStructureContinuationConstraint:
         assert constraint.value in guidance
+    for constraint in SignalTransformConstraint:
+        assert constraint.value in guidance
     assert "nuclei without a nearby accepted soma" in guidance
     assert "source admission and target-body response as separate attempts" in guidance
     assert "splitting an already admitted source" in guidance
@@ -46,6 +49,8 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "diagnostic evidence rather than an automatic replacement" in guidance
     assert "declare the permissive value only on the dataset or preset" in guidance
     assert "distance, ownership, and response alone are insufficient" in guidance
+    assert "monotone, ridge, or contrast preprocessing" in guidance
+    assert "Aggregate length or object-count agreement alone" in guidance
 
 
 def test_trace_growth_requires_more_root_connected_continuity() -> None:

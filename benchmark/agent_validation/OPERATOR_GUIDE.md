@@ -56,11 +56,15 @@ For each attempt:
    alignment and source-object/body exclusion in addition to a bounded,
    response-supported, single-owner path. Distance, ownership, and response alone
    can admit soma-edge decorations.
-8. State one falsifiable hypothesis and change one declaration-owned semantic
+8. If faint signal motivates a monotone, ridge, or contrast transform, apply it
+   only to the declared process channel, prove the other channels are unchanged,
+   and sweep one transform parameter per attempt. Compare added and removed rooted
+   paths at identical coordinates; aggregate length is not acceptance evidence.
+9. State one falsifiable hypothesis and change one declaration-owned semantic
    gate. If a permissive setting is dataset-specific, declare it on that pipeline
    or preset; do not weaken the shared engine default.
-9. Compile, run a bounded public case, and inspect the materialised outputs.
-10. Finalise an `AttemptObservation`; never replace a prior attempt directory.
+10. Compile, run a bounded public case, and inspect the materialised outputs.
+11. Finalise an `AttemptObservation`; never replace a prior attempt directory.
 
 Use the image-analysis workflow guidance returned by OpenHCS as the canonical
 QA procedure. Its gate and measurement wording is generated from
