@@ -222,9 +222,7 @@ class TiffImageFileFormat(ImageFileFormat):
             dtype = series.dtype
             declared_scale = self._declared_intensity_scale_from_page(tif.pages[0])
             sample_axis = series.axes.find("S")
-            sample_count = (
-                int(series.shape[sample_axis]) if sample_axis >= 0 else None
-            )
+            sample_count = int(series.shape[sample_axis]) if sample_axis >= 0 else None
             pixel_semantics = SourceImagePixelSemantics()
             if sample_count is not None and sample_count > 1:
                 pixel_semantics = SourceImagePixelSemantics(
@@ -235,9 +233,7 @@ class TiffImageFileFormat(ImageFileFormat):
                 )
         return ImageFileSourceMetadata(
             source_dtype=dtype,
-            intensity_scale=(
-                declared_scale or image_intensity_scale_for_dtype(dtype)
-            ),
+            intensity_scale=(declared_scale or image_intensity_scale_for_dtype(dtype)),
             pixel_semantics=pixel_semantics,
         )
 

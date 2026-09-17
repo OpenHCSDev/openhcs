@@ -31,7 +31,6 @@ from openhcs.core.steps.function_output_manifest import (
 )
 from openhcs.processing.materialization import Output
 
-
 RuntimeArtifactViewerComponentIdentity = tuple[tuple[str, str], ...]
 
 
@@ -151,8 +150,7 @@ class RuntimeArtifactExecutionExpectation:
 
     def __post_init__(self) -> None:
         self.artifact_kinds = frozenset(
-            ArtifactType.coerce(kind)
-            for kind in self.artifact_kinds
+            ArtifactType.coerce(kind) for kind in self.artifact_kinds
         )
         if not isinstance(self.exports, RuntimeExportExpectation):
             raise TypeError(
@@ -222,10 +220,7 @@ def runtime_artifact_viewer_expectations(
         RuntimeArtifactViewerExpectation(
             producer_identity=producer,
             payloads=tuple(
-                {
-                    payload.identity_key: payload
-                    for payload in payloads
-                }.values()
+                {payload.identity_key: payload for payload in payloads}.values()
             ),
         )
         for producer, payloads in expected_by_producer.items()
@@ -332,7 +327,9 @@ class RuntimeArtifactExecutionObservation:
     def record_counts_by_axis(self) -> Mapping[str, Mapping[type[ArtifactType], int]]:
         return MappingProxyType(
             {
-                axis: MappingProxyType(Counter(record.key.artifact_type for record in records))
+                axis: MappingProxyType(
+                    Counter(record.key.artifact_type for record in records)
+                )
                 for axis, records in self.records_by_axis.items()
             }
         )

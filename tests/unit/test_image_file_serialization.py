@@ -147,9 +147,7 @@ def test_tiff_source_metadata_reads_rgb_semantics_without_generic_reopen(
     assert metadata.intensity_scale == 255.0
     assert metadata.pixel_semantics.channel_axis == -1
     assert metadata.pixel_semantics.channel_count == 3
-    assert metadata.pixel_semantics.validated_channel_axis(
-        tifffile.imread(path)
-    ) == -1
+    assert metadata.pixel_semantics.validated_channel_axis(tifffile.imread(path)) == -1
 
 
 def test_tiff_required_source_metadata_fails_closed_for_unreadable_header(
@@ -169,9 +167,7 @@ def test_required_source_metadata_does_not_reuse_replaced_header(
 ) -> None:
     path = tmp_path / "replaceable.tif"
     tifffile.imwrite(path, np.zeros((4, 5, 3), dtype=np.uint8), photometric="rgb")
-    assert (
-        require_image_file_source_metadata(path).pixel_semantics.channel_axis == -1
-    )
+    assert require_image_file_source_metadata(path).pixel_semantics.channel_axis == -1
     assert image_file_source_metadata(path).pixel_semantics.channel_axis == -1
 
     tifffile.imwrite(path, np.zeros((4, 5), dtype=np.uint8))

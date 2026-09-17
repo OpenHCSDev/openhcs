@@ -171,11 +171,7 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         """Execute this command through an already initialized stdio session."""
         return await call_mcp_session(
             session,
-            (
-                self.calls_from_args(args)
-                if prepared_calls is None
-                else prepared_calls
-            ),
+            (self.calls_from_args(args) if prepared_calls is None else prepared_calls),
             timeout_seconds=self.timeout_seconds(args),
         )
 

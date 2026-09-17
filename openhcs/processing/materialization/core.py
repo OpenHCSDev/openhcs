@@ -1694,11 +1694,9 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         component_order: tuple[str, ...],
     ) -> dict[str, ViewerWireValue]:
         if output.variable_components:
-            return (
-                StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-                    output.metadata,
-                    output.variable_components,
-                )
+            return StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+                output.metadata,
+                output.variable_components,
             )
         return StreamImagePayloadMetadataProjector.item_fields(
             output.metadata,

@@ -88,7 +88,9 @@ class SourceBindingsHandler(MicroscopeHandler):
             parser=parser,
             metadata_handler=OpenHCSMetadataHandler(filemanager),
         )
-        from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
+        from openhcs.core.source_binding_workspace import (
+            SourceBindingWorkspaceProjector,
+        )
 
         self._source_bindings_config = source_bindings_config
         self._projector = SourceBindingWorkspaceProjector(
@@ -142,9 +144,7 @@ class SourceBindingsHandler(MicroscopeHandler):
             )
             if (
                 workspace_metadata is not None
-                and workspace_metadata.get(
-                    FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY
-                )
+                and workspace_metadata.get(FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY)
                 == self._source_bindings_config.declaration_identity()
                 and VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
                     plate_root,

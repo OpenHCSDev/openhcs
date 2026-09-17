@@ -121,9 +121,12 @@ def test_callable_contract_preserves_primary_image_carrier_requirement() -> None
         contract.primary_image_carrier_requirement
         is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
     )
-    assert contract.metadata.as_namespace()[
-        FunctionContractAttribute.primary_image_carrier_requirement
-    ] is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+    assert (
+        contract.metadata.as_namespace()[
+            FunctionContractAttribute.primary_image_carrier_requirement
+        ]
+        is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+    )
 
 
 def test_callable_metadata_rejects_string_carrier_requirement() -> None:
@@ -184,9 +187,12 @@ def test_callable_contract_preserves_declared_carrier_transition() -> None:
         contract.primary_image_carrier_transition
         is PrimaryImageCarrierTransition.PRESERVE
     )
-    assert contract.metadata.as_namespace()[
-        FunctionContractAttribute.primary_image_carrier_transition
-    ] is PrimaryImageCarrierTransition.PRESERVE
+    assert (
+        contract.metadata.as_namespace()[
+            FunctionContractAttribute.primary_image_carrier_transition
+        ]
+        is PrimaryImageCarrierTransition.PRESERVE
+    )
 
 
 def test_callable_contract_exposes_canonical_raw_import_identity() -> None:

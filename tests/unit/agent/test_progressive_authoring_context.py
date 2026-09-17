@@ -307,7 +307,10 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "Tune only on the declared development subset" in image_analysis
     assert "Score held-out fields once" in image_analysis
     assert "one explicit hypothesis" in image_analysis
-    assert "multiple simultaneous changes make repair quality unscoreable" in image_analysis
+    assert (
+        "multiple simultaneous changes make repair quality unscoreable"
+        in image_analysis
+    )
     assert "same reflected signature and defaults" in image_analysis
     assert "unregistered callable is not an OpenHCS pipeline result" in image_analysis
     assert "Do not preprocess scientific inputs in an external script" in image_analysis
@@ -356,8 +359,14 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "SOURCE-BINDING WORKFLOW" not in viewer
     assert "view one specific step" in viewer
     assert "step_materialization_config persists" in viewer
-    assert "does not override an artifact output's own materialization declaration" in viewer
-    assert "automatically streamed object-label ROI projection can be streaming-only" in viewer
+    assert (
+        "does not override an artifact output's own materialization declaration"
+        in viewer
+    )
+    assert (
+        "automatically streamed object-label ROI projection can be streaming-only"
+        in viewer
+    )
     assert "verify the reported paths exist before freezing the pipeline" in viewer
     assert "pipeline_config.well_filter_config" in viewer
     assert "path_planning_config.well_filter=0" in viewer
@@ -372,7 +381,10 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert "user-controlled presentation state" in viewer
     assert "raw route payloads, label identities" in viewer
     assert "Review one current execution in raw-evidence order" in viewer
-    assert "Aggregate viewer indices are not necessarily a route-local semantic coordinate" in viewer
+    assert (
+        "Aggregate viewer indices are not necessarily a route-local semantic coordinate"
+        in viewer
+    )
     assert "distinct component domains and axis offsets" in viewer
     assert "black, empty, stale, or mismatched capture" in viewer
     assert f'kind="{ImageAnalysisWorkflowAuthoringContext.require_kind()}"' in viewer
@@ -410,8 +422,7 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
 def test_onboarding_surfaces_link_to_the_canonical_image_analysis_context() -> None:
     repository_root = Path(__file__).resolve().parents[3]
     skill = (
-        repository_root
-        / "packaging/codex/openhcs/skills/use-openhcs/SKILL.md"
+        repository_root / "packaging/codex/openhcs/skills/use-openhcs/SKILL.md"
     ).read_text(encoding="utf-8")
     default_prompt = (
         repository_root

@@ -86,6 +86,7 @@ _PARAMETER_KIND_POLICY_BY_KIND = _parameter_kind_policy_by_kind(
 # ===== DECLARATIVE DEFAULT VALUES =====
 # These declarations control defaults and may be moved to configuration in the future
 
+
 # Simple, direct error messages
 def missing_memory_type_error(func_name, step_name):
     return (
@@ -105,22 +106,32 @@ def missing_memory_type_error(func_name, step_name):
         f"📋 Available functions: query the function catalog for canonical IDs"
     )
 
+
 def inconsistent_memory_types_error(step_name, func1, func2):
     return f"Functions in step '{step_name}' have different memory types: {func1} vs {func2}"
+
 
 def invalid_memory_type_error(func_name, input_type, output_type, valid_types):
     return f"Function '{func_name}' has invalid memory types: {input_type}/{output_type}. Valid: {valid_types}"
 
+
 def invalid_pattern_error(pattern):
     return f"Invalid function pattern: {pattern}"
+
 
 def missing_required_args_error(func_name, step_name, missing_args):
     return f"Function '{func_name}' in step '{step_name}' missing required args: {missing_args}"
 
-def complex_pattern_error(step_name):
-    return f"Step '{step_name}' with special decorators must use simple function pattern"
 
-def missing_external_library_error(func_name, step_name, module_name, install_command=None):
+def complex_pattern_error(step_name):
+    return (
+        f"Step '{step_name}' with special decorators must use simple function pattern"
+    )
+
+
+def missing_external_library_error(
+    func_name, step_name, module_name, install_command=None
+):
     error_msg = (
         f"Function '{func_name}' in step '{step_name}' requires external library '{module_name}' which is not installed.\n"
         f"\n"
@@ -153,25 +164,86 @@ class ImportStatementExtractor(ast.NodeVisitor):
         self.module_name = module_name
         # Common Python standard library modules to skip
         self.stdlib_modules = {
-            'os', 'sys', 're', 'math', 'json', 'collections', 'itertools',
-            'functools', 'typing', 'datetime', 'time', 'pathlib', 'io',
-            'logging', 'warnings', 'contextlib', 'copy', 'pickle', 'random',
-            'string', 'enum', 'dataclasses', 'inspect', 'ast', 'importlib',
-            'types', 'numbers', 'abc', 'threading', 'multiprocessing',
-            'concurrent', 'queue', 'subprocess', 'shutil', 'tempfile',
-            'glob', 'fnmatch', 'hashlib', 'base64', 'uuid', 'decimal',
-            'fractions', 'statistics', 'secrets', 'textwrap', 'unicodedata',
-            'codecs', 'csv', 'configparser', 'xml', 'html', 'urllib',
-            'http', 'email', 'mimetypes', 'socket', 'ssl', 'hashlib',
-            'hmac', 'secrets', 'zipfile', 'tarfile', 'gzip', 'bz2', 'lzma',
-            'sqlite3', 'decimal', 'fractions', 'statistics', 'typing',
-            'typing_extensions', 'builtins', '__future__', 'warnings',
+            "os",
+            "sys",
+            "re",
+            "math",
+            "json",
+            "collections",
+            "itertools",
+            "functools",
+            "typing",
+            "datetime",
+            "time",
+            "pathlib",
+            "io",
+            "logging",
+            "warnings",
+            "contextlib",
+            "copy",
+            "pickle",
+            "random",
+            "string",
+            "enum",
+            "dataclasses",
+            "inspect",
+            "ast",
+            "importlib",
+            "types",
+            "numbers",
+            "abc",
+            "threading",
+            "multiprocessing",
+            "concurrent",
+            "queue",
+            "subprocess",
+            "shutil",
+            "tempfile",
+            "glob",
+            "fnmatch",
+            "hashlib",
+            "base64",
+            "uuid",
+            "decimal",
+            "fractions",
+            "statistics",
+            "secrets",
+            "textwrap",
+            "unicodedata",
+            "codecs",
+            "csv",
+            "configparser",
+            "xml",
+            "html",
+            "urllib",
+            "http",
+            "email",
+            "mimetypes",
+            "socket",
+            "ssl",
+            "hashlib",
+            "hmac",
+            "secrets",
+            "zipfile",
+            "tarfile",
+            "gzip",
+            "bz2",
+            "lzma",
+            "sqlite3",
+            "decimal",
+            "fractions",
+            "statistics",
+            "typing",
+            "typing_extensions",
+            "builtins",
+            "__future__",
+            "warnings",
         }
 
     def visit_Import(self, node: ast.Import) -> None:
         """Visit import statements."""
         for alias in node.names:
-            module_name = alias.name.split('.')[0]
+            module_name = alias.name.split(".")[0]
             self._add_module_if_external(module_name)
         self.generic_visit(node)
 
@@ -204,7 +276,9 @@ class ImportStatementExtractor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def _resolve_relative_import(self, module: Optional[str], level: Optional[int] = None) -> Optional[str]:
+    def _resolve_relative_import(
+        self, module: Optional[str], level: Optional[int] = None
+    ) -> Optional[str]:
         """
         Resolve an ImportFrom-relative import (module + level) to an absolute module name.
 
@@ -234,7 +308,7 @@ class ImportStatementExtractor(ast.NodeVisitor):
             # e.g., '.' -> 1 (current package), '..' -> 2 (parent package), '...' -> 3 (grandparent package)
             level = 0
             for char in relative_module:
-                if char == '.':
+                if char == ".":
                     level += 1
                 else:
                     break
@@ -250,7 +324,7 @@ class ImportStatementExtractor(ast.NodeVisitor):
         # Split the current module name into parts
         # e.g., 'openhcs.processing.backends.processors.numpy_processor'
         # -> ['openhcs', 'processing', 'backends', 'processors', 'numpy_processor']
-        module_parts = self.module_name.split('.')
+        module_parts = self.module_name.split(".")
 
         # Remove the last part (the module name itself)
         # e.g., ['openhcs', 'processing', 'backends', 'processors', 'numpy_processor']
@@ -268,7 +342,9 @@ class ImportStatementExtractor(ast.NodeVisitor):
         if levels_to_go_up >= len(module_parts):
             return None
 
-        module_parts = module_parts[:-levels_to_go_up] if levels_to_go_up > 0 else module_parts
+        module_parts = (
+            module_parts[:-levels_to_go_up] if levels_to_go_up > 0 else module_parts
+        )
 
         # Add the module path parts (may be nested like "utils.foo")
         if package_part:
@@ -276,7 +352,7 @@ class ImportStatementExtractor(ast.NodeVisitor):
             module_parts.extend(package_parts)
 
         # Join to get the absolute module name
-        absolute_module = '.'.join(module_parts)
+        absolute_module = ".".join(module_parts)
         return absolute_module
 
     def _add_module_if_external(self, module_name: str) -> None:
@@ -287,7 +363,7 @@ class ImportStatementExtractor(ast.NodeVisitor):
             module_name: The module name to check
         """
         # Skip openhcs internal modules
-        if module_name == 'openhcs':
+        if module_name == "openhcs":
             return
 
         # Skip standard library modules
@@ -295,7 +371,7 @@ class ImportStatementExtractor(ast.NodeVisitor):
             return
 
         # Skip built-in modules
-        if module_name in ('builtins', '__builtins__'):
+        if module_name in ("builtins", "__builtins__"):
             return
 
         # Add the module
@@ -350,7 +426,7 @@ def _extract_import_statements_from_module_file(
 ) -> frozenset[str]:
     del mtime_ns, size_bytes
     try:
-        with open(module_file, 'r', encoding='utf-8') as f:
+        with open(module_file, "r", encoding="utf-8") as f:
             source = f.read()
     except Exception:
         return frozenset()
@@ -367,6 +443,7 @@ def _extract_import_statements_from_module_file(
     extractor.visit(tree)
 
     return frozenset(extractor.modules)
+
 
 class FuncStepContractValidator:
     """
@@ -423,10 +500,10 @@ class FuncStepContractValidator:
         # e.g., "openhcs.processing.backends.analysis.skan_axon_analysis" -> "openhcs"
         # e.g., "skimage.measure" -> "skimage"
         # e.g., "skan" -> "skan"
-        top_level_package = module_name.split('.')[0]
+        top_level_package = module_name.split(".")[0]
 
         # For openhcs modules, parse source code for import statements
-        if top_level_package == 'openhcs':
+        if top_level_package == "openhcs":
             # Extract import statements from the module's source code
             import_statements = extract_import_statements(func)
 
@@ -442,16 +519,19 @@ class FuncStepContractValidator:
                     # Try to extract the missing module from the error message
                     if "No module named" in error_str:
                         import re
+
                         match = re.search(r"No module named '([^']+)'", error_str)
                         if match:
                             missing_module = match.group(1)
 
                     # Generate a generic install command for the module
-                    install_command = f'pip install {missing_module}'
+                    install_command = f"pip install {missing_module}"
 
-                    raise ValueError(missing_external_library_error(
-                        func.__name__, step_name, missing_module, install_command
-                    )) from e
+                    raise ValueError(
+                        missing_external_library_error(
+                            func.__name__, step_name, missing_module, install_command
+                        )
+                    ) from e
         else:
             # For external modules, try to import the module directly
             try:
@@ -468,6 +548,7 @@ class FuncStepContractValidator:
                 if "No module named" in error_str:
                     # Extract module name from quotes
                     import re
+
                     match = re.search(r"No module named '([^']+)'", error_str)
                     if match:
                         missing_module = match.group(1)
@@ -476,11 +557,13 @@ class FuncStepContractValidator:
                     missing_module = top_level_package
 
                 # Generate a generic install command for the module
-                install_command = f'pip install {missing_module}'
+                install_command = f"pip install {missing_module}"
 
-                raise ValueError(missing_external_library_error(
-                    func.__name__, step_name, missing_module, install_command
-                )) from e
+                raise ValueError(
+                    missing_external_library_error(
+                        func.__name__, step_name, missing_module, install_command
+                    )
+                ) from e
 
     @staticmethod
     def normalized_group_by(
@@ -610,13 +693,8 @@ class FuncStepContractValidator:
         compiled_pattern = step_plan.compiled_function_pattern
         invocations = tuple(compiled_pattern.iter_invocations())
         contracts = tuple(invocation.contract for invocation in invocations)
-        FuncStepContractValidator.validate_artifact_input_scope_availability(
-            step_plan
-        )
-        if (
-            compiled_pattern.execution_scope
-            is FunctionStepExecutionScope.PLATE
-        ):
+        FuncStepContractValidator.validate_artifact_input_scope_availability(step_plan)
+        if compiled_pattern.execution_scope is FunctionStepExecutionScope.PLATE:
             if compiled_pattern.is_grouped:
                 raise ValueError(
                     f"Plate-scoped FunctionStep {step_name!r} cannot use a dict pattern."
@@ -748,7 +826,9 @@ class FuncStepContractValidator:
         )
         contracts = [item.contract for item in normalized.iter_items()]
         if not contracts:
-            raise ValueError(f"No valid functions found in pattern for step {step_name}")
+            raise ValueError(
+                f"No valid functions found in pattern for step {step_name}"
+            )
         execution_scope = FunctionStepExecutionScope.require_uniform(contracts)
         if execution_scope is FunctionStepExecutionScope.PLATE:
             if isinstance(func_pattern, dict):
@@ -818,7 +898,9 @@ class FuncStepContractValidator:
         """Validate memory contracts from the compiled function-pattern graph."""
         invocations = tuple(compiled_pattern.iter_invocations())
         if not invocations:
-            raise ValueError(f"No valid functions found in compiled pattern for step {step_name}")
+            raise ValueError(
+                f"No valid functions found in compiled pattern for step {step_name}"
+            )
 
         if compiled_pattern.execution_scope is FunctionStepExecutionScope.PLATE:
             FuncStepContractValidator.validate_plate_callable_contracts(
@@ -954,7 +1036,10 @@ class FuncStepContractValidator:
             raise ValueError(
                 missing_memory_type_error(contract.function_name, step_name)
             )
-        if input_type not in VALID_MEMORY_TYPES or output_type not in VALID_MEMORY_TYPES:
+        if (
+            input_type not in VALID_MEMORY_TYPES
+            or output_type not in VALID_MEMORY_TYPES
+        ):
             raise ValueError(
                 invalid_memory_type_error(
                     callable_label or contract.function_name,
@@ -972,10 +1057,7 @@ class FuncStepContractValidator:
         return input_type, output_type
 
     @staticmethod
-    def validate_function_pattern(
-        func: Any,
-        step_name: str
-    ) -> Tuple[str, str]:
+    def validate_function_pattern(func: Any, step_name: str) -> Tuple[str, str]:
         """
         Validate memory type contracts for a function pattern.
 
@@ -1039,14 +1121,13 @@ class FuncStepContractValidator:
 
         # Raise error if any required args are missing
         if missing_args:
-            raise ValueError(missing_required_args_error(func.__name__, step_name, missing_args))
+            raise ValueError(
+                missing_required_args_error(func.__name__, step_name, missing_args)
+            )
 
     @staticmethod
     def _validate_dict_pattern_keys(
-        func_pattern: dict,
-        group_by,
-        step_name: str,
-        orchestrator
+        func_pattern: dict, group_by, step_name: str, orchestrator
     ) -> None:
         """
         Validate that dict function pattern keys match available component keys.
@@ -1099,8 +1180,7 @@ class FuncStepContractValidator:
 
     @staticmethod
     def validate_pattern_structure(
-        func: FunctionPatternSyntax,
-        step_name: str
+        func: FunctionPatternSyntax, step_name: str
     ) -> List[Callable]:
         """
         Validate and extract all functions from a function pattern.
@@ -1142,7 +1222,9 @@ class FuncStepContractValidator:
         )
         contracts = [item.contract for item in normalized.iter_items()]
         if not contracts:
-            raise ValueError(f"No valid functions found in pattern for step {step_name}")
+            raise ValueError(
+                f"No valid functions found in pattern for step {step_name}"
+            )
         return contracts
 
     @staticmethod

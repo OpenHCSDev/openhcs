@@ -2141,7 +2141,9 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         """Project exact source declarations for one main-flow execution scope."""
 
         component_plan = (
-            self if group_key is None else self.for_component_group(component, group_key)
+            self
+            if group_key is None
+            else self.for_component_group(component, group_key)
         )
         if main_flow_refs == ():
             return None

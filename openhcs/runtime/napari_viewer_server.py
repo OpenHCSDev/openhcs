@@ -4364,7 +4364,9 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
         aggregate_bindings = presentation.aggregate_axis_bindings
         records = []
         for item in items:
-            for aggregate_indices in NapariViewerPayloadProjection.aggregate_index_tuples(
+            for (
+                aggregate_indices
+            ) in NapariViewerPayloadProjection.aggregate_index_tuples(
                 aggregate_bindings
             ):
                 components = aggregate_bindings.item_component_values(

@@ -606,8 +606,7 @@ class SourceImageSetIdentityCompatibility(SourceImageSetIdentityPairPredicate):
             return record_components == current_components
         shared_keys = set(record_components) & set(current_components)
         return bool(shared_keys) and all(
-            record_components[key] == current_components[key]
-            for key in shared_keys
+            record_components[key] == current_components[key] for key in shared_keys
         )
 
 
@@ -708,7 +707,10 @@ def overlay_source_metadata(
             overlaid[field] = source_metadata_scalar(value)
 
     for field, value in additions.items():
-        if field in {ORIGINAL_SOURCE_METADATA_FIELD, SOURCE_FILTER_PATHS_METADATA_FIELD}:
+        if field in {
+            ORIGINAL_SOURCE_METADATA_FIELD,
+            SOURCE_FILTER_PATHS_METADATA_FIELD,
+        }:
             continue
         if isinstance(value, Mapping):
             overlaid[field] = {
@@ -729,6 +731,7 @@ def overlay_source_metadata(
             path=path,
         ).merge_into(overlaid, path=path)
     return overlaid
+
 
 def with_original_source_metadata(
     metadata: SourceMetadataMapping,
@@ -925,9 +928,7 @@ class SourceAxisMetadataScope:
         """Return the stable worker-axis partition of this runtime scope."""
         from openhcs.constants.constants import get_multiprocessing_axis
 
-        multiprocessing_axis = ComponentSet.coerce_component(
-            get_multiprocessing_axis()
-        )
+        multiprocessing_axis = ComponentSet.coerce_component(get_multiprocessing_axis())
         return type(self).from_component_values(
             tuple(
                 (component, value)

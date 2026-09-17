@@ -208,15 +208,11 @@ class SignalTransformConstraint(Enum):
     REFERENCE_CHANNEL_IDENTITY = (
         "prove that source, nuclear, and other reference channels remain unchanged"
     )
-    ONE_PARAMETER_PER_ATTEMPT = (
-        "change one transform parameter per diagnostic attempt"
-    )
+    ONE_PARAMETER_PER_ATTEMPT = "change one transform parameter per diagnostic attempt"
     SAME_COORDINATE_DELTA = (
         "compare added and removed rooted paths at identical source coordinates"
     )
-    ROOTED_RECOVERY = (
-        "require recovered signal-supported rooted continuity rather than aggregate growth"
-    )
+    ROOTED_RECOVERY = "require recovered signal-supported rooted continuity rather than aggregate growth"
     FRAGMENTATION_CONTROL = (
         "reject gains accompanied by unsupported background or topology fragmentation"
     )

@@ -207,9 +207,7 @@ class PrimaryImageCarrierRequirement(str, Enum):
         """Validate one exact source after source-binding transformations."""
 
         source_channel_axis = (
-            None
-            if load_as_monochrome
-            else metadata.pixel_semantics.channel_axis
+            None if load_as_monochrome else metadata.pixel_semantics.channel_axis
         )
         if self is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS:
             if source_channel_axis is None:
@@ -515,13 +513,13 @@ class CallableMetadata:
                 self.image_payload_consumption
             )
         if self.primary_image_carrier_requirement is not None:
-            namespace[
-                FunctionContractAttribute.primary_image_carrier_requirement
-            ] = self.primary_image_carrier_requirement
+            namespace[FunctionContractAttribute.primary_image_carrier_requirement] = (
+                self.primary_image_carrier_requirement
+            )
         if self.primary_image_carrier_transition is not None:
-            namespace[
-                FunctionContractAttribute.primary_image_carrier_transition
-            ] = self.primary_image_carrier_transition
+            namespace[FunctionContractAttribute.primary_image_carrier_transition] = (
+                self.primary_image_carrier_transition
+            )
         if self.request_binding is not None:
             namespace[FunctionContractAttribute.callable_request_binding] = (
                 self.request_binding
@@ -2024,16 +2022,14 @@ class CallableMetadataReader:
         return value
 
     @overload
-    def optional_enum(self, field_name: str, enum_type: None = None) -> Enum | None:
-        ...
+    def optional_enum(self, field_name: str, enum_type: None = None) -> Enum | None: ...
 
     @overload
     def optional_enum(
         self,
         field_name: str,
         enum_type: type[_EnumT],
-    ) -> _EnumT | None:
-        ...
+    ) -> _EnumT | None: ...
 
     def optional_enum(
         self,

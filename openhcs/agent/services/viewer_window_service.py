@@ -1624,9 +1624,7 @@ class ViewerWindowService:
             path=self._required_scalar(
                 payload, ViewerPayloadField.PATH, str, "a string"
             ),
-            components=self._required_mapping(
-                payload, ViewerPayloadField.COMPONENTS
-            ),
+            components=self._required_mapping(payload, ViewerPayloadField.COMPONENTS),
             axis_indices=self._required_typed_tuple(
                 payload, ViewerPayloadField.AXIS_INDICES, int
             ),
@@ -1647,8 +1645,7 @@ class ViewerWindowService:
             for value in values
         ):
             raise TypeError(
-                f"Viewer response field {field_name!r} must be "
-                "a numeric pair."
+                f"Viewer response field {field_name!r} must be " "a numeric pair."
             )
         pair = (
             float(cast(int | float, values[0])),

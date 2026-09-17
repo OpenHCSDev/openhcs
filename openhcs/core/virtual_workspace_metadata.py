@@ -195,9 +195,7 @@ class OpenHCSMetadataFields:
     SOURCE_METADATA: str = SourceProjectionMetadataSerializer.SOURCE_METADATA_FIELD
     SOURCE_PROJECTION: str = SourceProjectionMetadataSerializer.SOURCE_PROJECTION_FIELD
     SOURCE_DIAGNOSTICS: str = "source_diagnostics"
-    SOURCE_BINDINGS_DECLARATION_IDENTITY: str = (
-        "source_bindings_declaration_identity"
-    )
+    SOURCE_BINDINGS_DECLARATION_IDENTITY: str = "source_bindings_declaration_identity"
     WORKSPACE_MAPPING: str = SourceProjectionMetadataSerializer.WORKSPACE_MAPPING_FIELD
     GRID_DIMENSIONS: str = "grid_dimensions"
     PIXEL_SIZE: str = "pixel_size"

@@ -21,7 +21,9 @@ SOURCE_PLANE_COUNT_FIELD = "source_plane_count"
 SOURCE_VOXEL_SPACING_FIELD = "OpenHCSSourceVoxelSpacingZYX"
 
 SourceMetadataScalar: TypeAlias = str | int | float | bool | None
-SourceMetadataValue: TypeAlias = SourceMetadataScalar | Mapping[str, SourceMetadataScalar]
+SourceMetadataValue: TypeAlias = (
+    SourceMetadataScalar | Mapping[str, SourceMetadataScalar]
+)
 SourceMetadataMapping: TypeAlias = Mapping[str, SourceMetadataValue]
 SourceMetadataIdentityValue: TypeAlias = (
     SourceMetadataScalar | tuple[tuple[str, SourceMetadataScalar], ...]
@@ -254,9 +256,9 @@ class SourceFilterPathMetadata:
                 path=path,
             ).paths
         )
-        target[SOURCE_FILTER_PATHS_METADATA_FIELD] = SourceFilterPathMetadata.from_paths(
-            (*merged, *self.paths)
-        ).as_dict()
+        target[SOURCE_FILTER_PATHS_METADATA_FIELD] = (
+            SourceFilterPathMetadata.from_paths((*merged, *self.paths)).as_dict()
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -292,7 +294,9 @@ class SourceVoxelSpacing:
         """Return CellProfiler Image.spacing semantics from NamesAndTypes values."""
         raw_y = float(y)
         if raw_y <= 0:
-            raise ValueError("CellProfiler relative pixel spacing in Y must be positive.")
+            raise ValueError(
+                "CellProfiler relative pixel spacing in Y must be positive."
+            )
         return cls((float(z) / raw_y, 1.0, float(x) / raw_y))
 
     @classmethod
@@ -313,9 +317,7 @@ class SourceVoxelSpacing:
             )
         else:
             values = tuple(
-                float(part)
-                for part in str(value).split(",")
-                if part.strip()
+                float(part) for part in str(value).split(",") if part.strip()
             )
         return cls(values)
 
@@ -363,9 +365,7 @@ class SourceVoxelSpacing:
 class SourceVoxelSpacingFields:
     """Source-image voxel spacing carried by runtime payload metadata."""
 
-    source_voxel_spacing: SourceVoxelSpacing = field(
-        default_factory=SourceVoxelSpacing
-    )
+    source_voxel_spacing: SourceVoxelSpacing = field(default_factory=SourceVoxelSpacing)
 
     def normalize_source_voxel_spacing_fields(self) -> None:
         if not isinstance(self.source_voxel_spacing, SourceVoxelSpacing):
@@ -440,7 +440,9 @@ class SourceMetadataIdentityProjection:
 def source_metadata_field_identity(field: str) -> str:
     """Return the canonical semantic identity of one source metadata field."""
 
-    normalized = "".join(character for character in field.lower() if character.isalnum())
+    normalized = "".join(
+        character for character in field.lower() if character.isalnum()
+    )
     return (
         normalized.removeprefix("metadata")
         if normalized.startswith("metadata")

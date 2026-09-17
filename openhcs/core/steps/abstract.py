@@ -18,7 +18,12 @@ from objectstate import get_base_type_for_lazy, semantic_values_equal
 from openhcs.constants.input_source import InputSource as InputSource
 
 # Import LazyStepMaterializationConfig for type hints
-from openhcs.core.config import LazyStepMaterializationConfig, LazyStreamingDefaults, LazyNapariStreamingConfig, LazyFijiStreamingConfig
+from openhcs.core.config import (
+    LazyStepMaterializationConfig,
+    LazyStreamingDefaults,
+    LazyNapariStreamingConfig,
+    LazyFijiStreamingConfig,
+)
 from openhcs.core.config import LazyStepWellFilterConfig
 from openhcs.core.config import LazyProcessingConfig, LazyDtypeConfig
 from openhcs.core.config import LazyStepSourceBindingsConfig
@@ -45,11 +50,11 @@ class StepExecutionObservation:
     ]
 
     @classmethod
-    def empty(cls) -> 'StepExecutionObservation':
+    def empty(cls) -> "StepExecutionObservation":
         return cls(MappingProxyType({}))
 
 
-#def get_step_id(step: 'AbstractStep') -> str:
+# def get_step_id(step: 'AbstractStep') -> str:
 #    """
 #    Generate a stable step ID from a step object reference.
 #
@@ -177,14 +182,14 @@ class AbstractStep(abc.ABC):
         description: str = None,
         enabled: bool = True,
         debug_pause: bool = False,
-        dtype_config: 'LazyDtypeConfig' = LazyDtypeConfig(),
-        processing_config: 'LazyProcessingConfig' = LazyProcessingConfig(),
-        source_bindings: 'LazyStepSourceBindingsConfig' = LazyStepSourceBindingsConfig(),
-        step_well_filter_config: 'LazyStepWellFilterConfig' = LazyStepWellFilterConfig(),
-        step_materialization_config: 'LazyStepMaterializationConfig' = LazyStepMaterializationConfig(),
-        streaming_defaults: 'LazyStreamingDefaults' = LazyStreamingDefaults(),
-        napari_streaming_config: 'LazyNapariStreamingConfig' = LazyNapariStreamingConfig(),
-        fiji_streaming_config: 'LazyFijiStreamingConfig' = LazyFijiStreamingConfig(),
+        dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
+        processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
+        source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
+        step_well_filter_config: "LazyStepWellFilterConfig" = LazyStepWellFilterConfig(),
+        step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
+        streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
+        napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
+        fiji_streaming_config: "LazyFijiStreamingConfig" = LazyFijiStreamingConfig(),
     ) -> None:
         """
         Initialize a step. These attributes are primarily used during the
@@ -247,14 +252,15 @@ class AbstractStep(abc.ABC):
 
         # Generate a stable step_id based on object id at instantiation.
         # This ID is used to link the step object to its plan in the context.
-#        self.step_id = str(id(self))
+
+    #        self.step_id = str(id(self))
 
     @abc.abstractmethod
     def process(
         self,
-        context: 'ProcessingContext',
+        context: "ProcessingContext",
         step_index: int,
-    ) -> 'StepExecutionObservation':
+    ) -> "StepExecutionObservation":
         """
         Process the step with the given context and step index.
 
@@ -270,4 +276,6 @@ class AbstractStep(abc.ABC):
             context: The frozen ProcessingContext containing all required fields,
                      including step_plans and filemanager.
         """
-        raise NotImplementedError("AbstractStep.process() must be implemented by subclasses")
+        raise NotImplementedError(
+            "AbstractStep.process() must be implemented by subclasses"
+        )

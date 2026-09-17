@@ -1347,6 +1347,4 @@ def materialize_artifact_outputs(
             *persistent_locations,
         )
 
-    return StepExecutionObservation(
-        MappingProxyType(locations_by_address)
-    )
+    return StepExecutionObservation(MappingProxyType(locations_by_address))

@@ -1430,9 +1430,7 @@ class PipelineCompiler:
                 continue
             for group in pattern.groups:
                 for invocation_index, invocation in enumerate(group.invocations):
-                    requirement = (
-                        invocation.contract.primary_image_carrier_requirement
-                    )
+                    requirement = invocation.contract.primary_image_carrier_requirement
                     if requirement is None:
                         continue
                     owner = (
@@ -1440,9 +1438,11 @@ class PipelineCompiler:
                         f"{group.group_key!r}, invocation "
                         f"{invocation.contract.function_name!r}"
                     )
-                    unproved_prefix = group.first_unproved_primary_image_carrier_invocation(
-                        requirement,
-                        stop_before=invocation_index,
+                    unproved_prefix = (
+                        group.first_unproved_primary_image_carrier_invocation(
+                            requirement,
+                            stop_before=invocation_index,
+                        )
                     )
                     if unproved_prefix is not None:
                         failures.append(
@@ -1539,9 +1539,7 @@ class PipelineCompiler:
                 main_flow_refs=main_flow_refs,
             )
         except ValueError as error:
-            routed_group = (
-                group.group_key if grouped_pattern else component_value
-            )
+            routed_group = group.group_key if grouped_pattern else component_value
             raise ValueError(
                 f"{owner}: cannot project source bindings for routed group "
                 f"{routed_group!r} on "
@@ -1613,13 +1611,11 @@ class PipelineCompiler:
                     f"{unproved.contract.function_name!r}."
                 )
                 return None
-            current_source_binding_plan = (
-                PipelineCompiler._source_anchor_binding_plan(
-                    producer,
-                    producer_group,
-                    owner=owner,
-                    grouped_pattern=producer.compiled_function_pattern.is_grouped,
-                )
+            current_source_binding_plan = PipelineCompiler._source_anchor_binding_plan(
+                producer,
+                producer_group,
+                owner=owner,
+                grouped_pattern=producer.compiled_function_pattern.is_grouped,
             )
             if (
                 current_source_binding_plan is not None

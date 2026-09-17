@@ -53,7 +53,6 @@ from openhcs.processing.backends.processors.numpy_processor import (
     stack_percentile_normalize,
 )
 
-
 _TRANSPORTED_FLEXIBLE_CALL_SHAPES: list[tuple[int, ...]] = []
 
 
@@ -433,9 +432,7 @@ def test_validate_processing_contract_chain_rejects_stack_consumer_after_collaps
 
 
 def test_validate_processing_contract_chain_rejects_assembly_before_stack_normalize():
-    pattern = _compiled_pattern(
-        [assemble_stack_cpu, stack_percentile_normalize]
-    )
+    pattern = _compiled_pattern([assemble_stack_cpu, stack_percentile_normalize])
 
     with pytest.raises(
         ValueError,
