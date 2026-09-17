@@ -85,6 +85,20 @@ class RuntimeObservationMode(Enum):
     def releases_worker_records(self) -> bool:
         return self is RuntimeObservationMode.OMIT
 
+    @classmethod
+    def from_parent_requirement(cls, required: bool) -> "RuntimeObservationMode":
+        """Select the mode implied by compiled parent-side execution needs."""
+
+        return cls.MERGE_INTO_PARENT if required else cls.OMIT
+
+    def including_parent_requirement(
+        self,
+        required: bool,
+    ) -> "RuntimeObservationMode":
+        """Return this mode strengthened by an additional retention requirement."""
+
+        return type(self).from_parent_requirement(self.collects_records or required)
+
 
 @dataclass(frozen=True)
 class ExecutionResult:

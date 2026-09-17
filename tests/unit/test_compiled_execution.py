@@ -1,5 +1,5 @@
-from types import SimpleNamespace
 import weakref
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -7,7 +7,11 @@ import pytest
 from arraybridge import MemoryType
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.artifacts import ArtifactOutputPlan, MeasurementsArtifactType
+from openhcs.core.artifacts import (
+    ArtifactOutputPlan,
+    ImageArtifactType,
+    MeasurementsArtifactType,
+)
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
@@ -21,19 +25,22 @@ from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
+from openhcs.core.orchestrator import worker_execution
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
     RuntimeExecutionObservation,
     RuntimeObservationMode,
 )
-from openhcs.core.orchestrator import worker_execution
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
-from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
-from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    MeasurementTable,
+)
+from openhcs.core.runtime_stores import RuntimeValueStore
+from openhcs.core.runtime_tabular_values import FieldSpec
 
 
 def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
@@ -91,6 +98,103 @@ def test_compiled_execution_bundle_derives_axis_ids_from_contexts() -> None:
     )
 
     assert bundle.axis_ids == ("A01", "B01")
+
+
+@pytest.mark.parametrize(
+    ("execution_scopes", "expected_mode"),
+    (
+        ((FunctionStepExecutionScope.AXIS,), RuntimeObservationMode.OMIT),
+        (
+            (
+                FunctionStepExecutionScope.AXIS,
+                FunctionStepExecutionScope.PLATE,
+            ),
+            RuntimeObservationMode.MERGE_INTO_PARENT,
+        ),
+    ),
+)
+def test_compiled_execution_bundle_derives_runtime_observation_mode(
+    execution_scopes,
+    expected_mode,
+) -> None:
+    context = ProcessingContext(
+        axis_id="A01",
+        step_plans={
+            index: SimpleNamespace(execution_scope=execution_scope)
+            for index, execution_scope in enumerate(execution_scopes)
+        },
+    )
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=(),
+        runtime_contexts={"A01": context},
+        transport_contexts={"A01": context},
+        worker_assignments={},
+        runtime_environment=_runtime_environment(),
+    )
+
+    assert (
+        RuntimeObservationMode.from_parent_requirement(
+            bundle.requires_parent_runtime_observation
+        )
+        is expected_mode
+    )
+
+
+def test_runtime_observation_mode_can_only_be_strengthened() -> None:
+    assert (
+        RuntimeObservationMode.OMIT.including_parent_requirement(True)
+        is RuntimeObservationMode.MERGE_INTO_PARENT
+    )
+    assert (
+        RuntimeObservationMode.MERGE_INTO_PARENT.including_parent_requirement(False)
+        is RuntimeObservationMode.MERGE_INTO_PARENT
+    )
+
+
+def test_axis_only_worker_lane_releases_runtime_values_after_each_axis(
+    monkeypatch,
+) -> None:
+    output_plan = ArtifactOutputPlan(
+        name="image",
+        path="/memory/image.npy",
+        artifact_type=ImageArtifactType,
+    )
+    contexts = [ProcessingContext(axis_id=axis) for axis in ("A01", "A02", "A03")]
+    payload_references = []
+
+    def execute_axis(_pipeline, context, _lane, **_kwargs):
+        assert all(reference() is None for reference in payload_references)
+        pixels = np.ones((1024, 1024), dtype=np.float32)
+        payload_references.append(weakref.ref(pixels))
+        context.runtime_value_store.record(
+            RuntimeValue.normalize(output_plan, pixels, axis_id=context.axis_id),
+            path=output_plan.path,
+            backend="memory",
+        )
+        return ExecutionResult.success(context.axis_id)
+
+    monkeypatch.setattr(worker_execution, "_execute_single_axis_static", execute_axis)
+    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
+
+    results = worker_execution.execute_worker_lane(
+        pipeline_definition=[object()],
+        lane_axis_contexts=[
+            (context.axis_id, [(context.axis_id, context)]) for context in contexts
+        ],
+        lane_context=WorkerLaneExecutionContext(
+            execution_id="execution",
+            plate_id="plate",
+            debug_execution_policy=NoOpDebugExecutionPolicy(),
+            worker_slot="worker",
+            worker_assignments={"worker": [context.axis_id for context in contexts]},
+        ),
+        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        release_axis_resources=False,
+    )
+
+    assert all(reference() is None for reference in payload_references)
+    assert all(not context.runtime_value_store.observed_values for context in contexts)
+    assert all(not result.runtime_observation.contexts for result in results.values())
 
 
 def test_runtime_execution_observation_merges_into_parent_contexts():

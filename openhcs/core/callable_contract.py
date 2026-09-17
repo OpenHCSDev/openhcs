@@ -150,6 +150,12 @@ class FunctionStepExecutionScope(str, Enum):
         """Return whether one compiled context owns this invocation's outputs."""
         return self is FunctionStepExecutionScope.AXIS or metadata_writer
 
+    @property
+    def requires_parent_runtime_observation(self) -> bool:
+        """Return whether worker records must survive for parent-side execution."""
+
+        return self is FunctionStepExecutionScope.PLATE
+
     @classmethod
     def require_uniform(
         cls,

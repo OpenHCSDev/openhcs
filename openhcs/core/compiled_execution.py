@@ -143,6 +143,16 @@ class CompiledExecutionBundle:
             )
         )
 
+    @property
+    def requires_parent_runtime_observation(self) -> bool:
+        """Return whether compiled scopes require worker records in the parent."""
+
+        return any(
+            plan.execution_scope.requires_parent_runtime_observation
+            for context in self.runtime_contexts.values()
+            for plan in context.step_plans.values()
+        )
+
     @classmethod
     def from_runtime_contexts(
         cls,

@@ -26,6 +26,7 @@ from zmqruntime.startup import EndpointStartupStatusCallback
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
+from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress import ProgressEvent
 from openhcs.core.steps.function_step import FunctionStep
@@ -57,6 +58,7 @@ from openhcs.runtime.zmq_worker_execution import ZMQWorkerExecutionRequest
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from openhcs.core.compiled_execution import CompiledExecutionBundle
     from openhcs.core.debug import DebugExecutionConfig
 
 
@@ -67,6 +69,16 @@ class ZMQAuxiliaryExecutionParams:
     axis_filter: tuple[str, ...] | None = None
     debug_execution_config: "DebugExecutionConfig | None" = None
     runtime_observation_export_path: Path | None = None
+
+    def runtime_observation_mode_for(
+        self,
+        execution_bundle: CompiledExecutionBundle,
+    ) -> RuntimeObservationMode:
+        """Resolve retention from compiled needs plus an explicit export request."""
+
+        return RuntimeObservationMode.from_parent_requirement(
+            execution_bundle.requires_parent_runtime_observation
+        ).including_parent_requirement(self.runtime_observation_export_path is not None)
 
     @classmethod
     def from_transport(
@@ -793,6 +805,11 @@ class ZMQExecutionServer(ExecutionServer):
             execution_id=request_context.execution_id,
             orchestrator=orchestrator,
             execution_bundle=compilation.execution_bundle,
+            runtime_observation_mode=(
+                request_context.auxiliary_params.runtime_observation_mode_for(
+                    compilation.execution_bundle
+                )
+            ),
             progress_context=progress_context,
             debug_execution_policy=debug_execution_policy,
             active_execution_record=self.active_executions[

@@ -673,7 +673,7 @@ class PipelineOrchestrator:
         log_file_base: Optional[str] = None,
         progress_queue=None,
         progress_context=None,
-        runtime_observation_mode: RuntimeObservationMode = RuntimeObservationMode.MERGE_INTO_PARENT,
+        runtime_observation_mode: RuntimeObservationMode | None = None,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
     ) -> Dict[str, ExecutionResult]:
         """
@@ -708,7 +708,13 @@ class PipelineOrchestrator:
                 visualizer=visualizer,
                 log_file_base=log_file_base,
                 progress_queue=progress_queue,
-                runtime_observation_mode=runtime_observation_mode,
+                runtime_observation_mode=(
+                    RuntimeObservationMode.from_parent_requirement(
+                        execution_bundle.requires_parent_runtime_observation
+                    )
+                    if runtime_observation_mode is None
+                    else runtime_observation_mode
+                ),
                 debug_execution_policy=debug_execution_policy,
             ),
         )

@@ -16,6 +16,7 @@ from openhcs.core.orchestrator.compiled_plate_execution import (
     CompiledPlateExecutionExtras,
     CompiledPlateExecutionResults,
 )
+from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.xdg_paths import get_openhcs_log_dir
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ class ZMQWorkerExecutionRequest:
     execution_id: str
     orchestrator: Any
     execution_bundle: CompiledExecutionBundle
+    runtime_observation_mode: RuntimeObservationMode
     progress_context: dict[str, Any]
     debug_execution_policy: Any
     active_execution_record: Any
@@ -72,6 +74,7 @@ class ZMQWorkerExecutionRequest:
                     ),
                     progress_queue=worker_progress_queue,
                     progress_context=self.progress_context,
+                    runtime_observation_mode=self.runtime_observation_mode,
                     debug_execution_policy=self.debug_execution_policy,
                 )
             )

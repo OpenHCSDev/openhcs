@@ -14,6 +14,7 @@ from openhcs.core.config import (
     ProcessingConfig,
 )
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.progress import (
     ProgressEvent,
     ProgressEventPayload,
@@ -23,6 +24,7 @@ from openhcs.core.progress import (
     create_event,
 )
 from openhcs.runtime.zmq_execution_server import (
+    ZMQAuxiliaryExecutionParams,
     ZMQExecutionContext,
     ZMQExecutionServer,
 )
@@ -73,6 +75,39 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
     )
     assert saved_global_config is global_config
     assert saved_global_config.processing_config.group_by is GroupBy.CHANNEL
+
+
+@pytest.mark.parametrize(
+    ("compiled_mode", "export_path", "expected_mode"),
+    (
+        (RuntimeObservationMode.OMIT, None, RuntimeObservationMode.OMIT),
+        (
+            RuntimeObservationMode.OMIT,
+            "/tmp/runtime-observation.pkl",
+            RuntimeObservationMode.MERGE_INTO_PARENT,
+        ),
+        (
+            RuntimeObservationMode.MERGE_INTO_PARENT,
+            None,
+            RuntimeObservationMode.MERGE_INTO_PARENT,
+        ),
+    ),
+)
+def test_zmq_auxiliary_params_strengthen_compiled_observation_requirement(
+    compiled_mode,
+    export_path,
+    expected_mode,
+) -> None:
+    params = ZMQAuxiliaryExecutionParams.from_transport(
+        {"runtime_observation_export_path": export_path}
+        if export_path is not None
+        else None
+    )
+    execution_bundle = SimpleNamespace(
+        requires_parent_runtime_observation=compiled_mode.collects_records
+    )
+
+    assert params.runtime_observation_mode_for(execution_bundle) is expected_mode
 
 
 def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(

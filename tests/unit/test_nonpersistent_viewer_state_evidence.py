@@ -12,7 +12,10 @@ from openhcs.core.orchestrator.compiled_plate_execution import (
     CompiledPlateExecutionExtras,
     CompiledPlateExecutionResults,
 )
-from openhcs.core.orchestrator.execution_result import ExecutionResult
+from openhcs.core.orchestrator.execution_result import (
+    ExecutionResult,
+    RuntimeObservationMode,
+)
 from openhcs.runtime.viewer_protocol import ViewerControlResponse
 from openhcs.runtime.zmq_server_hooks import ZMQResultsSummaryEnricher
 from openhcs.runtime.zmq_worker_execution import ZMQWorkerExecutionRequest
@@ -67,8 +70,11 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
         runtime_environment=SimpleNamespace(worker_start=worker_start),
     )
 
+    execution_calls = []
+
     class Orchestrator:
-        def execute_compiled_plate(self, **_kwargs):
+        def execute_compiled_plate(self, **kwargs):
+            execution_calls.append(kwargs)
             return compiled_results
 
     record = ExecutionRecord(
@@ -83,6 +89,7 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
         execution_id="exec",
         orchestrator=Orchestrator(),
         execution_bundle=execution_bundle,
+        runtime_observation_mode=RuntimeObservationMode.OMIT,
         progress_context={"execution_id": "exec", "plate_id": "plate"},
         debug_execution_policy=object(),
         active_execution_record=record,
@@ -90,6 +97,7 @@ def test_settled_viewer_state_survives_zmq_execution_result_transport(
     ).execute()
 
     assert returned is compiled_results
+    assert execution_calls[0]["runtime_observation_mode"] is RuntimeObservationMode.OMIT
     assert progress_queue.values == [None]
     assert record.get_extra(CompiledPlateExecutionExtras.EXECUTION_RECORD_KEY) is (
         compiled_results.extras
