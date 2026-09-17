@@ -1119,6 +1119,27 @@ def test_saved_update_session_restores_through_existing_authorities(
     assert not consumed.directory.exists()
 
 
+@pytest.mark.parametrize(
+    "source",
+    (
+        "{}",
+        "[]",
+        '{"selected_plate_scope_id": 7}',
+        '{"selected_plate_scope_id": null, "extra": true}',
+        "{",
+    ),
+)
+def test_desktop_restart_ui_state_rejects_malformed_payloads(
+    tmp_path: Path,
+    source: str,
+) -> None:
+    state_document = tmp_path / "ui-state.json"
+    state_document.write_text(source, encoding="utf-8")
+
+    with pytest.raises(DesktopUpdateError, match="UI state is invalid"):
+        DesktopRestartUiState.read(state_document)
+
+
 def test_saved_session_restores_selected_plate_after_all_scope_payload(
     monkeypatch,
     tmp_path: Path,

@@ -25,6 +25,7 @@ from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from python_introspect import dataclass_from_mapping
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.desktop_deployment import (
@@ -36,6 +37,7 @@ from openhcs.desktop_deployment import (
 from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
 from openhcs.mcp.bootstrap import MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE
 from openhcs.pyqt_gui.services.desktop_update_worker import DesktopUpdatePlan
+from openhcs.serialization.json import to_jsonable
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
@@ -331,20 +333,16 @@ class DesktopRestartUiState:
 
     @classmethod
     def read(cls, path: Path) -> DesktopRestartUiState:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(payload, dict):
-            raise DesktopUpdateError("Saved desktop UI state must be a JSON object.")
-        selected_scope_id = payload.get("selected_plate_scope_id")
-        if selected_scope_id is not None and not isinstance(selected_scope_id, str):
-            raise DesktopUpdateError(
-                "Saved desktop plate selection must be a string or null."
-            )
-        return cls(selected_plate_scope_id=selected_scope_id)
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            return dataclass_from_mapping(cls, payload)
+        except (json.JSONDecodeError, TypeError, ValueError) as error:
+            raise DesktopUpdateError("Saved desktop UI state is invalid.") from error
 
     def write(self, path: Path) -> None:
         path.write_text(
             json.dumps(
-                {"selected_plate_scope_id": self.selected_plate_scope_id},
+                to_jsonable(self),
                 indent=2,
                 sort_keys=True,
             )
