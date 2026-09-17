@@ -63,6 +63,12 @@ class ImageQaPrecondition(Enum):
         "apply dataset-specific sensitivity through the pipeline declaration, "
         "not by changing the shared engine default"
     )
+    SOURCE_LAYOUT_CONTRACT = (
+        "verify that the routed source rank and channel-axis semantics satisfy the "
+        "declared callable contract; when a color axis is not a biological plane "
+        "axis, collapse it explicitly with a registered typed transform before "
+        "segmentation"
+    )
 
 
 class ReferenceEvidenceRule(Enum):

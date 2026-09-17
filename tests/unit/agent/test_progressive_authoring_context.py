@@ -274,6 +274,8 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert f'kind="{ImageAnalysisWorkflowAuthoringContext.require_kind()}"' in pipeline
 
     assert "IMAGE-ANALYSIS WORKFLOW" in image_analysis
+    assert "routed source rank and channel-axis semantics" in image_analysis
+    assert "registered typed transform before segmentation" in image_analysis
     assert "variable_components=[SITE]" in image_analysis
     assert "group_by=CHANNEL" in image_analysis
     assert "one SITE stack per channel" in image_analysis
