@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from functools import lru_cache
-import logging
 from pathlib import Path
 from typing import Any, ClassVar, Sequence
 
@@ -127,19 +126,24 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
     def source_metadata(self, path: Path) -> ImageFileSourceMetadata:
         """Read format-owned source metadata without loading pixel data."""
         try:
-            import imageio.v3 as iio
-
-            dtype = iio.improps(path).dtype
+            return self.require_source_metadata(path)
         except Exception:
             logger.debug("Could not read image metadata for %s.", path, exc_info=True)
             return ImageFileSourceMetadata()
+
+    def require_source_metadata(self, path: Path) -> ImageFileSourceMetadata:
+        """Read complete format-owned header metadata or fail closed."""
+
+        import imageio.v3 as iio
+
+        dtype = iio.improps(path).dtype
         return ImageFileSourceMetadata(
             source_dtype=dtype,
             intensity_scale=(
                 self.declared_intensity_scale(path)
                 or image_intensity_scale_for_dtype(dtype)
             ),
-            pixel_semantics=self.pixel_semantics(path),
+            pixel_semantics=self.require_pixel_semantics(path),
         )
 
     def requires_plane_store_decoder(self, path: Path) -> bool:
@@ -155,10 +159,7 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
     def pixel_semantics(self, path: Path) -> SourceImagePixelSemantics:
         """Return explicit channel-band semantics exposed by the file container."""
         try:
-            from PIL import Image
-
-            with Image.open(path) as image:
-                band_count = len(image.getbands())
+            return self.require_pixel_semantics(path)
         except Exception:
             logger.debug(
                 "Could not read source pixel-band metadata for %s.",
@@ -166,6 +167,14 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
                 exc_info=True,
             )
             return SourceImagePixelSemantics()
+
+    def require_pixel_semantics(self, path: Path) -> SourceImagePixelSemantics:
+        """Read complete pixel-band header semantics or fail closed."""
+
+        from PIL import Image
+
+        with Image.open(path) as image:
+            band_count = len(image.getbands())
         if band_count <= 1:
             return SourceImagePixelSemantics()
         return SourceImagePixelSemantics(channel_axis=-1, channel_count=band_count)
@@ -202,24 +211,15 @@ class TiffImageFileFormat(ImageFileFormat):
         with tifffile.TiffFile(path) as tif:
             return bool(tif.is_ome)
 
-    def source_metadata(self, path: Path) -> ImageFileSourceMetadata:
-        """Read TIFF dtype and sample scale through one container context."""
-        try:
-            import tifffile
+    def require_source_metadata(self, path: Path) -> ImageFileSourceMetadata:
+        """Read complete TIFF header semantics through one container context."""
 
-            tif = tifffile.TiffFile(path)
-        except Exception:
-            logger.debug("Could not read image metadata for %s.", path, exc_info=True)
-            return ImageFileSourceMetadata()
+        import tifffile
+
+        tif = tifffile.TiffFile(path)
         with tif:
-            try:
-                series = tif.series[0]
-                dtype = series.dtype
-            except Exception:
-                logger.debug(
-                    "Could not read image metadata for %s.", path, exc_info=True
-                )
-                return ImageFileSourceMetadata()
+            series = tif.series[0]
+            dtype = series.dtype
             declared_scale = self._declared_intensity_scale_from_page(tif.pages[0])
             sample_axis = series.axes.find("S")
             sample_count = (
@@ -334,12 +334,20 @@ class NumericImagePayloadUint8Strategy(ImagePayloadUint8Strategy):
         return np.rint(np.clip(sanitized, 0.0, 255.0)).astype(np.uint8)
 
 
-@lru_cache(maxsize=8192)
 def image_file_source_metadata(path: Path | None) -> ImageFileSourceMetadata:
     """Return source metadata through the exact registered file format."""
     if path is None or not path.exists() or not ImageFileFormat.is_image_path(path):
         return ImageFileSourceMetadata()
     return ImageFileFormat.require_path(path).source_metadata(path)
+
+
+def require_image_file_source_metadata(path: Path) -> ImageFileSourceMetadata:
+    """Return strict header metadata from the one registered format owner."""
+
+    image_format = ImageFileFormat.require_path(path)
+    if not path.exists():
+        raise ValueError(f"Image source does not exist: {path}.")
+    return image_format.require_source_metadata(path)
 
 
 def prepare_disk_image_payloads(

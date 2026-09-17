@@ -17,9 +17,12 @@ from typing import TYPE_CHECKING, TypeAlias
 if TYPE_CHECKING:
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
 
+from pyqt_reactive.pattern_metadata import PatternScopeToken
+from python_introspect import Enableable
+
 from openhcs.core.artifacts import (
-    ArtifactInputProjectionPlan,
     ArtifactInputPlan,
+    ArtifactInputProjectionPlan,
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecAccumulator,
@@ -28,18 +31,17 @@ from openhcs.core.artifacts import (
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
+    PrimaryImageCarrierRequirement,
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
+from openhcs.core.function_reference import FunctionReference
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
-    InvocationContractProvider,
     InvocationArtifactDeclarationProviderLike,
+    InvocationContractProvider,
     callable_contract_artifact_declarations,
 )
-from openhcs.core.function_reference import FunctionReference
-from pyqt_reactive.pattern_metadata import PatternScopeToken
-from python_introspect import Enableable
 
 FunctionPatternCallable: TypeAlias = Callable | FunctionReference
 FunctionPatternSyntax: TypeAlias = Callable | tuple | list | dict
@@ -563,6 +565,15 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             plan for plan in self.artifact_output_plans if plan.ref() in canonical_refs
         )
 
+    def proves_primary_image_carrier(
+        self,
+        requirement: PrimaryImageCarrierRequirement,
+    ) -> bool:
+        """Return whether this declaration proves carrier preservation."""
+
+        transition = self.contract.primary_image_carrier_transition
+        return transition is not None and transition.proves(requirement)
+
 
 @dataclass(frozen=True, slots=True)
 class ComponentFunctionInvocationProjection:
@@ -694,6 +705,26 @@ class CompiledFunctionGroup:
         return bool(self.invocations) and all(
             invocation.contract.preserves_input_main_flow()
             for invocation in self.invocations
+        )
+
+    def first_unproved_primary_image_carrier_invocation(
+        self,
+        requirement: PrimaryImageCarrierRequirement,
+        *,
+        stop_before: int | None = None,
+    ) -> CompiledFunctionInvocation | None:
+        """Return the first invocation without a typed carrier proof."""
+
+        invocations = (
+            self.invocations if stop_before is None else self.invocations[:stop_before]
+        )
+        return next(
+            (
+                invocation
+                for invocation in invocations
+                if not invocation.proves_primary_image_carrier(requirement)
+            ),
+            None,
         )
 
 

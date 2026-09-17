@@ -17,6 +17,7 @@ from openhcs.core.artifacts import (
     InputStackBroadcastSourceRelation,
     ObjectLabelsArtifactType,
 )
+from openhcs.core.callable_contract import preserves_primary_image_carrier
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
@@ -852,6 +853,7 @@ def crop_output_metadata(
     )
 
 
+@preserves_primary_image_carrier
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 @special_inputs("topology_inputs")
 def crop(

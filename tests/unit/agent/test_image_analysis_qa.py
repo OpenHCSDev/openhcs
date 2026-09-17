@@ -67,6 +67,9 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "without opening hidden labels or scoring references" in guidance
     assert "NamedSourceBinding(load_as_monochrome=True)" in guidance
     assert "do not apply unconditional color_to_gray downstream" in guidance
+    assert "inventory every selected source" in guidance
+    assert "registered image-file header semantics" in guidance
+    assert "rather than sampling files or inferring layout from array rank" in guidance
     assert "label-ID sets to be identical" in guidance
     assert "equal object counts alone do not prove seed identity conservation" in guidance
     assert "primary-seed pixel lies inside the secondary mask" in guidance

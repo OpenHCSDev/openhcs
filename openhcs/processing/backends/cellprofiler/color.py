@@ -26,6 +26,10 @@ from openhcs.core.artifacts import (
     GroupLineageSourceRelation,
     ImageArtifactType,
 )
+from openhcs.core.callable_contract import (
+    PrimaryImageCarrierRequirement,
+    requires_primary_image_carrier,
+)
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.pipeline.function_contracts import (
@@ -1564,6 +1568,9 @@ def gray_to_color(
     )
 
 
+@requires_primary_image_carrier(
+    PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,
+)
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def color_to_gray(
     image: np.ndarray,

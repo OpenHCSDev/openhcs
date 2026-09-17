@@ -99,6 +99,12 @@ class ImageQaPrecondition(Enum):
         "declare NamedSourceBinding(load_as_monochrome=True) at the source boundary; "
         "do not apply unconditional color_to_gray downstream"
     )
+    EXHAUSTIVE_SOURCE_CARRIER_INVENTORY = (
+        "inventory every selected source through its registered image-file header "
+        "semantics before authoring or execution; report distinct declared carrier "
+        "classes and refuse unknown or unreadable headers rather than sampling files "
+        "or inferring layout from array rank"
+    )
 
 
 class ImageQaEvidenceRule(Enum):

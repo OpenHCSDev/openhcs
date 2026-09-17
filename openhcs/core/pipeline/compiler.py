@@ -70,7 +70,10 @@ from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
 )
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable_contract import (
+    FunctionStepExecutionScope,
+    PrimaryImageCarrierRequirement,
+)
 from openhcs.core.context.processing_context import (
     ProcessingContext,
     RequiredVisualizer,
@@ -127,6 +130,16 @@ from openhcs.core.pipeline.framework_device_assignment import (
 )
 from openhcs.core.pipeline.step_attribute_stripper import StepAttributeStripper
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
+from openhcs.core.function_patterns import (
+    CompiledFunctionGroup,
+)
+from openhcs.core.image_file_serialization import (
+    require_image_file_source_metadata,
+)
+from openhcs.core.source_bindings import (
+    CompiledSourceBindingPlan,
+    SourceProjectionRole,
+)
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.utils import WellFilterProcessor
 from objectstate import ObjectState, ObjectStateRegistry, get_base_type_for_lazy
@@ -1383,6 +1396,7 @@ class PipelineCompiler:
     ) -> None:
         PipelineCompiler.validate_memory_contracts(session)
         PipelineCompiler.validate_source_workspace_projection(session)
+        PipelineCompiler.validate_primary_image_carrier_requirements(session)
         PipelineCompiler.assign_framework_device_resources(session)
         if enable_visualizer_override:
             PipelineCompiler.apply_global_visualizer_override(
@@ -1402,6 +1416,317 @@ class PipelineCompiler:
         if projection is None:
             return
         projection.validate_runtime_metadata_projection(axis_id=session.axis_id)
+
+    @staticmethod
+    def validate_primary_image_carrier_requirements(
+        session: CompilationSession,
+    ) -> None:
+        """Prove callable-declared source carrier requirements before execution."""
+
+        failures: list[str] = []
+        for step_index, plan in session.plans.items():
+            pattern = plan.compiled_function_pattern
+            if pattern is None:
+                continue
+            for group in pattern.groups:
+                for invocation_index, invocation in enumerate(group.invocations):
+                    requirement = (
+                        invocation.contract.primary_image_carrier_requirement
+                    )
+                    if requirement is None:
+                        continue
+                    owner = (
+                        f"step {step_index} ({plan.step_name!r}), group "
+                        f"{group.group_key!r}, invocation "
+                        f"{invocation.contract.function_name!r}"
+                    )
+                    unproved_prefix = group.first_unproved_primary_image_carrier_invocation(
+                        requirement,
+                        stop_before=invocation_index,
+                    )
+                    if unproved_prefix is not None:
+                        failures.append(
+                            f"{owner}: carrier requirement {requirement.value!r} "
+                            "is not preserved by earlier callable "
+                            f"{unproved_prefix.contract.function_name!r} in the "
+                            "same group."
+                        )
+                        continue
+                    source_binding_plan = PipelineCompiler._source_anchor_binding_plan(
+                        plan,
+                        group,
+                        owner=owner,
+                        grouped_pattern=pattern.is_grouped,
+                    )
+                    if (
+                        source_binding_plan is None
+                        or not source_binding_plan.primary_plane_bindings
+                    ):
+                        if plan.source_binding_plan.binding_declarations:
+                            failures.append(
+                                f"{owner}: no exact primary source-binding "
+                                "projection represents this callable's main flow."
+                            )
+                            continue
+                        source_proof = PipelineCompiler._carrier_source_plan(
+                            session=session,
+                            plan=plan,
+                            group_key=group.group_key,
+                            initial_source_binding_plan=source_binding_plan,
+                            owner=owner,
+                            requirement=requirement,
+                            failures=failures,
+                        )
+                        if source_proof is None:
+                            continue
+                        _source_plan, source_binding_plan = source_proof
+                    PipelineCompiler._validate_pipeline_start_carrier_requirement(
+                        session=session,
+                        source_binding_plan=(
+                            CompiledSourceBindingPlan.empty()
+                            if source_binding_plan is None
+                            else source_binding_plan
+                        ),
+                        owner=owner,
+                        requirement=requirement,
+                        failures=failures,
+                    )
+        if failures:
+            raise ValueError(
+                "Primary image carrier requirements failed before execution:\n- "
+                + "\n- ".join(failures)
+            )
+
+    @staticmethod
+    def _source_anchor_binding_plan(
+        plan: CompiledStepPlan,
+        group: CompiledFunctionGroup,
+        *,
+        owner: str,
+        grouped_pattern: bool,
+    ) -> CompiledSourceBindingPlan | None:
+        """Return the exact component-scoped bindings feeding one group."""
+
+        declared_plan = plan.source_binding_plan
+        if grouped_pattern and plan.execution_group_scope.component is None:
+            raise ValueError(
+                f"{owner}: cannot project source bindings for a grouped callable "
+                "pattern without a routed component scope."
+            )
+        if not declared_plan.has_primary_content:
+            return None
+        execution_scope = plan.execution_group_scope
+        try:
+            if execution_scope.component is None:
+                component_value = None
+            elif not grouped_pattern and execution_scope.has_single_static_key:
+                component_value = execution_scope.require_single_static_key()
+            elif not grouped_pattern:
+                # A single callable is applied across every static/dynamic routed
+                # coordinate.  The compiled plan itself is the exact source scope;
+                # it must be validated as a whole rather than guessed from the
+                # synthetic ``default`` function-group key.
+                component_value = None
+            else:
+                component_value = execution_scope.resolve_runtime_key(group.group_key)
+            main_flow_refs = group.main_flow_input_refs_for_component(
+                execution_scope,
+                component_value,
+            )
+            return declared_plan.for_main_flow_scope(
+                component=execution_scope.component,
+                group_key=component_value,
+                main_flow_refs=main_flow_refs,
+            )
+        except ValueError as error:
+            routed_group = (
+                group.group_key if grouped_pattern else component_value
+            )
+            raise ValueError(
+                f"{owner}: cannot project source bindings for routed group "
+                f"{routed_group!r} on "
+                f"{execution_scope.component.value!r}: {error}"
+            ) from error
+
+    @staticmethod
+    def _carrier_source_plan(
+        *,
+        session: CompilationSession,
+        plan: CompiledStepPlan,
+        group_key: str,
+        initial_source_binding_plan: CompiledSourceBindingPlan | None,
+        owner: str,
+        requirement: PrimaryImageCarrierRequirement,
+        failures: list[str],
+    ) -> tuple[CompiledStepPlan, CompiledSourceBindingPlan | None] | None:
+        """Trace a carrier-preserving main-flow chain to its source-owning plan."""
+
+        try:
+            ancestry = session.main_flow_plan_ancestry(plan.step_index)
+        except ValueError as error:
+            failures.append(
+                f"{owner}: carrier requirement {requirement.value!r} has an "
+                f"invalid compiled step dependency: {error}"
+            )
+            return None
+
+        current_source_binding_plan = initial_source_binding_plan
+        for ancestry_index, producer in enumerate(ancestry):
+            if ancestry_index == 0:
+                continue
+            if producer.compiled_function_pattern is None:
+                failures.append(
+                    f"{owner}: carrier requirement {requirement.value!r} has no "
+                    f"compiled producer proof for step {producer.step_index}."
+                )
+                return None
+            try:
+                producer_group = producer.compiled_function_pattern.group_for_component(
+                    group_key
+                )
+            except ValueError as error:
+                failures.append(
+                    f"{owner}: carrier requirement {requirement.value!r} cannot "
+                    f"select a carrier-producing group from step "
+                    f"{producer.step_index}: {error}"
+                )
+                return None
+            if producer_group is None:
+                failures.append(
+                    f"{owner}: carrier requirement {requirement.value!r} has no "
+                    f"producer group {group_key!r} at step {producer.step_index}."
+                )
+                return None
+            if not producer_group.invocations:
+                failures.append(
+                    f"{owner}: carrier requirement {requirement.value!r} has an "
+                    f"empty producer group at step {producer.step_index}."
+                )
+                return None
+            unproved = producer_group.first_unproved_primary_image_carrier_invocation(
+                requirement
+            )
+            if unproved is not None:
+                failures.append(
+                    f"{owner}: carrier requirement {requirement.value!r} is not "
+                    f"preserved by producer step {producer.step_index} callable "
+                    f"{unproved.contract.function_name!r}."
+                )
+                return None
+            current_source_binding_plan = (
+                PipelineCompiler._source_anchor_binding_plan(
+                    producer,
+                    producer_group,
+                    owner=owner,
+                    grouped_pattern=producer.compiled_function_pattern.is_grouped,
+                )
+            )
+            if (
+                current_source_binding_plan is not None
+                and current_source_binding_plan.primary_plane_bindings
+            ):
+                return producer, current_source_binding_plan
+            if producer.source_binding_plan.binding_declarations:
+                failures.append(
+                    f"{owner}: carrier requirement {requirement.value!r} has no "
+                    f"exact primary source-binding projection at producer step "
+                    f"{producer.step_index}."
+                )
+                return None
+
+        current = ancestry[-1]
+        try:
+            current.main_input_dependency.require_pipeline_start()
+        except ValueError as error:
+            failures.append(
+                f"{owner}: carrier requirement {requirement.value!r} cannot be "
+                f"traced to an exact pipeline-start source: {error}"
+            )
+            return None
+        return current, current_source_binding_plan
+
+    @staticmethod
+    def _validate_pipeline_start_carrier_requirement(
+        *,
+        session: CompilationSession,
+        source_binding_plan: CompiledSourceBindingPlan,
+        owner: str,
+        requirement: PrimaryImageCarrierRequirement,
+        failures: list[str],
+    ) -> None:
+        """Validate every exact selected source for one pipeline-start callable."""
+
+        workspace_projection = session.source_workspace_projection
+        declared_bindings = source_binding_plan.primary_plane_bindings
+        if declared_bindings:
+            selected = tuple(
+                (source_projection, binding.load_as_monochrome, binding.alias)
+                for binding in declared_bindings
+                for source_projection in (
+                    projection
+                    for projection in (
+                        workspace_projection.source_projections_by_virtual_path.values()
+                    )
+                    if projection.matches_binding(binding)
+                )
+            )
+            matched_aliases = frozenset(alias for _, _, alias in selected)
+            for binding in declared_bindings:
+                if binding.alias not in matched_aliases:
+                    failures.append(
+                        f"{owner}: no exact source projection proves binding "
+                        f"{binding.alias!r} for carrier requirement "
+                        f"{requirement.value!r}."
+                    )
+        else:
+            selected = tuple(
+                (projection, False, "<pipeline-start>")
+                for projection in (
+                    workspace_projection.source_projections_by_virtual_path.values()
+                )
+                if projection.projection_role is SourceProjectionRole.PRIMARY_PLANE
+            )
+        if not selected:
+            failures.append(
+                f"{owner}: no exact selected source proves carrier requirement "
+                f"{requirement.value!r}."
+            )
+            return
+
+        filemanager = session.context.filemanager
+        workspace_root = workspace_projection.workspace_root
+        if filemanager is None or workspace_root is None:
+            failures.append(
+                f"{owner}: exact physical source headers cannot be resolved "
+                "without a file manager and virtual-workspace root."
+            )
+            return
+
+        for source_projection, load_as_monochrome, binding_alias in selected:
+            source_ref = source_projection.ref
+            try:
+                physical_source = filemanager.physical_source_path(
+                    source_ref.backend_address,
+                    source_ref.backend,
+                    base_path=workspace_root,
+                )
+                if physical_source is None:
+                    raise ValueError(
+                        "storage backend does not expose a physical source path"
+                    )
+                source_path = Path(physical_source)
+                metadata = require_image_file_source_metadata(source_path)
+                requirement.validate_source_metadata(
+                    metadata,
+                    source_path=source_path,
+                    load_as_monochrome=load_as_monochrome,
+                )
+            except (OSError, ValueError) as error:
+                failures.append(
+                    f"{owner}: binding {binding_alias!r}, source "
+                    f"{source_ref.backend_address!r} does not prove "
+                    f"{requirement.value!r}: {error}"
+                )
 
     @staticmethod
     def _validate_sequential_components_for_session(

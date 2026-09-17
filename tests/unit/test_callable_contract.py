@@ -15,10 +15,15 @@ from openhcs.core.callable_contract import (
     CallableContract,
     CallableImportIdentity,
     CallableMetadata,
+    CallableMetadataReader,
     CompilerPreparedAutoRegisterFamily,
+    PrimaryImageCarrierRequirement,
+    PrimaryImageCarrierTransition,
     attach_callable_contract_metadata,
     prepare_module_autoregister_families,
     prepare_processing_callable,
+    preserves_primary_image_carrier,
+    requires_primary_image_carrier,
     reset_processing_callable_preparation_cache,
     runtime_image_execution_mode,
 )
@@ -101,6 +106,87 @@ def test_callable_contract_reads_runtime_image_execution_mode() -> None:
     contract = CallableContract.from_callable(process)
 
     assert contract.runtime_image_execution_mode is ImagePayloadExecutionMode.FULL_STACK
+
+
+def test_callable_contract_preserves_primary_image_carrier_requirement() -> None:
+    @requires_primary_image_carrier(
+        PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS,
+    )
+    def process(image):
+        return image
+
+    contract = CallableContract.from_callable(process)
+
+    assert (
+        contract.primary_image_carrier_requirement
+        is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+    )
+    assert contract.metadata.as_namespace()[
+        FunctionContractAttribute.primary_image_carrier_requirement
+    ] is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+
+
+def test_callable_metadata_rejects_string_carrier_requirement() -> None:
+    with pytest.raises(TypeError, match="PrimaryImageCarrierRequirement"):
+        CallableMetadata(primary_image_carrier_requirement="source_channel_axis")
+
+
+def test_callable_metadata_reader_rejects_wrong_carrier_enum_family() -> None:
+    def process(image):
+        return image
+
+    process.__dict__[FunctionContractAttribute.primary_image_carrier_requirement] = (
+        PrimaryImageCarrierTransition.PRESERVE
+    )
+
+    with pytest.raises(TypeError, match="PrimaryImageCarrierRequirement"):
+        CallableContract.from_callable(process)
+
+
+def test_callable_metadata_reader_preserves_requested_enum_family() -> None:
+    reader = CallableMetadataReader(
+        {
+            FunctionContractAttribute.primary_image_carrier_requirement: (
+                PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+            ),
+            FunctionContractAttribute.primary_image_carrier_transition: (
+                PrimaryImageCarrierTransition.PRESERVE
+            ),
+        },
+        "process",
+    )
+
+    requirement = reader.optional_enum(
+        FunctionContractAttribute.primary_image_carrier_requirement,
+        PrimaryImageCarrierRequirement,
+    )
+    transition = reader.optional_enum(
+        FunctionContractAttribute.primary_image_carrier_transition,
+        PrimaryImageCarrierTransition,
+    )
+    legacy = reader.optional_enum(
+        FunctionContractAttribute.primary_image_carrier_requirement,
+    )
+
+    assert requirement is PrimaryImageCarrierRequirement.SOURCE_CHANNEL_AXIS
+    assert transition is PrimaryImageCarrierTransition.PRESERVE
+    assert legacy is requirement
+
+
+def test_callable_contract_preserves_declared_carrier_transition() -> None:
+    @preserves_primary_image_carrier
+    def crop_like(image):
+        return image
+
+    contract = CallableContract.from_callable(crop_like)
+
+    assert (
+        contract.primary_image_carrier_transition
+        is PrimaryImageCarrierTransition.PRESERVE
+    )
+    assert contract.metadata.as_namespace()[
+        FunctionContractAttribute.primary_image_carrier_transition
+    ] is PrimaryImageCarrierTransition.PRESERVE
 
 
 def test_callable_contract_exposes_canonical_raw_import_identity() -> None:

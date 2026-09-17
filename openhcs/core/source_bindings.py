@@ -2116,6 +2116,28 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
     def has_primary_content(self) -> bool:
         return bool(self.bindings)
 
+    def for_main_flow_scope(
+        self,
+        *,
+        component: AllComponents | None,
+        group_key: str | None,
+        main_flow_refs: tuple[ArtifactSpecRef, ...] | None,
+    ) -> "CompiledSourceBindingPlan | None":
+        """Project exact source declarations for one main-flow execution scope."""
+
+        component_plan = (
+            self if group_key is None else self.for_component_group(component, group_key)
+        )
+        if main_flow_refs == ():
+            return None
+        if main_flow_refs is None:
+            return component_plan
+        declared_main_flow_plan = self.for_artifact_refs(main_flow_refs)
+        if not declared_main_flow_plan.binding_declarations:
+            return None
+        compatible_plan = component_plan.for_artifact_refs(main_flow_refs)
+        return compatible_plan if compatible_plan.binding_declarations else None
+
     def __reduce__(
         self,
     ) -> tuple[
