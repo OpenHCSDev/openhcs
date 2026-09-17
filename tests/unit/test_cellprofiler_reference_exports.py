@@ -232,9 +232,8 @@ def test_reference_export_plan_derives_terminal_artifacts_from_declarations(
         source_root=pipeline_path.parent,
     )
 
-    assert (
-        tuple(artifact.artifact_name for artifact in plan.artifacts)
-        == (EXPECTED_TERMINAL_EXPORTS[case_name])
+    assert tuple(artifact.artifact_name for artifact in plan.artifacts) == (
+        EXPECTED_TERMINAL_EXPORTS[case_name]
     )
     for artifact in plan.artifacts:
         if (
