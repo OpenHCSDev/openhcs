@@ -30,6 +30,7 @@ def test_navigation_inverts_route_placement_with_inserted_singleton_axes(
             projected_axis_components=("channel",),
             component_values={"channel": [2]},
             routed_component_values={"channel": [2]},
+            routed_component_coordinates=((2,),),
             axis_offsets=(1,),
             scalar_component_values={},
         ),
