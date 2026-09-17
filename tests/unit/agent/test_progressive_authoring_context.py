@@ -293,9 +293,21 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
         in image_analysis
     )
     assert "Compare channel histograms, clipped fractions" in image_analysis
-    assert "across tile interiors and boundaries" in image_analysis
+    assert "joins, quadrants, and complete fields" in image_analysis
+    assert "per-region object or traced-signal density" in image_analysis
     assert "Display normalisation changes presentation only" in image_analysis
     assert "representative dim structures, bright structures" in image_analysis
+    assert "missed-signal components" in image_analysis
+    assert "unsupported-mask coverage" in image_analysis
+    assert "intensity along each path" in image_analysis
+    assert "discontinuities, gaps, endpoints, branches, crossings" in image_analysis
+    assert "blinded, spatially distributed representative set" in image_analysis
+    assert "Tune only on the declared development subset" in image_analysis
+    assert "Score held-out fields once" in image_analysis
+    assert "control ordering remain stable" in image_analysis
+    assert "Escalate rather than declare success" in image_analysis
+    assert "unexplained tile/quadrant drift" in image_analysis
+    assert "Ask the domain expert" in image_analysis
     assert "artifact provenance" in image_analysis
     assert "dispatch on function-name strings" in image_analysis
 
@@ -400,12 +412,17 @@ def test_onboarding_surfaces_link_to_the_canonical_image_analysis_context() -> N
     for surface in (skill, default_prompt, client_guide, server_instructions):
         assert context_kind in surface
 
-    canonical_rule = "must not fit a separate percentile pair per field"
-    assert canonical_rule in AgentAuthoringContextService().get_authoring_context(
-        context_kind
-    ).content
+    canonical_rules = (
+        "must not fit a separate percentile pair per field",
+        "blinded, spatially distributed representative set",
+        "Escalate rather than declare success",
+    )
+    context = AgentAuthoringContextService().get_authoring_context(context_kind).content
+    for canonical_rule in canonical_rules:
+        assert canonical_rule in context
     for linked_surface in (skill, default_prompt, client_guide, server_instructions):
-        assert canonical_rule not in linked_surface
+        for canonical_rule in canonical_rules:
+            assert canonical_rule not in linked_surface
 
 
 def test_viewer_array_capabilities_expose_value_opt_in_and_bounded_tiling() -> None:
