@@ -15,6 +15,7 @@ from zmqruntime.viewer_protocol import ViewerBatchDisplayPayload
 
 from openhcs.core.config import NapariDisplayConfig
 from openhcs.runtime.viewer_protocol import NapariViewerServerRequest
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
@@ -55,6 +56,7 @@ def test_napari_transport_rep_follows_receiver_owned_shared_memory_copy(
             transport_mode=TransportMode.IPC,
         )
     )
+    assert server._create_pong_response().application == OPENHCS_ENDPOINT_APPLICATION
     source = np.arange(12, dtype=np.uint16).reshape(3, 4)
     shm = shared_memory.SharedMemory(create=True, size=source.nbytes)
     np.ndarray(source.shape, dtype=source.dtype, buffer=shm.buf)[:] = source

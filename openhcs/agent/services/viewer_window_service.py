@@ -1105,6 +1105,9 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         )
         control_url = message.endpoint.control_url()
         timeout_ms = int(message.timeout * 1000)
+        message.endpoint.application_compatibility(
+            timeout_ms=timeout_ms,
+        ).require_match()
         context = self._context_factory()
         socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.LINGER, 0)

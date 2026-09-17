@@ -6,6 +6,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
@@ -1236,6 +1237,11 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     context = _SilentZMQContext(socket)
     poller = _SilentZMQPoller()
     monkeypatch.setattr(viewer_window_service_module.zmq, "Poller", lambda: poller)
+    monkeypatch.setattr(
+        viewer_window_service_module.ViewerRuntimeEndpoint,
+        "application_compatibility",
+        lambda _endpoint, *, timeout_ms: SimpleNamespace(require_match=lambda: None),
+    )
     gateway = ZMQViewerWindowGateway(context_factory=lambda: context)
     service = ViewerWindowService(gateway=gateway)
 
@@ -1253,6 +1259,33 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert type(next(iter(decoded_request))) is str
     assert socket.closed is True
     assert context.destroy_linger == 0
+
+
+def test_viewer_window_zmq_gateway_rejects_stale_viewer_before_control_dispatch(
+    monkeypatch,
+):
+    def reject_stale_viewer() -> None:
+        raise ValueError("stale viewer application")
+
+    def unexpected_context():
+        raise AssertionError("stale viewer must fail before opening a control context")
+
+    monkeypatch.setattr(
+        viewer_window_service_module.ViewerRuntimeEndpoint,
+        "application_compatibility",
+        lambda _endpoint, *, timeout_ms: SimpleNamespace(
+            require_match=reject_stale_viewer
+        ),
+    )
+    gateway = ZMQViewerWindowGateway(context_factory=unexpected_context)
+
+    result = ViewerWindowService(gateway=gateway).probe_window(
+        ViewerWindowStateRequest(connection=_viewer_connection(), timeout_ms=25)
+    )
+
+    assert result.reachable is False
+    assert result.errors[0].code == "viewer_window_state_failed"
+    assert result.errors[0].message == "stale viewer application"
 
 
 def test_function_catalog_search_and_describe_use_registry_ids(monkeypatch):

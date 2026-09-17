@@ -38,7 +38,6 @@ from qtpy.QtCore import Qt, QTimer
 from qtpy.QtWidgets import QDockWidget
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import ControlMessageType, ResponseType
-from zmqruntime.streaming import StreamingVisualizerServer
 from zmqruntime.transport import remove_ipc_socket
 from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
 
@@ -107,6 +106,7 @@ from openhcs.runtime.viewer_controls import ViewerResultElementCoordinateAuthori
 from openhcs.runtime.viewer_protocol import (
     NapariLayerKind,
     NapariViewerServerRequest,
+    OpenHCSViewerServerABC,
     ViewerBatchMessageType,
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
@@ -4892,7 +4892,7 @@ class NapariControlTransportPump:
                     )
 
 
-class NapariViewerServer(StreamingVisualizerServer):
+class NapariViewerServer(OpenHCSViewerServerABC):
     """
     ZMQ server for Napari viewer that receives images from clients.
 
@@ -4920,7 +4920,6 @@ class NapariViewerServer(StreamingVisualizerServer):
             transport_mode=request.transport_mode,
             config=OPENHCS_ZMQ_CONFIG,
         )
-
         self.napari_window_title = request.viewer_title
         self.replace_layers = request.replace_layers
         self.viewer = None

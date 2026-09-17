@@ -11,7 +11,7 @@ import sys
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, MutableMapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
 from typing import ClassVar, Self, TypeAlias, cast
@@ -22,8 +22,13 @@ from polystore.streaming_constants import StreamingDataType
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
 from zmqruntime.config import TransportMode, ZMQConfig
-from zmqruntime.messages import ControlMessageType
-from zmqruntime.streaming import VisualizerProcessManager
+from zmqruntime.messages import (
+    ControlMessageType,
+    EndpointApplicationCompatibility,
+    EndpointApplicationCompatibilityError,
+    PongResponse,
+)
+from zmqruntime.streaming import StreamingVisualizerServer, VisualizerProcessManager
 from zmqruntime.transport import resolve_transport_mode
 from zmqruntime.viewer_protocol import (
     ViewerBatchContextWireField as ViewerBatchContextWireField,
@@ -69,6 +74,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
 ViewerComponentValue: TypeAlias = ViewerScalar | tuple[ViewerScalar, ...]
 NaturalTokenKey: TypeAlias = tuple[int, int | str]
@@ -594,6 +600,16 @@ class ViewerServerLaunchRequest:
     transport_mode: TransportMode = TransportMode.IPC
 
 
+class OpenHCSViewerServerABC(StreamingVisualizerServer, ABC):
+    """Viewer server whose heartbeat derives OpenHCS application identity."""
+
+    def _create_pong_response(self) -> PongResponse:
+        return replace(
+            super()._create_pong_response(),
+            application=OPENHCS_ENDPOINT_APPLICATION,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class NapariViewerServerRequest(ViewerServerLaunchRequest):
     """Nominal launch request consumed by the Napari viewer server."""
@@ -668,6 +684,33 @@ class ViewerRuntimeEndpoint:
             timeout_ms=timeout_ms,
             require_ready=require_ready,
         )
+
+    def heartbeat(self, *, timeout_ms: int) -> PongResponse | None:
+        """Return the endpoint heartbeat without discarding its identity."""
+
+        return self.transport.ping(
+            self.config,
+            timeout_ms=timeout_ms,
+        )
+
+    def application_compatibility(
+        self,
+        *,
+        timeout_ms: int,
+        require_ready: bool = True,
+    ) -> EndpointApplicationCompatibility:
+        """Compare a reachable viewer with the local OpenHCS declaration."""
+
+        heartbeat = self.heartbeat(timeout_ms=timeout_ms)
+        if heartbeat is None:
+            raise RuntimeError(
+                f"Viewer endpoint on port {self.port} did not answer its "
+                "compatibility handshake."
+            )
+        if require_ready and not heartbeat.ready:
+            raise RuntimeError(f"Viewer endpoint on port {self.port} is not ready.")
+
+        return OPENHCS_ENDPOINT_APPLICATION.compatibility_with(heartbeat.application)
 
     def wait_ready(self, *, timeout: float, require_ready: bool = True) -> bool:
         from zmqruntime.transport import wait_for_server_ready
@@ -1260,17 +1303,35 @@ class ManagedViewerLifecycleMixin(
             mode=ViewerControlPingMode.EXISTING_VIEWER,
             endpoint=self.runtime_endpoint,
         )
-        return request.endpoint.ping(
-            timeout_ms=request.timeout_ms,
-            require_ready=request.require_ready,
-        )
+        try:
+            request.endpoint.application_compatibility(
+                timeout_ms=request.timeout_ms,
+                require_ready=request.require_ready,
+            ).require_match()
+        except (RuntimeError, EndpointApplicationCompatibilityError) as error:
+            logging.getLogger(type(self).__module__).warning(
+                "%s viewer on port %s cannot be reused: %s",
+                self.viewer_process_label,
+                self.required_port,
+                error,
+            )
+            return False
+        return True
 
     def wait_for_ready(self, timeout: float = 10.0) -> bool:
         """Wait for the viewer endpoint to bind and report ready."""
-        return self.runtime_endpoint.wait_ready(
+        if not self.runtime_endpoint.wait_ready(
             timeout=timeout,
             require_ready=True,
-        )
+        ):
+            return False
+        try:
+            self.runtime_endpoint.application_compatibility(
+                timeout_ms=max(1, int(timeout * 1000)),
+            ).require_match()
+        except (RuntimeError, EndpointApplicationCompatibilityError):
+            return False
+        return True
 
     def configure_launch_context(
         self,

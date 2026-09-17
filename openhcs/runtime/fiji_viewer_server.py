@@ -40,6 +40,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerSettlePhase,
     ViewerSettleProgress,
     ViewerServerLaunchRequest,
+    OpenHCSViewerServerABC,
 )
 from openhcs.runtime.viewer_component_system import (
     ComponentValue,
@@ -59,7 +60,6 @@ from openhcs.runtime.fiji_macro_runtime import (
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from zmqruntime.config import TransportMode, ZMQConfig
-from zmqruntime.streaming import StreamingVisualizerServer
 
 logger = logging.getLogger(__name__)
 _ACK_ERROR = ViewerProtocolStatus.ERROR.value
@@ -1776,7 +1776,7 @@ class FijiInteractiveModeFailure:
         )
 
 
-class FijiViewerServer(StreamingVisualizerServer):
+class FijiViewerServer(OpenHCSViewerServerABC):
     """
     ZMQ server for Fiji viewer that receives images from clients.
 
@@ -1815,7 +1815,6 @@ class FijiViewerServer(StreamingVisualizerServer):
             transport_mode=launch_config.transport_mode,
             config=launch_config.resolved_zmq_config,
         )
-
         self.ij = None  # PyImageJ instance
         self._shutdown_requested = False
         self.windows = FijiWindowRegistry()
