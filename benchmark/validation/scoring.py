@@ -246,9 +246,7 @@ class TranslocationAssayScorer(ValidationScoringStrategy):
     ) -> ValidationScoreReport:
         rows = _read_assay_results(
             result_path,
-            source_manifest_path=scoring_root.parent
-            / "authoring"
-            / "source_manifest.csv",
+            source_manifest_path=scoring_root / "source_manifest.csv",
         )
         metrics = tuple(
             assay_quality_metrics(rows, treatment=treatment)

@@ -30,7 +30,11 @@ from benchmark.contracts.validation import (
     ValidationEvidenceKind,
     ValidationFunctionSurface,
     ValidationMetricProfile,
+    ValidationPartition,
     ValidationRepositorySource,
+    ValidationSelectionOrder,
+    ValidationSourceSetSelection,
+    ValidationTrialSplit,
 )
 from openhcs.constants.constants import Microscope
 
@@ -79,6 +83,17 @@ BBBC039_INDEPENDENT_VALIDATION = IndependentValidationSpec(
     ),
     channels=(ValidationChannelSpec(alias="dna", value="DNA"),),
     expected_input_planes=200,
+    trial_split=ValidationTrialSplit(
+        development=ValidationSourceSetSelection(
+            partitions=(ValidationPartition.VALIDATION,),
+            limit=4,
+        ),
+        held_out=ValidationSourceSetSelection(
+            partitions=(ValidationPartition.TEST,),
+        ),
+        expected_development_source_sets=4,
+        expected_held_out_source_sets=50,
+    ),
     source_identity_fields=("plate", "well", "site"),
     execution_group_fields=("plate", "well"),
     reference_decoder_url=(
@@ -129,6 +144,19 @@ BBBC007_INDEPENDENT_VALIDATION = IndependentValidationSpec(
         ValidationChannelSpec(alias="actin", value="ACTIN"),
     ),
     expected_input_planes=32,
+    trial_split=ValidationTrialSplit(
+        development=ValidationSourceSetSelection(
+            partitions=(ValidationPartition.COMPLETE,),
+            limit=4,
+            order=ValidationSelectionOrder.SHA256,
+            salt="slas-20260915",
+        ),
+        held_out=ValidationSourceSetSelection(
+            partitions=(ValidationPartition.COMPLETE,),
+        ),
+        expected_development_source_sets=4,
+        expected_held_out_source_sets=12,
+    ),
     repository_sources=(
         ValidationRepositorySource(
             name="Haase sparse BBBC007 tutorial subset",
@@ -220,6 +248,17 @@ BBBC013_INDEPENDENT_VALIDATION = IndependentValidationSpec(
         ValidationChannelSpec(alias="dna", value="DNA"),
     ),
     expected_input_planes=192,
+    trial_split=ValidationTrialSplit(
+        development=ValidationSourceSetSelection(
+            partitions=(ValidationPartition.COMPLETE,),
+            include_selection_keys=("A04", "B08", "E04", "F08"),
+        ),
+        held_out=ValidationSourceSetSelection(
+            partitions=(ValidationPartition.COMPLETE,),
+        ),
+        expected_development_source_sets=4,
+        expected_held_out_source_sets=92,
+    ),
     published_assay_references=(
         PublishedAssayReference(
             name="carpenter_2006_z_prime_both_drugs",

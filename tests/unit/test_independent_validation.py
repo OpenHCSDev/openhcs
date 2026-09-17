@@ -18,6 +18,7 @@ from benchmark.validation.corpus import (
     derive_validation_dsl_contract,
     freeze_pipeline,
     source_bindings_for_validation,
+    split_validation_records,
     verify_frozen_pipeline,
 )
 from benchmark.validation.references import (
@@ -96,6 +97,7 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
                 "images/plate-1_well-A01_site-1_channel-DNA.tif"
             ),
             source_set_id="1_A01_1",
+            selection_key="first.tif",
             partition=ValidationPartition.TRAINING,
             well="A01",
             site="1",
@@ -108,6 +110,7 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
                 "images/plate-1_well-A01_site-2_channel-DNA.tif"
             ),
             source_set_id="1_A01_2",
+            selection_key="second.tif",
             partition=ValidationPartition.TRAINING,
             well="A01",
             site="2",
@@ -121,16 +124,72 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
 
     assert tuple(binding.alias for binding in bindings.bindings) == ("dna",)
     assert bindings.grouping_metadata_fields == ("plate", "well")
+    assert tuple(
+        join.image_metadata_field for join in bindings.imported_metadata_tables[0].joins
+    ) == ("plate", "well", "site", "channel")
     assert contract.source_components == ("plate", "well", "site", "channel")
     assert contract.grouping_fields == ("plate", "well")
     assert contract.variable_components == ("site",)
     assert contract.source_set_count == 2
 
 
+def test_trial_splits_are_declaration_owned_disjoint_and_counted():
+    for dataset_id, expected in (
+        ("BBBC039_nuclei_segmentation", (4, 50)),
+        ("BBBC007_cell_boundaries", (4, 12)),
+        ("BBBC013_u2os_translocation_bmp", (4, 92)),
+    ):
+        validation = get_dataset_spec(dataset_id).independent_validation
+        assert validation is not None
+        assert (
+            validation.trial_split.expected_development_source_sets,
+            validation.trial_split.expected_held_out_source_sets,
+        ) == expected
+
+
+def test_trial_split_hides_held_out_sets_before_freeze():
+    validation = get_dataset_spec(
+        "BBBC013_u2os_translocation_bmp"
+    ).independent_validation
+    assert validation is not None
+    records = tuple(
+        ValidationImageRecord(
+            source_relative_path=Path(f"{well}_{channel}.bmp"),
+            canonical_relative_path=Path("images") / f"{well}_{channel}.bmp",
+            source_set_id=f"{well}_1",
+            selection_key=well,
+            partition=ValidationPartition.COMPLETE,
+            well=well,
+            site="1",
+            channel=channel,
+        )
+        for well in (
+            "A04",
+            "B08",
+            "E04",
+            "F08",
+            *(f"X{index:03d}" for index in range(92)),
+        )
+        for channel in ("GFP", "DNA")
+    )
+
+    development, held_out = split_validation_records(validation, records)
+
+    assert {record.selection_key for record in development} == {
+        "A04",
+        "B08",
+        "E04",
+        "F08",
+    }
+    assert not (
+        {record.source_set_id for record in development}
+        & {record.source_set_id for record in held_out}
+    )
+
+
 def test_pipeline_freeze_fails_closed_after_bytes_change(tmp_path):
     dataset_id = "BBBC039_nuclei_segmentation"
-    scoring_root = tmp_path / dataset_id / "trusted_scoring"
-    scoring_root.mkdir(parents=True)
+    (tmp_path / dataset_id).mkdir(parents=True)
     pipeline = tmp_path / "pipeline.py"
     pipeline.write_text("pipeline = 1\n", encoding="utf-8")
 
