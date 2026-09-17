@@ -20,8 +20,9 @@ from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime import OperationCancellation
 from zmqruntime.client import endpoint_process
 
-from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.function_reference import ResolvedRegistryFunction
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 from .unified_registry import (
     LIBRARY_REGISTRIES,
@@ -216,8 +217,9 @@ class RegistryService:
         policy = BackgroundProcessLaunchPolicy.current(detached=False)
         command = (
             policy.python_executable(sys.executable),
-            "-m",
-            "openhcs.runtime.zmq_execution_server_launcher",
+            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+                "openhcs.runtime.zmq_execution_server_launcher"
+            ),
             "--prepare-capabilities",
             "--log-level",
             "WARNING",

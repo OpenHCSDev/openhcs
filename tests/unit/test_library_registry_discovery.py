@@ -449,10 +449,13 @@ def test_registry_preparation_uses_background_process_policy(monkeypatch) -> Non
 
     registry_service.RegistryService._prepare_persistent_catalog()
 
+    from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
+
     assert calls[0][0][:4] == (
         "pythonw.exe",
-        "-m",
-        "openhcs.runtime.zmq_execution_server_launcher",
+        *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+            "openhcs.runtime.zmq_execution_server_launcher"
+        ),
         "--prepare-capabilities",
     )
     assert calls[0][1]["creationflags"] == 73
