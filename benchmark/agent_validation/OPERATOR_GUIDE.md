@@ -47,10 +47,14 @@ For each attempt:
    attempt, subtract the accepted candidate mask, and rank the added connected
    components by raw-signal support and valid-root connectivity. The permissive
    result is evidence; it is not automatically the replacement result.
-7. State one falsifiable hypothesis and change one declaration-owned semantic
+7. For proposed thin-structure endpoint continuation, require terminal-direction
+   alignment and source-object/body exclusion in addition to a bounded,
+   response-supported, single-owner path. Distance, ownership, and response alone
+   can admit soma-edge decorations.
+8. State one falsifiable hypothesis and change one declaration-owned semantic
    gate.
-8. Compile, run a bounded public case, and inspect the materialised outputs.
-9. Finalise an `AttemptObservation`; never replace a prior attempt directory.
+9. Compile, run a bounded public case, and inspect the materialised outputs.
+10. Finalise an `AttemptObservation`; never replace a prior attempt directory.
 
 Use the image-analysis workflow guidance returned by OpenHCS as the canonical
 QA procedure. Its gate and measurement wording is generated from

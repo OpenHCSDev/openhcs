@@ -8,6 +8,7 @@ from openhcs.agent.image_analysis_qa import (
     ResidualStructureObservation,
     RootedContinuityObservation,
     SemanticGate,
+    ThinStructureContinuationConstraint,
 )
 
 
@@ -27,6 +28,8 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     for stage in ImageQaMissStage:
         assert stage.name.lower() in guidance
         assert stage.value in guidance
+    for constraint in ThinStructureContinuationConstraint:
+        assert constraint.value in guidance
     assert "nuclei without a nearby accepted soma" in guidance
     assert "for example DAPI" in guidance
     assert "accepted-label overlay" in guidance
@@ -34,6 +37,7 @@ def test_repair_guidance_is_derived_from_every_typed_gate_and_measure() -> None:
     assert "higher-sensitivity diagnostic attempt" in guidance
     assert "subtract the accepted candidate mask" in guidance
     assert "diagnostic evidence rather than an automatic replacement" in guidance
+    assert "distance, ownership, and response alone are insufficient" in guidance
 
 
 def test_trace_growth_requires_more_root_connected_continuity() -> None:

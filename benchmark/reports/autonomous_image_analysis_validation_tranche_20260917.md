@@ -185,6 +185,15 @@ reported defect was stale output rather than a current miss. The remaining
 ranked evidence contains short faint terminal fragments and two small current
 candidate fragments of 11 and 6 pixels that remain outside the rooted result.
 It does not justify lowering source-object admission or the candidate threshold
-globally. The supported next algorithmic question is bounded same-owner endpoint
-continuation under declared local-response, gap-width, topology and foreign-owner
-constraints.
+globally.
+
+A read-only bounded same-owner endpoint-continuation prototype tested five- and
+six-pixel gap limits while preserving all 131,909 accepted rooted pixels. The
+rules rejected unsupported pixels and foreign-owner crossings, but the two
+bounds added only 103 and 171 pixels, respectively, mostly as tiny endpoint or
+soma-edge decorations. Neither recovered the two representative current-candidate
+connectivity residuals. That change was therefore rejected. The negative result
+adds a QA constraint rather than an algorithmic mechanism: any future
+thin-structure continuation must also exclude the accepted body neighborhood and
+follow the existing terminal direction before its biological usefulness is
+evaluated.

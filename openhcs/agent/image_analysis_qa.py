@@ -66,6 +66,16 @@ class ImageQaMissStage(Enum):
     OWNERSHIP = "present in the rooted result with an evidenced identity discontinuity"
 
 
+class ThinStructureContinuationConstraint(Enum):
+    """Evidence required before extending a rooted thin structure."""
+
+    TERMINAL_DIRECTION = "aligned with the existing terminal direction"
+    BODY_EXCLUSION = "outside the accepted source-object or body neighborhood"
+    LOCAL_SIGNAL_SUPPORT = "supported by the declared local-response gate"
+    BOUNDED_GAP = "bounded by a declared physical-width-derived gap"
+    OWNER_CONSISTENCY = "contained within one owner region without a foreign crossing"
+
+
 class SemanticGate(Enum):
     """Independent semantic gates changed by one diagnostic experiment."""
 
@@ -238,6 +248,9 @@ class ImageAnalysisQaPolicy:
         miss_stage_text = "; ".join(
             f"{stage.name.lower()} means {stage.value}" for stage in ImageQaMissStage
         )
+        continuation_constraint_text = ", ".join(
+            constraint.value for constraint in ThinStructureContinuationConstraint
+        )
         gate_text = "; ".join(
             (
                 f"{gate.value} {gate.description}; measure "
@@ -277,6 +290,10 @@ class ImageAnalysisQaPolicy:
             "than an automatic replacement. Accept a recovery only when local signal "
             "support, "
             "connectivity, and topology evidence agree. "
+            "For thin-structure endpoint continuation, require every proposed path "
+            f"to be {continuation_constraint_text}; distance, ownership, and response "
+            "alone are insufficient because they can admit source-object-edge "
+            "decorations. "
             "Reject mask growth that does not increase root-connected continuity, "
             "and preserve rejected parameter changes as well as accepted ones, with "
             "the recovered-candidate evidence for each decision."
