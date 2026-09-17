@@ -25,6 +25,7 @@ from pyqt_reactive.services.function_navigation import FUNCTION_FIELD_ROOT
 from pyqt_reactive.services.system_monitor_actions import SystemMonitorAction
 from python_introspect import dataclass_from_mapping
 
+from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.ui_bridge_actions import PlateManagerAction
 from openhcs.agent.ui_bridge_identities import (
     GlobalConfigWindowIdentity,
@@ -35,6 +36,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
     UiStableWindowIdentityDeclaration,
 )
+from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.pyqt_gui.ui_tab_identities import DualEditorTab, PlateViewerTab
 from openhcs.serialization.json import JsonValue, to_jsonable
 
@@ -196,6 +198,7 @@ class GallerySourceCaptureRequest:
     output: Path
     descriptor_file_path: Path | None = None
     timeout_ms: int | None = None
+    viewer_connection: ExecutionConnectionSpec | None = None
 
     def __post_init__(self) -> None:
         if self.timeout_ms is not None and self.timeout_ms <= 0:
@@ -477,6 +480,16 @@ class ApplicationSceneCaptureTarget(HumanReviewedCaptureTargetABC):
 class ViewerWindowCaptureTargetABC(GalleryCaptureTargetABC, ABC):
     """Nominal branch for viewer-native windows."""
 
+    viewer_type: ClassVar[ViewerType]
+
+    def capture_source(
+        self,
+        request: GallerySourceCaptureRequest,
+    ) -> GallerySourceCaptureResult:
+        from scripts.capture_media_gallery import capture_viewer_window_source
+
+        return capture_viewer_window_source(self, request)
+
 
 class HumanReviewedViewerWindowCaptureTargetABC(
     HumanReviewedCaptureTargetABC,
@@ -497,10 +510,14 @@ class HumanReviewedViewerWindowCaptureTargetABC(
 class FijiViewerWindowCaptureTarget(HumanReviewedViewerWindowCaptureTargetABC):
     """The Fiji window used for native image and ROI review."""
 
+    viewer_type = ViewerType.FIJI
+
 
 @dataclass(frozen=True, slots=True)
 class NapariViewerWindowCaptureTarget(ViewerWindowCaptureTargetABC):
     """The Napari window exposed through its viewer control endpoint."""
+
+    viewer_type = ViewerType.NAPARI
 
 
 class GalleryScientificEvidenceABC(ABC):
@@ -1072,6 +1089,19 @@ class HumanReviewedStillGalleryScenario(StillGalleryScenarioABC):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerStillGalleryScenario(StillGalleryScenarioABC):
+    """Still source from an explicitly connected native viewer window."""
+
+    capture_target: ViewerWindowCaptureTargetABC
+
+    def capture_source(
+        self,
+        request: GallerySourceCaptureRequest,
+    ) -> GallerySourceCaptureResult:
+        return self.capture_target.capture_source(request)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class MotionGalleryScenario(GalleryScenarioABC):
     """Gallery scenario represented by WebM/MP4 video and a WebP poster."""
 
@@ -1496,6 +1526,62 @@ class NapariRoiNavigationGalleryScenarioCatalog(GalleryScenarioCatalog):
     )
 
 
+class CurrentNeuriteResultGalleryScenarioCatalog(GalleryScenarioCatalog):
+    """Add the current native neuronal-result still to the existing gallery."""
+
+    declaration = ViewerStillGalleryScenario(
+        scenario_id="current-neurite-result",
+        label="Current neuronal result",
+        heading="Neuronal labels and inspectable paths",
+        description=(
+            "A native Napari window shows enhanced neuronal signal with unified "
+            "labels and the retained path ROI list. Selecting a row highlights "
+            "its path in the image."
+        ),
+        proof=(
+            "The still is captured through the explicitly connected viewer's "
+            "native Qt snapshot endpoint; its lossless source checksum and "
+            "derivative evidence are retained separately from archived recordings."
+        ),
+        layout_class="gallery-card-feature",
+        alt_text=(
+            "Current neuronal labels and an inspectable selected path in a native "
+            "Napari result window"
+        ),
+        open_aria_label="Open the current neuronal result at full resolution",
+        capture_target=NapariViewerWindowCaptureTarget(),
+        publication_targets=frozenset(GalleryPublicationTarget),
+    )
+
+
+class StitchedNeuriteOverviewGalleryScenarioCatalog(GalleryScenarioCatalog):
+    """Add the whole-mosaic neuronal analysis view to the public gallery."""
+
+    declaration = ViewerStillGalleryScenario(
+        scenario_id="stitched-neurite-overview",
+        label="Napari",
+        heading="Inspect a stitched mosaic as one result",
+        description=(
+            "OpenHCS stitches the source fields before analysis and returns one "
+            "inspectable neuron-ROI layer spanning the mosaic, so residual faint-"
+            "process misses remain visible in the same viewer."
+        ),
+        proof=(
+            "The still is captured through the explicitly connected viewer's "
+            "native Qt snapshot endpoint from the retained blind neurite-analysis "
+            "session; source and derivative checksums are recorded."
+        ),
+        layout_class="gallery-card-feature",
+        alt_text=(
+            "Napari displaying a full stitched neuronal mosaic with hundreds of "
+            "colored neuron and neurite ROI traces"
+        ),
+        open_aria_label="Open the stitched neuronal analysis at full resolution",
+        capture_target=NapariViewerWindowCaptureTarget(),
+        publication_targets=frozenset(GalleryPublicationTarget),
+    )
+
+
 class StableUiWindowReferenceGalleryScenarioCatalog(GalleryScenarioCatalog):
     """Add registry-derived stable-window reference scenarios to documentation."""
 
@@ -1519,6 +1605,8 @@ class OpenHCSGalleryScenarioCatalog(
     FijiReviewGalleryScenarioCatalog,
     ZmqStartupCompileGalleryScenarioCatalog,
     NapariRoiNavigationGalleryScenarioCatalog,
+    CurrentNeuriteResultGalleryScenarioCatalog,
+    StitchedNeuriteOverviewGalleryScenarioCatalog,
     StableUiWindowReferenceGalleryScenarioCatalog,
     ContextualUiReferenceGalleryScenarioCatalog,
 ):
@@ -1615,7 +1703,7 @@ class GalleryReleaseRecord(GalleryReleaseContext):
 
 
 GALLERY_RELEASE = GalleryReleaseDeclaration(
-    captured_at="2026-08-28",
+    captured_at="2026-09-17",
     capture_contract=GalleryCaptureContract(
         surface="real OpenHCS, Napari, and Fiji/ImageJ X11 windows",
         visible_interaction_driver=(
@@ -1628,7 +1716,8 @@ GALLERY_RELEASE = GalleryReleaseDeclaration(
         dataset_note=(
             "CellProfiler ExampleCometAssay and ExampleWoundHealing are shown under "
             "BSD-3-Clause. Comet fluorescence images were contributed by Scott "
-            "Floyd and Michael Pacold."
+            "Floyd and Michael Pacold. The neuronal views use a blinded neurite-"
+            "outgrowth acquisition supplied by the authors."
         ),
         attribution_url=(
             "https://github.com/CellProfiler/examples/tree/"

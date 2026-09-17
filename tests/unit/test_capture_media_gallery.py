@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 
@@ -10,9 +11,14 @@ import pytest
 from pyqt_reactive.animation import WindowFlashOverlay
 from pyqt_reactive.animation.flash_overlay_opengl import WindowFlashOverlayGL
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentResourceRef
+from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.ui_bridge import UiWindowSnapshotResult
+from openhcs.agent.dto.viewer import ViewerWindowDescriptor, ViewerWindowSnapshotResult
+from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.serialization.json import to_jsonable
 from scripts.capture_media_gallery import (
     CaptureManifest,
     CaptureRecord,
@@ -32,10 +38,13 @@ from scripts.capture_media_gallery import (
     _capture_target,
     _write_json,
     build_manifest,
+    build_parser,
     build_transcode_command,
     capture_scenario_still,
+    capture_scenario_still_release,
     capture_ui_bridge_window_source,
     capture_ui_window_reference_stills,
+    capture_viewer_window_source,
     capture_window_still,
     doctor,
     load_manifest,
@@ -43,6 +52,7 @@ from scripts.capture_media_gallery import (
     read_window_geometry,
     record_window,
     resolve_contained_path,
+    retain_native_snapshot_source,
     validate_derivative,
     validate_manifest_outputs,
 )
@@ -50,10 +60,14 @@ from scripts.gallery_catalog import (
     FunctionSelectorCaptureTarget,
     GallerySourceCaptureRequest,
     GallerySourceCaptureResult,
+    MotionGalleryScenario,
+    NapariViewerWindowCaptureTarget,
     ObjectStateCaptureScopeRole,
+    OpenHCSGalleryScenarioCatalog,
     PlateManagerActionWindowCaptureTarget,
     SystemMonitorActionWindowCaptureTarget,
     UiBridgeWindowCaptureTarget,
+    ViewerStillGalleryScenario,
     read_gallery_source_evidence,
     ui_context_reference_gallery_scenarios,
     ui_window_reference_gallery_scenarios,
@@ -293,6 +307,290 @@ def test_ui_bridge_snapshot_capture_uses_declared_request_and_result_contracts(
     assert result.sha256 == expected_sha256
     assert (result.width, result.height) == (942, 900)
     assert (source_root / result.path).read_bytes() == snapshot_bytes
+
+
+def test_current_neurite_still_reuses_existing_catalog_and_capture_leaf(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed = []
+    expected = GallerySourceCaptureResult(
+        path="raw/current.png",
+        sha256="a" * 64,
+        width=1200,
+        height=800,
+    )
+    monkeypatch.setattr(
+        "scripts.capture_media_gallery.capture_viewer_window_source",
+        lambda target, request: observed.append((target, request)) or expected,
+    )
+    connection = ExecutionConnectionSpec(host="127.0.0.1", port=5585)
+    result = capture_scenario_still(
+        tmp_path,
+        Path("raw/current.png"),
+        "current-neurite-result",
+        viewer_connection=connection,
+    )
+    assert result is expected
+    assert observed[0][1].viewer_connection is connection
+    assert observed[0][0].viewer_type is ViewerType.NAPARI
+    current = OpenHCSGalleryScenarioCatalog.for_id("current-neurite-result")
+    assert isinstance(current, ViewerStillGalleryScenario)
+    assert current.published_paths() == ("current-neurite-result.webp",)
+    assert isinstance(
+        OpenHCSGalleryScenarioCatalog.for_id("napari-roi-navigation"),
+        MotionGalleryScenario,
+    )
+    assert "eight" not in current.proof and "8" not in current.proof
+
+    stitched = OpenHCSGalleryScenarioCatalog.for_id("stitched-neurite-overview")
+    assert isinstance(stitched, ViewerStillGalleryScenario)
+    assert stitched.published_paths() == ("stitched-neurite-overview.webp",)
+
+
+def test_single_scenario_release_reuses_derived_still_batch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection = ExecutionConnectionSpec(host="127.0.0.1", port=5585)
+    expected = object()
+    observed = []
+
+    def capture_batch(scenarios, source_root, output_root, **kwargs):
+        observed.append((scenarios, source_root, output_root, kwargs))
+        return expected
+
+    monkeypatch.setattr(
+        "scripts.capture_media_gallery._capture_ui_reference_stills",
+        capture_batch,
+    )
+
+    result = capture_scenario_still_release(
+        tmp_path / "sources",
+        tmp_path / "gallery",
+        "stitched-neurite-overview",
+        timeout_ms=3000,
+        viewer_connection=connection,
+        force=True,
+    )
+
+    assert result is expected
+    assert tuple(scenario.scenario_id for scenario in observed[0][0]) == (
+        "stitched-neurite-overview",
+    )
+    assert observed[0][3]["viewer_connection"] is connection
+    assert observed[0][3]["force"] is True
+
+
+@pytest.mark.parametrize("connection", [None, ExecutionConnectionSpec()])
+def test_native_viewer_capture_refuses_unspecified_instance(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    connection: ExecutionConnectionSpec | None,
+) -> None:
+    def forbidden_service():
+        pytest.fail("Missing explicit viewer selection must not invoke a service.")
+
+    monkeypatch.setattr(
+        "scripts.capture_media_gallery.ViewerWindowService",
+        forbidden_service,
+    )
+    with pytest.raises(MediaGalleryError, match="explicit"):
+        capture_viewer_window_source(
+            NapariViewerWindowCaptureTarget(),
+            GallerySourceCaptureRequest(
+                source_root=tmp_path,
+                output=Path("raw/current.png"),
+                viewer_connection=connection,
+            ),
+        )
+
+
+@pytest.mark.parametrize("viewer_type", [ViewerType.NAPARI, ViewerType.FIJI])
+def test_viewer_still_ingests_real_native_qt_snapshot_without_rerendering(
+    qtbot,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    viewer_type: ViewerType,
+) -> None:
+    from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
+    from pyqt_reactive.services.window_snapshot import (
+        QtWindowSnapshotRequest,
+        QtWindowSnapshotService,
+    )
+
+    widget = QWidget()
+    widget.setWindowTitle("Native viewer source fixture")
+    QVBoxLayout(widget).addWidget(QLabel("Real native result-window pixels"))
+    widget.resize(420, 120)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
+    connection = ExecutionConnectionSpec(host="127.0.0.1", port=5585)
+    observed = []
+    native = []
+
+    class NativeSnapshotService:
+        def snapshot_window(self, request):
+            observed.append(request)
+            snapshot = QtWindowSnapshotService().capture(
+                QtWindowSnapshotRequest(
+                    widget=widget,
+                    capture=request,
+                    subject_id="native-gallery-fixture",
+                    title=widget.windowTitle(),
+                )
+            )
+            native.append(snapshot)
+            return ViewerWindowSnapshotResult(
+                schema_version=SCHEMA_VERSION,
+                connection=request.connection,
+                output_dir_path=request.output_dir_path,
+                capture_scope=request.capture_scope,
+                captured=True,
+                viewer=ViewerWindowDescriptor(
+                    viewer_type=viewer_type, title=snapshot.title
+                ),
+                resource=AgentResourceRef(
+                    uri=snapshot.uri,
+                    title=snapshot.title,
+                    mime_type=snapshot.mime_type,
+                    path=snapshot.path,
+                    size_bytes=snapshot.size_bytes,
+                    sha256=snapshot.sha256,
+                ),
+                width=snapshot.width,
+                height=snapshot.height,
+            )
+
+    monkeypatch.setattr(
+        "scripts.capture_media_gallery.ViewerWindowService",
+        NativeSnapshotService,
+    )
+    request = GallerySourceCaptureRequest(
+        source_root=tmp_path,
+        output=Path("raw/current.png"),
+        viewer_connection=connection,
+        timeout_ms=3000,
+    )
+    if viewer_type is ViewerType.FIJI:
+        with pytest.raises(MediaGalleryError, match="declared"):
+            capture_viewer_window_source(NapariViewerWindowCaptureTarget(), request)
+        assert Path(native[0].path).is_file()
+        assert not (tmp_path / request.output).exists()
+    else:
+        result = capture_viewer_window_source(
+            NapariViewerWindowCaptureTarget(), request
+        )
+        image = tmp_path / result.path
+        assert image.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+        assert (
+            sha256(image.read_bytes()).hexdigest() == native[0].sha256 == result.sha256
+        )
+        assert (result.width, result.height) == (widget.width(), widget.height())
+        assert not Path(native[0].path).exists()
+    assert len(observed) == len(native) == 1
+    assert observed[0].connection is connection
+    assert observed[0].capture_scope is WindowSnapshotCaptureScope.WINDOW
+    assert observed[0].timeout_ms == 3000
+
+
+def test_viewer_connection_cli_and_request_projection_reuse_existing_codec(
+    tmp_path: Path,
+) -> None:
+    connection = ExecutionConnectionSpec(host="127.0.0.1", port=5585)
+    request = GallerySourceCaptureRequest(
+        source_root=tmp_path,
+        output=Path("raw/current.png"),
+        viewer_connection=connection,
+    )
+    restored = dataclass_from_mapping(GallerySourceCaptureRequest, to_jsonable(request))
+    assert restored == request
+    assert isinstance(restored.viewer_connection, ExecutionConnectionSpec)
+    arguments = build_parser().parse_args(
+        [
+            "capture-scenario-still",
+            "current-neurite-result",
+            "--source-root",
+            str(tmp_path),
+            "--output",
+            "raw/current.png",
+            "--viewer-connection-json",
+            json.dumps(to_jsonable(connection)),
+        ]
+    )
+    assert arguments.viewer_connection == connection
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(
+            [
+                "capture-scenario-still",
+                "current-neurite-result",
+                "--source-root",
+                str(tmp_path),
+                "--output",
+                "raw/current.png",
+                "--viewer-connection-json",
+                '{"port": 70000}',
+            ]
+        )
+
+
+@pytest.mark.parametrize("invalid", ["checksum", "directory", "dimensions"])
+def test_shared_native_snapshot_ingestion_refuses_invalid_resource_without_moving_source(
+    qtbot,
+    tmp_path: Path,
+    invalid: str,
+) -> None:
+    from PyQt6.QtWidgets import QLabel
+    from pyqt_reactive.services.window_snapshot import (
+        QtWindowSnapshotRequest,
+        QtWindowSnapshotService,
+        WindowSnapshotCaptureSpec,
+    )
+
+    source_root = tmp_path / "capture"
+    request = GallerySourceCaptureRequest(
+        source_root=source_root,
+        output=Path("raw/current.png"),
+    )
+    output_directory = (
+        tmp_path / "elsewhere" if invalid == "directory" else source_root / "raw"
+    )
+    widget = QLabel("Native source must not be discarded")
+    qtbot.addWidget(widget)
+    widget.resize(300, 80)
+    snapshot = QtWindowSnapshotService().capture(
+        QtWindowSnapshotRequest(
+            widget=widget,
+            subject_id="invalid-contract",
+            title="Native invalid resource",
+            capture=WindowSnapshotCaptureSpec(output_dir_path=str(output_directory)),
+        )
+    )
+    resource = AgentResourceRef(
+        uri=snapshot.uri,
+        title=snapshot.title,
+        path=snapshot.path,
+        mime_type=snapshot.mime_type,
+        sha256=snapshot.sha256,
+    )
+    response = UiWindowSnapshotResult(
+        schema_version=SCHEMA_VERSION,
+        window_id="native-source",
+        output_dir_path=str(output_directory),
+        captured=True,
+        resource=resource,
+        width=snapshot.width,
+        height=snapshot.height,
+    )
+    if invalid == "checksum":
+        response = replace(response, resource=replace(resource, sha256="0" * 64))
+    elif invalid == "dimensions":
+        response = replace(response, width=0)
+    with pytest.raises(MediaGalleryError):
+        retain_native_snapshot_source(request, response)
+    assert Path(snapshot.path).is_file()
+    assert not (source_root / request.output).exists()
 
 
 def test_ui_window_reference_batch_derives_every_capture_and_evidence(
