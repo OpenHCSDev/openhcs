@@ -7,18 +7,6 @@ from dataclasses import dataclass
 from typing import Self
 
 from objectstate.object_state import ObjectState, ObjectStateRegistry
-from openhcs.core.steps.function_step import FunctionEntry, FunctionSpec, FunctionStep
-from openhcs.pyqt_gui.services.plate_manager_root_state import (
-    root_orchestrator_scope_ids,
-)
-from openhcs.ui.shared.plate_scope_identity import (
-    PipelineScopeIdentity,
-    PlateScopeIdentity,
-)
-from openhcs.pyqt_gui.services.step_scope_identity import (
-    FunctionStepScopeToken,
-    SCOPE_SEGMENT_SEPARATOR,
-)
 from pyqt_reactive.services.function_pattern_code_document import (
     EditableFunctionPatternCallable,
     FunctionPatternCodeDocumentService,
@@ -31,6 +19,19 @@ from pyqt_reactive.services.pattern_data_manager import (
 from pyqt_reactive.services.scope_token_service import (
     ScopeTokenService,
     reconcile_occurrence_tokens,
+)
+
+from openhcs.core.steps.function_step import FunctionEntry, FunctionSpec, FunctionStep
+from openhcs.pyqt_gui.services.plate_manager_root_state import (
+    root_orchestrator_scope_ids,
+)
+from openhcs.pyqt_gui.services.step_scope_identity import (
+    SCOPE_SEGMENT_SEPARATOR,
+    FunctionStepScopeToken,
+)
+from openhcs.ui.shared.plate_scope_identity import (
+    PipelineScopeIdentity,
+    PlateScopeIdentity,
 )
 
 PipelineFunctionPattern = FunctionSpec | None
@@ -398,33 +399,13 @@ class PipelineObjectStateBinding:
             func_scope_id = f"{scope_id}{SCOPE_SEGMENT_SEPARATOR}{token}"
             existing_func_state = ObjectStateRegistry.get_by_scope(func_scope_id)
             if existing_func_state is not None:
-                if function_service.same_function_authority(
-                    existing_func_state.object_instance,
-                    func_obj,
-                ):
-                    FunctionPatternCodeDocumentService.apply_kwargs_to_state(
+                existing_func_state = (
+                    FunctionPatternCodeDocumentService.synchronize_existing_function_state(
                         state=existing_func_state,
-                        previous_kwargs=(
-                            FunctionPatternCodeDocumentService.reconstruct_kwargs_from_state(
-                                existing_func_state
-                            )
-                        ),
-                        next_kwargs=kwargs,
-                    )
-                else:
-                    FunctionPatternCodeDocumentService.replace_function_state(
-                        scope_id=func_scope_id,
                         parent_state=step_state,
                         entry=FunctionPatternValue(func_obj, kwargs),
                     )
-                    existing_func_state = ObjectStateRegistry.get_by_scope(
-                        func_scope_id
-                    )
-                    if existing_func_state is None:
-                        raise RuntimeError(
-                            "Function-pattern state replacement did not register "
-                            f"{func_scope_id!r}."
-                        )
+                )
                 function_states[func_scope_id] = existing_func_state
                 continue
             editable_func = EditableFunctionPatternCallable.for_entry(

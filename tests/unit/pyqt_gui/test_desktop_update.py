@@ -6,19 +6,29 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from objectstate import ObjectStateRegistry
 from packaging.version import Version
 from PyQt6.QtNetwork import QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox, QWidget
 from pyqt_reactive.process_launch import BackgroundProcessPlatform
+from pyqt_reactive.services.scope_token_service import ScopeTokenService
 from pyqt_reactive.theming import ColorScheme
 
 import openhcs.pyqt_gui.main as main_module
 from openhcs import __version__ as OPENHCS_VERSION
-from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.steps.function_step import FunctionStep
 from openhcs.desktop_deployment import (
     DESKTOP_RESTART_EXECUTABLE_ENVIRONMENT_VARIABLE,
 )
 from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
+from openhcs.processing.backends.assemblers.assemble_stack_cpu import (
+    assemble_stack_cpu,
+)
+from openhcs.processing.backends.assemblers.blending import TileBlendMethod
+from openhcs.processing.backends.processors.numpy_processor import (
+    stack_percentile_normalize,
+)
 from openhcs.pyqt_gui.services.desktop_update import (
     LATEST_RELEASE_API_URL,
     DesktopRestartPurpose,
@@ -37,6 +47,9 @@ from openhcs.pyqt_gui.services.desktop_update import (
 from openhcs.pyqt_gui.services.desktop_update_worker import (
     DesktopUpdatePlan,
     DesktopUpdateProgressTheme,
+)
+from openhcs.pyqt_gui.services.pipeline_object_state_binding import (
+    PipelineObjectStateBinding,
 )
 from openhcs.pyqt_gui.services.service_adapter import PyQtServiceAdapter
 from openhcs.resources.brand import BrandAsset, brand_asset_bytes
@@ -1093,11 +1106,119 @@ def test_saved_update_session_restores_through_existing_authorities(
     assert calls == [
         ("payload", payload),
         ("history", str(consumed.history_document)),
+        ("payload", payload),
         ("history-ui", None),
         ("refresh", None),
     ]
     assert not session.directory.exists()
     assert not consumed.directory.exists()
+
+
+def test_restart_reconciles_saved_document_after_history_materialization(
+    tmp_path: Path,
+) -> None:
+    """The captured declaration remains authoritative across fresh token owners."""
+
+    plate_scope = "/plate"
+    initial_steps = [
+        FunctionStep(
+            name="Process",
+            func=(
+                assemble_stack_cpu,
+                {"blend_method": TileBlendMethod.DYNAMIC},
+            ),
+        )
+    ]
+    captured_steps = [
+        FunctionStep(
+            name="Process",
+            func=[
+                (stack_percentile_normalize, {"target_max": 255.0}),
+                (
+                    assemble_stack_cpu,
+                    {"blend_method": TileBlendMethod.DYNAMIC},
+                ),
+            ],
+        )
+    ]
+    payload = PlateManagerCodeDocumentAuthority.from_values(
+        plate_paths=(plate_scope,),
+        global_pipeline_config=GlobalPipelineConfig(),
+        per_plate_configs={plate_scope: PipelineConfig()},
+        pipeline_data={plate_scope: captured_steps},
+    )
+    session = DesktopRestartSession(tmp_path / "pending")
+    session.directory.mkdir()
+    session.session_document.write_text(
+        PlateManagerCodeDocumentAuthority.render(payload),
+        encoding="utf-8",
+    )
+
+    ObjectStateRegistry.clear()
+    ScopeTokenService.clear_scope(plate_scope)
+    try:
+        with ObjectStateRegistry.atomic_success("initial pipeline"):
+            PipelineObjectStateBinding.update_plate_steps(
+                plate_scope,
+                initial_steps,
+            )
+        with ObjectStateRegistry.atomic_success("captured pipeline"):
+            PipelineObjectStateBinding.update_plate_steps(
+                plate_scope,
+                captured_steps,
+            )
+        [expected_step] = PipelineObjectStateBinding.steps_for_plate(plate_scope)
+        ObjectStateRegistry.save_history_to_file(str(session.history_document))
+        latest_declaration = expected_step.declaration_parameters()
+        latest_declaration["name"] = "Latest Process"
+        expected_step = FunctionStep(**latest_declaration)
+        session.session_document.write_text(
+            PlateManagerCodeDocumentAuthority.render(
+                PlateManagerCodeDocumentAuthority.from_values(
+                    plate_paths=(plate_scope,),
+                    global_pipeline_config=GlobalPipelineConfig(),
+                    per_plate_configs={plate_scope: PipelineConfig()},
+                    pipeline_data={plate_scope: [expected_step]},
+                )
+            ),
+            encoding="utf-8",
+        )
+
+        # A restarted process derives occurrence tokens afresh from declaration order.
+        ObjectStateRegistry.clear()
+        ScopeTokenService.clear_scope(plate_scope)
+
+        def apply_payload(restored_payload) -> None:
+            PipelineObjectStateBinding.update_plate_steps(
+                plate_scope,
+                restored_payload.pipeline_data[plate_scope],
+            )
+
+        plate_manager = SimpleNamespace(
+            code_execution_workflow=SimpleNamespace(apply_payload=apply_payload),
+            update_item_list=lambda: None,
+        )
+        main_window = SimpleNamespace(
+            embedded_widgets=SimpleNamespace(
+                require_plate_manager=lambda: plate_manager,
+            ),
+            time_travel_widget=SimpleNamespace(refresh=lambda: None),
+        )
+
+        session.consume().restore(main_window)
+
+        [restored_step] = PipelineObjectStateBinding.steps_for_plate(plate_scope)
+        assert isinstance(restored_step.func, list)
+        assert restored_step.same_declaration(expected_step)
+        assert restored_step.name == "Latest Process"
+        restored_entries = restored_step.func
+        assert restored_entries[0][1]["target_max"] == 255.0
+        assert restored_entries[1][1]["blend_method"] is TileBlendMethod.DYNAMIC
+        assert "blend_method" not in restored_entries[0][1]
+        assert "target_max" not in restored_entries[1][1]
+    finally:
+        ObjectStateRegistry.clear()
+        ScopeTokenService.clear_scope(plate_scope)
 
 
 def test_restored_session_outcome_leaves_own_dialog_presentation() -> None:

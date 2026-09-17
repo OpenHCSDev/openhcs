@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import json
 import os
 import platform
 import shutil
 import subprocess
 import sys
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
@@ -18,12 +18,12 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 from uuid import uuid4
 
+from objectstate.object_state import ObjectStateRegistry
 from packaging.version import InvalidVersion, Version
 from PyQt6.QtCore import QByteArray, QObject, QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox
-from objectstate.object_state import ObjectStateRegistry
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 
 from openhcs import __version__ as OPENHCS_VERSION
@@ -527,6 +527,24 @@ class DesktopUpdateFailedAndRestored(DesktopRestartRestoreOutcomeABC):
 class ConsumedDesktopRestartSession(DesktopRestartSession):
     """Restart data that is no longer eligible for automatic restore."""
 
+    def _restore_declarations_and_history(self, code_workflow, payload) -> None:
+        """Restore history around the captured declaration authority.
+
+        ObjectState history addresses child states by occurrence token.  A fresh
+        process must first materialize those scopes, but their newly derived
+        tokens need not match the historical token ownership after an insertion
+        or reorder.  Reapplying the captured document through the normal workflow
+        reconciles the imported history with the current declaration rather than
+        allowing historical metadata to redefine it.
+        """
+
+        code_workflow.apply_payload(payload)
+        ObjectStateRegistry.load_history_from_file(str(self.history_document))
+        with ObjectStateRegistry.atomic_success(
+            "restore captured session declaration"
+        ):
+            code_workflow.apply_payload(payload)
+
     def restore(self, main_window) -> DesktopRestartRestoreOutcomeABC:
         """Decode and restore declarations and history from the recovery copy."""
 
@@ -544,8 +562,10 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
             else None
         )
         plate_manager = main_window.embedded_widgets.require_plate_manager()
-        plate_manager.code_execution_workflow.apply_payload(payload)
-        ObjectStateRegistry.load_history_from_file(str(self.history_document))
+        self._restore_declarations_and_history(
+            plate_manager.code_execution_workflow,
+            payload,
+        )
         main_window.time_travel_widget.refresh()
         plate_manager.update_item_list()
         outcome = DesktopRestartRestoreOutcomeABC.from_restoration(
