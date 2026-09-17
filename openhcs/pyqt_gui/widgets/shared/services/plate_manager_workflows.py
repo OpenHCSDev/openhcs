@@ -412,9 +412,12 @@ class PlateManagerCodeWorkflow(ManagerCodeExecutionWorkflow):
         self.manager.pipeline_data_changed.emit()
 
     def invalidate_orchestrator_compilation_state(self, plate_path: str) -> None:
+        """Retire future compiled readiness without changing a submitted job."""
         if plate_path in self.manager.plate_compiled_data:
             self.manager.emit_compiled_state(plate_path, None)
             logger.debug("Cleared compiled data for %s", plate_path)
+        if self.manager.plate_terminal_activity_status.is_active(plate_path):
+            return
         self.manager.clear_plate_execution_tracking(plate_path)
 
         orchestrator = ObjectStateRegistry.get_object(plate_path)

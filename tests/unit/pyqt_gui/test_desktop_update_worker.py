@@ -920,7 +920,9 @@ parser.add_argument("--restore-update-session", required=True, type=Path)
 args = parser.parse_args()
 calls = []
 ObjectStateRegistry.load_history_from_file = classmethod(
-    lambda cls, path: calls.append(["history", Path(path).read_text(encoding="utf-8")])
+    lambda cls, path, *, migration: calls.append(
+        ["history", Path(path).read_text(encoding="utf-8")]
+    )
 )
 plate_manager = SimpleNamespace(
     code_execution_workflow=SimpleNamespace(

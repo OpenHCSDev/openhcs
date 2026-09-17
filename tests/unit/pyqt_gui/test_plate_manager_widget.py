@@ -199,29 +199,38 @@ def test_plate_work_guards_are_scope_local_and_views_remain_available(
     try:
         manager.require_pipeline_definition_mutation_allowed(other.scope_id)
         for scope in (None, active.scope_id):
-            with pytest.raises(RuntimeError, match="affected plate"):
+            if work == "run":
                 manager.require_pipeline_definition_mutation_allowed(scope)
+            else:
+                with pytest.raises(RuntimeError, match="affected plate"):
+                    manager.require_pipeline_definition_mutation_allowed(scope)
         for row, allowed in ((active, False), (other, True)):
             monkeypatch.setattr(manager, "get_selected_items", lambda row=row: [row])
             editor.current_plate = row.scope_id
             update_buttons(manager)
-            for action in ("del_plate", "edit_config", "init_plate", "compile_plate"):
+            for action in ("del_plate", "init_plate", "compile_plate"):
                 assert manager.buttons[action].isEnabled() is allowed
+            definition_allowed = allowed or work == "run"
+            assert manager.buttons["edit_config"].isEnabled() is definition_allowed
             assert manager.buttons["code_plate"].isEnabled()
             assert manager.buttons["view_metadata"].isEnabled()
             for action in ("add_step", "auto_load_pipeline", "del_step", "edit_step"):
-                assert editor.buttons[action].isEnabled() is allowed
+                assert editor.buttons[action].isEnabled() is definition_allowed
             assert editor.buttons["code_pipeline"].isEnabled()
         editor.current_plate = active.scope_id
-        with pytest.raises(RuntimeError, match="affected plate"):
+        if work == "run":
             MainWindowPipelineActions(manager, editor).new_pipeline()
-        assert editor.pipeline_steps == [step]
+            assert editor.pipeline_steps == []
+        else:
+            with pytest.raises(RuntimeError, match="affected plate"):
+                MainWindowPipelineActions(manager, editor).new_pipeline()
+            assert editor.pipeline_steps == [step]
         editor.current_plate = other.scope_id
         MainWindowPipelineActions(manager, editor).new_pipeline()
         assert editor.pipeline_steps == []
         if work == "run":
             PlateManagerCodeWorkflow(manager).invalidate_orchestrator_compilation_state(
-                other.scope_id
+                active.scope_id
             )
             assert (
                 manager.plate_terminal_activity_status.execution_id(active.scope_id)
@@ -829,10 +838,14 @@ class TestPlateManagerWidget:
         close_widget(widget)
         ObjectStateRegistry.clear()
 
+    @pytest.mark.parametrize(
+        "state", (OrchestratorState.READY, OrchestratorState.EXECUTING)
+    )
     def test_source_binding_context_projects_current_orchestrator_state(
         self,
         monkeypatch,
         tmp_path: Path,
+        state: OrchestratorState,
     ) -> None:
         ObjectStateRegistry.clear()
         widget = PlateManagerWidgetTestHarness.widget(monkeypatch)
@@ -872,6 +885,7 @@ class TestPlateManagerWidget:
                 binding.alias for binding in before.source_bindings.bindings
             ) == ("Before",)
 
+            orchestrator._state = state
             orchestrator.apply_pipeline_config(
                 PipelineConfig(
                     source_bindings_config=LazySourceBindingsConfig(
@@ -884,6 +898,10 @@ class TestPlateManagerWidget:
             assert tuple(
                 binding.alias for binding in after.source_bindings.bindings
             ) == ("After",)
+            assert tuple(
+                binding.alias for binding in before.source_bindings.bindings
+            ) == ("Before",)
+            assert orchestrator.state is OrchestratorState.CREATED
         finally:
             close_widget(widget)
             ObjectStateRegistry.clear()
@@ -1321,28 +1339,32 @@ class TestPlateManagerWidget:
                     widget.plate_terminal_activity_status.execution_id(unselected_scope)
                     == "untouched-run"
                 )
-                with pytest.raises(RuntimeError, match="affected plate"):
-                    PlateManagerCodeWorkflow(
-                        widget,
-                        mutation_scope=SelectedPlateManagerCodeMutationScope(
-                            selected_scope_ids=(selected_scope,)
-                        ),
-                    ).apply_payload(
-                        PlateManagerCodeDocumentAuthority.from_values(
-                            plate_paths=[selected_scope],
-                            global_pipeline_config=GlobalPipelineConfig(num_workers=47),
-                            per_plate_configs={
-                                scope: widget.authored_pipeline_config_for_code_document(
-                                    scope
-                                )
-                                for scope in (selected_scope,)
-                            },
-                            pipeline_data={
-                                scope: PipelineObjectStateBinding.steps_for_plate(scope)
-                                for scope in (selected_scope,)
-                            },
-                        )
+                PlateManagerCodeWorkflow(
+                    widget,
+                    mutation_scope=SelectedPlateManagerCodeMutationScope(
+                        selected_scope_ids=(selected_scope,)
+                    ),
+                ).apply_payload(
+                    PlateManagerCodeDocumentAuthority.from_values(
+                        plate_paths=[selected_scope],
+                        global_pipeline_config=GlobalPipelineConfig(num_workers=47),
+                        per_plate_configs={
+                            scope: widget.authored_pipeline_config_for_code_document(
+                                scope
+                            )
+                            for scope in (selected_scope,)
+                        },
+                        pipeline_data={
+                            scope: PipelineObjectStateBinding.steps_for_plate(scope)
+                            for scope in (selected_scope,)
+                        },
                     )
+                )
+                assert widget.plate_terminal_activity_status.is_active(unselected_scope)
+                assert (
+                    widget.plate_terminal_activity_status.execution_id(unselected_scope)
+                    == "untouched-run"
+                )
         finally:
             close_widget(widget)
             ObjectStateRegistry.clear()
@@ -1964,14 +1986,16 @@ class TestPlateManagerWidget:
             premature_result = bridge.apply_document(
                 UiCodeDocumentApplyRequest(
                     document_id=UiCodeDocumentId.PLATE_MANAGER_ORCHESTRATOR.value,
-                    source=replacement_source,
+                    source=replacement_source.replace(
+                        "Replacement", "Edited during execution"
+                    ),
                     base_revision_token=document.current_revision_token,
                     confirmation_requirement=(
                         UiBridgeConfirmationRequirement.from_flag(False)
                     ),
                 )
             )
-            assert not premature_result.applied
+            assert premature_result.applied
             assert (
                 manager.plate_terminal_activity_status.execution_id(plate_scope)
                 == "execution-1"
@@ -1979,7 +2003,7 @@ class TestPlateManagerWidget:
             assert [
                 step.name
                 for step in PipelineObjectStateBinding.steps_for_plate(plate_scope)
-            ] == ["Failing"]
+            ] == ["Edited during execution"]
 
             completion_poller.fail()
             assert manager.execution_state is ManagerExecutionState.IDLE
@@ -2171,21 +2195,28 @@ class TestPlateManagerWidget:
                     selection_mode=UiCodeDocumentSelectionMode.SELECTED.value,
                 )
             )
-            rejected = bridge.apply_document(
+            during_execution = bridge.apply_document(
                 UiCodeDocumentApplyRequest(
                     document_id=document.summary.identity.document_id,
-                    source=replacement_source,
+                    source=replacement_source.replace(
+                        "Replacement", "Edited during execution"
+                    ),
                     base_revision_token=document.current_revision_token,
                     confirmation_requirement=(
                         UiBridgeConfirmationRequirement.from_flag(False)
                     ),
                 )
             )
-            assert not rejected.applied
+            assert during_execution.applied
+            assert (
+                manager.plate_terminal_activity_status.execution_id(plate_scope)
+                == "execution-1"
+            )
+            assert manager.plate_terminal_activity_status.is_active(plate_scope)
             assert [
                 step.name
                 for step in PipelineObjectStateBinding.steps_for_plate(plate_scope)
-            ] == ["Original"]
+            ] == ["Edited during execution"]
 
             completion_poller.release.set()
             deadline = time.monotonic() + 5
@@ -2454,3 +2485,72 @@ class CellProfilerWorkspaceResultFixture:
             pipeline_steps=list(steps),
             pipeline_config=pipeline_config,
         )
+
+
+def test_new_produced_row_selects_prepared_replay_without_overwriting_saved_or_later_choices(
+    monkeypatch, tmp_path
+):
+    from objectstate import DataclassFieldAccess
+    from objectstate.lazy_factory import replace_raw
+
+    from openhcs.constants.constants import Microscope
+    from openhcs.core.execution_state import (
+        ExecutionCompletionPayload,
+        ExecutionOutputPlateSummary,
+    )
+    from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
+
+    ObjectStateRegistry.clear()
+    widget = PlateManagerWidgetTestHarness.widget(monkeypatch)
+    monkeypatch.setattr(widget, "update_item_list", lambda: None)
+    widget.global_config = GlobalPipelineConfig(microscope=Microscope.SOURCE_BINDINGS)
+    ensure_global_config_context(GlobalPipelineConfig, widget.global_config)
+    output_root = str(tmp_path / "produced")
+    saved = PipelineConfig(microscope=Microscope.SOURCE_BINDINGS, num_workers=7)
+    widget.plate_configs[output_root] = saved
+    completion = ExecutionCompletionPayload(
+        status=TerminalExecutionStatus.COMPLETE,
+        execution_id="synthetic-produced",
+        results={},
+        output_plate=ExecutionOutputPlateSummary(
+            output_plate_root=output_root,
+            auto_add_output_plate_to_plate_manager=True,
+        ),
+        traceback_text="",
+        message="",
+    )
+    try:
+        widget._maybe_auto_add_output_plate_orchestrator(
+            "/synthetic-source", completion
+        )
+        state = ObjectStateRegistry.get_by_scope(output_root)
+        orchestrator = state.object_instance
+        selected = DataclassFieldAccess.raw_init_values(orchestrator.pipeline_config)
+        original = DataclassFieldAccess.raw_init_values(saved)
+        assert selected == {**original, "microscope": Microscope.OPENHCS}
+        assert orchestrator.get_effective_config().microscope is Microscope.OPENHCS
+        assert output_root in root_orchestrator_scope_ids(widget._ensure_root_state())
+
+        # Later explicit user source selection is not a sticky output-role policy.
+        orchestrator.apply_pipeline_config(
+            replace_raw(
+                orchestrator.pipeline_config, microscope=Microscope.SOURCE_BINDINGS
+            )
+        )
+        reused = widget._create_orchestrator_for_plate(
+            output_root, source_role=MicroscopeSourceSelectionRole.PREPARED_WORKSPACE
+        )
+        assert reused is state
+        assert (
+            orchestrator.get_effective_config().microscope is Microscope.SOURCE_BINDINGS
+        )
+        widget._maybe_auto_add_output_plate_orchestrator(
+            "/synthetic-source", completion
+        )
+        assert ObjectStateRegistry.get_by_scope(output_root) is state
+        assert (
+            orchestrator.get_effective_config().microscope is Microscope.SOURCE_BINDINGS
+        )
+    finally:
+        close_widget(widget)
+        ObjectStateRegistry.clear()

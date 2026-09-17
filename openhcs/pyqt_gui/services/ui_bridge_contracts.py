@@ -242,7 +242,10 @@ class UiWindowProviderABC(UiLiveOverviewContributorABC):
         raise NotImplementedError
 
     @abstractmethod
-    def navigate(self, request: UiWindowNavigateRequest) -> UiWindowNavigateResult:
+    def navigate(
+        self, request: UiWindowNavigateRequest,
+        completed: Callable[[UiWindowNavigateResult], None] | None = None,
+    ) -> UiWindowNavigateResult:
         raise NotImplementedError
 
     @abstractmethod
@@ -250,7 +253,10 @@ class UiWindowProviderABC(UiLiveOverviewContributorABC):
         raise NotImplementedError
 
     @abstractmethod
-    def snapshot(self, request: UiWindowSnapshotRequest) -> UiWindowSnapshotResult:
+    def snapshot(
+        self, request: UiWindowSnapshotRequest,
+        completed: Callable[[UiWindowSnapshotResult], None] | None = None,
+    ) -> UiWindowSnapshotResult:
         raise NotImplementedError
 
     @abstractmethod

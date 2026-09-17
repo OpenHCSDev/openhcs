@@ -10,6 +10,7 @@ from zmqruntime.config import TransportMode
 from openhcs.agent.dto.common import (
     AgentError,
     AgentResultEnvelope,
+    AgentResourceRef,
     AgentWarning,
     JsonObject,
     JsonValue,
@@ -26,6 +27,7 @@ from openhcs.core.synthetic_plate_generation import (
     SYNTHETIC_PLATE_GENERATION_PROFILE,
     SyntheticPlateFormat,
 )
+from openhcs.serialization.json import to_jsonable
 
 
 class PlateInspectionStatus(str, Enum):
@@ -388,6 +390,7 @@ class PlateFileStreamRequest:
     viewer_config_key: str = ViewerType.NAPARI.config_key
     connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
     fresh_viewer: bool = False
+    source_receipt: AgentResourceRef | None = None
 
     @classmethod
     def from_fields(
@@ -407,6 +410,7 @@ class PlateFileStreamRequest:
         transport_mode: TransportMode | None = None,
         persistent: bool = True,
         fresh_viewer: bool = False,
+        source_receipt: AgentResourceRef | None = None,
     ) -> "PlateFileStreamRequest":
         return cls(
             plate_path=plate_path,
@@ -425,6 +429,7 @@ class PlateFileStreamRequest:
                 persistent=persistent,
             ),
             fresh_viewer=fresh_viewer,
+            source_receipt=source_receipt,
         )
 
     def as_tool_arguments(self) -> dict[str, JsonValue]:
@@ -440,6 +445,11 @@ class PlateFileStreamRequest:
             "viewer_config_key": self.viewer_config_key,
             **self.connection.tool_arguments(),
             "fresh_viewer": self.fresh_viewer,
+            "source_receipt": (
+                None
+                if self.source_receipt is None
+                else to_jsonable(self.source_receipt)
+            ),
         }
 
 
