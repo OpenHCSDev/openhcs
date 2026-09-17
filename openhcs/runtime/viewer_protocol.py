@@ -35,6 +35,9 @@ from zmqruntime.viewer_protocol import (
     ViewerBatchWireField as ViewerBatchWireField,
 )
 from zmqruntime.viewer_protocol import (
+    ViewerControlMessageType as ViewerControlMessageType,
+)
+from zmqruntime.viewer_protocol import (
     ViewerControlReplyHeader as ViewerControlReplyHeader,
 )
 from zmqruntime.viewer_protocol import (
@@ -81,18 +84,6 @@ _EXECUTION_OWNED_VIEWER_PROCESSES = EndpointProcessGroup()
 register_cleanup_callback(_EXECUTION_OWNED_VIEWER_PROCESSES.stop_all)
 
 
-class ViewerControlMessageType(Enum):
-    """Shared control-message names consumed by viewer servers."""
-
-    SCREENSHOT = "screenshot"
-    CLEAR_STATE = "clear_state"
-    SETTLE = "settle"
-    STATE = "state"
-    PAYLOADS = "payloads"
-    NAVIGATE = "navigate"
-    ISOLATE_LAYERS = "isolate_layers"
-
-
 class ViewerSettlePhase(str, Enum):
     """Lifecycle phase for incremental viewer settlement."""
 
@@ -133,6 +124,7 @@ class ViewerControlField(str, Enum):
     VIEWER_NDIM = "viewer_ndim"
     CURRENT_STEP = "current_step"
     AXIS_LABELS = "axis_labels"
+    NATIVE_VIEWPORT = "native_viewport"
     COMPONENT_GROUP_COUNT = "component_group_count"
     COMPONENT_ITEM_COUNT = "component_item_count"
 
@@ -168,7 +160,8 @@ class ViewerLayerField(str, Enum):
     AXIS_COMPONENT_VALUES = "axis_component_values"
     ROUTED_COMPONENT_VALUES = "routed_component_values"
     DATA_SHAPE = "data_shape"
-    TRANSLATE = "translate"
+    NATIVE_TRANSFORM = "native_transform"
+    NATIVE_INTENSITY = "native_intensity"
     VISIBLE = "visible"
     SELECTED = "selected"
     FEATURE_ROW_COUNT = "feature_row_count"
@@ -408,8 +401,43 @@ class ViewerComponentValueOrdering:
 class QtPlatformName(Enum):
     """Qt platform plugin names used by detached viewer processes."""
 
-    COCOA = "cocoa"
-    XCB = "xcb"
+    COCOA = ("cocoa", True)
+    XCB = ("xcb", True)
+    OFFSCREEN = ("offscreen", False)
+
+    def __new__(
+        cls,
+        value: str,
+        supports_interactive_viewer: bool,
+    ) -> Self:
+        member = object.__new__(cls)
+        member._value_ = value
+        member.supports_interactive_viewer = supports_interactive_viewer
+        return member
+
+    def interactive_viewer_platform(
+        self,
+        default: Self | None,
+    ) -> Self | None:
+        """Resolve this declared plugin for an interactive viewer launch."""
+
+        return self if self.supports_interactive_viewer else default
+
+    @classmethod
+    def resolve_interactive_viewer_platform(
+        cls,
+        current_value: str | None,
+        default: Self | None,
+    ) -> Self | None:
+        """Resolve a declared Qt plugin without replacing unknown plugins."""
+
+        if current_value is None:
+            return default
+        try:
+            current_platform = cls(current_value)
+        except ValueError:
+            return None
+        return current_platform.interactive_viewer_platform(default)
 
 
 class ViewerProcessPlatform(Enum):
@@ -473,12 +501,18 @@ class ViewerLaunchContext:
 
     mode: ViewerLaunchContextMode
     environment_overlay: Mapping[str, str] = field(default_factory=dict)
+    environment_unset_keys: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(
             self,
             "environment_overlay",
             dict(self.environment_overlay),
+        )
+        object.__setattr__(
+            self,
+            "environment_unset_keys",
+            tuple(self.environment_unset_keys),
         )
 
     @classmethod
@@ -492,9 +526,17 @@ class ViewerLaunchContext:
         environment: Mapping[str, str],
     ) -> "ViewerLaunchContext":
         """Carry a graphical environment already validated by its owner."""
+
+        environment_overlay = dict(environment)
+        qpa_platform = environment_overlay.get("QT_QPA_PLATFORM")
+        environment_unset_keys: tuple[str, ...] = ()
+        if qpa_platform == QtPlatformName.OFFSCREEN.value:
+            environment_overlay.pop("QT_QPA_PLATFORM")
+            environment_unset_keys = ("QT_QPA_PLATFORM",)
         return cls(
             ViewerLaunchContextMode.PROJECTED_GRAPHICAL_SESSION,
-            environment,
+            environment_overlay,
+            environment_unset_keys,
         )
 
     @classmethod
@@ -512,6 +554,8 @@ class ViewerLaunchContext:
     ) -> dict[str, str]:
         """Overlay projected GUI values onto the launching process environment."""
         environment = dict(base_environment)
+        for key in self.environment_unset_keys:
+            environment.pop(key, None)
         environment.update(self.environment_overlay)
         return environment
 
@@ -949,8 +993,13 @@ class ViewerQtPlatformEnvironmentPolicy:
         self,
         env: MutableMapping[str, str],
     ) -> MutableMapping[str, str]:
-        if self.qpa_platform is not None and "QT_QPA_PLATFORM" not in env:
-            env["QT_QPA_PLATFORM"] = self.qpa_platform.value
+        qpa_environment_key = "QT_QPA_PLATFORM"
+        resolved_qpa_platform = QtPlatformName.resolve_interactive_viewer_platform(
+            env.get(qpa_environment_key),
+            self.qpa_platform,
+        )
+        if resolved_qpa_platform is not None:
+            env[qpa_environment_key] = resolved_qpa_platform.value
         env.update(self.always_set)
         return env
 

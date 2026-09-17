@@ -27,8 +27,21 @@ from polystore.streaming.viewer_transport import (
 from zmqruntime.config import ZMQConfig
 from zmqruntime.viewer_protocol import ViewerWireMapping
 
+from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.runtime_image_values import (
+    image_payload_data,
+    image_payload_mask,
+    image_payload_metadata,
+)
+from openhcs.core.source_image_provenance import SourceImageIdentity
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspacePathLookup,
+    VirtualWorkspaceSourceProjection,
+    VirtualWorkspaceSourceProjectionAuthority,
+)
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
+    StreamImagePayloadMetadataProjector,
     StreamSourceComponentMetadataItems,
 )
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -69,6 +82,8 @@ class ImageStreamingRequest(ViewerStreamingContext):
 
     filenames: tuple[str, ...]
     read_backend: str
+    source_projection: VirtualWorkspaceSourceProjection | None = None
+    producer: ViewerStreamProducer | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -263,11 +278,44 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
     """Source authority for viewer streaming from one initialized plate."""
 
     filemanager: FileManager
+    microscope_handler: MicroscopeHandler
 
-    def load_image(self, filename: str, read_backend: str):
-        return self.filemanager.load(
-            str(Path(self.plate_path) / filename),
-            read_backend,
+    def source_workspace_projection(self) -> VirtualWorkspaceSourceProjection:
+        return VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+            plate_path=Path(self.plate_path),
+            metadata_handler=self.microscope_handler.metadata_handler,
+            filemanager=self.filemanager,
+        ).projection_or_empty()
+
+    def load_image(
+        self,
+        filename: str,
+        read_backend: str,
+        *,
+        source_projection: VirtualWorkspaceSourceProjection,
+        component_metadata: ViewerWireMapping,
+    ):
+        lookup = VirtualWorkspacePathLookup.from_paths(
+            filename, str(Path(self.plate_path) / filename)
+        )
+        source_ref = source_projection.source_ref_for(lookup)
+        backend = read_backend if source_ref is None else source_ref.backend
+        source_path = source_projection.resolved_source_path_for(
+            lookup, self.filemanager
+        )
+        image = self.filemanager.load(source_path, backend)
+        image = source_projection.project_unbound_payload(lookup, image)
+        metadata = ImagePayloadSourceMetadataContext(
+            source_identity=SourceImageIdentity(
+                lookup.full_virtual_path,
+                source_projection.source_metadata_for(lookup) or component_metadata,
+            ),
+            read_backend=backend,
+            filemanager=self.filemanager,
+            source_address=source_path,
+        ).metadata(image)
+        return metadata.payload_with(
+            image_payload_data(image), image_payload_mask(image)
         )
 
     def component_metadata_by_path(
@@ -299,12 +347,83 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
     def image_component_metadata_by_path(
         self,
         paths: list[str],
+        source_projection: VirtualWorkspaceSourceProjection | None = None,
     ) -> dict[str, ViewerWireMapping]:
-        return self.component_metadata_by_path(
-            paths,
-            StreamingSourceFilenameAuthority.source_filename_candidates_for_image,
-            "image",
+        if source_projection is None:
+            return self.component_metadata_by_path(
+                paths,
+                StreamingSourceFilenameAuthority.source_filename_candidates_for_image,
+                "image",
+            )
+        metadata_by_path = {
+            path: metadata
+            for path in paths
+            if (
+                metadata := source_projection.source_metadata_for(
+                    VirtualWorkspacePathLookup.from_paths(
+                        path, str(Path(self.plate_path) / path)
+                    )
+                )
+            )
+            is not None
+        }
+        metadata_by_path.update(
+            self.component_metadata_by_path(
+                [path for path in paths if path not in metadata_by_path],
+                StreamingSourceFilenameAuthority.source_filename_candidates_for_image,
+                "image",
+            )
         )
+        return metadata_by_path
+
+    def require_projected_image_window(
+        self, filename: str, image, source_projection: VirtualWorkspaceSourceProjection
+    ) -> None:
+        """Validate a request-authored full-window binding against loaded pixels."""
+        projection = source_projection.source_projection_for(
+            VirtualWorkspacePathLookup.from_paths(
+                filename, str(Path(self.plate_path) / filename)
+            )
+        )
+        if projection is None or projection.image_metadata is None:
+            raise ValueError(
+                "Explicit image projection requires a metadata-bearing source."
+            )
+        metadata = projection.image_metadata
+        shape = tuple(image_payload_data(image).shape)
+        if (
+            len(shape) != 3
+            or metadata.plane_axis is None
+            or shape[0] != metadata.source_plane_metadata_count
+            or metadata.source_spatial_domain.origin_yx != (0, 0)
+            or tuple(shape[-2:]) != metadata.source_spatial_domain.source_shape_yx
+        ):
+            raise ValueError(
+                "Loaded image window conflicts with its explicit source binding."
+            )
+
+    def image_source_metadata_items(
+        self,
+        paths: tuple[str, ...],
+        metadata_by_path: Mapping[str, ViewerWireMapping],
+        source_projection: VirtualWorkspaceSourceProjection,
+    ) -> StreamSourceComponentMetadataItems:
+        """Include declared pixel-plane coordinates, never mere contributors."""
+        values = []
+        for path in paths:
+            projection = source_projection.source_projection_for(
+                VirtualWorkspacePathLookup.from_paths(
+                    path, str(Path(self.plate_path) / path)
+                )
+            )
+            metadata = None if projection is None else projection.image_metadata
+            if metadata is not None and metadata.plane_axis is not None:
+                values.extend(
+                    metadata.source_image_provenance_planes.runtime_component_metadata
+                )
+            else:
+                values.append(metadata_by_path[path])
+        return StreamSourceComponentMetadataItems.from_values(values)
 
     def roi_component_metadata_by_path(
         self,
@@ -439,30 +558,30 @@ class StreamingService:
         total_images = len(request.filenames)
         num_chunks = (total_images + CHUNK_SIZE - 1) // CHUNK_SIZE
         logger.info(f"Streaming {total_images} images in {num_chunks} chunks")
+        source_projection = (
+            self.source.source_workspace_projection()
+            if request.source_projection is None
+            else request.source_projection
+        )
         all_metadata_by_path = self.source.image_component_metadata_by_path(
-            list(request.filenames)
+            list(request.filenames), source_projection
         )
         viewer_surface = request.config.viewer_surface(
             self.source,
             self.transport_config,
         )
-        source_metadata_items = StreamSourceComponentMetadataItems.from_values(
-            all_metadata_by_path[path] for path in request.filenames
+        source_metadata_items = self.source.image_source_metadata_items(
+            request.filenames, all_metadata_by_path, source_projection
         )
         message_authority = StreamComponentMessageExtraAuthority.from_viewer_surface(
             viewer_surface,
             source_metadata_items=source_metadata_items,
         )
-        stream_backend_kwargs = message_authority.viewer_backend_kwargs(
-            producer=ViewerStreamProducer.from_identity(
-                StreamProducerIdentity.fixed_output(
-                    FixedStreamProducerIdentityKind.MANUAL,
-                    "selected_images",
-                )
-            ),
-            source_metadata=message_authority.path_mapped_source_metadata(
-                all_metadata_by_path
-            ),
+        producer = request.producer or ViewerStreamProducer.from_identity(
+            StreamProducerIdentity.fixed_output(
+                FixedStreamProducerIdentityKind.MANUAL,
+                "selected_images",
+            )
         )
 
         for chunk_idx in range(num_chunks):
@@ -483,7 +602,13 @@ class StreamingService:
                 image_data = self.source.load_image(
                     filename,
                     request.read_backend,
+                    source_projection=source_projection,
+                    component_metadata=all_metadata_by_path[filename],
                 )
+                if request.source_projection is not None:
+                    self.source.require_projected_image_window(
+                        filename, image_data, source_projection
+                    )
                 image_data_list.append(image_data)
                 file_paths.append(filename)
 
@@ -491,12 +616,32 @@ class StreamingService:
                 f"Loaded chunk {chunk_idx + 1}/{num_chunks}: {len(image_data_list)} images"
             )
 
-            self.source.filemanager.save_batch(
-                image_data_list,
-                file_paths,
-                backend_enum.value,
-                **stream_backend_kwargs.to_kwargs(),
-            )
+            component_order = message_authority.layout.component_order
+            for indices in StreamImagePayloadMetadataProjector.partition_indices(
+                (image_payload_metadata(image) for image in image_data_list),
+                component_order,
+            ):
+                metadata = image_payload_metadata(image_data_list[indices[0]])
+                producer_subset = producer.for_indices(
+                    tuple(start_idx + index for index in indices), total_images
+                )
+                self.source.filemanager.save_batch(
+                    [image_payload_data(image_data_list[index]) for index in indices],
+                    [file_paths[index] for index in indices],
+                    backend_enum.value,
+                    **message_authority.viewer_backend_kwargs(
+                        producer=producer_subset,
+                        source_metadata=message_authority.path_mapped_source_metadata(
+                            all_metadata_by_path
+                        ),
+                    )
+                    .with_item_fields(
+                        StreamImagePayloadMetadataProjector.item_fields(
+                            metadata, component_order
+                        )
+                    )
+                    .to_kwargs(),
+                )
             logger.info(
                 f"Streamed chunk {chunk_idx + 1}/{num_chunks} to {display_name}"
             )

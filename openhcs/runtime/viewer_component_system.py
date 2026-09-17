@@ -11,6 +11,9 @@ from typing import ClassVar, Generic, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 from polystore.streaming_constants import StreamingDataType
+from polystore.streaming.receivers.core.metadata_presentation import (
+    ComponentMetadataPresentationABC,
+)
 from zmqruntime.viewer_protocol import (
     ViewerBatchDisplayPayload,
     ViewerBatchContextWireField,
@@ -27,7 +30,6 @@ from polystore.streaming.viewer_transport import ViewerDisplayConfigABC
 from openhcs.constants.constants import AllComponents
 from openhcs.runtime.viewer_protocol import ViewerComponentValueOrdering
 
-
 ComponentValue: TypeAlias = str | int | float | bool | tuple | None
 ComponentWireValue: TypeAlias = ComponentValue | Sequence[ComponentValue]
 ComponentMap: TypeAlias = dict[str, ComponentValue]
@@ -36,7 +38,9 @@ ComponentDomainKey: TypeAlias = str | tuple[str, ...] | tuple[str, tuple[str, ..
 ComponentModeMap: TypeAlias = dict[str, str]
 DisplayModeValue: TypeAlias = str | Enum
 DisplayComponentName: TypeAlias = str | Enum
-DisplayConfigMappingValue: TypeAlias = Mapping[str, DisplayModeValue] | Sequence[DisplayComponentName]
+DisplayConfigMappingValue: TypeAlias = (
+    Mapping[str, DisplayModeValue] | Sequence[DisplayComponentName]
+)
 ComponentMetadataItems: TypeAlias = Sequence[Mapping[str, ComponentValue] | None]
 ComponentAxisValues: TypeAlias = Mapping[str, Sequence[ComponentValue]]
 ComponentNameMetadataWireMapping: TypeAlias = Mapping[
@@ -252,7 +256,9 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
             display_layout=self,
         )
 
-    def group_window_payloads(self, payloads: Sequence[Mapping[str, ComponentWireValue]]):
+    def group_window_payloads(
+        self, payloads: Sequence[Mapping[str, ComponentWireValue]]
+    ):
         from polystore.streaming.receivers.core import WindowProjectionSource
 
         return self.group_window_sources(
@@ -268,6 +274,7 @@ class ViewerComponentLayout(ViewerBatchDisplayPayload):
         return self.group_window_sources(
             WindowProjectionSource.from_payload_providers(items)
         )
+
 
 @dataclass(slots=True)
 class ViewerComponentMetadataNormalizer:
@@ -306,6 +313,18 @@ class ViewerComponentValueDomainEntry:
         unique_values = sorted(set(values), key=ViewerComponentValueOrdering.key)
         return cls(component=component, values=tuple(unique_values))
 
+    @classmethod
+    def from_declared_values(
+        cls, component: str, values: Sequence[ComponentValue]
+    ) -> "ViewerComponentValueDomainEntry":
+        """Preserve pixel-plane order, refusing ambiguous coordinate assignments."""
+        ordered_values = tuple(values)
+        if len(set(ordered_values)) != len(ordered_values):
+            raise ValueError(
+                "Declared plane coordinates must be unique after normalization."
+            )
+        return cls(component=component, values=ordered_values)
+
 
 @dataclass(frozen=True, slots=True)
 class ViewerComponentValueDomainPayload:
@@ -336,7 +355,9 @@ class ViewerComponentValueDomainPayload:
             normalized_metadata = normalizer.normalize(dict(metadata))
             for component in component_layout.component_order:
                 if component in normalized_metadata:
-                    values_by_component[component].append(normalized_metadata[component])
+                    values_by_component[component].append(
+                        normalized_metadata[component]
+                    )
         return cls(
             entries=tuple(
                 ViewerComponentValueDomainEntry.from_values(component, values)
@@ -352,6 +373,41 @@ class ViewerComponentValueDomainPayload:
         *,
         context: str,
     ) -> "ViewerComponentValueDomainPayload":
+        """Project observed membership with its established sort/dedup contract."""
+        return cls(
+            tuple(
+                ViewerComponentValueDomainEntry.from_values(
+                    entry.component, entry.values
+                )
+                for entry in cls._wire_entries(payload, context=context)
+            )
+        )
+
+    @classmethod
+    def from_ordered_wire_mapping(
+        cls,
+        payload: Mapping[str, Sequence[ComponentWireValue]],
+        *,
+        context: str,
+    ) -> "ViewerComponentValueDomainPayload":
+        """Decode an explicitly ordered pixel-plane coordinate declaration."""
+        return cls(
+            tuple(
+                ViewerComponentValueDomainEntry.from_declared_values(
+                    entry.component, entry.values
+                )
+                for entry in cls._wire_entries(payload, context=context)
+            )
+        )
+
+    @classmethod
+    def _wire_entries(
+        cls,
+        payload: Mapping[str, Sequence[ComponentWireValue]],
+        *,
+        context: str,
+    ) -> tuple[ViewerComponentValueDomainEntry, ...]:
+        """Parse and normalize external coordinates once for either projection."""
         normalizer = ViewerComponentMetadataNormalizer()
         entries = []
         for component, raw_values in payload.items():
@@ -361,7 +417,7 @@ class ViewerComponentValueDomainPayload:
                 )
             component_name = str(component)
             entries.append(
-                ViewerComponentValueDomainEntry.from_values(
+                ViewerComponentValueDomainEntry(
                     component_name,
                     tuple(
                         normalizer.normalize_value(
@@ -375,17 +431,16 @@ class ViewerComponentValueDomainPayload:
                     ),
                 )
             )
-        return cls(tuple(entries))
+        return tuple(entries)
 
     def component_values(self) -> ComponentValues:
-        return {
-            entry.component: list(entry.values)
-            for entry in self.entries
-        }
+        return {entry.component: list(entry.values) for entry in self.entries}
 
     def required_component_values(self, components: Sequence[str]) -> ComponentValues:
         values = self.component_values()
-        missing = tuple(component for component in components if component not in values)
+        missing = tuple(
+            component for component in components if component not in values
+        )
         if missing:
             raise ValueError(
                 "Declared component value domain missing required component(s): "
@@ -409,10 +464,7 @@ class ViewerComponentValueDomainPayload:
         )
 
     def to_wire_mapping(self) -> dict[str, list[ComponentValue]]:
-        return {
-            entry.component: list(entry.values)
-            for entry in self.entries
-        }
+        return {entry.component: list(entry.values) for entry in self.entries}
 
     def __bool__(self) -> bool:
         return bool(self.entries)
@@ -519,7 +571,9 @@ class ViewerBatchPayloadFields:
             )
 
     def require_fields(self, fields: Sequence[ViewerBatchField]) -> None:
-        missing = tuple(field.value for field in fields if field.value not in self.payload)
+        missing = tuple(
+            field.value for field in fields if field.value not in self.payload
+        )
         if missing:
             raise ValueError(f"{self.context} missing required fields: {missing!r}.")
 
@@ -674,7 +728,7 @@ class ViewerComponentNameMetadataStore:
 
 
 @dataclass(frozen=True, kw_only=True)
-class ViewerComponentNameMetadata:
+class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValue]):
     """Component-value display names shared by viewer receivers."""
 
     ABBREVIATIONS: ClassVar[Mapping[str, str]] = {
@@ -731,33 +785,16 @@ class ViewerComponentNameMetadata:
             return None
         return str(name)
 
-    def compact_label(self, component: str, value: ComponentValue) -> str:
-        name = self.display_name(component, value)
-        if name is not None:
-            return name
-        return f"{self.abbreviation(component)} {value}"
-
     def abbreviation(self, component: str) -> str:
         if component in self.ABBREVIATIONS:
             return self.ABBREVIATIONS[component]
         return component
 
-    def axis_label(self, component: str, value: ComponentValue) -> str:
-        name = self.display_name(component, value)
-        if name is None:
-            return self.compact_label(component, value)
-
+    def named_axis_label(self, component: str, value: ComponentValue, name: str) -> str:
         formatter = self.METADATA_FORMATTERS.get(component)
         if formatter is not None:
             return formatter(value, name)
         return f"{component.title()} {value}: {name}"
-
-    def axis_labels(
-        self,
-        component: str,
-        values: Sequence[ComponentValue],
-    ) -> list[str]:
-        return [self.axis_label(component, value) for value in values]
 
     def compact_tuple_labels(
         self,
@@ -830,9 +867,8 @@ class ViewerComponentAxisSemantics(ViewerComponentValueDomainPayload):
             if self.layout.component_modes[component] != mode_value:
                 continue
             component_identity = AllComponents.from_value(component)
-            if (
-                component_identity is not None
-                and self.component_has_role(component_identity, role)
+            if component_identity is not None and self.component_has_role(
+                component_identity, role
             ):
                 return component
         return None
@@ -845,6 +881,7 @@ class ViewerComponentAxisSemantics(ViewerComponentValueDomainPayload):
         if role is ViewerComponentSemanticRole.COLOR:
             return component.is_default_group_by_axis()
         raise ValueError(f"No component role mapping for {role!r}.")
+
 
 class ViewerComponentAxisSemanticsAuthority:
     """Build component-axis semantics from external config/domain inputs."""
@@ -984,9 +1021,7 @@ class ViewerComponentValueDomainView:
         owner: str,
     ) -> None:
         domain_values = self.required_values(component)
-        missing = tuple(
-            value for value in route_values if value not in domain_values
-        )
+        missing = tuple(value for value in route_values if value not in domain_values)
         if missing:
             raise ValueError(
                 f"{owner} component domain for '{component}' does not contain "
@@ -1254,10 +1289,9 @@ class ViewerLayerAxisProjectionStep:
         self,
         coordinate_values: Sequence[ComponentValue],
     ) -> bool:
-        return (
-            len(coordinate_values) == 1
-            and not self.request.declared_domain.has_multiple_values(self.component)
-        )
+        return len(
+            coordinate_values
+        ) == 1 and not self.request.declared_domain.has_multiple_values(self.component)
 
     def route_domain_values(self) -> list[ComponentValue]:
         if not self.request.route_domain.values.get(self.component, []):
@@ -1302,6 +1336,7 @@ class ViewerLayerAxisProjectionStep:
                 f"Route component value {value!r} for '{self.component}' is absent "
                 f"from viewer domain {list(viewer_values)!r}."
             ) from error
+
 
 @dataclass(frozen=True, slots=True)
 class ViewerLayerAxisProjectionRequest:
@@ -1374,9 +1409,7 @@ class ViewerLayerAxisProjectionRequestAuthority:
                 axis_components
             ),
             declared_component_values=(
-                component_axis_semantics.required_component_values(
-                    axis_components
-                )
+                component_axis_semantics.required_component_values(axis_components)
             ),
         )
 
@@ -1402,9 +1435,7 @@ class ViewerLayerAxisProjector:
 
         return ViewerLayerAxisProjection(
             projected_axis_components=tuple(axis.component for axis in projected_axes),
-            component_values={
-                axis.component: axis.values for axis in projected_axes
-            },
+            component_values={axis.component: axis.values for axis in projected_axes},
             routed_component_values={
                 axis.component: axis.routed_values for axis in projected_axes
             },
@@ -1498,14 +1529,13 @@ class ViewerDimensionValueAuthority:
         if not components:
             return [()]
 
-        values = {
-            cls.value_tuple(cls.metadata(item), components)
-            for item in items
-        }
+        values = {cls.value_tuple(cls.metadata(item), components) for item in items}
         return sorted(values, key=ViewerComponentValueOrdering.tuple_key)
 
     @staticmethod
-    def merge(stored_values: Sequence[tuple], new_values: Sequence[tuple]) -> list[tuple]:
+    def merge(
+        stored_values: Sequence[tuple], new_values: Sequence[tuple]
+    ) -> list[tuple]:
         return sorted(
             set(stored_values) | set(new_values),
             key=ViewerComponentValueOrdering.tuple_key,
@@ -1513,7 +1543,7 @@ class ViewerDimensionValueAuthority:
 
     @staticmethod
     def metadata(
-        item: Mapping[str, ComponentValue | Mapping[str, ComponentValue]]
+        item: Mapping[str, ComponentValue | Mapping[str, ComponentValue]],
     ) -> Mapping[str, ComponentValue]:
         metadata = item["metadata"]
         if not isinstance(metadata, Mapping):
