@@ -1053,6 +1053,7 @@ args.marker.write_text(
         "calls": [
             ["payload", []],
             ["history", "canonical history"],
+            ["payload", []],
             ["history-ui", None],
             ["refresh", None],
         ],

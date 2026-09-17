@@ -1661,18 +1661,14 @@ class AgentCapabilityNamespace:
     ) -> None:
         object.__setattr__(self, "_capability_projection", capability_projection)
 
-    @property
-    def capabilities(self) -> tuple[AgentCapabilitySpec, ...]:
-        """Return the current declaration-owned capability projection."""
-        return self._capability_projection()
-
     def __getattr__(self, name: str) -> AgentCapabilitySpec:
         """Resolve one generated name from the current declaration projection."""
         _load_capability_extensions()
         for declaration in AgentCapabilityDeclaration.__registry__.values():
-            if declaration.name is not None and _capability_attribute_name(
-                declaration.name
-            ) == name:
+            if (
+                declaration.name is not None
+                and _capability_attribute_name(declaration.name) == name
+            ):
                 return declaration.to_spec()
         raise AttributeError(f"Unknown OpenHCS agent capability attribute: {name}")
 
