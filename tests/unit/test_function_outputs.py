@@ -3,9 +3,11 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import tifffile
 import pytest
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
+from polystore.memory import MemoryStorageBackend
 from polystore.streaming.viewer_transport import (
     ViewerDisplayConfigABC,
     ViewerStreamKwarg,
@@ -1295,8 +1297,16 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     output_dir = plate_root / "images"
     path = output_dir / "A01_s1_w1.tif"
     output_dir.mkdir(parents=True)
-    path.write_bytes(b"produced image")
-    context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    pixels = np.zeros((2, 4, 5), dtype=np.uint16)
+    tifffile.imwrite(path, pixels)
+    context = context_stub(
+        FileManager(
+            {
+                Backend.DISK.value: DiskStorageBackend(),
+                Backend.MEMORY.value: MemoryStorageBackend(),
+            }
+        )
+    )
     context.metadata_cache = {
         AllComponents.WELL: {"A01": None},
         AllComponents.SITE: {"1": None},
@@ -1357,6 +1367,12 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
             extension=".tif",
             source="collapsed mosaic",
         ),
+    )
+    context.filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    context.filemanager.save(
+        ImageMetadataPayload(pixels, metadata),
+        str(path),
+        Backend.MEMORY.value,
     )
     OpenHCSMetadataWriter.write(context, plan)
     OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
