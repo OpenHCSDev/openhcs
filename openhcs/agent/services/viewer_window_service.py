@@ -1108,21 +1108,21 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
 
     def snapshot_window(self, request: ViewerWindowSnapshotRequest) -> JsonObject:
         message = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.SCREENSHOT.value,
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.SCREENSHOT.value,
             ViewerControlResponseField.PAYLOAD.value: request,
         }
         return self._send_control_message(request, message)
 
     def window_state(self, request: ViewerWindowStateRequest) -> JsonObject:
         message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.STATE.value,
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.STATE.value,
             ViewerControlResponseField.PAYLOAD.value: request.state_controls,
         }
         return self._send_control_message(request, message)
 
     def window_payloads(self, request: ViewerWindowPayloadRequest) -> JsonObject:
         message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.PAYLOADS.value,
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.PAYLOADS.value,
             ViewerControlResponseField.PAYLOAD.value: request.payload_projection,
         }
         return self._send_control_message(request, message)
@@ -1131,7 +1131,7 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         return self._send_control_message(
             request,
             {
-                ViewerControlResponseField.TYPE: ViewerControlMessageType.IMAGE_INTENSITY.value,
+                ViewerControlResponseField.TYPE.value: ViewerControlMessageType.IMAGE_INTENSITY.value,
                 ViewerControlResponseField.PAYLOAD.value: request.intensity,
             },
         )
@@ -1147,14 +1147,14 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
 
     def navigate_window(self, request: ViewerWindowNavigationRequest) -> JsonObject:
         message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.NAVIGATE.value,
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.NAVIGATE.value,
             ViewerControlResponseField.PAYLOAD.value: request.navigation,
         }
         return self._send_control_message(request, message)
 
     def isolate_layers(self, request: ViewerWindowLayerIsolationRequest) -> JsonObject:
         message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: (
+            ViewerControlResponseField.TYPE.value: (
                 ViewerControlMessageType.ISOLATE_LAYERS.value
             ),
             ViewerControlResponseField.PAYLOAD.value: request.isolation,
@@ -1737,9 +1737,7 @@ class ViewerWindowService:
             path=self._required_scalar(
                 payload, ViewerPayloadField.PATH, str, "a string"
             ),
-            components=self._required_mapping(
-                payload, ViewerPayloadField.COMPONENTS
-            ),
+            components=self._required_mapping(payload, ViewerPayloadField.COMPONENTS),
             axis_indices=self._required_typed_tuple(
                 payload, ViewerPayloadField.AXIS_INDICES, int
             ),

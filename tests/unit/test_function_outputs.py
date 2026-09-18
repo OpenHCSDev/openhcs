@@ -1336,8 +1336,21 @@ def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifac
     output_dir = plate_root / "images"
     output_dir.mkdir(parents=True)
     output_path = output_dir / "A01_s1_w1.tif"
-    output_path.write_bytes(b"produced image")
-    context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    pixels = np.zeros((4, 5), dtype=np.uint16)
+    tifffile.imwrite(output_path, pixels)
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    context = context_stub(filemanager)
+    context.filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    context.filemanager.save(
+        ImageMetadataPayload(pixels, ImagePayloadMetadata(source_dtype="uint16")),
+        str(output_path),
+        Backend.MEMORY.value,
+    )
     context.microscope_handler.metadata_handler = UnknownLayoutMetadataHandlerStub(
         {"channel": {"1": "DNA"}}
     )

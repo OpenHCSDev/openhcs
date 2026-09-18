@@ -117,6 +117,7 @@ from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
+    ViewerControlResponseField,
     ViewerLayerIsolationField,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
@@ -1007,6 +1008,7 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
     def image_intensity(self, request):
         self.requests.append(request)
         return self.window_state(request)
+
     def apply_intensity_window(self, request):
         self.requests.append(request)
         controls = request.intensity_window
@@ -2318,8 +2320,8 @@ def test_viewer_window_zmq_gateway_projects_intensity_control_owner(monkeypatch)
     gateway = ZMQViewerWindowGateway()
     calls = []
 
-    def send_control_message(projected_request, message_type, payload):
-        calls.append((projected_request, message_type, payload))
+    def send_control_message(projected_request, message):
+        calls.append((projected_request, message))
         return {"status": "error", "message": "test"}
 
     monkeypatch.setattr(gateway, "_send_control_message", send_control_message)
@@ -2329,8 +2331,12 @@ def test_viewer_window_zmq_gateway_projects_intensity_control_owner(monkeypatch)
     assert calls == [
         (
             request,
-            ViewerControlMessageType.APPLY_INTENSITY_WINDOW,
-            request.intensity_window,
+            {
+                ViewerControlResponseField.TYPE.value: (
+                    ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
+                ),
+                ViewerControlResponseField.PAYLOAD.value: request.intensity_window,
+            },
         )
     ]
 
