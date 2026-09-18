@@ -522,6 +522,50 @@ def test_validate_viewer_polls_until_debounced_layers_settle(monkeypatch) -> Non
     assert calls[1]["timeout_seconds"] == 30.0
 
 
+def test_validate_viewer_retries_failed_control_commands_until_viewer_starts(
+    monkeypatch,
+) -> None:
+    responses = iter(
+        (
+            {"errors": [{"code": "viewer_window_state_failed"}]},
+            {
+                "observed": True,
+                "valid": True,
+                "pending_update_count": 0,
+                "mounted_layer_count": 9,
+                "nonzero_payload_count": 9,
+                "viewer": {"viewer_type": "napari"},
+            },
+        )
+    )
+    calls: list[dict[str, object]] = []
+
+    def fake_run_mcp(client, argv, *, tool_name, timeout_seconds):
+        calls.append({"argv": tuple(argv), "timeout_seconds": timeout_seconds})
+        payload = next(responses)
+        if "errors" in payload:
+            raise installed_demo.InstalledDemoFailure(
+                f"MCP command failed: payload={{'errors': {payload['errors']}}}"
+            )
+        return payload
+
+    now = 0.0
+
+    def monotonic() -> float:
+        nonlocal now
+        now += 6.0
+        return now
+
+    monkeypatch.setattr(installed_demo, "_run_mcp", fake_run_mcp)
+    monkeypatch.setattr(installed_demo.time, "monotonic", monotonic)
+    monkeypatch.setattr(installed_demo.time, "sleep", lambda _seconds: None)
+
+    payload = installed_demo._validate_viewer(object(), viewer_port=43128)
+
+    assert payload["valid"] is True
+    assert len(calls) == 2
+
+
 def test_validate_viewer_fails_after_settle_deadline(monkeypatch) -> None:
     now = 0.0
 

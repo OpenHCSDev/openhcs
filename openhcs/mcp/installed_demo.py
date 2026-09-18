@@ -621,25 +621,35 @@ def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
 
     deadline = time.monotonic() + _VIEWER_SETTLE_DEADLINE_SECONDS
     payload: dict[str, Any] = {}
+    last_failure: InstalledDemoFailure | None = None
     while True:
-        payload = _run_mcp(
-            client,
-            (
-                ValidateViewerCommandSpec.command,
-                str(viewer_port),
-                "--host",
-                "127.0.0.1",
-                "--transport-mode",
-                "tcp",
-                "--timeout-ms",
-                "5000",
-                "--require-nonzero-payloads",
-                "--include-state",
-                "--json",
-            ),
-            tool_name=agent_capabilities.validate_viewer_window_state.name,
-            timeout_seconds=30.0,
-        )
+        try:
+            payload = _run_mcp(
+                client,
+                (
+                    ValidateViewerCommandSpec.command,
+                    str(viewer_port),
+                    "--host",
+                    "127.0.0.1",
+                    "--transport-mode",
+                    "tcp",
+                    "--timeout-ms",
+                    "5000",
+                    "--require-nonzero-payloads",
+                    "--include-state",
+                    "--json",
+                ),
+                tool_name=agent_capabilities.validate_viewer_window_state.name,
+                timeout_seconds=30.0,
+            )
+        except InstalledDemoFailure as exc:
+            # A viewer whose control socket is still starting also surfaces as
+            # a failed MCP command; retry until the deadline before failing.
+            last_failure = exc
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(_VIEWER_SETTLE_POLL_SECONDS)
+            continue
         if _viewer_is_settled(payload):
             break
         if time.monotonic() >= deadline:
