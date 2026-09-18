@@ -34,24 +34,29 @@ def test_validation_violation_preserves_string_kind_and_is_frozen():
 def test_validator_registry_returns_stable_default_order():
     validator_classes = ASTValidator.validators_for()
 
-    assert tuple(cls.validation_kind for cls in validator_classes) == DEFAULT_VALIDATION_KINDS
+    assert (
+        tuple(cls.validation_kind for cls in validator_classes)
+        == DEFAULT_VALIDATION_KINDS
+    )
     assert validator_classes[0] is PathTypeValidator
     assert ASTValidator.validators_for([PATH_TYPE]) == (PathTypeValidator,)
 
 
 def test_run_ast_validators_supports_kind_subset():
-    tree = ast.parse(
-        """
+    tree = ast.parse("""
 from os.path import join
 
 @validate_path_types()
 def load_image(path: int):
     return path
-"""
-    )
+""")
 
-    path_violations = run_ast_validators(tree, "openhcs/example.py", [ValidationKind.PATH_TYPE])
-    vfs_violations = run_ast_validators(tree, "openhcs/example.py", [ValidationKind.VFS_BOUNDARY])
+    path_violations = run_ast_validators(
+        tree, "openhcs/example.py", [ValidationKind.PATH_TYPE]
+    )
+    vfs_violations = run_ast_validators(
+        tree, "openhcs/example.py", [ValidationKind.VFS_BOUNDARY]
+    )
 
     assert [violation.violation_type for violation in path_violations] == [PATH_TYPE]
     assert [violation.violation_type for violation in vfs_violations] == [VFS_BOUNDARY]
@@ -70,9 +75,14 @@ def load_image(path: int):
         encoding="utf-8",
     )
 
-    violations = validate_file(str(source_path), kinds=[ValidationKind.PATH_TYPE, ValidationKind.BACKEND_PARAM])
+    violations = validate_file(
+        str(source_path), kinds=[ValidationKind.PATH_TYPE, ValidationKind.BACKEND_PARAM]
+    )
 
-    assert [violation.violation_type for violation in violations] == [PATH_TYPE, BACKEND_PARAM]
+    assert [violation.violation_type for violation in violations] == [
+        PATH_TYPE,
+        BACKEND_PARAM,
+    ]
 
 
 def test_validate_file_keeps_syntax_error_violation(tmp_path):

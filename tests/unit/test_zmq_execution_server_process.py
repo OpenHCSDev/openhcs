@@ -15,6 +15,7 @@ from zmqruntime.startup import (
 )
 
 from openhcs.runtime import zmq_execution_client, zmq_execution_server_launcher
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
@@ -66,13 +67,16 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
         popen_call["stdout"].close()
 
     command = popen_call["command"]
-    assert command[:5] == [
+    assert command[:3] == [
         sys.executable,
         "-X",
         "faulthandler",
-        "-m",
-        "openhcs.runtime.zmq_execution_server_launcher",
     ]
+    assert command[3:5] == list(
+        OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+            "openhcs.runtime.zmq_execution_server_launcher"
+        )
+    )
     assert popen_call["creationflags"] == 73
     assert "start_new_session" not in popen_call
     assert popen_call["env"] is subprocess_environment

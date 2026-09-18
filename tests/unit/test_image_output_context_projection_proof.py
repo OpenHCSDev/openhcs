@@ -89,11 +89,15 @@ def test_projected_variable_stack_proves_source_ownership_once(
             ),
         ),
     ).payload_with(np.ones((2, 4, 5), dtype=np.float32), None)
-    output = image_payload_metadata(source).replace_fields(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-    ).payload_with(
-        np.ones((2, 4, 5), dtype=np.uint16),
-        None,
+    output = (
+        image_payload_metadata(source)
+        .replace_fields(
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        )
+        .payload_with(
+            np.ones((2, 4, 5), dtype=np.uint16),
+            None,
+        )
     )
     output_plan = ArtifactOutputPlan(
         name="SavedVolume",

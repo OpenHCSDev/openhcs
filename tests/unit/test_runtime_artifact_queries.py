@@ -1087,8 +1087,7 @@ def test_batch_label_slice_measurement_lookup_scans_each_axis_once(
         (id(table), 1),
     ]
     assert all(
-        set(object_names) == {"Cells", "Nuclei"}
-        for _, _, object_names in table_scans
+        set(object_names) == {"Cells", "Nuclei"} for _, _, object_names in table_scans
     )
 
 
@@ -1572,7 +1571,9 @@ def test_measurement_table_union_preserves_payload_rows_in_axis_declaring_table(
     assert MeasurementTableUnion(
         "CellMeasurements",
         (table,),
-    ).row_axis_domain(MeasurementRowAxisField.SLICE_INDEX) == (0,)
+    ).row_axis_domain(
+        MeasurementRowAxisField.SLICE_INDEX
+    ) == (0,)
 
 
 def test_measurement_table_union_rejects_mixed_slice_domains() -> None:

@@ -8,7 +8,7 @@ import pytest
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    )
+)
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.processing.backends.cellprofiler._backend import (
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -36,16 +36,15 @@ def test_align_execution_retains_input_and_additional_mode_invariants(
     image = np.zeros((image_count, 4, 5), dtype=np.float32)
     execution = AlignExecution(
         image=ImagePayloadMetadata(
-                source_image_provenance_planes=(
-                    SourceImageProvenancePlanes.from_components(
-                        paths=tuple(
-                            f"/input/image-{index}.tif"
-                            for index in range(image_count)
-                        )
+            source_image_provenance_planes=(
+                SourceImageProvenancePlanes.from_components(
+                    paths=tuple(
+                        f"/input/image-{index}.tif" for index in range(image_count)
                     )
-                ),
-                plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
-            ).payload_with(image, None),
+                )
+            ),
+            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        ).payload_with(image, None),
         method="Mutual Information",
         crop_mode="Keep size",
         additional_alignment_modes=additional_modes,

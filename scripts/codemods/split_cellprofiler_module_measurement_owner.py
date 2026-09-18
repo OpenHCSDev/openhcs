@@ -6,7 +6,6 @@ from pathlib import Path
 
 import libcst as cst
 
-
 ROOT_PATH = Path("openhcs/interop/cellprofiler/module_declarations.py")
 OWNER_PATH = Path("openhcs/interop/cellprofiler/module_measurement_features.py")
 
@@ -85,7 +84,10 @@ def main() -> None:
     moved: list[cst.BaseStatement] = []
     root_body: list[cst.BaseStatement] = []
     for statement in root_module.body:
-        if not isinstance(statement, cst.ClassDef) or statement.name.value != "CellProfilerModule":
+        if (
+            not isinstance(statement, cst.ClassDef)
+            or statement.name.value != "CellProfilerModule"
+        ):
             root_body.append(statement)
             continue
         retained: list[cst.BaseStatement] = []
@@ -98,10 +100,12 @@ def main() -> None:
             else:
                 retained.append(member)
         bases = tuple(
-            cst.Arg(cst.Name("CellProfilerMeasurementFeatureOwner"))
-            if isinstance(base.value, cst.Name)
-            and base.value.value == "RuntimeMeasurementFeatureOwner"
-            else base
+            (
+                cst.Arg(cst.Name("CellProfilerMeasurementFeatureOwner"))
+                if isinstance(base.value, cst.Name)
+                and base.value.value == "RuntimeMeasurementFeatureOwner"
+                else base
+            )
             for base in statement.bases
         )
         root_body.append(

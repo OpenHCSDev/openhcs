@@ -8,7 +8,6 @@ that is used by constants.py to dynamically create enums.
 from .framework import ComponentConfiguration, ComponentConfigurationFactory
 
 __all__ = [
-    'ComponentConfiguration',
-    'ComponentConfigurationFactory',
+    "ComponentConfiguration",
+    "ComponentConfigurationFactory",
 ]
-

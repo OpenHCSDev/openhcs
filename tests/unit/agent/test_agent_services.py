@@ -37,6 +37,8 @@ from openhcs.agent.dto.functions import FunctionParameterSource
 from openhcs.agent.dto.pipeline import CreatePipelineRequest
 from openhcs.agent.dto.viewer import (
     ViewerWindowCloseRequest,
+    ViewerWindowIntensityPayloadIdentity,
+    ViewerWindowIntensityWindowRequest,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerVisibilityRecord,
     ViewerWindowNavigationRequest,
@@ -112,6 +114,8 @@ from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProje
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
+    ViewerControlMessageType,
+    ViewerControlResponseField,
     ViewerLayerIsolationField,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
@@ -999,6 +1003,35 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
         response[ViewerLayerIsolationField.MISSING_ROUTE_KEYS.value] = missing_routes
         return response
 
+    def image_intensity(self, request):
+        self.requests.append(request)
+        return self.window_state(request)
+
+    def apply_intensity_window(self, request):
+        self.requests.append(request)
+        controls = request.intensity_window
+        return {
+            "status": "success",
+            "route_key": controls.route_key,
+            "axis_indices": dict(controls.axis_indices),
+            "requested_percentiles": (
+                controls.low_percentile,
+                controls.high_percentile,
+            ),
+            "resolved_limits": (12.0, 240.0),
+            "matched_payload_count": 1,
+            "matched_payload_identities": (
+                {
+                    "path": "/tmp/A14.tif",
+                    "components": {"well": "A14", "site": 0},
+                    "axis_indices": (0, 0, 0),
+                    "aggregate_axis_indices": (),
+                },
+            ),
+            "contributing_payload_count": 1,
+            "contributing_pixel_count": 256,
+        }
+
 
 class _UnmountedRouteViewerWindowGateway(_FakeViewerWindowGateway):
     def window_state(self, request):
@@ -1051,6 +1084,14 @@ class _MalformedViewerWindowGateway(ViewerWindowGatewayABC):
     def isolate_layers(self, request):
         del request
         return {"status": "success", "layers": ()}
+
+    def image_intensity(self, request):
+        del request
+        return {"status": "success"}
+
+    def apply_intensity_window(self, request):
+        del request
+        return {"status": "success"}
 
 
 class _CompactStateViewerWindowGateway(_FakeViewerWindowGateway):
@@ -2206,6 +2247,70 @@ def test_viewer_window_service_navigates_running_viewer_window():
     )
     assert gateway.requests[0].timeout_ms == 25
     assert gateway.requests[0].navigation.axis_indices == {"well": 1, "channel": 0}
+
+
+def test_viewer_window_service_applies_typed_intensity_window_result():
+    gateway = _FakeViewerWindowGateway()
+    service = ViewerWindowService(gateway=gateway)
+    request = ViewerWindowIntensityWindowRequest.from_fields(
+        connection=_viewer_connection(),
+        route_key="IdentifyPrimaryObjects|image",
+        axis_indices={"well": 0, "site": 0},
+        low_percentile=2.0,
+        high_percentile=98.0,
+    )
+
+    result = service.apply_intensity_window(request)
+
+    assert result.applied is True
+    assert result.route_key == "IdentifyPrimaryObjects|image"
+    assert result.axis_indices == {"well": 0, "site": 0}
+    assert result.requested_percentiles == (2.0, 98.0)
+    assert result.resolved_limits == (12.0, 240.0)
+    assert result.matched_payload_count == 1
+    assert result.matched_payload_identities == (
+        ViewerWindowIntensityPayloadIdentity(
+            path="/tmp/A14.tif",
+            components={"well": "A14", "site": 0},
+            axis_indices=(0, 0, 0),
+            aggregate_axis_indices=(),
+        ),
+    )
+    assert result.contributing_payload_count == 1
+    assert result.contributing_pixel_count == 256
+    assert request.as_tool_arguments()["axis_indices"] == {"well": 0, "site": 0}
+
+
+def test_viewer_window_zmq_gateway_projects_intensity_control_owner(monkeypatch):
+    request = ViewerWindowIntensityWindowRequest.from_fields(
+        connection=_viewer_connection(),
+        route_key="image-route",
+        axis_indices={"site": 2},
+        low_percentile=5.0,
+        high_percentile=95.0,
+    )
+    gateway = ZMQViewerWindowGateway()
+    calls = []
+
+    def send_control_message(projected_request, message):
+        calls.append((projected_request, message))
+        return {"status": "error", "message": "test"}
+
+    monkeypatch.setattr(gateway, "_send_control_message", send_control_message)
+
+    gateway.apply_intensity_window(request)
+
+    assert calls == [
+        (
+            request,
+            {
+                ViewerControlResponseField.TYPE.value: (
+                    ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
+                ),
+                ViewerControlResponseField.PAYLOAD.value: request.intensity_window,
+            },
+        )
+    ]
 
 
 def test_viewer_window_service_isolates_only_mounted_layers() -> None:

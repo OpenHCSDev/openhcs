@@ -19,7 +19,6 @@ from metaclass_registry import (
     extract_key_from_class_name,
 )
 
-
 _EnumT = TypeVar("_EnumT", bound=Enum)
 _ContextT = TypeVar("_ContextT")
 _StrategyT = TypeVar("_StrategyT", bound="EnumKeyedStrategyMixin[Any]")
@@ -42,8 +41,7 @@ class RegisteredStrategyTypesMixin(Generic[_StrategyT]):
         """Return registered concrete strategy classes."""
         return tuple(
             dict.fromkeys(
-                cast(type[_StrategyT], item)
-                for item in cls.__registry__.values()
+                cast(type[_StrategyT], item) for item in cls.__registry__.values()
             )
         )
 
@@ -216,8 +214,10 @@ class NominalTypeKeyedStrategyMixin(RegisteredStrategyTypesMixin[_TypeStrategyT]
 def _is_nominal_type_member(value: object) -> bool:
     if isinstance(value, type):
         return True
-    return isinstance(value, tuple) and bool(value) and all(
-        isinstance(item, type) for item in value
+    return (
+        isinstance(value, tuple)
+        and bool(value)
+        and all(isinstance(item, type) for item in value)
     )
 
 
@@ -246,8 +246,7 @@ class MostDerivedContextStrategyMeta(AutoRegisterMeta):
 
     def __new__(mcs, name: str, bases: tuple[type, ...], attrs: dict):
         starts_context_family = any(
-            base.__dict__.get(mcs.FAMILY_ROOT_MARKER) is True
-            for base in bases
+            base.__dict__.get(mcs.FAMILY_ROOT_MARKER) is True for base in bases
         )
         if starts_context_family:
             registry_key = attrs.get("__registry_key__", mcs.REGISTRY_KEY)

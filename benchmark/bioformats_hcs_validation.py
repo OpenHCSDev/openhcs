@@ -164,7 +164,9 @@ def validate_acquired_bioformats_hcs_dataset(
     channels = component_keys[AllComponents.CHANNEL]
     z_indexes = component_keys[AllComponents.Z_INDEX]
     timepoints = component_keys[AllComponents.TIMEPOINT]
-    grid_dimensions = metadata_handler.get_grid_dimensions(acquired.path)
+    grid_dimensions = tuple(
+        metadata_handler.get_metadata_grid_dimensions(acquired.path)
+    )
 
     return BioFormatsHcsValidationResult(
         dataset_id=spec.id,

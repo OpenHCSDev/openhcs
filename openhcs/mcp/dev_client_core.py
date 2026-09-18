@@ -62,6 +62,7 @@ from openhcs.mcp.control_timeout import (
     McpViewerTimeoutPolicy,
 )
 from openhcs.pyqt_gui.config import UIConfigCacheEnvironment
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.serialization.json import to_jsonable
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -312,8 +313,9 @@ class McpDevServerSpec:
 
     def process_args(self) -> tuple[str, ...]:
         return (
-            "-m",
-            self.module_name,
+            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+                self.module_name
+            ),
             "--surface",
             self.surface_profile.name,
         )

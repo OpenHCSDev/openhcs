@@ -136,11 +136,18 @@ def test_napari_viewer_state_keeps_numeric_channel_and_declared_display_label():
 def test_collapsed_metadata_keeps_unnamed_coordinates_and_binding_label():
     names = _component_name_metadata()
     coordinates = {
-        "channel": [1], "site": [7], "z_index": [2], "timepoint": [3],
+        "channel": [1],
+        "site": [7],
+        "z_index": [2],
+        "timepoint": [3],
         "custom_coordinate": ["condition-b"],
     }
     assert names.scalar_labels(coordinates) == (
-        "Ch1: DNA", "Site 7", "Z 2", "T 3", "custom_coordinate condition-b",
+        "Ch1: DNA",
+        "Site 7",
+        "Z 2",
+        "T 3",
+        "custom_coordinate condition-b",
     )
     assert coordinates["channel"] == [1]
 

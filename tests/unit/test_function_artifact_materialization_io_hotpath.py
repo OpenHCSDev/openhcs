@@ -60,7 +60,9 @@ def test_persistent_only_backend_kwargs_skip_stream_payload_projection(
     streaming_viewer_surfaces: dict[str, object],
 ) -> None:
     def unexpected_stream_metadata(**_kwargs: object) -> None:
-        raise AssertionError("persistent-only materialization projected stream metadata")
+        raise AssertionError(
+            "persistent-only materialization projected stream metadata"
+        )
 
     monkeypatch.setattr(
         ArtifactStreamSourceMetadataAuthority,
@@ -95,6 +97,9 @@ def test_persistent_only_backend_kwargs_skip_stream_payload_projection(
 
 
 def test_backend_kwargs_no_longer_accepts_eager_stream_metadata() -> None:
-    assert "source_metadata_items" not in inspect.signature(
-        ArtifactMaterializationBackendPlan.backend_kwargs
-    ).parameters
+    assert (
+        "source_metadata_items"
+        not in inspect.signature(
+            ArtifactMaterializationBackendPlan.backend_kwargs
+        ).parameters
+    )

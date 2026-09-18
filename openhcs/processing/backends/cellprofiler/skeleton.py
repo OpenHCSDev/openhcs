@@ -532,8 +532,7 @@ class MeasureObjectSkeletonModule(
         return tuple(
             binding
             for binding in bindings
-            if retain_branchpoint_image
-            or binding is not cls.branchpoint_image_binding
+            if retain_branchpoint_image or binding is not cls.branchpoint_image_binding
         )
 
     @classmethod

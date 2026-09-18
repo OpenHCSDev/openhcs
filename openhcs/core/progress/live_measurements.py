@@ -26,7 +26,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
 
-
 LIVE_MEASUREMENTS_CONTEXT_KEY = "live_measurements"
 DEFAULT_LIVE_MEASUREMENT_ROW_LIMIT = 50
 DEFAULT_LIVE_MEASUREMENT_COLUMN_LIMIT = 64
@@ -106,9 +105,7 @@ class LiveMeasurementTablePreview:
             return cls(
                 address=RuntimeArtifactAddress.from_dict(data["address"]),
                 columns=tuple(str(column) for column in data.get("columns", ())),
-                rows=tuple(
-                    _decode_row_mapping(row) for row in data.get("rows", ())
-                ),
+                rows=tuple(_decode_row_mapping(row) for row in data.get("rows", ())),
                 row_count=int(data.get("row_count", 0)),
                 truncated_rows=bool(data.get("truncated_rows", False)),
                 truncated_columns=bool(data.get("truncated_columns", False)),
@@ -134,8 +131,7 @@ class LiveMeasurementTablePreview:
             "truncated_rows": self.truncated_rows,
             "truncated_columns": self.truncated_columns,
             "materialized_locations": [
-                location.to_dict()
-                for location in self.materialized_locations
+                location.to_dict() for location in self.materialized_locations
             ],
             "object_name": self.object_name,
             "source_image_name": self.source_image_name,
@@ -282,11 +278,7 @@ def _columnar_row_preview(
             {
                 column: value
                 for column, values in column_values
-                for value in (
-                    values[row_index]
-                    if row_index < len(values)
-                    else None,
-                )
+                for value in (values[row_index] if row_index < len(values) else None,)
                 if not is_structural_missing_measurement_cell(value)
             }
             for row_index in range(min(row_limit, row_count))

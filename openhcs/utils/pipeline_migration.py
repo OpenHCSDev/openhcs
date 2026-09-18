@@ -12,7 +12,7 @@ The migration handles:
 
 Usage:
     from openhcs.utils.pipeline_migration import migrate_pipeline_file, detect_legacy_pipeline
-    
+
     # Check if migration is needed
     if detect_legacy_pipeline(steps):
         success = migrate_pipeline_file(pipeline_path)
@@ -43,25 +43,38 @@ def detect_legacy_pipeline(steps: List[Any]) -> bool:
     try:
         for step in steps:
             # Check if step has direct group_by attribute (OLD format)
-            if hasattr(step, 'group_by') and not hasattr(step, 'processing_config'):
+            if hasattr(step, "group_by") and not hasattr(step, "processing_config"):
                 logger.debug(f"Legacy direct group_by attribute detected on step")
                 return True
 
             # Check if step has direct variable_components attribute (OLD format)
-            if hasattr(step, 'variable_components') and not hasattr(step, 'processing_config'):
-                logger.debug(f"Legacy direct variable_components attribute detected on step")
+            if hasattr(step, "variable_components") and not hasattr(
+                step, "processing_config"
+            ):
+                logger.debug(
+                    f"Legacy direct variable_components attribute detected on step"
+                )
                 return True
 
             # Also check for string-based enum values in processing_config (secondary migration)
-            if hasattr(step, 'processing_config'):
-                if hasattr(step.processing_config, 'group_by') and isinstance(step.processing_config.group_by, str):
-                    logger.debug(f"Legacy string group_by detected in processing_config: {step.processing_config.group_by}")
+            if hasattr(step, "processing_config"):
+                if hasattr(step.processing_config, "group_by") and isinstance(
+                    step.processing_config.group_by, str
+                ):
+                    logger.debug(
+                        f"Legacy string group_by detected in processing_config: {step.processing_config.group_by}"
+                    )
                     return True
 
-                if hasattr(step.processing_config, 'variable_components') and step.processing_config.variable_components:
+                if (
+                    hasattr(step.processing_config, "variable_components")
+                    and step.processing_config.variable_components
+                ):
                     for component in step.processing_config.variable_components:
                         if isinstance(component, str):
-                            logger.debug(f"Legacy string variable_component detected in processing_config: {component}")
+                            logger.debug(
+                                f"Legacy string variable_component detected in processing_config: {component}"
+                            )
                             return True
 
         return False
@@ -76,7 +89,11 @@ def create_migration_mapping(enum_class) -> Dict[str, Any]:
     Single source of truth for all migration mappings.
     """
     # Special cases for NONE enum
-    mapping = {'': enum_class.NONE, 'none': enum_class.NONE} if hasattr(enum_class, 'NONE') else {}
+    mapping = (
+        {"": enum_class.NONE, "none": enum_class.NONE}
+        if hasattr(enum_class, "NONE")
+        else {}
+    )
 
     # Generate all variations using dict comprehension - Pythonic and clean
     variations = {
@@ -95,7 +112,7 @@ def _generate_string_variations(enum_member):
     return [
         variant.lower()
         for base in base_strings
-        for variant in [base, base.replace('_', '')]
+        for variant in [base, base.replace("_", "")]
     ]
 
 
@@ -132,10 +149,14 @@ def migrate_legacy_variable_components(variable_components: List[Any]) -> List[A
         if isinstance(comp, str):
             migrated_comp = migration_map.get(comp.lower())
             if migrated_comp:
-                logger.debug(f"Migrated variable_component: '{comp}' -> {migrated_comp}")
+                logger.debug(
+                    f"Migrated variable_component: '{comp}' -> {migrated_comp}"
+                )
                 migrated.append(migrated_comp)
             else:
-                logger.warning(f"Legacy variable_component '{comp}' not available - skipping")
+                logger.warning(
+                    f"Legacy variable_component '{comp}' not available - skipping"
+                )
         else:
             # Already an enum - keep as-is
             migrated.append(comp)
@@ -162,45 +183,77 @@ def migrate_pipeline_steps(steps: List[Any]) -> List[Any]:
 
     for step in steps:
         # Handle OLD format: direct attributes on step
-        if hasattr(step, 'group_by') or hasattr(step, 'variable_components'):
+        if hasattr(step, "group_by") or hasattr(step, "variable_components"):
             # Ensure step has processing_config
-            if not hasattr(step, 'processing_config'):
+            if not hasattr(step, "processing_config"):
                 step.processing_config = LazyProcessingConfig()
 
             # Migrate group_by from direct attribute to processing_config
-            if hasattr(step, 'group_by'):
-                old_group_by = getattr(step, 'group_by')
+            if hasattr(step, "group_by"):
+                old_group_by = getattr(step, "group_by")
                 migrated_group_by = migrate_legacy_group_by(old_group_by)
                 # Set in processing_config (need to handle frozen dataclass)
-                object.__setattr__(step.processing_config, 'group_by', migrated_group_by)
+                object.__setattr__(
+                    step.processing_config, "group_by", migrated_group_by
+                )
                 # Remove old direct attribute
-                delattr(step, 'group_by')
-                logger.debug(f"Migrated group_by from direct attribute to processing_config")
+                delattr(step, "group_by")
+                logger.debug(
+                    f"Migrated group_by from direct attribute to processing_config"
+                )
 
             # Migrate variable_components from direct attribute to processing_config
-            if hasattr(step, 'variable_components'):
-                old_variable_components = getattr(step, 'variable_components')
-                migrated_variable_components = migrate_legacy_variable_components(old_variable_components)
+            if hasattr(step, "variable_components"):
+                old_variable_components = getattr(step, "variable_components")
+                migrated_variable_components = migrate_legacy_variable_components(
+                    old_variable_components
+                )
                 # Set in processing_config (need to handle frozen dataclass)
-                object.__setattr__(step.processing_config, 'variable_components', migrated_variable_components)
+                object.__setattr__(
+                    step.processing_config,
+                    "variable_components",
+                    migrated_variable_components,
+                )
                 # Remove old direct attribute
-                delattr(step, 'variable_components')
-                logger.debug(f"Migrated variable_components from direct attribute to processing_config")
+                delattr(step, "variable_components")
+                logger.debug(
+                    f"Migrated variable_components from direct attribute to processing_config"
+                )
 
         # Handle secondary migration: string-based enums in processing_config
-        if hasattr(step, 'processing_config'):
+        if hasattr(step, "processing_config"):
             # Migrate string-based group_by in processing_config
-            if hasattr(step.processing_config, 'group_by') and isinstance(step.processing_config.group_by, str):
-                migrated_group_by = migrate_legacy_group_by(step.processing_config.group_by)
-                object.__setattr__(step.processing_config, 'group_by', migrated_group_by)
+            if hasattr(step.processing_config, "group_by") and isinstance(
+                step.processing_config.group_by, str
+            ):
+                migrated_group_by = migrate_legacy_group_by(
+                    step.processing_config.group_by
+                )
+                object.__setattr__(
+                    step.processing_config, "group_by", migrated_group_by
+                )
                 logger.debug(f"Migrated string group_by in processing_config to enum")
 
             # Migrate string-based variable_components in processing_config
-            if hasattr(step.processing_config, 'variable_components') and step.processing_config.variable_components:
-                if any(isinstance(comp, str) for comp in step.processing_config.variable_components):
-                    migrated_variable_components = migrate_legacy_variable_components(step.processing_config.variable_components)
-                    object.__setattr__(step.processing_config, 'variable_components', migrated_variable_components)
-                    logger.debug(f"Migrated string variable_components in processing_config to enums")
+            if (
+                hasattr(step.processing_config, "variable_components")
+                and step.processing_config.variable_components
+            ):
+                if any(
+                    isinstance(comp, str)
+                    for comp in step.processing_config.variable_components
+                ):
+                    migrated_variable_components = migrate_legacy_variable_components(
+                        step.processing_config.variable_components
+                    )
+                    object.__setattr__(
+                        step.processing_config,
+                        "variable_components",
+                        migrated_variable_components,
+                    )
+                    logger.debug(
+                        f"Migrated string variable_components in processing_config to enums"
+                    )
 
         migrated_steps.append(step)
 
@@ -210,44 +263,48 @@ def migrate_pipeline_steps(steps: List[Any]) -> List[Any]:
 def migrate_pipeline_file(pipeline_path: Path, backup_suffix: str = ".backup") -> bool:
     """
     Migrate a pipeline file from legacy format to new enum structure.
-    
+
     Args:
         pipeline_path: Path to pipeline file
         backup_suffix: Suffix for backup file
-        
+
     Returns:
         True if migration was needed and successful, False otherwise
     """
     if not pipeline_path.exists():
         logger.error(f"Pipeline file not found: {pipeline_path}")
         return False
-    
+
     # Load existing pipeline
     try:
-        with open(pipeline_path, 'rb') as f:
+        with open(pipeline_path, "rb") as f:
             steps = pickle.load(f)
     except Exception as e:
         logger.error(f"Failed to load pipeline from {pipeline_path}: {e}")
         return False
-    
+
     if not isinstance(steps, list):
-        logger.error(f"Invalid pipeline format in {pipeline_path}: expected list, got {type(steps)}")
+        logger.error(
+            f"Invalid pipeline format in {pipeline_path}: expected list, got {type(steps)}"
+        )
         return False
-    
+
     # Check if migration is needed
     if not detect_legacy_pipeline(steps):
-        logger.info(f"Pipeline file {pipeline_path} is already in new format - no migration needed")
+        logger.info(
+            f"Pipeline file {pipeline_path} is already in new format - no migration needed"
+        )
         return False
-    
+
     logger.info(f"Legacy format detected in {pipeline_path}")
-    
+
     # Perform migration
     try:
         migrated_steps = migrate_pipeline_steps(steps)
     except Exception as e:
         logger.error(f"Failed to migrate pipeline: {e}")
         return False
-    
+
     # Create backup
     backup_file = pipeline_path.with_suffix(f"{pipeline_path.suffix}{backup_suffix}")
     try:
@@ -256,10 +313,10 @@ def migrate_pipeline_file(pipeline_path: Path, backup_suffix: str = ".backup") -
     except OSError as e:
         logger.error(f"Failed to create backup: {e}")
         return False
-    
+
     # Write migrated pipeline
     try:
-        with open(pipeline_path, 'wb') as f:
+        with open(pipeline_path, "wb") as f:
             pickle.dump(migrated_steps, f)
         logger.info(f"Successfully migrated pipeline file: {pipeline_path}")
         return True
@@ -270,7 +327,9 @@ def migrate_pipeline_file(pipeline_path: Path, backup_suffix: str = ".backup") -
             backup_file.rename(pipeline_path)
             logger.info("Restored original file from backup")
         except OSError:
-            logger.error(f"Failed to restore backup - original file is at {backup_file}")
+            logger.error(
+                f"Failed to restore backup - original file is at {backup_file}"
+            )
         return False
 
 
@@ -288,7 +347,7 @@ class LegacyGroupByUnpickler(pickle.Unpickler):
         cls = super().find_class(module, name)
 
         # If this is the GroupBy enum, wrap it with migration logic
-        if name == 'GroupBy' and module == 'openhcs.constants.constants':
+        if name == "GroupBy" and module == "openhcs.constants.constants":
             return self._create_migrating_groupby_class(cls)
 
         return cls
@@ -301,7 +360,10 @@ class LegacyGroupByUnpickler(pickle.Unpickler):
 
             def __new__(cls, value):
                 # If it's already a GroupBy enum, return it as-is
-                if hasattr(value, '__class__') and value.__class__.__name__ == 'GroupBy':
+                if (
+                    hasattr(value, "__class__")
+                    and value.__class__.__name__ == "GroupBy"
+                ):
                     return value
 
                 # Handle legacy string values
@@ -313,7 +375,9 @@ class LegacyGroupByUnpickler(pickle.Unpickler):
                     migrated_value = migration_map.get(value.lower())
 
                     if migrated_value:
-                        logger.debug(f"Unpickler migrated: '{value}' -> {migrated_value}")
+                        logger.debug(
+                            f"Unpickler migrated: '{value}' -> {migrated_value}"
+                        )
                         return migrated_value
 
                     logger.warning(f"Unpickler: '{value}' not available - using NONE")
@@ -325,6 +389,7 @@ class LegacyGroupByUnpickler(pickle.Unpickler):
                 except ValueError:
                     logger.warning(f"Failed to create GroupBy from value: {value}")
                     from openhcs.constants.constants import GroupBy
+
                     return GroupBy.NONE
 
         return MigratingGroupBy
@@ -333,40 +398,42 @@ class LegacyGroupByUnpickler(pickle.Unpickler):
 def load_pipeline_with_migration(pipeline_path: Path) -> Optional[List[Any]]:
     """
     Load pipeline file with automatic migration if needed.
-    
+
     This is the main function that should be used by the PyQt GUI
     to load pipeline files with backward compatibility.
-    
+
     Args:
         pipeline_path: Path to pipeline file
-        
+
     Returns:
         List of pipeline steps or None if loading failed
     """
     try:
         # Load pipeline using custom unpickler for enum migration
-        with open(pipeline_path, 'rb') as f:
+        with open(pipeline_path, "rb") as f:
             unpickler = LegacyGroupByUnpickler(f)
             steps = unpickler.load()
-        
+
         if not isinstance(steps, list):
             logger.error(f"Invalid pipeline format: expected list, got {type(steps)}")
             return None
-        
+
         # Check if migration is needed
         if detect_legacy_pipeline(steps):
             logger.info(f"Migrating legacy pipeline format in {pipeline_path}")
-            
+
             # Migrate in-memory (don't modify the file unless explicitly requested)
             migrated_steps = migrate_pipeline_steps(steps)
-            
+
             # Optionally save the migrated version back to file
             # For now, just return the migrated steps without saving
-            logger.info("Pipeline migrated in-memory. Use migrate_pipeline_file() to save changes.")
+            logger.info(
+                "Pipeline migrated in-memory. Use migrate_pipeline_file() to save changes."
+            )
             return migrated_steps
-        
+
         return steps
-        
+
     except Exception as e:
         logger.error(f"Failed to load pipeline from {pipeline_path}: {e}")
         return None
@@ -401,28 +468,32 @@ def patch_step_constructors_for_migration():
     def migrating_init(self, **kwargs):
         """Wrapper that migrates old-format parameters to new processing_config structure."""
         # Extract old-format parameters if present
-        old_group_by = kwargs.pop('group_by', None)
-        old_variable_components = kwargs.pop('variable_components', None)
+        old_group_by = kwargs.pop("group_by", None)
+        old_variable_components = kwargs.pop("variable_components", None)
 
         # If old-format parameters exist, merge them into processing_config
         if old_group_by is not None or old_variable_components is not None:
-            logger.debug(f"Migrating old-format constructor parameters for {self.__class__.__name__}")
+            logger.debug(
+                f"Migrating old-format constructor parameters for {self.__class__.__name__}"
+            )
 
             # Get existing processing_config or create new one
-            existing_config = kwargs.get('processing_config', LazyProcessingConfig())
+            existing_config = kwargs.get("processing_config", LazyProcessingConfig())
 
             # Build new config with migrated values
             config_kwargs = {}
             if old_group_by is not None:
-                config_kwargs['group_by'] = old_group_by
+                config_kwargs["group_by"] = old_group_by
                 logger.debug(f"  - Migrated group_by: {old_group_by}")
             if old_variable_components is not None:
-                config_kwargs['variable_components'] = old_variable_components
-                logger.debug(f"  - Migrated variable_components: {old_variable_components}")
+                config_kwargs["variable_components"] = old_variable_components
+                logger.debug(
+                    f"  - Migrated variable_components: {old_variable_components}"
+                )
 
             # Merge with existing config using dataclass replace
             if config_kwargs:
-                kwargs['processing_config'] = replace(existing_config, **config_kwargs)
+                kwargs["processing_config"] = replace(existing_config, **config_kwargs)
 
         # Call original __init__ with migrated kwargs
         original_init(self, **kwargs)

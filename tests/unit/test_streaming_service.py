@@ -321,6 +321,131 @@ def test_stream_images_reports_success_only_after_viewer_state_is_settled() -> N
     assert viewer.settlement_calls == 1
 
 
+def test_stream_images_derives_rgb_channel_axis_before_viewer_dispatch(
+    tmp_path: Path,
+) -> None:
+    import tifffile
+
+    path = tmp_path / "A01_s001_wDNA_z001_t001.tif"
+    tifffile.imwrite(path, np.zeros((8, 9, 3), dtype=np.uint8), photometric="rgb")
+
+    class DiskFileManager(FakeFileManager):
+        def load(self, path: str, read_backend: str) -> np.ndarray:
+            assert read_backend == "disk"
+            return tifffile.imread(path)
+
+        def physical_source_path(
+            self,
+            address: str,
+            backend: str,
+            *,
+            base_path: Path,
+        ) -> Path | None:
+            del backend, base_path
+            return Path(address)
+
+    filemanager = DiskFileManager()
+    service = StreamingService(
+        filemanager=filemanager,
+        microscope_handler=SimpleNamespace(
+            parser=SimpleNamespace(
+                parse_filename=lambda _filename: filename_parse_result()
+            ),
+            metadata_handler=FakeMetadataHandler(),
+        ),
+        plate_path=tmp_path,
+    )
+
+    service.stream_images(
+        ImageStreamingRequest(
+            viewer=FakeViewer(),
+            config=NapariStreamingConfig(enabled=True),
+            status_callback=lambda _status: None,
+            error_callback=lambda error: (_ for _ in ()).throw(AssertionError(error)),
+            filenames=(path.name,),
+            read_backend="disk",
+        )
+    )
+
+    assert len(filemanager.saved_batches) == 1
+    _data, _paths, _backend, kwargs = filemanager.saved_batches[0]
+    stream_request = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
+    item_fields = dict(stream_request.source.item_fields)
+    image_metadata = item_fields.pop("image_metadata")
+    assert image_metadata["source_channel_axis"] == -1
+    assert image_metadata["source_spatial_domain"]["origin_yx"] == [0, 0]
+    assert item_fields == {
+        "source_spatial_shape_yx": [8, 9],
+        "spatial_origin_yx": [0, 0],
+        "source_channel_axis": -1,
+    }
+
+
+def test_stream_images_projects_declared_channel_singleton_with_retained_plane_axis(
+    tmp_path: Path,
+) -> None:
+    import tifffile
+
+    path = tmp_path / "A01_s001_wDNA_z001_t001.tif"
+    tifffile.imwrite(
+        path,
+        np.zeros((3, 8, 9), dtype=np.uint16),
+        photometric="minisblack",
+    )
+
+    class DiskFileManager(FakeFileManager):
+        def load(self, path: str, read_backend: str) -> np.ndarray:
+            assert read_backend == "disk"
+            return tifffile.imread(path)
+
+        def physical_source_path(
+            self,
+            address: str,
+            backend: str,
+            *,
+            base_path: Path,
+        ) -> Path | None:
+            del backend, base_path
+            return Path(address)
+
+    filemanager = DiskFileManager()
+    viewer = FakeViewer()
+    service = StreamingService(
+        filemanager=filemanager,
+        microscope_handler=SimpleNamespace(
+            parser=SimpleNamespace(
+                parse_filename=lambda _filename: filename_parse_result()
+            ),
+            metadata_handler=FakeMetadataHandler(),
+        ),
+        plate_path=tmp_path,
+    )
+
+    service.stream_images(
+        ImageStreamingRequest(
+            viewer=viewer,
+            config=NapariStreamingConfig(enabled=True),
+            status_callback=lambda _status: None,
+            error_callback=lambda error: (_ for _ in ()).throw(AssertionError(error)),
+            filenames=(path.name,),
+            read_backend="disk",
+        )
+    )
+
+    assert len(filemanager.saved_batches) == 1
+    assert viewer.settlement_calls
+    _data, _paths, _backend, kwargs = filemanager.saved_batches[0]
+    stream_request = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
+    item_fields = dict(stream_request.source.item_fields)
+    image_metadata = item_fields.pop("image_metadata")
+    assert image_metadata["plane_axis"] is None
+    assert image_metadata["source_channel_axis"] is None
+    assert item_fields == {
+        "source_spatial_shape_yx": [8, 9],
+        "spatial_origin_yx": [0, 0],
+    }
+
+
 def test_stream_images_does_not_report_success_when_viewer_settlement_fails() -> None:
     statuses: list[str] = []
     viewer = FakeViewer(settlement_succeeds=False)

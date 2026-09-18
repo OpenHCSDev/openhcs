@@ -1063,6 +1063,10 @@ class ViewerWindowGatewayABC(ABC):
     def close_window(self, request: ViewerWindowCloseRequest) -> EndpointShutdownResult:
         """Close the exact viewer endpoint and prove process termination."""
 
+    def apply_intensity_window(
+        self,
+        request: ViewerWindowIntensityWindowRequest,
+    ) -> JsonObject:
         raise NotImplementedError
 
 
@@ -1076,21 +1080,21 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
 
     def snapshot_window(self, request: ViewerWindowSnapshotRequest) -> JsonObject:
         message = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.SCREENSHOT.value,
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.SCREENSHOT.value,
             ViewerControlResponseField.PAYLOAD.value: request,
         }
         return self._send_control_message(request, message)
 
     def window_state(self, request: ViewerWindowStateRequest) -> JsonObject:
         message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.STATE.value,
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.STATE.value,
             ViewerControlResponseField.PAYLOAD.value: request.state_controls,
         }
         return self._send_control_message(request, message)
 
     def window_payloads(self, request: ViewerWindowPayloadRequest) -> JsonObject:
         message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.PAYLOADS.value,
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.PAYLOADS.value,
             ViewerControlResponseField.PAYLOAD.value: request.payload_projection,
         }
         return self._send_control_message(request, message)
@@ -1099,7 +1103,7 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         return self._send_control_message(
             request,
             {
-                ViewerControlResponseField.TYPE: ViewerControlMessageType.IMAGE_INTENSITY.value,
+                ViewerControlResponseField.TYPE.value: ViewerControlMessageType.IMAGE_INTENSITY.value,
                 ViewerControlResponseField.PAYLOAD.value: request.intensity,
             },
         )
@@ -1115,14 +1119,14 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
 
     def navigate_window(self, request: ViewerWindowNavigationRequest) -> JsonObject:
         message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: ViewerControlMessageType.NAVIGATE.value,
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.NAVIGATE.value,
             ViewerControlResponseField.PAYLOAD.value: request.navigation,
         }
         return self._send_control_message(request, message)
 
     def isolate_layers(self, request: ViewerWindowLayerIsolationRequest) -> JsonObject:
         message: dict[str, object] = {
-            ViewerControlResponseField.TYPE: (
+            ViewerControlResponseField.TYPE.value: (
                 ViewerControlMessageType.ISOLATE_LAYERS.value
             ),
             ViewerControlResponseField.PAYLOAD.value: request.isolation,
@@ -1138,6 +1142,18 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
             host=request.connection.host,
             config=OPENHCS_ZMQ_CONFIG,
         )
+
+    def apply_intensity_window(
+        self,
+        request: ViewerWindowIntensityWindowRequest,
+    ) -> JsonObject:
+        message: dict[str, object] = {
+            ViewerControlResponseField.TYPE: (
+                ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
+            ),
+            ViewerControlResponseField.PAYLOAD.value: request.intensity_window,
+        }
+        return self._send_control_message(request, message)
 
     def _send_control_message(
         self,

@@ -42,12 +42,16 @@ class FakeInspectionService:
 
     def open_context(self, request):
         self.open_requests.append(request)
-        return PlateInspectionContext(
-            plate_path=Path(request.plate_path),
-            filemanager=object(),
-            handler=FakeHandler(),
-            parser=None,
-        ), (), ()
+        return (
+            PlateInspectionContext(
+                plate_path=Path(request.plate_path),
+                filemanager=object(),
+                handler=FakeHandler(),
+                parser=None,
+            ),
+            (),
+            (),
+        )
 
     def resolve_plate_path(self, plate_path):
         self.resolve_requests.append(plate_path)
@@ -205,7 +209,9 @@ def test_plate_streaming_service_returns_typed_headless_result(monkeypatch):
     assert "validated UI bridge descriptor automatically" in error.hint
 
 
-def test_plate_streaming_service_projects_detached_log_diagnostics(monkeypatch, tmp_path):
+def test_plate_streaming_service_projects_detached_log_diagnostics(
+    monkeypatch, tmp_path
+):
     inventory = PlateFileInventory(
         plate_path=Path("/plate"),
         image_records=(

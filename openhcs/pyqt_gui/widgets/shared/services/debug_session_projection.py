@@ -17,7 +17,6 @@ from openhcs.pyqt_gui.widgets.shared.services.pipeline_debug_actions import (
     PipelineDebugActionDeclarationBase,
 )
 
-
 PipelineDebugTargetState = DebugSessionTargetState
 PipelineDebugSessionPhase = DebugSessionPhase
 PipelineDebugPauseBoundaryState = DebugPauseBoundaryState
@@ -55,8 +54,7 @@ class DebugToolbarActionProjector:
         context: DebugSessionProjectionContext,
     ) -> tuple[DebugActionRenderModel, ...]:
         return tuple(
-            cls.render_model(declaration, context)
-            for declaration in cls.declarations()
+            cls.render_model(declaration, context) for declaration in cls.declarations()
         )
 
     @classmethod
@@ -83,7 +81,9 @@ class DebugToolbarActionProjector:
         )
 
     @classmethod
-    def target_scope_ids(cls, context: DebugSessionProjectionContext) -> tuple[str, ...]:
+    def target_scope_ids(
+        cls, context: DebugSessionProjectionContext
+    ) -> tuple[str, ...]:
         if context.target is None:
             return ()
         return (context.target.pipeline_scope_id,)
@@ -148,10 +148,7 @@ class DebugToolbarActionProjector:
                     f"{declaration.label!r}."
                 ),
             )
-        if (
-            declaration.requires_active_debug_session
-            and context.active_session is None
-        ):
+        if declaration.requires_active_debug_session and context.active_session is None:
             return DebugActionDisabledReason(
                 code="debug_session_required",
                 message=f"{declaration.label} requires an active debug session.",
@@ -182,7 +179,9 @@ class DebugSessionPanelText:
     detail: str
 
     @classmethod
-    def from_context(cls, context: DebugSessionProjectionContext) -> "DebugSessionPanelText":
+    def from_context(
+        cls, context: DebugSessionProjectionContext
+    ) -> "DebugSessionPanelText":
         phase_declaration = DebugSessionPhaseDeclarationBase.for_context(context)
         cursor = None
         command_type = None

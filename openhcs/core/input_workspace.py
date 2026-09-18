@@ -64,8 +64,12 @@ class InputWorkspacePreparationResult:
     pipeline_import_error: PipelineImportDiagnostic | None = None
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "original_source_root", Path(self.original_source_root))
-        object.__setattr__(self, "execution_plate_path", Path(self.execution_plate_path))
+        object.__setattr__(
+            self, "original_source_root", Path(self.original_source_root)
+        )
+        object.__setattr__(
+            self, "execution_plate_path", Path(self.execution_plate_path)
+        )
         if self.pipeline_path is not None:
             object.__setattr__(self, "pipeline_path", Path(self.pipeline_path))
         if (self.pipeline_steps is None) is not (self.pipeline_config is None):

@@ -238,13 +238,11 @@ def persisted_special_output_probe(image):
         plate_dir,
         global_config.path_planning_config,
     )
-    analysis_results_dir = PathPlannerPathAuthority.analysis_results_dir_for(
-        output_plate_root / global_config.path_planning_config.sub_dir
+    analysis_results_dir = (
+        output_plate_root / global_config.materialization_results_path
     )
     analysis_results_dir.mkdir(parents=True)
-    stale_csv_path = (
-        analysis_results_dir / "A01_stale_counts_step0_details.csv"
-    )
+    stale_csv_path = analysis_results_dir / "A01_stale_counts_step0_details.csv"
     stale_csv_path.write_text(
         "slice_index,cell_count,stale_signal\n0,999,1\n",
         encoding="utf-8",
@@ -324,10 +322,11 @@ def persisted_special_output_probe(image):
         csv_paths = sorted(tmp_path.rglob("*dual_channel_counts*.csv"))
         assert len(csv_paths) == 4
         assert {"site-1", "site-2"} == {
-            "site-1" if "_site-1_" in path.name else "site-2"
-            for path in csv_paths
+            "site-1" if "_site-1_" in path.name else "site-2" for path in csv_paths
         }
-        assert all("_w1_" not in path.name and "_w2_" not in path.name for path in csv_paths)
+        assert all(
+            "_w1_" not in path.name and "_w2_" not in path.name for path in csv_paths
+        )
         rows = []
         for csv_path in csv_paths:
             with csv_path.open(newline="") as csv_file:
@@ -358,9 +357,7 @@ def persisted_special_output_probe(image):
         assert len(cell_rows) == 8
         assert {int(row["object_label"]) for row in cell_rows} == {1, 2}
 
-        aggregate_csv_paths = sorted(
-            tmp_path.rglob("*cell_counts_step1_details.csv")
-        )
+        aggregate_csv_paths = sorted(tmp_path.rglob("*cell_counts_step1_details.csv"))
         assert len(aggregate_csv_paths) == 2
         aggregate_rows = []
         for aggregate_csv_path in aggregate_csv_paths:
@@ -369,10 +366,7 @@ def persisted_special_output_probe(image):
             assert len(well_rows) == 4
             expected_well = aggregate_csv_path.name.split("_", maxsplit=1)[0]
             assert {row["well"] for row in well_rows} == {expected_well}
-            assert {
-                (row["site"], row["channel"])
-                for row in well_rows
-            } == {
+            assert {(row["site"], row["channel"]) for row in well_rows} == {
                 ("1", "1"),
                 ("1", "2"),
                 ("2", "1"),
@@ -391,10 +385,7 @@ def persisted_special_output_probe(image):
         summary_rows = list(csv.DictReader(summary_lines[6:]))
         assert len(summary_rows) == 2
         assert {row["Well"] for row in summary_rows} == {"A01", "B01"}
-        assert not any(
-            "stale" in field_name.lower()
-            for field_name in summary_rows[0]
-        )
+        assert not any("stale" in field_name.lower() for field_name in summary_rows[0])
         assert stale_csv_path.exists()
 
         roi_paths = sorted(
@@ -432,19 +423,14 @@ def persisted_special_output_probe(image):
             for site in ("1", "2")
             for channel in ("1", "2")
         }
-        assert all(
-            len(load_rois_from_zip(path)) == 2
-            for path in aggregate_roi_paths
-        )
+        assert all(len(load_rois_from_zip(path)) == 2 for path in aggregate_roi_paths)
 
         aggregate_roi_summaries = sorted(
             tmp_path.rglob("*segmentation_masks_step1_segmentation_summary.txt")
         )
         assert len(aggregate_roi_summaries) == 2
 
-        custom_csv_paths = sorted(
-            tmp_path.rglob("*legacy_counts_step2_details.csv")
-        )
+        custom_csv_paths = sorted(tmp_path.rglob("*legacy_counts_step2_details.csv"))
         assert len(custom_csv_paths) == 2
         assert all(
             "_z_index-1_timepoint-1_" in path.name
@@ -464,9 +450,7 @@ def persisted_special_output_probe(image):
             }
             assert {int(row["cell_count"]) for row in custom_rows} == {1}
 
-        custom_roi_paths = sorted(
-            tmp_path.rglob("*legacy_masks_step2_rois.roi.zip")
-        )
+        custom_roi_paths = sorted(tmp_path.rglob("*legacy_masks_step2_rois.roi.zip"))
         assert len(custom_roi_paths) == 2
         assert all(
             "_z_index-1_timepoint-1_" in path.name

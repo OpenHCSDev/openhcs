@@ -23,8 +23,10 @@ from openhcs.core.pipeline.funcstep_contract_validator import (
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
+
 # Import from existing modules
 from openhcs.core.pipeline.path_planner import PipelinePathPlanner
+
 # Import directly from modules to avoid circular dependency
 from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.pipeline.step_attribute_stripper import StepAttributeStripper

@@ -11,7 +11,7 @@ import sys
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, MutableMapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
 from typing import ClassVar, Self, TypeAlias, cast
@@ -22,9 +22,17 @@ from polystore.streaming_constants import StreamingDataType
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
 from zmqruntime.client import EndpointProcessGroup, endpoint_process
 from zmqruntime.config import TransportMode, ZMQConfig
-from zmqruntime.messages import ControlMessageType
-from zmqruntime.streaming import VisualizerProcessManager
+from zmqruntime.messages import (
+    ControlMessageType,
+    EndpointApplicationCompatibility,
+    EndpointApplicationCompatibilityError,
+    PongResponse,
+)
+from zmqruntime.streaming import StreamingVisualizerServer, VisualizerProcessManager
 from zmqruntime.transport import resolve_transport_mode
+from openhcs.runtime.import_authority import (
+    OpenHCSRuntimeImportAuthority,
+)
 from zmqruntime.viewer_protocol import (
     ViewerBatchContextWireField as ViewerBatchContextWireField,
 )
@@ -56,6 +64,9 @@ from openhcs.core.streaming_config_factory import (
 )
 from openhcs.core.xdg_paths import get_openhcs_log_dir
 from openhcs.runtime.viewer_controls import (
+    ViewerIntensityWindowControlOptions as ViewerIntensityWindowControlOptions,
+)
+from openhcs.runtime.viewer_controls import (
     ViewerLayerIsolationControlOptions as ViewerLayerIsolationControlOptions,
 )
 from openhcs.runtime.viewer_controls import (
@@ -72,6 +83,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 
 ViewerComponentValue: TypeAlias = ViewerScalar | tuple[ViewerScalar, ...]
 NaturalTokenKey: TypeAlias = tuple[int, int | str]
@@ -135,6 +147,19 @@ class ViewerLayerIsolationField(str, Enum):
     APPLIED = "applied"
     CHANGED_ROUTE_COUNT = "changed_route_count"
     MISSING_ROUTE_KEYS = "missing_route_keys"
+
+
+class ViewerIntensityWindowField(str, Enum):
+    """Route-global image intensity-window response fields."""
+
+    ROUTE_KEY = "route_key"
+    REQUESTED_PERCENTILES = "requested_percentiles"
+    AXIS_INDICES = "axis_indices"
+    RESOLVED_LIMITS = "resolved_limits"
+    MATCHED_PAYLOAD_COUNT = "matched_payload_count"
+    MATCHED_PAYLOAD_IDENTITIES = "matched_payload_identities"
+    CONTRIBUTING_PAYLOAD_COUNT = "contributing_payload_count"
+    CONTRIBUTING_PIXEL_COUNT = "contributing_pixel_count"
 
 
 class ViewerLayerField(str, Enum):
@@ -638,6 +663,16 @@ class ViewerServerLaunchRequest:
     transport_mode: TransportMode = TransportMode.IPC
 
 
+class OpenHCSViewerServerABC(StreamingVisualizerServer, ABC):
+    """Viewer server whose heartbeat derives OpenHCS application identity."""
+
+    def _create_pong_response(self) -> PongResponse:
+        return replace(
+            super()._create_pong_response(),
+            application=OPENHCS_ENDPOINT_APPLICATION,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class NapariViewerServerRequest(ViewerServerLaunchRequest):
     """Nominal launch request consumed by the Napari viewer server."""
@@ -712,6 +747,33 @@ class ViewerRuntimeEndpoint:
             timeout_ms=timeout_ms,
             require_ready=require_ready,
         )
+
+    def heartbeat(self, *, timeout_ms: int) -> PongResponse | None:
+        """Return the endpoint heartbeat without discarding its identity."""
+
+        return self.transport.ping(
+            self.config,
+            timeout_ms=timeout_ms,
+        )
+
+    def application_compatibility(
+        self,
+        *,
+        timeout_ms: int,
+        require_ready: bool = True,
+    ) -> EndpointApplicationCompatibility:
+        """Compare a reachable viewer with the local OpenHCS declaration."""
+
+        heartbeat = self.heartbeat(timeout_ms=timeout_ms)
+        if heartbeat is None:
+            raise RuntimeError(
+                f"Viewer endpoint on port {self.port} did not answer its "
+                "compatibility handshake."
+            )
+        if require_ready and not heartbeat.ready:
+            raise RuntimeError(f"Viewer endpoint on port {self.port} is not ready.")
+
+        return OPENHCS_ENDPOINT_APPLICATION.compatibility_with(heartbeat.application)
 
     def wait_ready(self, *, timeout: float, require_ready: bool = True) -> bool:
         from zmqruntime.transport import wait_for_server_ready
@@ -908,7 +970,7 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
 
     def python_code(
         self,
-        python_path_root: Path,
+        import_authority: OpenHCSRuntimeImportAuthority,
         *,
         transport_mode: TransportMode,
         arguments: DetachedViewerPythonArguments,
@@ -928,7 +990,7 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
             "    except OSError:",
             "        pass",
             "",
-            f"sys.path.insert(0, {str(python_path_root)!r})",
+            f"sys.path.insert(0, {str(import_authority.import_root)!r})",
             "",
             "try:",
             f"    from {self.module_name} import {self.function_name}",
@@ -963,16 +1025,19 @@ class DetachedViewerServerEntrypointSpec(ViewerTypeIdentity):
         log_file: Path,
         cwd: Path | None = None,
         launch_context: ViewerLaunchContext | None = None,
+        import_authority: OpenHCSRuntimeImportAuthority | None = None,
     ) -> DetachedViewerLaunchRequest:
         if cwd is None:
             cwd = Path.cwd()
         if launch_context is None:
             launch_context = ViewerLaunchContext.inherited_graphical_session()
+        if import_authority is None:
+            import_authority = OpenHCSRuntimeImportAuthority.current()
         return DetachedViewerLaunchRequest(
             viewer_type=self.viewer_type,
             port=port,
             python_code=self.python_code(
-                cwd,
+                import_authority,
                 transport_mode=transport_mode,
                 arguments=arguments,
             ),
@@ -1144,6 +1209,22 @@ class ViewerControlMessageRequest:
     payload: object | None = None
     timeout: float = 2.0
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.message_type, str) or not self.message_type:
+            raise ValueError("Viewer control message_type must be a non-empty string.")
+        if self.timeout <= 0:
+            raise ValueError("Viewer control timeout must be positive.")
+
+    def to_wire_mapping(self) -> dict[str, object]:
+        """Project this typed request to primitive wire fields."""
+
+        request: dict[str, object] = {
+            ViewerControlResponseField.TYPE.value: self.message_type
+        }
+        if self.payload is not None:
+            request[ViewerControlResponseField.PAYLOAD.value] = self.payload
+        return request
+
     def send(self) -> ViewerControlResponse:
         import pickle
 
@@ -1157,12 +1238,7 @@ class ViewerControlMessageRequest:
             socket.setsockopt(zmq.LINGER, 0)
             socket.setsockopt(zmq.RCVTIMEO, int(self.timeout * 1000))
             socket.connect(self.endpoint.control_url())
-            request: dict[str, object] = {
-                ViewerControlResponseField.TYPE.value: self.message_type
-            }
-            if self.payload is not None:
-                request[ViewerControlResponseField.PAYLOAD.value] = self.payload
-            socket.send(pickle.dumps(request))
+            socket.send(pickle.dumps(self.to_wire_mapping()))
             payload = pickle.loads(socket.recv())
             if not isinstance(payload, Mapping):
                 raise TypeError(
@@ -1298,17 +1374,35 @@ class ManagedViewerLifecycleMixin(
             mode=ViewerControlPingMode.EXISTING_VIEWER,
             endpoint=self.runtime_endpoint,
         )
-        return request.endpoint.ping(
-            timeout_ms=request.timeout_ms,
-            require_ready=request.require_ready,
-        )
+        try:
+            request.endpoint.application_compatibility(
+                timeout_ms=request.timeout_ms,
+                require_ready=request.require_ready,
+            ).require_match()
+        except (RuntimeError, EndpointApplicationCompatibilityError) as error:
+            logging.getLogger(type(self).__module__).warning(
+                "%s viewer on port %s cannot be reused: %s",
+                self.viewer_process_label,
+                self.required_port,
+                error,
+            )
+            return False
+        return True
 
     def wait_for_ready(self, timeout: float = 10.0) -> bool:
         """Wait for the viewer endpoint to bind and report ready."""
-        return self.runtime_endpoint.wait_ready(
+        if not self.runtime_endpoint.wait_ready(
             timeout=timeout,
             require_ready=True,
-        )
+        ):
+            return False
+        try:
+            self.runtime_endpoint.application_compatibility(
+                timeout_ms=max(1, int(timeout * 1000)),
+            ).require_match()
+        except (RuntimeError, EndpointApplicationCompatibilityError):
+            return False
+        return True
 
     def configure_launch_context(
         self,

@@ -58,7 +58,5 @@ class ArtifactPlanKeySelector(ABC):
     def validate_artifact_relation_refs(self, *, owner_name: str) -> None:
         self.artifact_specs.validate_registered_relation_refs(
             owner_name=owner_name,
-            relation_specs=self.artifact_specs.for_plan_type(
-                ArtifactOutputPlan
-            ).specs,
+            relation_specs=self.artifact_specs.for_plan_type(ArtifactOutputPlan).specs,
         )

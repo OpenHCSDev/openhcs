@@ -64,7 +64,11 @@ from openhcs.core.source_metadata import (
     SOURCE_PLANE_INDEX_FIELD,
 )
 from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection, RuntimePlaneProjection
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+    RuntimePlaneProjection,
+)
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
@@ -143,8 +147,7 @@ def test_special_outputs_is_the_artifact_outputs_public_spelling() -> None:
         return image
 
     assert tuple(
-        spec.name
-        for spec in vars(analyze)[FunctionContractAttribute.artifact_outputs]
+        spec.name for spec in vars(analyze)[FunctionContractAttribute.artifact_outputs]
     ) == ("measurements", "labels")
 
 
@@ -937,10 +940,13 @@ def test_stack_payload_context_nests_incompatible_singleton_plane_topology():
 
     assert provenance_planes.count == 1
     assert provenance_planes.contributor_count == 2
-    assert tuple(
-        dict(contributor.component_metadata)
-        for contributor in provenance_planes.contributors
-    ) == plane_metadata
+    assert (
+        tuple(
+            dict(contributor.component_metadata)
+            for contributor in provenance_planes.contributors
+        )
+        == plane_metadata
+    )
 
 
 def test_stack_payload_context_preserves_singleton_stack_payload_mask_domain():
@@ -1013,12 +1019,17 @@ def test_execute_function_core_saves_named_artifacts():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="measurements",
-                    path="/memory/measurements.pkl",
-                    artifact_type=MeasurementsArtifactType,
-                    relations=measurement_spec.relations,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="measurements",
+                        path="/memory/measurements.pkl",
+                        artifact_type=MeasurementsArtifactType,
+                        relations=measurement_spec.relations,
+                    ),
+                )
+            },
         )
     )
 
@@ -1076,16 +1087,22 @@ def test_trailing_object_labels_do_not_replace_canonical_image_output():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name=measurement_spec.name,
-                    path="/memory/cell-counts.pkl",
-                    artifact_type=MeasurementsArtifactType,
-                    relations=measurement_spec.relations,
-                ), ArtifactOutputPlan(
-                    name=labels_spec.name,
-                    path="/memory/segmentation-masks.pkl",
-                    artifact_type=ObjectLabelsArtifactType,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name=measurement_spec.name,
+                        path="/memory/cell-counts.pkl",
+                        artifact_type=MeasurementsArtifactType,
+                        relations=measurement_spec.relations,
+                    ),
+                    ArtifactOutputPlan(
+                        name=labels_spec.name,
+                        path="/memory/segmentation-masks.pkl",
+                        artifact_type=ObjectLabelsArtifactType,
+                    ),
+                )
+            },
         )
     )
 
@@ -1126,16 +1143,21 @@ def test_execute_function_core_attaches_execution_group_identity_to_artifact():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="segmentation_masks",
-                    path="/memory/A01_w2_segmentation_masks.pkl",
-                    artifact_type=ObjectLabelsArtifactType,
-                    group_component=AllComponents.CHANNEL,
-                    group_keys=("2",),
-                    paths_by_group={
-                        "2": "/memory/A01_w2_segmentation_masks.pkl",
-                    },
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="segmentation_masks",
+                        path="/memory/A01_w2_segmentation_masks.pkl",
+                        artifact_type=ObjectLabelsArtifactType,
+                        group_component=AllComponents.CHANNEL,
+                        group_keys=("2",),
+                        paths_by_group={
+                            "2": "/memory/A01_w2_segmentation_masks.pkl",
+                        },
+                    ),
+                )
+            },
             group_key="2",
             execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         )
@@ -1186,16 +1208,21 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="segmentation_masks",
-                    path="/memory/A01_segmentation_masks.pkl",
-                    artifact_type=ObjectLabelsArtifactType,
-                    group_keys=(None,),
-                    group_component=AllComponents.CHANNEL,
-                    paths_by_group={
-                        None: "/memory/A01_segmentation_masks.pkl",
-                    },
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="segmentation_masks",
+                        path="/memory/A01_segmentation_masks.pkl",
+                        artifact_type=ObjectLabelsArtifactType,
+                        group_keys=(None,),
+                        group_component=AllComponents.CHANNEL,
+                        paths_by_group={
+                            None: "/memory/A01_segmentation_masks.pkl",
+                        },
+                    ),
+                )
+            },
             group_key="2",
             execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         )
@@ -1283,15 +1310,21 @@ def test_execute_function_core_routes_exact_image_artifact_tuple_to_main_flow():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="Red",
-                    path="/memory/red.pkl",
-                    artifact_type=ImageArtifactType,
-                ), ArtifactOutputPlan(
-                    name="Green",
-                    path="/memory/green.pkl",
-                    artifact_type=ImageArtifactType,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="Red",
+                        path="/memory/red.pkl",
+                        artifact_type=ImageArtifactType,
+                    ),
+                    ArtifactOutputPlan(
+                        name="Green",
+                        path="/memory/green.pkl",
+                        artifact_type=ImageArtifactType,
+                    ),
+                )
+            },
         )
     )
 
@@ -1332,16 +1365,22 @@ def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="CropGreen",
-                    path="/memory/crop-green.pkl",
-                    artifact_type=ImageArtifactType,
-                ), ArtifactOutputPlan(
-                    name="CropGreen__crop_mask",
-                    path="/memory/crop-green-mask.pkl",
-                    artifact_type=ImageArtifactType,
-                    sidecar_role=ArtifactSidecarRole.CROP_MASK,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="CropGreen",
+                        path="/memory/crop-green.pkl",
+                        artifact_type=ImageArtifactType,
+                    ),
+                    ArtifactOutputPlan(
+                        name="CropGreen__crop_mask",
+                        path="/memory/crop-green-mask.pkl",
+                        artifact_type=ImageArtifactType,
+                        sidecar_role=ArtifactSidecarRole.CROP_MASK,
+                    ),
+                )
+            },
         )
     )
 
@@ -1380,11 +1419,16 @@ def test_execute_function_core_saves_single_image_artifact_output_to_main_flow()
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="CorrectedImage",
-                    path="/memory/corrected.pkl",
-                    artifact_type=ImageArtifactType,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="CorrectedImage",
+                        path="/memory/corrected.pkl",
+                        artifact_type=ImageArtifactType,
+                    ),
+                )
+            },
         )
     )
 
@@ -1436,12 +1480,17 @@ def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name=output_spec.name,
-                    path="/memory/derived-image.pkl",
-                    artifact_type=ImageArtifactType,
-                    variable_components=(AllComponents.SITE,),
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name=output_spec.name,
+                        path="/memory/derived-image.pkl",
+                        artifact_type=ImageArtifactType,
+                        variable_components=(AllComponents.SITE,),
+                    ),
+                )
+            },
             runtime_plane_count=2,
         )
     )
@@ -1459,12 +1508,14 @@ def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
             image_payload_data(output_payload),
             output_slices[index],
         )
-        assert metadata.source_path == image_payload_metadata(source_payload).source_path
+        assert (
+            metadata.source_path == image_payload_metadata(source_payload).source_path
+        )
         assert metadata.source_image_names == (output_spec.name,)
         assert metadata.source_provenance.represented_source_image_names == (
             output_spec.name,
             "OrigGreen",
-    )
+        )
 
     assert isinstance(result, RuntimeSliceAlignedValues)
     assert tuple(
@@ -1506,18 +1557,23 @@ def test_execute_function_core_saves_artifact_to_runtime_group_path():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="measurements",
-                    path="/memory/A01_measurements.pkl",
-                    artifact_type=MeasurementsArtifactType,
-                    relations=measurement_spec.relations,
-                    group_component=AllComponents.SITE,
-                    group_keys=("1", "2"),
-                    paths_by_group={
-                        "1": "/memory/A01_s1_measurements.pkl",
-                        "2": "/memory/A01_s2_measurements.pkl",
-                    },
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="measurements",
+                        path="/memory/A01_measurements.pkl",
+                        artifact_type=MeasurementsArtifactType,
+                        relations=measurement_spec.relations,
+                        group_component=AllComponents.SITE,
+                        group_keys=("1", "2"),
+                        paths_by_group={
+                            "1": "/memory/A01_s1_measurements.pkl",
+                            "2": "/memory/A01_s2_measurements.pkl",
+                        },
+                    ),
+                )
+            },
             group_key="2",
             execution_group_scope=ComponentGroupScope.from_raw(
                 ("2",),
@@ -1527,9 +1583,7 @@ def test_execute_function_core_saves_artifact_to_runtime_group_path():
     )
 
     assert tuple(
-        context.filemanager.saved[
-            ("/memory/A01_s2_measurements.pkl", "memory")
-        ].rows
+        context.filemanager.saved[("/memory/A01_s2_measurements.pkl", "memory")].rows
     ) == ({"site": "2", "count": 3},)
     stored = context.runtime_value_store.find(
         name="measurements",
@@ -1620,11 +1674,16 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
             main_data_arg=ambient_source,
             base_kwargs={},
             context=context,
-            artifact_inputs={plan.ref(): plan for plan in (ArtifactInputPlan(
-                    name=source_input_spec.name,
-                    path="/memory/source_image.pkl",
-                    artifact_type=source_input_spec.artifact_type,
-                ),)},
+            artifact_inputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactInputPlan(
+                        name=source_input_spec.name,
+                        path="/memory/source_image.pkl",
+                        artifact_type=source_input_spec.artifact_type,
+                    ),
+                )
+            },
             artifact_outputs={},
         )
     )
@@ -1891,11 +1950,16 @@ def test_execute_function_core_records_image_artifact_as_main_flow():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name=illumination_spec.name,
-                    path="/memory/illumination.pkl",
-                    artifact_type=ImageArtifactType,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name=illumination_spec.name,
+                        path="/memory/illumination.pkl",
+                        artifact_type=ImageArtifactType,
+                    ),
+                )
+            },
         )
     )
 
@@ -1947,11 +2011,16 @@ def test_execute_function_core_preserves_complete_main_output_source_identity_wi
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="labels",
-                    path="/memory/labels.pkl",
-                    artifact_type=ObjectLabelsArtifactType,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="labels",
+                        path="/memory/labels.pkl",
+                        artifact_type=ObjectLabelsArtifactType,
+                    ),
+                )
+            },
         )
     )
 
@@ -1983,11 +2052,16 @@ def test_execute_function_core_preserves_complete_main_output_source_identity_wi
             main_data_arg=main_source,
             base_kwargs={},
             context=context,
-            artifact_inputs={plan.ref(): plan for plan in (ArtifactInputPlan(
-                    name=label_input_spec.name,
-                    path="/memory/labels.pkl",
-                    artifact_type=label_input_spec.artifact_type,
-                ),)},
+            artifact_inputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactInputPlan(
+                        name=label_input_spec.name,
+                        path="/memory/labels.pkl",
+                        artifact_type=label_input_spec.artifact_type,
+                    ),
+                )
+            },
             artifact_outputs={},
         )
     )
@@ -2034,11 +2108,16 @@ def test_execute_function_core_uses_object_input_source_for_image_artifact_outpu
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="labels",
-                    path="/memory/labels.pkl",
-                    artifact_type=ObjectLabelsArtifactType,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="labels",
+                        path="/memory/labels.pkl",
+                        artifact_type=ObjectLabelsArtifactType,
+                    ),
+                )
+            },
         )
     )
 
@@ -2070,19 +2149,27 @@ def test_execute_function_core_uses_object_input_source_for_image_artifact_outpu
             main_data_arg=primary_source,
             base_kwargs={},
             context=context,
-            artifact_inputs={plan.ref(): plan for plan in (ArtifactInputPlan(
-                    name="labels",
-                    path="/memory/labels.pkl",
-                    artifact_type=ObjectLabelsArtifactType,
-                ),)},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="label_image",
-                    path="/memory/label_image.pkl",
-                    artifact_type=ImageArtifactType,
-                    relations=(
-                        GroupLineageSourceRelation(label_input_spec.ref()),
+            artifact_inputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactInputPlan(
+                        name="labels",
+                        path="/memory/labels.pkl",
+                        artifact_type=ObjectLabelsArtifactType,
                     ),
-                ),)},
+                )
+            },
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="label_image",
+                        path="/memory/label_image.pkl",
+                        artifact_type=ImageArtifactType,
+                        relations=(GroupLineageSourceRelation(label_input_spec.ref()),),
+                    ),
+                )
+            },
         )
     )
 
@@ -2127,11 +2214,16 @@ def test_execute_function_core_contextualizes_object_label_artifact():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="nuclei",
-                    path="/memory/nuclei.pkl",
-                    artifact_type=ObjectLabelsArtifactType,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="nuclei",
+                        path="/memory/nuclei.pkl",
+                        artifact_type=ObjectLabelsArtifactType,
+                    ),
+                )
+            },
         )
     )
 
@@ -2184,12 +2276,17 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name=output_spec.name,
-                    path="/memory/cells.pkl",
-                    artifact_type=ObjectLabelsArtifactType,
-                    variable_components=(AllComponents.SITE,),
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name=output_spec.name,
+                        path="/memory/cells.pkl",
+                        artifact_type=ObjectLabelsArtifactType,
+                        variable_components=(AllComponents.SITE,),
+                    ),
+                )
+            },
             runtime_plane_count=2,
         )
     )
@@ -2206,10 +2303,7 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
     np.testing.assert_array_equal(
         label_set.labels,
         np.stack(
-            tuple(
-                labels.value_for_slice(index)
-                for index in range(labels.slice_count)
-            )
+            tuple(labels.value_for_slice(index) for index in range(labels.slice_count))
         ),
     )
     assert label_set.source_provenance.source_image_provenance_planes.paths == tuple(
@@ -2244,12 +2338,17 @@ def test_execute_function_core_wraps_columnar_rows_with_compiled_measurement_ide
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name=measurement_spec.name,
-                    path="/memory/cell-counts.pkl",
-                    artifact_type=MeasurementsArtifactType,
-                    relations=measurement_spec.relations,
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name=measurement_spec.name,
+                        path="/memory/cell-counts.pkl",
+                        artifact_type=MeasurementsArtifactType,
+                        relations=measurement_spec.relations,
+                    ),
+                )
+            },
         )
     )
 
@@ -2408,12 +2507,17 @@ def test_execute_function_core_rejects_nominal_measurement_subject_mismatch():
                 base_kwargs={},
                 context=context,
                 artifact_inputs={},
-                artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                        name=measurement_spec.name,
-                        path="/memory/cell-counts.pkl",
-                        artifact_type=MeasurementsArtifactType,
-                        relations=measurement_spec.relations,
-                    ),)},
+                artifact_outputs={
+                    plan.ref(): plan
+                    for plan in (
+                        ArtifactOutputPlan(
+                            name=measurement_spec.name,
+                            path="/memory/cell-counts.pkl",
+                            artifact_type=MeasurementsArtifactType,
+                            relations=measurement_spec.relations,
+                        ),
+                    )
+                },
             )
         )
 
@@ -2434,10 +2538,15 @@ def test_execute_function_core_loads_artifact_input_from_runtime_store_record():
             base_kwargs={},
             context=context,
             artifact_inputs={},
-            artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                    name="positions",
-                    path="/memory/positions.pkl",
-                ),)},
+            artifact_outputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactOutputPlan(
+                        name="positions",
+                        path="/memory/positions.pkl",
+                    ),
+                )
+            },
         )
     )
 
@@ -2463,11 +2572,16 @@ def test_execute_function_core_loads_artifact_input_from_runtime_store_record():
             main_data_arg=41,
             base_kwargs={},
             context=context,
-            artifact_inputs={plan.ref(): plan for plan in (ArtifactInputPlan(
-                    name=positions_input_spec.name,
-                    path="/memory/positions.pkl",
-                    artifact_type=positions_input_spec.artifact_type,
-                ),)},
+            artifact_inputs={
+                plan.ref(): plan
+                for plan in (
+                    ArtifactInputPlan(
+                        name=positions_input_spec.name,
+                        path="/memory/positions.pkl",
+                        artifact_type=positions_input_spec.artifact_type,
+                    ),
+                )
+            },
             artifact_outputs={},
         )
     )
@@ -2540,11 +2654,16 @@ def test_execute_function_core_requires_store_record_even_when_vfs_payload_exist
                 main_data_arg=41,
                 base_kwargs={},
                 context=context,
-                artifact_inputs={plan.ref(): plan for plan in (ArtifactInputPlan(
-                        name=positions_input_spec.name,
-                        path="/memory/positions.pkl",
-                        artifact_type=positions_input_spec.artifact_type,
-                    ),)},
+                artifact_inputs={
+                    plan.ref(): plan
+                    for plan in (
+                        ArtifactInputPlan(
+                            name=positions_input_spec.name,
+                            path="/memory/positions.pkl",
+                            artifact_type=positions_input_spec.artifact_type,
+                        ),
+                    )
+                },
                 artifact_outputs={},
             )
         )
@@ -2567,11 +2686,16 @@ def test_execute_function_core_requires_all_declared_artifact_values():
                 base_kwargs={},
                 context=context,
                 artifact_inputs={},
-                artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                        name="measurements",
-                        path="/memory/measurements.pkl",
-                        artifact_type=MeasurementsArtifactType,
-                    ),)},
+                artifact_outputs={
+                    plan.ref(): plan
+                    for plan in (
+                        ArtifactOutputPlan(
+                            name="measurements",
+                            path="/memory/measurements.pkl",
+                            artifact_type=MeasurementsArtifactType,
+                        ),
+                    )
+                },
             )
         )
 
@@ -2593,11 +2717,16 @@ def test_execute_function_core_validates_artifact_kind():
                 base_kwargs={},
                 context=context,
                 artifact_inputs={},
-                artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                        name="metadata",
-                        path="/memory/metadata.pkl",
-                        artifact_type=MetadataArtifactType,
-                    ),)},
+                artifact_outputs={
+                    plan.ref(): plan
+                    for plan in (
+                        ArtifactOutputPlan(
+                            name="metadata",
+                            path="/memory/metadata.pkl",
+                            artifact_type=MetadataArtifactType,
+                        ),
+                    )
+                },
             )
         )
 
@@ -2620,11 +2749,16 @@ def test_execute_function_core_validates_tuple_artifact_kind():
                 base_kwargs={},
                 context=context,
                 artifact_inputs={},
-                artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                        name="nuclei",
-                        path="/memory/nuclei.pkl",
-                        artifact_type=ObjectLabelsArtifactType,
-                    ),)},
+                artifact_outputs={
+                    plan.ref(): plan
+                    for plan in (
+                        ArtifactOutputPlan(
+                            name="nuclei",
+                            path="/memory/nuclei.pkl",
+                            artifact_type=ObjectLabelsArtifactType,
+                        ),
+                    )
+                },
             )
         )
 
@@ -2795,9 +2929,7 @@ def test_declared_source_payload_preserves_compiled_complete_main_flow() -> None
 def test_declared_source_payload_prefers_exact_loaded_ref_over_main_flow() -> None:
     spec = ArtifactSpec.input("StoredImage", ImageArtifactType)
     executor = _declared_source_executor(spec)
-    primary = ImagePayloadMetadata().payload_with(
-        np.zeros((3, 4), dtype=np.float32)
-    )
+    primary = ImagePayloadMetadata().payload_with(np.zeros((3, 4), dtype=np.float32))
     stored = ImagePayloadMetadata(
         source_image_names=("StoredImage",),
     ).payload_with(np.ones((3, 4), dtype=np.float32))

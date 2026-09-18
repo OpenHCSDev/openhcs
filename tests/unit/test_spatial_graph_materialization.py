@@ -365,7 +365,9 @@ def test_graph_roi_projection_preserves_paths_and_graph_features() -> None:
 
 
 @pytest.mark.unit
-def test_graph_roi_projects_declared_object_subject_without_losing_edge_identity() -> None:
+def test_graph_roi_projects_declared_object_subject_without_losing_edge_identity() -> (
+    None
+):
     neurons = ArtifactSpec.output("neurons", ObjectLabelsArtifactType)
     base_graph = _branched_graph()
     graph = SpatialGraph(
@@ -407,12 +409,10 @@ def test_graph_roi_projects_declared_object_subject_without_losing_edge_identity
     rois = outputs[0].content
     assert [roi.metadata["edge_id"] for roi in rois] == [1, 2, 3]
     assert [
-        roi.metadata[ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE]
-        for roi in rois
+        roi.metadata[ObjectArtifactSubjectBinding.SUBJECT_ID_FEATURE] for roi in rois
     ] == [7, 7, 7]
     subject_tokens = {
-        roi.metadata[ObjectArtifactSubjectBinding.SUBJECT_FEATURE]
-        for roi in rois
+        roi.metadata[ObjectArtifactSubjectBinding.SUBJECT_FEATURE] for roi in rois
     }
     assert len(subject_tokens) == 1
     assert '"object_labels","neurons","neurite-step",4' in subject_tokens.pop()

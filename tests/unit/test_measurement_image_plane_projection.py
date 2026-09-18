@@ -13,8 +13,15 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.measurement_image_alignment import MeasurementImageReferenceDomain
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisProjector, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_object_label_domains import (
+    ObjectLabelDomain,
+    ObjectLabelDomainScope,
+)
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisProjector,
+    RuntimePlaneAxisValueProjection,
+)
 from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerMeasurementImage,
 )

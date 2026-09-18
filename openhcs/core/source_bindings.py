@@ -1701,7 +1701,13 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     """Metadata field names used to partition matched sources into execution groups."""
 
     source_voxel_spacing: SourceVoxelSpacing = field(default_factory=SourceVoxelSpacing)
-    """Physical source-pixel spacing in z, y, x order; omit values when unknown."""
+    """Source-pixel spacing in z/y/x array order (or y/x for 2D).
+
+    Configured values use micrometers by default. CellProfiler imports retain
+    dimensionless relative spacing explicitly; that does not calibrate physical
+    measurements. Omit values when unknown. Anisotropic coordinates are valid,
+    but scalar physical-pixel-size functions require isotropic X/Y calibration.
+    """
 
     def __post_init__(self) -> None:
         self._normalize_common_fields()

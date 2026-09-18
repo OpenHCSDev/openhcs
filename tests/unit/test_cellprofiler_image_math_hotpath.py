@@ -20,8 +20,7 @@ from openhcs.processing.backends.cellprofiler.image_math import (
 def _source_binding_operands() -> tuple[np.ndarray, ...]:
     rng = np.random.default_rng(17)
     return tuple(
-        rng.uniform(0.05, 0.95, size=(5, 17, 19)).astype(np.float32)
-        for _ in range(3)
+        rng.uniform(0.05, 0.95, size=(5, 17, 19)).astype(np.float32) for _ in range(3)
     )
 
 
@@ -42,7 +41,9 @@ def _allocating_reference(
 ) -> np.ndarray:
     pixel_data = [operand.astype(np.float64) for operand in operands]
     output = pixel_data[0].copy()
-    operators: dict[ImageMathOperation, Callable[[np.ndarray, np.ndarray], np.ndarray]] = {
+    operators: dict[
+        ImageMathOperation, Callable[[np.ndarray, np.ndarray], np.ndarray]
+    ] = {
         ImageMathOperation.ADD: np.add,
         ImageMathOperation.SUBTRACT: np.subtract,
         ImageMathOperation.MULTIPLY: np.multiply,

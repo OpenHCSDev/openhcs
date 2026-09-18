@@ -21,7 +21,10 @@ from openhcs.core.source_plane_alignment import (
     SourcePlaneIdentitySequenceAlignment,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_metadata
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_metadata,
+)
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.interop.cellprofiler.runtime.invocation import (
@@ -33,7 +36,10 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeArtifactTypeStrategy,
     RuntimeInputBindingRequest,
 )
-from openhcs.core.steps.function_runtime import RuntimeCallableArgument, RuntimeCallableKwargs
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableArgument,
+    RuntimeCallableKwargs,
+)
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
@@ -189,9 +195,7 @@ class CellProfilerOutputRecordRequest:
         """Return the contract-ordered image-set axis of exact artifacts."""
 
         if not specs:
-            raise ValueError(
-                "Measurement source context requires declared artifacts."
-            )
+            raise ValueError("Measurement source context requires declared artifacts.")
         artifact_values = tuple(self.artifact_value(spec) for spec in specs)
         metadata = tuple(image_payload_metadata(value) for value in artifact_values)
         source_group_component = self.output_plan.group_component

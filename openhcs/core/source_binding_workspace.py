@@ -48,6 +48,7 @@ from openhcs.core.source_metadata import (
     SourceMetadataMapping,
     SourceMetadataRoleView,
     SourceMetadataScalar,
+    SourceVoxelSpacing,
     SourceComponentProjectionStrategy,
 )
 from openhcs.core.source_projection import (
@@ -60,6 +61,7 @@ from openhcs.core.source_projection import (
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
+from openhcs.core.source_tile_geometry import SourceTileLayout
 from openhcs.core.virtual_workspace_metadata import (
     AtomicMetadataWriter,
     FIELDS,
@@ -657,16 +659,39 @@ class SourceBindingWorkspaceProjector:
     ) -> SourceProjectionSet:
         """Return projections for one already-resolved candidate universe."""
 
+        from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
+
+        candidates = tuple(
+            SourcePlaneStoreAdapter.enrich_source_candidate(
+                candidate,
+                physical_path=(
+                    Path(physical_path)
+                    if (
+                        physical_path := filemanager.physical_source_path(
+                            candidate.source_ref.backend_address,
+                            candidate.source_ref.backend,
+                            base_path=plate_path,
+                        )
+                    )
+                    is not None
+                    else None
+                ),
+            )
+            for candidate in candidates
+        )
+
         candidates = tuple(
             self._candidate_with_declared_metadata(plate_path, candidate)
             for candidate in candidates
         )
 
         if not self.source_bindings.binding_declarations:
-            return SourceProjectionSet(
+            projection_set = SourceProjectionSet(
                 self._ungrouped_projections(candidates),
                 diagnostics=diagnostics,
             )
+            SourceTileLayout.from_projection_set(projection_set)
+            return projection_set
         candidates_by_alias = self._candidates_by_alias(
             plate_path,
             candidates,
@@ -692,13 +717,15 @@ class SourceBindingWorkspaceProjector:
             source_sets,
             candidates_by_alias,
         )
-        return SourceProjectionSet(
+        projection_set = SourceProjectionSet(
             self._source_set_projections(
                 self.source_bindings.binding_declarations,
                 source_sets,
             ),
             diagnostics=diagnostics,
         )
+        SourceTileLayout.from_projection_set(projection_set)
+        return projection_set
 
     def _candidate_with_declared_metadata(
         self,
@@ -786,8 +813,11 @@ class SourceBindingWorkspaceProjector:
             parser=self.parser,
             microscope_handler_name=Microscope.SOURCE_BINDINGS.value,
             source_filename_parser_name=type(self.parser).__name__,
-            grid_dimensions=[1, 1],
-            pixel_size=1.0,
+            grid_dimensions=SourceTileLayout.metadata_grid_dimensions(projection_set),
+            pixel_size=SourceVoxelSpacing.metadata_pixel_size(
+                SourceVoxelSpacing.from_source_metadata(projection.source_metadata)
+                for projection in projection_set.execution_anchor_projections
+            ),
             main=True,
         )
         primary_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY] = (

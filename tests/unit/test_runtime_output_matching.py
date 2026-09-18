@@ -109,9 +109,7 @@ def test_runtime_output_matcher_binds_selected_plans_after_resolving_complete_ab
         image.ref(): "image",
         measurements.ref(): "measurements",
     }
-    assert matched_outputs == (
-        (measurement_plan, measurements, "measurements"),
-    )
+    assert matched_outputs == ((measurement_plan, measurements, "measurements"),)
 
 
 def test_runtime_invocation_selects_storage_without_truncating_callable_abi() -> None:

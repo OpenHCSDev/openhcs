@@ -27,7 +27,9 @@ class SourceBindingContext:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "display_plate_root", Path(self.display_plate_root))
-        object.__setattr__(self, "execution_plate_path", Path(self.execution_plate_path))
+        object.__setattr__(
+            self, "execution_plate_path", Path(self.execution_plate_path)
+        )
         if not isinstance(self.source_bindings, SourceBindingsConfig):
             raise TypeError(
                 "SourceBindingContext.source_bindings must be SourceBindingsConfig."

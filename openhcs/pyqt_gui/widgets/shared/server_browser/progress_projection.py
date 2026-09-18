@@ -108,10 +108,8 @@ class ExecutionServerProgressRenderer:
         previous_children = tuple(
             server_item.child(index) for index in range(server_item.childCount())
         )
-        previous_expansion = (
-            self._tree_state_adapter.capture_subtree_expansion_state(
-                previous_children
-            )
+        previous_expansion = self._tree_state_adapter.capture_subtree_expansion_state(
+            previous_children
         )
 
         self._tree_sync_adapter.sync_children(

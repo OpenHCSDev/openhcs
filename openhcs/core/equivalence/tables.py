@@ -38,7 +38,6 @@ from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
 
-
 MEASUREMENT_IDENTITY_FIELDS = frozenset(
     {
         "image_id",

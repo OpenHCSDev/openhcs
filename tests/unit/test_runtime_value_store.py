@@ -314,9 +314,7 @@ def test_runtime_value_store_keeps_fixed_component_artifacts_distinct() -> None:
             input_plan,
             invocation_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
             producer_selection_scope=input_plan.producer_group_scope(),
-            component_scopes=(
-                ComponentGroupScope.dynamic(AllComponents.CHANNEL),
-            ),
+            component_scopes=(ComponentGroupScope.dynamic(AllComponents.CHANNEL),),
             consumer_variable_components=(),
         ),
         axis_scope=RuntimeExecutionAxisScope.from_raw(

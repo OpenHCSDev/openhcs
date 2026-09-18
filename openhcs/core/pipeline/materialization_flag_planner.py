@@ -75,13 +75,13 @@ class MaterializationFlagPlanner:
         # === PROCESS EACH STEP ===
         for i, step in enumerate(pipeline_definition):
             step_plan = step_plans[i]  # Use step index instead of step_id
-            step_plan.main_flow_axis_persistence_enabled = (
-                materializes_main_flow_axis
-            )
+            step_plan.main_flow_axis_persistence_enabled = materializes_main_flow_axis
 
             # === READ BACKEND SELECTION ===
             if i == 0:  # First step - read from plate format
-                read_backend = MaterializationFlagPlanner._get_first_step_read_backend(context, vfs_config)
+                read_backend = MaterializationFlagPlanner._get_first_step_read_backend(
+                    context, vfs_config
+                )
                 step_plan.read_backend = read_backend
 
                 # Zarr conversion flag is already set by path planner if needed
@@ -89,12 +89,18 @@ class MaterializationFlagPlanner:
                 if step_plan.read_backend is None:
                     # Check if this step reads from PIPELINE_START (original input)
                     from openhcs.core.steps.abstract import InputSource
-                    if step.processing_config.input_source == InputSource.PIPELINE_START:
+
+                    if (
+                        step.processing_config.input_source
+                        == InputSource.PIPELINE_START
+                    ):
                         # Check if input conversion will happen - if so, use zarr backend
                         if step_plans[0].input_conversion is not None:
                             step_plan.read_backend = Backend.ZARR.value
                             # Also update input_dir to point to conversion target
-                            step_plan.input_dir = step_plans[0].input_conversion.output_dir
+                            step_plan.input_dir = step_plans[
+                                0
+                            ].input_conversion.output_dir
                             logger.debug(
                                 "Step %s: PIPELINE_START with conversion -> zarr backend, input_dir=%s",
                                 i,
@@ -112,20 +118,31 @@ class MaterializationFlagPlanner:
 
             if will_use_zarr and materializes_main_flow_axis:
                 # Steps with zarr_config should write to materialization backend
-                materialization_backend = MaterializationFlagPlanner._resolve_materialization_backend(context, vfs_config)
+                materialization_backend = (
+                    MaterializationFlagPlanner._resolve_materialization_backend(
+                        context, vfs_config
+                    )
+                )
                 step_plan.write_backend = materialization_backend
             elif (
-                materializes_main_flow_axis
-                and i == last_image_materialization_step
+                materializes_main_flow_axis and i == last_image_materialization_step
             ):  # Last image-producing step without zarr - write to materialization backend
-                materialization_backend = MaterializationFlagPlanner._resolve_materialization_backend(context, vfs_config)
+                materialization_backend = (
+                    MaterializationFlagPlanner._resolve_materialization_backend(
+                        context, vfs_config
+                    )
+                )
                 step_plan.write_backend = materialization_backend
             else:  # Other steps - write to memory
                 step_plan.write_backend = Backend.MEMORY.value
 
             # === PER-STEP MATERIALIZATION BACKEND SELECTION ===
             if step_plan.materialized_output is not None:
-                materialization_backend = MaterializationFlagPlanner._resolve_materialization_backend(context, vfs_config)
+                materialization_backend = (
+                    MaterializationFlagPlanner._resolve_materialization_backend(
+                        context, vfs_config
+                    )
+                )
                 step_plan.materialized_output = dataclasses.replace(
                     step_plan.materialized_output,
                     backend=materialization_backend,
@@ -164,7 +181,9 @@ class MaterializationFlagPlanner:
             return vfs_config.read_backend.value
 
         # AUTO mode: Use unified backend detection
-        return MaterializationFlagPlanner._detect_backend_for_context(context, fallback_backend=Backend.DISK.value)
+        return MaterializationFlagPlanner._detect_backend_for_context(
+            context, fallback_backend=Backend.DISK.value
+        )
 
     @staticmethod
     def _resolve_materialization_backend(context: ProcessingContext, vfs_config) -> str:
@@ -174,7 +193,9 @@ class MaterializationFlagPlanner:
             return vfs_config.materialization_backend.value
 
         # AUTO mode: Use unified backend detection
-        return MaterializationFlagPlanner._detect_backend_for_context(context, fallback_backend=MaterializationBackend.DISK.value)
+        return MaterializationFlagPlanner._detect_backend_for_context(
+            context, fallback_backend=MaterializationBackend.DISK.value
+        )
 
     @staticmethod
     def _last_image_materialization_step(step_plans, step_count: int) -> int | None:
@@ -198,8 +219,12 @@ class MaterializationFlagPlanner:
         )
 
     @staticmethod
-    def _detect_backend_for_context(context: ProcessingContext, fallback_backend: str) -> str:
+    def _detect_backend_for_context(
+        context: ProcessingContext, fallback_backend: str
+    ) -> str:
         """Unified backend detection logic for both read and materialization backends."""
         # Use the microscope handler's get_primary_backend method
         # This handles both OpenHCS (metadata-based) and other microscopes (compatibility-based)
-        return context.microscope_handler.get_primary_backend(context.input_dir, context.filemanager)
+        return context.microscope_handler.get_primary_backend(
+            context.input_dir, context.filemanager
+        )

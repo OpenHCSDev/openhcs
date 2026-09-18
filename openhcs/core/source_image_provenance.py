@@ -3,18 +3,27 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence, Mapping
 from dataclasses import InitVar, dataclass, field, replace
-from inspect import signature
 from pathlib import Path
+from inspect import signature
+from math import isfinite
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeVar, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping
 from python_introspect.validation import validate_annotation_value
+from openhcs.serialization.json import to_jsonable
 
 from openhcs.constants.constants import AllComponents
+from openhcs.core.source_metadata import (
+    SOURCE_PLANE_COUNT_FIELD,
+    SOURCE_PLANE_INDEX_FIELD,
+    SourceMetadataMapping,
+    SourceMetadataScalar,
+    SourceMetadataValue,
+)
 from openhcs.core.source_matching import (
     SourceImageSetIdentity,
     SourceImageSetIdentityPolicy,
@@ -23,13 +32,6 @@ from openhcs.core.source_matching import (
     source_metadata_value,
     with_source_component_metadata,
 )
-from openhcs.core.source_metadata import (
-    SOURCE_PLANE_COUNT_FIELD,
-    SOURCE_PLANE_INDEX_FIELD,
-    SourceMetadataMapping,
-    SourceMetadataValue,
-)
-from openhcs.serialization.json import to_jsonable
 
 SourceComponentMetadata = SourceMetadataMapping
 SourceImageProvenancePlanePathValues = tuple[str | None, ...]
@@ -384,6 +386,63 @@ class SourceImageProvenancePlanes:
         )
 
     @classmethod
+    def from_component_domain(
+        cls,
+        *,
+        path: str,
+        fixed_components: SourceComponentMetadata,
+        aggregate_components: Mapping[str, Sequence[SourceMetadataScalar]],
+        plane_count: int,
+    ) -> "SourceImageProvenancePlanes":
+        """Expand one explicitly ordered varying coordinate into runtime planes.
+
+        Neither filenames, page counts, nor plate cardinalities establish this
+        coordinate domain. The caller must supply its original declaration.
+        """
+        component_names = frozenset(component.value for component in AllComponents)
+        if (
+            len(aggregate_components) != 1
+            or set(fixed_components) & set(aggregate_components)
+            or set(fixed_components) | set(aggregate_components) != component_names
+            or type(plane_count) is not int
+            or plane_count <= 0
+        ):
+            raise ValueError(
+                "Image plane domain requires complete disjoint components."
+            )
+        varying_component, declared_values = next(iter(aggregate_components.items()))
+        if not isinstance(declared_values, Sequence) or isinstance(
+            declared_values, str
+        ):
+            raise TypeError(
+                "Image plane domain requires an ordered coordinate sequence."
+            )
+        values = tuple(declared_values)
+        coordinates = (*fixed_components.values(), *values)
+        if any(
+            not isinstance(value, (str, int, float))
+            or isinstance(value, bool)
+            or (isinstance(value, str) and not value)
+            or (isinstance(value, float) and not isfinite(value))
+            for value in coordinates
+        ):
+            raise ValueError("Image plane coordinates must be finite nonempty scalars.")
+        if (
+            len(values) != plane_count
+            or len(set(values)) != plane_count
+            or len(set(map(str, values))) != plane_count
+        ):
+            raise ValueError(
+                "Image plane domain cardinality or unique ordering conflicts."
+            )
+        return cls.from_components(
+            paths=(path,) * plane_count,
+            component_metadata=tuple(
+                {**fixed_components, varying_component: value} for value in values
+            ),
+        )
+
+    @classmethod
     def from_contributor_components(
         cls,
         *,
@@ -654,37 +713,22 @@ class SourceImageProvenance:
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, object]) -> "SourceImageProvenance":
-        """Decode constructor-owned facts into nominal provenance values."""
-
-        if not isinstance(values, Mapping):
-            raise TypeError("Source image provenance requires a mapping.")
+        """Decode constructor-owned facts, retaining nominal contributor records."""
         parameters = signature(cls).parameters
-        annotations = get_type_hints(cls.__init__)
         unknown = set(values) - set(parameters)
         if unknown:
             raise ValueError(f"Unknown source provenance fields: {sorted(unknown)!r}.")
         decoded = dict(values)
-        plane_fields = tuple(
-            name
-            for name in parameters
-            if annotations[name] == SourceImageProvenancePlanes | None
-        )
-        if len(plane_fields) != 1:
-            raise ValueError("Source image provenance requires one plane declaration.")
-        plane_field = plane_fields[0]
+        plane_field = "source_image_provenance_planes"
         if plane_field in decoded:
-            plane_records = decoded[plane_field]
-            if not isinstance(plane_records, Sequence) or isinstance(
-                plane_records, (str, bytes)
-            ):
-                raise TypeError("Source image provenance planes require a sequence.")
             decoded[plane_field] = SourceImageProvenancePlanes.from_records(
                 tuple(
                     dataclass_from_mapping(SourceImageProvenancePlaneRecord, record)
-                    for record in plane_records
+                    for record in decoded[plane_field]
                 )
             )
         result = cls(**decoded)
+        annotations = get_type_hints(cls.__init__)
         for name in parameters:
             validate_annotation_value(
                 annotations[name], getattr(result, name), path=f"{cls.__name__}.{name}"
@@ -928,11 +972,11 @@ class SourceImageProvenance:
     def varying_plane_component_values(
         self,
         components: Sequence[AllComponents],
-    ) -> dict[str, tuple[Any, ...]]:
+    ) -> dict[str, tuple[SourceMetadataScalar, ...]]:
         """Return exact component values that vary across declared source planes."""
         if self.source_plane_count <= 1:
             return {}
-        values_by_component: dict[str, tuple[Any, ...]] = {}
+        values_by_component: dict[str, tuple[SourceMetadataScalar, ...]] = {}
         for component in components:
             values = tuple(
                 source_component_metadata_raw_value(
@@ -1880,8 +1924,7 @@ class VariableComponentAxisProjection:
 
 @to_jsonable.register(SourceImageProvenance)
 def _jsonable_source_provenance(value: SourceImageProvenance):
-    """Project the public constructor declaration, not cached internals."""
-
+    """Project the public constructor declaration, not cached identity internals."""
     return {
         name: to_jsonable(getattr(value, name))
         for name in signature(SourceImageProvenance).parameters

@@ -15,6 +15,7 @@ from openhcs.core.progress.runtime_tree import (
     RuntimeTreeProjectionBuilder,
 )
 
+
 class ProgressTreeNodeConverter:
     """Convert core runtime tree nodes to PyQt-reactive TreeNode records."""
 

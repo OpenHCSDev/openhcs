@@ -6,7 +6,6 @@ import os
 
 from threadpoolctl import threadpool_limits
 
-
 _NATIVE_THREAD_COUNT_ENVIRONMENT_VARIABLES = (
     "OMP_NUM_THREADS",
     "OPENBLAS_NUM_THREADS",

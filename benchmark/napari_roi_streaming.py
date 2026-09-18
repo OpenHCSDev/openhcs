@@ -164,9 +164,7 @@ def _run_sample(
     application.processEvents()
     return NapariRoiStreamingBenchmarkSample(
         roi_count=len(payload.data),
-        vertices_per_roi=(
-            len(payload.data[0]) if payload.data else 0
-        ),
+        vertices_per_roi=(len(payload.data[0]) if payload.data else 0),
         total_vertex_count=sum(len(coordinates) for coordinates in payload.data),
         wire_bytes=len(encoded),
         serialization_seconds=serialization_seconds,

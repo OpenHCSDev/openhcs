@@ -120,9 +120,7 @@ def test_source_provenance_projection_rejects_negative_slice_index() -> None:
     provenance = SourceImageProvenance(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s1_w1.tif",),
-            component_metadata=(
-                {"well": "A01", "site": "1", "channel": "1"},
-            ),
+            component_metadata=({"well": "A01", "site": "1", "channel": "1"},),
         )
     )
 
@@ -130,7 +128,9 @@ def test_source_provenance_projection_rejects_negative_slice_index() -> None:
         measurement_rows_with_source_provenance(rows, provenance)
 
 
-def test_source_provenance_preserves_producer_image_name_and_fills_coordinates() -> None:
+def test_source_provenance_preserves_producer_image_name_and_fills_coordinates() -> (
+    None
+):
     rows = MeasurementProjectedColumnarRows(
         {
             "slice_index": (0,),
@@ -147,9 +147,7 @@ def test_source_provenance_preserves_producer_image_name_and_fills_coordinates()
         source_image_names=("IllumActin",),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s1_w2.tif",),
-            component_metadata=(
-                {"well": "A01", "site": "1", "channel": "2"},
-            ),
+            component_metadata=({"well": "A01", "site": "1", "channel": "2"},),
         ),
     )
 
@@ -177,9 +175,7 @@ def test_biological_coordinates_are_axes_not_measurement_evidence() -> None:
             "timepoint": "4",
         }
     )
-    assert carries_measurement_row_semantics(
-        {"slice_index": 0, "cell_count": 2}
-    )
+    assert carries_measurement_row_semantics({"slice_index": 0, "cell_count": 2})
 
 
 def test_zero_row_dataclass_carrier_uses_nominal_annotations() -> None:
@@ -346,8 +342,7 @@ def test_sparse_concatenation_preserves_gaps_order_and_marker_identity() -> None
     assert other_values[2] == 10
     assert other_values[4:].tolist() == [20, 30]
     assert all(
-        is_structural_missing_measurement_cell(values[index])
-        for index in (2, 4, 5)
+        is_structural_missing_measurement_cell(values[index]) for index in (2, 4, 5)
     )
     assert all(
         is_structural_missing_measurement_cell(other_values[index])
@@ -383,8 +378,7 @@ def test_sparse_concatenation_ast_uses_one_fill_instead_of_gap_tuples() -> None:
         isinstance(node, ast.BinOp)
         and isinstance(node.op, ast.Mult)
         and any(
-            isinstance(child, ast.Name)
-            and child.id == "MEASUREMENT_SPARSE_CELL"
+            isinstance(child, ast.Name) and child.id == "MEASUREMENT_SPARSE_CELL"
             for child in ast.walk(node)
         )
         for node in ast.walk(method)

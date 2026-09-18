@@ -16,7 +16,6 @@ from tests.integration.helpers.fixture_utils import (
     ZMQ_EXECUTION_MODE_CONFIGS,
 )
 
-
 VISUALIZER_CONFIGS = {
     "none": {"enable_napari": False, "enable_fiji": False},
     "napari": {"enable_napari": True, "enable_fiji": False},
@@ -97,7 +96,9 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
 
 
 @pytest.fixture
-def enable_napari(request: pytest.FixtureRequest, visualizer_config: dict[str, bool]) -> bool:
+def enable_napari(
+    request: pytest.FixtureRequest, visualizer_config: dict[str, bool]
+) -> bool:
     return bool(
         request.config.getoption("--enable-napari")
         or visualizer_config["enable_napari"]
@@ -105,8 +106,9 @@ def enable_napari(request: pytest.FixtureRequest, visualizer_config: dict[str, b
 
 
 @pytest.fixture
-def enable_fiji(request: pytest.FixtureRequest, visualizer_config: dict[str, bool]) -> bool:
+def enable_fiji(
+    request: pytest.FixtureRequest, visualizer_config: dict[str, bool]
+) -> bool:
     return bool(
-        request.config.getoption("--enable-fiji")
-        or visualizer_config["enable_fiji"]
+        request.config.getoption("--enable-fiji") or visualizer_config["enable_fiji"]
     )

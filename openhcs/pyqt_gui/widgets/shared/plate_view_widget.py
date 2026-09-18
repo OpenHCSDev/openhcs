@@ -144,9 +144,7 @@ class PlateGridModel:
             if coord_to_well is not None
             else cls._coordinates_from_standard_well_ids(well_ids)
         )
-        reverse_coordinates = {
-            well_id: coord for coord, well_id in coordinates.items()
-        }
+        reverse_coordinates = {well_id: coord for coord, well_id in coordinates.items()}
 
         if not well_ids:
             return cls.empty()
@@ -263,9 +261,7 @@ class PlateSubdirectoryButtonRegistry:
         for subdir in subdirs:
             button = QPushButton(subdir)
             button.setCheckable(True)
-            button.setStyleSheet(
-                self.color_scheme.styles.generate_button_style()
-            )
+            button.setStyleSheet(self.color_scheme.styles.generate_button_style())
             button.clicked.connect(lambda checked, s=subdir: on_selected(s))
 
             self.button_group.addButton(button)
@@ -537,8 +533,7 @@ class PlateSelectionInteractionLifecycle:
 
     def is_left_rectangle_drag(self, event) -> bool:
         return (
-            self.view.is_rect_selecting
-            and event.buttons() & Qt.MouseButton.LeftButton
+            self.view.is_rect_selecting and event.buttons() & Qt.MouseButton.LeftButton
         )
 
     def begin_rectangle_selection(self, start_pos) -> None:
@@ -1079,9 +1074,7 @@ class PlateViewWidget(QWidget):
                 background-color: {self.color_scheme.to_hex(self.color_scheme.panel_bg)};
             }}
         """)
-        invert_btn.clicked.connect(
-            lambda: self.selection_controller.invert_selection()
-        )
+        invert_btn.clicked.connect(lambda: self.selection_controller.invert_selection())
         self.well_grid_layout.addWidget(invert_btn, 0, 0)
 
         # Add column headers - for all columns in bounding rectangle

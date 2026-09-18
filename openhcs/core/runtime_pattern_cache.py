@@ -103,10 +103,7 @@ class FrozenPatternDiscoveryResult:
         )
 
     def thaw(self) -> dict[str, DiscoveredPatternCollection]:
-        return {
-            axis_id: patterns.thaw()
-            for axis_id, patterns in self.patterns_by_axis
-        }
+        return {axis_id: patterns.thaw() for axis_id, patterns in self.patterns_by_axis}
 
 
 @dataclass(slots=True)

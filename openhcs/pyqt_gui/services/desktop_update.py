@@ -40,6 +40,7 @@ from openhcs.desktop_deployment import (
 from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
 from openhcs.mcp.bootstrap import MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE
 from openhcs.pyqt_gui.services.desktop_update_worker import DesktopUpdatePlan
+from openhcs.pyqt_gui.services.history_migration import DesktopHistoryUpgrade
 from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
 from openhcs.serialization.json import to_jsonable
 from openhcs.ui.shared.plate_manager_code_document import (
@@ -612,7 +613,9 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
         """
 
         code_workflow.apply_payload(payload)
-        ObjectStateRegistry.load_history_from_file(str(self.history_document))
+        ObjectStateRegistry.load_history_from_file(
+            str(self.history_document), migration=DesktopHistoryUpgrade()
+        )
         with ObjectStateRegistry.atomic_success("restore captured session declaration"):
             code_workflow.apply_payload(payload)
 

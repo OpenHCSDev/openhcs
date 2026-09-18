@@ -11,7 +11,9 @@ from tests.unit.bioformats_fixture import (
 )
 
 
-def test_bioformats_handler_preloads_planes_through_runtime_path(tmp_path: Path) -> None:
+def test_bioformats_handler_preloads_planes_through_runtime_path(
+    tmp_path: Path,
+) -> None:
     stack = write_bioformats_manifest_fixture(tmp_path)
     filemanager = bioformats_filemanager()
     handler = BioFormatsHandler(filemanager)

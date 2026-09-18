@@ -25,7 +25,9 @@ def test_visible_source_alias_is_writable_polystore_workspace(
     alias = resolve_visible_source_path(hidden_source)
 
     assert alias != hidden_source
-    assert not any(part.startswith(".") for part in alias.parts if part not in {alias.anchor, ""})
+    assert not any(
+        part.startswith(".") for part in alias.parts if part not in {alias.anchor, ""}
+    )
     assert filemanager.is_symlink(alias / "image.txt", backend)
     assert not filemanager.is_symlink(alias / "openhcs_metadata.json", backend)
 
@@ -66,7 +68,9 @@ def test_visible_source_alias_preserves_pipeline_parent_siblings(
     assert alias.parent.name.startswith(f"{pipeline_root.name}_")
     assert filemanager.is_symlink(alias / "IXMtest_A01_s1_w1.tif", backend)
     assert filemanager.is_symlink(alias.parent / "20585_AE.csv", backend)
-    assert filemanager.is_symlink(alias.parent / "BBBC022_Analysis_Final.cppipe", backend)
+    assert filemanager.is_symlink(
+        alias.parent / "BBBC022_Analysis_Final.cppipe", backend
+    )
     assert resolve_visible_source_path(image_root) == alias
 
 

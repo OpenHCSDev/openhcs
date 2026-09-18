@@ -67,9 +67,12 @@ def test_measure_image_skeleton_compiles_one_image_measurement_output() -> None:
     (measurements,) = contract.artifact_outputs.specs
     assert measurements.name == "Skeleton metrics_1_measurements"
     assert measurements.artifact_type is MeasurementsArtifactType
-    assert ImageMeasurementSubjectRelation(
-        source=ArtifactSpec.input("SMI312", ImageArtifactType).ref()
-    ) in measurements.relations
+    assert (
+        ImageMeasurementSubjectRelation(
+            source=ArtifactSpec.input("SMI312", ImageArtifactType).ref()
+        )
+        in measurements.relations
+    )
 
 
 def test_measure_image_skeleton_returns_schema_bearing_rows() -> None:

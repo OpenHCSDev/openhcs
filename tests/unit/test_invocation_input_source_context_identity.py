@@ -184,9 +184,7 @@ def test_multiple_main_flow_images_keep_declared_source_projection() -> None:
 def test_primary_workspace_role_does_not_override_compiled_input_ownership(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    contract, plate_template, combined_image, compiled = (
-        _compile_source_context_edges()
-    )
+    contract, plate_template, combined_image, compiled = _compile_source_context_edges()
     edges = next(compiled.iter_invocations()).artifact_input_edges
     edges_by_ref = {edge.spec.ref(): edge for edge in edges}
     source_payload = ImagePayloadMetadata(

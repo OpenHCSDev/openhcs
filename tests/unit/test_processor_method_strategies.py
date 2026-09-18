@@ -78,12 +78,16 @@ def test_numpy_processor_method_strategies_use_distinct_inherited_registries() -
 def test_numpy_processor_method_strategies_dispatch_behavior() -> None:
     stack = np.arange(2 * 4 * 4, dtype=np.uint16).reshape(2, 4, 4)
 
-    assert numpy_processor.spatial_bin_2d(
-        stack, 2, SpatialBinMethod.MEAN
-    ).shape == (2, 2, 2)
-    assert numpy_processor.spatial_bin_3d(
-        stack, 2, SpatialBinMethod.MAX
-    ).shape == (1, 2, 2)
+    assert numpy_processor.spatial_bin_2d(stack, 2, SpatialBinMethod.MEAN).shape == (
+        2,
+        2,
+        2,
+    )
+    assert numpy_processor.spatial_bin_3d(stack, 2, SpatialBinMethod.MAX).shape == (
+        1,
+        2,
+        2,
+    )
     assert numpy_processor.create_projection(
         stack, NumpyStackProjectionMethod.MEAN
     ).shape == (4, 4)
@@ -101,17 +105,14 @@ def test_numpy_processor_method_strategies_dispatch_behavior() -> None:
 
 def test_projection_method_types_exactly_match_registered_dispatch() -> None:
     processor_root = (
-        Path(__file__).parents[2]
-        / "openhcs/processing/backends/processors"
+        Path(__file__).parents[2] / "openhcs/processing/backends/processors"
     )
     discovered: dict[str, set[str]] = {}
 
     for path in processor_root.glob("*_processor.py"):
         tree = ast.parse(path.read_text(), filename=str(path))
         functions = {
-            node.name: node
-            for node in tree.body
-            if isinstance(node, ast.FunctionDef)
+            node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)
         }
         create_projection = functions.get("create_projection")
         if create_projection is None:
@@ -131,23 +132,22 @@ def test_projection_method_types_exactly_match_registered_dispatch() -> None:
             node.name
             for node in tree.body
             if isinstance(node, ast.ClassDef)
+            and any(
+                isinstance(base, ast.Subscript)
+                and ast.unparse(base.value) == "EnumKeyedStrategyMixin"
+                and ast.unparse(base.slice) == method_type_name
+                for base in node.bases
+            )
+            and any(
+                isinstance(statement, ast.Assign)
                 and any(
-                    isinstance(base, ast.Subscript)
-                    and ast.unparse(base.value) == "EnumKeyedStrategyMixin"
-                    and ast.unparse(base.slice) == method_type_name
-                    for base in node.bases
+                    isinstance(target, ast.Name) and target.id == "__enum_member_attr__"
+                    for target in statement.targets
                 )
-                and any(
-                    isinstance(statement, ast.Assign)
-                    and any(
-                        isinstance(target, ast.Name)
-                        and target.id == "__enum_member_attr__"
-                        for target in statement.targets
-                    )
-                    and isinstance(statement.value, ast.Constant)
-                    and statement.value.value == "method"
-                    for statement in node.body
-                )
+                and isinstance(statement.value, ast.Constant)
+                and statement.value.value == "method"
+                for statement in node.body
+            )
         }
         registered_members = {
             statement.value.attr
@@ -172,9 +172,7 @@ def test_projection_method_types_exactly_match_registered_dispatch() -> None:
 
 
 def test_processor_method_roots_use_shared_enum_strategy_directly() -> None:
-    method_axes_source = (
-        Path(method_axes.__file__).read_text(encoding="utf-8")
-    )
+    method_axes_source = Path(method_axes.__file__).read_text(encoding="utf-8")
 
     assert "RegisteredProcessorMethodStrategy" not in method_axes_source
 

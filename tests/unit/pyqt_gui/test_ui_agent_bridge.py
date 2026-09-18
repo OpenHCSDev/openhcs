@@ -10,6 +10,7 @@ from objectstate.lazy_factory import ensure_global_config_context
 from objectstate.object_state import ObjectState, ObjectStateRegistry
 from PyQt6 import sip
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -577,8 +578,14 @@ class FakeMainWindow:
         )
         self.window_specs = {}
         self.check_for_updates_action = QPushButton()
+        self.exit_action = QAction("Exit")
         self.update_check_count = 0
         self.restart_count = 0
+        self.exit_count = 0
+        self.exit_action.triggered.connect(self._record_exit)
+
+    def _record_exit(self) -> None:
+        self.exit_count += 1
 
     def session_restart_available(self) -> bool:
         return True
@@ -645,6 +652,33 @@ def test_main_window_restart_action_owns_dispatch_and_reconnect_warning() -> Non
     assert main_window.update_check_count == 0
     assert result.warnings == action.warnings
     assert "ui_restart_reconnect_required" in {
+        warning.code for warning in provider.catalog().warnings
+    }
+
+
+def test_main_window_exit_action_owns_dispatch_and_disconnect_warning() -> None:
+    QtApplicationAuthority.app()
+    main_window = FakeMainWindow()
+    provider = MainWindowActionProvider(main_window)
+    action = MainWindowAction.EXIT
+    summary = provider.summary(action.value)
+    assert summary.enabled
+    assert summary.confirmation_required
+    assert summary.side_effects == action.side_effects
+
+    result = provider.invoke(
+        UiActionInvokeRequest(
+            widget_id="main_window",
+            action_id=action.value,
+        )
+    )
+
+    assert result.status == "accepted"
+    assert main_window.exit_count == 1
+    assert main_window.restart_count == 0
+    assert main_window.update_check_count == 0
+    assert result.warnings == action.warnings
+    assert "ui_exit_disconnect_expected" in {
         warning.code for warning in provider.catalog().warnings
     }
 
@@ -4960,21 +4994,26 @@ def test_ui_bridge_control_server_round_trips_documents_through_descriptor(
     binding = server.start()
     try:
         service = UiBridgeService()
+        connection = service.connection_from_args(
+            descriptor_file_path=binding.descriptor_file_path
+        )
 
-        status = service.status()
-        catalog = service.list_documents()
-        state_catalog = service.list_state_surfaces()
+        status = service.status(connection)
+        catalog = service.list_documents(connection)
+        state_catalog = service.list_state_surfaces(connection)
         document = service.get_document(
             UiCodeDocumentRequest(
                 document_id=DOCUMENT_ID,
                 selection_mode=ALL_SELECTION_MODE,
-            )
+            ),
+            connection,
         )
         state = service.get_state_surface(
             UiStateSurfaceRequest(
                 surface_id=UiStateSurfaceId.PLATE_MANAGER.value,
                 selection_mode=ALL_SELECTION_MODE,
-            )
+            ),
+            connection,
         )
 
         assert status.reachable is True

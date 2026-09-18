@@ -12,8 +12,10 @@ from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.interop.cellprofiler.runtime.profile_fields import (
     object_label_artifact_profile_fields,
 )
-from openhcs.core.steps.function_runtime import RuntimeCallableArgument, RuntimeProfileFieldValue
-
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableArgument,
+    RuntimeProfileFieldValue,
+)
 
 logger = logging.getLogger(__name__)
 

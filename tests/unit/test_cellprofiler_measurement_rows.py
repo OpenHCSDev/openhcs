@@ -391,14 +391,18 @@ def test_row_sequence_projection_overlays_identity_without_materializing_rows() 
     )
     schema = ObjectMeasurementRowCompletionSchema.from_fields(fields)
 
-    projected = RowSequenceMeasurementObjectRowIdentityProjectionStrategy().project_rows(
-        rows,
-        schema,
-        CellProfilerObjectMeasurementRowPolicy(),
+    projected = (
+        RowSequenceMeasurementObjectRowIdentityProjectionStrategy().project_rows(
+            rows,
+            schema,
+            CellProfilerObjectMeasurementRowPolicy(),
+        )
     )
 
     assert projected.rows.fields == fields
-    assert projected.rows.object_row_identity is MeasurementObjectRowIdentity.ROW_SEQUENCE
+    assert (
+        projected.rows.object_row_identity is MeasurementObjectRowIdentity.ROW_SEQUENCE
+    )
     assert tuple(projected.rows.column_values("object_label")) == (1, 2)
     assert tuple(projected.rows.column_values("value")) == (1.0, 3.0)
     assert projected.row_keys.entries == ((1, (0,)), (2, (0,)))

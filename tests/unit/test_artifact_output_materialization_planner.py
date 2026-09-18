@@ -6,16 +6,17 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
     ImageArtifactType,
+    MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
 from openhcs.core.pipeline.artifact_planning import (
     AutomaticArtifactOutputMaterializationStrategy,
     ArtifactOutputMaterializationPlanner,
-    StreamingOnlyMaterializationSpec,
     TerminalMaterializationSpec,
 )
 from openhcs.core.runtime_exports import RuntimeExportExpectation
 from openhcs.processing.materialization import (
+    CsvOptions,
     ImageFileOptions,
     MaterializedFilenameIdentity,
     MaterializationSpec,
@@ -65,7 +66,7 @@ def test_consumed_image_output_remains_unmaterialized() -> None:
     assert materialization is None
 
 
-def test_object_label_output_gets_streaming_only_roi_materialization() -> None:
+def test_object_label_output_gets_terminal_roi_and_label_materialization() -> None:
     output = ArtifactSpec.output("Cells", ObjectLabelsArtifactType)
 
     materialization = ArtifactOutputMaterializationPlanner.materialization_for(
@@ -73,18 +74,22 @@ def test_object_label_output_gets_streaming_only_roi_materialization() -> None:
         (),
     )
 
-    assert isinstance(materialization, StreamingOnlyMaterializationSpec)
+    assert isinstance(materialization, TerminalMaterializationSpec)
     assert materialization.outputs == (
         ROIOptions(
             min_area=1,
             filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
         ),
+        ImageFileOptions(
+            filename_suffix=".labels.tif",
+            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+        ),
     )
-    assert not materialization.participates_in_persistent_materialization()
+    assert materialization.participates_in_persistent_materialization()
     assert not materialization.participates_in_runtime_export_observation()
 
 
-def test_consumed_object_label_output_retains_roi_stream_materialization() -> None:
+def test_consumed_object_label_output_retains_terminal_materialization() -> None:
     output = ArtifactSpec.output("Cells", ObjectLabelsArtifactType)
 
     materialization = ArtifactOutputMaterializationPlanner.materialization_for(
@@ -92,7 +97,34 @@ def test_consumed_object_label_output_retains_roi_stream_materialization() -> No
         (output.ref().for_plan_type(ArtifactInputPlan),),
     )
 
-    assert isinstance(materialization, StreamingOnlyMaterializationSpec)
+    assert isinstance(materialization, TerminalMaterializationSpec)
+
+
+def test_terminal_measurement_output_gets_artifact_named_csv_materialization() -> None:
+    output = ArtifactSpec.output("CellMeasurements", MeasurementsArtifactType)
+
+    materialization = ArtifactOutputMaterializationPlanner.materialization_for(
+        output,
+        (),
+    )
+
+    assert isinstance(materialization, TerminalMaterializationSpec)
+    assert materialization.outputs == (
+        CsvOptions(
+            filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+        ),
+    )
+
+
+def test_consumed_measurement_output_remains_unmaterialized() -> None:
+    output = ArtifactSpec.output("Intermediate", MeasurementsArtifactType)
+
+    materialization = ArtifactOutputMaterializationPlanner.materialization_for(
+        output,
+        (output.ref().for_plan_type(ArtifactInputPlan),),
+    )
+
+    assert materialization is None
 
 
 def test_explicit_output_materialization_remains_authoritative() -> None:
@@ -104,8 +136,7 @@ def test_explicit_output_materialization_remains_authoritative() -> None:
     )
 
     assert (
-        ArtifactOutputMaterializationPlanner.materialization_for(output, ())
-        is explicit
+        ArtifactOutputMaterializationPlanner.materialization_for(output, ()) is explicit
     )
     assert explicit.participates_in_runtime_export_observation()
 
@@ -121,9 +152,7 @@ def test_runtime_export_expectation_excludes_terminal_persistence() -> None:
     exported = ArtifactSpec.output(
         "Saved",
         ImageArtifactType,
-        materialization=MaterializationSpec(
-            ImageFileOptions(filename_suffix=".npy")
-        ),
+        materialization=MaterializationSpec(ImageFileOptions(filename_suffix=".npy")),
     )
 
     expectation = RuntimeExportExpectation.from_output_specs((terminal, exported))

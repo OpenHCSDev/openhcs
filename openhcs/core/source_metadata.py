@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
+from enum import Enum
 from functools import lru_cache
+from math import isfinite
 from pathlib import Path
 from typing import ClassVar, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
+from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
@@ -19,6 +22,7 @@ SOURCE_FILTER_PATHS_METADATA_FIELD = "OpenHCSSourceFilterPaths"
 SOURCE_PLANE_INDEX_FIELD = "source_plane_index"
 SOURCE_PLANE_COUNT_FIELD = "source_plane_count"
 SOURCE_VOXEL_SPACING_FIELD = "OpenHCSSourceVoxelSpacingZYX"
+SOURCE_VOXEL_SPACING_UNIT_FIELD = "OpenHCSSourceVoxelSpacingUnit"
 
 SourceMetadataScalar: TypeAlias = str | int | float | bool | None
 SourceMetadataValue: TypeAlias = (
@@ -39,34 +43,27 @@ def source_metadata_dict(
 ) -> dict[str, SourceMetadataValue]:
     """Return a detached JSON-compatible source-metadata mapping."""
 
-    return {
-        str(key): canonical_source_metadata_value(str(key), value)
-        for key, value in metadata.items()
-    }
-
-
-def canonical_source_metadata_value(
-    field: str,
-    value: SourceMetadataValue,
-) -> SourceMetadataValue:
-    """Project one declared source-metadata value into its canonical form."""
-
-    if field == ORIGINAL_SOURCE_METADATA_FIELD:
-        return OriginalSourceMetadata.from_reserved_value(
-            value,
-            path=field,
-        ).as_dict()
-    if field == SOURCE_FILTER_PATHS_METADATA_FIELD:
-        return SourceFilterPathMetadata.from_reserved_value(
-            value,
-            path=field,
-        ).as_dict()
-    if isinstance(value, Mapping):
-        return {
-            str(nested_key): source_metadata_scalar(nested_value)
-            for nested_key, nested_value in value.items()
-        }
-    return source_metadata_scalar(value)
+    detached: dict[str, SourceMetadataValue] = {}
+    for key, value in metadata.items():
+        field = str(key)
+        if field == ORIGINAL_SOURCE_METADATA_FIELD:
+            detached[field] = OriginalSourceMetadata.from_reserved_value(
+                value,
+                path=field,
+            ).as_dict()
+        elif field == SOURCE_FILTER_PATHS_METADATA_FIELD:
+            detached[field] = SourceFilterPathMetadata.from_reserved_value(
+                value,
+                path=field,
+            ).as_dict()
+        elif isinstance(value, Mapping):
+            detached[field] = {
+                str(nested_key): source_metadata_scalar(nested_value)
+                for nested_key, nested_value in value.items()
+            }
+        else:
+            detached[field] = source_metadata_scalar(value)
+    return detached
 
 
 def source_metadata_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:
@@ -261,23 +258,68 @@ class SourceFilterPathMetadata:
         )
 
 
+class SourceVoxelSpacingUnit(Enum):
+    """Coordinate units own their projection into physical scalar calibration."""
+
+    native_unit: str
+
+    MICROMETERS = (
+        "micrometers",
+        lambda spacing: spacing.isotropic_xy_spacing,
+        "micrometer",
+    )
+    RELATIVE = "relative", lambda spacing: None, "dimensionless"
+
+    def __new__(
+        cls,
+        name: str,
+        physical_projection: Callable[["SourceVoxelSpacing"], float | None],
+        native_unit: str,
+    ):
+        member = object.__new__(cls)
+        member._value_ = name
+        member._physical_projection = physical_projection
+        member.native_unit = native_unit
+        return member
+
+    def physical_pixel_size(self, spacing: "SourceVoxelSpacing") -> float | None:
+        return self._physical_projection(spacing)
+
+
 @dataclass(frozen=True, slots=True)
 class SourceVoxelSpacing:
-    """Relative physical spacing for source pixels, ordered like arrays."""
+    """Source-pixel coordinates, ordered like arrays, with explicit unit semantics.
+
+    Configured values are micrometers. CellProfiler NamesAndTypes coordinates are
+    dimensionless ratios normalized by Y, not absolute physical calibration.
+    """
 
     values_zyx: tuple[float, ...] = ()
     """Positive y/x or z/y/x spacing values; an empty tuple means unspecified spacing."""
 
+    unit: SourceVoxelSpacingUnit = SourceVoxelSpacingUnit.MICROMETERS
+    """Units of the configured spacing values.
+
+    MICROMETERS specifies physical micrometers per pixel. Physical scalar
+    measurements require equal X and Y spacing and consistent calibration across
+    their image sources; Z spacing may differ. RELATIVE specifies dimensionless
+    coordinate ratios, including CellProfiler spacing normalized by Y. Relative
+    spacing and legacy spacing metadata without recorded units do not provide
+    physical scalar calibration. An empty values tuple leaves spacing unspecified.
+    """
+
     def __post_init__(self) -> None:
         normalized = tuple(float(value) for value in self.values_zyx)
-        if any(value <= 0 for value in normalized):
-            raise ValueError("SourceVoxelSpacing values must be positive.")
+        if any(not isfinite(value) or value <= 0 for value in normalized):
+            raise ValueError("SourceVoxelSpacing values must be finite and positive.")
         if len(normalized) not in (0, 2, 3):
             raise ValueError(
                 "SourceVoxelSpacing requires 2-D or 3-D spacing, got "
                 f"{len(normalized)} values."
             )
         object.__setattr__(self, "values_zyx", normalized)
+        if not isinstance(self.unit, SourceVoxelSpacingUnit):
+            raise TypeError("SourceVoxelSpacing.unit must be SourceVoxelSpacingUnit.")
 
     @property
     def has_values(self) -> bool:
@@ -297,7 +339,10 @@ class SourceVoxelSpacing:
             raise ValueError(
                 "CellProfiler relative pixel spacing in Y must be positive."
             )
-        return cls((float(z) / raw_y, 1.0, float(x) / raw_y))
+        return cls(
+            (float(z) / raw_y, 1.0, float(x) / raw_y),
+            unit=SourceVoxelSpacingUnit.RELATIVE,
+        )
 
     @classmethod
     def from_source_metadata(
@@ -319,7 +364,68 @@ class SourceVoxelSpacing:
             values = tuple(
                 float(part) for part in str(value).split(",") if part.strip()
             )
-        return cls(values)
+        # Historical coordinate metadata did not establish physical units.
+        unit = SourceVoxelSpacingUnit(
+            metadata.get(
+                SOURCE_VOXEL_SPACING_UNIT_FIELD, SourceVoxelSpacingUnit.RELATIVE.value
+            )
+        )
+        return cls(values, unit=unit)
+
+    @property
+    def isotropic_xy_spacing(self) -> float | None:
+        if not self.has_values:
+            return None
+        y, x = self.values_zyx[-2:]
+        return x if x == y else None
+
+    @classmethod
+    def common_physical_pixel_size(
+        cls, spacings: Iterable["SourceVoxelSpacing"]
+    ) -> float | None:
+        """Project a uniformly calibrated source set; Z need not equal X/Y."""
+        values = tuple(
+            spacing.unit.physical_pixel_size(spacing) for spacing in spacings
+        )
+        unique = set(values)
+        return values[0] if len(unique) == 1 and None not in unique else None
+
+    @classmethod
+    def metadata_pixel_size(cls, spacings: Iterable["SourceVoxelSpacing"]) -> float:
+        """Numeric legacy metadata view; physical artifacts validate coordinates.
+
+        The existing uncalibrated compatibility value remains 1.0 where no
+        uniform physical scalar exists. It does not establish micrometer units.
+        """
+        value = cls.common_physical_pixel_size(spacings)
+        return 1.0 if value is None else value
+
+    @classmethod
+    def require_physical_pixel_size(
+        cls, spacings: Iterable["SourceVoxelSpacing"]
+    ) -> float:
+        value = cls.common_physical_pixel_size(spacings)
+        if value is None:
+            raise ValueError(
+                "Physical scalar pixel size requires micrometer calibration, "
+                "isotropic X/Y spacing, and agreement across every source. "
+                "Relative coordinates and mixed or conflicting calibrations "
+                "cannot provide this artifact."
+            )
+        return value
+
+    @classmethod
+    def resolve_physical_pixel_size(
+        cls,
+        spacings: Iterable["SourceVoxelSpacing"],
+        *,
+        legacy_metadata_pixel_size: float,
+    ) -> float:
+        """Explicit coordinates govern calibration; unconfigured formats retain legacy behavior."""
+        declared = tuple(spacings)
+        if any(spacing.has_values for spacing in declared):
+            return cls.require_physical_pixel_size(declared)
+        return legacy_metadata_pixel_size
 
     def as_source_metadata_value(self) -> str:
         return ",".join(f"{value:.17g}" for value in self.values_zyx)
@@ -339,6 +445,7 @@ class SourceVoxelSpacing:
                 f"{path!r}: {existing.values_zyx!r} != {self.values_zyx!r}."
             )
         target[SOURCE_VOXEL_SPACING_FIELD] = self.as_source_metadata_value()
+        target[SOURCE_VOXEL_SPACING_UNIT_FIELD] = self.unit.value
 
     def with_missing_from(
         self,
@@ -360,12 +467,20 @@ class SourceVoxelSpacing:
             )
         return self.values_zyx[-ndim:]
 
+    @property
+    def native_coordinate_unit(self) -> str:
+        """Unknown calibration is pixels, never an inferred physical unit."""
+        return self.unit.native_unit if self.has_values else "pixel"
+
 
 @dataclass(kw_only=True)
 class SourceVoxelSpacingFields:
     """Source-image voxel spacing carried by runtime payload metadata."""
 
-    source_voxel_spacing: SourceVoxelSpacing = field(default_factory=SourceVoxelSpacing)
+    source_voxel_spacing: SourceVoxelSpacing = field(
+        default_factory=SourceVoxelSpacing,
+        metadata={ViewerWireField.IMAGE_METADATA: True},
+    )
 
     def normalize_source_voxel_spacing_fields(self) -> None:
         if not isinstance(self.source_voxel_spacing, SourceVoxelSpacing):

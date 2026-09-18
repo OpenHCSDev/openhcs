@@ -370,7 +370,6 @@ def test_output_record_requests_do_not_copy_active_output_specs() -> None:
 
     assert request_calls
     assert all(
-        "active_output_specs"
-        not in {keyword.arg for keyword in call.keywords}
+        "active_output_specs" not in {keyword.arg for keyword in call.keywords}
         for call in request_calls
     )

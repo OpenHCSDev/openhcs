@@ -1150,6 +1150,9 @@ class ViewerLayerAxisProjection:
     routed_component_values: ComponentValues
     axis_offsets: tuple[int, ...]
     scalar_component_values: ComponentValues = field(default_factory=dict)
+    routed_component_coordinates: tuple[ComponentCoordinate, ...] = field(
+        default_factory=tuple
+    )
 
     def axis_shape(self) -> tuple[int, ...]:
         """Return the viewer-domain stack shape for projected component axes."""
@@ -1352,6 +1355,7 @@ class ViewerLayerAxisProjectionRequest:
         cls,
         *,
         projected_axis_components: Sequence[str],
+        route_component_coordinates: Sequence[Sequence[ComponentValue]] = (),
         route_component_values: ComponentValues,
         viewer_component_values: ComponentValues,
         declared_component_values: ComponentValues,
@@ -1405,9 +1409,7 @@ class ViewerLayerAxisProjectionRequestAuthority:
                 route_value_tracker.domain_key(route_key, axis_components),
                 axis_components,
             ),
-            viewer_component_values=display_axis_domain.display_axis_values_for(
-                axis_components
-            ),
+            viewer_component_values=declared_component_values,
             declared_component_values=(
                 component_axis_semantics.required_component_values(axis_components)
             ),

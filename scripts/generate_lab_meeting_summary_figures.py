@@ -16,7 +16,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
-
 METHOD_COLORS = {
     "CP": "#262626",
     "OH1": "#0f8b8d",
@@ -206,7 +205,9 @@ def main() -> int:
             )
     if args.measured_throughput_speedup:
         if args.native_summary_csv is None:
-            raise ValueError("--native-summary-csv is required for measured throughput speedup.")
+            raise ValueError(
+                "--native-summary-csv is required for measured throughput speedup."
+            )
         outputs.extend(
             generate_measured_throughput_speedup_figure(
                 rows,
@@ -232,7 +233,9 @@ def main() -> int:
         )
     if args.well_throughput_summary:
         if args.native_summary_csv is None:
-            raise ValueError("--native-summary-csv is required for well throughput summary.")
+            raise ValueError(
+                "--native-summary-csv is required for well throughput summary."
+            )
         outputs.extend(
             generate_well_throughput_summary_figure(
                 rows,
@@ -275,7 +278,10 @@ def generate_summary_distribution_figure(
     table_axis.axis("off")
 
     cell_text = [
-        [_format_value(summaries[method][column], spec["percentage"]) for column in SUMMARY_COLUMNS]
+        [
+            _format_value(summaries[method][column], spec["percentage"])
+            for column in SUMMARY_COLUMNS
+        ]
         for method in methods
     ]
     table = table_axis.table(
@@ -361,7 +367,12 @@ def generate_category_speedup_dot_figure(
     if not grouped:
         return ()
 
-    ordered = tuple(sorted(grouped, key=lambda category: sum(grouped[category]) / len(grouped[category])))
+    ordered = tuple(
+        sorted(
+            grouped,
+            key=lambda category: sum(grouped[category]) / len(grouped[category]),
+        )
+    )
     means = [sum(grouped[category]) / len(grouped[category]) for category in ordered]
     fig_width = max(8.1, len(ordered) * 0.48)
     fig, axis = plt.subplots(figsize=(fig_width, 3.6), layout="constrained")
@@ -370,7 +381,10 @@ def generate_category_speedup_dot_figure(
     for index, category in enumerate(ordered):
         values = grouped[category]
         axis.scatter(
-            [index + _deterministic_jitter(point_index, len(values)) for point_index, _ in enumerate(values)],
+            [
+                index + _deterministic_jitter(point_index, len(values))
+                for point_index, _ in enumerate(values)
+            ],
             values,
             s=22,
             color="#111111",
@@ -384,7 +398,12 @@ def generate_category_speedup_dot_figure(
         axis.set_yscale("log")
         axis.yaxis.set_major_formatter(FuncFormatter(_plain_tick_label))
     axis.set_xticks(x_positions)
-    axis.set_xticklabels([_wrap_label(category) for category in ordered], rotation=45, ha="right", fontsize=6.6)
+    axis.set_xticklabels(
+        [_wrap_label(category) for category in ordered],
+        rotation=45,
+        ha="right",
+        fontsize=6.6,
+    )
     axis.grid(axis="y", alpha=0.25)
     axis.set_ylim(bottom=1.0 if log_scale else 0.0)
     axis.text(
@@ -395,7 +414,11 @@ def generate_category_speedup_dot_figure(
         va="top",
         ha="left",
         fontsize=8.5,
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#0f8b8d"},
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": "white",
+            "edgecolor": "#0f8b8d",
+        },
     )
 
     outputs: list[Path] = []
@@ -425,7 +448,8 @@ def generate_measured_throughput_speedup_figure(
     """Plot measured multi-sample throughput against native CellProfiler timing."""
     native_seconds_by_case = _native_seconds_by_case(native_rows)
     grouped: dict[str, list[float]] = {
-        _sample_condition_label(worker_count, replicas): [] for worker_count in worker_counts
+        _sample_condition_label(worker_count, replicas): []
+        for worker_count in worker_counts
     }
     for row in rows:
         if int(row.get(REPLICAS_FIELD, "0")) != replicas:
@@ -477,7 +501,10 @@ def generate_measured_throughput_speedup_figure(
         )
         values = grouped[method]
         axis.scatter(
-            [index + _deterministic_jitter(point_index, len(values)) for point_index, _ in enumerate(values)],
+            [
+                index + _deterministic_jitter(point_index, len(values))
+                for point_index, _ in enumerate(values)
+            ],
             values,
             s=18,
             color="#111111",
@@ -503,7 +530,11 @@ def generate_measured_throughput_speedup_figure(
         va="top",
         ha="left",
         fontsize=8.2,
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#0f8b8d"},
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": "white",
+            "edgecolor": "#0f8b8d",
+        },
     )
 
     outputs: list[Path] = []
@@ -517,10 +548,7 @@ def generate_measured_throughput_speedup_figure(
 
 
 def _sample_condition_label(worker_count: int, replicas: int) -> str:
-    return (
-        f"{worker_count} core\n"
-        f"{replicas} sample{'s' if replicas != 1 else ''}"
-    )
+    return f"{worker_count} core\n" f"{replicas} sample{'s' if replicas != 1 else ''}"
 
 
 def _batch_throughput_speedups(
@@ -568,7 +596,12 @@ def _preliminary_well_speedups(
         native_seconds = native_seconds_by_case.get(case_name)
         well_count = _optional_float(row.get(WELL_COUNT_FIELD))
         total_seconds = _optional_float(row.get(TOTAL_SECONDS_FIELD))
-        if native_seconds is None or well_count is None or total_seconds is None or total_seconds <= 0.0:
+        if (
+            native_seconds is None
+            or well_count is None
+            or total_seconds is None
+            or total_seconds <= 0.0
+        ):
             continue
         speedups.append(native_seconds * well_count / total_seconds)
     return speedups
@@ -624,7 +657,10 @@ def generate_well_throughput_summary_figure(
         offset = -0.17 if series_index == 0 else 0.17
         axis.bar(
             [position + offset for position in group_positions],
-            [summary_values[series_index] for _summary_name, summary_values in summaries],
+            [
+                summary_values[series_index]
+                for _summary_name, summary_values in summaries
+            ],
             width=0.32,
             color=color,
             alpha=0.78,
@@ -651,7 +687,9 @@ def generate_well_throughput_summary_figure(
     axis.axhline(1.0, color="#333333", linewidth=0.9, alpha=0.7)
     axis.axhline(4.0, color="#333333", linewidth=0.9, alpha=0.35, linestyle="--")
     axis.set_xticks(group_positions)
-    axis.set_xticklabels([summary_name for summary_name, _values in summaries], fontsize=9)
+    axis.set_xticklabels(
+        [summary_name for summary_name, _values in summaries], fontsize=9
+    )
     axis.set_ylabel("Speedup vs CellProfiler (x)")
     axis.grid(axis="y", alpha=0.25)
     axis.yaxis.set_major_formatter(FuncFormatter(_plain_tick_label))
@@ -662,12 +700,20 @@ def generate_well_throughput_summary_figure(
         0.95,
         f"Measured {well_count} wells, {worker_count} cores\n"
         f"{len(points)} pipelines; dots = pipelines"
-        + (f"\nExcluded: {len(excluded_cases)} failed/frozen run" if excluded_cases else ""),
+        + (
+            f"\nExcluded: {len(excluded_cases)} failed/frozen run"
+            if excluded_cases
+            else ""
+        ),
         transform=axis.transAxes,
         va="top",
         ha="right",
         fontsize=8.5,
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#0f8b8d"},
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": "white",
+            "edgecolor": "#0f8b8d",
+        },
     )
 
     outputs: list[Path] = []
@@ -741,9 +787,7 @@ def _plot_projected_core_lines(
         values_by_pipeline.setdefault(row["pipeline_name"], {})[method] = speedup
 
     for pipeline_values in values_by_pipeline.values():
-        ordered_methods = [
-            method for method in methods if method in pipeline_values
-        ]
+        ordered_methods = [method for method in methods if method in pipeline_values]
         if len(ordered_methods) < 2:
             continue
         axis.plot(
@@ -768,7 +812,11 @@ def _plot_projected_core_lines(
         va="top",
         ha="left",
         fontsize=8.5,
-        bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#d95f02"},
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": "white",
+            "edgecolor": "#d95f02",
+        },
     )
 
 
@@ -893,9 +941,7 @@ def generate_core_regression_figure(
 
     fig, axis = plt.subplots(figsize=(8.1, 3.6), layout="constrained")
     for core_count in sorted(set(xs)):
-        core_values = [
-            y for x, y, _pipeline_name in points if x == core_count
-        ]
+        core_values = [y for x, y, _pipeline_name in points if x == core_count]
         jittered_x = [
             core_count + _deterministic_jitter(index, len(core_values)) * 0.9
             for index, _ in enumerate(core_values)
@@ -922,7 +968,11 @@ def generate_core_regression_figure(
         va="top",
         ha="left",
         fontsize=9,
-        bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": "#0f8b8d"},
+        bbox={
+            "boxstyle": "round,pad=0.35",
+            "facecolor": "white",
+            "edgecolor": "#0f8b8d",
+        },
     )
 
     outputs: list[Path] = []
@@ -934,7 +984,9 @@ def generate_core_regression_figure(
     return tuple(outputs)
 
 
-def _core_regression_points(rows: Sequence[dict[str, str]]) -> Iterable[tuple[int, float, str]]:
+def _core_regression_points(
+    rows: Sequence[dict[str, str]],
+) -> Iterable[tuple[int, float, str]]:
     for row in rows:
         if row.get("pipeline_name") == "Average":
             continue

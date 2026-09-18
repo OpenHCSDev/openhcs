@@ -102,6 +102,7 @@ from openhcs.agent.services.ui_bridge_service import (
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
@@ -156,6 +157,9 @@ class _ProjectedViewerWindowService(ViewerWindowService):
 
     def image_intensity(self, request):
         return self._delegate.image_intensity(request)
+
+    def apply_intensity_window(self, request):
+        return self._delegate.apply_intensity_window(request)
 
 
 def _viewer_mcp_context(viewer_window_service):
@@ -14812,8 +14816,9 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
     } == {key: "1" for key in native_thread_count_environment_keys()}
     assert "OPENHCS_UNRELATED_TEST_VALUE" not in environment
     assert dev_client.McpDevServerSpec(sys.executable).process_args() == (
-        "-m",
-        "openhcs.mcp",
+        *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+            "openhcs.mcp"
+        ),
         "--surface",
         "full",
     )

@@ -319,9 +319,9 @@ class RuntimeMeasurementDialect:
         Callable[[], Mapping[tuple[str, ...], tuple[str, ...]]] | None
     ) = None
     source_feature_prefixes: tuple[tuple[str, ...], ...] = ()
-    source_feature_prefixes_provider: (
-        Callable[[], Iterable[tuple[str, ...]]] | None
-    ) = None
+    source_feature_prefixes_provider: Callable[[], Iterable[tuple[str, ...]]] | None = (
+        None
+    )
     calculated_feature_prefixes: tuple[tuple[str, ...], ...] = ()
     calculated_feature_prefixes_provider: (
         Callable[[], Iterable[tuple[str, ...]]] | None
@@ -350,9 +350,9 @@ class RuntimeMeasurementDialect:
     source_qualifier_prefix_tokens: frozenset[str] = frozenset()
     source_qualifier_suffix_tokens: frozenset[str] = frozenset()
     non_measurement_field_prefixes_provider: Callable[[], Iterable[str]] | None = None
-    spatial_grid_measurement_feature_name_provider: (
-        Callable[[str, str], str] | None
-    ) = None
+    spatial_grid_measurement_feature_name_provider: Callable[[str, str], str] | None = (
+        None
+    )
     row_qualifiers: tuple[RuntimeMeasurementRowQualifier, ...] = (
         _DEFAULT_MEASUREMENT_ROW_QUALIFIERS
     )
@@ -526,9 +526,8 @@ class RuntimeMeasurementDialect:
                 "RuntimeMeasurementDialect.measurement_feature_marker_provider "
                 "must be callable."
             )
-        if (
-            self.indexed_descriptor_suffix_width_provider is not None
-            and not callable(self.indexed_descriptor_suffix_width_provider)
+        if self.indexed_descriptor_suffix_width_provider is not None and not callable(
+            self.indexed_descriptor_suffix_width_provider
         ):
             raise TypeError(
                 "RuntimeMeasurementDialect.indexed_descriptor_suffix_width_provider "
@@ -647,9 +646,7 @@ class RuntimeMeasurementDialect:
 
     def resolved_category_prefixes(self) -> tuple[tuple[str, ...], ...]:
         """Return static and provider-supplied measurement category prefixes."""
-        return _resolved_category_prefixes(
-            runtime_measurement_dialect_cache_id(self)
-        )
+        return _resolved_category_prefixes(runtime_measurement_dialect_cache_id(self))
 
     def spatial_grid_measurement_feature_name(
         self,
@@ -687,7 +684,9 @@ class RuntimeMeasurementDialect:
             for prefix in self.resolved_primary_category_prefixes()
         )
 
-    def resolved_feature_part_aliases(self) -> Mapping[tuple[str, ...], tuple[str, ...]]:
+    def resolved_feature_part_aliases(
+        self,
+    ) -> Mapping[tuple[str, ...], tuple[str, ...]]:
         """Return static and provider-supplied direct feature-part aliases."""
         return _resolved_feature_part_aliases(
             runtime_measurement_dialect_cache_id(self)

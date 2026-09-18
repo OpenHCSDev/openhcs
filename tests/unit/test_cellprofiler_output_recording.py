@@ -87,7 +87,10 @@ def test_output_recording_uses_artifact_dependency_order() -> None:
     )
     adapter = Mock(spec=CellProfilerRuntimeAdapter)
     adapter.request = SimpleNamespace(
-        artifact_outputs={dependent_plan.ref(): dependent_plan, source_plan.ref(): source_plan}
+        artifact_outputs={
+            dependent_plan.ref(): dependent_plan,
+            source_plan.ref(): source_plan,
+        }
     )
     image = np.zeros((2, 2), dtype=np.float32)
     invocation = RuntimeFunctionInvocationRequest(
@@ -185,9 +188,7 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
     output = ArtifactSpec.output(
         "ColorNeighbors",
         ImageArtifactType,
-        relations=(
-            SourceStackLineageSourceRelation(source=measured_objects.ref()),
-        ),
+        relations=(SourceStackLineageSourceRelation(source=measured_objects.ref()),),
     )
     output_plan = ArtifactOutputPlan(
         name=output.name,

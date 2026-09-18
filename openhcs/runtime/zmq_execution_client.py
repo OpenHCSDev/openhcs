@@ -46,6 +46,7 @@ from openhcs.core.pipeline_document import (
 )
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.xdg_paths import get_openhcs_data_dir, get_openhcs_log_dir
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_signature import (
     ZMQExecutionCompileControl,
@@ -882,8 +883,9 @@ class ZMQExecutionClient(
             sys.executable,
             "-X",
             "faulthandler",
-            "-m",
-            "openhcs.runtime.zmq_execution_server_launcher",
+            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+                "openhcs.runtime.zmq_execution_server_launcher"
+            ),
         ]
         cmd.extend(["--log-file-path", str(log_file_path)])
         cmd.extend(["--startup-status-path", str(self._startup_status_path)])

@@ -58,7 +58,9 @@ def test_empty_marker_mask_deletes_segmentation_and_labeling(
     assert label_value.domain.declared_object_ids == ()
     assert label_value.source_provenance == metadata.source_provenance
     assert label_value.source_spatial_domain.source_shape_yx == image.shape[-2:]
-    assert label_value.parent_image_source_voxel_spacing == metadata.source_voxel_spacing
+    assert (
+        label_value.parent_image_source_voxel_spacing == metadata.source_voxel_spacing
+    )
     assert rows.row_mappings() == (
         {"slice_index": 0, "object_count": 0, "mean_area": 0.0},
     )
@@ -109,16 +111,17 @@ def test_nonempty_sparse_high_markers_preserve_connectivity_reference(
         structuring_element_size=1,
     )
 
-    actual_initial_labels, mask_source = (
-        CellProfiler4InitialWatershedStrategy.for_enum_member(
-            WatershedMethod.MARKERS
-        ).labels(
-            image,
-            None,
-            markers,
-            mask,
-            parameters,
-        )
+    (
+        actual_initial_labels,
+        mask_source,
+    ) = CellProfiler4InitialWatershedStrategy.for_enum_member(
+        WatershedMethod.MARKERS
+    ).labels(
+        image,
+        None,
+        markers,
+        mask,
+        parameters,
     )
     labels = watershed_connected_components(actual_initial_labels)
 
@@ -142,9 +145,7 @@ def test_nonempty_sparse_high_markers_preserve_connectivity_reference(
     np.testing.assert_array_equal(public_labels, expected_labels)
     assert public_labels.dtype == np.int32
     assert label_value.domain.scope is ObjectLabelDomainScope.PAYLOAD
-    assert label_value.domain.explicit_id_domain() == tuple(
-        range(1, object_count + 1)
-    )
+    assert label_value.domain.explicit_id_domain() == tuple(range(1, object_count + 1))
     assert rows.row_mappings() == (
         {
             "slice_index": 0,

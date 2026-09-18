@@ -146,9 +146,7 @@ def test_runtime_execution_observation_reads_context_stores() -> None:
         backend="memory",
     )
 
-    observation = RuntimeArtifactExecutionObservation.from_contexts(
-        {"A01": context}
-    )
+    observation = RuntimeArtifactExecutionObservation.from_contexts({"A01": context})
 
     assert observation.record_counts_by_axis["A01"][MeasurementsArtifactType] == 1
 
@@ -203,7 +201,7 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
     )
     monkeypatch.setattr(
         "openhcs.core.steps.function_artifact_materialization."
-        "materialized_artifact_output_paths",
+        "runtime_export_artifact_output_paths",
         lambda _plan, _context: (contracted_output,),
     )
 
@@ -222,9 +220,7 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
 
 
 def test_compiled_artifact_viewer_expectations_preserve_full_producers() -> None:
-    materialization = MaterializationSpec(
-        ImageFileOptions(filename_suffix=".tif")
-    )
+    materialization = MaterializationSpec(ImageFileOptions(filename_suffix=".tif"))
     first_output = ArtifactOutputPlan(
         name="Repeated",
         path="/memory/first/Repeated.pkl",
@@ -252,9 +248,9 @@ def test_compiled_artifact_viewer_expectations_preserve_full_producers() -> None
                 step_type="FunctionStep",
                 axis_id="A01",
                 step_scope_id="scope-first",
-                    pipeline_position=1,
-                    output_dir=Path("/tmp/output/first"),
-                    analysis_results_dir=Path("/tmp/output/first/results"),
+                pipeline_position=1,
+                output_dir=Path("/tmp/output/first"),
+                analysis_results_dir=Path("/tmp/output/first/results"),
                 artifact_outputs=OrderedDict(((first_output.ref(), first_output),)),
                 compiled_function_pattern=_compiled_pattern(),
                 streaming_configs={"napari_stream": streaming_config},
@@ -265,9 +261,9 @@ def test_compiled_artifact_viewer_expectations_preserve_full_producers() -> None
                 step_type="FunctionStep",
                 axis_id="A01",
                 step_scope_id="scope-second",
-                    pipeline_position=2,
-                    output_dir=Path("/tmp/output/second"),
-                    analysis_results_dir=Path("/tmp/output/second/results"),
+                pipeline_position=2,
+                output_dir=Path("/tmp/output/second"),
+                analysis_results_dir=Path("/tmp/output/second/results"),
                 artifact_outputs=OrderedDict(((second_output.ref(), second_output),)),
                 compiled_function_pattern=_compiled_pattern(),
                 streaming_configs={"napari_stream": streaming_config},
@@ -419,9 +415,7 @@ def test_empty_roi_materialization_does_not_invent_viewer_layer() -> None:
     )
     context = _streaming_context({0: plan})
     labels = ObjectLabelPayload(
-        variant_data=ObjectLabelVariantData(
-            labels=np.zeros((8, 8), dtype=np.int32)
-        ),
+        variant_data=ObjectLabelVariantData(labels=np.zeros((8, 8), dtype=np.int32)),
         source_component_metadata={
             "site": "1",
             "channel": "1",
@@ -484,7 +478,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
 
     monkeypatch.setattr(
         "openhcs.core.steps.function_artifact_materialization."
-        "materialized_artifact_output_paths",
+        "runtime_export_artifact_output_paths",
         output_paths,
     )
 

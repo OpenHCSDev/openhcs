@@ -31,9 +31,7 @@ def test_area_occupied_accepts_object_label_payload_input() -> None:
     output_image, measurements = inspect.unwrap(measure_image_area_occupied)(
         image,
         operand_choices=(OperandChoice.OBJECTS,),
-        area_occupied_rows=(
-            AreaOccupiedRow(OperandChoice.OBJECTS, "Cells"),
-        ),
+        area_occupied_rows=(AreaOccupiedRow(OperandChoice.OBJECTS, "Cells"),),
         object_labels=(payload,),
     )
 

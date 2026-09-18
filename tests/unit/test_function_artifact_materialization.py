@@ -1,9 +1,12 @@
+import importlib
+import json
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 import pytest
-from polystore.base import DataSink
+from polystore.base import DataSink, ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
 from polystore.napari_stream import NapariStreamingBackend
 from polystore.streaming import (
@@ -21,7 +24,6 @@ from openhcs.constants.constants import AllComponents, GroupBy, VariableComponen
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
-    ArtifactViewerStreaming,
     GroupLineageSourceRelation,
     ImageArtifactType,
     MaterializationSourceIdentityRelation,
@@ -60,6 +62,7 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeExecutionObservation,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs
+from openhcs.core.pipeline.artifact_planning import TerminalMaterializationSpec
 from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
@@ -118,6 +121,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     observed_materialized_artifact_output_paths,
     planned_materialization_preview,
     runtime_artifact_materializations,
+    runtime_export_artifact_output_paths,
 )
 from openhcs.core.steps.function_output_identity import (
     IncompleteFunctionOutputFilenameIdentityError,
@@ -141,15 +145,16 @@ from openhcs.processing.materialization import (
     tiff_stack,
 )
 from openhcs.processing.materialization.core import (
-    MaterializationResult,
     MaterializationSpec,
     Output,
-    SavedMaterializationOutput,
     materialization_outputs,
 )
 from openhcs.processing.materialization.options import (
     ImageFileOptions,
     MaterializedFilenameIdentity,
+)
+from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
+    TILE_POSITIONS_OUTPUT,
 )
 
 
@@ -504,34 +509,6 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
     assert tuple(included.streaming_viewer_surfaces) == ("napari_stream",)
 
 
-def test_on_demand_artifact_is_persisted_without_automatic_viewer_streaming():
-    output_plan = ArtifactOutputPlan(
-        name="diagnostic_labels",
-        path="/memory/diagnostic_labels.pkl",
-        artifact_type=ObjectLabelsArtifactType,
-        materialization=roi_zip(),
-        viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
-    )
-    config = streaming_config_stub()
-    plan = _plan(output_plan, streaming_configs={"napari_stream": config})
-    context = _context(FileManagerStub())
-    materialization = SimpleNamespace(
-        output_plan=output_plan,
-        record=SimpleNamespace(
-            key=SimpleNamespace(scope=SimpleNamespace(value_text=None))
-        ),
-    )
-
-    backend_plan = PersistentArtifactMaterializationTargetPlan("disk").backend_plan(
-        plan,
-        context,
-        materialization,
-    )
-
-    assert tuple(backend_plan.persistent_backend_kwargs) == ("disk",)
-    assert backend_plan.streaming_viewer_surfaces == {}
-
-
 def test_viewer_output_expectation_omits_empty_stream_payload() -> None:
     filemanager = FileManager({"napari_stream": NapariStreamingBackend()})
     context = _context(filemanager)
@@ -807,10 +784,10 @@ def test_materialize_artifact_outputs_uses_runtime_store_payload(
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -824,49 +801,6 @@ def test_materialize_artifact_outputs_uses_runtime_store_payload(
     assert materialized == [
         ({"x": "from-runtime"}, "/analysis/A01_positions_step7.roi.zip")
     ]
-
-
-def test_materialize_artifact_outputs_returns_exact_persistent_write_receipt(
-    monkeypatch,
-):
-    output_plan = ArtifactOutputPlan(
-        name="positions",
-        path="/memory/positions.pkl",
-        materialization=csv_only(),
-    )
-    filemanager = FileManagerStub()
-    context = _context(filemanager)
-    record = context.runtime_value_store.record(
-        RuntimeValue.normalize(output_plan, {"x": 1}, axis_id="A01"),
-        path=output_plan.path,
-        backend="memory",
-    )
-    written_path = "/analysis/exact-runtime-output.csv"
-    monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
-        lambda *_args, **_kwargs: MaterializationResult(
-            written_path,
-            (
-                SavedMaterializationOutput(
-                    "disk",
-                    Output(path=written_path, content=b"x\n1\n"),
-                ),
-            ),
-        ),
-    )
-
-    observation = materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
-
-    assert observation.materialized_locations_by_address == {
-        RuntimeArtifactAddress.from_record(record): (
-            RuntimeArtifactLocation(path=written_path, backend="disk"),
-        ),
-    }
 
 
 def test_materialize_artifact_outputs_attaches_image_schema_provenance(monkeypatch):
@@ -900,10 +834,10 @@ def test_materialize_artifact_outputs_attaches_image_schema_provenance(monkeypat
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -983,10 +917,10 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
                 variable_components=kwargs["variable_components"],
             )
         )
-        return MaterializationResult(output_paths[0], ())
+        return output_paths[0]
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -1051,10 +985,10 @@ def test_materialize_artifact_outputs_does_not_require_vfs_payload_for_store_rec
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -1106,10 +1040,10 @@ def test_materialize_artifact_outputs_uses_runtime_record_identity_not_final_pat
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -1160,10 +1094,10 @@ def test_materialize_artifact_outputs_uses_declared_measurement_csv_spec(
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -1757,6 +1691,54 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
     assert consolidation_inputs.destination.images_dir == "/images"
 
 
+def test_terminal_persistence_is_reported_without_becoming_declared_export() -> None:
+    output_plan = ArtifactOutputPlan(
+        name="cell_counts",
+        path="/memory/cell_counts.pkl",
+        artifact_type=MeasurementsArtifactType,
+        materialization=TerminalMaterializationSpec(CsvOptions()),
+    )
+    context = _context(FileManagerStub())
+    record = context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            output_plan,
+            MeasurementTable(
+                name=output_plan.name,
+                rows=MeasurementSparseColumnarRows.from_rows(
+                    ({"cell_count": 2},),
+                    fields=(FieldSpec("cell_count", int),),
+                ),
+                subject=MeasurementSubject(MeasurementScope.ARTIFACT),
+            ),
+            axis_id="A01",
+        ),
+        path=output_plan.path,
+        backend="memory",
+    )
+    plan = _plan(output_plan)
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend="disk",
+    )
+
+    locations = observed_materialized_artifact_locations_by_address(
+        plan,
+        context,
+        (record,),
+    )
+
+    assert locations == {
+        RuntimeArtifactAddress.from_record(record): (
+            RuntimeArtifactLocation(
+                path="/analysis/A01_cell_counts_step7_details.csv",
+                backend="disk",
+            ),
+        ),
+    }
+    assert runtime_export_artifact_output_paths(plan, context) == ()
+    assert not output_plan.materialization.participates_in_runtime_export_observation()
+
+
 @pytest.mark.parametrize(
     ("options", "payload"),
     (
@@ -1874,10 +1856,10 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((tuple(data.iter_row_mappings()), path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -1891,8 +1873,8 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
     assert materialized == [
         (
             (
-                {"image_area": 100.0},
-                {"object_label": 1, "area": 42.0},
+                {"image_area": 100.0, "source_image_name": "OrigBlue"},
+                {"object_label": 1, "area": 42.0, "object_name": "Nuclei"},
             ),
             "/analysis/A01_w1_measurements_step7.roi.zip",
         )
@@ -2177,10 +2159,10 @@ def test_materialize_tabular_artifact_does_not_build_viewer_stream_kwargs(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2242,10 +2224,10 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2380,10 +2362,10 @@ def test_materialize_artifact_outputs_uses_group_measurement_artifact_identity(
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2444,10 +2426,10 @@ def test_materialize_artifact_outputs_keeps_grouped_artifact_record_path(
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2510,10 +2492,10 @@ def test_materialize_artifact_outputs_uses_null_component_group_identity_for_str
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2580,10 +2562,10 @@ def test_materialize_artifact_outputs_streams_aggregate_artifact_with_incomplete
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2730,10 +2712,10 @@ def test_materialize_artifact_outputs_uses_declared_metadata_json_spec(
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2766,7 +2748,7 @@ def test_materialize_artifact_outputs_skips_special_without_explicit_spec(
         materialized.append((args, kwargs))
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2778,6 +2760,70 @@ def test_materialize_artifact_outputs_skips_special_without_explicit_spec(
     )
 
     assert materialized == []
+
+
+@pytest.mark.parametrize(
+    "module_name,function_name",
+    (
+        ("ashlar_main_cpu", "ashlar_compute_tile_positions_cpu"),
+        ("ashlar_main_gpu", "ashlar_compute_tile_positions_gpu"),
+        ("acquisition_positions", "acquisition_tile_positions"),
+    ),
+)
+def test_tile_position_producers_share_output_materialization(
+    module_name, function_name
+):
+    module = importlib.import_module(
+        f"openhcs.processing.backends.pos_gen.{module_name}"
+    )
+    contract = CallableContract.from_callable(getattr(module, function_name))
+    (output,) = tuple(contract.artifact_outputs)
+    assert output == TILE_POSITIONS_OUTPUT
+    assert output.materialization is TILE_POSITIONS_OUTPUT.materialization
+
+
+@pytest.mark.parametrize("group_key", (None, "2"))
+def test_tile_positions_runtime_materializes_native_json_without_changing_payload(
+    tmp_path, group_key
+):
+    positions = [(-1.25, 0.000000001), (921.600000001, -3.5), (1.0, 1843.2)]
+    spec = TILE_POSITIONS_OUTPUT
+    output_plan = ArtifactOutputPlan(
+        name=spec.name,
+        path=str(tmp_path / "runtime" / "positions.pkl"),
+        artifact_type=spec.artifact_type,
+        materialization=spec.materialization,
+        group_component=AllComponents.CHANNEL if group_key is not None else None,
+        group_keys=(group_key,),
+    )
+    ensure_storage_registry()
+    filemanager = FileManager(dict(storage_registry))
+    context = _context(filemanager)
+    value = RuntimeValue.normalize(
+        output_plan.for_group(group_key), positions, axis_id=context.axis_id
+    )
+    record = context.runtime_value_store.record(
+        value, path=output_plan.path, backend="memory"
+    )
+    plan = replace(
+        _plan(
+            output_plan,
+            group_by_value="channel" if group_key is not None else None,
+        ),
+        analysis_results_dir=str(tmp_path / "results"),
+    )
+
+    materialize_artifact_outputs(
+        filemanager,
+        plan,
+        PersistentArtifactMaterializationTargetPlan("disk"),
+        context,
+    )
+
+    (retained,) = tuple((tmp_path / "results").rglob("*.json"))
+    assert json.loads(retained.read_text()) == [list(pair) for pair in positions]
+    assert positions == [(-1.25, 0.000000001), (921.600000001, -3.5), (1.0, 1843.2)]
+    assert record.value is value
 
 
 def test_materialize_artifact_outputs_skips_explicitly_disabled_artifact_without_record(
@@ -2797,7 +2843,7 @@ def test_materialize_artifact_outputs_skips_explicitly_disabled_artifact_without
         materialized.append((args, kwargs))
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2835,10 +2881,10 @@ def test_materialize_artifact_outputs_uses_declared_object_labels_roi_spec(monke
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2892,10 +2938,10 @@ def test_materialize_artifact_outputs_can_target_streaming_without_persistent_ba
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -2981,10 +3027,9 @@ def test_main_flow_artifact_persists_without_duplicate_viewer_stream(monkeypatch
         **_kwargs,
     ):
         materialized.append((backends, backend_kwargs))
-        return MaterializationResult(_path, ())
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3046,10 +3091,10 @@ def test_materialize_artifact_outputs_uses_artifact_source_metadata_for_streamin
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3128,10 +3173,10 @@ def test_materialize_artifact_outputs_streams_payload_component_metadata(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3190,10 +3235,10 @@ def test_materialize_artifact_outputs_uses_runtime_plane_group_identity(
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3261,10 +3306,10 @@ def test_materialize_artifact_outputs_merges_parser_axes_into_source_metadata(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3362,10 +3407,10 @@ def test_materialize_artifact_outputs_uses_variable_components_for_streaming_ide
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3531,10 +3576,10 @@ def test_materialize_artifact_outputs_streams_source_binding_roi_plane_metadata(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3634,10 +3679,10 @@ def test_materialize_rgb_artifact_streams_filename_channel_identity(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3720,10 +3765,10 @@ def test_materialize_image_uses_declared_filename_source_identity(monkeypatch):
 
     def fake_materialize(_spec, _data, path, *_args, **_kwargs):
         materialized.append(path)
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 
@@ -3950,10 +3995,10 @@ def test_materialize_rgb_artifact_keeps_scalar_filename_identity_for_mixed_prove
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return MaterializationResult(path, ())
+        return path
 
     monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization.materialize_with_result",
+        "openhcs.processing.materialization.materialize",
         fake_materialize,
     )
 

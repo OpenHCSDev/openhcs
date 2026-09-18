@@ -180,15 +180,16 @@ class FormattingMeasurementFeatureTemplate(
                 token = f"OpenHCSFormatField{index}"
                 field_tokens.append(normalize_runtime_identifier(token))
                 template_parts.append(token)
-        pattern = re.escape(
-            normalize_runtime_identifier("".join(template_parts))
-        )
+        pattern = re.escape(normalize_runtime_identifier("".join(template_parts)))
         for token in field_tokens:
             pattern = pattern.replace(re.escape(token), ".+")
-        return re.fullmatch(
-            pattern,
-            normalize_runtime_identifier(feature_name),
-        ) is not None
+        return (
+            re.fullmatch(
+                pattern,
+                normalize_runtime_identifier(feature_name),
+            )
+            is not None
+        )
 
     def database_field_spec(
         self,

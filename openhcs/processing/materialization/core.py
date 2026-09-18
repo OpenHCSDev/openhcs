@@ -26,11 +26,7 @@ from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
     ViewerStreamBackendKwargs,
 )
-from zmqruntime.viewer_protocol import (
-    ViewerComponentMetadataPayload,
-    ViewerWireField,
-    ViewerWireValue,
-)
+from zmqruntime.viewer_protocol import ViewerWireField, ViewerWireValue
 
 from openhcs.constants.constants import AllComponents, VariableComponents
 from openhcs.core.artifacts import ArtifactMaterializationPayload
@@ -77,8 +73,6 @@ from openhcs.core.source_matching import (
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
-    StreamScopedDisplayConfig,
-    StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
 )
 from openhcs.processing.materialization.constants import (
@@ -328,22 +322,6 @@ class Output:
             self,
             variable_components=ComponentSet.coerce(variable_components).as_tuple(),
         )
-
-
-@dataclass(frozen=True, slots=True)
-class SavedMaterializationOutput:
-    """One concrete output accepted and saved by a materialization backend."""
-
-    backend: str
-    output: Output
-
-
-@dataclass(frozen=True, slots=True)
-class MaterializationResult:
-    """Primary path and exact backend writes from one materialization call."""
-
-    primary_path: str
-    saved_outputs: tuple[SavedMaterializationOutput, ...]
 
 
 @dataclass(frozen=True)
@@ -1545,12 +1523,11 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         self,
         output: Output,
     ) -> dict:
-        values = self._values_scoped_to_outputs((output,))
-        output_fields = self._output_fields(output, values=values)
+        output_fields = self._output_fields(output)
         if output_fields is None:
-            return values.to_kwargs()
+            return self.values.to_kwargs()
         component_metadata, item_fields = output_fields
-        return values.with_single_item_source(
+        return self.values.with_single_item_source(
             component_metadata,
             item_fields,
         ).to_kwargs()
@@ -1559,7 +1536,6 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         self,
         outputs: Sequence[Output],
     ) -> tuple[tuple[tuple[Output, ...], dict], ...]:
-        values = self._values_scoped_to_outputs(outputs)
         grouped: list[
             tuple[
                 dict[str, ViewerWireValue],
@@ -1569,7 +1545,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         ] = []
         unprojected_outputs: list[Output] = []
         for output in outputs:
-            output_fields = self._output_fields(output, values=values)
+            output_fields = self._output_fields(output)
             if output_fields is None:
                 unprojected_outputs.append(output)
                 continue
@@ -1586,7 +1562,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
 
         batches: list[tuple[tuple[Output, ...], dict]] = []
         if unprojected_outputs:
-            batches.append((tuple(unprojected_outputs), values.to_kwargs()))
+            batches.append((tuple(unprojected_outputs), self.values.to_kwargs()))
         for item_fields, batch_outputs, component_metadata in grouped:
             metadata_by_path = dict(
                 zip(
@@ -1599,7 +1575,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 raise ValueError(
                     "Viewer materialization batch requires unique output paths."
                 )
-            stream_request = values.with_item_fields(item_fields).stream_request
+            stream_request = self.values.with_item_fields(item_fields).stream_request
             stream_request = replace(
                 stream_request,
                 source=replace(
@@ -1617,111 +1593,18 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
             )
         return tuple(batches)
 
-    def _values_scoped_to_outputs(
-        self,
-        outputs: Sequence[Output],
-    ) -> ViewerStreamBackendKwargs:
-        """Derive scalar viewer axes from the concrete writer outputs."""
-
-        metadata_items = StreamSourceComponentMetadataItems.from_values(
-            self._source_component_metadata(output, values=self.values)
-            for output in outputs
-            if output.viewer_stream_requires_source_metadata
-        )
-        if not metadata_items.values:
-            return self.values
-        stream_request = self.values.stream_request
-        component_order = stream_request.display_semantics.component_order
-        metadata_component_order = metadata_items.complete_component_order(
-            component_order
-        )
-        plane_components = frozenset(
-            component
-            for output in outputs
-            for component in self._plane_component_values(
-                self._output_item_fields(
-                    output,
-                    component_order=component_order,
-                )
-            )
-        )
-        complete_component_order = tuple(
-            component
-            for component in component_order
-            if component in metadata_component_order or component in plane_components
-        )
-        if complete_component_order == component_order:
-            return self.values
-
-        component_metadata = ViewerComponentMetadataPayload.from_optional_wire_mapping(
-            stream_request.message_extra or {}
-        )
-        message_extra = ViewerComponentMetadataPayload.strip_component_metadata(
-            stream_request.message_extra or {}
-        )
-        if component_metadata is not None:
-            message_extra.update(
-                component_metadata.scoped_to(complete_component_order).to_wire_mapping()
-            )
-        return ViewerStreamBackendKwargs(
-            replace(
-                stream_request,
-                display_config=StreamScopedDisplayConfig(
-                    base=stream_request.display_config,
-                    component_order=complete_component_order,
-                ),
-                message_extra=message_extra,
-            )
-        )
-
-    @staticmethod
-    def _source_component_metadata(
-        output: Output,
-        *,
-        values: ViewerStreamBackendKwargs,
-    ) -> SourceComponentMetadata | None:
-        source_identity = output.source_identity
-        if source_identity is None:
-            return None
-        return source_identity.with_parsed_path_components(
-            values.stream_request.source.identity.microscope_handler.parser
-        ).component_metadata
-
-    @staticmethod
-    def _output_item_fields(
-        output: Output,
-        *,
-        component_order: tuple[str, ...],
-    ) -> dict[str, ViewerWireValue]:
-        if output.variable_components:
-            return StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-                output.metadata,
-                output.variable_components,
-            )
-        return StreamImagePayloadMetadataProjector.item_fields(
-            output.metadata,
-            component_order,
-        )
-
-    @staticmethod
-    def _plane_component_values(
-        item_fields: Mapping[str, ViewerWireValue],
-    ) -> Mapping[str, ViewerWireValue]:
-        plane_component_values = item_fields.get(
-            ViewerWireField.PLANE_COMPONENT_VALUES.value,
-            {},
-        )
-        if not isinstance(plane_component_values, Mapping):
-            raise TypeError("Viewer stream plane_component_values must be a mapping.")
-        return plane_component_values
-
     def _output_fields(
         self,
         output: Output,
-        *,
-        values: ViewerStreamBackendKwargs,
     ) -> tuple[dict[str, MaterializationValue], dict[str, ViewerWireValue]] | None:
-        component_metadata = self._source_component_metadata(output, values=values)
+        source_identity = output.source_identity
+        if source_identity is not None:
+            source_identity = source_identity.with_parsed_path_components(
+                self.values.stream_request.source.identity.microscope_handler.parser
+            )
+        component_metadata = (
+            source_identity.component_metadata if source_identity is not None else None
+        )
         if component_metadata is None:
             if not output.viewer_stream_requires_source_metadata:
                 return None
@@ -1729,12 +1612,19 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 "Viewer stream materialization requires output metadata with "
                 "source_component_metadata."
             )
-        display_semantics = values.stream_request.display_semantics
-        item_fields = self._output_item_fields(
-            output,
-            component_order=display_semantics.component_order,
+        item_fields = (
+            StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+                output.metadata,
+                output.variable_components,
+            )
         )
-        plane_component_values = self._plane_component_values(item_fields)
+        plane_component_values = item_fields.get(
+            ViewerWireField.PLANE_COMPONENT_VALUES.value,
+            {},
+        )
+        if not isinstance(plane_component_values, Mapping):
+            raise TypeError("Viewer stream plane_component_values must be a mapping.")
+        display_semantics = self.values.stream_request.display_semantics
         projected_metadata = StreamViewerComponentMetadataProjector(
             tuple(
                 component
@@ -1767,8 +1657,7 @@ class BackendSaver:
     def save_all(
         self,
         outputs: Sequence[Output],
-    ) -> tuple[SavedMaterializationOutput, ...]:
-        saved_outputs: list[SavedMaterializationOutput] = []
+    ) -> None:
         for backend in self.backends:
             backend_instance = self.filemanager._get_backend(backend)
             output_acceptance = tuple(
@@ -1807,11 +1696,6 @@ class BackendSaver:
                     backend,
                     **kwargs,
                 )
-                saved_outputs.extend(
-                    SavedMaterializationOutput(backend, output)
-                    for output in batch_outputs
-                )
-        return tuple(saved_outputs)
 
     def _prepare_path(self, backend: str, backend_instance, path: str) -> None:
         if not backend_instance.requires_filesystem_validation:
@@ -1844,44 +1728,6 @@ class MaterializationContext:
     source_paths: tuple[str, ...] = ()
     pipeline_position: int | None = None
     output_plan: ArtifactOutputPlan | None = None
-
-    @classmethod
-    def from_request(
-        cls,
-        *,
-        spec: MaterializationSpec,
-        path: str,
-        filemanager: FileManager,
-        backends: Sequence[str] | str,
-        backend_kwargs: BackendKwargsInput = BACKEND_KWARGS_ABSENT,
-        context: ProcessingContext | None = None,
-        extra_inputs: dict | None = None,
-        artifact_source_identity: SourceImageIdentity | None = None,
-        artifact_filename_identity: SourceImageIdentity | None = None,
-        variable_components: Sequence[VariableComponents] = (),
-        source_paths: Sequence[str] = (),
-        pipeline_position: int | None = None,
-        output_plan: ArtifactOutputPlan | None = None,
-    ) -> MaterializationContext:
-        """Normalize one public materialization request into its execution context."""
-
-        normalized_backends = BackendSequenceAuthority.normalize(backends)
-        AllowedBackendsAuthority.validate(spec, normalized_backends)
-        return cls(
-            base_path=path,
-            backends=normalized_backends,
-            backend_kwargs=BackendKwargsAuthority.normalize(backend_kwargs),
-            filemanager=filemanager,
-            extra_inputs={} if extra_inputs is None else extra_inputs,
-            context=context,
-            artifact_source_identity=artifact_source_identity,
-            artifact_filename_identity=artifact_filename_identity,
-            variable_components=tuple(variable_components),
-            write_mode=spec.write_mode,
-            source_paths=tuple(str(source_path) for source_path in source_paths),
-            pipeline_position=pipeline_position,
-            output_plan=output_plan,
-        )
 
     def paths(self, options: FileOutputOptions) -> PathHelper:
         return PathHelper(self.base_path, options)
@@ -4272,67 +4118,35 @@ def materialize(
 ) -> str:
     """Materialize data to one or more backends."""
 
-    return materialize_with_result(
-        spec,
-        data,
-        path,
-        filemanager,
-        backends,
-        backend_kwargs,
-        context,
-        extra_inputs,
-        artifact_source_identity=artifact_source_identity,
-        artifact_filename_identity=artifact_filename_identity,
-        variable_components=variable_components,
-        source_paths=source_paths,
-        pipeline_position=pipeline_position,
-        output_plan=output_plan,
-    ).primary_path
+    normalized_backends = BackendSequenceAuthority.normalize(backends)
+    AllowedBackendsAuthority.validate(spec, normalized_backends)
+    effective_backend_kwargs = BackendKwargsAuthority.normalize(backend_kwargs)
+    if extra_inputs is None:
+        effective_extra_inputs = {}
+    else:
+        effective_extra_inputs = extra_inputs
 
-
-def materialize_with_result(
-    spec: MaterializationSpec,
-    data: MaterializationValue,
-    path: str,
-    filemanager: FileManager,
-    backends: Sequence[str] | str,
-    backend_kwargs: BackendKwargsInput = BACKEND_KWARGS_ABSENT,
-    context: ProcessingContext | None = None,
-    extra_inputs: dict | None = None,
-    *,
-    artifact_source_identity: SourceImageIdentity | None = None,
-    artifact_filename_identity: SourceImageIdentity | None = None,
-    variable_components: Sequence[VariableComponents] = (),
-    source_paths: Sequence[str] = (),
-    pipeline_position: int | None = None,
-    output_plan: ArtifactOutputPlan | None = None,
-) -> MaterializationResult:
-    """Materialize once and return the exact backend writes from that execution."""
-
-    materialization_context = MaterializationContext.from_request(
-        spec=spec,
-        path=path,
+    ctx = MaterializationContext(
+        base_path=path,
+        backends=normalized_backends,
+        backend_kwargs=effective_backend_kwargs,
         filemanager=filemanager,
-        backends=backends,
-        backend_kwargs=backend_kwargs,
+        extra_inputs=effective_extra_inputs,
         context=context,
-        extra_inputs=extra_inputs,
         artifact_source_identity=artifact_source_identity,
         artifact_filename_identity=artifact_filename_identity,
-        variable_components=variable_components,
-        source_paths=source_paths,
+        variable_components=tuple(variable_components),
+        write_mode=spec.write_mode,
+        source_paths=tuple(str(p) for p in source_paths),
         pipeline_position=pipeline_position,
         output_plan=output_plan,
     )
 
     primary_path = ""
-    saved_outputs: list[SavedMaterializationOutput] = []
 
-    for i, (writer, outs) in enumerate(
-        _materialization_output_groups(spec, data, materialization_context)
-    ):
-        saved_outputs.extend(materialization_context.saver.save_all(outs))
+    for i, (writer, outs) in enumerate(_materialization_output_groups(spec, data, ctx)):
+        ctx.saver.save_all(outs)
         if i == spec.primary:
             primary_path = writer.primary_path(list(outs))
 
-    return MaterializationResult(primary_path, tuple(saved_outputs))
+    return primary_path

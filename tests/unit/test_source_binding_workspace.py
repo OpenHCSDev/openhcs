@@ -11,7 +11,14 @@ from openhcs.constants.constants import AllComponents, Backend, Microscope
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
-from openhcs.core.source_metadata import SourceMetadataRoleView
+from openhcs.core.source_metadata import (
+    SourceMetadataRoleView,
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+    SOURCE_VOXEL_SPACING_FIELD,
+    SOURCE_VOXEL_SPACING_UNIT_FIELD,
+)
+from openhcs.microscopes.microscope_interfaces import PixelSizeMetadataArtifactProvider
 from openhcs.core.source_bindings import (
     ComponentSelector,
     ImagePlaneSource,
@@ -32,9 +39,6 @@ from openhcs.core.source_bindings import (
     SourceSetRole,
     SourceSelector,
 )
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionCache,
-)
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
 from openhcs.microscopes.openhcs import (
@@ -42,6 +46,9 @@ from openhcs.microscopes.openhcs import (
     FIELDS,
     OpenHCSMetadataHandler,
     get_metadata_path,
+)
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
@@ -60,6 +67,139 @@ def _write_tiff_stack(path: Path, values: tuple[int, ...]) -> None:
 def _filemanager() -> FileManager:
     ensure_storage_registry()
     return FileManager(dict(storage_registry))
+
+
+@pytest.mark.parametrize(
+    "spacing,expected_scalar,physical",
+    (
+        (SourceVoxelSpacing(), 1.0, True),
+        (SourceVoxelSpacing((1.3556, 1.3556)), 1.3556, True),
+        (SourceVoxelSpacing((4.2, 1.3556, 1.3556)), 1.3556, True),
+        (SourceVoxelSpacing((1.2, 1.3556)), 1.0, False),
+        (SourceVoxelSpacing.from_cellprofiler_xyz(x=3.0, y=3.0, z=12.0), 1.0, False),
+    ),
+)
+def test_materialized_calibration_reaches_physical_artifact_without_relabeling_coordinates(
+    tmp_path,
+    spacing,
+    expected_scalar,
+    physical,
+):
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    images = tuple(source_root / f"A01_s001_w{channel}.tif" for channel in (1, 2))
+    for image in images:
+        _write_tiff_stack(image, (1,))
+    filemanager = _filemanager()
+    materialization = SourceBindingWorkspaceProjector(
+        SourceBindingsConfig(
+            bindings=(NamedSourceBinding(alias="Images"),),
+            source_voxel_spacing=spacing,
+        ),
+        parser=SourceSchemaFilenameParser(),
+    ).materialize(
+        source_root,
+        tmp_path / "workspace",
+        filemanager=filemanager,
+        source_backend=Backend.DISK,
+        workspace_backend=Backend.DISK,
+        source_files=images,
+    )
+    metadata = json.loads(materialization.metadata_path.read_text())
+    default = metadata["subdirectories"][FIELDS.DEFAULT_SUBDIRECTORY]
+    assert default[FIELDS.PIXEL_SIZE] == expected_scalar
+    for source in default[FIELDS.SOURCE_METADATA].values():
+        assert SourceVoxelSpacing.from_source_metadata(source) == spacing
+    handler = OpenHCSMetadataHandler(filemanager)
+    workspace = materialization.metadata_path.parent / FIELDS.DEFAULT_SUBDIRECTORY
+    assert handler.get_metadata_pixel_size(workspace) == expected_scalar
+    if physical:
+        assert (
+            PixelSizeMetadataArtifactProvider().resolve(handler, workspace)
+            == expected_scalar
+        )
+    else:
+        with pytest.raises(ValueError, match="Physical scalar pixel size"):
+            PixelSizeMetadataArtifactProvider().resolve(handler, workspace)
+
+
+@pytest.mark.parametrize(
+    "spacings,expected",
+    (
+        ((SourceVoxelSpacing((0.65, 0.65)),) * 2, 0.65),
+        ((SourceVoxelSpacing((0.65, 0.65)), SourceVoxelSpacing((0.7, 0.7))), None),
+        ((SourceVoxelSpacing((0.65, 0.65)), SourceVoxelSpacing()), None),
+        ((SourceVoxelSpacing((0.65, 0.7)),) * 2, None),
+        (
+            (SourceVoxelSpacing((5, 0.65, 0.65)), SourceVoxelSpacing((9, 0.65, 0.65))),
+            0.65,
+        ),
+    ),
+)
+def test_scalar_projection_requires_uniform_physical_xy_not_z(spacings, expected):
+    assert SourceVoxelSpacing.common_physical_pixel_size(spacings) == expected
+    if expected is None:
+        with pytest.raises(ValueError, match="Physical scalar pixel size"):
+            SourceVoxelSpacing.require_physical_pixel_size(spacings)
+    else:
+        assert SourceVoxelSpacing.require_physical_pixel_size(spacings) == expected
+
+
+def test_cellprofiler_relative_and_legacy_spacing_never_gain_micrometer_units():
+    spacing = SourceVoxelSpacing.from_cellprofiler_xyz(x=1, y=2, z=6)
+    assert spacing.values_zyx == (3, 1, 0.5)
+    assert spacing.unit is SourceVoxelSpacingUnit.RELATIVE
+    source = {}
+    spacing.merge_into(source, path="image")
+    assert source[SOURCE_VOXEL_SPACING_UNIT_FIELD] == "relative"
+    assert SourceVoxelSpacing.from_source_metadata(source) == spacing
+    legacy = {SOURCE_VOXEL_SPACING_FIELD: "3,1,0.5"}
+    assert SourceVoxelSpacing.from_source_metadata(legacy) == spacing
+
+
+@pytest.mark.parametrize(
+    "value", (0.0, -1.0, float("nan"), float("inf"), float("-inf"))
+)
+def test_voxel_spacing_rejects_nonfinite_and_nonpositive_coordinates(value):
+    with pytest.raises(ValueError, match="finite and positive"):
+        SourceVoxelSpacing((value, 1.0))
+
+
+@pytest.mark.parametrize(
+    "spacings",
+    (
+        (SourceVoxelSpacing((0.65, 0.65)), SourceVoxelSpacing((0.7, 0.7))),
+        (SourceVoxelSpacing((0.65, 0.65)), SourceVoxelSpacing()),
+        (
+            SourceVoxelSpacing((1.0, 1.0)),
+            SourceVoxelSpacing.from_cellprofiler_xyz(x=1, y=1, z=1),
+        ),
+    ),
+)
+def test_physical_artifact_rejects_conflicting_or_mixed_source_calibration(
+    tmp_path, spacings
+):
+    sources = {}
+    for index, spacing in enumerate(spacings):
+        source = {}
+        spacing.merge_into(source, path=f"image-{index}")
+        sources[f"image-{index}"] = source
+    metadata = {
+        "main": True,
+        FIELDS.IMAGE_FILES: list(sources),
+        FIELDS.PIXEL_SIZE: SourceVoxelSpacing.metadata_pixel_size(spacings),
+        FIELDS.SOURCE_METADATA: sources,
+    }
+    AtomicMetadataWriter().replace_subdirectory_metadata(
+        get_metadata_path(tmp_path),
+        FIELDS.DEFAULT_SUBDIRECTORY,
+        metadata,
+    )
+    handler = OpenHCSMetadataHandler(_filemanager())
+    path = tmp_path / FIELDS.DEFAULT_SUBDIRECTORY
+    assert handler.get_metadata_pixel_size(path) == 1.0
+    with pytest.raises(ValueError, match="Physical scalar pixel size"):
+        PixelSizeMetadataArtifactProvider().resolve(handler, path)
 
 
 def test_source_workspace_excludes_non_pixel_sidecars_before_projection(tmp_path):
@@ -1109,7 +1249,7 @@ def test_imported_metadata_rejects_invalid_table_contracts(
         )
 
 
-def test_source_bindings_handler_does_not_reinterpret_prepared_workspace(tmp_path):
+def test_source_bindings_reinitialization_resolves_current_imported_metadata(tmp_path):
     image = tmp_path / "A01_DNA.tif"
     image.touch()
     table = tmp_path / "plate.csv"
@@ -1158,87 +1298,135 @@ def test_source_bindings_handler_does_not_reinterpret_prepared_workspace(tmp_pat
     default_metadata = second_document["subdirectories"][FIELDS.DEFAULT_SUBDIRECTORY]
     second_metadata = next(iter(default_metadata[FIELDS.SOURCE_METADATA].values()))
 
-    assert metadata_path.read_bytes() == first_payload
+    assert metadata_path.read_bytes() != first_payload
     assert (
         dict(SourceMetadataRoleView(second_metadata).original_items())["Compound"]
-        == "First"
+        == "Second"
     )
 
 
-def test_source_bindings_handler_reprojects_when_declaration_changes(tmp_path):
-    image = tmp_path / "A01_DNA.tif"
-    image.touch()
-    table = tmp_path / "plate.csv"
-    table.write_text("WellID,Compound\nA01,First\n", encoding="utf-8")
-    shared_declarations = {
-        "metadata_rules": (
-            MetadataExtractionRule(
-                MetadataSource.FILE_NAME,
-                r"^(?P<Well>[A-Z][0-9]+)_DNA\.tif$",
-            ),
-        ),
-        "bindings": (NamedSourceBinding(alias="DNA"),),
-    }
-    with_imported_metadata = SourceBindingsConfig(
-        **shared_declarations,
-        imported_metadata_tables=(
-            ImportedMetadataTable(
-                location="plate.csv",
-                joins=(ImportedMetadataJoin("Well", "WellID"),),
-            ),
-        ),
-    )
-    without_imported_metadata = SourceBindingsConfig(**shared_declarations)
+@pytest.mark.parametrize("legacy_unit", (False, True))
+def test_source_reinitialization_refreshes_calibration_and_registered_projection(
+    tmp_path, legacy_unit
+):
+    image = tmp_path / "A01_s001_w1.tif"
+    _write_tiff_stack(image, (7,))
     filemanager = _filemanager()
-
-    first_handler = SourceBindingsHandler(
-        filemanager,
-        source_bindings_config=with_imported_metadata,
+    initial = SourceBindingsHandler.create(
+        filemanager=filemanager,
+        source_bindings_config=SourceBindingsConfig(
+            bindings=(NamedSourceBinding(alias="Images"),),
+            source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
+        ),
     )
-    first_handler.initialize_workspace(tmp_path, filemanager)
-    metadata_path = tmp_path / "openhcs_metadata.json"
-    first_document = json.loads(metadata_path.read_text())
-    first_metadata = first_document["subdirectories"][FIELDS.DEFAULT_SUBDIRECTORY]
-    first_source_metadata = next(iter(first_metadata[FIELDS.SOURCE_METADATA].values()))
+    initial.initialize_workspace(tmp_path, filemanager)
+    original_backend = filemanager.registry[Backend.VIRTUAL_WORKSPACE.value]
+    virtual_name = "A01_s001_w1_z001_t001.tif"
     assert (
-        dict(SourceMetadataRoleView(first_source_metadata).original_items())["Compound"]
-        == "First"
+        np.asarray(
+            filemanager.load(virtual_name, Backend.VIRTUAL_WORKSPACE.value)
+        ).max()
+        == 7
     )
-    assert first_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY] == (
-        with_imported_metadata.declaration_identity()
+    metadata_path = get_metadata_path(tmp_path)
+    if legacy_unit:
+        stale = json.loads(metadata_path.read_text())["subdirectories"][
+            FIELDS.DEFAULT_SUBDIRECTORY
+        ]
+        stale[FIELDS.PIXEL_SIZE] = 1.0
+        for source in stale[FIELDS.SOURCE_METADATA].values():
+            source.pop(SOURCE_VOXEL_SPACING_UNIT_FIELD)
+        AtomicMetadataWriter().replace_subdirectory_metadata(
+            metadata_path,
+            FIELDS.DEFAULT_SUBDIRECTORY,
+            stale,
+        )
+    current = SourceBindingsHandler.create(
+        filemanager=filemanager,
+        source_bindings_config=SourceBindingsConfig(
+            bindings=(NamedSourceBinding(alias="Images"),),
+            source_voxel_spacing=SourceVoxelSpacing((1.3556, 1.3556)),
+        ),
+    )
+    current.initialize_workspace(tmp_path, filemanager)
+    assert current.metadata_handler.get_pixel_size(tmp_path) == 1.3556
+    assert filemanager.registry[Backend.VIRTUAL_WORKSPACE.value] is not original_backend
+    assert (
+        np.asarray(
+            filemanager.load(virtual_name, Backend.VIRTUAL_WORKSPACE.value)
+        ).max()
+        == 7
+    )
+    sources = json.loads(metadata_path.read_text())["subdirectories"][
+        FIELDS.DEFAULT_SUBDIRECTORY
+    ][FIELDS.SOURCE_METADATA]
+    assert all(
+        SourceVoxelSpacing.from_source_metadata(source)
+        == SourceVoxelSpacing((1.3556, 1.3556))
+        for source in sources.values()
     )
 
-    projection_cache = VirtualWorkspaceSourceProjectionCache()
-    first_projection = projection_cache.projection_for(tmp_path, first_document)
 
-    second_handler = SourceBindingsHandler(
-        filemanager,
-        source_bindings_config=without_imported_metadata,
+def test_source_reinitialization_sees_new_physical_files_not_virtual_aliases(tmp_path):
+    _write_tiff_stack(tmp_path / "A01_s001_w1.tif", (7,))
+    filemanager = _filemanager()
+    handler = SourceBindingsHandler.create(
+        filemanager=filemanager,
+        source_bindings_config=SourceBindingsConfig(
+            bindings=(NamedSourceBinding(alias="Images"),),
+            metadata_rules=(
+                MetadataExtractionRule(
+                    MetadataSource.FILE_NAME,
+                    r"^(?P<Well>[A-Z]\d{2})_s(?P<Site>\d+)_w(?P<Channel>\d+)\.tif$",
+                ),
+            ),
+        ),
     )
-    second_handler.initialize_workspace(tmp_path, filemanager)
-    second_document = json.loads(metadata_path.read_text())
-    second_metadata = second_document["subdirectories"][FIELDS.DEFAULT_SUBDIRECTORY]
-    second_source_metadata = next(
-        iter(second_metadata[FIELDS.SOURCE_METADATA].values())
+    handler.initialize_workspace(tmp_path, filemanager)
+    first_payload = get_metadata_path(tmp_path).read_bytes()
+    handler.initialize_workspace(tmp_path, filemanager)
+    assert get_metadata_path(tmp_path).read_bytes() == first_payload
+    _write_tiff_stack(tmp_path / "A02_s001_w1.tif", (9,))
+    handler.initialize_workspace(tmp_path, filemanager)
+    image_files = handler.metadata_handler.get_image_files(tmp_path)
+    assert set(image_files) == {
+        "A01_s001_w1_z001_t001.tif",
+        "A02_s001_w1_z001_t001.tif",
+    }
+    assert (
+        np.asarray(
+            filemanager.load(
+                "A02_s001_w1_z001_t001.tif", Backend.VIRTUAL_WORKSPACE.value
+            )
+        ).max()
+        == 9
     )
 
-    assert "Compound" not in dict(
-        SourceMetadataRoleView(second_source_metadata).original_items()
-    )
-    assert second_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY] == (
-        without_imported_metadata.declaration_identity()
-    )
-    assert first_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY] != (
-        second_metadata[FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY]
-    )
 
-    second_projection = projection_cache.projection_for(tmp_path, second_document)
-    assert second_projection is not first_projection
-    assert "Compound" not in dict(
-        SourceMetadataRoleView(
-            next(iter(second_projection.source_metadata_by_path.values()))
-        ).original_items()
+def test_source_scan_excludes_only_the_owned_metadata_transaction_files(tmp_path):
+    image = tmp_path / "A01_s001_w1.tif"
+    _write_tiff_stack(image, (7,))
+    custom_json = tmp_path / "measurements.json"
+    custom_lock = tmp_path / "external.lock"
+    custom_json.write_text("{}")
+    custom_lock.touch()
+    filemanager = _filemanager()
+    handler = SourceBindingsHandler.create(
+        filemanager=filemanager,
+        source_bindings_config=SourceBindingsConfig(
+            bindings=(NamedSourceBinding(alias="Images"),)
+        ),
     )
+    AtomicMetadataWriter().replace_subdirectory_metadata(
+        get_metadata_path(tmp_path),
+        FIELDS.DEFAULT_SUBDIRECTORY,
+        {},
+    )
+    assert set(handler._list_source_files(tmp_path, filemanager)) == {
+        image,
+        custom_json,
+        custom_lock,
+    }
 
 
 def test_source_binding_workspace_projector_expands_declared_source_stack(tmp_path):
@@ -1721,6 +1909,7 @@ def test_source_bindings_handler_materializes_non_stack_source_artifacts(tmp_pat
         ),
     )
 
+    handler.initialize_workspace(tmp_path, filemanager)
     handler.initialize_workspace(tmp_path, filemanager)
 
     metadata = json.loads((tmp_path / "openhcs_metadata.json").read_text())

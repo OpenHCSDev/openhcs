@@ -3537,6 +3537,25 @@ def test_napari_endpoint_lifecycle_capabilities_derive_from_registered_actions()
     assert server._create_pong_response().control_capabilities == expected
 
 
+def test_napari_endpoint_lifecycle_capabilities_derive_from_registered_actions():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    from zmqruntime.messages import EndpointControlCapability
+
+    expected = frozenset(EndpointControlCapability)
+    assert (
+        napari_viewer_server.NapariControlMessageAction.endpoint_control_capabilities()
+        == expected
+    )
+    server = napari_viewer_server.NapariViewerServer(
+        NapariViewerServerRequest(
+            port=54321,
+            viewer_title="lifecycle capability test",
+        )
+    )
+
+    assert server._create_pong_response().control_capabilities == expected
+
+
 def test_napari_axis_projector_drops_only_globally_singleton_axes():
     pytest.importorskip("openhcs.runtime.napari_viewer_server")
     component_values = {

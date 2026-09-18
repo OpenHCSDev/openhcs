@@ -108,12 +108,12 @@ class ComponentSet:
 
     def excluding(self, *others: "ComponentSet") -> "ComponentSet":
         excluded = frozenset(
-            component
-            for other in others
-            for component in other.components
+            component for other in others for component in other.components
         )
         return ComponentSet(
-            tuple(component for component in self.components if component not in excluded)
+            tuple(
+                component for component in self.components if component not in excluded
+            )
         )
 
     def intersection(self, other: "ComponentSet") -> "ComponentSet":

@@ -8,7 +8,6 @@ from collections import defaultdict
 from pathlib import Path
 from types import ModuleType
 
-
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _EXTERNAL_ROOT = _REPO_ROOT / "external"
 
@@ -86,9 +85,7 @@ def _setup_cfg_import_roots(repo_dir: Path) -> tuple[Path, ...]:
     ):
         where = parser.get("options.packages.find", "where")
         candidates.extend(
-            repo_dir / item.strip()
-            for item in where.split(",")
-            if item.strip()
+            repo_dir / item.strip() for item in where.split(",") if item.strip()
         )
 
     if parser.has_section("options") and parser.has_option(
@@ -117,8 +114,7 @@ def _has_package_dir(root: Path) -> bool:
     if not root.is_dir():
         return False
     return any(
-        child.is_dir() and (child / "__init__.py").is_file()
-        for child in root.iterdir()
+        child.is_dir() and (child / "__init__.py").is_file() for child in root.iterdir()
     )
 
 
@@ -193,4 +189,3 @@ def _is_relative_to(path: Path, root: Path) -> bool:
     except ValueError:
         return False
     return True
-

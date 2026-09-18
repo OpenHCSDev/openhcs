@@ -3,12 +3,17 @@ from __future__ import annotations
 import ast
 import json
 import signal
-from types import SimpleNamespace
 from pathlib import Path
+from types import SimpleNamespace
 
 import imageio.v3 as imageio
 import numpy as np
 import pytest
+from zmqruntime import (
+    EndpointApplication,
+    EndpointApplicationCompatibility,
+    ProcessIdentity,
+)
 
 from benchmark.adapters.openhcs import (
     ZMQ_RESULTS_SUMMARY_FILENAME,
@@ -52,11 +57,6 @@ from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
 from openhcs.ui.shared.plate_scope_identity import PlateScopeIdentity
-from zmqruntime import (
-    EndpointApplication,
-    EndpointApplicationCompatibility,
-    ProcessIdentity,
-)
 
 _HAS_INTERVAL_TIMER = all(
     hasattr(signal, attribute) for attribute in ("SIGALRM", "ITIMER_REAL", "setitimer")
@@ -125,7 +125,7 @@ def test_reference_export_equivalence_uses_declared_label_plane_contract(
     report, comparisons = _reference_export_equivalence(
         plan,
         reference_root=reference_root,
-        candidate_root=candidate_root,
+        candidate_paths=(candidate_root / artifact.output_filename,),
     )
 
     assert report.is_equivalent is True

@@ -89,7 +89,16 @@ def object_colocalization_base_reductions(
     second_pixels: np.ndarray,
     object_labels: np.ndarray,
     object_count: int,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
     counts = np.zeros(object_count, dtype=np.float64)
     sum1 = np.zeros(object_count, dtype=np.float64)
     sum2 = np.zeros(object_count, dtype=np.float64)

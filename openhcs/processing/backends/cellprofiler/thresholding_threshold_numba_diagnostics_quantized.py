@@ -70,9 +70,7 @@ def quantized_threshold_codebook(
     scale_value = int(scale)
     if scale_value <= 0 or not np.issubdtype(image_array.dtype, np.floating):
         return None
-    code_dtype = (
-        np.uint8 if scale_value <= int(np.iinfo(np.uint8).max) else np.uint16
-    )
+    code_dtype = np.uint8 if scale_value <= int(np.iinfo(np.uint8).max) else np.uint16
     codes = np.empty(image_array.shape, dtype=code_dtype)
     values = np.zeros(scale_value + 1, dtype=image_array.dtype)
     populated = np.zeros(scale_value + 1, dtype=np.bool_)
@@ -123,9 +121,7 @@ def quantized_threshold_diagnostic_context(
     )
 
 
-def exact_quantized_threshold_codes(
-    image: np.ndarray, scale: int
-) -> np.ndarray | None:
+def exact_quantized_threshold_codes(image: np.ndarray, scale: int) -> np.ndarray | None:
     """Return quantized codes only when image values exactly match ``scale``."""
     scale_value = int(scale)
     if scale_value <= 0:
@@ -134,9 +130,7 @@ def exact_quantized_threshold_codes(
     rounded = np.rint(scaled)
     if not np.array_equal(scaled, rounded):
         return None
-    code_dtype = (
-        np.uint8 if scale_value <= int(np.iinfo(np.uint8).max) else np.uint16
-    )
+    code_dtype = np.uint8 if scale_value <= int(np.iinfo(np.uint8).max) else np.uint16
     return np.ascontiguousarray(rounded.astype(code_dtype, copy=False))
 
 
@@ -272,9 +266,9 @@ def _threshold_diagnostics_unmasked_finite_quantized_numba(
             bg_mean = bg_sum / bg_count
             fg_variance = fg_sumsq / fg_count - fg_mean * fg_mean
             bg_variance = bg_sumsq / bg_count - bg_mean * bg_mean
-            weighted_variance = (
-                fg_variance * fg_count + bg_variance * bg_count
-            ) / (fg_count + bg_count)
+            weighted_variance = (fg_variance * fg_count + bg_variance * bg_count) / (
+                fg_count + bg_count
+            )
 
     if minval == 0.0:
         return weighted_variance, 0.0
@@ -303,8 +297,7 @@ def _threshold_diagnostics_unmasked_finite_quantized_numba(
                 log_delta_value = entropy_log_delta_values[code]
             noise_value = noise[y, x]
             log_smoothed_value = (
-                log_delta_value * noise_value
-                + (1.0 - noise_value) * entropy_log_value
+                log_delta_value * noise_value + (1.0 - noise_value) * entropy_log_value
             )
             if log_smoothed_value > 0.0:
                 log_smoothed_value = 0.0
@@ -397,9 +390,9 @@ def _threshold_diagnostics_rectangular_mask_quantized_numba(
             bg_mean = bg_sum / bg_count
             fg_variance = fg_sumsq / fg_count - fg_mean * fg_mean
             bg_variance = bg_sumsq / bg_count - bg_mean * bg_mean
-            weighted_variance = (
-                fg_variance * fg_count + bg_variance * bg_count
-            ) / (fg_count + bg_count)
+            weighted_variance = (fg_variance * fg_count + bg_variance * bg_count) / (
+                fg_count + bg_count
+            )
 
     if minval == 0.0:
         return weighted_variance, 0.0
@@ -418,8 +411,7 @@ def _threshold_diagnostics_rectangular_mask_quantized_numba(
                 log_delta_value = entropy_log_delta_values[code]
             noise_value = noise[y, x]
             log_smoothed_value = (
-                log_delta_value * noise_value
-                + (1.0 - noise_value) * log_value
+                log_delta_value * noise_value + (1.0 - noise_value) * log_value
             )
             if log_smoothed_value > 0.0:
                 log_smoothed_value = 0.0
@@ -461,8 +453,7 @@ def _threshold_diagnostics_rectangular_mask_quantized_numba(
                 log_delta_value = entropy_log_delta_values[code]
             noise_value = noise[y, x]
             log_smoothed_value = (
-                log_delta_value * noise_value
-                + (1.0 - noise_value) * log_value
+                log_delta_value * noise_value + (1.0 - noise_value) * log_value
             )
             if log_smoothed_value > 0.0:
                 log_smoothed_value = 0.0

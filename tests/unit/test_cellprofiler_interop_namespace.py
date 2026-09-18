@@ -11,7 +11,6 @@ from openhcs.interop.cellprofiler.pipeline_import import (
     import_cellprofiler_pipeline,
 )
 
-
 PROJECT_ROOT = Path(__file__).parents[2]
 CELLPROFILER_INIT = PROJECT_ROOT / "openhcs/interop/cellprofiler/__init__.py"
 

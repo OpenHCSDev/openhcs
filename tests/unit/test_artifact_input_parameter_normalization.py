@@ -61,10 +61,9 @@ def test_matching_legacy_and_artifact_spec_declarations_compile() -> None:
 
     compiled = compile_function_pattern(consume, {}, {})
 
-    assert (
-        compiled.default_group.invocations[0].contract.artifact_input_parameter_names
-        == ("labels",)
-    )
+    assert compiled.default_group.invocations[
+        0
+    ].contract.artifact_input_parameter_names == ("labels",)
 
 
 def test_conflicting_legacy_and_artifact_spec_declarations_fail_compilation() -> None:
@@ -80,7 +79,9 @@ def test_conflicting_legacy_and_artifact_spec_declarations_fail_compilation() ->
         del labels, mask
         return image
 
-    with pytest.raises(ValueError, match="artifact-fed parameter declarations disagree"):
+    with pytest.raises(
+        ValueError, match="artifact-fed parameter declarations disagree"
+    ):
         compile_function_pattern(consume, {}, {})
 
 

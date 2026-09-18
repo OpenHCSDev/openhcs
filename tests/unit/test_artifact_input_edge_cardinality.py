@@ -83,9 +83,10 @@ def test_repeated_input_roles_compile_as_exact_edge_occurrences() -> None:
     )
     invocation = next(compiled.iter_invocations())
 
-    assert tuple(
-        edge.key.input_index for edge in invocation.artifact_input_edges
-    ) == (0, 1)
+    assert tuple(edge.key.input_index for edge in invocation.artifact_input_edges) == (
+        0,
+        1,
+    )
     assert tuple(edge.spec.ref() for edge in invocation.artifact_input_edges) == (
         objects.ref(),
         objects.ref(),
@@ -93,7 +94,9 @@ def test_repeated_input_roles_compile_as_exact_edge_occurrences() -> None:
     assert len(compiled.artifact_input_edges_by_key()) == 2
 
 
-def test_repeated_input_roles_compile_distinct_relation_owned_edge_projections() -> None:
+def test_repeated_input_roles_compile_distinct_relation_owned_edge_projections() -> (
+    None
+):
     source = ArtifactSpec.input("source", ObjectLabelsArtifactType)
     plain_objects = ArtifactSpec.input("objects", ObjectLabelsArtifactType)
     source_scoped_objects = ArtifactSpec.input(

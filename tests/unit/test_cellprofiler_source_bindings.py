@@ -20,7 +20,7 @@ from openhcs.core.config import (
     LazyStepSourceBindingsConfig,
     PipelineConfig,
 )
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
@@ -954,6 +954,7 @@ def test_names_and_types_contributes_3d_axis_and_voxel_spacing() -> None:
 
     assert config.source_stack_components == (AllComponents.Z_INDEX,)
     assert config.source_voxel_spacing.values_zyx == (2.0, 1.0, 0.5)
+    assert config.source_voxel_spacing.unit is SourceVoxelSpacingUnit.RELATIVE
 
 
 def test_load_images_contributes_binding_filters_metadata_and_grouping() -> None:

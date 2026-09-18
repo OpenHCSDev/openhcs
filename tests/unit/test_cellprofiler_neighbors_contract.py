@@ -411,9 +411,7 @@ def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
     }
 
 
-def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() -> (
-    None
-):
+def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() -> None:
     from openhcs.core.artifacts import MeasurementsArtifactType
     from openhcs.processing.backends.cellprofiler.relationships import (
         relate_objects_with_saved_children,

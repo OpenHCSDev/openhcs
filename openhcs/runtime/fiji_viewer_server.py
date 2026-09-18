@@ -1256,7 +1256,6 @@ class FijiUnsupportedPayloadsControlPlan(FijiControlMessagePlan):
         )
 
 
-@dataclass(frozen=True, slots=True)
 class FijiUnsupportedIntensityWindowControlPlan(FijiControlMessagePlan):
     """Fail closed because Fiji lacks routed native layer contrast authority."""
 
