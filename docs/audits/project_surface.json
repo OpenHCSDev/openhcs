@@ -12,7 +12,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Declares the published README, Python range, package dependencies, optional surfaces, console commands, and project links."
       },
       {
@@ -27,7 +27,7 @@
       },
       {
         "path": "openhcs/core/pipeline_document.py",
-        "sha256": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
+        "sha256": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
         "role": "Owns the validated Python pipeline document shared by visual, code, and agent authoring."
       },
       {
@@ -52,12 +52,12 @@
       },
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "8cb881da211f1f1837b2db7375ca9c937790c54a97fa54facd10cdc81fcc6b1c",
+        "sha256": "224c8b9e66868f8224c61434e576ac62dc80c0abec9d366464815a998376c036",
         "role": "Owns manual and orchestrated image and ROI streaming through registered viewer declarations."
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "7a09a8d9b10b9f6f4dc2cf8dfcfd97b58b67faf5a9fbbb0a52b5407221534ea5",
+        "sha256": "e3a5adcc0b503de04cb05f3f9c24db218e3dd830b10584d3816f5469d6c812d1",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
