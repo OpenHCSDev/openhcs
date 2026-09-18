@@ -1278,6 +1278,7 @@ class FijiUnsupportedIntensityWindowControlPlan(FijiControlMessagePlan):
             ),
         )
 
+
 class FijiRunMacroControlPlan(FijiControlMessagePlan):
     """Execute an ImageJ macro inside the managed PyImageJ process."""
 
