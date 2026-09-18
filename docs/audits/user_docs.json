@@ -969,7 +969,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/desktop_update.py",
-        "sha256": "7e9428f12e2514da8619ef853a55145bb30c144b68aea51c5ffc4585e289a41a",
+        "sha256": "42910339c4f11afe8d413dfbe024910a20ac6b275c563d1c6947452f8baec908",
         "role": "Builds a staged desktop-update plan from the active managed environment."
       },
       {
