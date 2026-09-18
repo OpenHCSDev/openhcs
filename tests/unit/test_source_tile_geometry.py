@@ -18,6 +18,7 @@ from openhcs.core.memory import numpy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.source_bindings import (
     MetadataExtractionRule,
@@ -439,6 +440,11 @@ def test_synthetic_pipeline_compiles_and_executes_positions_artifact_then_paired
 
     assembler = assemble_stack_cpu
     if assembly_backend == "gpu":
+        # CPU-only mode excludes GPU framework declarations from the registry
+        # surface; the GPU leg admits itself through the same process
+        # admission authority the registry consults before skipping.
+        if OpenHCSProcessEnvironment.cpu_only_mode():
+            pytest.skip("CPU-only mode excludes GPU framework declarations")
         cp = pytest.importorskip("cupy")
         from cupy_backends.cuda.libs import nvrtc
 

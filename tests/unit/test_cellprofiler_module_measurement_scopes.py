@@ -176,7 +176,7 @@ def test_identify_secondary_distance_n_omits_threshold_features() -> None:
             single_output_object_name=lambda: "Cells",
             callable_contract=SimpleNamespace(
                 artifact_outputs=ArtifactSpecCollection(
-                    (ArtifactSpec.output("Cells", ObjectLabelsArtifactType),)
+                    (ArtifactSpec("Cells", ObjectLabelsArtifactType),)
                 )
             ),
         )

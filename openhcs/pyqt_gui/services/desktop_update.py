@@ -643,7 +643,7 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
         if self.ui_state_document.is_file():
             DesktopRestartUiState.read(self.ui_state_document).restore(
                 plate_manager,
-                plate_paths=tuple(str(path) for path in payload.plate_paths),
+                plate_paths=payload.plate_paths,
             )
         main_window.time_travel_widget.refresh()
         plate_manager.update_item_list()
