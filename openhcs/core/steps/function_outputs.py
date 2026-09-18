@@ -875,6 +875,20 @@ class OpenHCSMetadataWriter:
         plan: CompiledStepPlan,
     ) -> None:
         if not plan.create_openhcs_metadata:
+            for target in (
+                cls.OutputTarget.primary(plan),
+                cls.OutputTarget.materialized(plan),
+            ):
+                if target is None:
+                    continue
+                structured_metadata = target.produced_projection_metadata(context, plan)
+                if structured_metadata is None:
+                    continue
+                AtomicMetadataWriter().merge_source_projection_metadata(
+                    METADATA_CONFIG.metadata_path(target.plate_root),
+                    target.sub_dir,
+                    structured_metadata,
+                )
             return
         cls.write_primary_metadata(context, plan)
         cls.write_materialized_metadata(context, plan)

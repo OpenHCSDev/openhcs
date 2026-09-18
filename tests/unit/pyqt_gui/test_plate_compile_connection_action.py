@@ -41,6 +41,9 @@ def test_run_control_uses_endpoint_readiness_without_disabling_stop(
     manager.plate_has_active_work = MethodType(
         PlateManagerWidget.plate_has_active_work, manager
     )
+    manager.plate_has_pending_definition_work = MethodType(
+        PlateManagerWidget.plate_has_pending_definition_work, manager
+    )
     PlateManagerWidget.update_button_states(manager)
     expected = {
         ManagerExecutionState.IDLE: compiled

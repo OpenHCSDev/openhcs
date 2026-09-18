@@ -4,31 +4,32 @@ import csv
 import json
 from pathlib import Path
 
-from benchmark.cellprofiler_comparison import (
-    CellProfilerComparisonCase,
-    NativeCellProfilerReferenceScope,
-    append_observations_jsonl,
-    comparison_observation_from_result,
-    load_comparison_cases,
-    load_observations_jsonl,
-    run_comparison_suite,
-    _discard_openhcs_benchmark_tree,
-    _discard_successful_openhcs_benchmark_tree,
-    _failed_comparison_observation,
-    write_module_coverage_artifacts,
-    write_observations_csv,
-    write_phase_timing_csv,
-    write_summary_csv,
-)
+import pytest
+
 from benchmark.adapters.cellprofiler import (
     NATIVE_CELLPROFILER_REFERENCE_SCHEMA_VERSION,
     NativeCellProfilerInputDomainStrategyKey,
     NativeCellProfilerProvenanceField,
 )
 from benchmark.cellprofiler_benchmark_cli import _filter_cases_by_name
-import pytest
-from benchmark.contracts.tool_adapter import ToolExecutionError
-from benchmark.contracts.tool_adapter import BenchmarkResult
+from benchmark.cellprofiler_comparison import (
+    CellProfilerComparisonCase,
+    NativeCellProfilerReferenceScope,
+    NativeReferenceLocation,
+    _discard_openhcs_benchmark_tree,
+    _discard_successful_openhcs_benchmark_tree,
+    _failed_comparison_observation,
+    append_observations_jsonl,
+    comparison_observation_from_result,
+    load_comparison_cases,
+    load_observations_jsonl,
+    run_comparison_suite,
+    write_module_coverage_artifacts,
+    write_observations_csv,
+    write_phase_timing_csv,
+    write_summary_csv,
+)
+from benchmark.contracts.tool_adapter import BenchmarkResult, ToolExecutionError
 from benchmark.runner import CellProfilerCompatibilityResult
 from openhcs.core.config import GlobalPipelineConfig, WellFilterConfig
 
@@ -159,6 +160,41 @@ def test_required_native_reference_does_not_rerun_cellprofiler(
     assert observations[0].native_cellprofiler.cached is False
     assert observations[0].native_cellprofiler.success is False
     assert "Required cached native CellProfiler reference" in (
+        observations[0].native_cellprofiler.error_message or ""
+    )
+
+
+def test_required_native_reference_rejects_empty_comparison_set(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    reference_output_dir = tmp_path / "empty-reference"
+    reference_output_dir.mkdir()
+    case = CellProfilerComparisonCase(
+        name="EmptyReference",
+        dataset_path=tmp_path / "images",
+        cppipe_path=tmp_path / "pipeline.cppipe",
+    )
+    monkeypatch.setattr(
+        "benchmark.cellprofiler_comparison._native_reference_location",
+        lambda *args, **kwargs: NativeReferenceLocation(
+            output_dir=reference_output_dir.parent,
+            reference_output_dir=reference_output_dir,
+        ),
+    )
+
+    observations = run_comparison_suite(
+        (case,),
+        output_root=tmp_path / "suite",
+        suite_id="suite-empty-reference",
+        native_reference_root=tmp_path / "native-refs",
+        require_native_reference=True,
+        continue_on_error=True,
+    )
+
+    assert len(observations) == 1
+    assert observations[0].native_cellprofiler.success is False
+    assert "has no comparable artifacts" in (
         observations[0].native_cellprofiler.error_message or ""
     )
 

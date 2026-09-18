@@ -177,6 +177,47 @@ def _native_reference_root() -> Path:
     return native_reference_root
 
 
+def _assert_manifest_reference_parity(
+    *,
+    manifest_path: Path,
+    native_reference_root: Path,
+    expected_case_count: int,
+    output_root: Path,
+    suite_id: str,
+) -> tuple[CellProfilerComparisonObservation, ...]:
+    """Execute one declared manifest and require every selected reference value."""
+
+    cases = load_comparison_cases(manifest_path)
+    assert len(cases) == expected_case_count
+    global_config = GlobalPipelineConfig(
+        well_filter_config=WellFilterConfig(well_filter=1),
+        napari_streaming_config=LazyNapariStreamingConfig(
+            enabled=False,
+            persistent=False,
+        ),
+    )
+    execution_port = _free_zmq_port_pair(
+        set(),
+        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+    )
+    observations = run_comparison_suite(
+        cases,
+        output_root=output_root,
+        suite_id=suite_id,
+        native_reference_root=native_reference_root,
+        require_native_reference=True,
+        openhcs_global_config=global_config,
+        discard_openhcs_outputs=True,
+        continue_on_error=True,
+        openhcs_execution_port=execution_port,
+    )
+
+    assert len(observations) == expected_case_count
+    _assert_successful_exact_observations(observations)
+    assert (output_root / "summary.csv").is_file()
+    return observations
+
+
 def _free_zmq_port_pair(
     excluded: set[int],
     *,
@@ -477,33 +518,13 @@ def _assert_fiji_fresh_process_image(
 def test_official30_compile_execute_and_match_native_references_over_zmq(
     tmp_path: Path,
 ) -> None:
-    native_reference_root = _native_reference_root()
-
-    cases = _OFFICIAL30_CASES
-    assert len(cases) == 30
-    global_config = GlobalPipelineConfig(
-        well_filter_config=WellFilterConfig(well_filter=1),
-        napari_streaming_config=LazyNapariStreamingConfig(
-            enabled=False,
-            persistent=False,
-        ),
+    _assert_manifest_reference_parity(
+        manifest_path=OFFICIAL30_MANIFEST,
+        native_reference_root=_native_reference_root(),
+        expected_case_count=30,
+        output_root=tmp_path / "official30",
+        suite_id="official30-zmq-value-comparison",
     )
-    output_root = tmp_path / "baseline"
-
-    observations = run_comparison_suite(
-        cases,
-        output_root=output_root,
-        suite_id="official30-zmq-baseline",
-        native_reference_root=native_reference_root,
-        require_native_reference=True,
-        openhcs_global_config=global_config,
-        discard_openhcs_outputs=True,
-        continue_on_error=True,
-    )
-
-    assert len(observations) == 30
-    _assert_successful_exact_observations(observations)
-    assert (output_root / "summary.csv").is_file()
 
 
 def test_official30_fiji_variants_project_registered_viewer_configs() -> None:
@@ -786,8 +807,7 @@ def test_official30_persistent_fiji_variants_isolated_per_case(
                     )
                 else:
                     raise AssertionError(
-                        "Unhandled registered Official30 viewer "
-                        f"{viewer_type.name!r}."
+                        f"Unhandled registered Official30 viewer {viewer_type.name!r}."
                     )
         except Exception as error:
             failures.append(

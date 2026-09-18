@@ -13,7 +13,6 @@ from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
     VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
     ViewerWindowImageSampleRequest,
-    ViewerWindowIntensityWindowRequest,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowNavigationRequest,
     ViewerWindowPayloadRequest,
@@ -764,75 +763,5 @@ class IsolateViewerCommandSpec(SingleToolCommandSpec):
             visible_route_keys=viewer_visible_route_keys_argument(args),
             selected_route_key=args.selected_route_key,
             axis_indices=parse_navigation_axis_indices(args.axis_index),
-        )
-        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
-
-
-class ViewerIntensityWindowCommandSpec(SingleToolCommandSpec):
-    capability = agent_capabilities.apply_viewer_intensity_window
-
-    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        add_viewer_port_argument(parser)
-        parser.add_argument("route_key", nargs="?")
-        parser.add_argument(
-            "--route-key",
-            dest="route_key_option",
-            help="Target image route key; alias for the positional route_key.",
-        )
-        parser.add_argument(
-            "--axis-index",
-            action="append",
-            metavar="NAME=INDEX",
-            help=(
-                "Semantic route coordinate selector; repeat for multiple axes. "
-                "Omit to include every real payload coordinate on the route."
-            ),
-        )
-        add_request_field_option(
-            parser,
-            ViewerWindowIntensityWindowRequest,
-            "low_percentile",
-            "--low-percentile",
-        )
-        add_request_field_option(
-            parser,
-            ViewerWindowIntensityWindowRequest,
-            "high_percentile",
-            "--high-percentile",
-        )
-        parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Render the complete MCP JSON response.",
-        )
-        add_viewer_connection_options(parser)
-
-    def tool_arguments(
-        self,
-        args: argparse.Namespace,
-    ) -> dict[str, JsonValue]:
-        connection = ViewerConnectionArguments.from_args(
-            args,
-            allow_positional_value_after_port_option=True,
-        )
-        request = ViewerWindowIntensityWindowRequest.from_fields(
-            connection=ExecutionConnectionSpec(
-                host=connection.host,
-                port=connection.port,
-                transport_mode=connection.transport_mode,
-            ),
-            timeout_ms=(
-                connection.timeout_ms
-                if connection.timeout_ms is not None
-                else VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
-            ),
-            route_key=required_viewer_route_key_argument(
-                args,
-                args.route_key,
-                args.route_key_option,
-            ),
-            axis_indices=parse_navigation_axis_indices(args.axis_index),
-            low_percentile=args.low_percentile,
-            high_percentile=args.high_percentile,
         )
         return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())

@@ -22,6 +22,7 @@ from openhcs.core.config import NapariDisplayConfig
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
+from openhcs.core.source_spatial_domain import CommonRuntimeValue
 from openhcs.runtime.viewer_component_system import (
     ComponentMap,
     ComponentValue,
@@ -1222,6 +1223,32 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             0.0,
             0.0,
         )
+
+    def spatial_layer_kwargs(
+        self,
+        items: Sequence[NapariStreamLayerItem],
+        payload_axis_labels: tuple[str, ...] = (),
+    ) -> dict[str, LayerKwargValue]:
+        """Project calibrated XY onto aligned native axes for every layer kind.
+
+        Component and internal payload axes remain dimensionless. Two-dimensional
+        acquisition calibration never invents physical Z or a color-band axis.
+        """
+        spacing = CommonRuntimeValue.from_values(
+            item.image_metadata.source_voxel_spacing for item in items
+        ).single
+        if spacing is None:
+            raise ValueError(
+                "A native viewer route requires consistent source voxel spacing."
+            )
+        prefix = len(self.display_axis_components) + len(payload_axis_labels)
+        return {
+            "scale": (*(1.0 for _ in range(prefix)), *spacing.spacing_for_ndim(2)),
+            "units": (
+                *("dimensionless" for _ in range(prefix)),
+                *(spacing.native_coordinate_unit for _ in range(2)),
+            ),
+        }
 
     def label_index(
         self,

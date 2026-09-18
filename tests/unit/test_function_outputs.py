@@ -3,9 +3,11 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import tifffile
 import pytest
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
+from polystore.memory import MemoryStorageBackend
 from polystore.streaming.viewer_transport import (
     ViewerDisplayConfigABC,
     ViewerStreamKwarg,
@@ -38,6 +40,9 @@ from openhcs.core.source_image_provenance import (
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
+    SOURCE_VOXEL_SPACING_FIELD,
+    SOURCE_VOXEL_SPACING_UNIT_FIELD,
+    SourceVoxelSpacing,
 )
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -233,6 +238,12 @@ class MetadataHandlerStub:
 
     def get_pixel_size(self, _root):
         return 1.0
+
+    def get_metadata_grid_dimensions(self, root):
+        return list(self.get_grid_dimensions(root))
+
+    def get_metadata_pixel_size(self, root):
+        return self.get_pixel_size(root)
 
 
 class ContextStub:
@@ -1286,8 +1297,16 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     output_dir = plate_root / "images"
     path = output_dir / "A01_s1_w1.tif"
     output_dir.mkdir(parents=True)
-    path.write_bytes(b"produced image")
-    context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    pixels = np.zeros((2, 4, 5), dtype=np.uint16)
+    tifffile.imwrite(path, pixels)
+    context = context_stub(
+        FileManager(
+            {
+                Backend.DISK.value: DiskStorageBackend(),
+                Backend.MEMORY.value: MemoryStorageBackend(),
+            }
+        )
+    )
     context.metadata_cache = {
         AllComponents.WELL: {"A01": None},
         AllComponents.SITE: {"1": None},
@@ -1302,7 +1321,17 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     plan.analysis_results_dir = str(plate_root / "images_results")
     plan.write_backend = Backend.DISK.value
     plan.create_openhcs_metadata = metadata_writer
+    context.step_plans = {plan.step_index: plan}
     metadata = ImagePayloadMetadata(
+        source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
+        source_component_metadata={
+            "well": "A01",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            SOURCE_VOXEL_SPACING_FIELD: "0.5,0.5",
+            SOURCE_VOXEL_SPACING_UNIT_FIELD: "micrometers",
+        },
         source_provenance=SourceImageProvenance(
             source_component_metadata={
                 "well": "A01",
@@ -1314,7 +1343,7 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
                 paths=("/source/site-1.tif", "/source/site-2.tif"),
                 component_metadata=({"site": "1"}, {"site": "2"}),
             ),
-        )
+        ),
     )
     record_output_path(
         context,
@@ -1339,11 +1368,20 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
             source="collapsed mosaic",
         ),
     )
+    context.filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    context.filemanager.save(
+        ImageMetadataPayload(pixels, metadata),
+        str(path),
+        Backend.MEMORY.value,
+    )
     OpenHCSMetadataWriter.write(context, plan)
+    OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
 
     subdirectory = json.loads(
         (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
     )[FIELDS.SUBDIRECTORIES]["images"]
+    assert subdirectory[FIELDS.GRID_DIMENSIONS] == []
+    assert subdirectory[FIELDS.PIXEL_SIZE] == 0.5
     record = subdirectory[FIELDS.SOURCE_PROJECTION][0]
     restored = ImagePayloadMetadata.from_mapping(
         record[SourceProjectionMetadataSerializer.IMAGE_METADATA_FIELD]

@@ -1262,7 +1262,7 @@ class PipelineEditorWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWi
         mutation_allowed = (
             self.plate_manager is None
             or not has_plate
-            or not self.plate_manager.plate_has_active_work(self.current_plate)
+            or not self.plate_manager.plate_has_pending_definition_work(self.current_plate)
         )
 
         # Mathematical constraints (mirrors Textual TUI logic):

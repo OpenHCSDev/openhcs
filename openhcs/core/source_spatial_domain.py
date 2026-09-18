@@ -12,6 +12,7 @@ import numpy as np
 
 from zmqruntime.viewer_protocol import (
     ViewerSourceSpatialDomainPayload,
+    ViewerWireField,
     ViewerWireMapping,
     ViewerWireValue,
 )
@@ -115,6 +116,39 @@ class SourceSpatialDomain:
             fill_value=self.fill_value,
             value_name=self.value_name,
         )
+
+    def require_image_window(self, image_shape_yx: Sequence[int]) -> None:
+        """Validate the same crop bounds used by dense source materialization."""
+        if self.origin_yx is None or self.source_shape_yx is None:
+            return
+        source_y, source_x = self._shape_yx(self.source_shape_yx, "source_shape_yx")
+        origin_y, origin_x = self._shape_yx(self.origin_yx, "origin_yx")
+        if min(source_y, source_x, origin_y, origin_x) < 0:
+            raise ValueError(
+                f"{self.value_name} spatial domains require non-negative source shape "
+                f"and origin; got source={self.source_shape_yx!r}, origin={self.origin_yx!r}."
+            )
+        height, width = self._shape_yx(image_shape_yx, "image_shape_yx")
+        if origin_y + height > source_y or origin_x + width > source_x:
+            raise ValueError(
+                f"{self.value_name} crop exceeds its declared source domain; got array "
+                f"{tuple(image_shape_yx)!r}, source={self.source_shape_yx!r}, origin={self.origin_yx!r}."
+            )
+
+    def with_native_image_context(
+        self,
+        native_domain: "SourceSpatialDomain",
+        *,
+        image_shape_yx: tuple[int, int] | None,
+    ) -> Self:
+        """Retain compatible authored crops, otherwise use validated native pixels."""
+        candidate = self.with_missing_from(native_domain)
+        if image_shape_yx is not None:
+            try:
+                candidate.require_image_window(image_shape_yx)
+            except ValueError:
+                return native_domain
+        return candidate
 
     @classmethod
     def common_from_domains(
@@ -355,7 +389,8 @@ class SourceSpatialDomainFields:
     """Source-image spatial domain carried by runtime payload metadata."""
 
     source_spatial_domain: SourceSpatialDomain = field(
-        default_factory=SourceSpatialDomain
+        default_factory=SourceSpatialDomain,
+        metadata={ViewerWireField.IMAGE_METADATA: True},
     )
 
     def normalize_source_spatial_domain_fields(self) -> None:
@@ -623,11 +658,6 @@ def dense_array_in_source_spatial_domain(
 
     source_y, source_x = (int(source_shape[0]), int(source_shape[1]))
     origin_y, origin_x = (int(origin[0]), int(origin[1]))
-    if source_y < 0 or source_x < 0 or origin_y < 0 or origin_x < 0:
-        raise ValueError(
-            f"{value_name} spatial domains require non-negative source shape "
-            f"and origin; got source={source_shape!r}, origin={origin!r}."
-        )
     if label_array.ndim < 2:
         raise ValueError(
             f"{value_name} spatial domains require at least 2D arrays; got "
@@ -647,14 +677,14 @@ def dense_array_in_source_spatial_domain(
         )
     payload_y = int(label_array.shape[y_axis])
     payload_x = int(label_array.shape[x_axis])
+    SourceSpatialDomain(
+        origin_yx=origin,
+        source_shape_yx=source_shape,
+        fill_value=fill_value,
+        value_name=value_name,
+    ).require_image_window((payload_y, payload_x))
     if (payload_y, payload_x) == (source_y, source_x) and origin == (0, 0):
         return label_array
-
-    if origin_y + payload_y > source_y or origin_x + payload_x > source_x:
-        raise ValueError(
-            f"{value_name} crop exceeds its declared source domain; got array "
-            f"{label_array.shape!r}, source={source_shape!r}, origin={origin!r}."
-        )
 
     expanded_shape = list(label_array.shape)
     expanded_shape[y_axis] = source_y

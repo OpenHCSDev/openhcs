@@ -37,11 +37,14 @@ from pyqt_reactive.services.window_manager import WindowManager
 from pyqt_reactive.services.window_navigation import (
     NullWindowNavigationDriver,
     WindowNavigationDispatch,
+    RegisteredWindowNavigationCompletion,
     WindowNavigationRequest,
 )
 from pyqt_reactive.services.window_snapshot import (
     QtWindowSnapshotRequest,
     QtWindowSnapshotService,
+    QtWindowSnapshot,
+    WindowVisualObservation,
 )
 from pyqt_reactive.widgets.shared import (
     BaseFormDialog,
@@ -58,6 +61,10 @@ from pyqt_reactive.widgets.shared.list_item_delegate import (
 from python_introspect import overlay_non_none_dataclass, project_dataclass
 
 from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentResourceRef
+from openhcs.agent.services.ui_bridge_service import (
+    UiBridgeNavigateWindowOperation,
+    UiBridgeSnapshotWindowOperation,
+)
 from openhcs.agent.dto.ui_bridge import (
     UiActionCatalog,
     UiActionIdentity,
@@ -427,7 +434,10 @@ class WindowCatalogProjectionABC(
         raise NotImplementedError
 
     @abstractmethod
-    def navigate(self, request: UiWindowNavigateRequest) -> UiWindowNavigateResult:
+    def navigate(
+        self, request: UiWindowNavigateRequest,
+        completed: Callable[[UiWindowNavigateResult], None] | None = None,
+    ) -> UiWindowNavigateResult:
         raise NotImplementedError
 
     @abstractmethod
@@ -435,7 +445,10 @@ class WindowCatalogProjectionABC(
         raise NotImplementedError
 
     @abstractmethod
-    def snapshot(self, request: UiWindowSnapshotRequest) -> UiWindowSnapshotResult:
+    def snapshot(
+        self, request: UiWindowSnapshotRequest,
+        completed: Callable[[UiWindowSnapshotResult], None] | None = None,
+    ) -> UiWindowSnapshotResult:
         raise NotImplementedError
 
     @abstractmethod
@@ -460,7 +473,10 @@ class WindowTargetOperationProjectionMixin(ABC):
     ) -> WindowProjectionTarget | None:
         raise NotImplementedError
 
-    def snapshot(self, request: UiWindowSnapshotRequest) -> UiWindowSnapshotResult:
+    def snapshot(
+        self, request: UiWindowSnapshotRequest,
+        completed: Callable[[UiWindowSnapshotResult], None] | None = None,
+    ) -> UiWindowSnapshotResult:
         target = self.target_for_operation(request)
         snapshot_results = UiWindowSnapshotResultFactory()
         if target is None:
@@ -468,7 +484,7 @@ class WindowTargetOperationProjectionMixin(ABC):
                 request,
                 WindowProjectionResultAuthority.unknown_window(request),
             )
-        return snapshot_results.capture(request, target)
+        return snapshot_results.capture(request, target, completed)
 
     def widget_tree(self, request: UiWidgetTreeRequest) -> UiWidgetTreeResult:
         target = self.target_for_operation(request)
@@ -534,7 +550,10 @@ class EmbeddedWindowRoute:
         self.pane.show()
         return self.summary()
 
-    def navigate(self, request: UiWindowNavigateRequest) -> WindowNavigationDispatch:
+    def navigate(
+        self, request: UiWindowNavigateRequest,
+        completed: Callable[[RegisteredWindowNavigationCompletion], None] | None = None,
+    ) -> WindowNavigationDispatch:
         self.pane.show()
         widget = self.widget()
         driver = (
@@ -548,6 +567,7 @@ class EmbeddedWindowRoute:
             requested_scope_id=request.window_id,
             item_id=request.item_id,
             field_path=request.field_path,
+            completed=completed,
         )
 
     def overview_sections(self) -> tuple[UiLiveOverviewSection, ...]:
@@ -586,13 +606,17 @@ class ManagedWindowRoute(FocusableWindowRouteMixin):
     identity: UiWindowIdentity
     title: str
 
-    def navigate(self, request: UiWindowNavigateRequest) -> WindowNavigationDispatch:
+    def navigate(
+        self, request: UiWindowNavigateRequest,
+        completed: Callable[[RegisteredWindowNavigationCompletion], None] | None = None,
+    ) -> WindowNavigationDispatch:
         self.focus()
         return WindowManager.focus_and_navigate_result(
             UiWindowManagerScope.from_identity(self.identity).value,
             item_id=request.item_id,
             field_path=request.field_path,
             requested_scope_id=request.window_id,
+            completed=completed,
         )
 
     def widget(self, create_if_missing: bool) -> QWidget | None:
@@ -1092,7 +1116,10 @@ class QtTopLevelWindowProjection(
             summary=self.summary(target.widget),
         )
 
-    def navigate(self, request: UiWindowNavigateRequest) -> UiWindowNavigateResult:
+    def navigate(
+        self, request: UiWindowNavigateRequest,
+        completed: Callable[[UiWindowNavigateResult], None] | None = None,
+    ) -> UiWindowNavigateResult:
         focus_result = self.focus(
             UiWindowFocusRequest(
                 window_id=request.window_id,
@@ -1106,7 +1133,10 @@ class QtTopLevelWindowProjection(
             navigated=False,
             created=False,
             summary=focus_result.summary,
-            errors=focus_result.errors,
+            errors=(focus_result.errors or (
+                (WindowProjectionResultAuthority.unsupported_navigation_target(request),)
+                if request.has_target else ()
+            )),
             warnings=focus_result.warnings,
         )
 
@@ -1208,27 +1238,47 @@ class UiWindowSnapshotResultFactory:
         self,
         request: UiWindowSnapshotRequest,
         target: WindowProjectionTarget,
+        completed: Callable[[UiWindowSnapshotResult], None] | None = None,
     ) -> UiWindowSnapshotResult:
+        qt_request = QtWindowSnapshotRequest(
+            widget=target.widget, capture=request,
+            subject_id=request.window_id, title=target.summary.title,
+        )
         try:
-            snapshot = self._snapshotter.capture(
-                QtWindowSnapshotRequest(
-                    widget=target.widget,
-                    capture=request,
-                    subject_id=request.window_id,
-                    title=target.summary.title,
+            if request.frame_condition.observes:
+                if completed is None:
+                    raise ValueError("Observed snapshots require an operation completion owner.")
+                self._snapshotter.observe(
+                    qt_request,
+                    lambda snapshot: completed(self.from_snapshot(request, target, snapshot)),
+                    lambda failure: completed(self.error(
+                        request, AgentError.from_exception(
+                            UiBridgeSnapshotWindowOperation.failure_error_code, failure.error),
+                        summary=target.summary, observation=failure.observation,
+                    )),
                 )
-            )
+                return project_dataclass(UiWindowSnapshotResult, request,
+                    schema_version=SCHEMA_VERSION, window_id=request.window_id,
+                    captured=False, summary=target.summary,
+                )
+            snapshot = self._snapshotter.capture(qt_request)
         except Exception as exc:
             return self.error(
                 request,
-                AgentError.from_exception("ui_window_snapshot_failed", exc),
+                AgentError.from_exception(UiBridgeSnapshotWindowOperation.failure_error_code, exc),
                 summary=target.summary,
             )
-        return UiWindowSnapshotResult(
+        return self.from_snapshot(request, target, snapshot)
+
+    @staticmethod
+    def from_snapshot(
+        request: UiWindowSnapshotRequest,
+        target: WindowProjectionTarget,
+        snapshot: QtWindowSnapshot,
+    ) -> UiWindowSnapshotResult:
+        return project_dataclass(UiWindowSnapshotResult, request,
             schema_version=SCHEMA_VERSION,
             window_id=request.window_id,
-            output_dir_path=request.output_dir_path,
-            capture_scope=request.capture_scope,
             captured=True,
             resource=AgentResourceRef(
                 uri=snapshot.uri,
@@ -1241,6 +1291,7 @@ class UiWindowSnapshotResultFactory:
             summary=target.summary,
             width=snapshot.width,
             height=snapshot.height,
+            observation=snapshot.observation,
         )
 
     @staticmethod
@@ -1249,14 +1300,14 @@ class UiWindowSnapshotResultFactory:
         error: AgentError,
         *,
         summary: UiWindowSummary | None = None,
+        observation: WindowVisualObservation | None = None,
     ) -> UiWindowSnapshotResult:
-        return UiWindowSnapshotResult(
+        return project_dataclass(UiWindowSnapshotResult, request,
             schema_version=SCHEMA_VERSION,
             window_id=request.window_id,
-            output_dir_path=request.output_dir_path,
-            capture_scope=request.capture_scope,
             captured=False,
             summary=summary,
+            observation=observation,
             errors=(error,),
         )
 
@@ -2397,8 +2448,11 @@ class UiWindowProjectionService(
         self,
         request: UiWindowNavigateRequest,
         resolution: WindowRouteResolution,
+        completed: Callable[[UiWindowNavigateResult], None] | None = None,
     ) -> UiWindowNavigateResult:
-        dispatch = resolution.route.navigate(request)
+        dispatch = resolution.route.navigate(request, self._completion_for(
+            request, completed, created=False, summary=resolution.summary,
+        ))
         return self._navigate_result(
             request,
             focused=dispatch.focused,
@@ -2410,6 +2464,7 @@ class UiWindowProjectionService(
     def navigate(
         self,
         request: UiWindowNavigateRequest,
+        completed: Callable[[UiWindowNavigateResult], None] | None = None,
     ) -> UiWindowNavigateResult:
         identity = request.as_identity()
         route_index = self._route_index()
@@ -2419,7 +2474,7 @@ class UiWindowProjectionService(
             resolve_scope_alias=False,
         )
         if embedded_route is not None:
-            return self._navigate_static_route(request, embedded_route)
+            return self._navigate_static_route(request, embedded_route, completed)
 
         managed_route = self._managed_route_resolution(
             identity,
@@ -2427,7 +2482,7 @@ class UiWindowProjectionService(
             resolve_scope_alias=False,
         )
         if managed_route is not None and request.open_policy.create_if_missing:
-            return self._navigate_static_route(request, managed_route)
+            return self._navigate_static_route(request, managed_route, completed)
 
         open_scope_id = self._open_window_manager_scope_id(identity)
         if open_scope_id is not None:
@@ -2436,6 +2491,10 @@ class UiWindowProjectionService(
                 item_id=request.item_id,
                 field_path=request.field_path,
                 requested_scope_id=identity.window_id,
+                completed=self._completion_for(
+                    request, completed, created=False,
+                    summary=lambda: self._dynamic_scope_projection().summary(identity, open_scope_id),
+                ),
             )
             if dispatch.focused:
                 return self._navigate_result(
@@ -2455,14 +2514,14 @@ class UiWindowProjectionService(
             resolve_scope_alias=True,
         )
         if embedded_route is not None:
-            return self._navigate_static_route(request, embedded_route)
+            return self._navigate_static_route(request, embedded_route, completed)
         managed_route = self._managed_route_resolution(
             identity,
             route_index,
             resolve_scope_alias=True,
         )
         if managed_route is not None and request.open_policy.create_if_missing:
-            return self._navigate_static_route(request, managed_route)
+            return self._navigate_static_route(request, managed_route, completed)
 
         result = ScopeWindowNavigationService.navigate(
             WindowNavigationRequest(
@@ -2470,7 +2529,10 @@ class UiWindowProjectionService(
                 item_id=request.item_id,
                 field_path=request.field_path,
                 create_if_missing=request.open_policy.create_if_missing,
-            )
+            ), completed=self._completion_for(
+                request, completed, created=True,
+                summary=lambda: self._dynamic_scope_projection().summary(identity, identity.window_id),
+            ),
         )
         if result.focused:
             return self._navigate_result(
@@ -2620,6 +2682,34 @@ class UiWindowProjectionService(
             focused=True,
             summary=summary,
         )
+
+    @staticmethod
+    def _completion_for(
+        request: UiWindowNavigateRequest,
+        completed: Callable[[UiWindowNavigateResult], None] | None,
+        *, created: bool, summary: Callable[[], UiWindowSummary],
+    ) -> Callable[[RegisteredWindowNavigationCompletion], None] | None:
+        if completed is None:
+            return None
+
+        def finish(facts: RegisteredWindowNavigationCompletion) -> None:
+            errors = ()
+            if facts.error is not None:
+                errors = (AgentError.from_exception(
+                    UiBridgeNavigateWindowOperation.failure_error_code, facts.error),)
+            elif not facts.executed:
+                errors = (AgentError(
+                    code=UiBridgeNavigateWindowOperation.failure_error_code,
+                    message=("Window was destroyed before navigation." if not facts.window_alive
+                             else f"Navigation readiness exhausted: {facts.wait_reason}."),
+                ),)
+            completed(UiWindowNavigateResult(
+                schema_version=SCHEMA_VERSION, window_id=request.window_id,
+                focused=facts.window_alive, created=created,
+                navigated=facts.executed, target_exposed=facts.target_exposed,
+                summary=summary() if facts.window_alive else None, errors=errors,
+            ))
+        return finish
 
     @staticmethod
     def _navigate_result(

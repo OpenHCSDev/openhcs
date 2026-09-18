@@ -72,6 +72,7 @@ class InstalledDemoFailure(RuntimeError):
 _EXECUTION_STALL_TIMEOUT_SECONDS = 180.0
 _EXECUTION_MAXIMUM_DURATION_SECONDS = 900.0
 _EXECUTION_POLL_INTERVAL_SECONDS = 0.5
+_VIEWER_SETTLE_TIMEOUT_SECONDS = 60.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -596,25 +597,56 @@ def _poll_execution_job(
         )
 
 
-def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
-    payload = _run_mcp(
-        client,
-        (
-            ValidateViewerCommandSpec.command,
-            str(viewer_port),
-            "--host",
-            "127.0.0.1",
-            "--transport-mode",
-            "tcp",
-            "--timeout-ms",
-            "2000",
-            "--require-nonzero-payloads",
-            "--include-state",
-            "--json",
-        ),
-        tool_name=agent_capabilities.validate_viewer_window_state.name,
-        timeout_seconds=20.0,
+_VIEWER_SETTLE_DEADLINE_SECONDS = 60.0
+_VIEWER_SETTLE_POLL_SECONDS = 1.0
+
+
+def _viewer_is_settled(payload: Mapping[str, Any]) -> bool:
+    """Return whether one observed viewer state shows settled mounted layers."""
+
+    return (
+        payload.get("observed") is True
+        and payload.get("valid") is True
+        and payload.get("pending_update_count") == 0
     )
+
+
+def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
+    """Validate the viewer after its debounced layer updates settle.
+
+    Layer mounts are debounced inside the viewer process and can legitimately
+    still be pending when pipeline execution completes, so poll until the
+    viewer settles or the deadline expires instead of racing the debounce.
+    """
+
+    deadline = time.monotonic() + _VIEWER_SETTLE_DEADLINE_SECONDS
+    payload: dict[str, Any] = {}
+    while True:
+        payload = _run_mcp(
+            client,
+            (
+                ValidateViewerCommandSpec.command,
+                str(viewer_port),
+                "--host",
+                "127.0.0.1",
+                "--transport-mode",
+                "tcp",
+                "--timeout-ms",
+                "5000",
+                "--require-nonzero-payloads",
+                "--include-state",
+                "--json",
+            ),
+            tool_name=agent_capabilities.validate_viewer_window_state.name,
+            timeout_seconds=30.0,
+        )
+        if _viewer_is_settled(payload):
+            break
+        if time.monotonic() >= deadline:
+            raise InstalledDemoFailure(
+                f"Installed Napari viewer validation did not pass: {payload}"
+            )
+        time.sleep(_VIEWER_SETTLE_POLL_SECONDS)
     viewer = payload.get("viewer")
     viewer_type = viewer.get("viewer_type") if isinstance(viewer, Mapping) else None
     if (

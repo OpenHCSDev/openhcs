@@ -21,6 +21,22 @@ from openhcs.core.runtime_image_values import (
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.runtime.viewer_protocol import (
+    NapariLayerKind,
+    NapariViewerServerRequest,
+    ViewerControlMessageType,
+    ViewerControlResponseField,
+    ViewerNavigationControlOptions,
+    ViewerPayloadControlOptions,
+    ViewerPayloadProjectionOptions,
+    ViewerShapePayloadProjection,
+    ViewerProtocolStatus,
+    ViewerSettlePhase,
+    ViewerSettleProgress,
+    ViewerControlResponse,
+    ViewerStateControlOptions,
+    ViewerComponentValueOrdering,
+)
 from openhcs.runtime.napari_streaming_handlers import (
     NapariAggregateAxisBinding,
     NapariAggregateAxisBindingAuthority,
@@ -690,6 +706,7 @@ def test_napari_state_control_message_honors_state_request_payload():
         {
             "name": "Payload",
             "data": np.ones((2, 2), dtype=np.uint8),
+            "scale": (0.65, 0.65),
             "translate": (0.0, 0.0),
             "visible": True,
         },
@@ -728,6 +745,10 @@ def test_napari_state_control_message_honors_state_request_payload():
     assert response["layer_count"] == 1
     layer_response = response["layers"][0]
     assert layer_response["route_key"] == "payload-route"
+    assert layer_response["native_transform"] == {
+        "scale": (0.65, 0.65),
+        "translate": (0.0, 0.0),
+    }
     assert layer_response["component_values"] == ()
     assert layer_response["component_value_count"] == 1
     assert layer_response["component_values_truncated"] is True
@@ -1198,6 +1219,8 @@ def test_napari_image_display_stacks_sites_without_rebasing_payload_color_axis()
         "blending": "additive",
         "rgb": True,
         "translate": (0.0, 0.0, 0.0),
+        "scale": (1.0, 1.0, 1.0),
+        "units": ("dimensionless", "pixel", "pixel"),
     }
 
 
@@ -1456,7 +1479,7 @@ def test_napari_display_pipeline_labels_collapsed_route_components():
     state = pipeline.server.layer_route_state.dimension_state_for("route-stack")
     assert axis_labels == ("site", "y", "x")
     assert state.labels == {"site": ["Site 1", "Site 2"]}
-    assert state.scalar_labels == ("Ch1: DAPI",)
+    assert state.scalar_labels == ("Ch1: DAPI", "T 1", "Z 1")
 
 
 def test_napari_display_pipeline_rejects_nonsemantic_payload_axis_labels() -> None:
@@ -1957,6 +1980,7 @@ def test_napari_navigation_control_selects_visible_layer_and_route_local_axes():
         {
             "name": "Objects",
             "data": np.zeros((1, 2, 20, 20), dtype=np.uint16),
+            "scale": (1.0, 1.0, 0.65, 0.65),
             "translate": (3.0, 0.0, 0.0, 0.0),
             "visible": False,
         },
@@ -2018,6 +2042,7 @@ def test_napari_navigation_visibility_change_preserves_selected_label_route():
         {
             "name": "Selected",
             "data": np.zeros((2, 20, 20), dtype=np.uint16),
+            "scale": (1.0, 0.65, 0.65),
             "translate": (0.0, 0.0, 0.0),
             "visible": True,
         },
@@ -2028,6 +2053,7 @@ def test_napari_navigation_visibility_change_preserves_selected_label_route():
         {
             "name": "Hidden",
             "data": np.zeros((2, 20, 20), dtype=np.uint16),
+            "scale": (1.0, 0.65, 0.65),
             "translate": (0.0, 0.0, 0.0),
             "visible": True,
         },
@@ -3207,7 +3233,10 @@ def _native_roi_selection_server(napari_viewer_server, viewer, layers):
     return server
 
 
-def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(qtbot):
+def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(
+    qtbot,
+    monkeypatch,
+):
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
     from napari.components import ViewerModel
 
@@ -3260,6 +3289,13 @@ def test_declared_object_subject_selects_all_neuron_paths_and_metrics_row(qtbot)
         ),
     )
     original_order = tuple(viewer.layers)
+    monkeypatch.setattr(
+        napari_viewer_server.NapariResultSelectionGroupAuthority,
+        "feature_values",
+        lambda *_args, **_kwargs: pytest.fail(
+            "ROI selection rescanned features after layer binding"
+        ),
+    )
 
     server.result_selection_controller.select_result_element(graph_layer, 1)
     assert graph_layer.selected_data == {0, 1}
@@ -3710,9 +3746,25 @@ def test_napari_control_dispatch_registry_is_module_local_and_eager():
     assert registry[ViewerControlMessageType.CLEAR_STATE.value] is (
         napari_viewer_server.NapariClearStateControlMessageAction
     )
-    assert registry[ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value] is (
-        napari_viewer_server.NapariIntensityWindowControlMessageAction
+
+
+def test_napari_endpoint_lifecycle_capabilities_derive_from_registered_actions():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    from zmqruntime.messages import EndpointControlCapability
+
+    expected = frozenset(EndpointControlCapability)
+    assert (
+        napari_viewer_server.NapariControlMessageAction.endpoint_control_capabilities()
+        == expected
     )
+    server = napari_viewer_server.NapariViewerServer(
+        NapariViewerServerRequest(
+            port=54321,
+            viewer_title="lifecycle capability test",
+        )
+    )
+
+    assert server._create_pong_response().control_capabilities == expected
 
 
 def test_napari_axis_projector_drops_only_globally_singleton_axes():
@@ -5393,3 +5445,96 @@ def test_napari_points_layer_display_applies_route_global_axis_translate():
     assert layer_kwargs["axis_labels"] == ("channel", "y", "x")
     assert layer_kwargs["translate"] == (3.0, 0.0, 0.0)
     assert layer_kwargs["properties"] == {"label": [7], "component": [4]}
+
+
+def test_native_image_intensity_command_preserves_data_and_navigation():
+    module = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    from napari.layers import Image
+    from zmqruntime.viewer_protocol import (
+        ViewerImageIntensityControlOptions,
+        ViewerNativeImageIntensityPresentation,
+    )
+
+    viewer = _FakeViewer()
+    viewer.dims.axis_labels = ("a", "b", "y", "x")
+    pixels = np.arange(32, dtype=np.uint16).reshape(4, 8)
+    layer = Image(
+        pixels, scale=(0.65, 0.65), translate=(2, 3), contrast_limits=(0, 100)
+    )
+    viewer.layers.append(layer)
+    server = type("Server", (), {})()
+    server.viewer = viewer
+    server.napari_window_title = "Native presentation test"
+    server.layer_route_state = NapariLayerRouteStateStore.empty()
+    server.layer_route_state.set_title("image", "Image")
+    server.layer_route_state.set_layer("image", layer)
+    server.layer_route_state.set_dimension_state(
+        "image", NapariDimensionLayerState.empty()
+    )
+    server.component_groups = NapariComponentGroupStore()
+    server.display_pipeline = module.NapariLayerDisplayPipeline(server)
+    presentation = ViewerNativeImageIntensityPresentation((5, 25), 1.5)
+    action = module.NapariImageIntensityControlMessageAction()
+    assert action.transport_thread_response(server, {}) is None
+    response = action.handle(
+        server, {"payload": ViewerImageIntensityControlOptions("image", presentation)}
+    )
+    assert response["status"] == "success", response
+    assert response["layers"][0]["native_intensity"] == presentation.to_wire_mapping()
+    assert layer.data is pixels
+    np.testing.assert_array_equal(layer.data, np.arange(32).reshape(4, 8))
+    np.testing.assert_array_equal(layer.scale, (0.65, 0.65))
+    np.testing.assert_array_equal(layer.translate, (2, 3))
+    assert viewer.dims.current_step == (3, 0, 0, 0)
+    assert viewer.layers.selection.active is None
+    assert (
+        action.handle(server, {"payload": {"route_key": "image"}})["status"] == "error"
+    )
+    assert (
+        action.handle(
+            server,
+            {"payload": ViewerImageIntensityControlOptions("missing", presentation)},
+        )["status"]
+        == "error"
+    )
+    viewer.layers.remove(layer)
+    assert (
+        action.handle(
+            server,
+            {"payload": ViewerImageIntensityControlOptions("image", presentation)},
+        )["status"]
+        == "error"
+    )
+
+    class FailingGammaImage(Image):
+        @Image.gamma.setter
+        def gamma(self, value):
+            if value == 1.5:
+                raise RuntimeError("Native gamma setter rejected update")
+            Image.gamma.fset(self, value)
+
+    partial = FailingGammaImage(pixels, contrast_limits=(0, 100), gamma=1)
+    server.layer_route_state.set_layer("image", partial)
+    viewer.layers.append(partial)
+    failure = action.handle(
+        server, {"payload": ViewerImageIntensityControlOptions("image", presentation)}
+    )
+    assert failure["status"] == "error"
+    assert "Native gamma setter rejected update" in failure["message"]
+    assert failure["layers"][0]["native_intensity"] == {
+        "contrast_limits": (5.0, 25.0),
+        "gamma": 1.0,
+    }
+    assert partial.data is pixels
+
+    from napari.layers import Labels
+
+    labels = Labels(np.zeros((4, 8), dtype=np.uint16))
+    viewer.layers.remove(partial)
+    viewer.layers.append(labels)
+    server.layer_route_state.set_layer("image", labels)
+    unsupported = action.handle(
+        server, {"payload": ViewerImageIntensityControlOptions("image", presentation)}
+    )
+    assert unsupported["status"] == "error"
+    assert unsupported["layers"][0]["native_intensity"] is None

@@ -26,7 +26,11 @@ from polystore.zarr_batch import ZarrStoredBatchSemantics
 
 from openhcs.constants.constants import AllComponents, Backend
 from openhcs.core.image_file_serialization import ImageFileFormat
-from openhcs.core.source_matching import with_source_component_metadata
+from openhcs.core.source_matching import (
+    merge_source_metadata,
+    with_source_component_metadata,
+)
+from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceCandidate,
@@ -482,6 +486,29 @@ class SourcePlaneStoreAdapter(ABC, metaclass=AutoRegisterMeta):
     __registry_key__ = "registry_key"
     __skip_if_no_key__ = True
     registry_key: ClassVar[str | None] = None
+
+    def source_metadata_for_path(self, path: Path) -> SourceMetadataMapping:
+        """Enrich a filename-bound physical source without replacing its axes."""
+        del path
+        return {}
+
+    @classmethod
+    def enrich_source_candidate(
+        cls,
+        candidate: SourceCandidate,
+        physical_path: Path | None,
+    ) -> SourceCandidate:
+        """Merge embedded metadata through its nominal decoder declarations."""
+        if physical_path is None:
+            return candidate
+        metadata = dict(candidate.metadata)
+        for adapter_type in cls.__registry__.values():
+            merge_source_metadata(
+                metadata,
+                adapter_type().source_metadata_for_path(physical_path),
+                path=candidate.relative_path,
+            )
+        return replace(candidate, metadata=metadata)
 
     @classmethod
     def claims_collection(cls, root: Path) -> bool:

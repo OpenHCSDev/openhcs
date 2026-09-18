@@ -95,14 +95,14 @@ dependencies = [
     "psutil>=5.9.0",
 
     # External dependencies (PyPI versions for production builds)
-    "zmqruntime>=0.2.20,<0.3",
+    "zmqruntime>=0.2.21,<0.3",
     "pycodify>=0.1.3,<0.2",
-    "objectstate>=1.1.6,<2",
-    "python-introspect>=0.1.13,<0.2",
+    "objectstate>=1.1.7,<2",
+    "python-introspect>=0.1.14,<0.2",
     "metaclass-registry>=0.2.1,<0.3",
     "arraybridge>=0.3.3,<0.4",
-    "polystore>=0.2.11,<0.3",
-    "pyqt-reactive>=0.3.23,<0.4",
+    "polystore>=0.2.14,<0.3",
+    "pyqt-reactive>=0.3.24,<0.4",
 ]
 
 [project.optional-dependencies]
@@ -327,8 +327,19 @@ benchmark = "benchmark.mcp_extension"
 zip-safe = false
 
 [tool.setuptools.packages.find]
+# Namespace discovery stays on: several real code packages (openhcs.utils,
+# openhcs.runtime, openhcs.ui, openhcs.formats, ...) have no __init__.py.
+# The benchmark fixture data trees (native_refs, results, manifests) are
+# excluded instead: they are read through the declared repository root, do
+# not ship, and one native_refs path exceeds the Windows MAX_PATH budget
+# inside the candidate wheel build.
 include = ["openhcs*", "benchmark*"]
-exclude = ["openhcs.omero.plugin.build*"]
+exclude = [
+    "openhcs.omero.plugin.build*",
+    "benchmark.native_refs*",
+    "benchmark.results*",
+    "benchmark.manifests*",
+]
 
 [tool.setuptools.dynamic]
 version = {attr = "openhcs.__version__"}
