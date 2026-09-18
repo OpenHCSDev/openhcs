@@ -689,6 +689,9 @@ class SourcePlaneProjection(SourceProjection):
         if self.image_metadata is not None:
             payload[self.image_metadata_wire_field()] = to_jsonable(self.image_metadata)
 
+    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
+        return self.image_metadata
+
     @property
     def payload_composition_alias(self) -> str | None:
         """Return this plane's alias for source-binding bundle composition."""

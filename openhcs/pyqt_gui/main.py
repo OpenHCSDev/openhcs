@@ -687,12 +687,12 @@ class OpenHCSMainWindow(QMainWindow):
         file_menu.addSeparator()
 
         # Exit action
-        exit_action = QAction("E&xit", self)
-        exit_action.triggered.connect(self.close)
-        file_menu.addAction(exit_action)
+        self.exit_action = QAction("E&xit", self)
+        self.exit_action.triggered.connect(self.close)
+        file_menu.addAction(self.exit_action)
         self.shortcut_lifecycle.bind_menu_action(
             lambda config: config.quit_app,
-            exit_action,
+            self.exit_action,
         )
 
         view_menu = menubar.addMenu("&View")

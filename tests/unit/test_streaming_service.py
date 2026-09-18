@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+import numpy as np
 from polystore.streaming.viewer_transport import ViewerStreamKwarg
 from polystore.zmq_config import POLYSTORE_ZMQ_CONFIG
 from zmqruntime.viewer_protocol import ViewerBatchWireField
@@ -43,18 +44,13 @@ class FakeFileManager:
     def __init__(self) -> None:
         self.saved_batches: list[tuple[list[object], list[str], str, dict]] = []
 
-    def load(self, path: str, read_backend: str) -> np.ndarray:
-        del path, read_backend
-        return np.zeros((4, 5), dtype=np.uint8)
+    def load(self, path: str, read_backend: str):
+        return np.zeros((4, 5), dtype=np.uint16)
 
-    def physical_source_path(
-        self,
-        address: str,
-        backend: str,
-        *,
-        base_path: Path,
-    ) -> Path | None:
-        del address, backend, base_path
+    def exists(self, path, backend):
+        return False
+
+    def physical_source_path(self, path, backend, *, base_path=None):
         return None
 
     def save_batch(
@@ -87,6 +83,9 @@ class FakeViewer:
 
 
 class FakeMetadataHandler:
+    def source_workspace_metadata_document(self, plate_path):
+        return None
+
     def find_metadata_file(self, root: Path) -> Path:
         return root
 

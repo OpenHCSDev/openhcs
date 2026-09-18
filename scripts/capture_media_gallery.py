@@ -2577,12 +2577,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Capture, derive, and publish one declared still gallery scenario.",
     )
     publish_scenario_still_parser.add_argument("scenario_id")
-    publish_scenario_still_parser.add_argument(
-        "--source-root", type=Path, required=True
-    )
-    publish_scenario_still_parser.add_argument(
-        "--output-root", type=Path, required=True
-    )
+    publish_scenario_still_parser.add_argument("--source-root", type=Path, required=True)
+    publish_scenario_still_parser.add_argument("--output-root", type=Path, required=True)
     publish_scenario_still_parser.add_argument("--descriptor-file-path", type=Path)
     publish_scenario_still_parser.add_argument("--timeout-ms", type=int)
     publish_scenario_still_parser.add_argument(

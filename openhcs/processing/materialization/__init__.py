@@ -1,18 +1,13 @@
 """Materialization public API (writer-based)."""
 
-from openhcs.processing.materialization.constants import (
-    MaterializationFormat,
-    WriteMode,
-)
+from openhcs.processing.materialization.constants import MaterializationFormat, WriteMode
 from openhcs.processing.materialization.core import (
     BackendSaver,
     MaterializationContext,
-    MaterializationResult,
     MaterializationSpec,
     Output,
     PathHelper,
     materialize,
-    materialize_with_result,
     materialization_outputs,
     registered_materialization_option_types,
     tabular_field_names_from_materialization,
@@ -42,18 +37,15 @@ from openhcs.processing.materialization.presets import (
     text_only,
     tiff_stack,
 )
-
 __all__ = [
     "MaterializationFormat",
     "WriteMode",
     "MaterializationSpec",
     "MaterializationContext",
-    "MaterializationResult",
     "Output",
     "PathHelper",
     "BackendSaver",
     "materialize",
-    "materialize_with_result",
     "materialization_outputs",
     "registered_materialization_option_types",
     "FileOutputOptions",

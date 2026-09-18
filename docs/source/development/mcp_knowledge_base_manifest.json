@@ -700,6 +700,29 @@
         "style"
       ],
       "title": "Respecting codebase architecture"
+    },
+    {
+      "document_id": "openhcs_callable_artifact_authoring",
+      "section_count": 0,
+      "source_path": "docs/source/development/callable_artifact_authoring.rst",
+      "summary": "Canonical callable and artifact authoring reference with executable imports and decorators for typed NumPy main flow, object labels, dataclass ColumnarRows, RuntimeMeasurementFeatureOwner, exact subject/source relations, CSV and ROI materialization, and custom registration namespace boundaries.",
+      "tags": [
+        "custom function artifacts",
+        "callable artifact authoring",
+        "artifact_outputs",
+        "MainFlowStackOutputSpec",
+        "ObjectLabelsArtifactType",
+        "MeasurementsArtifactType",
+        "RuntimeMeasurementFeatureOwner",
+        "DataclassMeasurementColumnarRows",
+        "ObjectMeasurementSubjectRelation",
+        "materialization",
+        "ROIOptions",
+        "CsvOptions",
+        "exact imports decorators",
+        "custom registration namespace"
+      ],
+      "title": "Callable and artifact authoring"
     }
   ],
   "schema_version": 1

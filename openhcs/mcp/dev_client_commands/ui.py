@@ -8,7 +8,7 @@ import json
 from collections.abc import Mapping
 from typing import cast
 
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope, WindowSnapshotFrameCondition
 
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.common import JsonObject, JsonValue
@@ -1028,6 +1028,14 @@ class WindowSnapshotCommandSpec(CapabilityBackedCommandSpec):
         )
         parser.add_argument("--create-if-missing", action="store_true")
         parser.add_argument(
+            "--frame-condition",
+            choices=tuple(condition.value for condition in WindowSnapshotFrameCondition),
+            default=WindowSnapshotFrameCondition.IMMEDIATE.value,
+        )
+        add_request_field_option(
+            parser, UiWindowSnapshotRequest, "observation_timeout_s", "--observation-timeout-s",
+        )
+        parser.add_argument(
             "--json",
             action="store_true",
             help="Render the complete MCP JSON response instead of a compact summary.",
@@ -1043,6 +1051,8 @@ class WindowSnapshotCommandSpec(CapabilityBackedCommandSpec):
             output_dir_path=args.output_dir_path,
             capture_scope=args.capture_scope,
             create_if_missing=args.create_if_missing,
+            frame_condition=args.frame_condition,
+            observation_timeout_s=args.observation_timeout_s,
         )
         return (
             McpDevToolCall(

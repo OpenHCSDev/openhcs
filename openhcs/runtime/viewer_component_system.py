@@ -11,6 +11,9 @@ from typing import ClassVar, Generic, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 from polystore.streaming_constants import StreamingDataType
+from polystore.streaming.receivers.core.metadata_presentation import (
+    ComponentMetadataPresentationABC,
+)
 from zmqruntime.viewer_protocol import (
     ViewerBatchDisplayPayload,
     ViewerBatchContextWireField,
@@ -311,6 +314,18 @@ class ViewerComponentValueDomainEntry:
         unique_values = sorted(set(values), key=ViewerComponentValueOrdering.key)
         return cls(component=component, values=tuple(unique_values))
 
+    @classmethod
+    def from_declared_values(
+        cls, component: str, values: Sequence[ComponentValue]
+    ) -> "ViewerComponentValueDomainEntry":
+        """Preserve pixel-plane order, refusing ambiguous coordinate assignments."""
+        ordered_values = tuple(values)
+        if len(set(ordered_values)) != len(ordered_values):
+            raise ValueError(
+                "Declared plane coordinates must be unique after normalization."
+            )
+        return cls(component=component, values=ordered_values)
+
 
 @dataclass(frozen=True, slots=True)
 class ViewerComponentValueDomainPayload:
@@ -359,6 +374,41 @@ class ViewerComponentValueDomainPayload:
         *,
         context: str,
     ) -> "ViewerComponentValueDomainPayload":
+        """Project observed membership with its established sort/dedup contract."""
+        return cls(
+            tuple(
+                ViewerComponentValueDomainEntry.from_values(
+                    entry.component, entry.values
+                )
+                for entry in cls._wire_entries(payload, context=context)
+            )
+        )
+
+    @classmethod
+    def from_ordered_wire_mapping(
+        cls,
+        payload: Mapping[str, Sequence[ComponentWireValue]],
+        *,
+        context: str,
+    ) -> "ViewerComponentValueDomainPayload":
+        """Decode an explicitly ordered pixel-plane coordinate declaration."""
+        return cls(
+            tuple(
+                ViewerComponentValueDomainEntry.from_declared_values(
+                    entry.component, entry.values
+                )
+                for entry in cls._wire_entries(payload, context=context)
+            )
+        )
+
+    @classmethod
+    def _wire_entries(
+        cls,
+        payload: Mapping[str, Sequence[ComponentWireValue]],
+        *,
+        context: str,
+    ) -> tuple[ViewerComponentValueDomainEntry, ...]:
+        """Parse and normalize external coordinates once for either projection."""
         normalizer = ViewerComponentMetadataNormalizer()
         entries = []
         for component, raw_values in payload.items():
@@ -368,7 +418,7 @@ class ViewerComponentValueDomainPayload:
                 )
             component_name = str(component)
             entries.append(
-                ViewerComponentValueDomainEntry.from_values(
+                ViewerComponentValueDomainEntry(
                     component_name,
                     tuple(
                         normalizer.normalize_value(
@@ -382,7 +432,7 @@ class ViewerComponentValueDomainPayload:
                     ),
                 )
             )
-        return cls(tuple(entries))
+        return tuple(entries)
 
     def component_values(self) -> ComponentValues:
         return {entry.component: list(entry.values) for entry in self.entries}
@@ -679,7 +729,7 @@ class ViewerComponentNameMetadataStore:
 
 
 @dataclass(frozen=True, kw_only=True)
-class ViewerComponentNameMetadata:
+class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValue]):
     """Component-value display names shared by viewer receivers."""
 
     ABBREVIATIONS: ClassVar[Mapping[str, str]] = {
@@ -736,33 +786,16 @@ class ViewerComponentNameMetadata:
             return None
         return str(name)
 
-    def compact_label(self, component: str, value: ComponentValue) -> str:
-        name = self.display_name(component, value)
-        if name is not None:
-            return name
-        return f"{self.abbreviation(component)} {value}"
-
     def abbreviation(self, component: str) -> str:
         if component in self.ABBREVIATIONS:
             return self.ABBREVIATIONS[component]
         return component
 
-    def axis_label(self, component: str, value: ComponentValue) -> str:
-        name = self.display_name(component, value)
-        if name is None:
-            return self.compact_label(component, value)
-
+    def named_axis_label(self, component: str, value: ComponentValue, name: str) -> str:
         formatter = self.METADATA_FORMATTERS.get(component)
         if formatter is not None:
             return formatter(value, name)
         return f"{component.title()} {value}: {name}"
-
-    def axis_labels(
-        self,
-        component: str,
-        values: Sequence[ComponentValue],
-    ) -> list[str]:
-        return [self.axis_label(component, value) for value in values]
 
     def compact_tuple_labels(
         self,
@@ -1325,8 +1358,12 @@ class ViewerLayerAxisProjectionRequestAuthority:
                 route_value_tracker.domain_key(route_key, axis_components),
                 axis_components,
             ),
-            viewer_component_values=declared_component_values,
-            declared_component_values=declared_component_values,
+            viewer_component_values=display_axis_domain.display_axis_values_for(
+                axis_components
+            ),
+            declared_component_values=(
+                component_axis_semantics.required_component_values(axis_components)
+            ),
         )
 
     @staticmethod

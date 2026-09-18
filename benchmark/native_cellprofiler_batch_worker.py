@@ -99,11 +99,7 @@ def main() -> None:
             pipeline.read_file_list(request.file_list_path)
         else:
             pipeline.add_pathnames_to_file_list(
-                [
-                    str(path)
-                    for path in Path(request.input_dir).rglob("*")
-                    if path.is_file()
-                ]
+                [str(path) for path in Path(request.input_dir).rglob("*") if path.is_file()]
             )
         startup_seconds = time.perf_counter() - startup_started
         observations = []
@@ -125,13 +121,9 @@ def main() -> None:
                 completed = time.perf_counter()
                 status = measurements.get_experiment_measurement(EXIT_STATUS)
                 if status != "Complete":
-                    raise RuntimeError(
-                        "Native CellProfiler batch did not complete: " + str(status)
-                    )
+                    raise RuntimeError("Native CellProfiler batch did not complete: " + str(status))
                 if clock.image_set_count != request.expected_image_sets:
-                    raise RuntimeError(
-                        "Native image-set count differs from requested workload"
-                    )
+                    raise RuntimeError("Native image-set count differs from requested workload")
                 if clock.first_module_started is None:
                     raise RuntimeError("Native batch executed no analysis modules")
                 observations.append(
@@ -140,33 +132,25 @@ def main() -> None:
                         output_root=str(output_root),
                         image_set_count=clock.image_set_count,
                         invocation_seconds=completed - clock.invocation_started,
-                        pre_first_module_seconds=clock.first_module_started
-                        - clock.invocation_started,
-                        first_module_through_post_run_seconds=completed
-                        - clock.first_module_started,
+                        pre_first_module_seconds=clock.first_module_started - clock.invocation_started,
+                        first_module_through_post_run_seconds=completed - clock.first_module_started,
                     )
                 )
             finally:
                 measurements.close()
-        print(
-            json.dumps(
-                asdict(
-                    NativeBatchReport(
-                        startup_seconds=startup_seconds,
-                        environment=NativeBatchEnvironment(
-                            python_executable=sys.executable,
-                            python_version=platform.python_version(),
-                            cellprofiler_version=cellprofiler.__version__,
-                            cellprofiler_core_version=cellprofiler_core.__version__,
-                            numpy_version=numpy.__version__,
-                            scipy_version=scipy.__version__,
-                        ),
-                        request=request,
-                        observations=tuple(observations),
-                    )
-                )
-            )
-        )
+        print(json.dumps(asdict(NativeBatchReport(
+            startup_seconds=startup_seconds,
+            environment=NativeBatchEnvironment(
+                python_executable=sys.executable,
+                python_version=platform.python_version(),
+                cellprofiler_version=cellprofiler.__version__,
+                cellprofiler_core_version=cellprofiler_core.__version__,
+                numpy_version=numpy.__version__,
+                scipy_version=scipy.__version__,
+            ),
+            request=request,
+            observations=tuple(observations),
+        ))))
     finally:
         stop_java()
 

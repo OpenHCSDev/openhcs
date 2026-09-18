@@ -16,6 +16,9 @@ from polystore.virtual_workspace import SourcePixelRef
 from openhcs.core.artifacts import ArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.constants.constants import AllComponents
+from openhcs.core.artifacts import ArtifactType
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.constants.constants import AllComponents
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
     SourceMetadataMapping,
@@ -27,7 +30,6 @@ from openhcs.core.source_projection import (
     SourceArtifactProjection,
     SourcePlaneProjection,
     SourceProjection,
-    SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
 from openhcs.core.source_tile_geometry import SourceTileLayout
@@ -136,40 +138,36 @@ class AtomicMetadataWriter:
         self,
         metadata_path: str | Path,
         subdirectory_name: str,
-        serializer: SourceProjectionMetadataSerializer,
-        projection_paths: tuple[tuple[SourceProjection, str], ...],
+        projection_metadata: Mapping[str, Any] | None = None,
     ) -> None:
-        """Merge produced projection records without replacing plate metadata."""
+        """Merge exact produced paths under one lock, preserving other wells."""
 
-        def update(data: dict[str, Any] | None) -> dict[str, Any]:
+        def update(data):
             data = self._ensure_subdirectories_structure(data)
             subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
                 subdirectory_name, {}
             )
-            existing_paths = dict(
-                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-                    subdirectory
-                ).entries
-            )
-            existing_paths.update(
-                {path: projection for projection, path in projection_paths}
-            )
-            subdirectory.update(
-                serializer.projection_fields(
-                    tuple(
-                        (projection, path)
-                        for path, projection in existing_paths.items()
-                    )
+            for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
+                subdirectory[key] = {
+                    **subdirectory.get(key, {}),
+                    **({} if projection_metadata is None else projection_metadata[key]),
+                }
+            entries = {
+                record["virtual_path"]: record
+                for record in subdirectory.get(FIELDS.SOURCE_PROJECTION, [])
+            }
+            if projection_metadata is not None:
+                entries.update(
+                    {
+                        record["virtual_path"]: record
+                        for record in projection_metadata[FIELDS.SOURCE_PROJECTION]
+                    }
                 )
-            )
+            subdirectory[FIELDS.SOURCE_PROJECTION] = list(entries.values())
             self._update_projection_geometry(subdirectory)
             return data
 
-        self._execute_update(
-            metadata_path,
-            update,
-            {METADATA_CONFIG.SUBDIRECTORIES_KEY: {}},
-        )
+        self._execute_update(metadata_path, update)
 
     @staticmethod
     def _update_projection_geometry(subdirectory: dict[str, Any]) -> None:

@@ -482,3 +482,63 @@ def test_execution_poll_fails_when_running_status_has_no_progress(monkeypatch) -
             stall_timeout_seconds=1.0,
             maximum_duration_seconds=10.0,
         )
+
+
+def test_validate_viewer_polls_until_debounced_layers_settle(monkeypatch) -> None:
+    responses = iter(
+        (
+            {"observed": True, "valid": False, "pending_update_count": 8},
+            {
+                "observed": True,
+                "valid": True,
+                "pending_update_count": 0,
+                "mounted_layer_count": 9,
+                "nonzero_payload_count": 9,
+                "viewer": {"viewer_type": "napari"},
+            },
+        )
+    )
+    calls: list[dict[str, object]] = []
+
+    def fake_run_mcp(client, argv, *, tool_name, timeout_seconds):
+        calls.append({"argv": tuple(argv), "timeout_seconds": timeout_seconds})
+        return next(responses)
+
+    now = 0.0
+
+    def monotonic() -> float:
+        nonlocal now
+        now += 1.1
+        return now
+
+    monkeypatch.setattr(installed_demo, "_run_mcp", fake_run_mcp)
+    monkeypatch.setattr(installed_demo.time, "monotonic", monotonic)
+    monkeypatch.setattr(installed_demo.time, "sleep", lambda _seconds: None)
+
+    payload = installed_demo._validate_viewer(object(), viewer_port=43126)
+
+    assert payload["valid"] is True
+    assert len(calls) == 2
+    assert calls[1]["timeout_seconds"] == 20.0
+
+
+def test_validate_viewer_fails_after_settle_deadline(monkeypatch) -> None:
+    now = 0.0
+
+    def monotonic() -> float:
+        nonlocal now
+        now += 30.0
+        return now
+
+    def fake_run_mcp(client, argv, *, tool_name, timeout_seconds):
+        return {"observed": True, "valid": False, "pending_update_count": 8}
+
+    monkeypatch.setattr(installed_demo, "_run_mcp", fake_run_mcp)
+    monkeypatch.setattr(installed_demo.time, "monotonic", monotonic)
+    monkeypatch.setattr(installed_demo.time, "sleep", lambda _seconds: None)
+
+    with pytest.raises(
+        installed_demo.InstalledDemoFailure,
+        match="viewer validation did not pass",
+    ):
+        installed_demo._validate_viewer(object(), viewer_port=43127)

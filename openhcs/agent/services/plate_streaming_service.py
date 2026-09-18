@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import replace
+from pathlib import Path
+
+from zmqruntime.viewer_protocol import ViewerSourceSpatialDomainPayload
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
@@ -16,19 +20,35 @@ from openhcs.agent.dto.plate import (
     PlatePathInspectionRequest,
 )
 from openhcs.agent.dto.ui_bridge import UiBridgeConnectionSpec
+from openhcs.agent.dto.viewer import ViewerWindowStateResult
 from openhcs.agent.services.plate_inspection_service import (
     PlateInspectionFileQueryProjection,
+    PlateInspectionContext,
     PlateInspectionService,
 )
 from openhcs.agent.services.ui_bridge_service import (
     DEFAULT_UI_BRIDGE_CONNECTION_SPEC,
     UiBridgeService,
 )
-from openhcs.constants.constants import FileFormat
 from openhcs.core.config import StreamingConfig
+from openhcs.constants import Backend, AllComponents
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source_image_provenance import (
+    SourceImageProvenance,
+    SourceImageProvenancePlanes,
+)
+from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjection,
+    VirtualWorkspaceSourceProjectionBuilder,
+)
+from openhcs.core.virtual_workspace_metadata import (
+    VirtualWorkspaceSourceProjectionEntries,
+)
 from openhcs.core.plate_image_inventory import (
     PlateFileInventoryQuery,
-    PlateFileKind,
     PlateFileRecord,
 )
 from openhcs.core.viewer_streaming_service import (
@@ -37,10 +57,12 @@ from openhcs.core.viewer_streaming_service import (
     StreamingService,
     StreamingViewerLifecycle,
 )
+from polystore.streaming.viewer_transport import ViewerStreamProducer
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     ViewerGraphicalSessionUnavailableError,
 )
+from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
 
 
 class PlateStreamingService:
@@ -172,6 +194,13 @@ class PlateStreamingService:
                     warnings=all_warnings,
                 )
 
+            read_backend = stream_context.handler.get_primary_backend(
+                stream_context.plate_path, stream_context.filemanager
+            )
+            source_projection, producer = self._receipt_source_projection(
+                request, resolved_records, stream_context
+            )
+
             viewer = StreamingViewerLifecycle.get_or_create_visualizer(
                 filemanager=stream_context.filemanager,
                 config=config,
@@ -185,10 +214,6 @@ class PlateStreamingService:
                 plate_path=stream_context.plate_path,
             )
             status_messages: list[str] = []
-            read_backend = stream_context.handler.get_primary_backend(
-                stream_context.plate_path,
-                stream_context.filemanager,
-            )
             if image_paths:
                 streaming_service.stream_images(
                     ImageStreamingRequest(
@@ -198,6 +223,8 @@ class PlateStreamingService:
                         error_callback=status_messages.append,
                         filenames=image_paths,
                         read_backend=read_backend,
+                        source_projection=source_projection,
+                        producer=producer,
                     )
                 )
             if roi_paths:
@@ -249,6 +276,93 @@ class PlateStreamingService:
             status_messages=tuple(status_messages),
             warnings=all_warnings,
         )
+
+    def _receipt_source_projection(
+        self,
+        request: PlateFileStreamRequest,
+        records: tuple[PlateFileRecord, ...],
+        context: PlateInspectionContext,
+    ) -> tuple[VirtualWorkspaceSourceProjection | None, ViewerStreamProducer | None]:
+        """Project canonical historical bindings without replacing native pixel facts."""
+        resource = request.source_receipt
+        if resource is None:
+            return None, None
+        if resource.path is None or resource.sha256 is None:
+            raise ValueError(
+                "Image source receipt requires a physical path and SHA256."
+            )
+        path = self._plate_inspection_service.resolve_readable_path(resource.path)
+        if resource.uri != path.as_uri() or resource.mime_type != "application/json":
+            raise ValueError(
+                "Image source receipt requires its exact physical JSON URI."
+            )
+        data = context.filemanager.read_verified_source_bytes(
+            path,
+            Backend.DISK.value,
+            base_path=path.parent,
+            expected_sha256=resource.sha256,
+        )
+        if resource.size_bytes is not None and resource.size_bytes != len(data):
+            raise ValueError(
+                "Image source receipt byte count conflicts with its resource."
+            )
+        state = ViewerWindowStateResult.from_mapping(json.loads(data))
+        builder = VirtualWorkspaceSourceProjectionBuilder(Path(context.plate_path))
+        projections = {}
+        producers = []
+        image_records = tuple(
+            record for record in records if record.streamable_image_path is not None
+        )
+        if not image_records:
+            raise ValueError(
+                "Image source receipt requires at least one resolved image."
+            )
+        for image_record in image_records:
+            image_path = image_record.streamable_image_path
+            source_ref = image_record.require_image_source_ref()
+            record, producer = state.image_payload_binding_for(image_path)
+            producers.append(producer)
+            plane_domain = ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
+                record.summary["aggregate_component_values"],
+                context="image receipt plane coordinates",
+            )
+            planes = SourceImageProvenancePlanes.from_component_domain(
+                path=image_path,
+                fixed_components=record.components,
+                aggregate_components=plane_domain.to_wire_mapping(),
+                plane_count=record.summary["shape"][0],
+            )
+            domain = ViewerSourceSpatialDomainPayload.from_wire_mapping(
+                record.summary, source_label="image receipt"
+            )
+            first_components = planes.component_metadata[0]
+            projection = SourcePlaneProjection(
+                address=OpenHCSPlaneAddress(
+                    (component, first_components[component.value])
+                    for component in AllComponents
+                ),
+                ref=source_ref,
+                source_metadata=first_components,
+                image_metadata=ImagePayloadMetadata(
+                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                    source_provenance=SourceImageProvenance(
+                        source_path=image_path,
+                        source_component_metadata=record.components,
+                        source_image_provenance_planes=planes,
+                    ),
+                    source_spatial_domain=SourceSpatialDomain(
+                        origin_yx=domain.origin_yx,
+                        source_shape_yx=domain.source_shape_yx,
+                    ),
+                ),
+            )
+            builder.record_workspace_source_path(image_path, projection.ref)
+            builder.record_source_metadata(image_path, projection.source_metadata)
+            projections[image_path] = projection
+        builder.ingest_source_projections(
+            VirtualWorkspaceSourceProjectionEntries(projections)
+        )
+        return builder.projection(), ViewerStreamProducer.from_identities(producers)
 
     @staticmethod
     def _stream_error(

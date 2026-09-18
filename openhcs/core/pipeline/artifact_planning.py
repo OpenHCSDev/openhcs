@@ -15,6 +15,7 @@ from openhcs.core.artifacts import (
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
     ImageArtifactType,
+    MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY
@@ -29,6 +30,7 @@ from openhcs.core.invocation_artifacts import (
 )
 from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
 from openhcs.processing.materialization import (
+    CsvOptions,
     ImageFileOptions,
     MaterializedFilenameIdentity,
     MaterializationSpec,
@@ -88,20 +90,39 @@ class AutomaticImageArtifactOutputMaterializationStrategy(
 class AutomaticObjectLabelsArtifactOutputMaterializationStrategy(
     AutomaticArtifactOutputMaterializationStrategy,
 ):
-    """Stream every object-label output through the canonical ROI writer."""
+    """Retain and stream object labels through their canonical representations."""
 
     artifact_type = ObjectLabelsArtifactType
 
     def materialization(self) -> ArtifactMaterializationPayload:
-        return StreamingOnlyMaterializationSpec(
+        return TerminalMaterializationSpec(
             ROIOptions(
                 min_area=1,
                 filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
-            )
+            ),
+            ImageFileOptions(
+                filename_suffix=".labels.tif",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            ),
         )
 
     def materializes_consumed_outputs(self) -> bool:
         return True
+
+
+class AutomaticMeasurementsArtifactOutputMaterializationStrategy(
+    AutomaticArtifactOutputMaterializationStrategy,
+):
+    """Retain terminal measurement tables as artifact-named CSV files."""
+
+    artifact_type = MeasurementsArtifactType
+
+    def materialization(self) -> ArtifactMaterializationPayload:
+        return TerminalMaterializationSpec(
+            CsvOptions(
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
+            )
+        )
 
 
 class ArtifactOutputMaterializationPlanner:

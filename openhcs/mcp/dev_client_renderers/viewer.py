@@ -1445,6 +1445,9 @@ class WindowSnapshotRenderer(McpDevOutputRenderer):
             ),
         ]
         object_state_scope_id = summary.get("object_state_scope_id")
+        operation_id = payload.get("operation_id")
+        if isinstance(operation_id, str) and operation_id:
+            lines.append(f"Observation operation: {operation_id} (use operation-wait)")
         if isinstance(object_state_scope_id, str) and object_state_scope_id:
             lines.append(f"ObjectState: scope={object_state_scope_id}")
         managed_action_ids = summary.get("managed_action_ids")

@@ -185,6 +185,32 @@ class ImagePayloadMetadata(
         )
 
     @classmethod
+    def from_mapping(cls, values: Mapping[str, object]) -> "ImagePayloadMetadata":
+        """Restore all declared metadata fields through their canonical codecs."""
+        decoded = dict(values)
+        if "source_provenance" in decoded:
+            decoded["source_provenance"] = SourceImageProvenance.from_mapping(
+                decoded["source_provenance"]
+            )
+        return dataclass_from_mapping(cls, decoded)
+
+    def retained_plane_component_values(
+        self,
+    ) -> dict[str, tuple[SourceMetadataScalar, ...]]:
+        """Derive varying source coordinates of the retained nominal plane axis.
+
+        Source provenance can also describe contributors after a projection.
+        Only a retained plane-axis declaration makes those coordinates a pixel
+        axis; artifact storage/grouping axes do not declare that image domain.
+        """
+
+        if self.plane_axis is None:
+            return {}
+        return self.source_provenance.varying_plane_component_values(
+            tuple(AllComponents)
+        )
+
+    @classmethod
     def for_array(
         cls,
         array: Any,

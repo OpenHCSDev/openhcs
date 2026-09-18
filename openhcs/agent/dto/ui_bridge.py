@@ -21,6 +21,8 @@ from pyqt_reactive.services.widget_tree_projection_config import (
 from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotCaptureScope,
     WindowSnapshotCaptureSpec,
+    WindowSnapshotFrameCondition,
+    WindowVisualObservation,
 )
 from python_introspect import (
     overlay_non_none_dataclass,
@@ -1373,6 +1375,8 @@ class UiWindowNavigateResult(AgentResultEnvelope, UiWindowIdentity):
     navigated: bool
     created: bool
     summary: UiWindowSummary | None = None
+    operation_id: str | None = None
+    target_exposed: bool | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1408,6 +1412,8 @@ class UiWindowSnapshotRequest(
         output_dir_path: str | None = None,
         capture_scope: str = WindowSnapshotCaptureScope.WIDGET.value,
         create_if_missing: bool = False,
+        frame_condition: str = WindowSnapshotFrameCondition.IMMEDIATE.value,
+        observation_timeout_s: float = WindowSnapshotCaptureSpec.observation_timeout_s,
     ) -> "UiWindowSnapshotRequest":
         if output_dir_path is None:
             output_dir_path = str(DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR)
@@ -1415,14 +1421,15 @@ class UiWindowSnapshotRequest(
             window_id=window_id,
             output_dir_path=output_dir_path,
             capture_scope=WindowSnapshotCaptureScope(capture_scope),
+            frame_condition=WindowSnapshotFrameCondition(frame_condition),
+            observation_timeout_s=observation_timeout_s,
             open_policy=UiWindowOpenPolicy(create_if_missing=create_if_missing),
         )
 
     def as_tool_arguments(self) -> JsonObject:
         return {
             "window_id": self.window_id,
-            "output_dir_path": self.output_dir_path,
-            "capture_scope": self.capture_scope.value,
+            **to_jsonable(project_dataclass(WindowSnapshotCaptureSpec, self)),
             "create_if_missing": self.open_policy.create_if_missing,
         }
 
@@ -1438,6 +1445,8 @@ class UiWindowSnapshotResult(
     summary: UiWindowSummary | None = None
     width: int | None = None
     height: int | None = None
+    operation_id: str | None = None
+    observation: WindowVisualObservation | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -2746,6 +2755,7 @@ class UiBridgeOperationRef(AgentTimedStatusEnvelope):
     identity: UiBridgeOperationIdentity
     completed_at_unix: float | None = None
     outcome: str | None = None
+    result_payload: JsonObject | None = None
 
 
 @dataclass(frozen=True, slots=True)

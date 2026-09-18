@@ -4272,58 +4272,38 @@ def materialize(
 ) -> str:
     """Materialize data to one or more backends."""
 
-    return materialize_with_result(
-        spec,
-        data,
-        path,
-        filemanager,
-        backends,
-        backend_kwargs,
-        context,
-        extra_inputs,
-        artifact_source_identity=artifact_source_identity,
-        artifact_filename_identity=artifact_filename_identity,
-        variable_components=variable_components,
-        source_paths=source_paths,
-        pipeline_position=pipeline_position,
-        output_plan=output_plan,
-    ).primary_path
+    normalized_backends = BackendSequenceAuthority.normalize(backends)
+    AllowedBackendsAuthority.validate(spec, normalized_backends)
+    effective_backend_kwargs = BackendKwargsAuthority.normalize(backend_kwargs)
+    if extra_inputs is None:
+        effective_extra_inputs = {}
+    else:
+        effective_extra_inputs = extra_inputs
 
-
-def materialize_with_result(
-    spec: MaterializationSpec,
-    data: MaterializationValue,
-    path: str,
-    filemanager: FileManager,
-    backends: Sequence[str] | str,
-    backend_kwargs: BackendKwargsInput = BACKEND_KWARGS_ABSENT,
-    context: ProcessingContext | None = None,
-    extra_inputs: dict | None = None,
-    *,
-    artifact_source_identity: SourceImageIdentity | None = None,
-    artifact_filename_identity: SourceImageIdentity | None = None,
-    variable_components: Sequence[VariableComponents] = (),
-    source_paths: Sequence[str] = (),
-    pipeline_position: int | None = None,
-    output_plan: ArtifactOutputPlan | None = None,
-) -> MaterializationResult:
-    """Materialize once and return the exact backend writes from that execution."""
-
-    materialization_context = MaterializationContext.from_request(
-        spec=spec,
-        path=path,
+    ctx = MaterializationContext(
+        base_path=path,
+        backends=normalized_backends,
+        backend_kwargs=effective_backend_kwargs,
         filemanager=filemanager,
-        backends=backends,
-        backend_kwargs=backend_kwargs,
+        extra_inputs=effective_extra_inputs,
         context=context,
-        extra_inputs=extra_inputs,
         artifact_source_identity=artifact_source_identity,
         artifact_filename_identity=artifact_filename_identity,
-        variable_components=variable_components,
-        source_paths=source_paths,
+        variable_components=tuple(variable_components),
+        write_mode=spec.write_mode,
+        source_paths=tuple(str(p) for p in source_paths),
         pipeline_position=pipeline_position,
         output_plan=output_plan,
     )
+
+    primary_path = ""
+
+    for i, (writer, outs) in enumerate(_materialization_output_groups(spec, data, ctx)):
+        ctx.saver.save_all(outs)
+        if i == spec.primary:
+            primary_path = writer.primary_path(list(outs))
+
+    return primary_path
 
     primary_path = ""
     saved_outputs: list[SavedMaterializationOutput] = []

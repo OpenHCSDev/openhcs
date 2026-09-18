@@ -167,8 +167,17 @@ def test_atomic_perwell_projection_merge_preserves_all_records(tmp_path):
         writer.merge_source_projection_metadata(
             path,
             ".",
-            SourceProjectionMetadataSerializer(None),
-            ((projection, virtual_path),),
+            {
+                FIELDS.WORKSPACE_MAPPING: {
+                    virtual_path: {"backend": "disk", "backend_address": virtual_path}
+                },
+                FIELDS.SOURCE_METADATA: {virtual_path: {"well": well}},
+                FIELDS.SOURCE_PROJECTION: [
+                    SourceProjectionMetadataSerializer(None)._source_projection_payload(
+                        projection, virtual_path
+                    )
+                ],
+            },
         )
 
     with ThreadPoolExecutor(max_workers=4) as pool:
