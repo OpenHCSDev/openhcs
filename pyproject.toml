@@ -327,6 +327,11 @@ benchmark = "benchmark.mcp_extension"
 zip-safe = false
 
 [tool.setuptools.packages.find]
+# Only real packages (with __init__.py) ship. Namespace discovery would also
+# claim the benchmark fixture data trees (native_refs, results, manifests),
+# whose repository paths exceed the Windows MAX_PATH budget inside the wheel
+# build and abort the Windows candidate build.
+namespaces = false
 include = ["openhcs*", "benchmark*"]
 exclude = ["openhcs.omero.plugin.build*"]
 
