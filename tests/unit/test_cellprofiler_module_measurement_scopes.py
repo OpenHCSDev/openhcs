@@ -3,6 +3,11 @@ from types import SimpleNamespace
 
 import numpy as np
 
+from openhcs.core.artifacts import (
+    ArtifactSpec,
+    ArtifactSpecCollection,
+    ObjectLabelsArtifactType,
+)
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     DataclassMeasurementColumnarRows,
@@ -169,6 +174,11 @@ def test_identify_secondary_distance_n_omits_threshold_features() -> None:
                 else MeasurementSparseColumnarRows.from_rows((), fields=())
             ),
             single_output_object_name=lambda: "Cells",
+            callable_contract=SimpleNamespace(
+                artifact_outputs=ArtifactSpecCollection(
+                    (ArtifactSpec.output("Cells", ObjectLabelsArtifactType),)
+                )
+            ),
         )
         projection = IdentifySecondaryObjectsModule.MeasurementRows.for_request(
             IdentifySecondaryObjectsModule,

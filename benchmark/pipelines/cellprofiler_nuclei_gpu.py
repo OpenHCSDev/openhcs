@@ -35,7 +35,7 @@ class NucleiMeasurement:
     mean_intensity: float
 
 
-@pyclesperanto
+@pyclesperanto_func
 @special_outputs(
     (
         "nuclei_measurements",
