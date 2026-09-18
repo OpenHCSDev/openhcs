@@ -152,6 +152,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerSettleProgress,
     ViewerStateControlOptions,
 )
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
@@ -5409,6 +5410,9 @@ class NapariViewerServer(StreamingVisualizerServer):
             transport_mode=request.transport_mode,
             config=OPENHCS_ZMQ_CONFIG,
         )
+        # Advertise the endpoint application identity on every heartbeat so
+        # clients can reject stale viewer endpoints before dispatch.
+        self.application = OPENHCS_ENDPOINT_APPLICATION
 
         self.napari_window_title = request.viewer_title
         self.replace_layers = request.replace_layers

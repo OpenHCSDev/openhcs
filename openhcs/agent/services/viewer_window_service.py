@@ -7,7 +7,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from itertools import product
-from typing import ClassVar, Generic, TypeVar
+from math import isfinite
+from typing import ClassVar, Generic, TypeVar, cast
 
 import zmq
 from metaclass_registry import AutoRegisterMeta
@@ -42,6 +43,9 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowImageIntensityResult,
     ViewerWindowImageSampleRequest,
     ViewerWindowImageSampleResult,
+    ViewerWindowIntensityPayloadIdentity,
+    ViewerWindowIntensityWindowRequest,
+    ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
     ViewerWindowLayerPayloads,
@@ -79,13 +83,16 @@ from openhcs.runtime.viewer_component_system import (
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlField,
+    ViewerControlMessageRequest,
     ViewerControlMessageType,
     ViewerControlResponseField,
     ViewerDescriptorField,
+    ViewerIntensityWindowField,
     ViewerLayerField,
     ViewerLayerIsolationField,
     ViewerPayloadField,
     ViewerPayloadSummaryField,
+    ViewerRuntimeEndpoint,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
@@ -228,10 +235,6 @@ class ViewerLayerPayloadCoordinateSet:
         payload_projection = ViewerPayloadComponentProjection.from_summary(
             payload_summary
         )
-        projected_values = tuple(
-            payload_projection.projected_values(component)
-            for component in projection.projected_axis_components
-        )
         return tuple(
             projection.coordinate_index(
                 payload_projection.coordinate_components(
@@ -240,8 +243,22 @@ class ViewerLayerPayloadCoordinateSet:
                 ),
                 context="viewer payload summary",
             )
-            for coordinate_values in product(*projected_values)
+            for coordinate_values in cls._payload_coordinates(
+                projection.projected_axis_components,
+                payload_projection,
+            )
         )
+
+    @staticmethod
+    def _payload_coordinates(
+        projected_axis_components: Sequence[str],
+        payload_projection: ViewerPayloadComponentProjection,
+    ) -> tuple[tuple[ComponentValue, ...], ...]:
+        projected_values = tuple(
+            payload_projection.projected_values(component)
+            for component in projected_axis_components
+        )
+        return tuple(product(*projected_values))
 
 
 @dataclass(frozen=True, slots=True)
@@ -268,6 +285,14 @@ class ViewerLayerValidationProjection:
         cls,
         layer: ViewerWindowLayerState,
     ) -> "ViewerLayerValidationProjection":
+        routed_component_coordinates = tuple(
+            coordinate
+            for payload_summary in layer.payload_summaries
+            for coordinate in ViewerLayerPayloadCoordinateSet._payload_coordinates(
+                layer.stack_axes,
+                ViewerPayloadComponentProjection.from_summary(payload_summary),
+            )
+        )
         return cls(
             projection=ViewerLayerAxisProjection(
                 projected_axis_components=layer.stack_axes,
@@ -280,6 +305,9 @@ class ViewerLayerValidationProjection:
                     layer.routed_component_values,
                     layer.stack_axes,
                     context="viewer layer routed domains",
+                ),
+                routed_component_coordinates=tuple(
+                    dict.fromkeys(routed_component_coordinates)
                 ),
                 axis_offsets=layer.axis_offsets,
             )
@@ -1587,6 +1615,196 @@ class ViewerWindowService:
                     exc,
                 ),
             )
+
+    def apply_intensity_window(
+        self,
+        request: ViewerWindowIntensityWindowRequest,
+    ) -> ViewerWindowIntensityWindowResult:
+        try:
+            response = self._gateway.apply_intensity_window(request)
+        except Exception as exc:
+            return ViewerWindowIntensityWindowResult.from_request_error(
+                request=request,
+                error=AgentError.from_exception("viewer_intensity_window_failed", exc),
+            )
+
+        try:
+            status = self._required_scalar(
+                response, ViewerControlResponseField.STATUS, str, "a string"
+            )
+            if status != self.SUCCESS_STATUS:
+                message = self._required_scalar(
+                    response, ViewerControlResponseField.MESSAGE, str, "a string"
+                )
+                return ViewerWindowIntensityWindowResult.from_request_error(
+                    request=request,
+                    error=AgentError(
+                        code="viewer_intensity_window_failed", message=message
+                    ),
+                )
+            identity_payloads = self._required_sequence(
+                response, ViewerIntensityWindowField.MATCHED_PAYLOAD_IDENTITIES
+            )
+            route_key = self._required_scalar(
+                response, ViewerIntensityWindowField.ROUTE_KEY, str, "a string"
+            )
+            axis_indices = self._required_axis_indices(
+                response, ViewerIntensityWindowField.AXIS_INDICES
+            )
+            requested_percentiles = self._required_numeric_pair(
+                response, ViewerIntensityWindowField.REQUESTED_PERCENTILES
+            )
+            resolved_limits = self._required_numeric_pair(
+                response, ViewerIntensityWindowField.RESOLVED_LIMITS
+            )
+            matched_payload_count = self._required_nonnegative_count(
+                response, ViewerIntensityWindowField.MATCHED_PAYLOAD_COUNT
+            )
+            contributing_payload_count = self._required_nonnegative_count(
+                response, ViewerIntensityWindowField.CONTRIBUTING_PAYLOAD_COUNT
+            )
+            contributing_pixel_count = self._required_nonnegative_count(
+                response, ViewerIntensityWindowField.CONTRIBUTING_PIXEL_COUNT
+            )
+            controls = request.intensity_window
+            if route_key != controls.route_key:
+                raise ValueError("Viewer intensity-window response route mismatch.")
+            if axis_indices != dict(controls.axis_indices):
+                raise ValueError(
+                    "Viewer intensity-window response axis_indices mismatch."
+                )
+            if requested_percentiles != (
+                float(controls.low_percentile),
+                float(controls.high_percentile),
+            ):
+                raise ValueError(
+                    "Viewer intensity-window response percentile contract mismatch."
+                )
+            if not resolved_limits[0] < resolved_limits[1]:
+                raise ValueError(
+                    "Viewer intensity-window resolved limits must be increasing."
+                )
+            if matched_payload_count != len(identity_payloads):
+                raise ValueError(
+                    "Viewer intensity-window matched payload count does not match "
+                    "its identity records."
+                )
+            if contributing_payload_count > matched_payload_count:
+                raise ValueError(
+                    "Viewer intensity-window contributing payload count exceeds "
+                    "the matched payload count."
+                )
+            if (
+                matched_payload_count == 0
+                or contributing_payload_count == 0
+                or contributing_pixel_count == 0
+            ):
+                raise ValueError(
+                    "A successful viewer intensity window requires matched and "
+                    "finite contributing payload data."
+                )
+            return ViewerWindowIntensityWindowResult(
+                schema_version=SCHEMA_VERSION,
+                connection=request.connection,
+                applied=True,
+                route_key=route_key,
+                axis_indices=axis_indices,
+                requested_percentiles=requested_percentiles,
+                resolved_limits=resolved_limits,
+                matched_payload_count=matched_payload_count,
+                matched_payload_identities=tuple(
+                    self._intensity_payload_identity(payload)
+                    for payload in identity_payloads
+                ),
+                contributing_payload_count=contributing_payload_count,
+                contributing_pixel_count=contributing_pixel_count,
+            )
+        except Exception as exc:
+            return ViewerWindowIntensityWindowResult.from_request_error(
+                request=request,
+                error=AgentError.from_exception(
+                    "viewer_intensity_window_response_invalid", exc
+                ),
+            )
+
+    def _intensity_payload_identity(
+        self,
+        payload: JsonValue,
+    ) -> ViewerWindowIntensityPayloadIdentity:
+        if not isinstance(payload, Mapping):
+            raise TypeError("Viewer intensity payload identities must be mappings.")
+        return ViewerWindowIntensityPayloadIdentity(
+            path=self._required_scalar(
+                payload, ViewerPayloadField.PATH, str, "a string"
+            ),
+            components=self._required_mapping(payload, ViewerPayloadField.COMPONENTS),
+            axis_indices=self._required_typed_tuple(
+                payload, ViewerPayloadField.AXIS_INDICES, int
+            ),
+            aggregate_axis_indices=self._required_typed_tuple(
+                payload, ViewerPayloadField.AGGREGATE_AXIS_INDICES, int
+            ),
+        )
+
+    @classmethod
+    def _required_numeric_pair(
+        cls,
+        payload: Mapping[str, JsonValue],
+        field_name: str,
+    ) -> tuple[float, float]:
+        values = cls._required_sequence(payload, field_name)
+        if len(values) != 2 or any(
+            isinstance(value, bool) or not isinstance(value, (int, float))
+            for value in values
+        ):
+            raise TypeError(
+                f"Viewer response field {field_name!r} must be " "a numeric pair."
+            )
+        pair = (
+            float(cast(int | float, values[0])),
+            float(cast(int | float, values[1])),
+        )
+        if not all(isfinite(value) for value in pair):
+            raise ValueError(
+                f"Viewer response field {field_name!r} values must be finite."
+            )
+        return pair
+
+    @classmethod
+    def _required_axis_indices(
+        cls,
+        payload: Mapping[str, JsonValue],
+        field_name: str,
+    ) -> dict[str, int]:
+        mapping = cls._required_mapping(payload, field_name)
+        if any(
+            not isinstance(axis_name, str)
+            or not axis_name
+            or isinstance(index, bool)
+            or not isinstance(index, int)
+            or index < 0
+            for axis_name, index in mapping.items()
+        ):
+            raise TypeError(
+                f"Viewer response field {field_name!r} must map non-empty axis "
+                "names to nonnegative integers."
+            )
+        return {
+            str(axis_name): cast(int, index) for axis_name, index in mapping.items()
+        }
+
+    @classmethod
+    def _required_nonnegative_count(
+        cls,
+        payload: Mapping[str, JsonValue],
+        field_name: str,
+    ) -> int:
+        value = cls._required_scalar(payload, field_name, int, "an integer")
+        if isinstance(value, bool) or value < 0:
+            raise ValueError(
+                f"Viewer response field {field_name!r} must be nonnegative."
+            )
+        return value
 
     def sample_image(
         self,
