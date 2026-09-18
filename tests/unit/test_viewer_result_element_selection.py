@@ -83,7 +83,6 @@ class _NavigationResponseGateway(ViewerWindowGatewayABC):
     def apply_intensity_window(self, request):
         raise AssertionError(request)
 
-
 class _DimensionLabelOverlay:
     def __init__(self) -> None:
         self.refresh_count = 0
