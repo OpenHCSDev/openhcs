@@ -159,6 +159,7 @@ class _ProjectedViewerWindowService(ViewerWindowService):
 
     def image_intensity(self, request):
         return self._delegate.image_intensity(request)
+
     def apply_intensity_window(self, request):
         return self._delegate.apply_intensity_window(request)
 

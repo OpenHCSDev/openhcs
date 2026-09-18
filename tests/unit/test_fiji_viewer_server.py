@@ -214,9 +214,7 @@ def test_fiji_intensity_window_control_fails_closed_as_unsupported() -> None:
             object(),
             FijiBatchSettlementState(),
         )
-    ).response_for(
-        {"type": ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value}
-    )
+    ).response_for({"type": ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value})
 
     wire_response = response.to_wire_mapping()
     assert wire_response["status"] == "error"

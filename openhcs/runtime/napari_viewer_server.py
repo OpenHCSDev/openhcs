@@ -15,7 +15,7 @@ import sys
 import threading
 import weakref
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Hashable, Mapping
+from collections.abc import Callable, Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from itertools import product

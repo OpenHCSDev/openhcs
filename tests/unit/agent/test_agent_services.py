@@ -1095,9 +1095,6 @@ class _MalformedViewerWindowGateway(ViewerWindowGatewayABC):
         del request
         return {"status": "success"}
 
-        del request
-        return {"status": "success"}
-
 
 class _CompactStateViewerWindowGateway(_FakeViewerWindowGateway):
     def window_state(self, request):
