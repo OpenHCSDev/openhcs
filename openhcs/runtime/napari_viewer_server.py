@@ -15,7 +15,7 @@ import sys
 import threading
 import weakref
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Hashable, Mapping
+from collections.abc import Callable, Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from itertools import product
@@ -4614,7 +4614,9 @@ class NapariIntensityWindowControlMessageAction(NapariControlMessageAction):
         aggregate_bindings = presentation.aggregate_axis_bindings
         records = []
         for item in items:
-            for aggregate_indices in NapariViewerPayloadProjection.aggregate_index_tuples(
+            for (
+                aggregate_indices
+            ) in NapariViewerPayloadProjection.aggregate_index_tuples(
                 aggregate_bindings
             ):
                 components = aggregate_bindings.item_component_values(
@@ -4685,6 +4687,7 @@ class NapariPreparedNavigation:
             )
             or self.request.data_index is not None
         )
+
 
 class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageAction):
     """Registered action that selects viewer layers and semantic axis indices."""

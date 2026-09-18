@@ -163,9 +163,14 @@ def test_paired_source_bindings_do_not_join_consumed_channel_component():
 
     bindings = source_bindings_for_validation(validation)
 
-    assert tuple(
-        join.image_metadata_field for join in bindings.imported_metadata_tables[0].joins
-    ) == validation.source_identity_fields == ("well", "site")
+    assert (
+        tuple(
+            join.image_metadata_field
+            for join in bindings.imported_metadata_tables[0].joins
+        )
+        == validation.source_identity_fields
+        == ("well", "site")
+    )
     assert tuple(
         binding.selector.metadata[0].value for binding in bindings.bindings
     ) == ("DNA", "ACTIN")
