@@ -1482,6 +1482,115 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     assert subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]["site"] == "1"
 
 
+class _QualifierIgnoringParserStub:
+    """Parse well/site/channel from filenames with an ignored output qualifier.
+
+    Mirrors the real source-schema parser behavior that produced same-address
+    outputs such as ``..._IllumActin.tif`` and ``..._IllumActinAvg.tif``.
+    """
+
+    def parse_filename(self, name):
+        parts = Path(name).stem.split("_")
+        well, site, channel = parts[0], parts[1], parts[2]
+        metadata = complete_component_metadata(
+            {
+                "well": well,
+                "site": site.removeprefix("s"),
+                "channel": channel.removeprefix("w"),
+                "extension": "".join(Path(name).suffixes),
+            }
+        )
+        return FilenameParseResult(
+            ((component, metadata.get(component.value)) for component in AllComponents),
+            extension=str(metadata["extension"]),
+        )
+
+    def bind_component_values(self, metadata, *, extension=None):
+        return FilenameParseResult.from_wire_mapping(
+            metadata,
+            extension=extension or ".tif",
+        )
+
+
+def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
+    tmp_path,
+):
+    plate_root = tmp_path / "output_plate"
+    output_dir = plate_root / "images"
+    output_dir.mkdir(parents=True)
+    first = output_dir / "A01_s1_w1_IllumActin.tif"
+    second = output_dir / "A01_s1_w1_IllumActinAvg.tif"
+    pixels = np.zeros((4, 5), dtype=np.uint16)
+    tifffile.imwrite(first, pixels)
+    tifffile.imwrite(second, pixels)
+    context = context_stub(
+        FileManager(
+            {
+                Backend.DISK.value: DiskStorageBackend(),
+                Backend.MEMORY.value: MemoryStorageBackend(),
+            }
+        ),
+        parser=_QualifierIgnoringParserStub(),
+    )
+    context.filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    context.filemanager.save(pixels, str(first), Backend.MEMORY.value)
+    context.filemanager.save(pixels, str(second), Backend.MEMORY.value)
+    context.metadata_cache = {
+        AllComponents.WELL: {"A01": None},
+        AllComponents.SITE: {"1": None},
+        AllComponents.CHANNEL: {"1": None},
+        AllComponents.Z_INDEX: {"1": None},
+        AllComponents.TIMEPOINT: {"1": None},
+    }
+    plan = function_step_plan("SaveImages")
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.write_backend = Backend.DISK.value
+    context.step_plans = {plan.step_index: plan}
+
+    record_output_path(
+        context,
+        plan,
+        str(first),
+        output_context=AlignedImageSliceContext.main_flow(
+            output_key="IllumActin",
+            artifact_kind=ImageArtifactType.value,
+        ),
+    )
+    record_output_path(
+        context,
+        plan,
+        str(second),
+        output_context=AlignedImageSliceContext.main_flow(
+            output_key="IllumActinAvg",
+            artifact_kind=ImageArtifactType.value,
+        ),
+    )
+
+    OpenHCSMetadataWriter.write(context, plan)
+
+    subdirectory = json.loads(
+        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+    )[FIELDS.SUBDIRECTORIES]["images"]
+    projections = subdirectory[FIELDS.SOURCE_PROJECTION]
+    roles = {record["projection_role"] for record in projections}
+    assert roles == {"primary_plane", "source_artifact"}
+    artifacts = [
+        record
+        for record in projections
+        if record["projection_role"] == "source_artifact"
+    ]
+    assert [record["source_alias"] for record in artifacts] == ["IllumActinAvg"]
+    assert artifacts[0]["address"]["well"] == "A01"
+    mapping = subdirectory[FIELDS.WORKSPACE_MAPPING]
+    assert set(mapping) == {
+        "images/A01_s1_w1_IllumActin.tif",
+        "images/A01_s1_w1_IllumActinAvg.tif",
+    }
+
+
 def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     tmp_path,
 ):
