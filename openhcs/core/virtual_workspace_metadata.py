@@ -18,6 +18,7 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.constants.constants import AllComponents
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
     SourceMetadataMapping,
@@ -105,6 +106,7 @@ class AtomicMetadataWriter:
                         }
                     else:
                         subdirectory[key] = value
+                self._update_projection_geometry(subdirectory)
             return data
 
         self._execute_update(
@@ -162,29 +164,29 @@ class AtomicMetadataWriter:
                     }
                 )
             subdirectory[FIELDS.SOURCE_PROJECTION] = list(entries.values())
-            if entries:
-                projections = SourceProjectionSet(
-                    tuple(
-                        VirtualWorkspaceSourceProjectionEntries._projection_record(
-                            record
-                        )[1]
-                        for record in entries.values()
-                    )
-                )
-                subdirectory[FIELDS.GRID_DIMENSIONS] = (
-                    SourceTileLayout.metadata_grid_dimensions(projections)
-                )
-                subdirectory[FIELDS.PIXEL_SIZE] = (
-                    SourceVoxelSpacing.metadata_pixel_size(
-                        SourceVoxelSpacing.from_source_metadata(
-                            projection.source_metadata
-                        )
-                        for projection in projections.plane_projections
-                    )
-                )
+            self._update_projection_geometry(subdirectory)
             return data
 
         self._execute_update(metadata_path, update)
+
+    @staticmethod
+    def _update_projection_geometry(subdirectory: dict[str, Any]) -> None:
+        entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+            subdirectory
+        ).entries
+        if not entries:
+            return
+        unique_projections: dict[tuple[object, ...], SourceProjection] = {}
+        for projection in entries.values():
+            unique_projections.setdefault(projection.identity_key, projection)
+        projections = SourceProjectionSet(tuple(unique_projections.values()))
+        subdirectory[FIELDS.GRID_DIMENSIONS] = (
+            SourceTileLayout.metadata_grid_dimensions(projections)
+        )
+        subdirectory[FIELDS.PIXEL_SIZE] = SourceVoxelSpacing.metadata_pixel_size(
+            SourceVoxelSpacing.from_source_metadata(projection.source_metadata)
+            for projection in projections.plane_projections
+        )
 
     def _execute_update(
         self,
@@ -343,7 +345,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         cls,
         subdirectory: OpenHCSSubdirectoryPayload,
     ) -> "VirtualWorkspaceSourceProjectionEntries":
-        records = subdirectory.get(FIELDS.SOURCE_PROJECTION)
+        records = subdirectory.get("source_projection")
         if records is None:
             return cls(MappingProxyType({}))
         if not isinstance(records, Sequence) or isinstance(records, str):

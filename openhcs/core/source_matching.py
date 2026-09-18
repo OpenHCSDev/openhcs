@@ -9,12 +9,12 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, ClassVar, Mapping, Sequence, TypeAlias
+from typing import Callable, ClassVar, Mapping, Sequence, TYPE_CHECKING, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
-from polystore.formats import get_format_from_extension
 
 from openhcs.constants.constants import AllComponents
+from polystore.formats import get_format_from_extension
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.process_local_cache import IdentityBoundProcessCache
 from openhcs.core.source_bindings import (
@@ -29,13 +29,12 @@ from openhcs.core.source_metadata import (
     ORIGINAL_SOURCE_METADATA_FIELD,
     SOURCE_FILTER_PATHS_METADATA_FIELD,
     OriginalSourceMetadata,
-    SourceComponentProjectionStrategy,
     SourceFilterPathMetadata,
     SourceMetadataMapping,
     SourceMetadataRoleView,
     SourceMetadataScalar,
     SourceMetadataValue,
-    canonical_source_metadata_value,
+    SourceComponentProjectionStrategy,
     path_metadata_values_equivalent,
     source_metadata_field_identity,
     source_metadata_dict,

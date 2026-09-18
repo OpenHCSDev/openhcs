@@ -5,14 +5,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import (
     Iterable,
-    Mapping,
     Sequence,
 )
 from dataclasses import dataclass, field, fields
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, TypeVar, get_type_hints
+from typing import Any, TypeVar
 
 import numpy as np
 from arraybridge import ArrayGeometry
@@ -187,27 +186,29 @@ class ImagePayloadMetadata(
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, object]) -> "ImagePayloadMetadata":
-        """Decode all declaration-owned image metadata fields."""
-
-        if not isinstance(values, Mapping):
-            raise TypeError("Image payload metadata requires a mapping.")
+        """Restore all declared metadata fields through their canonical codecs."""
         decoded = dict(values)
-        annotations = get_type_hints(cls)
-        provenance_fields = tuple(
-            declared.name
-            for declared in fields(cls)
-            if annotations[declared.name] is SourceImageProvenance
-        )
-        if len(provenance_fields) != 1:
-            raise ValueError(
-                "Image payload metadata requires one source provenance declaration."
-            )
-        provenance_field = provenance_fields[0]
-        if provenance_field in decoded:
-            decoded[provenance_field] = SourceImageProvenance.from_mapping(
-                decoded[provenance_field]
+        if "source_provenance" in decoded:
+            decoded["source_provenance"] = SourceImageProvenance.from_mapping(
+                decoded["source_provenance"]
             )
         return dataclass_from_mapping(cls, decoded)
+
+    def retained_plane_component_values(
+        self,
+    ) -> dict[str, tuple[SourceMetadataScalar, ...]]:
+        """Derive varying source coordinates of the retained nominal plane axis.
+
+        Source provenance can also describe contributors after a projection.
+        Only a retained plane-axis declaration makes those coordinates a pixel
+        axis; artifact storage/grouping axes do not declare that image domain.
+        """
+
+        if self.plane_axis is None:
+            return {}
+        return self.source_provenance.varying_plane_component_values(
+            tuple(AllComponents)
+        )
 
     @classmethod
     def for_array(

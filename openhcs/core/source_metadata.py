@@ -43,34 +43,27 @@ def source_metadata_dict(
 ) -> dict[str, SourceMetadataValue]:
     """Return a detached JSON-compatible source-metadata mapping."""
 
-    return {
-        str(key): canonical_source_metadata_value(str(key), value)
-        for key, value in metadata.items()
-    }
-
-
-def canonical_source_metadata_value(
-    field: str,
-    value: SourceMetadataValue,
-) -> SourceMetadataValue:
-    """Project one declared source-metadata value into its canonical form."""
-
-    if field == ORIGINAL_SOURCE_METADATA_FIELD:
-        return OriginalSourceMetadata.from_reserved_value(
-            value,
-            path=field,
-        ).as_dict()
-    if field == SOURCE_FILTER_PATHS_METADATA_FIELD:
-        return SourceFilterPathMetadata.from_reserved_value(
-            value,
-            path=field,
-        ).as_dict()
-    if isinstance(value, Mapping):
-        return {
-            str(nested_key): source_metadata_scalar(nested_value)
-            for nested_key, nested_value in value.items()
-        }
-    return source_metadata_scalar(value)
+    detached: dict[str, SourceMetadataValue] = {}
+    for key, value in metadata.items():
+        field = str(key)
+        if field == ORIGINAL_SOURCE_METADATA_FIELD:
+            detached[field] = OriginalSourceMetadata.from_reserved_value(
+                value,
+                path=field,
+            ).as_dict()
+        elif field == SOURCE_FILTER_PATHS_METADATA_FIELD:
+            detached[field] = SourceFilterPathMetadata.from_reserved_value(
+                value,
+                path=field,
+            ).as_dict()
+        elif isinstance(value, Mapping):
+            detached[field] = {
+                str(nested_key): source_metadata_scalar(nested_value)
+                for nested_key, nested_value in value.items()
+            }
+        else:
+            detached[field] = source_metadata_scalar(value)
+    return detached
 
 
 def source_metadata_scalar(value: SourceMetadataScalar) -> SourceMetadataScalar:

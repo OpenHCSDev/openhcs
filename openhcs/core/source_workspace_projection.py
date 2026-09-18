@@ -9,10 +9,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, TypeVar
 
-from polystore.virtual_workspace import SourcePixelRef
-
 from openhcs.constants import Backend
-from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
@@ -20,16 +17,17 @@ from openhcs.core.runtime_image_values import (
     image_payload_mask,
     image_payload_metadata,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     SourceProjectionRole,
 )
+from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_matching import (
     source_component_metadata_values,
     source_metadata_value,
     source_metadata_values_equal,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_path_identity import source_path_identity_key
 from openhcs.core.source_projection import SourceProjection
 from openhcs.core.virtual_workspace_metadata import (
@@ -37,16 +35,16 @@ from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataSubdirectories,
     OpenHCSSubdirectoryPayload,
     VirtualWorkspaceMapping,
-    VirtualWorkspaceSourceMetadataEntries,
     VirtualWorkspaceSourceProjectionEntries,
+    VirtualWorkspaceSourceMetadataEntries,
 )
+from polystore.virtual_workspace import SourcePixelRef
 
 if TYPE_CHECKING:
-    from polystore.filemanager import FileManager
-
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.vfs_protocol import FileManagerLike
     from openhcs.microscopes.microscope_interfaces import MetadataHandler
+    from openhcs.core.vfs_protocol import FileManagerLike
+    from polystore.filemanager import FileManager
 
 
 LookupValueT = TypeVar("LookupValueT")
@@ -296,7 +294,9 @@ class VirtualWorkspaceSourceProjection:
         metadata = (
             current_metadata
             if persisted_metadata is None
-            else persisted_metadata.with_source_context_from(current_metadata)
+            else persisted_metadata.with_source_spatial_context_from(
+                current_metadata
+            ).with_missing_intensity_from(current_metadata)
         )
         metadata = metadata.replace_fields(
             source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(

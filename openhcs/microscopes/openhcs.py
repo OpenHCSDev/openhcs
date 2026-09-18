@@ -25,7 +25,10 @@ from typing import (
 )
 
 from openhcs.constants.constants import AllComponents, Backend, Microscope
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import (
+    SourceComponentProjectionStrategy,
+    SourceVoxelSpacing,
+)
 from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
@@ -489,45 +492,21 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 plate_path,
                 "pixel_size",
             ),
-            FIELDS.CHANNELS: self._merge_subdirectory_mapping(
+            **OpenHCSMetadata.component_kwargs(
                 {
-                    subdirectory_name: metadata.channels
-                    for subdirectory_name, metadata in metadata_by_subdirectory.items()
-                },
-                plate_path,
-                "channels",
-            ),
-            FIELDS.WELLS: self._merge_subdirectory_mapping(
-                {
-                    subdirectory_name: metadata.wells
-                    for subdirectory_name, metadata in metadata_by_subdirectory.items()
-                },
-                plate_path,
-                "wells",
-            ),
-            FIELDS.SITES: self._merge_subdirectory_mapping(
-                {
-                    subdirectory_name: metadata.sites
-                    for subdirectory_name, metadata in metadata_by_subdirectory.items()
-                },
-                plate_path,
-                "sites",
-            ),
-            FIELDS.Z_INDEXES: self._merge_subdirectory_mapping(
-                {
-                    subdirectory_name: metadata.z_indexes
-                    for subdirectory_name, metadata in metadata_by_subdirectory.items()
-                },
-                plate_path,
-                "z_indexes",
-            ),
-            FIELDS.TIMEPOINTS: self._merge_subdirectory_mapping(
-                {
-                    subdirectory_name: metadata.timepoints
-                    for subdirectory_name, metadata in metadata_by_subdirectory.items()
-                },
-                plate_path,
-                "timepoints",
+                    component: self._merge_subdirectory_mapping(
+                        {
+                            subdirectory_name: getattr(
+                                metadata,
+                                OpenHCSMetadata.component_collection_field(component),
+                            )
+                            for subdirectory_name, metadata in metadata_by_subdirectory.items()
+                        },
+                        plate_path,
+                        OpenHCSMetadata.component_collection_field(component),
+                    )
+                    for component in AllComponents
+                }
             ),
             FIELDS.AVAILABLE_BACKENDS: self._merge_subdirectory_mapping(
                 {
@@ -843,6 +822,37 @@ class OpenHCSMetadata:
         None  # Sibling directory containing analysis results for this subdirectory
     )
 
+    def __post_init__(self) -> None:
+        pass
+
+    @staticmethod
+    def component_collection_field(component: AllComponents) -> str:
+        """Project one nominal component to its persisted collection field."""
+
+        return SourceComponentProjectionStrategy.for_enum_member(
+            component
+        ).metadata_collection_field
+
+    @classmethod
+    def component_fields(cls) -> tuple[str, ...]:
+        """Derive the component collection fields from their nominal owners."""
+
+        return tuple(
+            cls.component_collection_field(component) for component in AllComponents
+        )
+
+    @classmethod
+    def component_kwargs(
+        cls,
+        values_by_component: Mapping[AllComponents, Any],
+    ) -> Dict[str, Any]:
+        """Build component collection kwargs from one component-keyed mapping."""
+
+        return {
+            cls.component_collection_field(component): values_by_component[component]
+            for component in AllComponents
+        }
+
     @classmethod
     def from_component_value_set(
         cls,
@@ -871,11 +881,9 @@ class OpenHCSMetadata:
             grid_dimensions=grid_dimensions,
             pixel_size=pixel_size,
             image_files=image_files,
-            channels=serialized_values(AllComponents.CHANNEL),
-            wells=serialized_values(AllComponents.WELL),
-            sites=serialized_values(AllComponents.SITE),
-            z_indexes=serialized_values(AllComponents.Z_INDEX),
-            timepoints=serialized_values(AllComponents.TIMEPOINT),
+            **cls.component_kwargs(
+                {component: serialized_values(component) for component in AllComponents}
+            ),
             available_backends=available_backends,
             source_diagnostics=source_diagnostics,
             main=main,
@@ -888,7 +896,7 @@ _OPENHCS_METADATA_REQUIRED_FIELDS = (
     FIELDS.GRID_DIMENSIONS,
     FIELDS.PIXEL_SIZE,
     FIELDS.IMAGE_FILES,
-    *(component_metadata_field(component) for component in AllComponents),
+    *OpenHCSMetadata.component_fields(),
     FIELDS.AVAILABLE_BACKENDS,
 )
 
@@ -916,11 +924,14 @@ def _openhcs_metadata_from_subdirectory(
         grid_dimensions=list(subdirectory_data[FIELDS.GRID_DIMENSIONS]),
         pixel_size=float(subdirectory_data[FIELDS.PIXEL_SIZE]),
         image_files=list(subdirectory_data[FIELDS.IMAGE_FILES]),
-        channels=subdirectory_data[FIELDS.CHANNELS],
-        wells=subdirectory_data[FIELDS.WELLS],
-        sites=subdirectory_data[FIELDS.SITES],
-        z_indexes=subdirectory_data[FIELDS.Z_INDEXES],
-        timepoints=subdirectory_data[FIELDS.TIMEPOINTS],
+        **OpenHCSMetadata.component_kwargs(
+            {
+                component: subdirectory_data[
+                    OpenHCSMetadata.component_collection_field(component)
+                ]
+                for component in AllComponents
+            }
+        ),
         available_backends=dict(subdirectory_data[FIELDS.AVAILABLE_BACKENDS]),
         workspace_mapping=_optional_metadata_field(
             subdirectory_data, FIELDS.WORKSPACE_MAPPING

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence, Mapping
 from dataclasses import InitVar, dataclass, field, replace
-from inspect import signature
 from pathlib import Path
 from inspect import signature
 from math import isfinite
@@ -33,13 +32,6 @@ from openhcs.core.source_matching import (
     source_metadata_value,
     with_source_component_metadata,
 )
-from openhcs.core.source_metadata import (
-    SOURCE_PLANE_COUNT_FIELD,
-    SOURCE_PLANE_INDEX_FIELD,
-    SourceMetadataMapping,
-    SourceMetadataValue,
-)
-from openhcs.serialization.json import to_jsonable
 
 SourceComponentMetadata = SourceMetadataMapping
 SourceImageProvenancePlanePathValues = tuple[str | None, ...]

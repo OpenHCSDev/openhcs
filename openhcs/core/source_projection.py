@@ -16,9 +16,8 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.serialization.json import to_jsonable
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.artifacts import ArtifactType, ImageArtifactType
 from openhcs.core.components.component_values import OpenHCSComponentValues
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.artifacts import ArtifactType, ImageArtifactType
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
@@ -40,7 +39,6 @@ from openhcs.core.source_metadata import (
     source_metadata_dict,
     source_metadata_scalar,
 )
-from openhcs.serialization.json import to_jsonable
 
 
 class SourceDatasetConflictError(ValueError):
@@ -641,11 +639,6 @@ class SourceProjection:
     def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
         """Add projection-specific fields to the nominal wire payload."""
 
-    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
-        """Return leaf-owned semantic image metadata when this is an image plane."""
-
-        return None
-
     def matches_binding(self, binding: NamedSourceBinding) -> bool:
         """Return whether this projection represents one exact source binding."""
 
@@ -1119,9 +1112,6 @@ class SourceProjectionMetadataSerializer:
             )
         if projection.component_labels:
             payload["component_labels"] = dict(projection.component_labels)
-        image_metadata = projection.persisted_image_metadata()
-        if image_metadata is not None:
-            payload[self.IMAGE_METADATA_FIELD] = to_jsonable(image_metadata)
         projection.extend_serialized_payload(payload)
         return payload
 
