@@ -91,9 +91,7 @@ class StepEditorScope:
             step_scope_id=step_scope_id,
             step_token=step_token,
             child_scope_id=(
-                SCOPE_SEGMENT_SEPARATOR.join(child_segments)
-                if child_segments
-                else None
+                SCOPE_SEGMENT_SEPARATOR.join(child_segments) if child_segments else None
             ),
         )
 

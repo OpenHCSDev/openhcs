@@ -24,9 +24,7 @@ def _reference_mask_resize(
 ) -> np.ndarray:
     zoom = tuple(
         output_size / input_size
-        for output_size, input_size in zip(
-            output_shape, mask.shape, strict=True
-        )
+        for output_size, input_size in zip(output_shape, mask.shape, strict=True)
     )
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
@@ -114,7 +112,9 @@ def test_resize_preserves_ordinary_image_payload_semantics() -> None:
     assert image_payload_data(result).dtype == pixels.dtype
     assert image_payload_data(result).shape == output_shape
     assert image_payload_metadata(result) == (
-        metadata.with_spatial_resize(output_shape).without_unit_interval_intensity_scale()
+        metadata.with_spatial_resize(
+            output_shape
+        ).without_unit_interval_intensity_scale()
     )
 
 

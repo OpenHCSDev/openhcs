@@ -54,7 +54,9 @@ def test_progress_summary_reports_active_case_without_inferring_completion(
     ]
 
 
-def test_progress_summary_reports_case_results_and_command_status(tmp_path: Path) -> None:
+def test_progress_summary_reports_case_results_and_command_status(
+    tmp_path: Path,
+) -> None:
     log_path = tmp_path / "run.log"
     log_path.write_text(
         "\n".join(

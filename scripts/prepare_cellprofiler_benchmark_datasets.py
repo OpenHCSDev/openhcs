@@ -6,7 +6,10 @@ import argparse
 from pathlib import Path
 
 from benchmark.datasets.acquire import acquire_dataset
-from benchmark.datasets.manifest import comparison_manifest_payload, write_comparison_manifest
+from benchmark.datasets.manifest import (
+    comparison_manifest_payload,
+    write_comparison_manifest,
+)
 from benchmark.datasets.registry import DATASET_REGISTRY, get_dataset_spec
 
 

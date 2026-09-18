@@ -43,10 +43,13 @@ def test_bioformats_plane_ref_has_canonical_address_round_trip(tmp_path: Path) -
         '{"plane_index":7,"series_index":3,'
         f'"source_path":"{tmp_path / "plate.fake"}"}}'
     )
-    assert BioFormatsStorageBackend().source_path(
-        ref.to_backend_address(),
-        base_path=tmp_path / "workspace",
-    ) == tmp_path / "plate.fake"
+    assert (
+        BioFormatsStorageBackend().source_path(
+            ref.to_backend_address(),
+            base_path=tmp_path / "workspace",
+        )
+        == tmp_path / "plate.fake"
+    )
 
 
 def test_bioformats_backend_dispatches_java_reader(monkeypatch, tmp_path: Path) -> None:

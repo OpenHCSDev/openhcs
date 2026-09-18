@@ -9,7 +9,6 @@ from typing import Any
 
 import numpy as np
 
-
 _CAPTURE_DIR_ENV = "OPENHCS_CAPTURE_CELLPROFILER_FIXTURES_DIR"
 _CAPTURE_LIMIT_ENV = "OPENHCS_CAPTURE_CELLPROFILER_FIXTURES_LIMIT"
 _DEFAULT_LIMIT = 16
@@ -36,9 +35,7 @@ def capture_array_fixture(name: str, **arrays: Any) -> None:
     root = Path(root_text)
     root.mkdir(parents=True, exist_ok=True)
     payload = {
-        key: np.asarray(value)
-        for key, value in arrays.items()
-        if value is not None
+        key: np.asarray(value) for key, value in arrays.items() if value is not None
     }
     if not payload:
         return

@@ -31,7 +31,6 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REFERENCE_PATH = REPO_ROOT / "docs/source/reference/dimensionality_and_measurements.rst"
 

@@ -34,6 +34,7 @@ from openhcs.mcp.dev_client_rendering import (
     ViewerImageSampleRenderOptions,
 )
 
+
 class ViewerValidationRenderer(McpDevOutputRenderer):
     """Compact renderer for viewer validation summaries."""
 
@@ -150,7 +151,9 @@ class ViewerStateRenderer(McpDevOutputRenderer):
             return json.dumps(response, indent=2, sort_keys=True)
         errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
         if "observed" not in payload and errors:
-            return "\n".join(("Viewer state: failed", *ViewerValidationRenderer._error_lines(errors)))
+            return "\n".join(
+                ("Viewer state: failed", *ViewerValidationRenderer._error_lines(errors))
+            )
         viewer = McpDevPayloadProjection.nested_mapping(payload, "viewer")
         lines = [
             (
@@ -270,7 +273,9 @@ class ViewerStateRenderer(McpDevOutputRenderer):
         for key in sorted(str(key) for key in value):
             item = value.get(key)
             if isinstance(item, list):
-                item_text = ",".join(McpDevPayloadProjection.text(part) for part in item)
+                item_text = ",".join(
+                    McpDevPayloadProjection.text(part) for part in item
+                )
             else:
                 item_text = McpDevPayloadProjection.text(item)
             parts.append(f"{key}={item_text}")
@@ -296,7 +301,10 @@ class ViewerPayloadRenderer(McpDevOutputRenderer):
         errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
         if "observed" not in payload and errors:
             return "\n".join(
-                ("Viewer payloads: failed", *ViewerValidationRenderer._error_lines(errors))
+                (
+                    "Viewer payloads: failed",
+                    *ViewerValidationRenderer._error_lines(errors),
+                )
             )
         lines = [
             (
@@ -381,7 +389,9 @@ class ViewerPayloadRenderer(McpDevOutputRenderer):
         summary: Mapping[str, JsonValue],
     ) -> str:
         if payload.get("data_type") != "shapes":
-            return f"nonzero={McpDevPayloadProjection.text(summary.get('nonzero_count'))}"
+            return (
+                f"nonzero={McpDevPayloadProjection.text(summary.get('nonzero_count'))}"
+            )
         shape_payload_count = summary.get("shape_payload_count")
         if shape_payload_count is None:
             shape_payload_count = summary.get("nonzero_count")
@@ -493,8 +503,7 @@ class ViewerRoiSummaryRenderer(McpDevOutputRenderer):
         lines = [
             (
                 "Interpretation: no ROI/shapes payloads were found for the "
-                "requested viewer"
-                + (" route." if route_key else ".")
+                "requested viewer" + (" route." if route_key else ".")
             ),
             "Next:",
             "- Run `viewer-state <port>` to list layer route keys, layer types, and visible image layers.",
@@ -740,7 +749,10 @@ class ViewerImageSampleRenderer(McpDevOutputRenderer):
                 f"{rerun_hint}"
             )
             array_values = record.get("array_values")
-            if array_summary.get("included") is True and cls._json_value_count(array_values) <= 64:
+            if (
+                array_summary.get("included") is True
+                and cls._json_value_count(array_values) <= 64
+            ):
                 lines.append(f"  sample values: {json.dumps(array_values)}")
         return lines
 
@@ -753,7 +765,9 @@ class ViewerImageSampleRenderer(McpDevOutputRenderer):
     @staticmethod
     def _json_value_count(value: JsonValue) -> int:
         if isinstance(value, list | tuple):
-            return sum(ViewerImageSampleRenderer._json_value_count(item) for item in value)
+            return sum(
+                ViewerImageSampleRenderer._json_value_count(item) for item in value
+            )
         if isinstance(value, Mapping):
             return sum(
                 ViewerImageSampleRenderer._json_value_count(item)
@@ -1005,7 +1019,10 @@ class RuntimeServerRenderer(McpDevOutputRenderer):
             )
             errors = McpDevPayloadProjection.sequence_of_mappings(server.get("errors"))
             if errors:
-                lines.extend(f"  {line}" for line in ViewerValidationRenderer._error_lines(errors))
+                lines.extend(
+                    f"  {line}"
+                    for line in ViewerValidationRenderer._error_lines(errors)
+                )
         return lines
 
     @staticmethod
@@ -1073,14 +1090,11 @@ class RuntimeDebugInspectionRenderer(McpDevOutputRenderer):
             view_model.get("sections")
         )
         matching_sections = tuple(
-            section
-            for section in sections
-            if cls._section_matches(section, contains)
+            section for section in sections if cls._section_matches(section, contains)
         )
         total_items = sum(cls._section_item_count(section) for section in sections)
         matched_items = sum(
-            cls._matched_item_count(section, contains)
-            for section in matching_sections
+            cls._matched_item_count(section, contains) for section in matching_sections
         )
         remaining = max(limit, 0)
         shown_items = 0

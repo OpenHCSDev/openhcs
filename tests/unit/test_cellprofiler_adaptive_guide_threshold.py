@@ -52,7 +52,6 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     threshold,
 )
 
-
 THRESHOLD_MODULE_TYPES = (
     ThresholdModule,
     IdentifyPrimaryObjectsModule,
@@ -114,9 +113,10 @@ def _step_context(module_type: type) -> ArtifactDeclarationStepContext:
 
 
 def test_adaptive_result_schema_extends_shared_typed_threshold_fields() -> None:
-    assert tuple(
-        field.name for field in fields(ObjectThresholdResult)
-    ) == GLOBAL_RESULT_FIELDS
+    assert (
+        tuple(field.name for field in fields(ObjectThresholdResult))
+        == GLOBAL_RESULT_FIELDS
+    )
     assert tuple(field.name for field in fields(AdaptiveObjectThresholdResult)) == (
         ADAPTIVE_RESULT_FIELDS
     )
@@ -247,15 +247,10 @@ def test_public_function_step_threshold_scope_reconstructs_exact_contract(
     assert consumed == ()
     assert len(blocks) == 1
     assert module_type.setting_value(blocks[0], "Threshold strategy") == scope.value
-    assert (
-        module_type.threshold_measurement_row_type(blocks[0])
-        is expected_row_type
-    )
-    (numbered_blocks,), _next_module_num = (
-        module_type.number_step_invocation_blocks(
-            (blocks,),
-            first_module_num=1,
-        )
+    assert module_type.threshold_measurement_row_type(blocks[0]) is expected_row_type
+    (numbered_blocks,), _next_module_num = module_type.number_step_invocation_blocks(
+        (blocks,),
+        first_module_num=1,
     )
     contract, contract_consumed = module_type.invocation_callable_contract(
         invocation=invocation,
@@ -264,11 +259,9 @@ def test_public_function_step_threshold_scope_reconstructs_exact_contract(
         step_context=step_context,
     )
     assert contract_consumed == ()
-    assert len(
-        contract.artifact_outputs.of_artifact_type(
-            MeasurementsArtifactType
-        )
-    ) == 1
+    assert (
+        len(contract.artifact_outputs.of_artifact_type(MeasurementsArtifactType)) == 1
+    )
     assert (
         module_type.resolve_function(
             numbered_blocks[0],

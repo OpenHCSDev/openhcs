@@ -135,9 +135,7 @@ def test_from_namespace_requires_steps_and_validates_explicit_types(
 
 
 def test_from_namespace_defaults_missing_pipeline_config() -> None:
-    document = PipelineDocumentAuthority.from_namespace(
-        {"pipeline_steps": [_step()]}
-    )
+    document = PipelineDocumentAuthority.from_namespace({"pipeline_steps": [_step()]})
 
     assert document.pipeline_config == PipelineConfig()
 

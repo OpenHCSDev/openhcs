@@ -397,7 +397,7 @@ def test_track_objects_contract_declares_parent_self_relationship(
         step_context=_context(cells),
     )
 
-    (relationship, declaration), = contract.artifact_outputs.relation_refs(
+    ((relationship, declaration),) = contract.artifact_outputs.relation_refs(
         ObjectRelationshipDeclaration
     )
     cells_input_ref = cells.for_plan_type(ArtifactInputPlan).ref()
@@ -530,7 +530,7 @@ def test_public_track_objects_reconstructs_exact_relationship_without_sidecar() 
         invocation_key=invocation.key,
         step_context=context,
     )
-    (relationship, declaration), = contract.artifact_outputs.relation_refs(
+    ((relationship, declaration),) = contract.artifact_outputs.relation_refs(
         ObjectRelationshipDeclaration
     )
 

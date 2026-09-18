@@ -234,9 +234,10 @@ def test_registered_control_router_reads_retained_compile_artifact() -> None:
         ZMQControlRequestContext(compiled_artifacts={"compile-1": record}),
     )
 
-    assert CompiledArtifactInspectionResponse.from_control_response(
-        response
-    ).inspection == expected
+    assert (
+        CompiledArtifactInspectionResponse.from_control_response(response).inspection
+        == expected
+    )
 
 
 def test_view_model_uses_compiled_rows_and_exact_runtime_address_matching() -> None:
@@ -297,7 +298,5 @@ def test_declaration_only_preview_and_debug_only_router_are_deleted() -> None:
     from pathlib import Path
 
     root = Path(__file__).parents[2]
-    assert not (
-        root / "openhcs/pyqt_gui/widgets/artifact_contract_preview.py"
-    ).exists()
+    assert not (root / "openhcs/pyqt_gui/widgets/artifact_contract_preview.py").exists()
     assert not (root / "openhcs/runtime/zmq_debug_control.py").exists()

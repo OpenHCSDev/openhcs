@@ -87,15 +87,15 @@ class BenchmarkProgressSnapshot:
         return self.cases.get(self.active_case_name)
 
 
-_CASE_START_RE = re.compile(r"^CASE_START (?P<case>\S+)(?:\s+timeout=(?P<timeout>\S+))?")
+_CASE_START_RE = re.compile(
+    r"^CASE_START (?P<case>\S+)(?:\s+timeout=(?P<timeout>\S+))?"
+)
 _CASE_RESULT_RE = re.compile(
     r"^CASE_RESULT (?P<case>\S+) success=(?P<success>True|False)"
     r"(?: metrics=(?P<metrics>\{.*\}))?(?: error=(?P<error>.*))?$"
 )
 _CASE_EXCEPTION_RE = re.compile(r"^CASE_EXCEPTION (?P<case>\S+)\s+(?P<error>.*)$")
-_STEP_START_RE = re.compile(
-    r"Starting step '(?P<step>[^']+)' for axis (?P<axis>\S+)"
-)
+_STEP_START_RE = re.compile(r"Starting step '(?P<step>[^']+)' for axis (?P<axis>\S+)")
 _STEP_COMPLETE_RE = re.compile(
     r"FunctionStep (?P<index>\d+) \((?P<step>[^)]+)\) completed for axis "
     r"(?P<axis>\S+) in (?P<seconds>[0-9.]+)s \(execute=(?P<execute>[0-9.]+)s"
@@ -181,8 +181,7 @@ def summarize_progress(
             case_builders[active_case_name].apply(event)
 
     cases = {
-        case_name: builder.freeze()
-        for case_name, builder in case_builders.items()
+        case_name: builder.freeze() for case_name, builder in case_builders.items()
     }
     if active_case_name is not None and cases.get(active_case_name, None) is not None:
         if cases[active_case_name].finished:

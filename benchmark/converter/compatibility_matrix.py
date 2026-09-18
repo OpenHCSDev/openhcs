@@ -34,7 +34,6 @@ from .cppipe_corpus import (
     default_cppipe_corpus,
 )
 
-
 INFRASTRUCTURE_COVERAGE_VALUE = "infrastructure"
 
 
@@ -230,6 +229,7 @@ class CellProfilerCompatibilityReport:
             for module in self.cppipe_modules
             if module.is_missing_processing_module
         )
+
 
 def build_cellprofiler_compatibility_report(
     *,

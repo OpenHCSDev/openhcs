@@ -22,8 +22,12 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.processing.backends.cellprofiler.primary_objects import identify_primary_objects
-from openhcs.processing.backends.cellprofiler.secondary import identify_secondary_objects
+from openhcs.processing.backends.cellprofiler.primary_objects import (
+    identify_primary_objects,
+)
+from openhcs.processing.backends.cellprofiler.secondary import (
+    identify_secondary_objects,
+)
 from zmqruntime.config import TransportMode
 
 pipeline_config = PipelineConfig(
@@ -53,22 +57,26 @@ pipeline_config = PipelineConfig(
             NamedSourceBinding(
                 alias="DNA",
                 selector=SourceSelector(
-                    filters=(SourceFilterClause(
-                        subject=SourceFilterSubject.FILE,
-                        match_type=SourceFilterMatchType.CONTAINS,
-                        value="_w1_",
-                    ),),
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.CONTAINS,
+                            value="_w1_",
+                        ),
+                    ),
                 ),
                 component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
             ),
             NamedSourceBinding(
                 alias="Actin",
                 selector=SourceSelector(
-                    filters=(SourceFilterClause(
-                        subject=SourceFilterSubject.FILE,
-                        match_type=SourceFilterMatchType.CONTAINS,
-                        value="_w2_",
-                    ),),
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.CONTAINS,
+                            value="_w2_",
+                        ),
+                    ),
                 ),
                 component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
             ),

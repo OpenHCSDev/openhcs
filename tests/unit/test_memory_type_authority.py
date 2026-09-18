@@ -41,8 +41,7 @@ def test_memory_type_sets_are_owner_reexports() -> None:
 
 def test_legacy_openhcs_memory_type_pickle_resolves_to_owner_identity() -> None:
     legacy_payload = (
-        b"copenhcs.constants.constants\nMemoryType\np0\n"
-        b"(Vnumpy\np1\ntp2\nRp3\n."
+        b"copenhcs.constants.constants\nMemoryType\np0\n" b"(Vnumpy\np1\ntp2\nRp3\n."
     )
 
     assert pickle.loads(legacy_payload) is ArrayBridgeMemoryType.NUMPY

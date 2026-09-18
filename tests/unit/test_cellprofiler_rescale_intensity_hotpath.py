@@ -104,9 +104,7 @@ def test_stretch_registry_leaf_owns_the_exact_reduction() -> None:
 
     tree = ast.parse(textwrap.dedent(inspect.getsource(type(runner).run)))
     calls = tuple(
-        ast.unparse(node.func)
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
+        ast.unparse(node.func) for node in ast.walk(tree) if isinstance(node, ast.Call)
     )
     assert calls.count("np.empty_like") == 1
     assert calls.count("np.subtract") == 1

@@ -629,9 +629,7 @@ def test_aligned_dense_object_label_stack_alignment_restores_secondary_domain() 
         ),
     )
     (primary_stack, secondary_stack), adapters = (
-        SourceSpatialDomainAdapter.aligned_values(
-            (primary_payload, secondary_payload)
-        )
+        SourceSpatialDomainAdapter.aligned_values((primary_payload, secondary_payload))
     )
 
     source_domain_output = np.zeros_like(secondary_stack)
@@ -661,8 +659,8 @@ def test_dense_object_label_stack_alignment_preserves_conflicting_label_planes()
         )
     )
 
-    (first_stack, second_stack), _adapters = (
-        SourceSpatialDomainAdapter.aligned_values((first, second))
+    (first_stack, second_stack), _adapters = SourceSpatialDomainAdapter.aligned_values(
+        (first, second)
     )
 
     np.testing.assert_array_equal(first_stack, first)

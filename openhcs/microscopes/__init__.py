@@ -12,7 +12,6 @@ discovered and registered via metaclass during discovery - no hardcoded imports 
 from importlib import import_module
 from pkgutil import iter_modules
 
-
 _DISCOVERY_EXCLUDED_MODULES = frozenset(
     {
         "handler_registry_service",
@@ -40,13 +39,13 @@ from openhcs.microscopes.microscope_base import create_microscope_handler
 # Import registry service for automatic discovery
 from openhcs.microscopes.handler_registry_service import (
     get_all_handler_types,
-    is_handler_available
+    is_handler_available,
 )
 
 __all__ = [
     # Factory function - primary public API
-    'create_microscope_handler',
+    "create_microscope_handler",
     # Registry service functions
-    'get_all_handler_types',
-    'is_handler_available',
+    "get_all_handler_types",
+    "is_handler_available",
 ]

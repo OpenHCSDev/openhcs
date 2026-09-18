@@ -214,7 +214,10 @@ class MakeProjectionModule(
     confidence = 1.0
     image_input_setting = SettingNameFamily("Select the input image")
     image_output_setting = SettingNameFamily("Name the output image")
-    setting_bindings = (SettingToKeywordBinding.input(image_input_setting, ImageArtifactType),SettingToKeywordBinding.output(image_output_setting, ImageArtifactType),SettingToKeywordBinding(
+    setting_bindings = (
+        SettingToKeywordBinding.input(image_input_setting, ImageArtifactType),
+        SettingToKeywordBinding.output(image_output_setting, ImageArtifactType),
+        SettingToKeywordBinding(
             "Type of projection",
             "projection_type",
             cellprofiler_enum_setting_parser(ProjectionType),
@@ -223,7 +226,8 @@ class MakeProjectionModule(
             "Frequency",
             "frequency",
             parse_cellprofiler_float,
-        ),)
+        ),
+    )
 
 
 __all__ = public_names_from_objects(

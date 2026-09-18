@@ -1,11 +1,18 @@
 import numpy as np
 
-from openhcs.core.aligned_image_payload import ObjectLabelPayloadSourceSpatialDomainAdapter
-from openhcs.core.runtime_object_labels import ObjectLabelRepresentation, ObjectLabelVariant
+from openhcs.core.aligned_image_payload import (
+    ObjectLabelPayloadSourceSpatialDomainAdapter,
+)
+from openhcs.core.runtime_object_labels import (
+    ObjectLabelRepresentation,
+    ObjectLabelVariant,
+)
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    )
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+)
+from openhcs.core.runtime_object_label_building import (
+    SourceImageObjectLabelBuildRequest,
+)
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
@@ -82,11 +89,11 @@ def test_sparse_object_label_projection_preserves_all_declared_variants():
         representation=ObjectLabelRepresentation.SPARSE_IJV,
     )
     target = ImagePayloadMetadata(
-            source_spatial_domain=SourceSpatialDomain(
-                origin_yx=(2, 3),
-                source_shape_yx=source_image.shape,
-            )
-        ).payload_with(np.zeros((3, 4), dtype=np.uint8), None)
+        source_spatial_domain=SourceSpatialDomain(
+            origin_yx=(2, 3),
+            source_shape_yx=source_image.shape,
+        )
+    ).payload_with(np.zeros((3, 4), dtype=np.uint8), None)
 
     projected = SourceSpatialDomainAdapter.for_value(labels).value_in_payload_domain(
         SourceSpatialDomainAdapter.for_value(target)

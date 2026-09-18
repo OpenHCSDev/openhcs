@@ -100,13 +100,11 @@ Crop:[module_num:10|svn_version:'Unknown'|variable_revision_number:3|show_window
         first_module_num=module.module_num,
     )
 
-    public_contract, _provider_consumed_names = (
-        CropModule.invocation_callable_contract(
-            invocation=invocation,
-            numbered_module_blocks=numbered_blocks,
-            consumed_kwarg_names=consumed_names,
-            step_context=step_context,
-        )
+    public_contract, _provider_consumed_names = CropModule.invocation_callable_contract(
+        invocation=invocation,
+        numbered_module_blocks=numbered_blocks,
+        consumed_kwarg_names=consumed_names,
+        step_context=step_context,
     )
 
     assert public_contract == parsed_contract

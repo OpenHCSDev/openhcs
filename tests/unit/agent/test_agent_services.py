@@ -1315,7 +1315,6 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert context.destroy_linger == 0
 
 
-
 def test_function_catalog_search_and_describe_use_registry_ids(monkeypatch):
     catalog = _catalog(monkeypatch)
 
@@ -2241,8 +2240,6 @@ def test_viewer_window_service_navigates_running_viewer_window():
     )
     assert gateway.requests[0].timeout_ms == 25
     assert gateway.requests[0].navigation.axis_indices == {"well": 1, "channel": 0}
-
-
 
 
 def test_viewer_window_service_isolates_only_mounted_layers() -> None:

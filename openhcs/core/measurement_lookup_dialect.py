@@ -14,7 +14,6 @@ from openhcs.core.public_api import declared_public_names
 from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 
-
 RuntimeMeasurementFeatureParts = tuple[str, ...]
 RuntimeMeasurementFeaturePartAliases = Mapping[
     RuntimeMeasurementFeatureParts,
@@ -26,9 +25,9 @@ RuntimeMeasurementAlternativeFeaturePartAliases = Mapping[
 ]
 
 _EMPTY_FEATURE_ALIASES: RuntimeMeasurementFeaturePartAliases = MappingProxyType({})
-_EMPTY_ALTERNATIVE_FEATURE_ALIASES: (
-    RuntimeMeasurementAlternativeFeaturePartAliases
-) = MappingProxyType({})
+_EMPTY_ALTERNATIVE_FEATURE_ALIASES: RuntimeMeasurementAlternativeFeaturePartAliases = (
+    MappingProxyType({})
+)
 _EMPTY_FEATURE_FAMILIES: tuple[tuple[str, ...], ...] = ()
 
 
@@ -54,31 +53,43 @@ class RuntimeMeasurementLookupDialect:
     """Dialect used to resolve external measurement names to runtime fields."""
 
     category_prefixes: tuple[RuntimeMeasurementFeatureParts, ...] = ()
-    category_prefixes_provider: Callable[
-        [],
-        Iterable[RuntimeMeasurementFeatureParts],
-    ] | None = None
+    category_prefixes_provider: (
+        Callable[
+            [],
+            Iterable[RuntimeMeasurementFeatureParts],
+        ]
+        | None
+    ) = None
     feature_part_aliases: RuntimeMeasurementFeaturePartAliases = field(
         default_factory=lambda: _EMPTY_FEATURE_ALIASES
     )
-    feature_part_aliases_provider: Callable[
-        [],
-        RuntimeMeasurementFeaturePartAliases,
-    ] | None = None
+    feature_part_aliases_provider: (
+        Callable[
+            [],
+            RuntimeMeasurementFeaturePartAliases,
+        ]
+        | None
+    ) = None
     alternative_feature_part_aliases: (
         RuntimeMeasurementAlternativeFeaturePartAliases
     ) = field(default_factory=lambda: _EMPTY_ALTERNATIVE_FEATURE_ALIASES)
-    alternative_feature_part_aliases_provider: Callable[
-        [],
-        RuntimeMeasurementAlternativeFeaturePartAliases,
-    ] | None = None
+    alternative_feature_part_aliases_provider: (
+        Callable[
+            [],
+            RuntimeMeasurementAlternativeFeaturePartAliases,
+        ]
+        | None
+    ) = None
     source_qualified_feature_families: tuple[RuntimeMeasurementFeatureParts, ...] = (
         _EMPTY_FEATURE_FAMILIES
     )
-    source_qualified_feature_families_provider: Callable[
-        [],
-        Iterable[RuntimeMeasurementFeatureParts],
-    ] | None = None
+    source_qualified_feature_families_provider: (
+        Callable[
+            [],
+            Iterable[RuntimeMeasurementFeatureParts],
+        ]
+        | None
+    ) = None
     object_domain_policy: RuntimeMeasurementObjectDomainPolicy = field(
         default_factory=RuntimeMeasurementObjectDomainPolicy
     )
@@ -123,17 +134,15 @@ class RuntimeMeasurementLookupDialect:
             "source_qualified_feature_families",
             self._normalized_feature_families(self.source_qualified_feature_families),
         )
-        if (
-            self.category_prefixes_provider is not None
-            and not callable(self.category_prefixes_provider)
+        if self.category_prefixes_provider is not None and not callable(
+            self.category_prefixes_provider
         ):
             raise TypeError(
                 "RuntimeMeasurementLookupDialect.category_prefixes_provider "
                 "must be callable."
             )
-        if (
-            self.feature_part_aliases_provider is not None
-            and not callable(self.feature_part_aliases_provider)
+        if self.feature_part_aliases_provider is not None and not callable(
+            self.feature_part_aliases_provider
         ):
             raise TypeError(
                 "RuntimeMeasurementLookupDialect.feature_part_aliases_provider "
@@ -147,15 +156,16 @@ class RuntimeMeasurementLookupDialect:
                 "RuntimeMeasurementLookupDialect."
                 "source_qualified_feature_families_provider must be callable."
             )
-        if (
-            self.alternative_feature_part_aliases_provider is not None
-            and not callable(self.alternative_feature_part_aliases_provider)
+        if self.alternative_feature_part_aliases_provider is not None and not callable(
+            self.alternative_feature_part_aliases_provider
         ):
             raise TypeError(
                 "RuntimeMeasurementLookupDialect."
                 "alternative_feature_part_aliases_provider must be callable."
             )
-        if not isinstance(self.object_domain_policy, RuntimeMeasurementObjectDomainPolicy):
+        if not isinstance(
+            self.object_domain_policy, RuntimeMeasurementObjectDomainPolicy
+        ):
             raise TypeError(
                 "RuntimeMeasurementLookupDialect.object_domain_policy must be "
                 "RuntimeMeasurementObjectDomainPolicy, got "
@@ -199,10 +209,7 @@ class RuntimeMeasurementLookupDialect:
             dict.fromkeys(
                 (
                     *self.category_prefixes,
-                    *(
-                        tuple(part for part in prefix if part)
-                        for prefix in provided
-                    ),
+                    *(tuple(part for part in prefix if part) for prefix in provided),
                 )
             )
         )
@@ -227,7 +234,10 @@ class RuntimeMeasurementLookupDialect:
         """Return dialect-normalized feature parts for one lookup token."""
         resolved_parts = parts
         for prefix in self.resolved_category_prefixes():
-            if len(resolved_parts) > len(prefix) and resolved_parts[: len(prefix)] == prefix:
+            if (
+                len(resolved_parts) > len(prefix)
+                and resolved_parts[: len(prefix)] == prefix
+            ):
                 resolved_parts = resolved_parts[len(prefix) :]
                 break
         return self.resolved_feature_part_aliases().get(resolved_parts, resolved_parts)
@@ -303,7 +313,11 @@ class RuntimeMeasurementFeatureLookup:
     @property
     def normalized_segments(self) -> tuple[tuple[str, ...], ...]:
         return tuple(
-            tuple(part for part in normalize_runtime_identifier(segment).split("_") if part)
+            tuple(
+                part
+                for part in normalize_runtime_identifier(segment).split("_")
+                if part
+            )
             for segment in str(self.feature_name).split("_")
             if segment
         )
@@ -344,9 +358,7 @@ class RuntimeMeasurementFeatureLookup:
     def source_names(self) -> tuple[str, ...]:
         names: list[str] = []
         for feature_family in self.source_qualified_feature_families:
-            source_name = "_".join(
-                self.dialect_feature_parts[len(feature_family) :]
-            )
+            source_name = "_".join(self.dialect_feature_parts[len(feature_family) :])
             if source_name and source_name not in names:
                 names.append(source_name)
         return tuple(names)
@@ -428,11 +440,11 @@ class RuntimeMeasurementFeatureLookup:
 
 
 DEFAULT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT = RuntimeMeasurementLookupDialect()
-_CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT: ContextVar[RuntimeMeasurementLookupDialect] = (
-    ContextVar(
-        "current_runtime_measurement_lookup_dialect",
-        default=DEFAULT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT,
-    )
+_CURRENT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT: ContextVar[
+    RuntimeMeasurementLookupDialect
+] = ContextVar(
+    "current_runtime_measurement_lookup_dialect",
+    default=DEFAULT_RUNTIME_MEASUREMENT_LOOKUP_DIALECT,
 )
 
 

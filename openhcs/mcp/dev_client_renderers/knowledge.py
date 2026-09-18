@@ -36,6 +36,7 @@ from openhcs.mcp.dev_client_renderers.viewer import (
     ViewerValidationRenderer,
 )
 
+
 class KnowledgeCatalogRenderer(McpDevOutputRenderer):
     """Compact renderer for knowledge-base document catalogs."""
 
@@ -127,6 +128,7 @@ class KnowledgeCatalogRenderer(McpDevOutputRenderer):
             return ()
         return tuple(tags)
 
+
 class KnowledgeSearchRenderer(McpDevOutputRenderer):
     """Compact renderer for knowledge search hits."""
 
@@ -173,6 +175,7 @@ class KnowledgeSearchRenderer(McpDevOutputRenderer):
             if snippet and snippet != "<none>":
                 lines.append(f"  {snippet}")
         return lines
+
 
 class KnowledgeDocumentRenderer(McpDevOutputRenderer):
     """Compact renderer for one knowledge-base document or section."""
@@ -239,6 +242,7 @@ class KnowledgeDocumentRenderer(McpDevOutputRenderer):
             lines.append(f"- ... {omitted_count} more sections")
         return lines
 
+
 class ArchitectureCatalogRenderer(McpDevOutputRenderer):
     """Compact renderer for architecture topic catalogs."""
 
@@ -275,18 +279,14 @@ class ArchitectureCatalogRenderer(McpDevOutputRenderer):
                 for topic in topics
                 if needle
                 in McpDevPayloadProjection.text(topic.get("topic_id")).casefold()
-                or needle
-                in McpDevPayloadProjection.text(topic.get("title")).casefold()
+                or needle in McpDevPayloadProjection.text(topic.get("title")).casefold()
                 or needle
                 in McpDevPayloadProjection.text(topic.get("summary")).casefold()
             )
         bounded_limit = max(limit, 0)
         visible_topics = topics[:bounded_limit]
         lines = [
-            (
-                "Architecture topics: "
-                f"matched={len(topics)} shown={len(visible_topics)}"
-            )
+            "Architecture topics: " f"matched={len(topics)} shown={len(visible_topics)}"
         ]
         if contains:
             lines.append(f"Filter: contains={contains}")
@@ -311,6 +311,7 @@ class ArchitectureCatalogRenderer(McpDevOutputRenderer):
                 f"summary={McpDevPayloadProjection.quoted_text(topic.get('summary'))}"
             )
         return lines
+
 
 class ArchitectureTopicRenderer(McpDevOutputRenderer):
     """Compact renderer for one source-backed architecture topic."""
@@ -382,6 +383,7 @@ class ArchitectureTopicRenderer(McpDevOutputRenderer):
             return ()
         return tuple(McpDevPayloadProjection.text(item) for item in value)
 
+
 class InternalSymbolRenderer(McpDevOutputRenderer):
     """Compact renderer for one projected internal architecture symbol."""
 
@@ -416,6 +418,7 @@ class InternalSymbolRenderer(McpDevOutputRenderer):
         if doc_summary != "<none>":
             lines.append(f"Doc: {doc_summary}")
         return "\n".join(lines)
+
 
 class FunctionSearchRenderer(McpDevOutputRenderer):
     """Compact renderer for processing-function search results."""
@@ -456,6 +459,7 @@ class FunctionSearchRenderer(McpDevOutputRenderer):
             if summary and summary != "<none>":
                 lines.append(f"  {summary}")
         return lines
+
 
 class CustomFunctionRegistrationRenderer(McpDevOutputRenderer):
     """Compact renderer for custom-function registration results."""
@@ -506,6 +510,7 @@ class CustomFunctionRegistrationRenderer(McpDevOutputRenderer):
                 lines.append(f"- function {function_id}")
                 lines.append(f"- draft-pipeline-step {function_id} --name <step_name>")
         return "\n".join(lines)
+
 
 class FunctionDetailRenderer(McpDevOutputRenderer):
     """Compact renderer for one processing-function detail payload."""
@@ -625,6 +630,7 @@ class FunctionDetailRenderer(McpDevOutputRenderer):
             for artifact in artifacts
         ]
 
+
 class AuthoringContextRenderer(McpDevOutputRenderer):
     """Compact renderer for authoring guidance."""
 
@@ -653,5 +659,7 @@ class AuthoringContextRenderer(McpDevOutputRenderer):
         ObjectStateScopeRenderer._append_messages(lines, payload)
         if isinstance(content, str):
             lines.append("Content:")
-            lines.append(CodeDocumentRenderer._source_text(content, max_source_chars=max_chars))
+            lines.append(
+                CodeDocumentRenderer._source_text(content, max_source_chars=max_chars)
+            )
         return "\n".join(lines)

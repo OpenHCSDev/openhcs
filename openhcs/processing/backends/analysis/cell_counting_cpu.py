@@ -89,15 +89,12 @@ class CellCountMeasurementRow:
         )
 
 
-
 @numpy_func
 @artifact_outputs(
     ArtifactSpec(
         "cell_counts",
         MeasurementsArtifactType,
-        materialization=MaterializationSpec(
-            CsvOptions(filename_suffix="_details.csv")
-        ),
+        materialization=MaterializationSpec(CsvOptions(filename_suffix="_details.csv")),
         relations=(ArtifactMeasurementSubjectRelation(),),
     ),
     ArtifactSpec(
@@ -111,28 +108,30 @@ def count_cells_single_channel(
     # Detection method and parameters
     detection_method: DetectionMethod = DetectionMethod.BLOB_LOG,  # UI will show radio buttons
     # Blob detection parameters
-    min_sigma: float = 1.0,                                       # Minimum blob size (pixels)
-    max_sigma: float = 10.0,                                      # Maximum blob size (pixels)
-    num_sigma: int = 10,                                          # Number of sigma values to test
-    threshold: float = 0.1,                                       # Detection threshold (0.0-1.0)
-    overlap: float = 0.5,                                         # Maximum overlap between blobs (0.0-1.0)
+    min_sigma: float = 1.0,  # Minimum blob size (pixels)
+    max_sigma: float = 10.0,  # Maximum blob size (pixels)
+    num_sigma: int = 10,  # Number of sigma values to test
+    threshold: float = 0.1,  # Detection threshold (0.0-1.0)
+    overlap: float = 0.5,  # Maximum overlap between blobs (0.0-1.0)
     # Watershed parameters
-    watershed_footprint_size: int = 3,                            # Local maxima footprint size
-    watershed_min_distance: Optional[int] = None,                 # Minimum distance between peaks (None = auto-calculate)
+    watershed_footprint_size: int = 3,  # Local maxima footprint size
+    watershed_min_distance: Optional[
+        int
+    ] = None,  # Minimum distance between peaks (None = auto-calculate)
     watershed_threshold_method: ThresholdMethod = ThresholdMethod.OTSU,  # UI will show threshold methods
     watershed_max_eccentricity: float = DEFAULT_WATERSHED_MAX_ECCENTRICITY,  # Max eccentricity to apply watershed (0=circle, 1=line)
     # Preprocessing parameters
     enable_preprocessing: bool = True,
-    gaussian_sigma: float = 1.0,                                  # Gaussian blur sigma
-    median_disk_size: int = 1,                                    # Median filter disk size
+    gaussian_sigma: float = 1.0,  # Gaussian blur sigma
+    median_disk_size: int = 1,  # Median filter disk size
     # Filtering parameters
-    min_cell_area: int = 10,                                      # Minimum cell area (pixels)
-    max_cell_area: int = 1000,                                    # Maximum cell area (pixels)
-    remove_border_cells: bool = True,                             # Remove cells touching image border
+    min_cell_area: int = 10,  # Minimum cell area (pixels)
+    max_cell_area: int = 1000,  # Maximum cell area (pixels)
+    remove_border_cells: bool = True,  # Remove cells touching image border
 ) -> tuple[np.ndarray, DataclassMeasurementColumnarRows, np.ndarray]:
     """
     Count cells in single-channel image stack using various detection methods.
-    
+
     Args:
         image_stack: 3D array (Z, Y, X) where each Z slice is processed independently
         detection_method: Method for cell detection (see DetectionMethod enum)
@@ -158,7 +157,7 @@ def count_cells_single_channel(
     """
     if image_stack.ndim != 3:
         raise ValueError(f"Expected 3D image stack, got {image_stack.ndim}D")
-    
+
     results = []
     segmentation_masks = []
 
@@ -178,10 +177,12 @@ def count_cells_single_channel(
         "median_disk_size": median_disk_size,
         "min_cell_area": min_cell_area,
         "max_cell_area": max_cell_area,
-        "remove_border_cells": remove_border_cells
+        "remove_border_cells": remove_border_cells,
     }
 
-    logging.info(f"Processing {image_stack.shape[0]} slices with {detection_method.value} method")
+    logging.info(
+        f"Processing {image_stack.shape[0]} slices with {detection_method.value} method"
+    )
 
     # Create output stack (will be preprocessed if enabled, otherwise original)
     output_stack = np.zeros_like(image_stack, dtype=np.float64)
@@ -225,57 +226,59 @@ def count_cells_single_channel(
 
 
 @numpy_func
-@artifact_outputs((
-    "multi_channel_counts",
-    MaterializationSpec(
-        JsonOptions(filename_suffix=".json", wrap_list=True),
-        CsvOptions(filename_suffix="_details.csv"),
-        primary=0,
-    ),
-))
+@artifact_outputs(
+    (
+        "multi_channel_counts",
+        MaterializationSpec(
+            JsonOptions(filename_suffix=".json", wrap_list=True),
+            CsvOptions(filename_suffix="_details.csv"),
+            primary=0,
+        ),
+    )
+)
 def count_cells_multi_channel(
     image_stack: np.ndarray,
-    chan_1: int,                         # Index of first channel (positional arg)
-    chan_2: int,                         # Index of second channel (positional arg)
+    chan_1: int,  # Index of first channel (positional arg)
+    chan_2: int,  # Index of second channel (positional arg)
     # Detection parameters for channel 1 (all single-channel params available)
-    chan_1_method: DetectionMethod = DetectionMethod.BLOB_LOG,        # UI will show radio buttons
-    chan_1_min_sigma: float = 1.0,                                    # Minimum blob size (pixels)
-    chan_1_max_sigma: float = 10.0,                                   # Maximum blob size (pixels)
-    chan_1_num_sigma: int = 10,                                       # Number of sigma values to test
-    chan_1_threshold: float = 0.1,                                    # Detection threshold (0.0-1.0)
-    chan_1_overlap: float = 0.5,                                      # Maximum overlap between blobs (0.0-1.0)
-    chan_1_watershed_footprint_size: int = 3,                         # Local maxima footprint size
-    chan_1_watershed_min_distance: int = 5,                           # Minimum distance between peaks
+    chan_1_method: DetectionMethod = DetectionMethod.BLOB_LOG,  # UI will show radio buttons
+    chan_1_min_sigma: float = 1.0,  # Minimum blob size (pixels)
+    chan_1_max_sigma: float = 10.0,  # Maximum blob size (pixels)
+    chan_1_num_sigma: int = 10,  # Number of sigma values to test
+    chan_1_threshold: float = 0.1,  # Detection threshold (0.0-1.0)
+    chan_1_overlap: float = 0.5,  # Maximum overlap between blobs (0.0-1.0)
+    chan_1_watershed_footprint_size: int = 3,  # Local maxima footprint size
+    chan_1_watershed_min_distance: int = 5,  # Minimum distance between peaks
     chan_1_watershed_threshold_method: ThresholdMethod = ThresholdMethod.OTSU,  # Thresholding method
-    chan_1_enable_preprocessing: bool = True,                         # Apply preprocessing
-    chan_1_gaussian_sigma: float = 1.0,                               # Gaussian blur sigma
-    chan_1_median_disk_size: int = 1,                                 # Median filter disk size
-    chan_1_min_area: int = 10,                                        # Minimum cell area (pixels)
-    chan_1_max_area: int = 1000,                                      # Maximum cell area (pixels)
-    chan_1_remove_border_cells: bool = True,                          # Remove cells touching border
+    chan_1_enable_preprocessing: bool = True,  # Apply preprocessing
+    chan_1_gaussian_sigma: float = 1.0,  # Gaussian blur sigma
+    chan_1_median_disk_size: int = 1,  # Median filter disk size
+    chan_1_min_area: int = 10,  # Minimum cell area (pixels)
+    chan_1_max_area: int = 1000,  # Maximum cell area (pixels)
+    chan_1_remove_border_cells: bool = True,  # Remove cells touching border
     # Detection parameters for channel 2 (all single-channel params available)
-    chan_2_method: DetectionMethod = DetectionMethod.BLOB_LOG,        # UI will show radio buttons
-    chan_2_min_sigma: float = 1.0,                                    # Minimum blob size (pixels)
-    chan_2_max_sigma: float = 10.0,                                   # Maximum blob size (pixels)
-    chan_2_num_sigma: int = 10,                                       # Number of sigma values to test
-    chan_2_threshold: float = 0.1,                                    # Detection threshold (0.0-1.0)
-    chan_2_overlap: float = 0.5,                                      # Maximum overlap between blobs (0.0-1.0)
-    chan_2_watershed_footprint_size: int = 3,                         # Local maxima footprint size
-    chan_2_watershed_min_distance: int = 5,                           # Minimum distance between peaks
+    chan_2_method: DetectionMethod = DetectionMethod.BLOB_LOG,  # UI will show radio buttons
+    chan_2_min_sigma: float = 1.0,  # Minimum blob size (pixels)
+    chan_2_max_sigma: float = 10.0,  # Maximum blob size (pixels)
+    chan_2_num_sigma: int = 10,  # Number of sigma values to test
+    chan_2_threshold: float = 0.1,  # Detection threshold (0.0-1.0)
+    chan_2_overlap: float = 0.5,  # Maximum overlap between blobs (0.0-1.0)
+    chan_2_watershed_footprint_size: int = 3,  # Local maxima footprint size
+    chan_2_watershed_min_distance: int = 5,  # Minimum distance between peaks
     chan_2_watershed_threshold_method: ThresholdMethod = ThresholdMethod.OTSU,  # Thresholding method
-    chan_2_enable_preprocessing: bool = True,                         # Apply preprocessing
-    chan_2_gaussian_sigma: float = 1.0,                               # Gaussian blur sigma
-    chan_2_median_disk_size: int = 1,                                 # Median filter disk size
-    chan_2_min_area: int = 10,                                        # Minimum cell area (pixels)
-    chan_2_max_area: int = 1000,                                      # Maximum cell area (pixels)
-    chan_2_remove_border_cells: bool = True,                          # Remove cells touching border
+    chan_2_enable_preprocessing: bool = True,  # Apply preprocessing
+    chan_2_gaussian_sigma: float = 1.0,  # Gaussian blur sigma
+    chan_2_median_disk_size: int = 1,  # Median filter disk size
+    chan_2_min_area: int = 10,  # Minimum cell area (pixels)
+    chan_2_max_area: int = 1000,  # Maximum cell area (pixels)
+    chan_2_remove_border_cells: bool = True,  # Remove cells touching border
     # Colocalization parameters
     colocalization_method: ColocalizationMethod = ColocalizationMethod.DISTANCE_BASED,  # UI will show coloc methods
-    max_distance: float = 5.0,                                        # Maximum distance for colocalization (pixels)
-    min_overlap_area: float = 0.3,                                    # Minimum overlap fraction for area-based method
-    intensity_threshold: float = 0.5,                                 # Threshold for intensity-based methods
+    max_distance: float = 5.0,  # Maximum distance for colocalization (pixels)
+    min_overlap_area: float = 0.3,  # Minimum overlap fraction for area-based method
+    intensity_threshold: float = 0.5,  # Threshold for intensity-based methods
     # Output parameters
-    return_colocalization_map: bool = False
+    return_colocalization_map: bool = False,
 ) -> Tuple[np.ndarray, List[MultiChannelResult]]:
     """
     Count cells in multi-channel image stack with colocalization analysis.
@@ -337,14 +340,16 @@ def count_cells_multi_channel(
         raise ValueError(f"Expected 3D image stack, got {image_stack.ndim}D")
 
     if chan_1 >= image_stack.shape[0] or chan_2 >= image_stack.shape[0]:
-        raise ValueError(f"Channel indices {chan_1}, {chan_2} exceed stack size {image_stack.shape[0]}")
+        raise ValueError(
+            f"Channel indices {chan_1}, {chan_2} exceed stack size {image_stack.shape[0]}"
+        )
 
     if chan_1 == chan_2:
         raise ValueError("Channel 1 and Channel 2 must be different")
 
     # Extract channel images
-    chan_1_img = image_stack[chan_1:chan_1+1]  # Keep 3D shape for consistency
-    chan_2_img = image_stack[chan_2:chan_2+1]
+    chan_1_img = image_stack[chan_1 : chan_1 + 1]  # Keep 3D shape for consistency
+    chan_2_img = image_stack[chan_2 : chan_2 + 1]
 
     # Count cells in each channel separately using the single-channel function
     # Channel 1 parameters (all explicit)
@@ -426,8 +431,12 @@ def count_cells_multi_channel(
 
     # Analyze colocalization
     coloc_result = _analyze_colocalization(
-        chan_1_result, chan_2_result, colocalization_method.value,
-        max_distance, min_overlap_area, intensity_threshold
+        chan_1_result,
+        chan_2_result,
+        colocalization_method.value,
+        max_distance,
+        min_overlap_area,
+        intensity_threshold,
     )
 
     multi_results.append(coloc_result)
@@ -443,7 +452,9 @@ def count_cells_multi_channel(
     return output_stack, multi_results
 
 
-def _preprocess_image(image: np.ndarray, gaussian_sigma: float, median_disk_size: int) -> np.ndarray:
+def _preprocess_image(
+    image: np.ndarray, gaussian_sigma: float, median_disk_size: int
+) -> np.ndarray:
     """Apply preprocessing to enhance cell detection."""
     # Gaussian blur to reduce noise
     if gaussian_sigma > 0:
@@ -459,10 +470,7 @@ def _preprocess_image(image: np.ndarray, gaussian_sigma: float, median_disk_size
 
 
 def _detect_cells_single_method(
-    image: np.ndarray,
-    slice_idx: int,
-    method: str,
-    params: Dict[str, Any]
+    image: np.ndarray, slice_idx: int, method: str, params: Dict[str, Any]
 ) -> CellCountResult:
     """Detect cells using specified method."""
     try:
@@ -472,7 +480,9 @@ def _detect_cells_single_method(
     return detector(image, slice_idx, params)
 
 
-def _detect_cells_blob_log(image: np.ndarray, slice_idx: int, params: Dict[str, Any]) -> CellCountResult:
+def _detect_cells_blob_log(
+    image: np.ndarray, slice_idx: int, params: Dict[str, Any]
+) -> CellCountResult:
     """Detect cells using Laplacian of Gaussian blob detection."""
     blobs = blob_log(
         image,
@@ -480,7 +490,7 @@ def _detect_cells_blob_log(image: np.ndarray, slice_idx: int, params: Dict[str, 
         max_sigma=params["max_sigma"],
         num_sigma=params["num_sigma"],
         threshold=params["threshold"],
-        overlap=params["overlap"]
+        overlap=params["overlap"],
     )
 
     # Extract positions, areas, and intensities
@@ -507,30 +517,36 @@ def _detect_cells_blob_log(image: np.ndarray, slice_idx: int, params: Dict[str, 
         confidences.append(confidence)
 
     # Filter by area constraints
-    filtered_data = AreaFilter().apply(
-        AreaFilterRequest.from_measurements(
-            positions,
-            areas,
-            intensities,
-            confidences,
-            min_area=params["min_cell_area"],
-            max_area=params["max_cell_area"],
+    filtered_data = (
+        AreaFilter()
+        .apply(
+            AreaFilterRequest.from_measurements(
+                positions,
+                areas,
+                intensities,
+                confidences,
+                min_area=params["min_cell_area"],
+                max_area=params["max_cell_area"],
+            )
         )
-    ).as_measurement_args()
+        .as_measurement_args()
+    )
 
     return CellCountResult.from_measurements(
         slice_idx, "blob_log", *filtered_data, params
     )
 
 
-def _detect_cells_blob_dog(image: np.ndarray, slice_idx: int, params: Dict[str, Any]) -> CellCountResult:
+def _detect_cells_blob_dog(
+    image: np.ndarray, slice_idx: int, params: Dict[str, Any]
+) -> CellCountResult:
     """Detect cells using Difference of Gaussian blob detection."""
     blobs = blob_dog(
         image,
         min_sigma=params["min_sigma"],
         max_sigma=params["max_sigma"],
         threshold=params["threshold"],
-        overlap=params["overlap"]
+        overlap=params["overlap"],
     )
 
     # Process similar to blob_log
@@ -553,23 +569,29 @@ def _detect_cells_blob_dog(image: np.ndarray, slice_idx: int, params: Dict[str, 
         confidence = float(sigma / params["max_sigma"])
         confidences.append(confidence)
 
-    filtered_data = AreaFilter().apply(
-        AreaFilterRequest.from_measurements(
-            positions,
-            areas,
-            intensities,
-            confidences,
-            min_area=params["min_cell_area"],
-            max_area=params["max_cell_area"],
+    filtered_data = (
+        AreaFilter()
+        .apply(
+            AreaFilterRequest.from_measurements(
+                positions,
+                areas,
+                intensities,
+                confidences,
+                min_area=params["min_cell_area"],
+                max_area=params["max_cell_area"],
+            )
         )
-    ).as_measurement_args()
+        .as_measurement_args()
+    )
 
     return CellCountResult.from_measurements(
         slice_idx, "blob_dog", *filtered_data, params
     )
 
 
-def _detect_cells_blob_doh(image: np.ndarray, slice_idx: int, params: Dict[str, Any]) -> CellCountResult:
+def _detect_cells_blob_doh(
+    image: np.ndarray, slice_idx: int, params: Dict[str, Any]
+) -> CellCountResult:
     """Detect cells using Determinant of Hessian blob detection."""
     blobs = blob_doh(
         image,
@@ -577,7 +599,7 @@ def _detect_cells_blob_doh(image: np.ndarray, slice_idx: int, params: Dict[str, 
         max_sigma=params["max_sigma"],
         num_sigma=params["num_sigma"],
         threshold=params["threshold"],
-        overlap=params["overlap"]
+        overlap=params["overlap"],
     )
 
     # Process similar to other blob methods
@@ -600,23 +622,29 @@ def _detect_cells_blob_doh(image: np.ndarray, slice_idx: int, params: Dict[str, 
         confidence = float(sigma / params["max_sigma"])
         confidences.append(confidence)
 
-    filtered_data = AreaFilter().apply(
-        AreaFilterRequest.from_measurements(
-            positions,
-            areas,
-            intensities,
-            confidences,
-            min_area=params["min_cell_area"],
-            max_area=params["max_cell_area"],
+    filtered_data = (
+        AreaFilter()
+        .apply(
+            AreaFilterRequest.from_measurements(
+                positions,
+                areas,
+                intensities,
+                confidences,
+                min_area=params["min_cell_area"],
+                max_area=params["max_cell_area"],
+            )
         )
-    ).as_measurement_args()
+        .as_measurement_args()
+    )
 
     return CellCountResult.from_measurements(
         slice_idx, "blob_doh", *filtered_data, params
     )
 
 
-def _detect_cells_watershed(image: np.ndarray, slice_idx: int, params: Dict[str, Any]) -> CellCountResult:
+def _detect_cells_watershed(
+    image: np.ndarray, slice_idx: int, params: Dict[str, Any]
+) -> CellCountResult:
     """Detect cells using shape-aware watershed segmentation.
 
     Only applies watershed splitting to round objects (low eccentricity).
@@ -645,7 +673,9 @@ def _detect_cells_watershed(image: np.ndarray, slice_idx: int, params: Dict[str,
     # Fast path for dense cultures: skip eccentricity check if >500 objects
     # For dense cultures, shape-aware processing is too slow and most cells are round anyway
     if num_objects > 500:
-        logger.info(f"Dense culture detected ({num_objects} objects), using fast watershed without shape analysis")
+        logger.info(
+            f"Dense culture detected ({num_objects} objects), using fast watershed without shape analysis"
+        )
         round_mask = binary
         elongated_labels = np.zeros_like(initial_labels)
         next_elongated_label = 1
@@ -684,7 +714,9 @@ def _detect_cells_watershed(image: np.ndarray, slice_idx: int, params: Dict[str,
                 min_distance = max(min_distance, 5)
             else:
                 # Use round objects only for distance calculation
-                round_regions = [r for r in initial_regions if r.eccentricity < max_eccentricity]
+                round_regions = [
+                    r for r in initial_regions if r.eccentricity < max_eccentricity
+                ]
                 if len(round_regions) > 0:
                     areas = [r.area for r in round_regions]
                     median_area = np.median(areas)
@@ -698,7 +730,9 @@ def _detect_cells_watershed(image: np.ndarray, slice_idx: int, params: Dict[str,
         local_maxima = peak_local_max(
             distance,
             min_distance=min_distance,
-            footprint=np.ones((params["watershed_footprint_size"], params["watershed_footprint_size"]))
+            footprint=np.ones(
+                (params["watershed_footprint_size"], params["watershed_footprint_size"])
+            ),
         )
 
         # Create markers for watershed
@@ -713,12 +747,14 @@ def _detect_cells_watershed(image: np.ndarray, slice_idx: int, params: Dict[str,
 
         # Offset watershed labels to not conflict with elongated labels
         if next_elongated_label > 1:
-            watershed_labels = np.where(watershed_labels > 0,
-                                       watershed_labels + next_elongated_label - 1,
-                                       0)
+            watershed_labels = np.where(
+                watershed_labels > 0, watershed_labels + next_elongated_label - 1, 0
+            )
 
         # Combine watershed results with elongated objects
-        combined_labels = np.where(elongated_labels > 0, elongated_labels, watershed_labels)
+        combined_labels = np.where(
+            elongated_labels > 0, elongated_labels, watershed_labels
+        )
     else:
         # No round objects, just use elongated labels
         combined_labels = elongated_labels
@@ -729,7 +765,7 @@ def _detect_cells_watershed(image: np.ndarray, slice_idx: int, params: Dict[str,
     props = regionprops_table(
         combined_labels,
         intensity_image=image,
-        properties=('label', 'centroid', 'area', 'mean_intensity')
+        properties=("label", "centroid", "area", "mean_intensity"),
     )
 
     positions = []
@@ -738,21 +774,23 @@ def _detect_cells_watershed(image: np.ndarray, slice_idx: int, params: Dict[str,
     confidences = []
     valid_labels = []
 
-    for i in range(len(props['label'])):
-        area = props['area'][i]
+    for i in range(len(props["label"])):
+        area = props["area"][i]
         # Filter by area
         if params["min_cell_area"] <= area <= params["max_cell_area"]:
-            x = float(props['centroid-1'][i])  # centroid-1 is x (column)
-            y = float(props['centroid-0'][i])  # centroid-0 is y (row)
+            x = float(props["centroid-1"][i])  # centroid-1 is x (column)
+            y = float(props["centroid-0"][i])  # centroid-0 is y (row)
             positions.append((x, y))
             areas.append(float(area))
-            intensities.append(float(props['mean_intensity'][i]))
+            intensities.append(float(props["mean_intensity"][i]))
             confidence = min(1.0, area / params["max_cell_area"])
             confidences.append(confidence)
-            valid_labels.append(props['label'][i])
+            valid_labels.append(props["label"][i])
 
     # Create filtered labeled mask
-    filtered_labeled_mask = np.where(np.isin(combined_labels, valid_labels), combined_labels, 0)
+    filtered_labeled_mask = np.where(
+        np.isin(combined_labels, valid_labels), combined_labels, 0
+    )
 
     return CellCountResult.from_measurements(
         slice_idx,
@@ -766,7 +804,9 @@ def _detect_cells_watershed(image: np.ndarray, slice_idx: int, params: Dict[str,
     )
 
 
-def _detect_cells_threshold(image: np.ndarray, slice_idx: int, params: Dict[str, Any]) -> CellCountResult:
+def _detect_cells_threshold(
+    image: np.ndarray, slice_idx: int, params: Dict[str, Any]
+) -> CellCountResult:
     """Detect cells using simple thresholding and connected components."""
     # Apply threshold
     binary = image > params["threshold"] * image.max()
@@ -783,7 +823,7 @@ def _detect_cells_threshold(image: np.ndarray, slice_idx: int, params: Dict[str,
     props = regionprops_table(
         labels,
         intensity_image=image,
-        properties=('label', 'centroid', 'area', 'mean_intensity')
+        properties=("label", "centroid", "area", "mean_intensity"),
     )
 
     positions = []
@@ -792,22 +832,22 @@ def _detect_cells_threshold(image: np.ndarray, slice_idx: int, params: Dict[str,
     confidences = []
     valid_labels = []  # Track which labels pass the size filter
 
-    for i in range(len(props['label'])):
-        area = props['area'][i]
+    for i in range(len(props["label"])):
+        area = props["area"][i]
         # Filter by area
         if params["min_cell_area"] <= area <= params["max_cell_area"]:
-            x = float(props['centroid-1'][i])  # centroid-1 is x (column)
-            y = float(props['centroid-0'][i])  # centroid-0 is y (row)
+            x = float(props["centroid-1"][i])  # centroid-1 is x (column)
+            y = float(props["centroid-0"][i])  # centroid-0 is y (row)
             positions.append((x, y))
             areas.append(float(area))
-            intensities.append(float(props['mean_intensity'][i]))
+            intensities.append(float(props["mean_intensity"][i]))
 
             # Use intensity as confidence measure
-            confidence = float(props['mean_intensity'][i] / image.max())
+            confidence = float(props["mean_intensity"][i] / image.max())
             confidences.append(confidence)
 
             # Track this label as valid
-            valid_labels.append(props['label'][i])
+            valid_labels.append(props["label"][i])
 
     # Create filtered labeled mask with only cells that passed size filter
     # Keep the connected component labels instead of converting to binary
@@ -846,7 +886,7 @@ def _analyze_colocalization(
     method: str,
     max_distance: float,
     min_overlap_area: float,
-    intensity_threshold: float
+    intensity_threshold: float,
 ) -> MultiChannelResult:
     """Analyze colocalization between two channels."""
     try:
@@ -871,32 +911,28 @@ ColocalizationAnalyzer = Callable[
 COLOCALIZATION_ANALYZERS: dict[str, ColocalizationAnalyzer] = (
     colocalization_analyzer_catalog(
         distance_based=(
-            lambda chan_1_result, chan_2_result, max_distance, _min_overlap_area, _intensity_threshold:
-            ColocalizationAnalysis().distance_based(
+            lambda chan_1_result, chan_2_result, max_distance, _min_overlap_area, _intensity_threshold: ColocalizationAnalysis().distance_based(
                 chan_1_result,
                 chan_2_result,
                 max_distance,
             )
         ),
         overlap_area=(
-            lambda chan_1_result, chan_2_result, _max_distance, min_overlap_area, _intensity_threshold:
-            ColocalizationAnalysis().overlap_based(
+            lambda chan_1_result, chan_2_result, _max_distance, min_overlap_area, _intensity_threshold: ColocalizationAnalysis().overlap_based(
                 chan_1_result,
                 chan_2_result,
                 min_overlap_area,
             )
         ),
         intensity_correlation=(
-            lambda chan_1_result, chan_2_result, _max_distance, _min_overlap_area, intensity_threshold:
-            ColocalizationAnalysis().intensity_based(
+            lambda chan_1_result, chan_2_result, _max_distance, _min_overlap_area, intensity_threshold: ColocalizationAnalysis().intensity_based(
                 chan_1_result,
                 chan_2_result,
                 intensity_threshold,
             )
         ),
         manders_coefficients=(
-            lambda chan_1_result, chan_2_result, _max_distance, _min_overlap_area, intensity_threshold:
-            ColocalizationAnalysis().manders(
+            lambda chan_1_result, chan_2_result, _max_distance, _min_overlap_area, intensity_threshold: ColocalizationAnalysis().manders(
                 chan_1_result,
                 chan_2_result,
                 intensity_threshold,
@@ -911,7 +947,7 @@ def _create_segmentation_visualization(
     positions: List[Tuple[float, float]],
     max_sigma: float,
     cell_areas: List[float] = None,
-    binary_mask: np.ndarray = None
+    binary_mask: np.ndarray = None,
 ) -> np.ndarray:
     """Create labeled segmentation mask from binary mask or positions.
 
@@ -941,11 +977,13 @@ def _create_segmentation_visualization(
             radius = max_sigma * 2
 
         # Create circular markers with actual cell size
-        rr, cc = np.ogrid[:image.shape[0], :image.shape[1]]
-        mask = (rr - y)**2 + (cc - x)**2 <= radius**2
+        rr, cc = np.ogrid[: image.shape[0], : image.shape[1]]
+        mask = (rr - y) ** 2 + (cc - x) ** 2 <= radius**2
 
         # Ensure indices are within bounds
-        valid_mask = (rr >= 0) & (rr < image.shape[0]) & (cc >= 0) & (cc < image.shape[1])
+        valid_mask = (
+            (rr >= 0) & (rr < image.shape[0]) & (cc >= 0) & (cc < image.shape[1])
+        )
         mask = mask & valid_mask
 
         visualization[mask] = label_id
@@ -954,9 +992,7 @@ def _create_segmentation_visualization(
 
 
 def _create_colocalization_map(
-    chan_1_img: np.ndarray,
-    chan_2_img: np.ndarray,
-    coloc_result: MultiChannelResult
+    chan_1_img: np.ndarray, chan_2_img: np.ndarray, coloc_result: MultiChannelResult
 ) -> np.ndarray:
     """Create colocalization visualization map."""
     # Create RGB-like visualization
@@ -965,10 +1001,15 @@ def _create_colocalization_map(
     # Mark colocalized positions
     for x, y in coloc_result.overlap_positions:
         # Create markers for colocalized cells
-        rr, cc = np.ogrid[:chan_1_img.shape[0], :chan_1_img.shape[1]]
-        mask = (rr - y)**2 + (cc - x)**2 <= 25  # 5-pixel radius
+        rr, cc = np.ogrid[: chan_1_img.shape[0], : chan_1_img.shape[1]]
+        mask = (rr - y) ** 2 + (cc - x) ** 2 <= 25  # 5-pixel radius
 
-        valid_mask = (rr >= 0) & (rr < chan_1_img.shape[0]) & (cc >= 0) & (cc < chan_1_img.shape[1])
+        valid_mask = (
+            (rr >= 0)
+            & (rr < chan_1_img.shape[0])
+            & (cc >= 0)
+            & (cc < chan_1_img.shape[1])
+        )
         mask = mask & valid_mask
 
         coloc_map[mask] = chan_1_img.max()  # Bright colocalization markers

@@ -22,7 +22,8 @@ from multiprocessing import Pool, cpu_count
 
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend for multiprocessing
+
+matplotlib.use("Agg")  # Use non-interactive backend for multiprocessing
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import Polygon
@@ -35,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from openhcs.core.roi import load_rois_from_zip, PolygonShape
 from openhcs.formats.experimental_analysis import read_plate_layout, load_plate_groups
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -44,8 +45,8 @@ def load_metadata(plate_dir: Path) -> dict:
     metadata_path = plate_dir / "openhcs_metadata.json"
     if not metadata_path.exists():
         raise FileNotFoundError(f"Metadata file not found: {metadata_path}")
-    
-    with open(metadata_path, 'r') as f:
+
+    with open(metadata_path, "r") as f:
         return json.load(f)
 
 
@@ -62,13 +63,13 @@ def convert_standard_to_opera_phenix_well_id(well_id: str) -> str:
     import re
 
     # Match standard format: Letter + digits
-    match = re.match(r'([A-Z])(\d+)', well_id.upper())
+    match = re.match(r"([A-Z])(\d+)", well_id.upper())
     if match:
         row_letter = match.group(1)
         col_num = int(match.group(2))
 
         # Convert letter to row number (A=1, B=2, etc.)
-        row_num = ord(row_letter) - ord('A') + 1
+        row_num = ord(row_letter) - ord("A") + 1
 
         # Format as Opera Phenix well ID
         return f"R{row_num:02d}C{col_num:02d}"
@@ -78,9 +79,7 @@ def convert_standard_to_opera_phenix_well_id(well_id: str) -> str:
 
 
 def get_used_wells_from_config(
-    config_path: Path,
-    results_csv_path: Path,
-    plate_name: str
+    config_path: Path, results_csv_path: Path, plate_name: str
 ) -> set:
     """
     Get set of wells that are used in analysis (not excluded) from config.xlsx.
@@ -96,23 +95,30 @@ def get_used_wells_from_config(
     import re
 
     # Load experimental layout and plate groups
-    scope, layout, conditions, ctrl_positions, excluded_positions, per_well_datapoints = read_plate_layout(config_path)
+    (
+        scope,
+        layout,
+        conditions,
+        ctrl_positions,
+        excluded_positions,
+        per_well_datapoints,
+    ) = read_plate_layout(config_path)
     plate_groups = load_plate_groups(config_path)
 
     # Parse results CSV to get plate ID for this plate name
     plate_id = None
     replicate = None
 
-    with open(results_csv_path, 'r') as f:
+    with open(results_csv_path, "r") as f:
         current_plate_name = None
         for line in f:
-            parts = line.strip().split(',')
+            parts = line.strip().split(",")
             if not parts:
                 continue
 
-            if parts[0] == 'Plate Name':
+            if parts[0] == "Plate Name":
                 current_plate_name = parts[1]
-            elif parts[0] == 'Plate ID' and current_plate_name == plate_name:
+            elif parts[0] == "Plate ID" and current_plate_name == plate_name:
                 plate_id = parts[1]
                 break
 
@@ -167,49 +173,49 @@ def get_used_wells_from_config(
 def find_image_results_pairs(plate_dir: Path, metadata: dict) -> List[Tuple[str, str]]:
     """
     Find pairs of image and results subdirectories.
-    
+
     Returns:
         List of (image_subdir, results_subdir) tuples
     """
-    subdirs = metadata.get('subdirectories', {})
+    subdirs = metadata.get("subdirectories", {})
     pairs = []
-    
+
     for subdir_name in subdirs.keys():
         # Check if there's a corresponding results directory
         results_subdir = f"{subdir_name}_results"
         results_path = plate_dir / results_subdir
-        
+
         if results_path.exists() and results_path.is_dir():
             pairs.append((subdir_name, results_subdir))
-    
+
     return pairs
 
 
 def match_roi_to_image(roi_zip_path: Path, image_dir: Path) -> Optional[Path]:
     """
     Find the image file that corresponds to a .roi.zip file.
-    
+
     The image filename (minus extension) should be a substring of the roi.zip filename.
-    
+
     Args:
         roi_zip_path: Path to .roi.zip file
         image_dir: Directory containing image files
-    
+
     Returns:
         Path to matching image file, or None if not found
     """
     # Get roi filename without .roi.zip extension
-    roi_stem = roi_zip_path.name.replace('.roi.zip', '')
-    
+    roi_stem = roi_zip_path.name.replace(".roi.zip", "")
+
     # Find all image files in the directory
-    image_extensions = ['.tif', '.tiff', '.png', '.jpg']
+    image_extensions = [".tif", ".tiff", ".png", ".jpg"]
     for img_path in image_dir.iterdir():
         if img_path.suffix.lower() in image_extensions:
             # Check if image stem is substring of roi stem
             img_stem = img_path.stem
             if img_stem in roi_stem:
                 return img_path
-    
+
     return None
 
 
@@ -222,14 +228,14 @@ def extract_well_from_filename(filename: str) -> Optional[str]:
     import re
 
     # Try OperaPhenix format first (r##c##)
-    match = re.search(r'[Rr](\d+)[Cc](\d+)', filename)
+    match = re.search(r"[Rr](\d+)[Cc](\d+)", filename)
     if match:
         row_num = int(match.group(1))
         col_num = int(match.group(2))
         return f"R{row_num:02d}C{col_num:02d}"
 
     # Try standard format (A01, B02, etc.)
-    match = re.search(r'([A-Z])(\d+)', filename.upper())
+    match = re.search(r"([A-Z])(\d+)", filename.upper())
     if match:
         return match.group(0)
 
@@ -246,14 +252,16 @@ def extract_channel_number_from_filename(filename: str) -> Optional[int]:
     """
     import re
 
-    match = re.search(r'-ch(\d+)', filename.lower())
+    match = re.search(r"-ch(\d+)", filename.lower())
     if match:
         return int(match.group(1))
 
     return None
 
 
-def get_channel_name_from_metadata(metadata: dict, subdir_name: str, channel_number: int) -> Optional[str]:
+def get_channel_name_from_metadata(
+    metadata: dict, subdir_name: str, channel_number: int
+) -> Optional[str]:
     """
     Get channel name from metadata.
 
@@ -265,9 +273,9 @@ def get_channel_name_from_metadata(metadata: dict, subdir_name: str, channel_num
     Returns:
         Channel name (e.g., "Alexa 647", "DAPI") or None
     """
-    subdirs = metadata.get('subdirectories', {})
+    subdirs = metadata.get("subdirectories", {})
     subdir_data = subdirs.get(subdir_name, {})
-    channels = subdir_data.get('channels', {})
+    channels = subdir_data.get("channels", {})
 
     # Channels are stored as strings in metadata
     channel_key = str(channel_number)
@@ -292,7 +300,15 @@ def process_single_roi_file(args):
     Returns:
         Tuple of (success: bool, output_filename: str or None, error_msg: str or None)
     """
-    roi_zip_path, image_dir, figures_dir, well_annotations, used_wells, metadata, image_subdir = args
+    (
+        roi_zip_path,
+        image_dir,
+        figures_dir,
+        well_annotations,
+        used_wells,
+        metadata,
+        image_subdir,
+    ) = args
 
     try:
         # Extract well ID from filename
@@ -323,14 +339,16 @@ def process_single_roi_file(args):
         channel_number = extract_channel_number_from_filename(roi_zip_path.name)
         channel_name = None
         if channel_number:
-            channel_name = get_channel_name_from_metadata(metadata, image_subdir, channel_number)
+            channel_name = get_channel_name_from_metadata(
+                metadata, image_subdir, channel_number
+            )
             # If no channel name in metadata, fall back to "Ch#"
             if not channel_name:
                 channel_name = f"Ch{channel_number}"
 
         # Extract just the annotation part (after the colon) for filename
-        if ': ' in well_annotation:
-            annotation_part = well_annotation.split(': ', 1)[1]
+        if ": " in well_annotation:
+            annotation_part = well_annotation.split(": ", 1)[1]
         else:
             annotation_part = well_annotation
 
@@ -342,7 +360,9 @@ def process_single_roi_file(args):
         output_path = figures_dir / output_filename
 
         # Create figure overlay
-        create_figure_overlay(image_path, rois, well_annotation, channel_name, output_path)
+        create_figure_overlay(
+            image_path, rois, well_annotation, channel_name, output_path
+        )
 
         return (True, output_filename, None)
 
@@ -355,7 +375,7 @@ def create_figure_overlay(
     rois: List,
     well_annotation: str,
     channel_name: Optional[str],
-    output_path: Path
+    output_path: Path,
 ) -> None:
     """
     Create a figure with image and ROI overlays.
@@ -378,8 +398,8 @@ def create_figure_overlay(
     fig, ax = plt.subplots(figsize=(12, 10), dpi=150)
 
     # Display image
-    ax.imshow(image, cmap='gray')
-    ax.axis('off')
+    ax.imshow(image, cmap="gray")
+    ax.axis("off")
 
     # Overlay ROIs - just colored outlines, no individual labels
     for idx, roi in enumerate(rois):
@@ -390,11 +410,7 @@ def create_figure_overlay(
                 coords_xy = coords[:, [1, 0]]  # Convert to (x, y) for matplotlib
 
                 polygon = Polygon(
-                    coords_xy,
-                    fill=False,
-                    edgecolor='yellow',
-                    linewidth=1.0,
-                    alpha=0.7
+                    coords_xy, fill=False, edgecolor="yellow", linewidth=1.0, alpha=0.7
                 )
                 ax.add_patch(polygon)
 
@@ -404,11 +420,11 @@ def create_figure_overlay(
         title_parts.append(channel_name)
     title = " | ".join(title_parts)
 
-    ax.set_title(title, fontsize=17, weight='bold', pad=10)
+    ax.set_title(title, fontsize=17, weight="bold", pad=10)
 
     # Save figure
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, bbox_inches='tight', dpi=150)
+    plt.savefig(output_path, bbox_inches="tight", dpi=150)
     plt.close(fig)
 
     logger.info(f"   Saved figure: {output_path.name}")
@@ -433,15 +449,17 @@ def process_plate(plate_dir: Path, config_path: Path, results_csv_path: Path) ->
         return
 
     # Get wells used in analysis from config.xlsx
-    used_wells = get_used_wells_from_config(config_path, results_csv_path, plate_dir.name)
+    used_wells = get_used_wells_from_config(
+        config_path, results_csv_path, plate_dir.name
+    )
     logger.info(f"   Found {len(used_wells)} wells used in analysis (from config.xlsx)")
 
     # Get well annotations for labels
     well_annotations = {}
-    subdirs = metadata.get('subdirectories', {})
+    subdirs = metadata.get("subdirectories", {})
     if subdirs:
         first_subdir = next(iter(subdirs.values()))
-        well_annotations = first_subdir.get('wells', {})
+        well_annotations = first_subdir.get("wells", {})
 
     # Find image/results pairs
     pairs = find_image_results_pairs(plate_dir, metadata)
@@ -461,7 +479,7 @@ def process_plate(plate_dir: Path, config_path: Path, results_csv_path: Path) ->
         figures_dir = plate_dir / f"{image_subdir}_figures"
 
         # Find all .roi.zip files
-        roi_files = list(results_dir.glob('*.roi.zip'))
+        roi_files = list(results_dir.glob("*.roi.zip"))
         logger.info(f"      Found {len(roi_files)} ROI files")
 
         if not roi_files:
@@ -469,7 +487,15 @@ def process_plate(plate_dir: Path, config_path: Path, results_csv_path: Path) ->
 
         # Prepare arguments for multiprocessing
         args_list = [
-            (roi_zip_path, image_dir, figures_dir, well_annotations, used_wells, metadata, image_subdir)
+            (
+                roi_zip_path,
+                image_dir,
+                figures_dir,
+                well_annotations,
+                used_wells,
+                metadata,
+                image_subdir,
+            )
             for roi_zip_path in roi_files
         ]
 
@@ -497,28 +523,27 @@ def main():
         description="Generate figure overlays for analyzed wells with ROIs"
     )
     parser.add_argument(
-        '--plate-dir',
+        "--plate-dir",
         type=Path,
-        action='append',
-        help='Path to plate directory containing openhcs_metadata.json (can be specified multiple times)'
+        action="append",
+        help="Path to plate directory containing openhcs_metadata.json (can be specified multiple times)",
     )
     parser.add_argument(
-        '--config',
-        type=Path,
-        required=True,
-        help='Path to config.xlsx file'
+        "--config", type=Path, required=True, help="Path to config.xlsx file"
     )
     parser.add_argument(
-        '--results',
+        "--results",
         type=Path,
         required=True,
-        help='Path to MetaXpress results CSV file'
+        help="Path to MetaXpress results CSV file",
     )
 
     args = parser.parse_args()
 
     if not args.plate_dir:
-        logger.error("No plate directories specified. Use --plate-dir to specify at least one directory.")
+        logger.error(
+            "No plate directories specified. Use --plate-dir to specify at least one directory."
+        )
         sys.exit(1)
 
     if not args.config.exists():
@@ -544,6 +569,5 @@ def main():
     logger.info("\n✅ All plates processed!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

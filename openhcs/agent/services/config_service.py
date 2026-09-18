@@ -63,7 +63,6 @@ from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 
-
 AgentConfig: TypeAlias = GlobalPipelineConfig | PipelineConfig
 
 
@@ -213,9 +212,7 @@ def agent_config_declaration_from_request(
         if declaration.matches(config_type):
             return declaration
     accepted = ", ".join(
-        alias
-        for declaration in declarations
-        for alias in declaration.accepted_names()
+        alias for declaration in declarations for alias in declaration.accepted_names()
     )
     raise ValueError(f"config_type must select a declared schema: {accepted}")
 
@@ -358,8 +355,7 @@ class ConfigPatchUnknownFieldError(AgentFacingErrorMixin, ValueError):
     ) -> None:
         requested_field = requested_path[-1]
         path_by_field = {
-            candidate_path[-1]: candidate_path
-            for candidate_path in candidate_paths
+            candidate_path[-1]: candidate_path for candidate_path in candidate_paths
         }
         closest_fields = get_close_matches(
             requested_field,
@@ -630,7 +626,10 @@ def _function_step_config_field_schema() -> tuple[ConfigFieldSchema, ...]:
     signature = inspect.signature(AbstractStep.__init__)
     direct_fields: list[ConfigFieldSchema] = []
     nested_fields: list[ConfigFieldSchema] = []
-    for field_name, declared_type in AbstractStep.config_classes_by_field_name().items():
+    for (
+        field_name,
+        declared_type,
+    ) in AbstractStep.config_classes_by_field_name().items():
         parameter = signature.parameters[field_name]
         source_type = _lazy_base_type(declared_type) or declared_type
         direct_fields.append(
@@ -791,9 +790,7 @@ def _schema_for_field(
         declaring_type=_type_repr(_field_declaring_type(declaring_cls, field.name)),
         default_origin=default_origin,
         nested_schema_path=(
-            (field.name if field_path is None else field_path)
-            if nested_types
-            else None
+            (field.name if field_path is None else field_path) if nested_types else None
         ),
     )
 
@@ -953,9 +950,7 @@ def _parameter_default_repr(parameter: inspect.Parameter) -> str | None:
 
 def _field_declaring_type(cls: type, field_name: str) -> type:
     source_cls = _lazy_base_type(cls) or cls
-    inherited_metadata = frozenset(
-        ("_inherited_default", "_inherited_default_factory")
-    )
+    inherited_metadata = frozenset(("_inherited_default", "_inherited_default_factory"))
     fallback = source_cls
     for candidate in source_cls.__mro__:
         if field_name not in candidate.__dict__.get("__annotations__", {}):
@@ -998,9 +993,7 @@ def _config_registry_schemas(
     registered_type_names = {
         type_name
         for config_key in StreamingConfig.supported_config_keys()
-        for registered_config_type in (
-            StreamingConfig.config_type_for_key(config_key),
-        )
+        for registered_config_type in (StreamingConfig.config_type_for_key(config_key),)
         for type_name in (
             _type_repr(registered_config_type),
             _type_repr(

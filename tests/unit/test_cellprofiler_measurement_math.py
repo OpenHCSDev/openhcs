@@ -74,10 +74,7 @@ def test_calculate_math_aligned_vector_rows_preserve_slice_index() -> None:
         row[MeasurementRowAxisField.OBJECT_LABEL.value] for row in row_mappings
     ] == [1, 2, 1, 2]
     np.testing.assert_allclose(
-        [
-            row[MeasurementRowValueField.RESULT_VALUE.value]
-            for row in row_mappings
-        ],
+        [row[MeasurementRowValueField.RESULT_VALUE.value] for row in row_mappings],
         [5.0, 5.0, 10.0, 5.0],
     )
 

@@ -224,9 +224,7 @@ class NumpyMedianFilterBackendStrategy(MedianFilterBackendStrategy):
             return list(slices_2d)
         mode = kwargs.get("mode", ScipyBoundaryMode.CONSTANT)
         if not isinstance(mode, ScipyBoundaryMode):
-            raise TypeError(
-                "MedianFilter runtime mode must be a ScipyBoundaryMode."
-            )
+            raise TypeError("MedianFilter runtime mode must be a ScipyBoundaryMode.")
         outputs = [
             self.filter(np.asarray(slice_2d), window_size=normalized_window, mode=mode)
             for slice_2d in slices_2d

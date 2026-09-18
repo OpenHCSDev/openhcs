@@ -85,10 +85,7 @@ def configure_gui_logging(
         logging.getLogger("PIL").setLevel(logging.WARNING)
 
     for handler in previous_handlers:
-        if (
-            handler not in handlers
-            and isinstance(handler, GuiLoggingHandler)
-        ):
+        if handler not in handlers and isinstance(handler, GuiLoggingHandler):
             handler.close()
 
     return log_file

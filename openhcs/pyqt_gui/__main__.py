@@ -13,13 +13,14 @@ import logging
 
 # CRITICAL: Check for SILENT mode BEFORE any other imports
 # This must be at MODULE LEVEL to run before launch.py is imported
-if '--log-level' in sys.argv:
-    log_level_idx = sys.argv.index('--log-level')
-    if log_level_idx + 1 < len(sys.argv) and sys.argv[log_level_idx + 1] == 'SILENT':
+if "--log-level" in sys.argv:
+    log_level_idx = sys.argv.index("--log-level")
+    if log_level_idx + 1 < len(sys.argv) and sys.argv[log_level_idx + 1] == "SILENT":
         # Disable ALL logging before any imports
         logging.disable(logging.CRITICAL)
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.CRITICAL + 1)
+
 
 def main():
     """Main entry point with graceful error handling for missing GUI dependencies."""

@@ -10,7 +10,6 @@ from typing import Generic, TypeAlias, TypeVar
 import numpy as np
 from numba import njit
 
-
 ObjectIntensity3DScanResult: TypeAlias = tuple[np.ndarray, ...]
 ObjectIntensity3DQuantileResult: TypeAlias = tuple[
     np.ndarray,
@@ -340,7 +339,7 @@ def _object_intensity_quantiles_grouped_numba(
         count = int(counts[index])
         if count <= 0:
             continue
-        group = values[start:start + count]
+        group = values[start : start + count]
         (
             lower[index],
             median[index],
@@ -459,7 +458,9 @@ def _quantile_from_dense_sorted_group(
     qfraction = qindex - low
     last = count - 1
     if low < last:
-        return sorted_values[low] * (1.0 - qfraction) + sorted_values[low + 1] * qfraction
+        return (
+            sorted_values[low] * (1.0 - qfraction) + sorted_values[low + 1] * qfraction
+        )
     return sorted_values[last]
 
 
@@ -542,7 +543,9 @@ def _quantile_from_sorted_group(
     qfraction = qindex - low
     last = start + count - 1
     if low < last:
-        return sorted_values[low] * (1.0 - qfraction) + sorted_values[low + 1] * qfraction
+        return (
+            sorted_values[low] * (1.0 - qfraction) + sorted_values[low + 1] * qfraction
+        )
     return sorted_values[last]
 
 
@@ -729,9 +732,7 @@ def _object_intensity_std_2d_numba(
         if counts[index] > 0.0:
             stds[index] = np.sqrt(variance_sums[index] / counts[index])
         if edge_counts[index] > 0.0:
-            edge_stds[index] = np.sqrt(
-                edge_variance_sums[index] / edge_counts[index]
-            )
+            edge_stds[index] = np.sqrt(edge_variance_sums[index] / edge_counts[index])
     return stds, edge_stds
 
 
@@ -790,7 +791,7 @@ def _object_intensity_quantiles_3d_batch_numba(
             count = int(counts[image_index, object_index])
             if count <= 0:
                 continue
-            group = values[start:start + count]
+            group = values[start : start + count]
             (
                 lower[image_index, object_index],
                 median[image_index, object_index],
@@ -894,21 +895,29 @@ def _object_intensity_scan_3d_batch_numba(
         for object_index in range(object_count):
             if counts[image_index, object_index] > 0.0:
                 means[image_index, object_index] = (
-                    sums[image_index, object_index]
-                    / counts[image_index, object_index]
+                    sums[image_index, object_index] / counts[image_index, object_index]
                 )
-                center_x = sum_x[image_index, object_index] / counts[
-                    image_index,
-                    object_index,
-                ]
-                center_y = sum_y[image_index, object_index] / counts[
-                    image_index,
-                    object_index,
-                ]
-                center_z = sum_z[image_index, object_index] / counts[
-                    image_index,
-                    object_index,
-                ]
+                center_x = (
+                    sum_x[image_index, object_index]
+                    / counts[
+                        image_index,
+                        object_index,
+                    ]
+                )
+                center_y = (
+                    sum_y[image_index, object_index]
+                    / counts[
+                        image_index,
+                        object_index,
+                    ]
+                )
+                center_z = (
+                    sum_z[image_index, object_index]
+                    / counts[
+                        image_index,
+                        object_index,
+                    ]
+                )
                 if sums[image_index, object_index] != 0.0:
                     center_mass_x[image_index, object_index] = (
                         weighted_x[image_index, object_index]
@@ -1088,7 +1097,9 @@ def _object_intensity_std_3d_batch_numba(
                         edge_variance_sums[
                             image_index,
                             object_index,
-                        ] += edge_diff * edge_diff
+                        ] += (
+                            edge_diff * edge_diff
+                        )
                         edge_counts[image_index, object_index] += 1.0
 
     stds = np.zeros((image_count, object_count), dtype=np.float64)
@@ -1143,7 +1154,9 @@ def _object_intensity_std_3d_sparse_batch_numba(
                 edge_variance_sums[
                     image_index,
                     object_index,
-                ] += edge_diff * edge_diff
+                ] += (
+                    edge_diff * edge_diff
+                )
                 edge_counts[image_index, object_index] += 1.0
 
     stds = np.zeros((image_count, object_count), dtype=np.float64)
@@ -1265,21 +1278,29 @@ def _object_intensity_scan_3d_sparse_batch_numba(
         for object_index in range(object_count):
             if counts[image_index, object_index] > 0.0:
                 means[image_index, object_index] = (
-                    sums[image_index, object_index]
-                    / counts[image_index, object_index]
+                    sums[image_index, object_index] / counts[image_index, object_index]
                 )
-                center_x = sum_x[image_index, object_index] / counts[
-                    image_index,
-                    object_index,
-                ]
-                center_y = sum_y[image_index, object_index] / counts[
-                    image_index,
-                    object_index,
-                ]
-                center_z = sum_z[image_index, object_index] / counts[
-                    image_index,
-                    object_index,
-                ]
+                center_x = (
+                    sum_x[image_index, object_index]
+                    / counts[
+                        image_index,
+                        object_index,
+                    ]
+                )
+                center_y = (
+                    sum_y[image_index, object_index]
+                    / counts[
+                        image_index,
+                        object_index,
+                    ]
+                )
+                center_z = (
+                    sum_z[image_index, object_index]
+                    / counts[
+                        image_index,
+                        object_index,
+                    ]
+                )
                 if sums[image_index, object_index] != 0.0:
                     center_mass_x[image_index, object_index] = (
                         weighted_x[image_index, object_index]
@@ -1395,7 +1416,7 @@ def _object_intensity_quantiles_3d_sparse_batch_numba(
             count = int(counts[image_index, object_index])
             if count <= 0:
                 continue
-            group = values[start:start + count]
+            group = values[start : start + count]
             (
                 lower[image_index, object_index],
                 median[image_index, object_index],

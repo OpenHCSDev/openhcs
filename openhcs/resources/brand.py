@@ -7,7 +7,6 @@ from enum import Enum
 from importlib.resources import files
 from pathlib import Path
 
-
 BRAND_PRIMARY_COLOR = "#00AAFF"
 BRAND_PRODUCT_NAME = "OpenHCS"
 

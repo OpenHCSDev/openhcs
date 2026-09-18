@@ -48,6 +48,7 @@ from openhcs.mcp.dev_client_rendering import (
 from openhcs.mcp.dev_client_renderers.object_state import ObjectStateScopeRenderer
 from openhcs.mcp.dev_client_renderers.viewer import ViewerValidationRenderer
 
+
 class UiBridgeStatusRenderer(McpDevOutputRenderer):
     """Compact renderer for live UI bridge status."""
 
@@ -126,7 +127,9 @@ class UiWindowCatalogRenderer(McpDevOutputRenderer):
             lines.append(
                 "Attention: "
                 f"{len(attention_windows)} visible top-level window(s): "
-                + ", ".join(cls._attention_label(window) for window in attention_windows)
+                + ", ".join(
+                    cls._attention_label(window) for window in attention_windows
+                )
             )
         for window in windows:
             lines.append(
@@ -183,16 +186,13 @@ class UiSmokeRenderer:
     def render(cls, response: JsonObject) -> str:
         errors = McpDevPayloadProjection.sequence_of_mappings(response.get("errors"))
         if errors:
-            return "\n".join(("UI smoke: unavailable", *McpDiagnosticRenderer.error_lines(errors)))
+            return "\n".join(
+                ("UI smoke: unavailable", *McpDiagnosticRenderer.error_lines(errors))
+            )
 
         results = McpDevPayloadProjection.sequence_of_mappings(response.get("results"))
         mcp_errors = sum(1 for result in results if result.get("mcp_error") is True)
-        lines = [
-            (
-                "UI smoke: "
-                f"results={len(results)} mcp_errors={mcp_errors}"
-            )
-        ]
+        lines = ["UI smoke: " f"results={len(results)} mcp_errors={mcp_errors}"]
         lines.append(cls._health_line(response))
         lines.extend(
             UiBridgeStatusRenderer.render(
@@ -347,7 +347,9 @@ class UiStateSurfacePayloadRenderer(ABC, metaclass=AutoRegisterMeta):
     __registry_key__ = "surface_identity"
     __skip_if_no_key__ = True
 
-    surface_identity: ClassVar[type[UiStateSurfaceIdentityDeclarationBase] | None] = None
+    surface_identity: ClassVar[type[UiStateSurfaceIdentityDeclarationBase] | None] = (
+        None
+    )
 
     @classmethod
     def for_payload(
@@ -419,7 +421,9 @@ class UiLiveOverviewStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
             return json.dumps(response, indent=2, sort_keys=True)
         errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
         if errors:
-            return "\n".join(("UI live overview: unavailable", *cls._error_lines(errors)))
+            return "\n".join(
+                ("UI live overview: unavailable", *cls._error_lines(errors))
+            )
         state_payload = McpDevPayloadProjection.nested_mapping(payload, "payload")
         sections = McpDevPayloadProjection.sequence_of_mappings(
             state_payload.get("sections")
@@ -455,9 +459,13 @@ class UiLiveOverviewStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
                 f"severity={McpDevPayloadProjection.text(item.get('severity'))}",
             ]
             if item.get("status") is not None:
-                parts.append(f"status={McpDevPayloadProjection.text(item.get('status'))}")
+                parts.append(
+                    f"status={McpDevPayloadProjection.text(item.get('status'))}"
+                )
             if item.get("detail") is not None:
-                parts.append(f"detail={McpDevPayloadProjection.text(item.get('detail'))}")
+                parts.append(
+                    f"detail={McpDevPayloadProjection.text(item.get('detail'))}"
+                )
             if item.get("source_surface_id") is not None:
                 parts.append(
                     "surface="
@@ -580,7 +588,9 @@ class PipelineEditorStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
             return json.dumps(response, indent=2, sort_keys=True)
         errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
         if errors:
-            return "\n".join(("Pipeline editor: unavailable", *cls._error_lines(errors)))
+            return "\n".join(
+                ("Pipeline editor: unavailable", *cls._error_lines(errors))
+            )
         state_payload = McpDevPayloadProjection.nested_mapping(payload, "payload")
         summary = McpDevPayloadProjection.nested_mapping(state_payload, "summary")
         steps = McpDevPayloadProjection.sequence_of_mappings(state_payload.get("steps"))
@@ -687,7 +697,9 @@ class PipelineDebugSessionStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
         if errors:
             return "\n".join(("Pipeline debug: unavailable", *cls._error_lines(errors)))
         state_payload = McpDevPayloadProjection.nested_mapping(payload, "payload")
-        actions = McpDevPayloadProjection.sequence_of_mappings(state_payload.get("actions"))
+        actions = McpDevPayloadProjection.sequence_of_mappings(
+            state_payload.get("actions")
+        )
         cursor = McpDevPayloadProjection.nested_mapping(state_payload, "cursor")
         lines = [
             (
@@ -770,8 +782,7 @@ class PipelineDebugSessionStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
             suffix = ""
             if disabled:
                 suffix = (
-                    " disabled="
-                    f"{McpDevPayloadProjection.text(disabled.get('code'))}"
+                    " disabled=" f"{McpDevPayloadProjection.text(disabled.get('code'))}"
                 )
             lines.append(
                 "- "
@@ -995,17 +1006,14 @@ class WidgetTreeOutlineRenderer(McpDevOutputRenderer):
 
         path_id = ""
         action_summary: Mapping[str, JsonValue] | None = None
-        if (
-            node.get("actionable") is True
-            or (node.get("visible") is not False and cls._has_action_kinds(node))
+        if node.get("actionable") is True or (
+            node.get("visible") is not False and cls._has_action_kinds(node)
         ):
             path_id = cls._value_text(node.get("path_id"))
             if path_id:
                 action_summary = action_summaries.get(path_id)
         semantic_parts = (
-            cls._semantic_parts(action_summary)
-            if action_summary is not None
-            else []
+            cls._semantic_parts(action_summary) if action_summary is not None else []
         )
 
         if not semantic_parts:
@@ -1064,9 +1072,7 @@ class WidgetTreeOutlineRenderer(McpDevOutputRenderer):
         markers = action_summary.get("semantic_markers")
         if isinstance(markers, list):
             marker_text = "".join(
-                cls._value_text(marker)
-                for marker in markers
-                if cls._value_text(marker)
+                cls._value_text(marker) for marker in markers if cls._value_text(marker)
             )
             if marker_text:
                 return marker_text
@@ -1092,6 +1098,7 @@ class WidgetTreeOutlineRenderer(McpDevOutputRenderer):
             return compact
         keep = WidgetTreeOutlineRenderer.MAX_LABEL_CHARS - 3
         return f"{compact[:keep]}..."
+
 
 class CodeDocumentCatalogRenderer(McpDevOutputRenderer):
     """Compact renderer for UI code-document catalogs."""
@@ -1371,9 +1378,7 @@ class UiActionCatalogRenderer(McpDevOutputRenderer):
         actions = McpDevPayloadProjection.sequence_of_mappings(payload.get("actions"))
         if widget_id is not None:
             actions = tuple(
-                action
-                for action in actions
-                if action.get("widget_id") == widget_id
+                action for action in actions if action.get("widget_id") == widget_id
             )
         header = f"UI actions: count={len(actions)}"
         if widget_id is not None:

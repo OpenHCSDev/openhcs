@@ -81,7 +81,6 @@ class _NavigationResponseGateway(ViewerWindowGatewayABC):
         return self.response
 
 
-
 class _DimensionLabelOverlay:
     def __init__(self) -> None:
         self.refresh_count = 0

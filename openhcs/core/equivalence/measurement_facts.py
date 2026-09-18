@@ -61,6 +61,8 @@ RuntimeMeasurementPaddingGroup = tuple[
     str | None,
     tuple[str, ...],
 ]
+
+
 @dataclass(frozen=True, slots=True)
 class RuntimeRowProjectionRecord(Generic[RuntimeRowProjectionValueT]):
     """One exact projected cell before same-row alias consolidation."""
@@ -149,7 +151,9 @@ class RuntimeDirectionalPairMeasurementDerivationContract:
     @property
     def regression_slope_feature(self) -> str | None:
         """Return the dialect-declared pair regression-slope family."""
-        return self.policy.measurement_dialect.resolved_pair_regression_slope_feature_name()
+        return (
+            self.policy.measurement_dialect.resolved_pair_regression_slope_feature_name()
+        )
 
     @property
     def correlation_feature(self) -> str | None:

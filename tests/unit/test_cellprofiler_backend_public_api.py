@@ -38,8 +38,7 @@ def test_backend_package_returns_underlying_declared_callable() -> None:
 
 
 def test_raw_callable_reference_construction_does_not_discover_other_modules() -> None:
-    script = textwrap.dedent(
-        """
+    script = textwrap.dedent("""
         import importlib
         import sys
 
@@ -69,8 +68,7 @@ def test_raw_callable_reference_construction_does_not_discover_other_modules() -
         assert reference.import_identity.module_name == implementation_name
         assert reference.import_identity.function_name == "crop"
         assert reference.composite_key == "openhcs:cellprofiler_crop"
-        """
-    )
+        """)
 
     completed = subprocess.run(
         [sys.executable, "-c", script],

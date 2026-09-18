@@ -19,7 +19,6 @@ from openhcs.core.source_matching import (
     SourceImageSetIdentityPolicy,
 )
 
-
 SourcePlaneIdentitySequence = tuple[frozenset[SourceImageSetIdentity], ...]
 SourcePayloadPlaneIdentitySequenceCacheValue = SourcePlaneIdentitySequence
 _source_payload_plane_identity_sequence_cache_size = 65536
@@ -174,9 +173,8 @@ class SourcePlaneIdentitySequenceAlignment:
 
     def target_indexes_for_exact_axis(self) -> tuple[int, ...] | None:
         """Return a bijection only when both sequences describe one exact axis."""
-        if (
-            not self.image_identities
-            or len(self.image_identities) != len(self.target_identities)
+        if not self.image_identities or len(self.image_identities) != len(
+            self.target_identities
         ):
             return None
         return self.target_indexes_for_image_planes()

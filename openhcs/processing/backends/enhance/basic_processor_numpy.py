@@ -13,7 +13,8 @@ Doctrinal Clauses:
 - Clause 3 — Declarative Primacy: All functions are pure and stateless
 - Clause 65 — Fail Loudly: No silent fallbacks or inferred capabilities
 """
-from __future__ import annotations 
+
+from __future__ import annotations
 
 import logging
 from typing import Any
@@ -95,7 +96,7 @@ def basic_flatfield_correction_numpy(
     tol: float = 1e-4,
     correction_mode: FlatfieldCorrectionMode = FlatfieldCorrectionMode.DIVIDE,
     normalize_output: bool = True,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> np.ndarray:
     """
     Correct a shared illumination field with low-rank and sparse decomposition.
@@ -158,7 +159,7 @@ def basic_flatfield_correction_numpy(
     S = np.zeros_like(D)  # Sparse component (foreground/structures)
 
     # Compute initial norm for convergence check
-    norm_D = np.linalg.norm(D, 'fro')
+    norm_D = np.linalg.norm(D, "fro")
 
     # Alternating minimization loop
     for iteration in range(max_iters):
@@ -173,9 +174,11 @@ def basic_flatfield_correction_numpy(
         S = _soft_threshold(D - L, lambda_sparse)
 
         # Check convergence
-        residual = np.linalg.norm(D - L - S, 'fro') / norm_D
+        residual = np.linalg.norm(D - L - S, "fro") / norm_D
         if verbose and (iteration % 10 == 0 or iteration == max_iters - 1):
-            logger.info(f"Iteration {iteration+1}/{max_iters}, residual: {residual:.6f}")
+            logger.info(
+                f"Iteration {iteration+1}/{max_iters}, residual: {residual:.6f}"
+            )
 
         if residual < tol:
             if verbose:
@@ -222,7 +225,7 @@ def basic_flatfield_correction_batch_numpy(
     tol: float = 1e-4,
     correction_mode: FlatfieldCorrectionMode = FlatfieldCorrectionMode.DIVIDE,
     normalize_output: bool = True,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> np.ndarray:
     """
     Apply BaSiC flatfield correction to a batch of 3D image stacks.
@@ -234,7 +237,7 @@ def basic_flatfield_correction_batch_numpy(
         batch_dim: Dimension along which the batch is organized (0 or 1)
         max_iters: Maximum number of iterations for the alternating minimization
         lambda_sparse: Regularization parameter for sparse component
-        lambda_lowrank: Regularization parameter for low-rank component  
+        lambda_lowrank: Regularization parameter for low-rank component
         rank: Rank constraint for the low-rank matrix
         tol: Convergence tolerance
         correction_mode: How to apply correction ("divide" or "subtract")
@@ -272,7 +275,7 @@ def basic_flatfield_correction_batch_numpy(
                 tol=tol,
                 correction_mode=correction_mode,
                 normalize_output=normalize_output,
-                verbose=verbose
+                verbose=verbose,
             )
             result_list.append(corrected)
 
@@ -290,7 +293,7 @@ def basic_flatfield_correction_batch_numpy(
                 tol=tol,
                 correction_mode=correction_mode,
                 normalize_output=normalize_output,
-                verbose=verbose
+                verbose=verbose,
             )
             result_list.append(corrected)
 

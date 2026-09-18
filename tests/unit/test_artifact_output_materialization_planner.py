@@ -136,8 +136,7 @@ def test_explicit_output_materialization_remains_authoritative() -> None:
     )
 
     assert (
-        ArtifactOutputMaterializationPlanner.materialization_for(output, ())
-        is explicit
+        ArtifactOutputMaterializationPlanner.materialization_for(output, ()) is explicit
     )
     assert explicit.participates_in_runtime_export_observation()
 
@@ -153,9 +152,7 @@ def test_runtime_export_expectation_excludes_terminal_persistence() -> None:
     exported = ArtifactSpec.output(
         "Saved",
         ImageArtifactType,
-        materialization=MaterializationSpec(
-            ImageFileOptions(filename_suffix=".npy")
-        ),
+        materialization=MaterializationSpec(ImageFileOptions(filename_suffix=".npy")),
     )
 
     expectation = RuntimeExportExpectation.from_output_specs((terminal, exported))

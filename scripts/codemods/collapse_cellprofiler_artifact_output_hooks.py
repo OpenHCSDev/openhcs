@@ -7,7 +7,6 @@ from pathlib import Path
 
 import libcst as cst
 
-
 METHOD_RENAMES = {
     "artifact_input_names_from_setting": "artifact_names_for_binding",
     "image_output_artifact_relations": "artifact_output_relations",
@@ -34,9 +33,11 @@ class ArtifactOutputHookTransformer(cst.CSTTransformer):
             return updated_node
         self.renamed_function_depth -= 1
         parameters = tuple(
-            parameter.with_changes(name=cst.Name("binding"))
-            if parameter.name.value == "setting"
-            else parameter
+            (
+                parameter.with_changes(name=cst.Name("binding"))
+                if parameter.name.value == "setting"
+                else parameter
+            )
             for parameter in updated_node.params.params
         )
         return updated_node.with_changes(
@@ -77,10 +78,12 @@ class ArtifactOutputHookTransformer(cst.CSTTransformer):
             return updated_node
         return updated_node.with_changes(
             args=tuple(
-                argument.with_changes(keyword=cst.Name("binding"))
-                if argument.keyword is not None
-                and argument.keyword.value == "setting"
-                else argument
+                (
+                    argument.with_changes(keyword=cst.Name("binding"))
+                    if argument.keyword is not None
+                    and argument.keyword.value == "setting"
+                    else argument
+                )
                 for argument in updated_node.args
             )
         )

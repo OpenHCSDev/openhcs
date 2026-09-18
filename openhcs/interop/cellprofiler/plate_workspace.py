@@ -173,8 +173,7 @@ class CellProfilerPlateWorkspacePreparer:
             if CellProfilerPipelineFile.is_visible_cppipe(path)
         )
         return tuple(
-            file.path
-            for file in sorted(pipeline_files, key=lambda file: file.sort_key)
+            file.path for file in sorted(pipeline_files, key=lambda file: file.sort_key)
         )
 
     def default_cppipe_path(self) -> Path | None:

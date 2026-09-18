@@ -35,7 +35,6 @@ from openhcs.mcp.context import OpenHCSAgentContext
 from openhcs.mcp.dev_client_renderers.knowledge import KnowledgeDocumentRenderer
 from openhcs.serialization.json import to_jsonable
 
-
 OFFICIAL30_DOCUMENT_ID = "openhcs_official30_benchmark_recipes"
 
 

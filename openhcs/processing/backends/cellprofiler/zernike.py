@@ -1180,7 +1180,9 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
             areas=np.bincount(
                 label_values,
                 minlength=measured_label_ids.size + 1,
-            )[1:].astype(np.float64),
+            )[
+                1:
+            ].astype(np.float64),
             y_coords=y_coords,
             x_coords=x_coords,
             label_values=label_values,

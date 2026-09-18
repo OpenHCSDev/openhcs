@@ -11,7 +11,6 @@ from pathlib import Path
 
 import libcst as cst
 
-
 TYPED_BINDING_NAMES = frozenset(
     {
         "image_input_bindings",

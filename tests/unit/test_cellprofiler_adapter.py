@@ -44,8 +44,9 @@ from tests.unit.cellprofiler_runtime_test_support import (
 )
 
 
-def test_deterministic_numpy_profile_disables_available_avx512_dispatch_aliases(
-) -> None:
+def test_deterministic_numpy_profile_disables_available_avx512_dispatch_aliases() -> (
+    None
+):
     """The reference profile covers NumPy's old and new x86-v4 aliases."""
 
     assert set(DETERMINISTIC_NUMPY_DISABLED_CPU_FEATURES.split(",")) >= {
@@ -365,9 +366,7 @@ def test_cellprofiler_adapter_runs_cppipe_headless(
     assert result.provenance["csv_output_count"] == 1
     assert result.provenance["pythonhashseed"] == DETERMINISTIC_PYTHONHASHSEED
     assert (
-        result.provenance[
-            NativeCellProfilerProvenanceField.NUMPY_DISABLED_CPU_FEATURES
-        ]
+        result.provenance[NativeCellProfilerProvenanceField.NUMPY_DISABLED_CPU_FEATURES]
         == DETERMINISTIC_NUMPY_DISABLED_CPU_FEATURES
     )
     assert {

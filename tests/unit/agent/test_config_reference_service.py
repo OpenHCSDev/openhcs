@@ -17,11 +17,14 @@ def test_every_visible_agent_config_field_has_declaration_help() -> None:
     for config_name in ("global", "pipeline", "step", "ui"):
         declaration = agent_config_declaration_from_request(config_name)
 
-        assert tuple(
-            field.path
-            for field in declaration.reflected_fields()
-            if not field.ui_hidden and not (field.description or "").strip()
-        ) == ()
+        assert (
+            tuple(
+                field.path
+                for field in declaration.reflected_fields()
+                if not field.ui_hidden and not (field.description or "").strip()
+            )
+            == ()
+        )
 
 
 def test_ui_object_state_and_agent_schema_share_exact_help() -> None:

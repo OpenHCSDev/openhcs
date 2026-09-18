@@ -32,8 +32,7 @@ def test_context_owns_exact_step_artifact_projection_facts() -> None:
     assert "processing_config" not in field_names
     assert ArtifactDeclarationStepContext.empty().group_by is GroupBy.NONE
     assert (
-        ArtifactDeclarationStepContext.empty().input_source
-        is InputSource.PREVIOUS_STEP
+        ArtifactDeclarationStepContext.empty().input_source is InputSource.PREVIOUS_STEP
     )
 
 
@@ -79,9 +78,7 @@ def test_context_supplemental_step_sources_do_not_replace_previous_main_flow() -
     advanced = ArtifactDeclarationStepContext(
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
-            bindings=(
-                NamedSourceBinding(alias="DNA"),
-            ),
+            bindings=(NamedSourceBinding(alias="DNA"),),
         ),
         input_source=InputSource.PREVIOUS_STEP,
         main_flow_artifacts=ArtifactSpecCollection((upstream_image,)),

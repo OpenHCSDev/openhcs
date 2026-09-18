@@ -26,7 +26,6 @@ from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from zmqruntime.config import TransportMode
 from zmqruntime.messages import PongResponse, ServerRole
 
-
 RUNTIME_SERVER_KIND_HINT = (
     "Use openhcs_scan_runtime_servers to discover endpoints. Viewer ports should "
     "be queried with viewer tools, and UI bridge ports should be queried with UI "
@@ -205,9 +204,7 @@ class RuntimeServerService:
         timeout_ms: int | None = None,
     ) -> RuntimeServerInfo:
         timeout_ms = (
-            self._config.server_info_timeout_ms
-            if timeout_ms is None
-            else timeout_ms
+            self._config.server_info_timeout_ms if timeout_ms is None else timeout_ms
         )
         connection = ExecutionConnectionSpec(host, port, transport_mode, persistent)
         try:
@@ -265,9 +262,7 @@ class RuntimeServerService:
         timeout_ms: int | None = None,
     ) -> RuntimeServerScanResult:
         timeout_ms = (
-            self._config.server_scan_timeout_ms
-            if timeout_ms is None
-            else timeout_ms
+            self._config.server_scan_timeout_ms if timeout_ms is None else timeout_ms
         )
         scanned_ports = self._scan_ports(ports)
         responses = self._gateway.scan(
@@ -320,9 +315,7 @@ class RuntimeServerService:
         timeout_ms: int | None = None,
     ) -> RuntimeExecutionStatus:
         timeout_ms = (
-            self._config.control_timeout_ms
-            if timeout_ms is None
-            else timeout_ms
+            self._config.control_timeout_ms if timeout_ms is None else timeout_ms
         )
         connection = ExecutionConnectionSpec(host, port, transport_mode, persistent)
         try:
@@ -374,9 +367,7 @@ class RuntimeServerService:
         timeout_ms: int | None = None,
     ) -> RuntimeDebugInspectionResult:
         timeout_ms = (
-            self._config.control_timeout_ms
-            if timeout_ms is None
-            else timeout_ms
+            self._config.control_timeout_ms if timeout_ms is None else timeout_ms
         )
         connection = ExecutionConnectionSpec(host, port, transport_mode, persistent)
         try:

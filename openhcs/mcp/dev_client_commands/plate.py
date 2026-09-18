@@ -30,6 +30,7 @@ from openhcs.mcp.dev_client_core import (
     ui_connection_arguments,
 )
 
+
 class GenerateSyntheticPlateCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.generate_synthetic_plate
     default_timeout_seconds = 30.0
@@ -175,6 +176,7 @@ class GenerateSyntheticPlateCommandSpec(SingleToolCommandSpec):
         )
         return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
 
+
 class InspectPlateCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.inspect_plate_path
 
@@ -241,6 +243,7 @@ class InspectPlateCommandSpec(SingleToolCommandSpec):
             max_files_to_parse=args.max_files_to_parse,
         )
         return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+
 
 class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.query_plate_files
@@ -332,6 +335,7 @@ class QueryPlateFilesCommandSpec(SingleToolCommandSpec):
             max_preview_bytes=args.max_preview_bytes,
         )
         return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+
 
 class SamplePlateImageCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.sample_plate_image
@@ -437,6 +441,7 @@ class SamplePlateImageCommandSpec(SingleToolCommandSpec):
             max_array_elements=args.max_array_elements,
         )
         return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+
 
 class PlateFileStreamCommandOptions:
     """Shared CLI options for plate file streaming commands."""
@@ -559,6 +564,7 @@ class PlateFileStreamCommandOptions:
             help="Render the complete MCP JSON response instead of a compact summary.",
         )
 
+
 class StreamPlateFilesCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.stream_plate_files_to_viewer
     default_timeout_seconds = 60.0
@@ -596,6 +602,7 @@ class StreamPlateFilesCommandSpec(SingleToolCommandSpec):
             fresh_viewer=args.fresh_viewer,
         )
         return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+
 
 class SelectedPlateImagesCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.ui_inspect_selected_plate_images
@@ -673,6 +680,7 @@ class SelectedPlateImagesCommandSpec(SingleToolCommandSpec):
             timeout_ms=args.timeout_ms,
         )
         return McpToolArgumentAuthority.from_payload(payload)
+
 
 class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.ui_query_selected_plate_files
@@ -789,6 +797,7 @@ class SelectedPlateFilesCommandSpec(SingleToolCommandSpec):
             timeout_ms=args.timeout_ms,
         )
         return McpToolArgumentAuthority.from_payload(payload)
+
 
 class SelectedPlateSampleCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.ui_sample_selected_plate_image
@@ -913,6 +922,7 @@ class SelectedPlateSampleCommandSpec(SingleToolCommandSpec):
             timeout_ms=args.timeout_ms,
         )
         return McpToolArgumentAuthority.from_payload(payload)
+
 
 class SelectedPlateStreamCommandSpec(SingleToolCommandSpec):
     capability = agent_capabilities.ui_stream_selected_plate_files_to_viewer

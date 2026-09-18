@@ -87,9 +87,10 @@ def test_object_intensity_dataclass_is_the_only_feature_schema_owner() -> None:
 
     assert "feature_names" not in vars(ObjectIntensityFeatureValues)
     assert "feature_items" not in vars(ObjectIntensityFeatureValues)
-    assert tuple(
-        field.name for field in row_fields if field.name in feature_name_set
-    ) == feature_names
+    assert (
+        tuple(field.name for field in row_fields if field.name in feature_name_set)
+        == feature_names
+    )
     assert frozenset(row_fields_by_name) == feature_name_set | {
         MeasurementRowAxisField.SLICE_INDEX.value,
         MeasurementRowAxisField.OBJECT_LABEL.value,

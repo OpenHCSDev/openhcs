@@ -9,7 +9,11 @@ from hashlib import md5
 import re
 from types import MappingProxyType
 from typing import Any, ClassVar
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementSubject, ObjectCoreMeasurementFeature
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementSubject,
+    ObjectCoreMeasurementFeature,
+)
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.source_metadata import (
     CellProfilerSourceMetadataField,
@@ -509,9 +513,7 @@ class CellProfilerDatabaseColumnDialect:
                 )
             return None
 
-        suffix = (
-            f"_{CellProfilerObjectCoreMeasurementFeature.OBJECT_NUMBER.value}"
-        )
+        suffix = f"_{CellProfilerObjectCoreMeasurementFeature.OBJECT_NUMBER.value}"
         if not raw_object_id.endswith(suffix):
             raise ValueError(
                 "CellProfiler object id field does not match the declared core "

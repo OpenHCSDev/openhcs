@@ -94,8 +94,8 @@ def test_runtime_plane_projection_requires_matching_payload_axis() -> None:
     )
     mask = np.ones_like(data, dtype=bool)
     payload = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        ).payload_with(data, mask)
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    ).payload_with(data, mask)
 
     selected = RuntimeSliceProjection.value_for_slice(
         payload,
@@ -133,9 +133,9 @@ def test_source_binding_runtime_projection_preserves_shared_spatial_mask() -> No
     mask = np.ones((4, 5), dtype=bool)
     mask[1, 2] = False
     payload = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
-            source_spatial_domain=SourceSpatialDomain(source_shape_yx=(4, 5)),
-        ).payload_with(data, mask)
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=(4, 5)),
+    ).payload_with(data, mask)
 
     projected = RuntimeSliceProjection.value_for_slice(
         payload,
@@ -196,8 +196,8 @@ def test_image_bundle_composition_declares_source_binding_axis() -> None:
 
 def test_single_runtime_slice_payload_is_not_repacked_as_source_binding() -> None:
     payload = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        ).payload_with(np.zeros((2, 4, 5), dtype=np.uint16), None)
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    ).payload_with(np.zeros((2, 4, 5), dtype=np.uint16), None)
 
     composition = compose_aligned_image_payload("MeasureImage", (payload,))
 

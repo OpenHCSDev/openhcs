@@ -47,7 +47,18 @@ from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionObservation,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.runtime_measurements import MeasurementScope, MeasurementStatistic, ObjectCoreMeasurementFeature, ObjectCalculatedFeatureMarker, ObjectCountFeatureMarker, ObjectGroupInvariantFeatureMarker, ObjectIdentifierFeatureMarker, ObjectIntensityFeatureMarker, ObjectLocationFeatureMarker, ObjectShapeDescriptorFeatureMarker
+from openhcs.core.runtime_measurements import (
+    MeasurementScope,
+    MeasurementStatistic,
+    ObjectCoreMeasurementFeature,
+    ObjectCalculatedFeatureMarker,
+    ObjectCountFeatureMarker,
+    ObjectGroupInvariantFeatureMarker,
+    ObjectIdentifierFeatureMarker,
+    ObjectIntensityFeatureMarker,
+    ObjectLocationFeatureMarker,
+    ObjectShapeDescriptorFeatureMarker,
+)
 from openhcs.core.runtime_tabular_values import measurement_row_mapping
 from openhcs.core.runtime_stores import StoredRuntimeValue
 from openhcs.core.registry_strategies import (
@@ -898,8 +909,12 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
         table = scoped_table.table
         schema_cache: RuntimeMeasurementRowSchemaCache = {}
         key_cache: RuntimeMeasurementFeatureKeyCache = {}
-        wide_feature_index_cache: equivalence_measurement_rows.RuntimeMeasurementWideFeatureIndexCache = {}
-        wide_feature_plan_cache: equivalence_measurement_rows.RuntimeMeasurementWideFeaturePlanCache = {}
+        wide_feature_index_cache: (
+            equivalence_measurement_rows.RuntimeMeasurementWideFeatureIndexCache
+        ) = {}
+        wide_feature_plan_cache: (
+            equivalence_measurement_rows.RuntimeMeasurementWideFeaturePlanCache
+        ) = {}
         qualifier_render_cache: RuntimeMeasurementQualifierRenderCache = {}
         padding_group_cache: RuntimeMeasurementPaddingGroupCache = {}
         required_projection = RequiredRuntimeMeasurementProjection(
@@ -2650,6 +2665,7 @@ class RuntimeMeasurementFeatureSemantics:
         ) or any(
             feature_name.endswith(suffix) for suffix in tolerance.feature_name_suffixes
         )
+
 
 @dataclass(frozen=True, slots=True)
 class SparseObjectBoundaryEquivalence:

@@ -43,7 +43,10 @@ def test_artifact_spec_collection_queries_ordered_artifact_contracts() -> None:
 
     assert collection.of_artifact_type(ImageArtifactType) == (image,)
     assert collection.by_name("Nuclei") == objects
-    assert collection.by_name_and_artifact_type("Nuclei", ObjectLabelsArtifactType) == objects
+    assert (
+        collection.by_name_and_artifact_type("Nuclei", ObjectLabelsArtifactType)
+        == objects
+    )
     assert collection.by_name_and_artifact_type("Nuclei", ImageArtifactType) is None
 
 

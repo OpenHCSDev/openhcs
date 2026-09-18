@@ -81,17 +81,14 @@ class RuntimeMeasurementFeatureSemanticProfile(
         context = RuntimeMeasurementFeatureSemanticContext(
             key,
             RuntimeEquivalencePolicy(
-                measurement_dialect=runtime_measurement_dialect_for_cache_id(
-                    dialect_id
-                )
+                measurement_dialect=runtime_measurement_dialect_for_cache_id(dialect_id)
             ),
         )
         strategy = cls.for_context(
             context,
             required=False,
             error_subject=(
-                "Runtime measurement feature semantic profile for "
-                f"{key!r}"
+                "Runtime measurement feature semantic profile for " f"{key!r}"
             ),
         )
         if strategy is None:
@@ -167,7 +164,9 @@ class MarkerRuntimeMeasurementFeatureSemanticProfile(
             dict.fromkeys(
                 marker_type
                 for profile_type in cls.__mro__
-                if issubclass(profile_type, MarkerRuntimeMeasurementFeatureSemanticProfile)
+                if issubclass(
+                    profile_type, MarkerRuntimeMeasurementFeatureSemanticProfile
+                )
                 and "marker_type" in profile_type.__dict__
                 for marker_type in (profile_type.__dict__["marker_type"],)
             )
@@ -230,7 +229,9 @@ class MarkerRuntimeMeasurementFeatureSemanticProfile(
         return self.matches_feature(context)
 
     @abstractmethod
-    def matches_feature(self, context: RuntimeMeasurementFeatureSemanticContext) -> bool:
+    def matches_feature(
+        self, context: RuntimeMeasurementFeatureSemanticContext
+    ) -> bool:
         """Return whether the already-shaped key is this marker's feature."""
 
 
@@ -327,7 +328,9 @@ class ObjectCountFeatureSemanticProfile(MarkerRuntimeMeasurementFeatureSemanticP
     marker_type = ObjectCountFeatureMarker
     statistic = MeasurementStatistic.COUNT
 
-    def matches_feature(self, context: RuntimeMeasurementFeatureSemanticContext) -> bool:
+    def matches_feature(
+        self, context: RuntimeMeasurementFeatureSemanticContext
+    ) -> bool:
         key = context.key
         return key.feature_name == ObjectCoreMeasurementFeature.OBJECT_COUNT.value
 
@@ -340,7 +343,9 @@ class ObjectIdentifierFeatureSemanticProfile(
     strategy_key = "object_identifier"
     marker_type = ObjectIdentifierFeatureMarker
 
-    def matches_feature(self, context: RuntimeMeasurementFeatureSemanticContext) -> bool:
+    def matches_feature(
+        self, context: RuntimeMeasurementFeatureSemanticContext
+    ) -> bool:
         key = context.key
         return (
             key.feature_name == ObjectCoreMeasurementFeature.OBJECT_NUMBER.value
@@ -358,7 +363,9 @@ class ObjectLocationFeatureSemanticProfile(
     strategy_key = "object_location"
     marker_type = ObjectLocationFeatureMarker
 
-    def matches_feature(self, context: RuntimeMeasurementFeatureSemanticContext) -> bool:
+    def matches_feature(
+        self, context: RuntimeMeasurementFeatureSemanticContext
+    ) -> bool:
         key = context.key
         return any(
             key.feature_name == strategy_type.axis_feature.value
@@ -376,12 +383,13 @@ class ObjectCalculatedFeatureSemanticProfile(
     strategy_key = "object_calculated"
     marker_type = ObjectCalculatedFeatureMarker
 
-    def matches_feature(self, context: RuntimeMeasurementFeatureSemanticContext) -> bool:
+    def matches_feature(
+        self, context: RuntimeMeasurementFeatureSemanticContext
+    ) -> bool:
         key = context.key
         feature_parts = tuple(part for part in key.feature_name.split("_") if part)
         return any(
-            len(feature_parts) > len(prefix)
-            and feature_parts[: len(prefix)] == prefix
+            len(feature_parts) > len(prefix) and feature_parts[: len(prefix)] == prefix
             for prefix in (
                 context.policy.measurement_dialect.resolved_calculated_feature_prefixes()
             )
@@ -396,11 +404,12 @@ class ObjectCalculatedIdentifierFeatureSemanticProfile(
 
     strategy_key = "object_calculated_identifier"
 
-    def matches_feature(self, context: RuntimeMeasurementFeatureSemanticContext) -> bool:
-        return (
-            ObjectIdentifierFeatureSemanticProfile.matches_feature(self, context)
-            and ObjectCalculatedFeatureSemanticProfile.matches_feature(self, context)
-        )
+    def matches_feature(
+        self, context: RuntimeMeasurementFeatureSemanticContext
+    ) -> bool:
+        return ObjectIdentifierFeatureSemanticProfile.matches_feature(
+            self, context
+        ) and ObjectCalculatedFeatureSemanticProfile.matches_feature(self, context)
 
 
 @dataclass(frozen=True, slots=True)
