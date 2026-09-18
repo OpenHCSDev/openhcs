@@ -829,7 +829,7 @@ jobs:
 
       - name: Set up Windows software OpenGL
         if: matrix.platform == 'windows'
-        uses: pyvista/setup-headless-display-action@b0bf9f57d62d2b3fee9f1c0e0c7e390f05e97a4e # v5.0.0
+        uses: pyvista/setup-headless-display-action@c103a2ff45650d38cb71684b5dc6cdfeb9442c79 # v5.1.0
         with:
           qt: true
           wm: herbstluftwm
@@ -2057,7 +2057,7 @@ jobs:
           python-version: "3.12"
 
       - name: Expose incompatible system Java 26
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: "26"
