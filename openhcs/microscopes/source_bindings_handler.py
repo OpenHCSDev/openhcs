@@ -119,6 +119,48 @@ class SourceBindingsHandler(MicroscopeHandler):
         del plate_folder, filemanager
         return False
 
+    def _replay_persisted_workspace(
+        self,
+        plate_root: Path,
+        filemanager: FileManager,
+    ) -> bool:
+        """Replay a persisted projection for a workspace without physical sources.
+
+        A materialized workspace owns metadata and virtual aliases, not source
+        files; rebuilding it would resolve an empty declared universe. A plate
+        root that still lists physical sources must always rebuild so new files
+        and refreshed imported tables are picked up.
+        """
+        if self._list_source_files(plate_root, filemanager):
+            return False
+        metadata_path = plate_root / OpenHCSMetadataHandler.METADATA_FILENAME
+        if not filemanager.exists(str(metadata_path), Backend.DISK.value):
+            return False
+        from openhcs.core.source_workspace_projection import (
+            VirtualWorkspaceSourceProjection,
+        )
+
+        metadata = self.metadata_handler.source_workspace_metadata_document(plate_root)
+        workspace_metadata = self.metadata_handler.workspace_mapping_metadata(
+            plate_root
+        )
+        if workspace_metadata is None:
+            return False
+        if workspace_metadata.get(FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY) != (
+            self._source_bindings_config.declaration_identity()
+        ):
+            return False
+        if (
+            VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
+                plate_root,
+                metadata,
+            )
+            is None
+        ):
+            return False
+        self._register_virtual_workspace_backend(plate_root, filemanager)
+        return True
+
     def initialize_workspace(
         self,
         plate_path: Union[str, Path],
@@ -135,6 +177,8 @@ class SourceBindingsHandler(MicroscopeHandler):
 
         plate_root = Path(plate_path)
         self.plate_folder = plate_root
+        if self._replay_persisted_workspace(plate_root, filemanager):
+            return plate_root
         materialize_source_binding_workspace(
             plate_root,
             plate_root,
