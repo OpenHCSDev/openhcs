@@ -31,8 +31,10 @@ from openhcs.core.image_file_serialization import (
     ImageFileFormat,
     ImageFileSourceMetadata,
 )
+from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
+    SourceArtifactProjection,
     SourcePlaneProjection,
     SourceProjectionSet,
     SourceProjectionMetadataSerializer,
@@ -800,6 +802,7 @@ class OpenHCSMetadataWriter:
                 Backend.MEMORY.value,
             )
             projection_paths = []
+            declared_addresses: set[OpenHCSPlaneAddress] = set()
             parser_context = FunctionOutputParserContext.from_processing_context(
                 context
             )
@@ -843,13 +846,29 @@ class OpenHCSMetadataWriter:
                 metadata.source_voxel_spacing.merge_into(
                     source_metadata, path=destination
                 )
+                address = OpenHCSPlaneAddress(parsed.components.items())
+                if address not in declared_addresses:
+                    declared_addresses.add(address)
+                    projection_paths.append(
+                        (
+                            SourcePlaneProjection(
+                                address=address,
+                                ref=SourcePixelRef(self.backend, virtual_path),
+                                source_metadata=source_metadata,
+                                image_metadata=metadata,
+                            ),
+                            virtual_path,
+                        )
+                    )
+                    continue
                 projection_paths.append(
                     (
-                        SourcePlaneProjection(
-                            address=OpenHCSPlaneAddress(parsed.components.items()),
+                        SourceArtifactProjection(
+                            address=address,
                             ref=SourcePixelRef(self.backend, virtual_path),
+                            source_alias=record.producer_identity.output_key,
+                            artifact_kind=ImageArtifactType,
                             source_metadata=source_metadata,
-                            image_metadata=metadata,
                         ),
                         virtual_path,
                     )

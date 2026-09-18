@@ -871,6 +871,15 @@ class SourceProjectionMetadataSerializer:
     SOURCE_METADATA_FIELD: ClassVar[str] = "source_metadata"
     SOURCE_PROJECTION_FIELD: ClassVar[str] = "source_projection"
     IMAGE_METADATA_FIELD: ClassVar[str] = "image_metadata"
+    MICROSCOPE_HANDLER_NAME_FIELD: ClassVar[str] = "microscope_handler_name"
+    SOURCE_FILENAME_PARSER_NAME_FIELD: ClassVar[str] = "source_filename_parser_name"
+    GRID_DIMENSIONS_FIELD: ClassVar[str] = "grid_dimensions"
+    PIXEL_SIZE_FIELD: ClassVar[str] = "pixel_size"
+    IMAGE_FILES_FIELD: ClassVar[str] = "image_files"
+    AVAILABLE_BACKENDS_FIELD: ClassVar[str] = "available_backends"
+    MAIN_FIELD: ClassVar[str] = "main"
+    RESULTS_DIR_FIELD: ClassVar[str] = "results_dir"
+    SOURCE_DIAGNOSTICS_FIELD: ClassVar[str] = "source_diagnostics"
 
     parser: Any
     image_extension: str = ".tif"
@@ -895,11 +904,11 @@ class SourceProjectionMetadataSerializer:
             projection_paths = self.projection_paths(projection_set)
         execution_anchors = projection_set.execution_anchor_projections
         metadata: dict[str, Any] = {
-            "microscope_handler_name": microscope_handler_name,
-            "source_filename_parser_name": source_filename_parser_name,
-            "grid_dimensions": list(grid_dimensions),
-            "pixel_size": pixel_size,
-            "image_files": [
+            self.MICROSCOPE_HANDLER_NAME_FIELD: microscope_handler_name,
+            self.SOURCE_FILENAME_PARSER_NAME_FIELD: source_filename_parser_name,
+            self.GRID_DIMENSIONS_FIELD: list(grid_dimensions),
+            self.PIXEL_SIZE_FIELD: pixel_size,
+            self.IMAGE_FILES_FIELD: [
                 path
                 for projection, path in projection_paths
                 if projection in execution_anchors
@@ -913,7 +922,7 @@ class SourceProjectionMetadataSerializer:
                 )
                 for component in AllComponents
             },
-            "available_backends": dict(
+            self.AVAILABLE_BACKENDS_FIELD: dict(
                 available_backends
                 if available_backends is not None
                 else self._available_backends(projection_set)
@@ -921,11 +930,11 @@ class SourceProjectionMetadataSerializer:
             **self.projection_fields(projection_paths),
         }
         if main is not None:
-            metadata["main"] = main
+            metadata[self.MAIN_FIELD] = main
         if results_dir is not None:
-            metadata["results_dir"] = results_dir
+            metadata[self.RESULTS_DIR_FIELD] = results_dir
         if projection_set.diagnostics:
-            metadata["source_diagnostics"] = [
+            metadata[self.SOURCE_DIAGNOSTICS_FIELD] = [
                 dict(diagnostic.metadata_payload())
                 for diagnostic in projection_set.diagnostics
             ]
