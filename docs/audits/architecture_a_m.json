@@ -91,7 +91,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
+        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
         "role": "Projects declaration-owned callable metadata, including memory contracts and artifact relations, at the nominal boundary."
       },
       {
@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "a508b27a16e8ccc5f209cf4a47fe08c3c646d56d14526f9d458664f9c8a9e3f1",
+        "sha256": "7a09a8d9b10b9f6f4dc2cf8dfcfd97b58b67faf5a9fbbb0a52b5407221534ea5",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -169,12 +169,12 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "4148ccb3e51d21c26f8126d19dd811c84b44f754f857d995889d9d1d24c135f9",
+        "sha256": "c1ac3749108e0c703a78f94d023b2a8ac7e22c815cf27d4d07df47810ed4854c",
         "role": "Exercises orchestrator lane planning and post-execution analysis boundaries used by consolidation."
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
-        "sha256": "b721e6fd9a55181bdd9f2b83974a653d1887f8cbc77acd1339c5683faa45a006",
+        "sha256": "0aee7dd3c0a25445c845f58c36dad0ca2be3a0225daeb3e314a87d9ca541f772",
         "role": "Proves consolidation consumes runtime CSV values, uses the compiled backend destination, ignores non-table artifacts, and propagates failures."
       },
       {
@@ -184,7 +184,7 @@
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "74759b37cb83a6c59f616b8b14fed21bbb187a8f489c4086bfb0fc7d380fddf0",
+        "sha256": "c5ff3a826c92ddf9208fcb0c512afc0848638c75df0049e7f2f1ca5bf4a0a822",
         "role": "Owns writer runtime-path selection before rendering and the shared ROI target request."
       }
     ],
@@ -219,22 +219,22 @@
     "authority": [
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
+        "sha256": "2d0ccc744689ccddb2314f2d5f412a8b020df726bf74d605ae2d2fa7eb5e4083",
         "role": "Defines artifact families, specifications, references, relations, and materialisation declarations."
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
+        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
         "role": "Defines callable artifact input and output ABI ownership and relation validation."
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "90a4991b326c37f86fa1bbcacb5b5cfecc40147ab86f3bcd3ba973c7003bd867",
+        "sha256": "2d069dae302f73970f0dd57bd8e3f9bcead2d4e93b31ef1e96b90e55f4a8ce58",
         "role": "Implements artifact satisfaction and exact compiled path planning."
       },
       {
         "path": "tests/unit/test_callable_contract.py",
-        "sha256": "792029ac2fe392bf61f11a6f6b0b8cb6eaec4bbbc9c4c5d67fccd672646e182e",
+        "sha256": "493f76a54f5fe024ca8f10c53b1f810b8c369626ad7141205b42ef3a78282137",
         "role": "Verifies callable contract construction, validation, and artifact semantics."
       },
       {
@@ -398,7 +398,7 @@
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "15a7731e5e00136af020ca8b99ef61e60b36ad55898b466d0d4465012bfb199b",
+        "sha256": "24b5236e2a775004a6898e8889fd0ba3e0ed1b6b7afcab7c144a423a1bb81c1f",
         "role": "Defines the executable Official30 import, execution, equivalence, and viewer evidence boundary."
       },
       {
@@ -408,12 +408,12 @@
       },
       {
         "path": "benchmark/cellprofiler_reference_exports.py",
-        "sha256": "d8bfe5495fefd52a5a77237dc59d8ddc52e4962c24d2c1d5fbdf7b754521bcf4",
+        "sha256": "604f9a95f94eeb10365437b875a0ff3d558dbb2fda13e7e951242d417a69b49c",
         "role": "Derives digest-bound benchmark-only exporter pipelines from terminal importer contracts and owns numeric-image and categorical-label comparison semantics."
       },
       {
         "path": "tests/unit/test_cellprofiler_reference_exports.py",
-        "sha256": "62615d5c5c7317a3d4ffd7b42a03729f1a5f9435678b7874933e4611014adfc6",
+        "sha256": "8b84a9706af7c9226ef93a96a3fdb9c1c16a8f220fbee4a65a53f6e15bc7cb61",
         "role": "Proves exact inventory selection, generated-pipeline digest validation, exporter derivation, and the declared image and label comparison contracts."
       }
     ],
@@ -458,7 +458,7 @@
       },
       {
         "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "210aff5841939f475648f9cfbb1146ecc580a02dd8e463b573233c176ef891e3",
+        "sha256": "0cc0d6d39ba9a206894a0785a15409e764331ce6dbfb23f9eeded8512ed5afed",
         "role": "Carries generic endpoint application and operation-lifecycle declarations through UI bridge descriptors and request/response envelopes."
       },
       {
@@ -483,7 +483,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/ui_agent_bridge.py",
-        "sha256": "75addb963f77738301308a1e09ad45385cbc9ec38f91b41d827ea81595c3c02c",
+        "sha256": "53e7a89267474a320ca80af373d0e851d34240553e2758e8c601bc3bd5e7bbf7",
         "role": "Projects ObjectState branch and snapshot restoration through the attached-agent surface."
       },
       {
@@ -523,7 +523,7 @@
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/services/function_pattern_code_document.py",
-        "sha256": "82064b60276644c63cf86d340db50efa76bdb8f3141cd6aeff67928a3315c4b3",
+        "sha256": "bdf41b58bff009890e6e696cfc4f18313adfb1669566b2566f9e7b93d863c071",
         "role": "Projects child parameter states into function-pattern code documents, retaining a child only while its function authority and editable surface match."
       },
       {
@@ -586,17 +586,17 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
+        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
         "role": "Lowers declarations into typed step plans, including declaration-derived framework-device assignments."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "8a5ef1f5fa2c020fcbe29a404bbcb5d45fb59e2d9357ca4addf2d2593655693a",
+        "sha256": "3c840a89baccc8665d415175458280fd904c1a837b7fd879e303d7dbca129a1c",
         "role": "Defines the scoped CompilationSession authority."
       },
       {
         "path": "openhcs/core/compiled_execution.py",
-        "sha256": "b2dd83ebf18f59d868e8fb12535c3e3f7c3c3df48ed963775cd57b62e4141d47",
+        "sha256": "941115f2dca2e53538d3141a59f3ae1f928a87cf741fcfa177f7cd64a5f41aea",
         "role": "Assembles and validates worker-safe execution bundles without a process-global GPU registry."
       }
     ],
@@ -624,7 +624,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
+        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
         "role": "Implements the current compiler stages, including declaration-derived framework-device assignment."
       },
       {
@@ -762,7 +762,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
+        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
         "role": "Consumes component declarations to construct execution axes, stacks, grouping, and typed plans."
       }
     ],
@@ -797,12 +797,12 @@
       },
       {
         "path": "openhcs/core/pipeline/funcstep_contract_validator.py",
-        "sha256": "88fb772ae68cc2719e71baf7f633ed7c4bda5b59f029f28831816cf2c65b02d5",
+        "sha256": "73cb5250a5855625903f8b7deada667b83fba594d66de0ed4a68ec76afa3db19",
         "role": "Validates callable grouping, required axes, function-step components, and declared input, output, and execution memory."
       },
       {
         "path": "tests/unit/test_funcstep_contract_validator.py",
-        "sha256": "631a60d469ca5e7878b439211e71a50ab68d4244577e25733ff85633fd5683d7",
+        "sha256": "2188b297564b7c756af16f1138e304a1a7dadbdea28f7c440bc7b484d9eb615c",
         "role": "Covers accepted and rejected component, grouping, callable-contract, and execution-memory combinations."
       }
     ],
@@ -827,7 +827,7 @@
     "authority": [
       {
         "path": "openhcs/core/compiled_execution.py",
-        "sha256": "b2dd83ebf18f59d868e8fb12535c3e3f7c3c3df48ed963775cd57b62e4141d47",
+        "sha256": "941115f2dca2e53538d3141a59f3ae1f928a87cf741fcfa177f7cd64a5f41aea",
         "role": "Defines the worker-safe CompiledExecutionBundle and its context-derived axis projection."
       },
       {
@@ -842,12 +842,12 @@
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "4148ccb3e51d21c26f8126d19dd811c84b44f754f857d995889d9d1d24c135f9",
+        "sha256": "c1ac3749108e0c703a78f94d023b2a8ac7e22c815cf27d4d07df47810ed4854c",
         "role": "Verifies that worker-lane grouping remains correct when context mapping keys do not encode axis identity."
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "d2ac66e753239cf4185eb3db4db1aca2a8a55a49f92ee58f30c2ab5fe47732ef",
+        "sha256": "21e75c623659b4380ac88d79f865ed87da1dfa2f3f78fee2c78bb075aa2a9f46",
         "role": "Owns executor construction, submission, result collection, cancellation, and footprint-aware cleanup."
       },
       {
@@ -934,7 +934,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "8a5ef1f5fa2c020fcbe29a404bbcb5d45fb59e2d9357ca4addf2d2593655693a",
+        "sha256": "3c840a89baccc8665d415175458280fd904c1a837b7fd879e303d7dbca129a1c",
         "role": "Consumes already resolved configuration in a scoped compiler session."
       }
     ],
@@ -993,7 +993,7 @@
       },
       {
         "path": "openhcs/core/steps/function_step.py",
-        "sha256": "f63b4dcb9c1f2071debdb40d35551559f78d5f464c1035ecbdcc505ce9084d57",
+        "sha256": "8e1243404095691030e9ebb95bb5611679f96c66c6b6819ae71e4b41249e74bc",
         "role": "Defines how registered callables enter ordinary FunctionStep declarations."
       }
     ],
@@ -1069,7 +1069,7 @@
     "authority": [
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "d20fe8d1614210e50bf804a6cea3ce4cc4fd3ce0459b153c1cf81e214e628d3e",
+        "sha256": "fe76286a2d378a39fd6061273363ccebbdc88f1dde6b1d36ed54b9cc28539e4a",
         "role": "Defines callable, sequential-chain, and dictionary-fan-out patterns and derives execution memory through nested declarations."
       },
       {
@@ -1186,7 +1186,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "5845d375c1bac4ed59ea067c5307810d80f9147ad68aeb46faf17fff481f7d71",
+        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1344,7 +1344,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/base.py",
-        "sha256": "bd0ca3ae38fe09dcdf69393704ec00b27de0ad5d867ee5f8b0979483c182aa3a",
+        "sha256": "71cb1089dac02ee4bf3d7e010882cb4f1d0523514d53d1a36cadb479d58b7fc1",
         "role": "Defines the generic storage backend boundary consumed by OpenHCS integrations."
       },
       {
@@ -1440,7 +1440,7 @@
       },
       {
         "path": "external/zmqruntime/src/zmqruntime/viewer_protocol.py",
-        "sha256": "962edf0009287382ca71efdc32eedbdc667aded89354470e282fa8a1f8d2e8dc",
+        "sha256": "d7abf09b11fd285f501c505b54f367fd045f4874b2e313cce1827f43ef449a27",
         "role": "Defines the generic viewer-control transport protocol."
       }
     ],
@@ -1464,12 +1464,12 @@
     "authority": [
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/animation/flash_mixin.py",
-        "sha256": "e4bafddfd1063e6140014d5b0e4ab562dafdbfc50bd0b8036bb42c0d0cd2bf01",
+        "sha256": "37cd2b32047109fc16255a3f9a9938ae553d5f8bd5987cd10460c7ba500f1486",
         "role": "Implements reusable flash propagation, widget-geometry masking, paint acknowledgement, and animation coordination."
       },
       {
         "path": "external/pyqt-reactive/src/pyqt_reactive/animation/flash_config.py",
-        "sha256": "040a0d25e60517c210399a27356f496c98bf3e66f432d24f1397bb9afc9c9c76",
+        "sha256": "efc6859a2de5115775a940be0a9e1c5e58f7e60e068872f11a256060b045fdeb",
         "role": "Declares generic flash phases, timing, colour, and paint-acknowledged playback."
       },
       {
@@ -1501,7 +1501,7 @@
     "authority": [
       {
         "path": "openhcs/core/function_patterns.py",
-        "sha256": "d20fe8d1614210e50bf804a6cea3ce4cc4fd3ce0459b153c1cf81e214e628d3e",
+        "sha256": "fe76286a2d378a39fd6061273363ccebbdc88f1dde6b1d36ed54b9cc28539e4a",
         "role": "Defines callable, sequential-chain, and dictionary-fan-out patterns and derives execution memory through nested declarations."
       },
       {
@@ -1543,12 +1543,12 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
+        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
         "role": "Adds OpenHCS processing, runtime, artifact, scope, and ArrayBridge memory semantics to analysed callables."
       },
       {
         "path": "tests/unit/test_callable_contract.py",
-        "sha256": "792029ac2fe392bf61f11a6f6b0b8cb6eaec4bbbc9c4c5d67fccd672646e182e",
+        "sha256": "493f76a54f5fe024ca8f10c53b1f810b8c369626ad7141205b42ef3a78282137",
         "role": "Verifies OpenHCS callable contracts projected from declaration-owned metadata, including execution memory."
       }
     ],
@@ -1624,7 +1624,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
+        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
         "role": "Projects declaration-owned input, output, and execution memory into immutable callable contracts."
       },
       {
@@ -1639,7 +1639,7 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
+        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
         "role": "Invokes callable validation and framework-device assignment before assembling the execution bundle."
       },
       {
@@ -1649,7 +1649,7 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "d2ac66e753239cf4185eb3db4db1aca2a8a55a49f92ee58f30c2ab5fe47732ef",
+        "sha256": "21e75c623659b4380ac88d79f865ed87da1dfa2f3f78fee2c78bb075aa2a9f46",
         "role": "Consumes compiled footprints for worker execution and lane-appropriate framework cleanup."
       },
       {
@@ -1737,12 +1737,12 @@
     "authority": [
       {
         "path": "openhcs/core/steps/function_step.py",
-        "sha256": "f63b4dcb9c1f2071debdb40d35551559f78d5f464c1035ecbdcc505ce9084d57",
+        "sha256": "8e1243404095691030e9ebb95bb5611679f96c66c6b6819ae71e4b41249e74bc",
         "role": "Defines the public FunctionStep declaration named by the architecture invariants."
       },
       {
         "path": "openhcs/core/pipeline/compilation_session.py",
-        "sha256": "8a5ef1f5fa2c020fcbe29a404bbcb5d45fb59e2d9357ca4addf2d2593655693a",
+        "sha256": "3c840a89baccc8665d415175458280fd904c1a837b7fd879e303d7dbca129a1c",
         "role": "Defines the scoped compiler authority named by the navigation map."
       },
       {
@@ -1752,7 +1752,7 @@
       },
       {
         "path": "openhcs/core/compiled_execution.py",
-        "sha256": "b2dd83ebf18f59d868e8fb12535c3e3f7c3c3df48ed963775cd57b62e4141d47",
+        "sha256": "941115f2dca2e53538d3141a59f3ae1f928a87cf741fcfa177f7cd64a5f41aea",
         "role": "Defines the worker-safe runtime bundle boundary without a process-global GPU registry."
       }
     ],
@@ -1878,17 +1878,17 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "a508b27a16e8ccc5f209cf4a47fe08c3c646d56d14526f9d458664f9c8a9e3f1",
+        "sha256": "7a09a8d9b10b9f6f4dc2cf8dfcfd97b58b67faf5a9fbbb0a52b5407221534ea5",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
         "path": "openhcs/mcp/dev_client_commanding.py",
-        "sha256": "9c7cfd9b2918d9a714c8a04eda02cf30c7013dd18afb19e00500ec0aae193c38",
+        "sha256": "ecf8052a2a5fa58f39bf3bbbb5447424c516564f3ff15b41cd2a6af7dcb370b3",
         "role": "Validates one-shot development commands against the selected surface before starting an MCP subprocess."
       },
       {
         "path": "openhcs/mcp/dev_client.py",
-        "sha256": "df0e10ea02d1567d7bc1cab0a9bb2c617470995818363c008507133f4846d749",
+        "sha256": "6c354b95fc527aecfb39519b711c54ebed66183916fd21746fc6202f350deee1",
         "role": "Validates commands before dispatch through an initialized persistent development session."
       },
       {
@@ -1908,17 +1908,17 @@
       },
       {
         "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "210aff5841939f475648f9cfbb1146ecc580a02dd8e463b573233c176ef891e3",
+        "sha256": "0cc0d6d39ba9a206894a0785a15409e764331ce6dbfb23f9eeded8512ed5afed",
         "role": "Declares the UI bridge connection and its default control timeout."
       },
       {
         "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "bb3ca36d0cca3f0c5287142a15ca9c882003bb290f3c1cdafbcd5f5b24a704a2",
+        "sha256": "8ee1eee78b8547d3844a17c473bb8f71e0bd2d27c3b3f876642f54be0bde8b47",
         "role": "Declares viewer control requests and their default timeout."
       },
       {
         "path": "openhcs/mcp/context.py",
-        "sha256": "991151c3a92b89961da8415a02c18045c7b644df82f2ed5e04d546111e19cbda",
+        "sha256": "31302d876170c4ad8612ef8e1dda1d10e49b9736334b50115e8b084df2f7e0b1",
         "role": "Composes local stdio authoring with the persisted desktop execution endpoint while keeping hosted HTTP self-contained."
       },
       {
@@ -2003,7 +2003,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "b3c2913fc9052edc033790f7cc7475587664b69125e816f5dc668f137b35f8fe",
+        "sha256": "ea46bce17be056a8a76ccc92c6a731037b2cb93db3e624125d8c3fb3995457a2",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -2028,7 +2028,7 @@
       },
       {
         "path": "openhcs/agent/services/llm_context_service.py",
-        "sha256": "6f623b552b5d639162602eed83bc24fa27af205842361ab643ca444cb6bca97e",
+        "sha256": "c9bc92188c038c0282e78563310e2c046d05fdc3f0be2962e0c3a95d33110fc5",
         "role": "Composes operating-guide sections from nominal context facets and bounds returned guidance."
       },
       {
@@ -2078,7 +2078,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "4ffd949056d8e511c9eafda7d7e81d54668ea25bfd58e6e3167f7022be349da6",
+        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],
@@ -2173,32 +2173,32 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "a431869d29fe3d9a47676177a7f6362a091e630a71375cff6d76570a832d1320",
+        "sha256": "c744cbb54aa17a8fece9e193910ed0adf3e15750b24496acaac2840bd6883cc7",
         "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
       },
       {
         "path": "benchmark/manifests/official30_portable_axis1.json",
-        "sha256": "a4a7c23ac2414614678012b05b058bc9c18cf3668b105cd663528a38ef2b437e",
+        "sha256": "7f11549c0bc870f9ce2792afc9176f52b6a2b83236e47b33cbedb4a2cac73267",
         "role": "Defines the exact portable 30-case acceptance corpus."
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "15a7731e5e00136af020ca8b99ef61e60b36ad55898b466d0d4465012bfb199b",
+        "sha256": "24b5236e2a775004a6898e8889fd0ba3e0ed1b6b7afcab7c144a423a1bb81c1f",
         "role": "Implements the headless and non-persistent Napari acceptance routes over all manifest cases."
       },
       {
         "path": "benchmark/cellprofiler_reference_exports.py",
-        "sha256": "d8bfe5495fefd52a5a77237dc59d8ddc52e4962c24d2c1d5fbdf7b754521bcf4",
+        "sha256": "604f9a95f94eeb10365437b875a0ff3d558dbb2fda13e7e951242d417a69b49c",
         "role": "Owns terminal-artifact exporter derivation, exact output-inventory selection, numeric-image tolerance, categorical-label equality, and explicit single-plane label projection."
       },
       {
         "path": "tests/unit/test_cellprofiler_reference_exports.py",
-        "sha256": "62615d5c5c7317a3d4ffd7b42a03729f1a5f9435678b7874933e4611014adfc6",
+        "sha256": "8b84a9706af7c9226ef93a96a3fdb9c1c16a8f220fbee4a65a53f6e15bc7cb61",
         "role": "Proves digest and inventory failures remain fail-closed and verifies the two declared per-artifact comparison contracts."
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "a3d7263385f5d50f8b47e23492d261385abfb99b9507b9f1379ecf5fbafecb6c",
+        "sha256": "626d5e7242e1265e590ecf3a2b8c3a2ebc25d264c0e283ce908be2556f690df2",
         "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
       }
     ],
@@ -2240,7 +2240,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "c47cc392418c576843901e956e73b00a012fa5c1ffba87a4a0f526c5cd20c95a",
+        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
         "role": "Projects ArrayBridge metadata into immutable callable input, output, and execution memory contracts."
       },
       {
@@ -2300,7 +2300,7 @@
       },
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "7e8852904adf9618f54d6bfce80e60a726ce514c896b4a5281a46f76ab91c5c2",
+        "sha256": "052820911e06797f64e64d21b7ed85d534a475f9a7697b76b7bb269d9f19fe28",
         "role": "Declares named source bindings independently of concrete microscope handlers."
       },
       {
@@ -2348,17 +2348,17 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
+        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
         "role": "Compiles source execution-axis and framework-device facts into frozen contexts and typed plans."
       },
       {
         "path": "openhcs/core/compiled_execution.py",
-        "sha256": "b2dd83ebf18f59d868e8fb12535c3e3f7c3c3df48ed963775cd57b62e4141d47",
+        "sha256": "941115f2dca2e53538d3141a59f3ae1f928a87cf741fcfa177f7cd64a5f41aea",
         "role": "Assembles and validates the one worker-safe execution bundle without a process-global GPU registry."
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "d2ac66e753239cf4185eb3db4db1aca2a8a55a49f92ee58f30c2ab5fe47732ef",
+        "sha256": "21e75c623659b4380ac88d79f865ed87da1dfa2f3f78fee2c78bb075aa2a9f46",
         "role": "Installs the bundle, submits one task per compiled axis, collects typed results, and performs footprint-aware cleanup."
       },
       {

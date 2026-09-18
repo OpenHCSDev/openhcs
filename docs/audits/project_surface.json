@@ -12,7 +12,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "5845d375c1bac4ed59ea067c5307810d80f9147ad68aeb46faf17fff481f7d71",
+        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
         "role": "Declares the published README, Python range, package dependencies, optional surfaces, console commands, and project links."
       },
       {
@@ -32,12 +32,12 @@
       },
       {
         "path": "openhcs/core/pipeline/compiler.py",
-        "sha256": "344f7e1073b2fe9fc4a8d44e4ca34b603935b27a6f6b3ad2ee43c1adbadd9c1f",
+        "sha256": "f768b8210c7a5e4d7d7ffab7c4556f7c979039866376125250c3ee568bae1a70",
         "role": "Owns compile-time resolution across selected axes and construction of the execution bundle."
       },
       {
         "path": "openhcs/core/artifacts.py",
-        "sha256": "a74ee06bf1398e249869e88454c62f6a9dea9c2a21037122656e1e8783df5b22",
+        "sha256": "2d0ccc744689ccddb2314f2d5f412a8b020df726bf74d605ae2d2fa7eb5e4083",
         "role": "Declares image, object, measurement, relationship, table, and file artifact semantics used by materialization."
       },
       {
@@ -52,12 +52,12 @@
       },
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "3a58e1accfa318b9d1a6ed849acc80e735dedc1394faa67087f3fe8a16f2221d",
+        "sha256": "8cb881da211f1f1837b2db7375ca9c937790c54a97fa54facd10cdc81fcc6b1c",
         "role": "Owns manual and orchestrated image and ROI streaming through registered viewer declarations."
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "a508b27a16e8ccc5f209cf4a47fe08c3c646d56d14526f9d458664f9c8a9e3f1",
+        "sha256": "7a09a8d9b10b9f6f4dc2cf8dfcfd97b58b67faf5a9fbbb0a52b5407221534ea5",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {
@@ -72,7 +72,7 @@
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "15a7731e5e00136af020ca8b99ef61e60b36ad55898b466d0d4465012bfb199b",
+        "sha256": "24b5236e2a775004a6898e8889fd0ba3e0ed1b6b7afcab7c144a423a1bb81c1f",
         "role": "Exercises all 30 declared CellProfiler comparison cases over ZMQ and validates live Napari and Fiji projections."
       },
       {
@@ -97,7 +97,7 @@
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "4ffd949056d8e511c9eafda7d7e81d54668ea25bfd58e6e3167f7022be349da6",
+        "sha256": "f7122d2e042da081ec40b148e0fc63006054489e5fdccd98ae7edf8e62fff04f",
         "role": "Proves the installed command derivation, typed receipts, MCP projection, path policy, and inspect-only import boundary."
       }
     ],

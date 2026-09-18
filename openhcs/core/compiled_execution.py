@@ -149,6 +149,15 @@ class CompiledExecutionBundle:
 
         return any(
             plan.execution_scope.requires_parent_runtime_observation
+            or (
+                context.analysis_consolidation_config.enabled
+                and plan.runtime_artifact_materialization.has_persistent_target
+                and any(
+                    output.materialization is not None
+                    and output.materialization.participates_in_runtime_export_observation()
+                    for output in plan.artifact_outputs.values()
+                )
+            )
             for context in self.runtime_contexts.values()
             for plan in context.step_plans.values()
         )
