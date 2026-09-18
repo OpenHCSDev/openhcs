@@ -519,7 +519,7 @@ def test_validate_viewer_polls_until_debounced_layers_settle(monkeypatch) -> Non
 
     assert payload["valid"] is True
     assert len(calls) == 2
-    assert calls[1]["timeout_seconds"] == 20.0
+    assert calls[1]["timeout_seconds"] == 30.0
 
 
 def test_validate_viewer_fails_after_settle_deadline(monkeypatch) -> None:
