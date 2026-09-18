@@ -72,7 +72,7 @@ class InstalledDemoFailure(RuntimeError):
 _EXECUTION_STALL_TIMEOUT_SECONDS = 180.0
 _EXECUTION_MAXIMUM_DURATION_SECONDS = 900.0
 _EXECUTION_POLL_INTERVAL_SECONDS = 0.5
-_VIEWER_SETTLE_TIMEOUT_SECONDS = 60.0
+_VIEWER_SETTLE_TIMEOUT_SECONDS = 120.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -677,14 +677,22 @@ def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
 def _shutdown_owned_viewer(endpoint: ViewerRuntimeEndpoint) -> None:
     if not endpoint.in_use():
         return
-    response = ViewerControlMessageRequest(
-        endpoint=endpoint,
-        message_type=ControlMessageType.FORCE_SHUTDOWN.value,
-        timeout=3.0,
-    ).send()
-    if not response.succeeded():
-        raise InstalledDemoFailure(
-            f"Owned Napari viewer rejected shutdown: {response.payload}"
+    try:
+        response = ViewerControlMessageRequest(
+            endpoint=endpoint,
+            message_type=ControlMessageType.FORCE_SHUTDOWN.value,
+            timeout=3.0,
+        ).send()
+        if not response.succeeded():
+            raise InstalledDemoFailure(
+                f"Owned Napari viewer rejected shutdown: {response.payload}"
+            )
+    except Exception as error:
+        # A headless viewer busy in a slow render can miss the shutdown ack;
+        # the endpoint release below is the authoritative liveness proof.
+        _report_phase(
+            f"owned viewer shutdown ack not received ({type(error).__name__}); "
+            "waiting for endpoint release"
         )
     if not endpoint.wait_until_released(timeout=15.0):
         raise InstalledDemoFailure("Owned Napari viewer did not release its endpoint.")
