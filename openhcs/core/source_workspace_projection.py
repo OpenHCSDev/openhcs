@@ -584,13 +584,22 @@ class VirtualWorkspaceSourceProjectionAxisCacheKey:
     axis_id: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class VirtualWorkspaceSourceProjectionCacheEntry:
+    """One projection bound to the exact metadata document that produced it."""
+
+    metadata: OpenHCSMetadataPayload
+    projection: VirtualWorkspaceSourceProjection
+
+
 @dataclass(slots=True)
 class VirtualWorkspaceSourceProjectionCache:
-    """Process-local cache for source-workspace projections keyed by plate path."""
+    """Process-local cache for projections keyed by metadata object identity."""
 
-    projections_by_plate_path: dict[str, VirtualWorkspaceSourceProjection] = field(
-        default_factory=dict
-    )
+    projections_by_plate_path: dict[
+        str,
+        VirtualWorkspaceSourceProjectionCacheEntry,
+    ] = field(default_factory=dict)
     axis_filtered_projections: dict[
         VirtualWorkspaceSourceProjectionAxisCacheKey,
         VirtualWorkspaceSourceProjection,
@@ -602,14 +611,18 @@ class VirtualWorkspaceSourceProjectionCache:
         metadata: OpenHCSMetadataPayload,
     ) -> VirtualWorkspaceSourceProjection:
         plate_key = str(plate_path)
-        projection = self.projections_by_plate_path.get(plate_key)
-        if projection is None:
+        cached = self.projections_by_plate_path.get(plate_key)
+        if cached is None or cached.metadata is not metadata:
             projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
                 plate_path,
                 metadata,
             )
-            self.projections_by_plate_path[plate_key] = projection
-        return projection
+            self.axis_filtered_projections.clear()
+            self.projections_by_plate_path[plate_key] = (
+                VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
+            )
+            return projection
+        return cached.projection
 
     def filtered_by_axis(
         self,
