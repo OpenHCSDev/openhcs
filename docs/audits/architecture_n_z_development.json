@@ -10,12 +10,12 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "1e85274b98ae1740eb41e309b7d4682543b8426f9f0059f883790e75a51d1c4a",
+        "sha256": "a9aeaace1fa0275ec0c2ad540195ad58c18c96d783560222b2516d57401aacd9",
         "role": "Detached Napari endpoint startup and application event-loop integration."
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "7b9c99e9f30233986c9bde55fb38d797be0a6989ad5b0e309a6be78e2df0b0bd",
+        "sha256": "57ea1759081d494713b2e2e11d04b55a96ccb82e5328635cfc2332f6561bf162",
         "role": "Napari route handlers that project typed received batches onto native viewer state."
       },
       {
@@ -46,7 +46,7 @@
     "authority": [
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "8cb881da211f1f1837b2db7375ca9c937790c54a97fa54facd10cdc81fcc6b1c",
+        "sha256": "224c8b9e66868f8224c61434e576ac62dc80c0abec9d366464815a998376c036",
         "role": "Compiled output streaming, viewer settlement, state evidence, and lifecycle cleanup."
       },
       {
@@ -81,7 +81,7 @@
     "authority": [
       {
         "path": "openhcs/core/registry_strategies.py",
-        "sha256": "8928183cfccac1a2ee6c37cfb2388d05c24f11dce8b360f75e2a1a261da4ef55",
+        "sha256": "a41186665abbd308f224d0bb41d6618cd9d89b08acaf54ec2819f2024a6e0804",
         "role": "OpenHCS enum, nominal-type, and most-derived strategy selection implementations."
       },
       {
@@ -132,7 +132,7 @@
     "authority": [
       {
         "path": "external/PolyStore/src/polystore/omero_local.py",
-        "sha256": "613f0b3b2fb527ae3753a77127d9affd75bf1d4fc1af655274a93509f3066233",
+        "sha256": "35d39564317510234c2a3ded00bb06a09417d1b6f7359e52e74c7bd0a086f642",
         "role": "Generic OMERO virtual-backend addressing, listing, pixel access, and declaration-owned output dispatch."
       },
       {
@@ -167,7 +167,7 @@
       },
       {
         "path": "openhcs/omero/plugin/omero_openhcs/apps.py",
-        "sha256": "de3f0af374efd146d5c27afd3a4d48922bab0bc09defb0ae96f98ed3e5e50ad4",
+        "sha256": "405391087c0014ebac3ae8a1a8fb060bd90284f1e07988ca8b2d1aac18a8c31e",
         "role": "OMERO.web application declaration owned by the bundled plugin."
       }
     ],
@@ -213,17 +213,17 @@
       },
       {
         "path": "openhcs/core/orchestrator/worker_execution.py",
-        "sha256": "21e75c623659b4380ac88d79f865ed87da1dfa2f3f78fee2c78bb075aa2a9f46",
+        "sha256": "3c952465268e4b6c44676a853bb9c99d2d04a0490c7d398d2cdaf8b3b5f966d7",
         "role": "Worker task execution and owner-bound runtime/framework cleanup for process, inline, and thread lanes."
       },
       {
         "path": "openhcs/core/orchestrator/orchestrator.py",
-        "sha256": "35cef23d52782dc8bac847041eb2f9d2a2b11f56baecf988e1c1dd08c1d2167b",
+        "sha256": "ca733be328ed5f1f033ee521fbf9bf0b088791bd19542f0071ddb01b4f2d3d9c",
         "role": "PipelineOrchestrator configuration ownership, resolution, compiler setup, and executor lifecycle."
       },
       {
         "path": "openhcs/runtime/viewer_protocol.py",
-        "sha256": "e165edc4d487235aad75503020aa7d18d72767007795f1d10f63b81b2eecdf99",
+        "sha256": "710f5bbd7bb47c081656bfff33768f85b0fbb4627e75239f81099248df608bae",
         "role": "Distinguishes external viewer clients from owned viewer processes during failed-bootstrap rollback."
       },
       {
@@ -238,12 +238,12 @@
       },
       {
         "path": "tests/unit/test_framework_device_resolver.py",
-        "sha256": "90b288a2ab4645226b3e8a3dea7b9338ff57592a434baa6b0c4f984bf0651b1c",
+        "sha256": "ba1814ae8eae05a39b594a81b4fc0d1444bf1334574bf4efe49aa829eec43a65",
         "role": "Regression proof for independent framework namespaces and exact compiled device bindings."
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "c1ac3749108e0c703a78f94d023b2a8ac7e22c815cf27d4d07df47810ed4854c",
+        "sha256": "becfccc1455deddb5549b654bbff8cd9b2ffb8a33e76c81d55d367fdf609466d",
         "role": "Proves partial viewer acquisition and readiness failures roll back every acquired viewer."
       },
       {
@@ -287,7 +287,7 @@
     "authority": [
       {
         "path": "openhcs/core/orchestrator/orchestrator.py",
-        "sha256": "35cef23d52782dc8bac847041eb2f9d2a2b11f56baecf988e1c1dd08c1d2167b",
+        "sha256": "ca733be328ed5f1f033ee521fbf9bf0b088791bd19542f0071ddb01b4f2d3d9c",
         "role": "PipelineOrchestrator configuration ownership, resolution, compiler setup, and executor lifecycle."
       },
       {
@@ -297,7 +297,7 @@
       },
       {
         "path": "external/ObjectState/src/objectstate/object_state.py",
-        "sha256": "1d8313d95ed3962a7d4b9c0bdc7b6fa45bb4a16f48f0f454e5fcd3e588836630",
+        "sha256": "735ce860ab650b281534e24e3c7354f37b64bb06832cf186d6b1f626f87108fe",
         "role": "Generic editable ObjectState and snapshot boundary."
       }
     ],
@@ -475,7 +475,7 @@
     "authority": [
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "052820911e06797f64e64d21b7ed85d534a475f9a7697b76b7bb269d9f19fe28",
+        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
         "role": "Public typed source-binding declaration vocabulary."
       },
       {
@@ -485,7 +485,7 @@
       },
       {
         "path": "openhcs/microscopes/source_bindings_handler.py",
-        "sha256": "8b6676c63fbf3e64bfae29ccc2b2bed6d0718f9ea85754233ae2018f9d49b191",
+        "sha256": "88f7c624310ea31a4cf5de884fdae295e4675a578f8a2821a837140e4e4b07b2",
         "role": "Arbitrary-folder ingestion and declared source-binding projection."
       }
     ],
@@ -514,7 +514,7 @@
       },
       {
         "path": "openhcs/core/pipeline/artifact_planning.py",
-        "sha256": "d4f05ddb85cbcd6369b1cc973b8f717b09427336ad28d76fbbea7e02079f5b34",
+        "sha256": "8f2a9fe778df5699218185b2b52f9537a57a929f64ae2a43915d14e04a2e7135",
         "role": "Exact ArtifactSpecRef planning and nominal artifact strategy selection."
       },
       {
@@ -583,7 +583,7 @@
       },
       {
         "path": "openhcs/core/steps/function_outputs.py",
-        "sha256": "4c6a750ba1bba8f348c64fbca86f525d2347145113e80a399458b18561a71558",
+        "sha256": "e9ef37811db8de288d6417dc7131ee3cae657a00734e379493d0d1b010327bed",
         "role": "Declaration-owned OpenHCS metadata targets, typed projection persistence, and completed-plate deduplication across compiled axes."
       },
       {
@@ -598,7 +598,7 @@
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
+        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
         "role": "Per-step framework-device assignment and typed compiled-plan ownership."
       },
       {
@@ -613,7 +613,7 @@
       },
       {
         "path": "tests/unit/test_framework_device_resolver.py",
-        "sha256": "90b288a2ab4645226b3e8a3dea7b9338ff57592a434baa6b0c4f984bf0651b1c",
+        "sha256": "ba1814ae8eae05a39b594a81b4fc0d1444bf1334574bf4efe49aa829eec43a65",
         "role": "Regression proof for independent framework namespaces and exact per-step selection."
       }
     ],
@@ -659,17 +659,17 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_plate_manager_widget.py",
-        "sha256": "36eed56a098cdf37920869eecfaca39adc3e36b6f7fe614b3ddb139b7d80d6dc",
+        "sha256": "b02e81c4a73213577df02a1effbd6843935f5c92f459d6c61ab2998bd489ad58",
         "role": "Regression evidence for Plate Manager service composition and UI delegation."
       },
       {
         "path": "openhcs/pyqt_gui/widgets/shared/services/plate_manager_workflows.py",
-        "sha256": "d09cdeefab9fac1922726ecedd8e8fe3c457c02aefaf523e8e080b9bd7df7d32",
+        "sha256": "d640bf4b2710009dc3f92719ec97cf09fe3d93ed7eb1bebaf2b02913e8fafbfd",
         "role": "Owns all-plates and selected-plates code-document mutation semantics."
       },
       {
         "path": "openhcs/pyqt_gui/services/pipeline_object_state_binding.py",
-        "sha256": "2aee82436d9d44b5bbe734ee0c117e0d670ef7b9bfcb921c59960818dc57b0b7",
+        "sha256": "78000f4d7c75734f7c430444316557d7eca4a55216e7eb50abedd37f633a9039",
         "role": "Owns incremental pipeline binding and complete declaration-graph replacement."
       },
       {
@@ -689,17 +689,17 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "7b87d8e35f8b91eff9dac31cc792e45b69c8bf1ab8d2d1870e36a7d14d444a45",
+        "sha256": "a156a006a3c40f43107b9b1f6ecb97ed150879eb88ded8ef89e25214309ae33a",
         "role": "Coordinates post-paint endpoint preparation and callable-catalogue prewarming."
       },
       {
         "path": "tests/unit/pyqt_gui/test_pipeline_editor_widget.py",
-        "sha256": "11451fc9126b86c7afecbf3e297e37de9f58403ae097bbf72385e033d19a36da",
+        "sha256": "8f28719c5bd9eb5681e67af8e1f7aceb445bcae97c12a13348f943c8b6bafa35",
         "role": "Proves exact reconciled editor state using the installed synthetic demo pipeline declaration."
       },
       {
         "path": "openhcs/demo/synthetic_plate_pipeline.py",
-        "sha256": "a08e4423973b32b42ac347baeb737ffb90c102f140d34b674349ce46cfe19820",
+        "sha256": "3f8916ff71938ac5b53c7f55329b037653519e9592cf564257f78dde158fbd11",
         "role": "Installed synthetic pipeline declaration used by the Pipeline Editor widget regression fixture."
       },
       {
@@ -757,7 +757,7 @@
       },
       {
         "path": "openhcs/core/registry_strategies.py",
-        "sha256": "8928183cfccac1a2ee6c37cfb2388d05c24f11dce8b360f75e2a1a261da4ef55",
+        "sha256": "a41186665abbd308f224d0bb41d6618cd9d89b08acaf54ec2819f2024a6e0804",
         "role": "OpenHCS enum, nominal-type, and most-derived strategy selection implementations."
       }
     ],
@@ -792,7 +792,7 @@
       },
       {
         "path": "openhcs/core/registry_strategies.py",
-        "sha256": "8928183cfccac1a2ee6c37cfb2388d05c24f11dce8b360f75e2a1a261da4ef55",
+        "sha256": "a41186665abbd308f224d0bb41d6618cd9d89b08acaf54ec2819f2024a6e0804",
         "role": "OpenHCS enum, nominal-type, and most-derived strategy selection implementations."
       }
     ],
@@ -837,7 +837,7 @@
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
+        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
         "role": "Per-step callable memory footprint and framework-device binding authority."
       },
       {
@@ -874,12 +874,12 @@
     "authority": [
       {
         "path": "openhcs/core/progress/projection.py",
-        "sha256": "c888bd0e54bddc2a206f705495d771b7c173a414f9b1fe83540fdaa447315bf0",
+        "sha256": "f07ac1c460d0761c2b70c834aae57f77994ac43bb3ef5cd688e4196ccc5d9fce",
         "role": "OpenHCS plate-runtime states and typed domain projection over generic progress."
       },
       {
         "path": "openhcs/core/debug.py",
-        "sha256": "1e4452e41b0c41829e05cc9d47e7da81f8f80c8f16fd4129dc68b72bd9a3314b",
+        "sha256": "072259811bc50bfe71cce9a7cac3e9867bfd853bd34ab5a74b01d9fe14b68f36",
         "role": "Nominal debug command, boundary, snapshot, replay, and paused-worker declarations."
       },
       {
@@ -909,7 +909,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "72c2bc9433f02952cfec64b68dcea716db43f21b4d4fc4cee5a1774291a38e3d",
+        "sha256": "10ba0935230d43f0ed8b2031e8690e12fa6840d26ba5bec2a7ed66fcf2c5fa17",
         "role": "Proves same-client reuse, exact observation serialization, terminal caching, and one-time client release."
       }
     ],
@@ -939,7 +939,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline_document.py",
-        "sha256": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
+        "sha256": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
         "role": "PipelineDocument construction and atomic configuration-step identity."
       },
       {
@@ -964,7 +964,7 @@
       },
       {
         "path": "tests/unit/test_pipeline_document.py",
-        "sha256": "bc0f4dbfb11882f717c4f79481f3bc662b0f7c3997856a20ac4eb43f1dee109b",
+        "sha256": "2c18222ac2a34ee267788063a374112b17874c64693bfe542669c4183bc90c36",
         "role": "Proves missing pipeline_config selects PipelineConfig() while explicit invalid values and missing steps remain rejected."
       },
       {
@@ -1002,12 +1002,12 @@
     "authority": [
       {
         "path": "openhcs/napari_roi_manager/widgets/_roi_manager.py",
-        "sha256": "4b00a846cca5f5f5e29d856ba7900f64e0939a62b6c6ad11bb9c27112b46b9ba",
+        "sha256": "9ae7518576902c4a6d0384e387a08ae73528b39cf3878039c1fc70cfaf6c8a19",
         "role": "Native Napari Shapes-layer ROI manager projection and selection behaviour."
       },
       {
         "path": "openhcs/processing/materialization/core.py",
-        "sha256": "c5ff3a826c92ddf9208fcb0c512afc0848638c75df0049e7f2f1ca5bf4a0a822",
+        "sha256": "74759b37cb83a6c59f616b8b14fed21bbb187a8f489c4086bfb0fc7d380fddf0",
         "role": "Nominal artifact materialisation and ROI projection strategies."
       },
       {
@@ -1017,7 +1017,7 @@
       },
       {
         "path": "tests/unit/test_napari_roi_manager_integration.py",
-        "sha256": "94e37f36266cdc682eb9048184a3975ad3eb1a53dd2cc41583beed2ce03d89b5",
+        "sha256": "de66b3d7aeb49b100ac5bb3c3acdf1c14afc19fb3681071b4356f6d7949a52dc",
         "role": "Regression proof for the native Shapes-layer ROI manager seam."
       }
     ],
@@ -1043,7 +1043,7 @@
     "authority": [
       {
         "path": "openhcs/core/runtime_artifact_values.py",
-        "sha256": "481a82c4d05b44c74925adb440f7159d529b055392f138e21f592f1a720da0be",
+        "sha256": "9ac62ec4c4a6a6f7f375026ea112cc2e43f09ee6e6ca270a3d955be8ef5347cf",
         "role": "RuntimeValue, ArtifactKey, location, and nominal payload wrapping."
       },
       {
@@ -1058,7 +1058,7 @@
       },
       {
         "path": "openhcs/core/runtime_image_values.py",
-        "sha256": "5625ad31adc2d64d8524ab96cc9deaad013404313dc19feb2f682c4b9106f740",
+        "sha256": "aec6e31b907c2ca5a69b3faf5fe3366654d9506b1191f90a7cbeb8ca1dbef08c",
         "role": "Owns semantic image payload metadata, its serialized projection, geometry use, masks, source provenance, and context projection."
       },
       {
@@ -1073,7 +1073,7 @@
       },
       {
         "path": "tests/unit/test_function_artifact_outputs.py",
-        "sha256": "9d6f8e6495ae13e56924ef26c56f4e68c71cc8c3cd06774ccfb0c639250521f8",
+        "sha256": "600465c47acd7b69c1c2036a05173d9018e1d5c118ff71474a95d86fd14fda49",
         "role": "Proves special artifacts bypass image-axis projection during runtime materialisation."
       },
       {
@@ -1171,12 +1171,12 @@
     "authority": [
       {
         "path": "openhcs/serialization/json.py",
-        "sha256": "5e11310ed8197c0b8b869b9c1780b804167a1fdbb7a12ce6cd342304759445b4",
+        "sha256": "fa1e2aeae1e5d6896944d1516c17db0ac486157b335d7be06fcb553ab3203f1f",
         "role": "Bounded JSON singledispatch projection for callables, registered types, dataclasses, paths, enums, and collections."
       },
       {
         "path": "openhcs/core/image_file_serialization.py",
-        "sha256": "95ffa2527ab07bb19fc9a690e727d78fb68c5c872cdd1c0df2780677a6b28816",
+        "sha256": "d3aec14d46696ac82d8cc0a7554f26550bdde76afd51c4e1a5d3be27e8545d5f",
         "role": "Nominal image-container format and pixel-semantics registry."
       },
       {
@@ -1261,17 +1261,17 @@
     "authority": [
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "052820911e06797f64e64d21b7ed85d534a475f9a7697b76b7bb269d9f19fe28",
+        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
         "role": "Public typed source-binding declaration vocabulary."
       },
       {
         "path": "openhcs/core/source_binding_workspace.py",
-        "sha256": "4b24207fb84a8d2c23a6a71dde45997113c0c33b6d4c26aa49058d2ab5f99c17",
+        "sha256": "7dce6e45b9e846713b246561340d43de378e251e35f6ef68d5527fccc1b31ad3",
         "role": "Compiled virtual source workspace and binding projection."
       },
       {
         "path": "openhcs/microscopes/source_bindings_handler.py",
-        "sha256": "8b6676c63fbf3e64bfae29ccc2b2bed6d0718f9ea85754233ae2018f9d49b191",
+        "sha256": "88f7c624310ea31a4cf5de884fdae295e4675a578f8a2821a837140e4e4b07b2",
         "role": "Arbitrary-folder ingestion and declared source-binding projection."
       },
       {
@@ -1306,7 +1306,7 @@
       },
       {
         "path": "openhcs/core/pipeline/artifact_planning.py",
-        "sha256": "d4f05ddb85cbcd6369b1cc973b8f717b09427336ad28d76fbbea7e02079f5b34",
+        "sha256": "8f2a9fe778df5699218185b2b52f9537a57a929f64ae2a43915d14e04a2e7135",
         "role": "Exact ArtifactSpecRef planning and nominal artifact strategy selection."
       },
       {
@@ -1316,7 +1316,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_contracts.py",
-        "sha256": "1c11641ee7305810f8ca3a60aaa4d62c3dbe418874c1b709fd94120991d07d6f",
+        "sha256": "bf2e8f6c66a181218c8fd9afa9132922e86295f65d6102d976e1b36e41e17ee5",
         "role": "Invocation-specific CellProfiler artifact contract derivation."
       }
     ],
@@ -1394,7 +1394,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1436,7 +1436,7 @@
     "authority": [
       {
         "path": "openhcs/core/viewer_streaming_service.py",
-        "sha256": "8cb881da211f1f1837b2db7375ca9c937790c54a97fa54facd10cdc81fcc6b1c",
+        "sha256": "224c8b9e66868f8224c61434e576ac62dc80c0abec9d366464815a998376c036",
         "role": "Compiled output streaming, viewer settlement, state evidence, and lifecycle cleanup."
       },
       {
@@ -1446,7 +1446,7 @@
       },
       {
         "path": "openhcs/runtime/viewer_protocol.py",
-        "sha256": "e165edc4d487235aad75503020aa7d18d72767007795f1d10f63b81b2eecdf99",
+        "sha256": "710f5bbd7bb47c081656bfff33768f85b0fbb4627e75239f81099248df608bae",
         "role": "OpenHCS viewer persistence policy, exact process ownership, platform policy, readiness, and settlement contracts."
       },
       {
@@ -1456,12 +1456,12 @@
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "1e85274b98ae1740eb41e309b7d4682543b8426f9f0059f883790e75a51d1c4a",
+        "sha256": "a9aeaace1fa0275ec0c2ad540195ad58c18c96d783560222b2516d57401aacd9",
         "role": "Applies bounded shape projection and preflighted layer isolation inside the owning Napari Qt process."
       },
       {
         "path": "openhcs/agent/services/viewer_window_service.py",
-        "sha256": "044296dd82637f6b3cd62157606944cb361c48f17f1b0bfdb2d4878cee537e21",
+        "sha256": "4370342a1cfdf9cde7113f7274e57bfa3ab64ecb8d8cbfec5c5b415fa63a4b35",
         "role": "Projects one typed bulk viewer response into agent results without client-side state mirroring or per-layer round trips."
       },
       {
@@ -1496,27 +1496,27 @@
       },
       {
         "path": "tests/unit/test_viewer_protocol.py",
-        "sha256": "1ba44f1dfeb2a9dc6956a7e5467449c6c750f70fa9b017a0c1172cc6f111e889",
+        "sha256": "da102feb78edbf64c639e3f22d3b590516108bf7f6f074f2a38432ee3527e71b",
         "role": "Proves execution cleanup stops exact non-persistent processes while persistent viewers remain available for typed lifecycle shutdown."
       },
       {
         "path": "tests/unit/test_viewer_result_element_selection.py",
-        "sha256": "71dfad47f8ad441e0c943d836721eeea3c41455ccc48cbf1772658197f04d498",
+        "sha256": "55020f61d39723560dfb542cdefda4dd520d23679102b9a0e27fbf2a13e3750f",
         "role": "Proves bulk isolation validates every route and navigation before any visibility, selection, or axis mutation."
       },
       {
         "path": "tests/unit/test_napari_streaming_handlers.py",
-        "sha256": "170b4f0b15951433cb5a8a352c93f6b4f42b67f3d324ee854bf406bd2301f472",
+        "sha256": "071d4a1a953266d8450b42db508db0baa632f3b9f8acb0229958855187972c01",
         "role": "Proves one global ROI-member budget and metadata-only shape projection across payload records."
       },
       {
         "path": "tests/unit/test_orchestrator_lane_planning.py",
-        "sha256": "c1ac3749108e0c703a78f94d023b2a8ac7e22c815cf27d4d07df47810ed4854c",
+        "sha256": "becfccc1455deddb5549b654bbff8cd9b2ffb8a33e76c81d55d367fdf609466d",
         "role": "Proves multi-viewer bootstrap rollback after partial acquisition and readiness failure."
       },
       {
         "path": "openhcs/runtime/napari_streaming_handlers.py",
-        "sha256": "7b9c99e9f30233986c9bde55fb38d797be0a6989ad5b0e309a6be78e2df0b0bd",
+        "sha256": "57ea1759081d494713b2e2e11d04b55a96ccb82e5328635cfc2332f6561bf162",
         "role": "Owns accepted intake-cycle and route error retention through settlement."
       },
       {
@@ -1566,7 +1566,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline_document.py",
-        "sha256": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
+        "sha256": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
         "role": "PipelineDocument construction and atomic configuration-step identity."
       },
       {
@@ -1604,7 +1604,7 @@
     "authority": [
       {
         "path": "openhcs/core/pipeline_document.py",
-        "sha256": "c4331b3eca0793e3272625addb69ac38ea7cda4040cf6992f360a076755c3d6c",
+        "sha256": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
         "role": "PipelineDocument construction and atomic configuration-step identity."
       },
       {
@@ -1624,7 +1624,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1634,7 +1634,7 @@
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
+        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
         "role": "Typed step-plan authority including framework-local device bindings."
       },
       {
@@ -1695,12 +1695,12 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "7b87d8e35f8b91eff9dac31cc792e45b69c8bf1ab8d2d1870e36a7d14d444a45",
+        "sha256": "a156a006a3c40f43107b9b1f6ecb97ed150879eb88ded8ef89e25214309ae33a",
         "role": "Desktop composition and live UIConfig application boundary."
       },
       {
@@ -1794,7 +1794,7 @@
       },
       {
         "path": "openhcs/agent/ui_bridge_actions.py",
-        "sha256": "4ad2f1e61d825907f5b362d9360606f04ebf05181c0bd21d64e74262a019e306",
+        "sha256": "28c494cc9335ac84482787f1949d9937fd818864407d56ca23ba585a3b0156a1",
         "role": "Owns main-window action behaviour, admission, effects and recovery warnings."
       },
       {
@@ -1804,7 +1804,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "7b87d8e35f8b91eff9dac31cc792e45b69c8bf1ab8d2d1870e36a7d14d444a45",
+        "sha256": "a156a006a3c40f43107b9b1f6ecb97ed150879eb88ded8ef89e25214309ae33a",
         "role": "Applies the same preview policy to both managers at startup and after configuration save."
       },
       {
@@ -2101,7 +2101,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "72c2bc9433f02952cfec64b68dcea716db43f21b4d4fc4cee5a1774291a38e3d",
+        "sha256": "10ba0935230d43f0ed8b2031e8690e12fa6840d26ba5bec2a7ed66fcf2c5fa17",
         "role": "Proves same-client status reuse, progress serialization, terminal caching, and one-time client release."
       },
       {
@@ -2176,7 +2176,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/widgets/shared/server_browser/progress_projection.py",
-        "sha256": "8628b74be8123ea95c8d8b751f2ac0d90b190e89c411231f70b95c109d043e06",
+        "sha256": "4b9c4bd90fbe6ed4ac55f5fe1d23cf2a46c3a7f743218d685df8ac2f27be7998",
         "role": "Browser-facing typed execution progress projection."
       },
       {
@@ -2196,7 +2196,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/main.py",
-        "sha256": "7b87d8e35f8b91eff9dac31cc792e45b69c8bf1ab8d2d1870e36a7d14d444a45",
+        "sha256": "a156a006a3c40f43107b9b1f6ecb97ed150879eb88ded8ef89e25214309ae33a",
         "role": "Projects the configured endpoint snapshot into its dedicated right-hand indicator, and routes endpoint termination to the client lifecycle owner."
       },
       {
@@ -2274,7 +2274,7 @@
       },
       {
         "path": "tests/unit/test_installed_mcp_demo.py",
-        "sha256": "e09e5967204ec38d3dae4eea65548864a91aa502e91ef0dd79202856c9cd493e",
+        "sha256": "5dfef53cffd3f81464dfd71af42864426ecf5577b9201d65d1547bb35630784b",
         "role": "Proves the installed MCP workflow, progress-aware inactivity watchdog, hard ceiling, and terminal completion."
       },
       {
@@ -2284,7 +2284,7 @@
       },
       {
         "path": "openhcs/mcp/installed_demo.py",
-        "sha256": "5ae2b17747a219a180efd6d23dca51c92470d18a2d5b6189af9ebfb13858d21f",
+        "sha256": "ea0f59a9926740d13c5bb97ed6202fb415844d98a6c43663cc4b38d72ee5189e",
         "role": "Implements the installed workflow rehearsal and derives activity from exact execution progress observations."
       },
       {
@@ -2345,7 +2345,7 @@
   },
   {
     "path": "docs/source/development/callable_artifact_authoring.rst",
-    "source_sha256": "77aa44504f5d5cfcf8d073f287bd4022fd085d0435633e55a53ad4eee422c2ea",
+    "source_sha256": "60006087b96c5e1c84063923e457fabbd54a040db4bad4e9e96c2fc6bfeb62b3",
     "audience": [
       "OpenHCS callable and artifact extension authors"
     ],
@@ -2364,12 +2364,12 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_contracts.py",
-        "sha256": "1c11641ee7305810f8ca3a60aaa4d62c3dbe418874c1b709fd94120991d07d6f",
+        "sha256": "bf2e8f6c66a181218c8fd9afa9132922e86295f65d6102d976e1b36e41e17ee5",
         "role": "Invocation-specific CellProfiler artifact contract derivation."
       },
       {
         "path": "tests/unit/test_artifact_spec_collection.py",
-        "sha256": "8b7f4f7ced00cf9893e26e180c94a9198997c9c30f82f2409f6491d49c9b9133",
+        "sha256": "939bb08b0a8a76d7f21060ba34164abaca367e10176d041713ccbc1e0c6383e6",
         "role": "Regression proof for role-neutral artifact specs, exact refs, relations, and collection validation."
       },
       {
@@ -2424,7 +2424,7 @@
       },
       {
         "path": "openhcs/interop/cellprofiler/module_artifact_contracts.py",
-        "sha256": "1c11641ee7305810f8ca3a60aaa4d62c3dbe418874c1b709fd94120991d07d6f",
+        "sha256": "bf2e8f6c66a181218c8fd9afa9132922e86295f65d6102d976e1b36e41e17ee5",
         "role": "Invocation-specific CellProfiler artifact contract derivation."
       },
       {
@@ -2439,7 +2439,7 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_public_boundary_contracts.py",
-        "sha256": "e5844ec28aedd5a23783fc6c328c6eb86648818f0498b948a9055aca415344ef",
+        "sha256": "1f025f7e8c3fb8d573408046aa65bd2cafae7615a3e782b7f9facd8720bc3283",
         "role": "Regression proof for public CellProfiler declaration and importer boundaries."
       },
       {
@@ -2493,7 +2493,7 @@
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "2d069dae302f73970f0dd57bd8e3f9bcead2d4e93b31ef1e96b90e55f4a8ce58",
+        "sha256": "0ed8bb8d843ff41382f4de25367a74c9535a39425c6fc328091ad3025d526151",
         "role": "Compiled source satisfaction, artifact edge, path, grouping, and plan decisions."
       },
       {
@@ -2508,7 +2508,7 @@
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
+        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
         "role": "Typed per-step framework-device binding authority."
       },
       {
@@ -2523,7 +2523,7 @@
       },
       {
         "path": "tests/unit/test_framework_device_resolver.py",
-        "sha256": "90b288a2ab4645226b3e8a3dea7b9338ff57592a434baa6b0c4f984bf0651b1c",
+        "sha256": "ba1814ae8eae05a39b594a81b4fc0d1444bf1334574bf4efe49aa829eec43a65",
         "role": "Regression proof for independent framework namespaces and exact selection."
       }
     ],
@@ -2558,7 +2558,7 @@
       },
       {
         "path": "openhcs/agent/services/knowledge_base_service.py",
-        "sha256": "50e5faf83fae94e5c7c3ea20ef3c7b48e0c7dcf3413017bb983a13262f06053a",
+        "sha256": "88e10e18c66eb3a8bc2ec5dd33493a9473510c0b0a9d355502d668042f32fdd9",
         "role": "Source-backed knowledge catalogue, search, section reads, and lazy Official30 projection."
       },
       {
@@ -2615,12 +2615,12 @@
     "authority": [
       {
         "path": "openhcs/core/registry_strategies.py",
-        "sha256": "8928183cfccac1a2ee6c37cfb2388d05c24f11dce8b360f75e2a1a261da4ef55",
+        "sha256": "a41186665abbd308f224d0bb41d6618cd9d89b08acaf54ec2819f2024a6e0804",
         "role": "OpenHCS enum, nominal-type, and most-derived strategy selection implementations."
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2635,7 +2635,7 @@
       },
       {
         "path": "openhcs/serialization/json.py",
-        "sha256": "5e11310ed8197c0b8b869b9c1780b804167a1fdbb7a12ce6cd342304759445b4",
+        "sha256": "fa1e2aeae1e5d6896944d1516c17db0ac486157b335d7be06fcb553ab3203f1f",
         "role": "Bounded JSON singledispatch projection for callables, registered types, dataclasses, paths, enums, and collections."
       },
       {
@@ -2650,7 +2650,7 @@
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
+        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
         "role": "Typed per-step framework-device binding authority."
       },
       {
@@ -2721,7 +2721,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2767,7 +2767,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2881,7 +2881,7 @@
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "f35366ad497a437339f5a9f6d0fcb1739348827cba553a39e39eaedbfed0fa67",
+        "sha256": "21c0c98f4a11518af2cf27b09eb607e76882dcdf8a38ac8c4dfc88aa0902e632",
         "role": "MCP dev-client session, declaration-derived command surface validation, receipt decoding, skip-reason-owned summary status, timeout, and workflow-owned terminal-state criteria."
       },
       {
@@ -2901,27 +2901,27 @@
       },
       {
         "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "0cc0d6d39ba9a206894a0785a15409e764331ce6dbfb23f9eeded8512ed5afed",
+        "sha256": "236ee6e6cabc50d85eaa0cd5c88cbb50042850f4db7937bb0ec2f06a5ab4887e",
         "role": "Declares the default UI bridge connection timeout."
       },
       {
         "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "8ee1eee78b8547d3844a17c473bb8f71e0bd2d27c3b3f876642f54be0bde8b47",
+        "sha256": "68265e8d117a3d564beb8c662fcd380fdffa16bf92a440b08e81eb8372982a31",
         "role": "Declares the default viewer control timeout."
       },
       {
         "path": "openhcs/mcp/dev_client_commands/ui.py",
-        "sha256": "9fca535abf852ef5601f244caa9ae2a8d7649a8d7788e7cfef156ee4d80df381",
+        "sha256": "6c1142ce723a5d28ef14726b10868e11ede4cd043b7ea40a622fcdcc1eecc8a4",
         "role": "Owns declaration-derived UI development commands, including selected-workflow ordering and the typed output-directory projection for window snapshots."
       },
       {
         "path": "openhcs/mcp/dev_client_commands/viewer.py",
-        "sha256": "bd7ef93e740ffbca98efe249d87f72ab09de92e795c1bc4036677f07bdfa4152",
+        "sha256": "93a1c1e532907677f6fdabe069af3b7f0db08cef673b6ce974056449deae9a50",
         "role": "Declares the development-client viewer state, payload, ROI-summary, navigation, and isolation command surfaces."
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "ea46bce17be056a8a76ccc92c6a731037b2cb93db3e624125d8c3fb3995457a2",
+        "sha256": "a78d83c6be2f7b5019d4d0705126215af15ad65ce82ea985b7e29f54b6da7ef7",
         "role": "Regression proof for selected-surface preflight, stale-row rejection, idempotent initialization, and every declared or malformed bridge-receipt continuation outcome."
       },
       {
@@ -2971,7 +2971,7 @@
       },
       {
         "path": "tests/unit/pyqt_gui/test_ui_agent_bridge.py",
-        "sha256": "641712b0ce3de1d1d3f516ed96f32441722d37a88bc0cfa2c3190b77eb4ebfa5",
+        "sha256": "9e5a9704ec0ee7d83575fc8f6bc2820a5aee382f33e7cfaddc6c27e3c02889dc",
         "role": "Proves stale protocol and application versions fail before UI operation dispatch."
       },
       {
@@ -2986,7 +2986,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "72c2bc9433f02952cfec64b68dcea716db43f21b4d4fc4cee5a1774291a38e3d",
+        "sha256": "10ba0935230d43f0ed8b2031e8690e12fa6840d26ba5bec2a7ed66fcf2c5fa17",
         "role": "Proves exact progress projection from the submitting client and one-time release at terminal status."
       },
       {
@@ -3062,7 +3062,7 @@
     "authority": [
       {
         "path": "openhcs/agent/services/knowledge_base_service.py",
-        "sha256": "50e5faf83fae94e5c7c3ea20ef3c7b48e0c7dcf3413017bb983a13262f06053a",
+        "sha256": "88e10e18c66eb3a8bc2ec5dd33493a9473510c0b0a9d355502d668042f32fdd9",
         "role": "Source-backed knowledge catalogue, search, section reads, and lazy Official30 projection."
       },
       {
@@ -3072,12 +3072,12 @@
       },
       {
         "path": "tests/unit/agent/test_knowledge_base_service.py",
-        "sha256": "79fbfd2d362bff38279662a1fe0091e5f7f21c4c44f03b251600ac128cf612d7",
+        "sha256": "7b4ab158ced3ec3355d314d04e9baf0c8a4e8b2e60ce84aa56b2723c44f563c1",
         "role": "Regression proof for canonical document IDs, search, bounded reads, and section selection."
       },
       {
         "path": "tests/unit/agent/test_official30_knowledge_examples.py",
-        "sha256": "f5d396b5a21f67a80d786473bfa04e43a8eaf3802ca7b6ed4e0dddace36f8eb8",
+        "sha256": "6b81450dc01a33370fdad7a9a3b88bc87c3f85eddcd8b872373da9a89172c7a4",
         "role": "Regression proof for lazy exact-case Official30 source conversion and structured failure."
       }
     ],
@@ -3107,7 +3107,7 @@
       },
       {
         "path": "scripts/sync_mcp_release_metadata.py",
-        "sha256": "cb8b38dc1cb7dbe4993a77c0eadcbe6cf4cff1cf892fb5277d2d60f44988e33f",
+        "sha256": "95b40ffc3c85af929a553f6fbc9fbaded3c7a40ba7a92bf4eeb6227747a784ca",
         "role": "Version and MCP metadata projection implementation."
       },
       {
@@ -3252,7 +3252,7 @@
       },
       {
         "path": "tests/unit/test_ci_package_boundaries.py",
-        "sha256": "06cd191fe933b08d0568d7bbbef2ac2c2e30bb8707123bba5b9c73b66f8eed03",
+        "sha256": "48dec76944bbabaa41d5995c27363c71c04f01c7b0fc4c940dfc10dd55ff44e2",
         "role": "Proves publication consumes central release requirements and that candidate and published GUI matrices retain their typed screenshot evidence."
       }
     ],
@@ -3362,7 +3362,7 @@
     "authority": [
       {
         "path": "external/PolyStore/src/polystore/omero_local.py",
-        "sha256": "613f0b3b2fb527ae3753a77127d9affd75bf1d4fc1af655274a93509f3066233",
+        "sha256": "35d39564317510234c2a3ded00bb06a09417d1b6f7359e52e74c7bd0a086f642",
         "role": "Generic OMERO addressing, persistence dispatch, and image-plane batching."
       },
       {
@@ -3471,7 +3471,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3532,7 +3532,7 @@
     "authority": [
       {
         "path": "openhcs/core/debug.py",
-        "sha256": "1e4452e41b0c41829e05cc9d47e7da81f8f80c8f16fd4129dc68b72bd9a3314b",
+        "sha256": "072259811bc50bfe71cce9a7cac3e9867bfd853bd34ab5a74b01d9fe14b68f36",
         "role": "Nominal debug command, boundary, snapshot, replay, and paused-worker declarations."
       },
       {
@@ -3542,7 +3542,7 @@
       },
       {
         "path": "openhcs/agent/services/runtime_server_service.py",
-        "sha256": "14cdc20c3d231e2f7de14b60edd4db4114ea62932713c794068b5c82f8577516",
+        "sha256": "15370111d357546f8cb232c6fcedc98ee97e1ad171ab441a6c3c9bd98271b70f",
         "role": "Bounded runtime-server and paused-debug inspection service."
       },
       {
@@ -3618,7 +3618,7 @@
       },
       {
         "path": "tests/unit/test_framework_device_resolver.py",
-        "sha256": "90b288a2ab4645226b3e8a3dea7b9338ff57592a434baa6b0c4f984bf0651b1c",
+        "sha256": "ba1814ae8eae05a39b594a81b4fc0d1444bf1334574bf4efe49aa829eec43a65",
         "role": "Regression proof for exact framework-local device selection."
       },
       {
@@ -3660,7 +3660,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ce7823cd81dc6e7ca179b6ee8dd53a26b726be3779759b9fd89179709ab1a3f0",
+        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -3701,7 +3701,7 @@
     "authority": [
       {
         "path": "openhcs/core/registry_strategies.py",
-        "sha256": "8928183cfccac1a2ee6c37cfb2388d05c24f11dce8b360f75e2a1a261da4ef55",
+        "sha256": "a41186665abbd308f224d0bb41d6618cd9d89b08acaf54ec2819f2024a6e0804",
         "role": "OpenHCS enum, nominal-type, and most-derived strategy selection implementations."
       },
       {
@@ -3773,7 +3773,7 @@
       },
       {
         "path": "openhcs/core/compiled_step_plan.py",
-        "sha256": "f1c3d2978296a625b0078d5d24e882ae49121d4394d8f943501bdbd922d82f3c",
+        "sha256": "6d46571e6f2d069b98a92b41d711b2e20bfab9f0493cf73d3f150d5be08e7f96",
         "role": "Typed per-step semantic and framework-device decisions."
       },
       {
@@ -3807,7 +3807,7 @@
     "authority": [
       {
         "path": "openhcs/core/runtime_artifact_values.py",
-        "sha256": "481a82c4d05b44c74925adb440f7159d529b055392f138e21f592f1a720da0be",
+        "sha256": "9ac62ec4c4a6a6f7f375026ea112cc2e43f09ee6e6ca270a3d955be8ef5347cf",
         "role": "RuntimeValue, ArtifactKey, location, and nominal payload wrapping."
       },
       {
@@ -3822,7 +3822,7 @@
       },
       {
         "path": "tests/unit/test_runtime_value_store.py",
-        "sha256": "9240378fe988d8fecad948fecbe45a96b4afcfa5f5da4601fb954a5311e2f6ce",
+        "sha256": "8900a7b83b59d0a40f9698dbafaaba778df982f9d7a0b628f80eab97335aeab0",
         "role": "Regression proof for typed runtime recording, replacement, queries, and failure behaviour."
       }
     ],
@@ -3845,17 +3845,17 @@
     "authority": [
       {
         "path": "openhcs/core/source_bindings.py",
-        "sha256": "052820911e06797f64e64d21b7ed85d534a475f9a7697b76b7bb269d9f19fe28",
+        "sha256": "3443e1da9d6a7a3c39f75d17e8216b7249035b506edc4270686d2160dbb9acfd",
         "role": "Public typed source-binding declaration vocabulary."
       },
       {
         "path": "openhcs/core/source_binding_workspace.py",
-        "sha256": "4b24207fb84a8d2c23a6a71dde45997113c0c33b6d4c26aa49058d2ab5f99c17",
+        "sha256": "7dce6e45b9e846713b246561340d43de378e251e35f6ef68d5527fccc1b31ad3",
         "role": "Compiled virtual source workspace and binding projection."
       },
       {
         "path": "openhcs/core/pipeline/path_planner.py",
-        "sha256": "2d069dae302f73970f0dd57bd8e3f9bcead2d4e93b31ef1e96b90e55f4a8ce58",
+        "sha256": "0ed8bb8d843ff41382f4de25367a74c9535a39425c6fc328091ad3025d526151",
         "role": "Compiled source satisfaction, artifact edge, path, grouping, and plan decisions."
       },
       {

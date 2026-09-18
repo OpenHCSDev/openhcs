@@ -72,6 +72,7 @@ class InstalledDemoFailure(RuntimeError):
 _EXECUTION_STALL_TIMEOUT_SECONDS = 180.0
 _EXECUTION_MAXIMUM_DURATION_SECONDS = 900.0
 _EXECUTION_POLL_INTERVAL_SECONDS = 0.5
+_VIEWER_SETTLE_TIMEOUT_SECONDS = 60.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -631,13 +632,13 @@ def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
                 "--transport-mode",
                 "tcp",
                 "--timeout-ms",
-                "2000",
+                "5000",
                 "--require-nonzero-payloads",
                 "--include-state",
                 "--json",
             ),
             tool_name=agent_capabilities.validate_viewer_window_state.name,
-            timeout_seconds=20.0,
+            timeout_seconds=30.0,
         )
         if _viewer_is_settled(payload):
             break

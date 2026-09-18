@@ -39,9 +39,6 @@ from openhcs.core.source_bindings import (
     SourceSetRole,
     SourceSelector,
 )
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionCache,
-)
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.bioformats_adapter import SourcePlaneStoreAdapter
 from openhcs.microscopes.openhcs import (
@@ -49,6 +46,9 @@ from openhcs.microscopes.openhcs import (
     FIELDS,
     OpenHCSMetadataHandler,
     get_metadata_path,
+)
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
