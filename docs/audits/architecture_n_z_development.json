@@ -2284,7 +2284,7 @@
       },
       {
         "path": "openhcs/mcp/installed_demo.py",
-        "sha256": "ffeefc5250a8b839172637c0592eed19258076acb06af4703e5c4d2a998d45ee",
+        "sha256": "4ea6c0730db6d3938eea1cac558dd46ea5c956ef151a5d68b8ea956e8bf57655",
         "role": "Implements the installed workflow rehearsal and derives activity from exact execution progress observations."
       },
       {
@@ -3167,7 +3167,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "c3f1b155287e339ad3e286c31a83728b43f28302863389d29692923f2ebd36a8",
+        "sha256": "d93b55b19447e3b1d30a18cf3792a411a18e357c7c89b07cb9557fbbeeecef24",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3407,7 +3407,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "c3f1b155287e339ad3e286c31a83728b43f28302863389d29692923f2ebd36a8",
+        "sha256": "d93b55b19447e3b1d30a18cf3792a411a18e357c7c89b07cb9557fbbeeecef24",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],

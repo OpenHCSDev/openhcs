@@ -398,7 +398,7 @@
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "22a8ec20ec9a518239d58d06417310e43bcd002d22ab3d4f2f44ed9ea707996c",
+        "sha256": "bc5abfddf076996a050b0601c46b6039d2d812ab57cd303847b241e477176f53",
         "role": "Defines the executable Official30 import, execution, equivalence, and viewer evidence boundary."
       },
       {
@@ -2183,7 +2183,7 @@
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "22a8ec20ec9a518239d58d06417310e43bcd002d22ab3d4f2f44ed9ea707996c",
+        "sha256": "bc5abfddf076996a050b0601c46b6039d2d812ab57cd303847b241e477176f53",
         "role": "Implements the headless and non-persistent Napari acceptance routes over all manifest cases."
       },
       {
