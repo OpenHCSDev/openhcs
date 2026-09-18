@@ -72,7 +72,7 @@
       },
       {
         "path": "tests/integration/test_cellprofiler_official30_zmq.py",
-        "sha256": "f14be9400c654060354a2abd53a8d5e869eb2c8248137e5b02c2f02989a74779",
+        "sha256": "22a8ec20ec9a518239d58d06417310e43bcd002d22ab3d4f2f44ed9ea707996c",
         "role": "Exercises all 30 declared CellProfiler comparison cases over ZMQ and validates live Napari and Fiji projections."
       },
       {
