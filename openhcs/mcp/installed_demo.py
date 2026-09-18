@@ -616,7 +616,7 @@ def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
                 "--transport-mode",
                 "tcp",
                 "--timeout-ms",
-                "2000",
+                "15000",
                 "--require-nonzero-payloads",
                 "--include-state",
                 "--json",
