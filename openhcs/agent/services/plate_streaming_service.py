@@ -347,10 +347,9 @@ class PlateStreamingService:
 
     @staticmethod
     def _is_streamable_record(record: PlateFileRecord) -> bool:
-        if record.kind is PlateFileKind.IMAGE:
-            return True
         return (
-            record.kind is PlateFileKind.RESULT and record.file_format is FileFormat.ROI
+            record.streamable_image_path is not None
+            or record.streamable_roi_path is not None
         )
 
     @classmethod
@@ -371,10 +370,11 @@ class PlateStreamingService:
             if not cls._is_streamable_record(record):
                 skipped_records.append(record)
                 continue
-            if record.kind is PlateFileKind.IMAGE:
-                image_paths.append(record.key)
-            elif record.kind is PlateFileKind.RESULT:
-                roi_path = record.full_path or record.key
+            image_path = record.streamable_image_path
+            roi_path = record.streamable_roi_path
+            if image_path is not None:
+                image_paths.append(image_path)
+            elif roi_path is not None:
                 roi_paths.append(roi_path)
                 if record.metadata:
                     roi_component_metadata_by_path[roi_path] = dict(record.metadata)

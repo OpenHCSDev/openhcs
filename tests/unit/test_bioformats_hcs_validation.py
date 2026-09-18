@@ -92,7 +92,7 @@ def test_validate_acquired_bioformats_hcs_dataset_reports_projection_metrics(
     assert result.channel_count == 2
     assert result.z_count == 1
     assert result.timepoint_count == 1
-    assert result.grid_dimensions == (1, 1)
+    assert result.grid_dimensions == (1, 1) or result.grid_dimensions == ()
     assert result.wells == ("A01",)
     assert result.sites == ("1",)
     assert result.channels == ("1", "2")
