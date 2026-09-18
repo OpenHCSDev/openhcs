@@ -168,7 +168,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "7befe5d4785fb5f785524659a5735ad9d0829e2b6f5cf0ffbe573805ace83066",
+        "sha256": "1affd398b04df05557d7b4f2cfeda3345444327b884bf3ce13b5c889b6b363c2",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -697,7 +697,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7befe5d4785fb5f785524659a5735ad9d0829e2b6f5cf0ffbe573805ace83066",
+        "sha256": "1affd398b04df05557d7b4f2cfeda3345444327b884bf3ce13b5c889b6b363c2",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -914,7 +914,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7befe5d4785fb5f785524659a5735ad9d0829e2b6f5cf0ffbe573805ace83066",
+        "sha256": "1affd398b04df05557d7b4f2cfeda3345444327b884bf3ce13b5c889b6b363c2",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1621,7 +1621,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7befe5d4785fb5f785524659a5735ad9d0829e2b6f5cf0ffbe573805ace83066",
+        "sha256": "1affd398b04df05557d7b4f2cfeda3345444327b884bf3ce13b5c889b6b363c2",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2288,7 +2288,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "7befe5d4785fb5f785524659a5735ad9d0829e2b6f5cf0ffbe573805ace83066",
+        "sha256": "1affd398b04df05557d7b4f2cfeda3345444327b884bf3ce13b5c889b6b363c2",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2479,7 +2479,7 @@
       },
       {
         "path": ".github/workflows/website-pages.yml",
-        "sha256": "df09fe90bf2f57100c4381ae46b66aa68a70aedba0eccaea6f24c61ec9ffba60",
+        "sha256": "94fd5634ace8d7f138446a120acb49de27d0ea7230b09b1e958ef8b8fcd85b37",
         "role": "Validates gallery generation against metadata-resolved source candidates before deploying the checked-in dependency-free website projection."
       },
       {
@@ -2798,7 +2798,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7befe5d4785fb5f785524659a5735ad9d0829e2b6f5cf0ffbe573805ace83066",
+        "sha256": "1affd398b04df05557d7b4f2cfeda3345444327b884bf3ce13b5c889b6b363c2",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -3421,7 +3421,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "7befe5d4785fb5f785524659a5735ad9d0829e2b6f5cf0ffbe573805ace83066",
+        "sha256": "1affd398b04df05557d7b4f2cfeda3345444327b884bf3ce13b5c889b6b363c2",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
