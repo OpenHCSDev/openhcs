@@ -10,7 +10,7 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "a2c46adc10b7a718b0e931dcec8bc524c4caec9867d208524cc7833d43f83d80",
+        "sha256": "f91f862a241b3e817122ef8c703cfa38830c01df42d78058c8a05298e55215e2",
         "role": "Detached Napari endpoint startup and application event-loop integration."
       },
       {
@@ -909,7 +909,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "5632d571e3b3ff3b9a57c7dccd747c09c4e55e7f0b02eca72540e9138c4a7f6f",
+        "sha256": "4487dd114ac0f0f6fc005d220812197a55cca7fb1ac0b450c8889d45055037c5",
         "role": "Proves same-client reuse, exact observation serialization, terminal caching, and one-time client release."
       }
     ],
@@ -1456,7 +1456,7 @@
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "a2c46adc10b7a718b0e931dcec8bc524c4caec9867d208524cc7833d43f83d80",
+        "sha256": "f91f862a241b3e817122ef8c703cfa38830c01df42d78058c8a05298e55215e2",
         "role": "Applies bounded shape projection and preflighted layer isolation inside the owning Napari Qt process."
       },
       {
@@ -1501,12 +1501,12 @@
       },
       {
         "path": "tests/unit/test_viewer_result_element_selection.py",
-        "sha256": "c5d426dad09204e682d7bcda063b4e897c69458b119edbe4ffd19e4ea9a3f920",
+        "sha256": "a08532745300afb45d8ac3f5e6b5e186f1e28ec0e261876a7e87d9d0b5faba7f",
         "role": "Proves bulk isolation validates every route and navigation before any visibility, selection, or axis mutation."
       },
       {
         "path": "tests/unit/test_napari_streaming_handlers.py",
-        "sha256": "bb9f4449ae8bf4df2e32d274278f60a1224743bd3470c1e14fe7c51148e36b01",
+        "sha256": "ff748551885454356def167c5661254440a705638fe5b6a98ef684bebc8dfc67",
         "role": "Proves one global ROI-member budget and metadata-only shape projection across payload records."
       },
       {
@@ -2101,7 +2101,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "5632d571e3b3ff3b9a57c7dccd747c09c4e55e7f0b02eca72540e9138c4a7f6f",
+        "sha256": "4487dd114ac0f0f6fc005d220812197a55cca7fb1ac0b450c8889d45055037c5",
         "role": "Proves same-client status reuse, progress serialization, terminal caching, and one-time client release."
       },
       {
@@ -2921,7 +2921,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "6d9c048e0cbf096bcbbda62488bd1ba1a0b0cf2cde3dab8b5908db8801c471e2",
+        "sha256": "82edae86d12e1fca90bea762d836d16946b6d8113bcd456d18b4ad7aa53a0a6f",
         "role": "Regression proof for selected-surface preflight, stale-row rejection, idempotent initialization, and every declared or malformed bridge-receipt continuation outcome."
       },
       {
@@ -2986,7 +2986,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "5632d571e3b3ff3b9a57c7dccd747c09c4e55e7f0b02eca72540e9138c4a7f6f",
+        "sha256": "4487dd114ac0f0f6fc005d220812197a55cca7fb1ac0b450c8889d45055037c5",
         "role": "Proves exact progress projection from the submitting client and one-time release at terminal status."
       },
       {
