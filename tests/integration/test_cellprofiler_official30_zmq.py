@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from itertools import product
+
 import json
 import os
 import shutil
@@ -421,19 +423,51 @@ def _assert_napari_state_matches_runtime(
         assert len(matching_layers) == 1
         layer = matching_layers[0]
         assert layer.mounted
-        assert layer.item_count == len(expected.payloads)
-        actual_payloads = tuple(
-            RuntimeArtifactViewerPayloadExpectation(
-                components=runtime_artifact_viewer_component_identity(
-                    payload["components"]
-                ),
-                source_spatial_domain=SourceSpatialDomain.from_viewer_wire_mapping(
-                    payload,
-                    source_label="official30 Napari payload summary",
-                ),
-            )
-            for payload in layer.payload_summaries
-        )
+        # The presentation may aggregate a varying component axis (e.g. site)
+        # into one layer item. Expand each summary's aggregate values back
+        # into per-coordinate identities before comparing with the runtime
+        # per-payload expectation.
+        actual_payloads: list[RuntimeArtifactViewerPayloadExpectation] = []
+        for payload in layer.payload_summaries:
+            aggregates = payload.get("aggregate_component_values") or {}
+            varying_axes = tuple(aggregates.items())
+            if not varying_axes:
+                actual_payloads.append(
+                    RuntimeArtifactViewerPayloadExpectation(
+                        components=runtime_artifact_viewer_component_identity(
+                            payload["components"]
+                        ),
+                        source_spatial_domain=(
+                            SourceSpatialDomain.from_viewer_wire_mapping(
+                                payload,
+                                source_label="official30 Napari payload summary",
+                            )
+                        ),
+                    )
+                )
+                continue
+            axes_values = [values for _, values in varying_axes]
+            for combination in product(*axes_values):
+                expanded = dict(payload["components"])
+                expanded.update(
+                    {
+                        component: value
+                        for (component, _), value in zip(
+                            varying_axes, combination, strict=True
+                        )
+                    }
+                )
+                actual_payloads.append(
+                    RuntimeArtifactViewerPayloadExpectation(
+                        components=runtime_artifact_viewer_component_identity(expanded),
+                        source_spatial_domain=(
+                            SourceSpatialDomain.from_viewer_wire_mapping(
+                                payload,
+                                source_label="official30 Napari payload summary",
+                            )
+                        ),
+                    )
+                )
         assert Counter(payload.identity_key for payload in actual_payloads) == Counter(
             payload.identity_key for payload in expected.payloads
         )
