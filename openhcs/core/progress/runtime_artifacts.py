@@ -8,7 +8,6 @@ from typing import Any
 
 from openhcs.core.runtime_stores import RuntimeArtifactAddress, StoredRuntimeValue
 
-
 RUNTIME_ARTIFACTS_CONTEXT_KEY = "runtime_artifacts"
 
 
@@ -27,7 +26,9 @@ class RuntimeArtifactProgressPayload:
         cls,
         records: Sequence[StoredRuntimeValue],
     ) -> "RuntimeArtifactProgressPayload | None":
-        addresses = tuple(RuntimeArtifactAddress.from_record(record) for record in records)
+        addresses = tuple(
+            RuntimeArtifactAddress.from_record(record) for record in records
+        )
         return None if not addresses else cls(addresses=addresses)
 
     @classmethod

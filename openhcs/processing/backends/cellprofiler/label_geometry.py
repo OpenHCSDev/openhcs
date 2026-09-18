@@ -13,9 +13,7 @@ from openhcs.processing.backends.numpy_runtime import (
     numpy_avx512_skx_svml_symbol_available,
 )
 
-_NUMPY_124_SVML_ACOS_AVAILABLE = numpy_avx512_skx_svml_symbol_available(
-    "__svml_acos8"
-)
+_NUMPY_124_SVML_ACOS_AVAILABLE = numpy_avx512_skx_svml_symbol_available("__svml_acos8")
 
 
 @intrinsic
@@ -107,8 +105,7 @@ def minimum_enclosing_circle_from_labels(
     label_array = np.asarray(labels, dtype=np.int32)
     if label_array.ndim != 2:
         raise ValueError(
-            "Minimum enclosing circle requires 2-D labels, got "
-            f"{label_array.ndim}D."
+            "Minimum enclosing circle requires 2-D labels, got " f"{label_array.ndim}D."
         )
     indexes = np.asarray(label_ids, dtype=np.int32)
     if indexes.size == 0:
@@ -138,9 +135,9 @@ def minimum_enclosing_circle_from_labels(
     anti_indexes = np.zeros(int(np.max(indexes)) + 1, dtype=int)
     anti_indexes[indexes] = np.arange(indexes.size)
     anti_indexes_per_point = anti_indexes[hull[:, 0]]
-    within_label_indexes = np.arange(hull.shape[0]) - point_index[
-        anti_indexes_per_point
-    ]
+    within_label_indexes = (
+        np.arange(hull.shape[0]) - point_index[anti_indexes_per_point]
+    )
 
     while np.any(active):
         labels_to_consider = indexes[active]
@@ -151,9 +148,7 @@ def minimum_enclosing_circle_from_labels(
         anti_indexes_to_consider[labels_to_consider] = np.arange(
             labels_to_consider.size
         )
-        active_vertices = active[anti_indexes_per_point] & (
-            within_label_indexes >= 2
-        )
+        active_vertices = active[anti_indexes_per_point] & (within_label_indexes >= 2)
         vertices = hull[active_vertices, 1:]
         vertex_labels = hull[active_vertices, 0]
         vertex_indexes = np.flatnonzero(active_vertices).astype(np.int32)
@@ -223,10 +218,8 @@ def minimum_enclosing_circle_from_labels(
             y_axis, x_axis = 0, 1
             denominator = 2 * (
                 case_s0[:, x_axis] * (case_s1[:, y_axis] - case_vertex[:, y_axis])
-                + case_s1[:, x_axis]
-                * (case_vertex[:, y_axis] - case_s0[:, y_axis])
-                + case_vertex[:, x_axis]
-                * (case_s0[:, y_axis] - case_s1[:, y_axis])
+                + case_s1[:, x_axis] * (case_vertex[:, y_axis] - case_s0[:, y_axis])
+                + case_vertex[:, x_axis] * (case_s0[:, y_axis] - case_s1[:, y_axis])
             )
             centers[case_2, x_axis] = (
                 np.sum(case_s0**2, axis=1)
@@ -244,9 +237,7 @@ def minimum_enclosing_circle_from_labels(
                 + np.sum(case_vertex**2, axis=1)
                 * (case_s1[:, x_axis] - case_s0[:, x_axis])
             ) / denominator
-            radii[case_2] = np.sqrt(
-                np.sum((case_s0 - centers[case_2]) ** 2, axis=1)
-            )
+            radii[case_2] = np.sqrt(np.sum((case_s0 - centers[case_2]) ** 2, axis=1))
             active[case_2] = False
 
         if np.any(active):
@@ -520,14 +511,18 @@ def _monotone_label_hull_numba(
     for offset in range(count):
         py = point_y[start + offset]
         px = point_x[start + offset]
-        while hull_count >= 2 and _cross_label_hull_points_numba(
-            hull_y[hull_count - 2],
-            hull_x[hull_count - 2],
-            hull_y[hull_count - 1],
-            hull_x[hull_count - 1],
-            py,
-            px,
-        ) <= 0:
+        while (
+            hull_count >= 2
+            and _cross_label_hull_points_numba(
+                hull_y[hull_count - 2],
+                hull_x[hull_count - 2],
+                hull_y[hull_count - 1],
+                hull_x[hull_count - 1],
+                py,
+                px,
+            )
+            <= 0
+        ):
             hull_count -= 1
         hull_y[hull_count] = py
         hull_x[hull_count] = px
@@ -537,14 +532,18 @@ def _monotone_label_hull_numba(
     for offset in range(count - 2, -1, -1):
         py = point_y[start + offset]
         px = point_x[start + offset]
-        while hull_count > lower_count and _cross_label_hull_points_numba(
-            hull_y[hull_count - 2],
-            hull_x[hull_count - 2],
-            hull_y[hull_count - 1],
-            hull_x[hull_count - 1],
-            py,
-            px,
-        ) <= 0:
+        while (
+            hull_count > lower_count
+            and _cross_label_hull_points_numba(
+                hull_y[hull_count - 2],
+                hull_x[hull_count - 2],
+                hull_y[hull_count - 1],
+                hull_x[hull_count - 1],
+                py,
+                px,
+            )
+            <= 0
+        ):
             hull_count -= 1
         hull_y[hull_count] = py
         hull_x[hull_count] = px

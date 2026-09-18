@@ -56,10 +56,13 @@ GAUSSIAN_SIGMA = 2.9
 
 # Step 1: Preprocessing (Gaussian smoothing)
 step_1 = FunctionStep(
-    func=(preprocess, {
-        'gaussian_sigma': GAUSSIAN_SIGMA,
-        'median_size': 0,
-    }),
+    func=(
+        preprocess,
+        {
+            "gaussian_sigma": GAUSSIAN_SIGMA,
+            "median_size": 0,
+        },
+    ),
     name="CellProfiler Preprocessing",
     processing_config=LazyProcessingConfig(
         variable_components=[VariableComponents.CHANNEL]
@@ -69,16 +72,19 @@ pipeline_steps.append(step_1)
 
 # Step 2: Nuclei Segmentation (IdentifyPrimaryObjects)
 step_2 = FunctionStep(
-    func=(segment, {
-        'min_diameter': 10,                         # CellProfiler: 10 pixels min
-        'max_diameter': 40,                         # CellProfiler: 40 pixels max
-        'threshold_method': 'minimum_cross_entropy', # CellProfiler: Min Cross-Entropy
-        'threshold_correction': 1.0,
-        'declump_method': 'shape',                  # CellProfiler: Shape declumping
-        'fill_holes': True,
-        'discard_border_objects': True,
-        'discard_outside_diameter': True,
-    }),
+    func=(
+        segment,
+        {
+            "min_diameter": 10,  # CellProfiler: 10 pixels min
+            "max_diameter": 40,  # CellProfiler: 40 pixels max
+            "threshold_method": "minimum_cross_entropy",  # CellProfiler: Min Cross-Entropy
+            "threshold_correction": 1.0,
+            "declump_method": "shape",  # CellProfiler: Shape declumping
+            "fill_holes": True,
+            "discard_border_objects": True,
+            "discard_outside_diameter": True,
+        },
+    ),
     name="IdentifyPrimaryObjects (Nuclei)",
     processing_config=LazyProcessingConfig(
         variable_components=[VariableComponents.CHANNEL]
@@ -87,4 +93,3 @@ step_2 = FunctionStep(
     step_materialization_config=LazyStepMaterializationConfig(),
 )
 pipeline_steps.append(step_2)
-

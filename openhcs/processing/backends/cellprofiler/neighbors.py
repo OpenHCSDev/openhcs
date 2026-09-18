@@ -30,7 +30,7 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
-    )
+)
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -409,15 +409,19 @@ class NeighborTopologyArrays:
         """Map variant-label adjacency back to final object numbering."""
 
         source_variant_count = max(
-            int(self.source_variant_numbers.max())
-            if self.source_variant_numbers.size
-            else 0,
+            (
+                int(self.source_variant_numbers.max())
+                if self.source_variant_numbers.size
+                else 0
+            ),
             int(object_numbers.max()) if object_numbers.size else 0,
         )
         target_variant_count = max(
-            int(self.target_variant_numbers.max())
-            if self.target_variant_numbers.size
-            else 0,
+            (
+                int(self.target_variant_numbers.max())
+                if self.target_variant_numbers.size
+                else 0
+            ),
             int(neighbor_numbers.max()) if neighbor_numbers.size else 0,
         )
         source_by_variant = np.zeros(source_variant_count + 1, dtype=np.int64)
@@ -589,20 +593,18 @@ class NumbaNumpyNeighborTopologyBackendStrategy(NeighborTopologyBackendStrategy)
             touching_pixel_count,
             source_variant_numbers,
             target_variant_numbers,
-        ) = (
-            _measure_neighbor_topology_numba(
-                working_array,
-                neighbor_array,
-                outline_array,
-                measured_object_mask,
-                offset_y,
-                offset_x,
-                touching_offset_y,
-                touching_offset_x,
-                bool(neighbors_are_same_objects),
-                int(variant_object_count),
-                int(variant_neighbor_count),
-            )
+        ) = _measure_neighbor_topology_numba(
+            working_array,
+            neighbor_array,
+            outline_array,
+            measured_object_mask,
+            offset_y,
+            offset_x,
+            touching_offset_y,
+            touching_offset_x,
+            bool(neighbors_are_same_objects),
+            int(variant_object_count),
+            int(variant_neighbor_count),
         )
         return NeighborTopologyArrays(
             neighbor_count=neighbor_count,
@@ -760,16 +762,20 @@ def measure_object_neighbors(
         else object_label_dense_array(neighbor_labels, dtype=np.int32)
     )
     measured_variant_labels = object_label_dense_array(
-        labels.small_removed_labels
-        if labels.small_removed_labels is not None
-        else labels,
+        (
+            labels.small_removed_labels
+            if labels.small_removed_labels is not None
+            else labels
+        ),
         dtype=np.int32,
     )
     neighbor_payload = labels if neighbor_labels is None else neighbor_labels
     neighbor_variant_labels = object_label_dense_array(
-        neighbor_payload.small_removed_labels
-        if neighbor_payload.small_removed_labels is not None
-        else neighbor_payload,
+        (
+            neighbor_payload.small_removed_labels
+            if neighbor_payload.small_removed_labels is not None
+            else neighbor_payload
+        ),
         dtype=np.int32,
     )
     require_matching_shape(
@@ -825,9 +831,7 @@ def measure_object_neighbors(
     neighbor_final_count = (
         final_object_count
         if neighbors_are_same_objects
-        else int(neighbor_final_labels.max())
-        if neighbor_final_labels.size
-        else 0
+        else int(neighbor_final_labels.max()) if neighbor_final_labels.size else 0
     )
     neighbor_has_pixels = (
         final_has_pixels
@@ -1528,7 +1532,9 @@ class MeasureObjectNeighborsModule(
     output_image_setting = SettingNameFamily("Name the output image")
     colormap_setting = "Select colormap"
     measured_objects_binding = SettingToKeywordBinding.input(
-        measured_objects_setting, ObjectLabelsArtifactType, runtime_parameter_name="labels"
+        measured_objects_setting,
+        ObjectLabelsArtifactType,
+        runtime_parameter_name="labels",
     )
     neighbor_objects_binding = SettingToKeywordBinding.input(
         neighbor_objects_setting,

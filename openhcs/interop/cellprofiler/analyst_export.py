@@ -340,9 +340,7 @@ class CellProfilerDatabaseExportSettings:
                 normalized_location or None,
             )
         plate_type = (
-            None
-            if self.plate_type is None
-            else str(self.plate_type).strip() or None
+            None if self.plate_type is None else str(self.plate_type).strip() or None
         )
         plate_metadata = str(self.plate_metadata).strip()
         well_metadata = str(self.well_metadata).strip()
@@ -1883,9 +1881,7 @@ class CPAPropertiesRenderer:
         object_table_name = (
             dialect.combined_object_table_name()
             if combined_objects
-            else ""
-            if object_table is None
-            else object_table.table_name
+            else "" if object_table is None else object_table.table_name
         )
         property_fields = self._property_fields_for_table(
             settings,

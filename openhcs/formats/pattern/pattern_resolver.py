@@ -35,7 +35,7 @@ class PatternDetector(ABC):
         backend: str,
         group_by=None,  # Accept GroupBy enum or None
         recursive: bool = False,
-        **kwargs  # Dynamic filter parameters (e.g., well_filter, site_filter)
+        **kwargs,  # Dynamic filter parameters (e.g., well_filter, site_filter)
     ) -> Dict[str, Any]:
         """Detect patterns in the given directory."""
         ...
@@ -46,10 +46,7 @@ class PathListProvider(ABC):
 
     @abstractmethod
     def path_list_from_pattern(
-        self,
-        directory: Union[str, Path],
-        pattern: str,
-        backend: str
+        self, directory: Union[str, Path], pattern: str, backend: str
     ) -> List[Union[str, Path]]:
         """List paths matching a pattern in a directory."""
         ...
@@ -65,7 +62,7 @@ class DirectoryLister(ABC):
         backend: str,
         recursive: bool = False,
         pattern: Optional[str] = None,
-        extensions: Optional[Set[str]] = None
+        extensions: Optional[Set[str]] = None,
     ) -> List[Union[str, Path]]:
         """List files in a directory."""
         ...
@@ -87,13 +84,12 @@ class ManualRecursivePatternDetector(PatternDetector, ABC):
 
     @property
     @abstractmethod
-    def parser(self) -> PathListProvider:
-        ...
+    def parser(self) -> PathListProvider: ...
 
     @property
     @abstractmethod
-    def filemanager(self) -> DirectoryLister:
-        ...
+    def filemanager(self) -> DirectoryLister: ...
+
 
 def _validate_filename_pattern(filename_pattern: str) -> None:
     """
@@ -106,22 +102,20 @@ def _validate_filename_pattern(filename_pattern: str) -> None:
         ValueError: If the pattern is invalid
     """
     # Check for balanced braces
-    if filename_pattern.count('{') != filename_pattern.count('}'):
+    if filename_pattern.count("{") != filename_pattern.count("}"):
         raise ValueError(f"Unbalanced braces in pattern: {filename_pattern}")
 
     # Check for valid characters
-    if not re.match(r'^[a-zA-Z0-9_\-.*?{}/]+$', filename_pattern):
+    if not re.match(r"^[a-zA-Z0-9_\-.*?{}/]+$", filename_pattern):
         raise ValueError(f"Invalid characters in pattern: {filename_pattern}")
 
     # Check for .tif or .tiff extension
-    if not filename_pattern.endswith('.tif') and not filename_pattern.endswith('.tiff'):
+    if not filename_pattern.endswith(".tif") and not filename_pattern.endswith(".tiff"):
         raise ValueError(f"Pattern must end with .tif or .tiff: {filename_pattern}")
 
 
 def _extract_patterns_from_data(
-    pattern_data: Any,
-    filemanager: FileManager,
-    backend: str
+    pattern_data: Any, filemanager: FileManager, backend: str
 ) -> List[str]:
     """
     Extract patterns from detector data.
@@ -143,7 +137,9 @@ def _extract_patterns_from_data(
     if isinstance(pattern_data, dict):
         for _, patterns_list in pattern_data.items():
             if isinstance(patterns_list, list):
-                result.extend(_process_pattern_list(patterns_list, filemanager, backend))
+                result.extend(
+                    _process_pattern_list(patterns_list, filemanager, backend)
+                )
 
     # Process flat list of patterns
     elif isinstance(pattern_data, list):
@@ -157,9 +153,7 @@ def _extract_patterns_from_data(
 
 
 def _process_pattern_list(
-    patterns: List[Any],
-    filemanager: FileManager,
-    backend: str
+    patterns: List[Any], filemanager: FileManager, backend: str
 ) -> List[str]:
     """
     Process a list of patterns.
@@ -190,10 +184,7 @@ def _process_pattern_list(
     return result
 
 
-def convert_filename_pattern(
-    filename_pattern: str,
-    filemanager: FileManager
-) -> str:
+def convert_filename_pattern(filename_pattern: str, filemanager: FileManager) -> str:
     """
     Convert a pattern string to a standardized format.
 
@@ -211,8 +202,10 @@ def convert_filename_pattern(
     """
     # Validate input structure
     if not isinstance(filename_pattern, str):
-        raise InvalidPatternError(f"Pattern must be string, got {type(filename_pattern).__name__}")
-    
+        raise InvalidPatternError(
+            f"Pattern must be string, got {type(filename_pattern).__name__}"
+        )
+
     if not filemanager.backend:
         raise ValueError("FileManager must be initialized with a backend")
 
@@ -230,7 +223,7 @@ def get_patterns_for_well(
     backend: str,
     detector: PatternDetector,
     variable_components: List[str],
-    recursive: bool = False
+    recursive: bool = False,
 ) -> List[str]:
     """
     Get flattened list of patterns for a specific well.
@@ -256,15 +249,21 @@ def get_patterns_for_well(
         raise TypeError(f"well must be a string, got {type(well).__name__}")
 
     if not isinstance(directory, (str, Path)):
-        raise TypeError(f"directory must be a string or Path, got {type(directory).__name__}")
+        raise TypeError(
+            f"directory must be a string or Path, got {type(directory).__name__}"
+        )
 
     if not isinstance(variable_components, list):
-        raise TypeError("variable_components must be a list, "
-                       f"got {type(variable_components).__name__}")
+        raise TypeError(
+            "variable_components must be a list, "
+            f"got {type(variable_components).__name__}"
+        )
 
     if not isinstance(filemanager, FileManager):
-        raise TypeError("filemanager must be a FileManager instance, "
-                       f"got {type(filemanager).__name__}")
+        raise TypeError(
+            "filemanager must be a FileManager instance, "
+            f"got {type(filemanager).__name__}"
+        )
 
     if not isinstance(backend, str):
         raise TypeError(f"backend must be a string, got {type(backend).__name__}")
@@ -276,12 +275,14 @@ def get_patterns_for_well(
     # pylint: disable=protected-access
     # Validate backend is properly initialized
     backend_instance = filemanager._get_backend(backend)
-    assert isinstance(backend_instance, StorageBackend), \
-        "Backend must be a StorageBackend instance"
+    assert isinstance(
+        backend_instance, StorageBackend
+    ), "Backend must be a StorageBackend instance"
     # pylint: enable=protected-access
 
     # Get patterns from detector using dynamic filter parameter
     from openhcs.constants import MULTIPROCESSING_AXIS
+
     axis_name = MULTIPROCESSING_AXIS.value
     filter_kwargs = {f"{axis_name}_filter": [well]}
 
@@ -290,7 +291,7 @@ def get_patterns_for_well(
         variable_components=variable_components,
         backend=backend,
         recursive=recursive,
-        **filter_kwargs
+        **filter_kwargs,
     )
 
     all_patterns: List[str] = []
@@ -306,6 +307,8 @@ def get_patterns_for_well(
 
     # Recursive scanning prohibited per Clause 65
     if recursive:
-        raise NotImplementedError("Recursive scanning requires explicit pattern declaration")
+        raise NotImplementedError(
+            "Recursive scanning requires explicit pattern declaration"
+        )
 
     return all_patterns

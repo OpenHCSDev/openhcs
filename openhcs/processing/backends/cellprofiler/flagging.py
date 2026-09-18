@@ -21,7 +21,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
-    )
+)
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_measurements import MeasurementRowAxisField

@@ -139,8 +139,12 @@ class PlateTerminalStatusRecorder:
 class PlateManagerDefinitionChangeRecorder:
     """Minimal plate-manager surface for pipeline invalidation notifications."""
 
-    plate_has_pending_definition_work = PlateManagerWidget.plate_has_pending_definition_work
-    require_pipeline_definition_mutation_allowed = PlateManagerWidget.require_pipeline_definition_mutation_allowed
+    plate_has_pending_definition_work = (
+        PlateManagerWidget.plate_has_pending_definition_work
+    )
+    require_pipeline_definition_mutation_allowed = (
+        PlateManagerWidget.require_pipeline_definition_mutation_allowed
+    )
 
     def __init__(self) -> None:
         self.changed_plates: list[str] = []
@@ -192,8 +196,12 @@ class PlateManagerDefinitionChangeRecorder:
 class PlateManagerCompiledStateRecorder:
     """Minimal plate-manager compiled-state authority for editor tests."""
 
-    plate_has_pending_definition_work = PlateManagerWidget.plate_has_pending_definition_work
-    require_pipeline_definition_mutation_allowed = PlateManagerWidget.require_pipeline_definition_mutation_allowed
+    plate_has_pending_definition_work = (
+        PlateManagerWidget.plate_has_pending_definition_work
+    )
+    require_pipeline_definition_mutation_allowed = (
+        PlateManagerWidget.require_pipeline_definition_mutation_allowed
+    )
 
     def __init__(self) -> None:
         self.plate_compiled_data: dict[str, object] = {}
@@ -568,9 +576,7 @@ def test_step_code_mode_applies_callable_pattern_through_parameter_form() -> Non
         ObjectStateRegistry.clear()
 
 
-def test_pipeline_editor_code_document_applies_during_execution() -> (
-    None
-):
+def test_pipeline_editor_code_document_applies_during_execution() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
 

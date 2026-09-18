@@ -1013,9 +1013,9 @@ def make_experiment_dict_values(
                         )
                         for feature in features
                     }
-                    experiment_dict_values[condition][replicate][dose] = (
-                        feature_value_dict
-                    )
+                    experiment_dict_values[condition][replicate][
+                        dose
+                    ] = feature_value_dict
 
     return experiment_dict_values
 

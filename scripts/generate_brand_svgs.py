@@ -8,7 +8,6 @@ from copy import deepcopy
 from pathlib import Path
 from xml.etree import ElementTree
 
-
 SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 SVG = f"{{{SVG_NAMESPACE}}}"
 ElementTree.register_namespace("", SVG_NAMESPACE)
@@ -247,9 +246,7 @@ def generate() -> None:
         width="512",
         height="512",
     )
-    icon.append(
-        _element("rect", width="512", height="512", rx="72", fill=BRAND_DARK)
-    )
+    icon.append(_element("rect", width="512", height="512", rx="72", fill=BRAND_DARK))
     _place_mark(
         icon,
         source_mark,
@@ -266,9 +263,7 @@ def generate() -> None:
         width="32",
         height="32",
     )
-    favicon.append(
-        _element("rect", width="32", height="32", rx="4", fill=BRAND_DARK)
-    )
+    favicon.append(_element("rect", width="32", height="32", rx="4", fill=BRAND_DARK))
     _place_mark(
         favicon,
         source_mark,

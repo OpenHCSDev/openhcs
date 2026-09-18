@@ -187,8 +187,7 @@ def test_manifest_dataset_registry_root_materializes_missing_paths(
         root / "CellProfiler4_benchmark_supplement/data/CombineObjects"
     )
     assert cases[0].cppipe_path == (
-        root
-        / "CellProfiler4_benchmark_supplement/data/CombineObjects/"
+        root / "CellProfiler4_benchmark_supplement/data/CombineObjects/"
         "CombineObjectsDemo.cppipe"
     )
 
@@ -228,7 +227,10 @@ def test_manifest_root_materialization_can_be_disabled(
     monkeypatch.setenv("OPENHCS_BENCHMARK_AUTO_ACQUIRE", "0")
     manifest = ComparisonManifest.load(manifest_path)
 
-    assert manifest.path_resolver.resolve(
-        manifest.payload["cases"][0],
-        "cppipe_path",
-    ) == root / "ExampleFly/ExampleFly.cppipe"
+    assert (
+        manifest.path_resolver.resolve(
+            manifest.payload["cases"][0],
+            "cppipe_path",
+        )
+        == root / "ExampleFly/ExampleFly.cppipe"
+    )

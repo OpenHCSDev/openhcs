@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOCKERFILE = REPO_ROOT / "packaging" / "hosted-mcp" / "Dockerfile"
 README = REPO_ROOT / "packaging" / "hosted-mcp" / "README.md"

@@ -17,6 +17,8 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+
 class CellProfilerObjectMeasurementExecutionPolicy(
     EnumKeyedStrategyMixin,
     StrategyLabelRegistryMixin,

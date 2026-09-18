@@ -122,7 +122,18 @@ def quantized_unit_interval_event_summaries(
     slope: float,
     intercept: float,
     preferred_scale: int,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None:
+) -> (
+    tuple[
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+    ]
+    | None
+):
     first_code_result = UnitIntervalDenseRankSemantics.integer_codes(
         first,
         preferred_scale=preferred_scale,

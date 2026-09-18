@@ -8,16 +8,17 @@ from openhcs.interop.cellprofiler.module_declarations import (
 from openhcs.core.artifacts import ImageArtifactType
 
 
-class EnhanceEdgesModule(
-    CellProfilerModule
-):
+class EnhanceEdgesModule(CellProfilerModule):
     module_name = "EnhanceEdges"
     function_name = "enhance_edges"
     validated = True
     confidence = 1.0
     input_image_setting = "Select the input image"
     output_image_setting = "Name the output image"
-    setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (SettingToKeywordBinding.input(input_image_setting, ImageArtifactType),SettingToKeywordBinding.output(output_image_setting, ImageArtifactType),SettingToKeywordBinding(
+    setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
+        SettingToKeywordBinding.input(input_image_setting, ImageArtifactType),
+        SettingToKeywordBinding.output(output_image_setting, ImageArtifactType),
+        SettingToKeywordBinding(
             "Automatically calculate the threshold?", "automatic_threshold"
         ),
         SettingToKeywordBinding("Absolute threshold", "manual_threshold"),
@@ -34,7 +35,8 @@ class EnhanceEdgesModule(
             "Calculate value for low threshold automatically?",
             "automatic_low_threshold",
         ),
-        SettingToKeywordBinding("Low threshold value", "low_threshold"),)
+        SettingToKeywordBinding("Low threshold value", "low_threshold"),
+    )
 
 
 from abc import ABC, abstractmethod

@@ -29,6 +29,7 @@ from openhcs.mcp.dev_client_rendering import (
     McpDiagnosticRenderer,
 )
 
+
 class PlateImageSampleRenderer(McpDevOutputRenderer):
     """Compact renderer for sampled plate image pixels and statistics."""
 
@@ -137,7 +138,9 @@ class PlateImageSampleRenderer(McpDevOutputRenderer):
     @staticmethod
     def _json_value_count(value: JsonValue) -> int:
         if isinstance(value, list | tuple):
-            return sum(PlateImageSampleRenderer._json_value_count(item) for item in value)
+            return sum(
+                PlateImageSampleRenderer._json_value_count(item) for item in value
+            )
         if isinstance(value, Mapping):
             return sum(
                 PlateImageSampleRenderer._json_value_count(item)
@@ -160,10 +163,7 @@ class PlateImageSampleRenderer(McpDevOutputRenderer):
 
     @staticmethod
     def _omitted_by_element_budget(reason: str) -> bool:
-        return (
-            reason == "max_array_elements_exceeded"
-            or "max_array_elements" in reason
-        )
+        return reason == "max_array_elements_exceeded" or "max_array_elements" in reason
 
     @staticmethod
     def _sequence_text(value: JsonValue) -> str:
@@ -182,6 +182,7 @@ class PlateImageSampleRenderer(McpDevOutputRenderer):
         if value is None:
             return "<none>"
         return str(value)
+
 
 class SyntheticPlateGenerationRenderer(McpDevOutputRenderer):
     """Compact renderer for synthetic plate generation results."""
@@ -252,6 +253,7 @@ class SyntheticPlateGenerationRenderer(McpDevOutputRenderer):
         if not isinstance(value, list | tuple):
             return ()
         return tuple(str(item) for item in value)
+
 
 class PlateInspectionRenderer(McpDevOutputRenderer):
     """Compact renderer for plate inspection results."""
@@ -471,11 +473,10 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
             full_virtual_path_value = record.get("full_virtual_path")
             virtual_path = McpDevPayloadProjection.text(virtual_path_value)
             source_path = McpDevPayloadProjection.text(source_path_value)
-            if (
-                source_path_value is not None
-                and source_path_value
-                not in {virtual_path_value, full_virtual_path_value}
-            ):
+            if source_path_value is not None and source_path_value not in {
+                virtual_path_value,
+                full_virtual_path_value,
+            }:
                 lines.append(
                     f"- {virtual_path} -> {source_path}"
                     f"{PlateFileQueryRenderer._metadata_suffix(record)}"
@@ -528,8 +529,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
         omitted_reason = preview.get("omitted_reason")
         if omitted_reason is not None:
             return [
-                "  preview omitted: "
-                f"{McpDevPayloadProjection.text(omitted_reason)}"
+                "  preview omitted: " f"{McpDevPayloadProjection.text(omitted_reason)}"
             ]
         roi_count = preview.get("roi_count")
         if roi_count is not None:
@@ -575,9 +575,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
         rows = McpDevPayloadProjection.sequence_of_mappings(preview.get("csv_rows"))
         if not PlateInspectionRenderer._valid_csv_columns(columns) or not rows:
             return []
-        lines = [
-            f"  csv columns: {PlateInspectionRenderer._csv_columns_text(columns)}"
-        ]
+        lines = [f"  csv columns: {PlateInspectionRenderer._csv_columns_text(columns)}"]
         visible_rows = rows[: PlateInspectionRenderer.MAX_CSV_PREVIEW_ROWS]
         for row in visible_rows:
             lines.append(
@@ -618,9 +616,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
                 wide_columns.append(column_text)
         row_text = ", ".join(compact_cells) if compact_cells else "<no compact cells>"
         if wide_columns:
-            row_text = (
-                f"{row_text}; omitted wide cells: {', '.join(wide_columns)}"
-            )
+            row_text = f"{row_text}; omitted wide cells: {', '.join(wide_columns)}"
         return PlateInspectionRenderer._bounded_preview_text(
             row_text,
             PlateInspectionRenderer.MAX_CSV_ROW_CHARS,
@@ -655,9 +651,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
     @staticmethod
     def _roi_member_text(preview: Mapping[str, JsonValue]) -> str:
         member_count = optional_int(preview.get("roi_member_count"))
-        duplicate_member_count = optional_int(
-            preview.get("roi_duplicate_member_count")
-        )
+        duplicate_member_count = optional_int(preview.get("roi_duplicate_member_count"))
         if (
             member_count is None
             or duplicate_member_count is None
@@ -855,6 +849,7 @@ class PlateInspectionRenderer(McpDevOutputRenderer):
     def _error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
         return McpDiagnosticRenderer.error_lines(errors)
 
+
 class PlateFileQueryRenderer(McpDevOutputRenderer):
     """Compact renderer for plate file query results."""
 
@@ -867,7 +862,12 @@ class PlateFileQueryRenderer(McpDevOutputRenderer):
             return json.dumps(response, indent=2, sort_keys=True)
         errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
         if errors:
-            return "\n".join(("Plate file query: failed", *PlateInspectionRenderer._error_lines(errors)))
+            return "\n".join(
+                (
+                    "Plate file query: failed",
+                    *PlateInspectionRenderer._error_lines(errors),
+                )
+            )
         records = McpDevPayloadProjection.sequence_of_mappings(payload.get("records"))
         lines = [
             f"Plate file query: {McpDevPayloadProjection.text(payload.get('plate_path'))}",
@@ -1124,6 +1124,7 @@ class PlateFileQueryRenderer(McpDevOutputRenderer):
         )
         return cls._modified_values(matching_records)
 
+
 class PlateFileStreamRenderer(McpDevOutputRenderer):
     """Compact renderer for plate file stream results."""
 
@@ -1189,15 +1190,21 @@ class PlateFileStreamRenderer(McpDevOutputRenderer):
         cls._append_path_lines(lines, "ROIs", roi_paths)
         if skipped:
             lines.append("Skipped:")
-            lines.extend(PlateFileQueryRenderer._record_lines(skipped[: cls.MAX_PATH_LINES]))
+            lines.extend(
+                PlateFileQueryRenderer._record_lines(skipped[: cls.MAX_PATH_LINES])
+            )
             if len(skipped) > cls.MAX_PATH_LINES:
                 lines.append(f"- ... {len(skipped) - cls.MAX_PATH_LINES} more")
         status_messages = cls._text_sequence(payload.get("status_messages"))
         if status_messages:
             lines.append("Status:")
-            lines.extend(f"- {message}" for message in status_messages[: cls.MAX_STATUS_LINES])
+            lines.extend(
+                f"- {message}" for message in status_messages[: cls.MAX_STATUS_LINES]
+            )
             if len(status_messages) > cls.MAX_STATUS_LINES:
-                lines.append(f"- ... {len(status_messages) - cls.MAX_STATUS_LINES} more")
+                lines.append(
+                    f"- ... {len(status_messages) - cls.MAX_STATUS_LINES} more"
+                )
         warnings = McpDevPayloadProjection.sequence_of_mappings(payload.get("warnings"))
         if warnings:
             lines.append("Warnings:")
@@ -1256,6 +1263,7 @@ class PlateFileStreamRenderer(McpDevOutputRenderer):
             return ()
         return tuple(McpDevPayloadProjection.text(item) for item in value)
 
+
 class SelectedPlateImagesRenderer(McpDevOutputRenderer):
     """Compact renderer for selected-plate image inspection."""
 
@@ -1269,7 +1277,10 @@ class SelectedPlateImagesRenderer(McpDevOutputRenderer):
         errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
         if errors:
             return "\n".join(
-                ("Selected plate images: failed", *PlateInspectionRenderer._error_lines(errors))
+                (
+                    "Selected plate images: failed",
+                    *PlateInspectionRenderer._error_lines(errors),
+                )
             )
 
         selected_plate = McpDevPayloadProjection.nested_mapping(
@@ -1310,6 +1321,7 @@ class SelectedPlateImagesRenderer(McpDevOutputRenderer):
         )
         return "\n".join(lines)
 
+
 class SelectedPlateFilesRenderer(McpDevOutputRenderer):
     """Compact renderer for selected-plate file queries."""
 
@@ -1323,7 +1335,10 @@ class SelectedPlateFilesRenderer(McpDevOutputRenderer):
         errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
         if errors:
             return "\n".join(
-                ("Selected plate files: failed", *PlateInspectionRenderer._error_lines(errors))
+                (
+                    "Selected plate files: failed",
+                    *PlateInspectionRenderer._error_lines(errors),
+                )
             )
 
         selected_plate = McpDevPayloadProjection.nested_mapping(
@@ -1377,6 +1392,7 @@ class SelectedPlateFilesRenderer(McpDevOutputRenderer):
         if selected_plate.get("output_plate_root") in (None, ""):
             return False
         return query.get("plate_path") == selected_plate.get("plate_root")
+
 
 class SelectedPlateSampleRenderer(McpDevOutputRenderer):
     """Compact renderer for selected-plate image sampling."""
@@ -1439,6 +1455,7 @@ class SelectedPlateSampleRenderer(McpDevOutputRenderer):
             )
         )
         return "\n".join(lines)
+
 
 class SelectedPlateStreamRenderer(McpDevOutputRenderer):
     """Compact renderer for selected-plate file streaming."""

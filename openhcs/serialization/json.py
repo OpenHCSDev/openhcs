@@ -24,8 +24,7 @@ def _jsonable_dataclass(value) -> JsonValue:
     """Project fields without ``asdict`` deep-copying immutable containers."""
 
     return {
-        field.name: to_jsonable(getattr(value, field.name))
-        for field in fields(value)
+        field.name: to_jsonable(getattr(value, field.name)) for field in fields(value)
     }
 
 

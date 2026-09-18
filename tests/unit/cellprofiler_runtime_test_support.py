@@ -137,9 +137,7 @@ def runtime_adapter_request_for_test(
     source_image_set_identity_policy: SourceImageSetIdentityPolicy = (
         SourceImageSetIdentityPolicy()
     ),
-    artifact_output_bindings: Iterable[
-        tuple[ArtifactSpec, ArtifactOutputPlan]
-    ] = (),
+    artifact_output_bindings: Iterable[tuple[ArtifactSpec, ArtifactOutputPlan]] = (),
     **request_fields: Any,
 ) -> RuntimeAdapterRequest:
     """Build the canonical runtime request with test-owned context services."""
@@ -180,9 +178,7 @@ def runtime_adapter_request_for_test(
                 )
             previous = output_plans.get(spec.ref())
             if previous is not None and previous != plan:
-                raise ValueError(
-                    f"Conflicting test output plans for {spec.ref()!r}."
-                )
+                raise ValueError(f"Conflicting test output plans for {spec.ref()!r}.")
             output_specs.append(spec)
             output_plans[spec.ref()] = plan
         request_fields["artifact_outputs"] = output_plans

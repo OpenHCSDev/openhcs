@@ -38,13 +38,13 @@ def convert_standard_to_opera_phenix_well_id(well_id: str) -> str:
         Opera Phenix format well ID (e.g., R02C03)
     """
     # Match standard format: Letter + digits
-    match = re.match(r'([A-Z])(\d+)', well_id.upper())
+    match = re.match(r"([A-Z])(\d+)", well_id.upper())
     if match:
         row_letter = match.group(1)
         col_num = int(match.group(2))
 
         # Convert letter to row number (A=1, B=2, etc.)
-        row_num = ord(row_letter) - ord('A') + 1
+        row_num = ord(row_letter) - ord("A") + 1
 
         # Format as Opera Phenix well ID
         return f"R{row_num:02d}C{col_num:02d}"
@@ -56,40 +56,40 @@ def convert_standard_to_opera_phenix_well_id(well_id: str) -> str:
 def parse_metaxpress_csv(csv_path: Path) -> Dict[str, Dict[str, List[str]]]:
     """
     Parse MetaXpress CSV to extract plate IDs, plate names, and wells.
-    
+
     Returns:
         Dict mapping plate_id -> {"plate_name": str, "wells": List[str]}
     """
     import pandas as pd
-    
+
     plates = {}
     current_plate_id = None
     current_plate_name = None
-    
-    with open(csv_path, 'r') as f:
+
+    with open(csv_path, "r") as f:
         for line in f:
-            parts = line.strip().split(',')
+            parts = line.strip().split(",")
             if not parts:
                 continue
-                
+
             # Look for Plate Name
-            if parts[0] == 'Plate Name':
+            if parts[0] == "Plate Name":
                 current_plate_name = parts[1]
-            
+
             # Look for Plate ID
-            elif parts[0] == 'Plate ID':
+            elif parts[0] == "Plate ID":
                 current_plate_id = parts[1]
                 if current_plate_id and current_plate_name:
                     plates[current_plate_id] = {
-                        'plate_name': current_plate_name,
-                        'wells': []
+                        "plate_name": current_plate_name,
+                        "wells": [],
                     }
-            
+
             # Look for well data (starts with R##C##)
-            elif parts[0].startswith('R') and 'C' in parts[0] and current_plate_id:
+            elif parts[0].startswith("R") and "C" in parts[0] and current_plate_id:
                 well = parts[0]
-                plates[current_plate_id]['wells'].append(well)
-    
+                plates[current_plate_id]["wells"].append(well)
+
     return plates
 
 
@@ -99,7 +99,7 @@ def build_well_annotations(
     layout: Dict,
     ctrl_positions: Optional[Dict],
     excluded_positions: Optional[Dict],
-    plate_groups: Dict
+    plate_groups: Dict,
 ) -> Dict[str, str]:
     """
     Build well annotations for a specific plate.
@@ -169,33 +169,32 @@ def detect_microscope_format(metadata_path: Path) -> str:
     Returns:
         'opera_phenix' or 'imagexpress' or 'unknown'
     """
-    with open(metadata_path, 'r') as f:
+    with open(metadata_path, "r") as f:
         metadata = json.load(f)
 
     # Check image filenames to detect format
-    subdirs = metadata.get('subdirectories', {})
+    subdirs = metadata.get("subdirectories", {})
     if subdirs:
         first_subdir = next(iter(subdirs.values()))
-        image_files = first_subdir.get('image_files', [])
+        image_files = first_subdir.get("image_files", [])
 
         if image_files:
             # Check first image filename
             first_image = image_files[0].lower()
 
             # OperaPhenix format: r##c##f###p###-ch#sk#fk#fl#.tif
-            if re.search(r'r\d+c\d+f\d+p\d+-ch\d+sk\d+', first_image):
-                return 'opera_phenix'
+            if re.search(r"r\d+c\d+f\d+p\d+-ch\d+sk\d+", first_image):
+                return "opera_phenix"
 
             # ImageXpress format: typically has _s#_w# or similar
             # This is a fallback - if not OperaPhenix, assume ImageXpress
-            return 'imagexpress'
+            return "imagexpress"
 
-    return 'unknown'
+    return "unknown"
 
 
 def update_metadata_with_annotations(
-    metadata_path: Path,
-    well_annotations: Dict[str, str]
+    metadata_path: Path, well_annotations: Dict[str, str]
 ) -> None:
     """
     Update openhcs_metadata.json with well annotations.
@@ -215,7 +214,7 @@ def update_metadata_with_annotations(
     microscope_format = detect_microscope_format(metadata_path)
 
     # Convert well IDs if needed
-    if microscope_format == 'opera_phenix':
+    if microscope_format == "opera_phenix":
         # Convert standard well IDs (B03) to OperaPhenix format (R02C03)
         converted_annotations = {
             convert_standard_to_opera_phenix_well_id(well): annotation
@@ -232,9 +231,9 @@ def update_metadata_with_annotations(
             data = {}
 
         # Update wells field in each subdirectory
-        subdirs = data.get('subdirectories', {})
+        subdirs = data.get("subdirectories", {})
         for subdir_name, subdir_data in subdirs.items():
-            wells = subdir_data.get('wells', {})
+            wells = subdir_data.get("wells", {})
             if wells:
                 # Update all wells that have annotations (replace existing values)
                 for well_id in wells.keys():
@@ -243,13 +242,15 @@ def update_metadata_with_annotations(
                         wells[well_id] = f"{well_id}: {converted_annotations[well_id]}"
 
         # Also store at top level for easy access
-        data['experimental_annotations'] = converted_annotations
+        data["experimental_annotations"] = converted_annotations
 
         return data
 
     # Use atomic update to safely add the field
     atomic_update_json(metadata_path, update_func, lock_timeout=30.0)
-    print(f"✅ Updated {metadata_path} with {len(converted_annotations)} well annotations")
+    print(
+        f"✅ Updated {metadata_path} with {len(converted_annotations)} well annotations"
+    )
 
 
 def main():
@@ -257,22 +258,22 @@ def main():
         description="Annotate wells in OpenHCS metadata with experimental conditions"
     )
     parser.add_argument(
-        '--results',
+        "--results",
         required=True,
         type=Path,
-        help='Path to MetaXpress-style results CSV'
+        help="Path to MetaXpress-style results CSV",
     )
     parser.add_argument(
-        '--config',
+        "--config",
         required=True,
         type=Path,
-        help='Path to experimental config Excel file'
+        help="Path to experimental config Excel file",
     )
     parser.add_argument(
-        '--batch-dir',
+        "--batch-dir",
         required=True,
         type=Path,
-        help='Path to batch directory containing plate folders'
+        help="Path to batch directory containing plate folders",
     )
 
     args = parser.parse_args()
@@ -293,7 +294,14 @@ def main():
     print("📊 Parsing experimental configuration...")
 
     # Parse config file
-    scope, layout, conditions, ctrl_positions, excluded_positions, per_well_datapoints = read_plate_layout(args.config)
+    (
+        scope,
+        layout,
+        conditions,
+        ctrl_positions,
+        excluded_positions,
+        per_well_datapoints,
+    ) = read_plate_layout(args.config)
     plate_groups = load_plate_groups(args.config)
 
     print(f"   Found {len(layout)} replicates")
@@ -315,13 +323,15 @@ def main():
 
     # Process each plate
     for plate_id, plate_info in plates.items():
-        plate_name = plate_info['plate_name']
-        wells = plate_info['wells']
+        plate_name = plate_info["plate_name"]
+        wells = plate_info["wells"]
 
         # Find replicate for this plate
         replicate = plate_id_to_replicate.get(plate_id)
         if not replicate:
-            print(f"⚠️  Skipping plate {plate_id} ({plate_name}): No replicate mapping found")
+            print(
+                f"⚠️  Skipping plate {plate_id} ({plate_name}): No replicate mapping found"
+            )
             continue
 
         print(f"\n📦 Plate: {plate_name}")
@@ -336,7 +346,7 @@ def main():
             layout,
             ctrl_positions,
             excluded_positions,
-            plate_groups
+            plate_groups,
         )
 
         print(f"   Annotations: {len(well_annotations)}")
@@ -358,5 +368,5 @@ def main():
     print("\n✅ Done!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -11,7 +11,6 @@ from openhcs.agent.services.config_service import (
     agent_config_declaration_from_request,
 )
 
-
 CONFIG_REFERENCE_DIRECTIVE = "openhcs-config-reference"
 _CONFIG_REFERENCE_DIRECTIVE_PATTERN = re.compile(
     rf"^\.\.\s+{CONFIG_REFERENCE_DIRECTIVE}::(?:\s+(?P<config_name>\S+))?\s*$"
@@ -40,9 +39,7 @@ class ConfigReferenceRstRenderer:
         config_type_name: str,
         fields: tuple[ConfigFieldSchema, ...],
     ) -> tuple[str, ...]:
-        roots = tuple(
-            dict.fromkeys(self._root_path(field.path) for field in fields)
-        )
+        roots = tuple(dict.fromkeys(self._root_path(field.path) for field in fields))
         fields_by_root = tuple(
             (
                 root,
@@ -93,11 +90,7 @@ class ConfigReferenceRstRenderer:
             title,
             "^" * len(title),
             "",
-            *(
-                line
-                for field in fields
-                for line in self._render_field(field)
-            ),
+            *(line for field in fields for line in self._render_field(field)),
         )
 
     def _render_field(self, field: ConfigFieldSchema) -> tuple[str, ...]:
@@ -118,7 +111,9 @@ class ConfigReferenceRstRenderer:
                 f"Registered values: {self._literal_values(field.registry_values)}"
             )
         if field.inheritable:
-            facts.append("Inheritance: unresolved ``None`` inherits from the wider scope")
+            facts.append(
+                "Inheritance: unresolved ``None`` inherits from the wider scope"
+            )
         if field.declaring_type:
             facts.append(f"Declared by: ``{field.declaring_type}``")
         return (

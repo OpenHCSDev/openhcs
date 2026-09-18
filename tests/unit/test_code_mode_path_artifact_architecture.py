@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-
 ROOT = Path(__file__).parents[2]
 OWNED_BOUNDARIES = (
     ROOT / "openhcs/serialization/source_path_factoring.py",
@@ -19,12 +18,10 @@ OWNED_BOUNDARIES = (
 )
 ARTIFACT_UI_BOUNDARIES = (
     ROOT / "openhcs/pyqt_gui/widgets/artifact_plan_view.py",
-    ROOT
-    / "openhcs/pyqt_gui/widgets/shared/services/compile_workflow_service.py",
+    ROOT / "openhcs/pyqt_gui/widgets/shared/services/compile_workflow_service.py",
     ROOT
     / "openhcs/pyqt_gui/widgets/shared/services/runtime_artifact_progress_service.py",
-    ROOT
-    / "openhcs/pyqt_gui/widgets/shared/services/progress_workflow_service.py",
+    ROOT / "openhcs/pyqt_gui/widgets/shared/services/progress_workflow_service.py",
     ROOT / "openhcs/pyqt_gui/windows/dual_editor_window.py",
     ROOT / "openhcs/pyqt_gui/windows/dual_editor_session.py",
     ROOT / "openhcs/pyqt_gui/windows/dual_editor_tab_builder.py",
@@ -53,11 +50,10 @@ def test_owned_boundaries_use_no_reflection_or_ambient_working_directory() -> No
                     violations.append((path, node.lineno, node.func.id))
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
                 owner = node.func.value
-                if (
-                    isinstance(owner, ast.Name)
-                    and (owner.id, node.func.attr)
-                    in {("Path", "cwd"), ("os", "getcwd")}
-                ):
+                if isinstance(owner, ast.Name) and (owner.id, node.func.attr) in {
+                    ("Path", "cwd"),
+                    ("os", "getcwd"),
+                }:
                     violations.append(
                         (path, node.lineno, f"{owner.id}.{node.func.attr}")
                     )

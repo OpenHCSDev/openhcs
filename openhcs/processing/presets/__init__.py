@@ -20,4 +20,3 @@ __all__ = []
 
 # Presets are loaded on-demand from the pipelines/ subdirectory
 # to avoid import overhead and allow dynamic discovery
-

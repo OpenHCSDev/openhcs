@@ -12,9 +12,7 @@ from openhcs.processing.backends.cellprofiler.save_images import SaveImagesBitDe
 def _reference_uint16_conversion(payload: np.ndarray) -> np.ndarray:
     values = payload.astype(np.float64, copy=False)
     finite = values[np.isfinite(values)]
-    if finite.size == 0 or (
-        float(finite.min()) >= 0.0 and float(finite.max()) <= 1.0
-    ):
+    if finite.size == 0 or (float(finite.min()) >= 0.0 and float(finite.max()) <= 1.0):
         values = values * 65535.0
     sanitized = np.nan_to_num(values, nan=0.0, posinf=65535.0, neginf=0.0)
     return np.rint(np.clip(sanitized, 0.0, 65535.0)).astype(np.uint16)

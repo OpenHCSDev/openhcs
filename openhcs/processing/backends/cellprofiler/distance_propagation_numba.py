@@ -374,14 +374,17 @@ def _propagate_labels_and_distances_numba(
                 continue
             if output[y2, x2] > 0 or not mask[y2, x2]:
                 continue
-            distance = _propagation_cost_numba(
-                image,
-                y1,
-                x1,
-                y2,
-                x2,
-                weight,
-            ) + d0
+            distance = (
+                _propagation_cost_numba(
+                    image,
+                    y1,
+                    x1,
+                    y2,
+                    x2,
+                    weight,
+                )
+                + d0
+            )
             if max_distance >= 0.0 and distance > max_distance:
                 continue
             if distances[y2, x2] == -1.0 or distances[y2, x2] > distance:

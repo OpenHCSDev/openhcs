@@ -7,7 +7,6 @@ from typing import cast
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import SourceMetadataScalar
 
-
 _NO_STATIC_DEFAULT = object()
 
 

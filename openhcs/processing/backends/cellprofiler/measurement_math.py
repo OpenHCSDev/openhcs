@@ -30,7 +30,7 @@ from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
 from openhcs.core.measurement_row_materialization import ConcatenatedColumnarRows
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
-    )
+)
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import (
     EnumKeyedStrategyMixin,

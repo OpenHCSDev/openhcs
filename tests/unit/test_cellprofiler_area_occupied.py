@@ -32,7 +32,9 @@ from openhcs.processing.backends.cellprofiler.area_occupied import (
     OperandChoice,
     measure_image_area_occupied,
 )
-from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
+from openhcs.interop.cellprofiler.runtime.artifact_binding import (
+    RuntimeInputBindingRequest,
+)
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,
     cellprofiler_runtime_input_edge_for_test,
@@ -161,9 +163,7 @@ def test_runtime_rows_must_match_public_operand_behavior() -> None:
         measure_image_area_occupied.__wrapped__(
             np.zeros((2, 2), dtype=np.float32),
             operand_choices=(OperandChoice.OBJECTS,),
-            area_occupied_rows=(
-                AreaOccupiedRow(OperandChoice.BINARY_IMAGE, "Mask"),
-            ),
+            area_occupied_rows=(AreaOccupiedRow(OperandChoice.BINARY_IMAGE, "Mask"),),
         )
 
 
@@ -213,9 +213,10 @@ MeasureImageAreaOccupied:[module_num:3|enabled:True]
         AreaOccupiedRow(OperandChoice.OBJECTS, "Cells"),
     )
     assert contract.artifact_outputs.names_of_artifact_type(ImageArtifactType) == ()
-    assert len(
-        contract.artifact_outputs.names_of_artifact_type(MeasurementsArtifactType)
-    ) == 1
+    assert (
+        len(contract.artifact_outputs.names_of_artifact_type(MeasurementsArtifactType))
+        == 1
+    )
     MeasureImageAreaOccupiedBinaryModule.validate_callable_artifact_abi(
         measure_image_area_occupied,
         contract,

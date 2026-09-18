@@ -38,7 +38,7 @@ from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode,
     runtime_bound_parameters,
     special_inputs,
-    )
+)
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import enum_member_with_payload
 from openhcs.core.runtime_array_values import RuntimeArrayData
@@ -710,14 +710,16 @@ class MeasureObjectIntensityDistributionModule(
     @classmethod
     def finalize_module_blocks_for_invocation(
         cls,
-        blocks, *,
+        blocks,
+        *,
         invocation,
         step_context,
     ) -> tuple[ModuleBlock, ...]:
         """Reconstruct all heatmap rows from the public callable declaration."""
 
         blocks = super().finalize_module_blocks_for_invocation(
-            blocks, invocation=invocation,
+            blocks,
+            invocation=invocation,
             step_context=step_context,
         )
         raw_groups = invocation.kwargs_dict.get("heatmap_groups", ())

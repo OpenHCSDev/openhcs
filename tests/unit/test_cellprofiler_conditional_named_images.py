@@ -139,11 +139,9 @@ def _public_function_step_contract(
         invocation=invocation,
         step_context=context,
     )
-    (numbered_blocks,), _next_module_num = (
-        module_type.number_step_invocation_blocks(
-            (blocks,),
-            first_module_num=1,
-        )
+    (numbered_blocks,), _next_module_num = module_type.number_step_invocation_blocks(
+        (blocks,),
+        first_module_num=1,
     )
     contract, consumed = module_type.invocation_callable_contract(
         invocation=invocation,
@@ -479,9 +477,7 @@ def test_run_imagej_macro_output_groups_own_names_order_and_relations() -> None:
     )
     assert all(
         output.relations
-        == (
-            GroupLineageSourceRelation(source=contract.artifact_inputs[0].ref()),
-        )
+        == (GroupLineageSourceRelation(source=contract.artifact_inputs[0].ref()),)
         for output in outputs
     )
 

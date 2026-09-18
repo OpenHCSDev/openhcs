@@ -59,13 +59,16 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     ObjectArtifactInputModule,
     ObjectArtifactOutputModule,
     PlaneRuntimeArtifactModule,
-    )
+)
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     MeasurementFeatureRecord,
     NoObjectNameMeasurementRecordMixin,
 )
-from openhcs.core.steps.function_runtime import RuntimeCallableArgument, RuntimeCallableKwargs
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableArgument,
+    RuntimeCallableKwargs,
+)
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     optional_setting_value,
@@ -389,7 +392,9 @@ class DefineGridManualModule(
         display_grid_image_setting, ImageArtifactType
     )
     previous_objects_binding = SettingToKeywordBinding.input(
-        previous_objects_setting, ObjectLabelsArtifactType, runtime_parameter_name="labels"
+        previous_objects_setting,
+        ObjectLabelsArtifactType,
+        runtime_parameter_name="labels",
     )
     grid_image_output_binding = SettingToKeywordBinding.output(
         grid_image_output_setting, ImageArtifactType

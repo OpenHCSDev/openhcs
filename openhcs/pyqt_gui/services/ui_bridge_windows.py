@@ -435,7 +435,8 @@ class WindowCatalogProjectionABC(
 
     @abstractmethod
     def navigate(
-        self, request: UiWindowNavigateRequest,
+        self,
+        request: UiWindowNavigateRequest,
         completed: Callable[[UiWindowNavigateResult], None] | None = None,
     ) -> UiWindowNavigateResult:
         raise NotImplementedError
@@ -446,7 +447,8 @@ class WindowCatalogProjectionABC(
 
     @abstractmethod
     def snapshot(
-        self, request: UiWindowSnapshotRequest,
+        self,
+        request: UiWindowSnapshotRequest,
         completed: Callable[[UiWindowSnapshotResult], None] | None = None,
     ) -> UiWindowSnapshotResult:
         raise NotImplementedError
@@ -474,7 +476,8 @@ class WindowTargetOperationProjectionMixin(ABC):
         raise NotImplementedError
 
     def snapshot(
-        self, request: UiWindowSnapshotRequest,
+        self,
+        request: UiWindowSnapshotRequest,
         completed: Callable[[UiWindowSnapshotResult], None] | None = None,
     ) -> UiWindowSnapshotResult:
         target = self.target_for_operation(request)
@@ -551,7 +554,8 @@ class EmbeddedWindowRoute:
         return self.summary()
 
     def navigate(
-        self, request: UiWindowNavigateRequest,
+        self,
+        request: UiWindowNavigateRequest,
         completed: Callable[[RegisteredWindowNavigationCompletion], None] | None = None,
     ) -> WindowNavigationDispatch:
         self.pane.show()
@@ -607,7 +611,8 @@ class ManagedWindowRoute(FocusableWindowRouteMixin):
     title: str
 
     def navigate(
-        self, request: UiWindowNavigateRequest,
+        self,
+        request: UiWindowNavigateRequest,
         completed: Callable[[RegisteredWindowNavigationCompletion], None] | None = None,
     ) -> WindowNavigationDispatch:
         self.focus()
@@ -1117,7 +1122,8 @@ class QtTopLevelWindowProjection(
         )
 
     def navigate(
-        self, request: UiWindowNavigateRequest,
+        self,
+        request: UiWindowNavigateRequest,
         completed: Callable[[UiWindowNavigateResult], None] | None = None,
     ) -> UiWindowNavigateResult:
         focus_result = self.focus(
@@ -1133,10 +1139,18 @@ class QtTopLevelWindowProjection(
             navigated=False,
             created=False,
             summary=focus_result.summary,
-            errors=(focus_result.errors or (
-                (WindowProjectionResultAuthority.unsupported_navigation_target(request),)
-                if request.has_target else ()
-            )),
+            errors=(
+                focus_result.errors
+                or (
+                    (
+                        WindowProjectionResultAuthority.unsupported_navigation_target(
+                            request
+                        ),
+                    )
+                    if request.has_target
+                    else ()
+                )
+            ),
             warnings=focus_result.warnings,
         )
 
@@ -1241,31 +1255,49 @@ class UiWindowSnapshotResultFactory:
         completed: Callable[[UiWindowSnapshotResult], None] | None = None,
     ) -> UiWindowSnapshotResult:
         qt_request = QtWindowSnapshotRequest(
-            widget=target.widget, capture=request,
-            subject_id=request.window_id, title=target.summary.title,
+            widget=target.widget,
+            capture=request,
+            subject_id=request.window_id,
+            title=target.summary.title,
         )
         try:
             if request.frame_condition.observes:
                 if completed is None:
-                    raise ValueError("Observed snapshots require an operation completion owner.")
+                    raise ValueError(
+                        "Observed snapshots require an operation completion owner."
+                    )
                 self._snapshotter.observe(
                     qt_request,
-                    lambda snapshot: completed(self.from_snapshot(request, target, snapshot)),
-                    lambda failure: completed(self.error(
-                        request, AgentError.from_exception(
-                            UiBridgeSnapshotWindowOperation.failure_error_code, failure.error),
-                        summary=target.summary, observation=failure.observation,
-                    )),
+                    lambda snapshot: completed(
+                        self.from_snapshot(request, target, snapshot)
+                    ),
+                    lambda failure: completed(
+                        self.error(
+                            request,
+                            AgentError.from_exception(
+                                UiBridgeSnapshotWindowOperation.failure_error_code,
+                                failure.error,
+                            ),
+                            summary=target.summary,
+                            observation=failure.observation,
+                        )
+                    ),
                 )
-                return project_dataclass(UiWindowSnapshotResult, request,
-                    schema_version=SCHEMA_VERSION, window_id=request.window_id,
-                    captured=False, summary=target.summary,
+                return project_dataclass(
+                    UiWindowSnapshotResult,
+                    request,
+                    schema_version=SCHEMA_VERSION,
+                    window_id=request.window_id,
+                    captured=False,
+                    summary=target.summary,
                 )
             snapshot = self._snapshotter.capture(qt_request)
         except Exception as exc:
             return self.error(
                 request,
-                AgentError.from_exception(UiBridgeSnapshotWindowOperation.failure_error_code, exc),
+                AgentError.from_exception(
+                    UiBridgeSnapshotWindowOperation.failure_error_code, exc
+                ),
                 summary=target.summary,
             )
         return self.from_snapshot(request, target, snapshot)
@@ -1276,7 +1308,9 @@ class UiWindowSnapshotResultFactory:
         target: WindowProjectionTarget,
         snapshot: QtWindowSnapshot,
     ) -> UiWindowSnapshotResult:
-        return project_dataclass(UiWindowSnapshotResult, request,
+        return project_dataclass(
+            UiWindowSnapshotResult,
+            request,
             schema_version=SCHEMA_VERSION,
             window_id=request.window_id,
             captured=True,
@@ -1302,7 +1336,9 @@ class UiWindowSnapshotResultFactory:
         summary: UiWindowSummary | None = None,
         observation: WindowVisualObservation | None = None,
     ) -> UiWindowSnapshotResult:
-        return project_dataclass(UiWindowSnapshotResult, request,
+        return project_dataclass(
+            UiWindowSnapshotResult,
+            request,
             schema_version=SCHEMA_VERSION,
             window_id=request.window_id,
             captured=False,
@@ -2450,9 +2486,15 @@ class UiWindowProjectionService(
         resolution: WindowRouteResolution,
         completed: Callable[[UiWindowNavigateResult], None] | None = None,
     ) -> UiWindowNavigateResult:
-        dispatch = resolution.route.navigate(request, self._completion_for(
-            request, completed, created=False, summary=resolution.summary,
-        ))
+        dispatch = resolution.route.navigate(
+            request,
+            self._completion_for(
+                request,
+                completed,
+                created=False,
+                summary=resolution.summary,
+            ),
+        )
         return self._navigate_result(
             request,
             focused=dispatch.focused,
@@ -2492,8 +2534,12 @@ class UiWindowProjectionService(
                 field_path=request.field_path,
                 requested_scope_id=identity.window_id,
                 completed=self._completion_for(
-                    request, completed, created=False,
-                    summary=lambda: self._dynamic_scope_projection().summary(identity, open_scope_id),
+                    request,
+                    completed,
+                    created=False,
+                    summary=lambda: self._dynamic_scope_projection().summary(
+                        identity, open_scope_id
+                    ),
                 ),
             )
             if dispatch.focused:
@@ -2529,9 +2575,14 @@ class UiWindowProjectionService(
                 item_id=request.item_id,
                 field_path=request.field_path,
                 create_if_missing=request.open_policy.create_if_missing,
-            ), completed=self._completion_for(
-                request, completed, created=True,
-                summary=lambda: self._dynamic_scope_projection().summary(identity, identity.window_id),
+            ),
+            completed=self._completion_for(
+                request,
+                completed,
+                created=True,
+                summary=lambda: self._dynamic_scope_projection().summary(
+                    identity, identity.window_id
+                ),
             ),
         )
         if result.focused:
@@ -2687,7 +2738,9 @@ class UiWindowProjectionService(
     def _completion_for(
         request: UiWindowNavigateRequest,
         completed: Callable[[UiWindowNavigateResult], None] | None,
-        *, created: bool, summary: Callable[[], UiWindowSummary],
+        *,
+        created: bool,
+        summary: Callable[[], UiWindowSummary],
     ) -> Callable[[RegisteredWindowNavigationCompletion], None] | None:
         if completed is None:
             return None
@@ -2695,20 +2748,35 @@ class UiWindowProjectionService(
         def finish(facts: RegisteredWindowNavigationCompletion) -> None:
             errors = ()
             if facts.error is not None:
-                errors = (AgentError.from_exception(
-                    UiBridgeNavigateWindowOperation.failure_error_code, facts.error),)
+                errors = (
+                    AgentError.from_exception(
+                        UiBridgeNavigateWindowOperation.failure_error_code, facts.error
+                    ),
+                )
             elif not facts.executed:
-                errors = (AgentError(
-                    code=UiBridgeNavigateWindowOperation.failure_error_code,
-                    message=("Window was destroyed before navigation." if not facts.window_alive
-                             else f"Navigation readiness exhausted: {facts.wait_reason}."),
-                ),)
-            completed(UiWindowNavigateResult(
-                schema_version=SCHEMA_VERSION, window_id=request.window_id,
-                focused=facts.window_alive, created=created,
-                navigated=facts.executed, target_exposed=facts.target_exposed,
-                summary=summary() if facts.window_alive else None, errors=errors,
-            ))
+                errors = (
+                    AgentError(
+                        code=UiBridgeNavigateWindowOperation.failure_error_code,
+                        message=(
+                            "Window was destroyed before navigation."
+                            if not facts.window_alive
+                            else f"Navigation readiness exhausted: {facts.wait_reason}."
+                        ),
+                    ),
+                )
+            completed(
+                UiWindowNavigateResult(
+                    schema_version=SCHEMA_VERSION,
+                    window_id=request.window_id,
+                    focused=facts.window_alive,
+                    created=created,
+                    navigated=facts.executed,
+                    target_exposed=facts.target_exposed,
+                    summary=summary() if facts.window_alive else None,
+                    errors=errors,
+                )
+            )
+
         return finish
 
     @staticmethod

@@ -19,7 +19,6 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 
-
 _SPATIAL_DOMAIN = SourceSpatialDomain(source_shape_yx=(4, 5))
 _SINGLETON_MASK = np.array(
     (
@@ -122,7 +121,9 @@ def test_same_shaped_scalar_images_do_not_invent_runtime_alignment() -> None:
     )
 
 
-def test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together() -> None:
+def test_singleton_runtime_projection_consumes_rgb_image_and_mask_axis_together() -> (
+    None
+):
     payload = ImagePayloadMetadata(
         source_spatial_domain=_SPATIAL_DOMAIN,
         source_channel_axis=3,

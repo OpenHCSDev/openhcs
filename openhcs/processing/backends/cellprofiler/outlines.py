@@ -137,9 +137,7 @@ class OverlayObjectsModule(
         """Preserve one payload-scoped object volume as one invocation."""
 
         del image, variable_components
-        labels = kwargs[
-            cls.input_objects_binding.require_runtime_parameter_name()
-        ]
+        labels = kwargs[cls.input_objects_binding.require_runtime_parameter_name()]
         if (
             isinstance(labels, ObjectLabelValue)
             and labels.object_label_domain().scope is ObjectLabelDomainScope.PAYLOAD
@@ -159,7 +157,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 class OverlayOutlinesModule(
     ObjectLabelsInputBindingMixin,
     ObjectArtifactInputModule,
-    ):
+):
     module_name = "OverlayOutlines"
     function_name = "overlay_outlines"
     validated = True
@@ -211,12 +209,18 @@ class OverlayOutlinesModule(
     )
     max_type_binding = SettingToKeywordBinding(max_type_setting, "max_type")
     line_mode_binding = SettingToKeywordBinding(line_mode_setting, "line_mode")
-    setting_bindings = (base_image_binding, outline_image_binding, objects_binding,output_image_binding,blank_image_binding,
+    setting_bindings = (
+        base_image_binding,
+        outline_image_binding,
+        objects_binding,
+        output_image_binding,
+        blank_image_binding,
         display_mode_binding,
         max_type_binding,
         line_mode_binding,
         source_kind_binding,
-        color_binding,)
+        color_binding,
+    )
 
     @dataclass(frozen=True, slots=True)
     class OutlineRow:
@@ -330,14 +334,16 @@ class OverlayOutlinesModule(
     @classmethod
     def finalize_module_blocks_for_invocation(
         cls,
-        blocks, *,
+        blocks,
+        *,
         invocation: NormalizedFunctionItem,
         step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ModuleBlock, ...]:
         """Reconstruct every ordered outline row on the nominal declaration."""
 
         blocks = super().finalize_module_blocks_for_invocation(
-            blocks, invocation=invocation,
+            blocks,
+            invocation=invocation,
             step_context=step_context,
         )
         reconstructed_blocks = tuple(
@@ -350,11 +356,10 @@ class OverlayOutlinesModule(
     @classmethod
     def _block_with_outline_rows(cls, block: ModuleBlock) -> ModuleBlock | None:
         source_kinds = cls._source_kinds(block)
-        if (
-            len(cls._outline_names(block, setting=cls.outline_image_setting))
-            != sum(kind is OutlineSourceKind.IMAGE for kind in source_kinds)
-            or len(cls._outline_names(block, setting=cls.objects_setting))
-            != sum(kind is OutlineSourceKind.OBJECTS for kind in source_kinds)
+        if len(cls._outline_names(block, setting=cls.outline_image_setting)) != sum(
+            kind is OutlineSourceKind.IMAGE for kind in source_kinds
+        ) or len(cls._outline_names(block, setting=cls.objects_setting)) != sum(
+            kind is OutlineSourceKind.OBJECTS for kind in source_kinds
         ):
             return None
         rows = cls._outline_rows_from_columns(block)
@@ -882,9 +887,7 @@ def overlay_outlines(
     display_mode: OutlineDisplayMode = OutlineDisplayMode.COLOR,
     line_mode: LineMode = LineMode.INNER,
     max_type: MaxType = MaxType.MAX_IMAGE,
-    outline_source_kinds: Sequence[OutlineSourceKind] = (
-        OutlineSourceKind.OBJECTS,
-    ),
+    outline_source_kinds: Sequence[OutlineSourceKind] = (OutlineSourceKind.OBJECTS,),
     outline_colors: Sequence[str | Sequence[float]] = ("Red",),
     object_labels: Sequence[ObjectLabelValue] = (),
 ) -> np.ndarray:

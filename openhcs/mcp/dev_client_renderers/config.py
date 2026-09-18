@@ -168,9 +168,11 @@ class ConfigSchemaRenderer(McpDevOutputRenderer):
     @staticmethod
     def _field_flags(field: Mapping[str, JsonValue]) -> tuple[str, ...]:
         flags = [
-            "required"
-            if field.get(ConfigFieldSchema.required.__name__) is True
-            else "optional"
+            (
+                "required"
+                if field.get(ConfigFieldSchema.required.__name__) is True
+                else "optional"
+            )
         ]
         for descriptor in (
             ConfigFieldSchema.lazy,

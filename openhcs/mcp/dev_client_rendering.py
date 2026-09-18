@@ -346,9 +346,7 @@ class McpDiagnosticRenderer:
                 if not isinstance(payload, Mapping):
                     continue
                 errors.extend(
-                    McpDevPayloadProjection.sequence_of_mappings(
-                        payload.get("errors")
-                    )
+                    McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
                 )
         return cls.error_lines(tuple(errors))
 
@@ -359,7 +357,9 @@ class McpDiagnosticRenderer:
         for error in errors:
             message = McpDevPayloadProjection.text(error.get("message"))
             hint = error.get("hint")
-            hint_text = None if hint is None else McpDevPayloadProjection.quoted_text(hint)
+            hint_text = (
+                None if hint is None else McpDevPayloadProjection.quoted_text(hint)
+            )
             code = McpDevPayloadProjection.text(error.get("code"))
             codes = grouped_codes.setdefault(message, [])
             if code not in codes:
@@ -373,10 +373,7 @@ class McpDiagnosticRenderer:
         lines: list[str] = []
         for message, codes in tuple(grouped_codes.items())[:3]:
             code_text = codes[0] if len(codes) == 1 else ", ".join(codes)
-            line = (
-                f"- {code_text}: "
-                f"{message}"
-            )
+            line = f"- {code_text}: " f"{message}"
             hint_texts = grouped_hints.get(message, [])
             if len(hint_texts) == 1:
                 line += f" hint={hint_texts[0]}"
@@ -497,10 +494,7 @@ class ToolListRenderer:
         cls,
         tools: tuple[Mapping[str, JsonValue], ...],
     ) -> list[str]:
-        entries = tuple(
-            (tool, cls._capability_for_tool(tool))
-            for tool in tools
-        )
+        entries = tuple((tool, cls._capability_for_tool(tool)) for tool in tools)
         lines: list[str] = []
         for workflow_group in CapabilityWorkflowGroup:
             group_entries = tuple(

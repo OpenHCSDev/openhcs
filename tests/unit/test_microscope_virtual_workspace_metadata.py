@@ -43,9 +43,7 @@ def test_virtual_workspace_metadata_records_parser_owned_axis_values(
     metadata = json.loads(
         (tmp_path / "openhcs_metadata.json").read_text(encoding="utf-8")
     )
-    source_metadata = metadata[FIELDS.SUBDIRECTORIES]["Images"][
-        FIELDS.SOURCE_METADATA
-    ]
+    source_metadata = metadata[FIELDS.SUBDIRECTORIES]["Images"][FIELDS.SOURCE_METADATA]
     assert source_metadata[virtual_a][AllComponents.WELL.value] == "R01C01"
     assert source_metadata[virtual_b][AllComponents.WELL.value] == "R02C03"
 

@@ -825,7 +825,9 @@ class SourceQualifiedInputPayloadMeasurementRecordMixin(
         if not source_names:
             return super().measurement_record_source_metadata(request, rows)
 
-        declared_inputs = ArtifactSpecCollection(request.callable_contract.artifact_inputs.specs)
+        declared_inputs = ArtifactSpecCollection(
+            request.callable_contract.artifact_inputs.specs
+        )
         source_specs = []
         for source_name in source_names:
             spec = declared_inputs.by_name(source_name)

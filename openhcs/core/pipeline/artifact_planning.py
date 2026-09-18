@@ -82,9 +82,7 @@ class AutomaticImageArtifactOutputMaterializationStrategy(
     artifact_type = ImageArtifactType
 
     def materialization(self) -> ArtifactMaterializationPayload:
-        return TerminalMaterializationSpec(
-            ImageFileOptions(filename_suffix=".tif")
-        )
+        return TerminalMaterializationSpec(ImageFileOptions(filename_suffix=".tif"))
 
 
 class AutomaticObjectLabelsArtifactOutputMaterializationStrategy(
@@ -163,8 +161,7 @@ class ArtifactProducer:
 
     def __post_init__(self) -> None:
         if self.producer_step_index is not None and (
-            type(self.producer_step_index) is not int
-            or self.producer_step_index < 0
+            type(self.producer_step_index) is not int or self.producer_step_index < 0
         ):
             raise ValueError(
                 "ArtifactProducer.producer_step_index must be a non-negative "

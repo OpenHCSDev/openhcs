@@ -9,7 +9,6 @@ from typing import Any, ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-
 CacheKey = TypeVar("CacheKey")
 CachedValue = TypeVar("CachedValue")
 
@@ -19,12 +18,9 @@ def identity_owner_tuples_match(
     right: Sequence[object],
 ) -> bool:
     """Return whether identity-keyed cache owners still reference the same objects."""
-    return (
-        len(left) == len(right)
-        and all(
-            left_owner is right_owner
-            for left_owner, right_owner in zip(left, right, strict=True)
-        )
+    return len(left) == len(right) and all(
+        left_owner is right_owner
+        for left_owner, right_owner in zip(left, right, strict=True)
     )
 
 
@@ -33,15 +29,12 @@ def named_identity_owner_tuples_match(
     right: Sequence[tuple[str, object]],
 ) -> bool:
     """Return whether named identity-keyed cache owners still match."""
-    return (
-        len(left) == len(right)
-        and all(
-            left_name == right_name and left_owner is right_owner
-            for (left_name, left_owner), (right_name, right_owner) in zip(
-                left,
-                right,
-                strict=True,
-            )
+    return len(left) == len(right) and all(
+        left_name == right_name and left_owner is right_owner
+        for (left_name, left_owner), (right_name, right_owner) in zip(
+            left,
+            right,
+            strict=True,
         )
     )
 

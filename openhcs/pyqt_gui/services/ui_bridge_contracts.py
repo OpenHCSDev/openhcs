@@ -243,7 +243,8 @@ class UiWindowProviderABC(UiLiveOverviewContributorABC):
 
     @abstractmethod
     def navigate(
-        self, request: UiWindowNavigateRequest,
+        self,
+        request: UiWindowNavigateRequest,
         completed: Callable[[UiWindowNavigateResult], None] | None = None,
     ) -> UiWindowNavigateResult:
         raise NotImplementedError
@@ -254,7 +255,8 @@ class UiWindowProviderABC(UiLiveOverviewContributorABC):
 
     @abstractmethod
     def snapshot(
-        self, request: UiWindowSnapshotRequest,
+        self,
+        request: UiWindowSnapshotRequest,
         completed: Callable[[UiWindowSnapshotResult], None] | None = None,
     ) -> UiWindowSnapshotResult:
         raise NotImplementedError
@@ -439,9 +441,7 @@ class UiActionProviderIdentity(UiActionIdentity):
         return cls(
             widget_id=declaration.require_value(),
             action_id=(
-                declaration.action_provider_id()
-                if action_id is None
-                else action_id
+                declaration.action_provider_id() if action_id is None else action_id
             ),
             title=title,
         )

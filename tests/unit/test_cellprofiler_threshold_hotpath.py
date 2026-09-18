@@ -28,14 +28,13 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_diagn
     exact_quantized_threshold_codes,
 )
 
-
 UINT16_SCALE = int(np.iinfo(np.uint16).max)
 
 
 def _quantized_stack() -> tuple[np.ndarray, np.ndarray]:
-    raw = (
-        (np.arange(60 * 16 * 16, dtype=np.uint32) * 37 + 11) % 4096
-    ).astype(np.uint16)
+    raw = ((np.arange(60 * 16 * 16, dtype=np.uint32) * 37 + 11) % 4096).astype(
+        np.uint16
+    )
     raw = raw.reshape((60, 16, 16))
     return raw, raw.astype(np.float32) / np.float32(UINT16_SCALE)
 

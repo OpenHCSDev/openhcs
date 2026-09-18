@@ -17,7 +17,6 @@ from benchmark.contracts.manifest_acquisition import (
 )
 from benchmark.datasets.cache import BenchmarkPathRootKind, resolve_benchmark_path_root
 
-
 JSONScalar: TypeAlias = str | int | float | bool | None
 JSONValue: TypeAlias = JSONScalar | Mapping[str, "JSONValue"] | Sequence["JSONValue"]
 ManifestPayload: TypeAlias = Mapping[str, JSONValue]

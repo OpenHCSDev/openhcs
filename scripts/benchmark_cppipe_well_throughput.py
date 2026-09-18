@@ -94,7 +94,9 @@ def main() -> int:
     from benchmark.well_throughput_scaling import WellThroughputBenchmarkPlan
     from benchmark.well_throughput_scaling import WellThroughputObservationKey
     from benchmark.well_throughput_scaling import WellThroughputPreset
-    from benchmark.well_throughput_scaling import native_execution_baselines_from_summary_csv
+    from benchmark.well_throughput_scaling import (
+        native_execution_baselines_from_summary_csv,
+    )
     from benchmark.well_throughput_scaling import read_well_throughput_csv
     from benchmark.well_throughput_scaling import generate_well_throughput_figures
     from benchmark.well_throughput_scaling import run_well_throughput_suite
@@ -124,8 +126,7 @@ def main() -> int:
     existing_results = read_well_throughput_csv(csv_path) if args.resume else ()
     try:
         skipped_observations = tuple(
-            _parse_observation_key(raw_value)
-            for raw_value in args.skip_case_mode or ()
+            _parse_observation_key(raw_value) for raw_value in args.skip_case_mode or ()
         )
     except ValueError as exc:
         parser.error(str(exc))
@@ -149,7 +150,9 @@ def main() -> int:
         figures_output_dir = args.figures_output_dir or args.output_dir / "figures"
         if args.native_summary_csv is not None:
             from benchmark.reports.cppipe_figures import SummarySource
-            from benchmark.reports.cppipe_figures import generate_cppipe_benchmark_figures
+            from benchmark.reports.cppipe_figures import (
+                generate_cppipe_benchmark_figures,
+            )
 
             for output in generate_cppipe_benchmark_figures(
                 (SummarySource("OH1", args.native_summary_csv),),
@@ -171,9 +174,7 @@ def _parse_observation_key(raw_value: str):
 
     case_name, separator, mode_name = raw_value.partition(":")
     if not separator or not case_name or not mode_name:
-        raise ValueError(
-            f"Expected CASE:MODE observation key, got {raw_value!r}."
-        )
+        raise ValueError(f"Expected CASE:MODE observation key, got {raw_value!r}.")
     return WellThroughputObservationKey(case_name, mode_name)
 
 

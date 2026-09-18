@@ -27,7 +27,10 @@ def _codebook_image(*, seed: int) -> np.ndarray:
 
 
 def test_virtual_source_uses_generic_payload_intensity_scale() -> None:
-    from openhcs.core.runtime_image_values import ImagePayloadMetadata, MaskedImagePayload
+    from openhcs.core.runtime_image_values import (
+        ImagePayloadMetadata,
+        MaskedImagePayload,
+    )
     from openhcs.core.source_metadata import (
         SOURCE_FILTER_PATHS_METADATA_FIELD,
         SourceFilterPathMetadata,
@@ -86,9 +89,11 @@ def test_minimum_cross_entropy_preserves_producer_float32_codebook() -> None:
     image = _codebook_image(seed=1)
     expected = thresholding._li_threshold_float32_numpy(image.ravel())
 
-    observed = NumbaNumpyThresholdPrimitiveBackendStrategy().minimum_cross_entropy_threshold(
-        image,
-        proven_unit_interval_scale=255,
+    observed = (
+        NumbaNumpyThresholdPrimitiveBackendStrategy().minimum_cross_entropy_threshold(
+            image,
+            proven_unit_interval_scale=255,
+        )
     )
 
     assert expected == 0.4035060703754425
@@ -105,7 +110,9 @@ def test_threshold_entropy_fast_path_preserves_producer_float32_logs(
     mask = np.ones(image.shape, dtype=np.bool_)
     expected = thresholding._numpy_threshold_sum_of_entropies(image, mask, binary)
 
-    def forbidden_generic_kernel(*args: object, **kwargs: object) -> tuple[float, float]:
+    def forbidden_generic_kernel(
+        *args: object, **kwargs: object
+    ) -> tuple[float, float]:
         del args, kwargs
         raise AssertionError("producer codebooks must retain the quantized fast path")
 
@@ -114,13 +121,14 @@ def test_threshold_entropy_fast_path_preserves_producer_float32_logs(
         "_threshold_diagnostics_unmasked_finite_numba",
         forbidden_generic_kernel,
     )
-    _weighted_variance, observed = (
-        NumbaNumpyThresholdDiagnosticsBackendStrategy().diagnostics(
-            image,
-            None,
-            binary,
-            proven_unit_interval_scale=255,
-        )
+    (
+        _weighted_variance,
+        observed,
+    ) = NumbaNumpyThresholdDiagnosticsBackendStrategy().diagnostics(
+        image,
+        None,
+        binary,
+        proven_unit_interval_scale=255,
     )
 
     assert expected == -13.022928470071477
@@ -136,9 +144,11 @@ def test_minimum_cross_entropy_preserves_float32_reduction_order() -> None:
     )
     image = codes.astype(np.float32) / np.float32(255)
     expected = thresholding._li_threshold_float32_numpy(image.ravel())
-    observed = NumbaNumpyThresholdPrimitiveBackendStrategy().minimum_cross_entropy_threshold(
-        image,
-        proven_unit_interval_scale=255,
+    observed = (
+        NumbaNumpyThresholdPrimitiveBackendStrategy().minimum_cross_entropy_threshold(
+            image,
+            proven_unit_interval_scale=255,
+        )
     )
 
     assert expected == 0.3884999454021454

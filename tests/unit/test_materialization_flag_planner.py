@@ -2,14 +2,20 @@ from types import SimpleNamespace
 
 from openhcs.constants.constants import Backend
 from openhcs.constants.input_source import InputSource
-from openhcs.core.artifacts import ArtifactOutputPlan, ObjectLabelsArtifactType, MeasurementsArtifactType
+from openhcs.core.artifacts import (
+    ArtifactOutputPlan,
+    ObjectLabelsArtifactType,
+    MeasurementsArtifactType,
+)
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import (
     MaterializationBackend,
     PathPlanningConfig,
     VFSConfig,
 )
-from openhcs.core.pipeline.materialization_flag_planner import MaterializationFlagPlanner
+from openhcs.core.pipeline.materialization_flag_planner import (
+    MaterializationFlagPlanner,
+)
 from openhcs.processing.materialization import MaterializationSpec, ROIOptions
 
 
@@ -40,13 +46,18 @@ def test_measurement_tail_materializes_previous_image_step() -> None:
                 "measure",
                 "FunctionStep",
                 "A01",
-                artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                        "measurements",
-                        "/memory/measurements.pkl",
-                        MeasurementsArtifactType,
-                    ),)},
+                artifact_outputs={
+                    plan.ref(): plan
+                    for plan in (
+                        ArtifactOutputPlan(
+                            "measurements",
+                            "/memory/measurements.pkl",
+                            MeasurementsArtifactType,
+                        ),
+                    )
+                },
             ),
-        ]
+        ],
     )
 
     MaterializationFlagPlanner.prepare_pipeline_flags(
@@ -69,14 +80,19 @@ def test_final_image_artifact_step_materializes_images() -> None:
                 "segment",
                 "FunctionStep",
                 "A01",
-                artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                        "labels",
-                        "/memory/labels.pkl",
-                        ObjectLabelsArtifactType,
-                        materialization=MaterializationSpec(ROIOptions()),
-                    ),)},
+                artifact_outputs={
+                    plan.ref(): plan
+                    for plan in (
+                        ArtifactOutputPlan(
+                            "labels",
+                            "/memory/labels.pkl",
+                            ObjectLabelsArtifactType,
+                            materialization=MaterializationSpec(ROIOptions()),
+                        ),
+                    )
+                },
             )
-        ]
+        ],
     )
 
     MaterializationFlagPlanner.prepare_pipeline_flags(
@@ -98,14 +114,19 @@ def test_final_image_artifact_step_honors_no_materialization_policy() -> None:
                 "segment",
                 "FunctionStep",
                 "A01",
-                artifact_outputs={plan.ref(): plan for plan in (ArtifactOutputPlan(
-                        "labels",
-                        "/memory/labels.pkl",
-                        ObjectLabelsArtifactType,
-                        materialization=None,
-                    ),)},
+                artifact_outputs={
+                    plan.ref(): plan
+                    for plan in (
+                        ArtifactOutputPlan(
+                            "labels",
+                            "/memory/labels.pkl",
+                            ObjectLabelsArtifactType,
+                            materialization=None,
+                        ),
+                    )
+                },
             )
-        ]
+        ],
     )
 
     MaterializationFlagPlanner.prepare_pipeline_flags(
@@ -121,7 +142,7 @@ def test_final_image_artifact_step_honors_no_materialization_policy() -> None:
 def test_final_uncontracted_step_preserves_legacy_image_materialization() -> None:
     context = SimpleNamespace(
         axis_id="A01",
-        step_plans=[CompiledStepPlan(0, "process", "FunctionStep", "A01")]
+        step_plans=[CompiledStepPlan(0, "process", "FunctionStep", "A01")],
     )
 
     MaterializationFlagPlanner.prepare_pipeline_flags(
@@ -176,11 +197,5 @@ def test_path_planning_filter_materializes_only_selected_axis() -> None:
 
     assert contexts["A01"].step_plans[0].write_backend == Backend.MEMORY.value
     assert contexts["B03"].step_plans[0].write_backend == Backend.DISK.value
-    assert (
-        contexts["A01"].step_plans[0].main_flow_axis_persistence_enabled
-        is False
-    )
-    assert (
-        contexts["B03"].step_plans[0].main_flow_axis_persistence_enabled
-        is True
-    )
+    assert contexts["A01"].step_plans[0].main_flow_axis_persistence_enabled is False
+    assert contexts["B03"].step_plans[0].main_flow_axis_persistence_enabled is True

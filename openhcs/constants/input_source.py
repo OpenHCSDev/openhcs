@@ -17,16 +17,16 @@ from enum import Enum
 class InputSource(Enum):
     """
     Main-flow source strategies for pipeline steps.
-    
+
     This enum replaces the @chain_breaker decorator system with explicit
     input source declaration, providing cleaner and more predictable
     pipeline behavior.
-    
+
     The InputSource enum supports two strategies:
-    
+
     1. **PREVIOUS_STEP** (Default): Standard pipeline chaining where each step
        receives the ordinary main-flow result of the previous step.
-       
+
     2. **PIPELINE_START**: The step receives the pipeline-start main-flow input,
        bypassing previous step results. This replaces the @chain_breaker
        decorator functionality.
@@ -35,9 +35,9 @@ class InputSource(Enum):
     callable declares those as artifact inputs, and compilation satisfies them
     through step source bindings or prior artifact producers alongside the main
     flow.
-    
+
     Usage Examples:
-    
+
     Standard chaining (default behavior):
     ```python
     step = FunctionStep(
@@ -48,7 +48,7 @@ class InputSource(Enum):
         ),
     )
     ```
-    
+
     Chain breaking for position generation:
     ```python
     step = FunctionStep(
@@ -59,7 +59,7 @@ class InputSource(Enum):
         ),
     )
     ```
-    
+
     Quality control accessing original data:
     ```python
     step = FunctionStep(
@@ -71,7 +71,7 @@ class InputSource(Enum):
     )
     ```
     """
-    
+
     PREVIOUS_STEP = "previous"
     """
     Standard pipeline chaining strategy.
@@ -84,7 +84,7 @@ class InputSource(Enum):
     - Enables progressive image processing
     - Is the default for all steps
     """
-    
+
     PIPELINE_START = "start"
     """
     Pipeline start input strategy (replaces @chain_breaker).

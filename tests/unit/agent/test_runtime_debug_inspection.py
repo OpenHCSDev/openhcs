@@ -28,7 +28,6 @@ from openhcs.core.debug_views import (
 )
 from openhcs.serialization.json import to_jsonable
 
-
 DEBUG_SESSION_ID = "debug-session-1"
 
 

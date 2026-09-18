@@ -21,7 +21,6 @@ from benchmark.reports.cppipe_figures import PIPELINE_NAME_FIELD
 from benchmark.reports.cppipe_figures import generate_grouped_benchmark_metric_figures
 from benchmark.datasets.cppipe_case_catalog import official_cp3_case_category
 
-
 CASE_NAME_FIELD = "case_name"
 WORKER_COUNT_FIELD = "worker_count"
 REPLICAS_FIELD = "replicas"
@@ -467,10 +466,7 @@ def _worker_methods(rows: Sequence[dict[str, str]]) -> tuple[str, ...]:
     return tuple(
         _method_label(replicas, worker_count)
         for replicas, worker_count in sorted(
-            {
-                (int(row[REPLICAS_FIELD]), int(row[WORKER_COUNT_FIELD]))
-                for row in rows
-            }
+            {(int(row[REPLICAS_FIELD]), int(row[WORKER_COUNT_FIELD])) for row in rows}
         )
     )
 

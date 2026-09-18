@@ -6,7 +6,6 @@ from enum import Enum
 from typing import TypeVar
 import warnings
 
-
 CellProfilerEnumT = TypeVar("CellProfilerEnumT", bound=Enum)
 
 

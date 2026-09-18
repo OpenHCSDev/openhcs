@@ -27,11 +27,13 @@ from python_introspect import (
 # REGISTER OPENHCS-SPECIFIC FORWARD-REFERENCE NAMESPACE
 # =============================================================================
 
+
 def _openhcs_namespace_provider():
     """Provide OpenHCS types for forward reference resolution."""
     try:
         import objectstate.lazy_factory as lazy_module
         import openhcs.core.config as config_module
+
         return {**vars(lazy_module), **vars(config_module)}
     except ImportError:
         return {}
@@ -43,13 +45,13 @@ register_namespace_provider(_openhcs_namespace_provider)
 
 __all__ = [
     # Signature analysis (from python_introspect)
-    'SignatureAnalyzer',
-    'ParameterInfo',
-    'DocstringInfo',
-    'DocstringExtractor',
+    "SignatureAnalyzer",
+    "ParameterInfo",
+    "DocstringInfo",
+    "DocstringExtractor",
     # Unified analysis (from python_introspect)
-    'UnifiedParameterAnalyzer',
-    'UnifiedParameterInfo',
+    "UnifiedParameterAnalyzer",
+    "UnifiedParameterInfo",
     # Plugin registration (from python_introspect)
-    'register_namespace_provider',
+    "register_namespace_provider",
 ]

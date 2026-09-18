@@ -35,9 +35,11 @@ class FileOutputOptions:
         object.__setattr__(
             self,
             "filename_identity",
-            self.filename_identity
-            if isinstance(self.filename_identity, MaterializedFilenameIdentity)
-            else MaterializedFilenameIdentity(self.filename_identity),
+            (
+                self.filename_identity
+                if isinstance(self.filename_identity, MaterializedFilenameIdentity)
+                else MaterializedFilenameIdentity(self.filename_identity)
+            ),
         )
 
     @property

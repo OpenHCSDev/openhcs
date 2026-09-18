@@ -59,14 +59,19 @@ def test_benchmark_dataset_paths_default_to_persistent_user_cache(
     )
 
 
-def test_benchmark_path_root_env_override_is_explicit(monkeypatch, tmp_path: Path) -> None:
+def test_benchmark_path_root_env_override_is_explicit(
+    monkeypatch, tmp_path: Path
+) -> None:
     override = tmp_path / "custom-cache"
     monkeypatch.setenv("OPENHCS_BENCHMARK_DATASET_CACHE_ROOT", str(override))
 
-    assert resolve_benchmark_path_root(
-        BenchmarkPathRootKind.DATASET_CACHE,
-        env_name="OPENHCS_BENCHMARK_DATASET_CACHE_ROOT",
-    ) == override
+    assert (
+        resolve_benchmark_path_root(
+            BenchmarkPathRootKind.DATASET_CACHE,
+            env_name="OPENHCS_BENCHMARK_DATASET_CACHE_ROOT",
+        )
+        == override
+    )
 
 
 def test_source_handlers_are_registered_by_enum() -> None:
@@ -166,7 +171,9 @@ def test_url_file_source_acquires_plain_files(monkeypatch, tmp_path: Path) -> No
     assert (acquired.path / "Well A01.DIB").read_bytes() == b"image"
 
 
-def test_non_empty_validation_counts_registered_image_extensions(tmp_path: Path) -> None:
+def test_non_empty_validation_counts_registered_image_extensions(
+    tmp_path: Path,
+) -> None:
     (tmp_path / "image.tif").write_bytes(b"not really a tiff")
     context = DatasetValidationContext(
         spec=DatasetSpec(
@@ -180,9 +187,12 @@ def test_non_empty_validation_counts_registered_image_extensions(tmp_path: Path)
         data_dir=tmp_path,
     )
 
-    assert DatasetValidationStrategy.for_rule(
-        DatasetValidationRule.NON_EMPTY
-    ).validate(context) == 1
+    assert (
+        DatasetValidationStrategy.for_rule(DatasetValidationRule.NON_EMPTY).validate(
+            context
+        )
+        == 1
+    )
 
 
 def test_dataset_acquisition_source_normalizes_legacy_urls() -> None:
@@ -220,7 +230,9 @@ def test_nested_dataset_archives_materialize_missing_payloads_without_clobbering
     assert (image_dir / "missing.tiff").read_bytes() == b"payload"
 
 
-def test_comparison_manifest_materializes_dataset_relative_cases(tmp_path: Path) -> None:
+def test_comparison_manifest_materializes_dataset_relative_cases(
+    tmp_path: Path,
+) -> None:
     data_dir = tmp_path / "data"
     image_dir = data_dir / "images"
     image_dir.mkdir(parents=True)
@@ -270,7 +282,9 @@ def test_comparison_manifest_materializes_dataset_relative_cases(tmp_path: Path)
 
 
 def test_public_git_dataset_specs_expose_benchmark_cases() -> None:
-    assert CELLPROFILER_TUTORIALS.acquisition_source().kind is DatasetSourceKind.GIT_SPARSE
+    assert (
+        CELLPROFILER_TUTORIALS.acquisition_source().kind is DatasetSourceKind.GIT_SPARSE
+    )
     assert len(CELLPROFILER_TUTORIALS.benchmark_cases) >= 7
     assert (
         CELLPROFILER4_BENCHMARK_SUPPLEMENT.acquisition_source().kind

@@ -45,9 +45,7 @@ def _write_prefixed_combined_database(path: Path, *, table_prefix: str) -> None:
             f'CREATE TABLE "{table_prefix}Per_Image" ('
             "ImageNumber INTEGER PRIMARY KEY, Image_Count_Nuclei INTEGER)"
         )
-        connection.execute(
-            f'INSERT INTO "{table_prefix}Per_Image" VALUES (1, 0)'
-        )
+        connection.execute(f'INSERT INTO "{table_prefix}Per_Image" VALUES (1, 0)')
         connection.execute(
             f'CREATE TABLE "{table_prefix}Per_Object" ('
             "ImageNumber INTEGER, ObjectNumber INTEGER, "
@@ -663,9 +661,7 @@ def test_database_column_dialect_inverts_declared_table_and_field_projection() -
 
 
 def test_database_column_dialect_inverts_prefixed_image_and_combined_object() -> None:
-    dialect = CellProfilerDatabaseColumnDialect.from_image_table(
-        "BBBC022QC_Per_Image"
-    )
+    dialect = CellProfilerDatabaseColumnDialect.from_image_table("BBBC022QC_Per_Image")
 
     assert dialect.table_prefix == "BBBC022QC_"
     assert dialect.combined_object_table_name() == "BBBC022QC_Per_Object"
@@ -673,10 +669,13 @@ def test_database_column_dialect_inverts_prefixed_image_and_combined_object() ->
         "BBBC022QC_Per_Image",
         "ImageNumber",
     ) == MeasurementSubject(MeasurementScope.IMAGE, "Image")
-    assert dialect.object_subject(
-        "BBBC022QC_Per_Object",
-        "ObjectNumber",
-    ) is None
+    assert (
+        dialect.object_subject(
+            "BBBC022QC_Per_Object",
+            "ObjectNumber",
+        )
+        is None
+    )
 
 
 def test_database_column_dialect_inverts_declared_image_object_aggregate() -> None:
@@ -687,10 +686,13 @@ def test_database_column_dialect_inverts_declared_image_object_aggregate() -> No
     )
 
     assert external_field.name == "Mean_Cells_Children_Cytoplasm_Count"
-    assert dialect.source_measurement_field(
-        MeasurementSubject(MeasurementScope.IMAGE, "Image"),
-        external_field,
-    ) == external_field
+    assert (
+        dialect.source_measurement_field(
+            MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            external_field,
+        )
+        == external_field
+    )
 
 
 def test_database_column_declarations_own_export_and_equivalence_names() -> None:

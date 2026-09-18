@@ -18,8 +18,13 @@ from openhcs.interop.cellprofiler.module_measurement_features import (
     CellProfilerModuleAuthority,
 )
 from collections.abc import Callable
-from openhcs.core.steps.function_runtime import RuntimeCallableArgument, RuntimeFunctionOutput
-from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableArgument,
+    RuntimeFunctionOutput,
+)
+from openhcs.interop.cellprofiler.runtime.artifact_binding import (
+    RuntimeInputBindingRequest,
+)
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.settings_binder import SettingToKeywordBinding
@@ -235,7 +240,6 @@ class ObjectLabelsInputBindingMixin(CellProfilerObjectInputPolicyMixin):
         )
         parameter_name = ObjectLabelsRuntimeParameter.require_parameter_name()
         bound[parameter_name] = tuple(
-            request.label_argument_for(spec, parameter_name)
-            for spec in object_inputs
+            request.label_argument_for(spec, parameter_name) for spec in object_inputs
         )
         return bound

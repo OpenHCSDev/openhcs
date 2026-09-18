@@ -34,7 +34,7 @@ def save_library_metadata(
     library_name: str,
     registry: Dict[str, Any],
     get_version_func: Callable[[], str],
-    extract_cache_data_func: Callable[[Any], Dict[str, Any]]
+    extract_cache_data_func: Callable[[Any], Dict[str, Any]],
 ) -> None:
     """
     Save library function metadata to cache.
@@ -55,32 +55,32 @@ def save_library_metadata(
 
     # Build cache data structure
     cache_data = {
-        'cache_version': '1.0',
-        'library_version': library_version,
-        'timestamp': time.time(),
-        'functions': {}
+        "cache_version": "1.0",
+        "library_version": library_version,
+        "timestamp": time.time(),
+        "functions": {},
     }
 
     # Extract function metadata
     for full_name, func_meta in registry.items():
         try:
-            cache_data['functions'][full_name] = extract_cache_data_func(func_meta)
+            cache_data["functions"][full_name] = extract_cache_data_func(func_meta)
         except Exception as e:
             logger.warning(f"Failed to extract cache data for {full_name}: {e}")
 
     # Save to disk
     try:
-        with open(cache_path, 'w') as f:
+        with open(cache_path, "w") as f:
             json.dump(cache_data, f, indent=2)
-        logger.info(f"Saved {library_name} metadata cache: {len(cache_data['functions'])} functions")
+        logger.info(
+            f"Saved {library_name} metadata cache: {len(cache_data['functions'])} functions"
+        )
     except Exception as e:
         logger.warning(f"Failed to save {library_name} metadata cache: {e}")
 
 
 def load_library_metadata(
-    library_name: str,
-    get_version_func: Callable[[], str],
-    max_age_days: int = 7
+    library_name: str, get_version_func: Callable[[], str], max_age_days: int = 7
 ) -> Optional[Dict[str, Dict[str, Any]]]:
     """
     Load library function metadata from cache with validation.
@@ -100,11 +100,11 @@ def load_library_metadata(
         return None
 
     try:
-        with open(cache_path, 'r') as f:
+        with open(cache_path, "r") as f:
             cache_data = json.load(f)
 
         # Handle old cache format (direct metadata dict)
-        if 'functions' not in cache_data:
+        if "functions" not in cache_data:
             logger.info(f"Found old {library_name} cache format - will rebuild")
             return None
 
@@ -114,20 +114,26 @@ def load_library_metadata(
         except Exception:
             current_version = "unknown"
 
-        cached_version = cache_data.get('library_version', 'unknown')
+        cached_version = cache_data.get("library_version", "unknown")
         if cached_version != current_version:
-            logger.info(f"{library_name} version changed ({cached_version} → {current_version}) - will rebuild cache")
+            logger.info(
+                f"{library_name} version changed ({cached_version} → {current_version}) - will rebuild cache"
+            )
             return None
 
         # Check cache age
-        cache_timestamp = cache_data.get('timestamp', 0)
+        cache_timestamp = cache_data.get("timestamp", 0)
         cache_age_days = (time.time() - cache_timestamp) / (24 * 3600)
         if cache_age_days > max_age_days:
-            logger.info(f"{library_name} cache is {cache_age_days:.1f} days old - will rebuild")
+            logger.info(
+                f"{library_name} cache is {cache_age_days:.1f} days old - will rebuild"
+            )
             return None
 
-        functions = cache_data['functions']
-        logger.info(f"Loaded valid {library_name} metadata cache: {len(functions)} functions")
+        functions = cache_data["functions"]
+        logger.info(
+            f"Loaded valid {library_name} metadata cache: {len(functions)} functions"
+        )
         return functions
 
     except Exception as e:
@@ -158,7 +164,7 @@ def register_functions_from_cache(
     cached_metadata: Dict[str, Dict[str, Any]],
     get_function_func: Callable[[str, str], Any],
     register_function_func: Callable[[Any, str, str], None],
-    memory_type: str
+    memory_type: str,
 ) -> tuple[int, int]:
     """
     Register library functions using cached metadata.
@@ -180,12 +186,12 @@ def register_functions_from_cache(
 
     for full_name, func_data in cached_metadata.items():
         try:
-            func_name = func_data['name']
-            module_path = func_data['module']
-            contract = func_data['contract']
+            func_name = func_data["name"]
+            module_path = func_data["module"]
+            contract = func_data["contract"]
 
             # Skip functions with unknown or dimension-changing contracts
-            if contract in ['unknown', 'dim_change']:
+            if contract in ["unknown", "dim_change"]:
                 skipped_count += 1
                 continue
 
@@ -205,7 +211,9 @@ def register_functions_from_cache(
             skipped_count += 1
 
     logger.info(f"Registered {decorated_count} {library_name} functions from cache")
-    logger.info(f"Skipped {skipped_count} functions (unknown/dim_change contracts or errors)")
+    logger.info(
+        f"Skipped {skipped_count} functions (unknown/dim_change contracts or errors)"
+    )
 
     return decorated_count, skipped_count
 
@@ -223,8 +231,10 @@ def should_use_cache_for_library(library_name: str) -> bool:
     import os
 
     # Always use cache in subprocess mode
-    if os.environ.get('OPENHCS_SUBPROCESS_MODE'):
-        logger.info(f"SUBPROCESS: Using cached metadata for {library_name} function registration")
+    if os.environ.get("OPENHCS_SUBPROCESS_MODE"):
+        logger.info(
+            f"SUBPROCESS: Using cached metadata for {library_name} function registration"
+        )
         return True
 
     # Use cache for TUI speedup too
@@ -245,33 +255,35 @@ def get_cache_status(library_name: str) -> Dict[str, Any]:
     cache_path = get_library_cache_path(library_name)
 
     status = {
-        'library': library_name,
-        'cache_file': str(cache_path),
-        'exists': cache_path.exists(),
-        'size': None,
-        'modified': None,
-        'function_count': None,
-        'library_version': None,
-        'cache_age_days': None
+        "library": library_name,
+        "cache_file": str(cache_path),
+        "exists": cache_path.exists(),
+        "size": None,
+        "modified": None,
+        "function_count": None,
+        "library_version": None,
+        "cache_age_days": None,
     }
 
-    if status['exists']:
+    if status["exists"]:
         try:
             stat = cache_path.stat()
-            status['size'] = stat.st_size
-            status['modified'] = stat.st_mtime
+            status["size"] = stat.st_size
+            status["modified"] = stat.st_mtime
 
             # Try to read cache data
-            with open(cache_path, 'r') as f:
+            with open(cache_path, "r") as f:
                 cache_data = json.load(f)
 
-            if 'functions' in cache_data:
-                status['function_count'] = len(cache_data['functions'])
-                status['library_version'] = cache_data.get('library_version')
+            if "functions" in cache_data:
+                status["function_count"] = len(cache_data["functions"])
+                status["library_version"] = cache_data.get("library_version")
 
-                cache_timestamp = cache_data.get('timestamp', 0)
+                cache_timestamp = cache_data.get("timestamp", 0)
                 if cache_timestamp:
-                    status['cache_age_days'] = (time.time() - cache_timestamp) / (24 * 3600)
+                    status["cache_age_days"] = (time.time() - cache_timestamp) / (
+                        24 * 3600
+                    )
 
         except Exception as e:
             logger.debug(f"Could not read cache status for {library_name}: {e}")
@@ -291,6 +303,7 @@ def run_cached_registration(library_name: str, register_from_cache_fn) -> bool:
             used = bool(register_from_cache_fn())
             return used
     except Exception as e:
-        logger.warning(f"{library_name}: cache fast path failed with error; falling back to discovery: {e}")
+        logger.warning(
+            f"{library_name}: cache fast path failed with error; falling back to discovery: {e}"
+        )
     return False
-

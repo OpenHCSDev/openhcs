@@ -14,7 +14,6 @@ from typing import Any, get_args, get_origin
 
 from objectstate import semantic_values_equal
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -84,13 +83,13 @@ class CodeEditorFormUpdater:
                     new_value,
                 )
 
-	        # NOTE:
-	        # Cross-window propagation and placeholder refresh are handled by
-	        # ParameterFormManager.update_parameter together with the
-	        # FieldChangeDispatcher / LiveContextService stack. Callers usually
-	        # do NOT need to trigger a global refresh after using this helper;
-	        # only special flows (e.g., global-config snapshot restore/cancel)
-	        # should call ParameterFormManager.trigger_global_cross_window_refresh().
+        # NOTE:
+        # Cross-window propagation and placeholder refresh are handled by
+        # ParameterFormManager.update_parameter together with the
+        # FieldChangeDispatcher / LiveContextService stack. Callers usually
+        # do NOT need to trigger a global refresh after using this helper;
+        # only special flows (e.g., global-config snapshot restore/cancel)
+        # should call ParameterFormManager.trigger_global_cross_window_refresh().
 
         if broadcast_callback:
             broadcast_callback(new_instance)
@@ -270,7 +269,5 @@ class CodeEditorFormUpdater:
         """
 
         if CodeEditorFormUpdater._is_dataclass(field_obj.type):
-            return CodeEditorFormUpdater._get_raw_field_value(
-                instance, field_obj.name
-            )
+            return CodeEditorFormUpdater._get_raw_field_value(instance, field_obj.name)
         return getattr(instance, field_obj.name, None)

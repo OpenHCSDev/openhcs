@@ -14,7 +14,6 @@ from scripts.build_hosted_mcp_plugin import (
     validate_remote_mcp_url,
 )
 
-
 PUBLIC_URLS = {
     "remote_mcp_url": "https://mcp.openhcs.example/mcp",
     "registered_app_id": "plugin_asdk_app_0123456789abcdef",

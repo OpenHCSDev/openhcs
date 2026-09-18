@@ -41,7 +41,9 @@ def canonical_scalar(value: object) -> object:
     return value
 
 
-def semantic_array_payload(value: object) -> tuple[str, str, tuple[int, ...], str] | None:
+def semantic_array_payload(
+    value: object,
+) -> tuple[str, str, tuple[int, ...], str] | None:
     """Return a backend-independent exact payload for array content."""
     array = canonical_numpy_array(value)
     if array is None:

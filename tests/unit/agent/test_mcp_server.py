@@ -15686,7 +15686,6 @@ def test_mcp_intensity_window_projects_typed_route_coordinate_request():
         def __init__(self):
             self.requests = []
 
-    
     viewer_window_service = _ViewerWindowService()
     built = server.build_server(_viewer_mcp_context(viewer_window_service))
 

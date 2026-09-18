@@ -24,7 +24,6 @@ from openhcs.processing.backends.cellprofiler.thresholding_threshold_numba_otsu_
     _yen_threshold_numba,
 )
 
-
 CELLPROFILER_LI_TOLERANCE = 0.5 / 65536.0
 
 
@@ -190,12 +189,8 @@ def _li_threshold_numba(values: np.ndarray, tolerance: float) -> float:
         if background_mean == foreground_mean:
             return background_mean + minimum
 
-        threshold = (
-            background_mean - foreground_mean
-        ) / (
+        threshold = (background_mean - foreground_mean) / (
             math.log(background_mean) - math.log(foreground_mean)
         )
         iterations += 1
     return threshold + minimum
-
-

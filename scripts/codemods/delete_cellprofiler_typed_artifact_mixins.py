@@ -8,7 +8,6 @@ from pathlib import Path
 import libcst as cst
 from libcst import RemovalSentinel
 
-
 REMOVED = frozenset(
     {
         "ArtifactInputBindingModule",
@@ -34,10 +33,7 @@ class TypedArtifactMixinDeletion(cst.CSTTransformer):
         bases = tuple(
             base
             for base in updated_node.bases
-            if not (
-                isinstance(base.value, cst.Name)
-                and base.value.value in REMOVED
-            )
+            if not (isinstance(base.value, cst.Name) and base.value.value in REMOVED)
         )
         if updated_node.bases and not bases:
             bases = (cst.Arg(cst.Name("CellProfilerModule")),)
@@ -53,10 +49,7 @@ class TypedArtifactMixinDeletion(cst.CSTTransformer):
         names = tuple(
             alias
             for alias in updated_node.names
-            if not (
-                isinstance(alias.name, cst.Name)
-                and alias.name.value in REMOVED
-            )
+            if not (isinstance(alias.name, cst.Name) and alias.name.value in REMOVED)
         )
         if not names:
             return cst.RemoveFromParent()
@@ -65,9 +58,11 @@ class TypedArtifactMixinDeletion(cst.CSTTransformer):
 
 def migrate(path: Path, *, delete_definitions: bool) -> bool:
     source = path.read_text()
-    updated = cst.parse_module(source).visit(
-        TypedArtifactMixinDeletion(delete_definitions=delete_definitions)
-    ).code
+    updated = (
+        cst.parse_module(source)
+        .visit(TypedArtifactMixinDeletion(delete_definitions=delete_definitions))
+        .code
+    )
     if updated == source:
         return False
     path.write_text(updated)

@@ -230,25 +230,17 @@ def test_save_images_contract_consumes_runtime_image_and_declares_export_only() 
 
     contract = _contract(module)
 
-    assert contract.artifact_inputs.names() == (
-        "ImageToSave",
-    )
-    assert contract.artifact_outputs.names() == (
-        "SaveImages_9_image_1",
-    )
+    assert contract.artifact_inputs.names() == ("ImageToSave",)
+    assert contract.artifact_outputs.names() == ("SaveImages_9_image_1",)
     output = contract.artifact_outputs[0]
     assert output.artifact_type is ImageArtifactType
     assert output.sidecar_role is ArtifactSidecarRole.MATERIALIZED_IMAGE_COPY
     assert not output.participates_in_main_flow
     assert contract.preserves_input_main_flow()
     assert contract.canonical_return_output_specs.names() == ()
-    assert contract.trailing_return_output_specs.names() == (
-        "SaveImages_9_image_1",
-    )
+    assert contract.trailing_return_output_specs.names() == ("SaveImages_9_image_1",)
     assert output.relations == (
-        SourceStackLineageSourceRelation(
-            source=contract.artifact_inputs[0].ref()
-        ),
+        SourceStackLineageSourceRelation(source=contract.artifact_inputs[0].ref()),
     )
     assert isinstance(output.materialization, MaterializationSpec)
 
@@ -403,11 +395,9 @@ def test_grouped_save_images_materializations_keep_numbered_module_identity() ->
         )
         for invocation in invocations
     )
-    numbered_blocks, _next_module_num = (
-        SaveImagesModule.number_step_invocation_blocks(
-            tuple(blocks for blocks, _consumed in blocks_and_consumed),
-            first_module_num=8,
-        )
+    numbered_blocks, _next_module_num = SaveImagesModule.number_step_invocation_blocks(
+        tuple(blocks for blocks, _consumed in blocks_and_consumed),
+        first_module_num=8,
     )
     contracts = {}
     for invocation, blocks, (_raw_blocks, consumed_names) in zip(
@@ -440,8 +430,7 @@ def test_grouped_save_images_materializations_keep_numbered_module_identity() ->
         "SaveImages_9_image_1",
     )
     assert tuple(
-        spec.materialization.outputs[0].relative_path_template
-        for spec in image_outputs
+        spec.materialization.outputs[0].relative_path_template for spec in image_outputs
     ) == (
         r"\g<folder>_IllumActin.npy",
         r"\g<folder>_IllumDAPI.npy",
@@ -802,16 +791,26 @@ def test_save_images_adapter_free_compile_binds_selected_runtime_image() -> None
 
     compiled = compile_function_pattern(
         save_images,
-        {plan.ref(): plan for plan in (ArtifactInputPlan(
-                selected.name,
-                "/tmp/save-images-selected.pkl",
-                artifact_type=selected.artifact_type,
-            ),)},
-        {plan.ref(): plan for plan in (ArtifactOutputPlan(
-                materialized.name,
-                "/tmp/save-images-materialized.pkl",
-                artifact_type=materialized.artifact_type,
-            ),)},
+        {
+            plan.ref(): plan
+            for plan in (
+                ArtifactInputPlan(
+                    selected.name,
+                    "/tmp/save-images-selected.pkl",
+                    artifact_type=selected.artifact_type,
+                ),
+            )
+        },
+        {
+            plan.ref(): plan
+            for plan in (
+                ArtifactOutputPlan(
+                    materialized.name,
+                    "/tmp/save-images-materialized.pkl",
+                    artifact_type=materialized.artifact_type,
+                ),
+            )
+        },
         invocation_contract_provider=lambda _invocation, _context: (
             InvocationContractPlan(module_contract)
         ),
@@ -1014,8 +1013,9 @@ def test_planned_image_output_restores_axis_without_duplicate_provenance() -> No
     assert contextualized_metadata.source_image_provenance_planes.paths == (
         metadata.source_image_provenance_planes.paths
     )
-    assert contextualized_metadata.source_image_provenance_planes.component_metadata == (
-        metadata.source_image_provenance_planes.component_metadata
+    assert (
+        contextualized_metadata.source_image_provenance_planes.component_metadata
+        == (metadata.source_image_provenance_planes.component_metadata)
     )
     assert contextualized_metadata.source_provenance.source_plane_count == plane_count
 
