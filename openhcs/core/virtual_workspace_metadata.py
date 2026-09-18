@@ -178,7 +178,10 @@ class AtomicMetadataWriter:
         ).entries
         if not entries:
             return
-        projections = SourceProjectionSet(tuple(entries.values()))
+        unique_projections: dict[tuple[object, ...], SourceProjection] = {}
+        for projection in entries.values():
+            unique_projections.setdefault(projection.identity_key, projection)
+        projections = SourceProjectionSet(tuple(unique_projections.values()))
         subdirectory[FIELDS.GRID_DIMENSIONS] = (
             SourceTileLayout.metadata_grid_dimensions(projections)
         )
