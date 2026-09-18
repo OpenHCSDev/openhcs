@@ -409,10 +409,14 @@ def _assert_napari_state_matches_runtime(
             assert layer.data_shape[axis_index] == len(component_values)
 
     for expected in runtime_observation.expectation.artifact_viewer:
+        # One producer identity can legitimately back both its native image
+        # layer and its derived shapes overlay; the payload expectation below
+        # compares ndarray summaries, so match the image layer.
         matching_layers = tuple(
             layer
             for layer in state.layers
             if expected.producer_identity in layer.producer_identities
+            and StreamingDataType.IMAGE.value in layer.data_types
         )
         assert len(matching_layers) == 1
         layer = matching_layers[0]
