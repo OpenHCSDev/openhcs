@@ -72,6 +72,7 @@ class InstalledDemoFailure(RuntimeError):
 _EXECUTION_STALL_TIMEOUT_SECONDS = 180.0
 _EXECUTION_MAXIMUM_DURATION_SECONDS = 900.0
 _EXECUTION_POLL_INTERVAL_SECONDS = 0.5
+_VIEWER_SETTLE_TIMEOUT_SECONDS = 60.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -597,24 +598,35 @@ def _poll_execution_job(
 
 
 def _validate_viewer(client: McpDevClient, viewer_port: int) -> dict[str, Any]:
-    payload = _run_mcp(
-        client,
-        (
-            ValidateViewerCommandSpec.command,
-            str(viewer_port),
-            "--host",
-            "127.0.0.1",
-            "--transport-mode",
-            "tcp",
-            "--timeout-ms",
-            "2000",
-            "--require-nonzero-payloads",
-            "--include-state",
-            "--json",
-        ),
-        tool_name=agent_capabilities.validate_viewer_window_state.name,
-        timeout_seconds=20.0,
-    )
+    """Validate the owned viewer, tolerating slow layer mounting.
+
+    Headless software-GL runners (Windows CI) mount Napari layers lazily
+    long after payloads arrive. Retry the validation until layers settle
+    or the acceptance deadline passes; payload-level failures still fail.
+    """
+    deadline = time.monotonic() + _VIEWER_SETTLE_TIMEOUT_SECONDS
+    while True:
+        payload = _run_mcp(
+            client,
+            (
+                ValidateViewerCommandSpec.command,
+                str(viewer_port),
+                "--host",
+                "127.0.0.1",
+                "--transport-mode",
+                "tcp",
+                "--timeout-ms",
+                "2000",
+                "--require-nonzero-payloads",
+                "--include-state",
+                "--json",
+            ),
+            tool_name=agent_capabilities.validate_viewer_window_state.name,
+            timeout_seconds=30.0,
+        )
+        if payload.get("valid") is True or time.monotonic() >= deadline:
+            break
+        time.sleep(2.0)
     viewer = payload.get("viewer")
     viewer_type = viewer.get("viewer_type") if isinstance(viewer, Mapping) else None
     if (
