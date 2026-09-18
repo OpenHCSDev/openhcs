@@ -924,7 +924,7 @@
       },
       {
         "path": "openhcs/mcp/installed_demo.py",
-        "sha256": "ea0f59a9926740d13c5bb97ed6202fb415844d98a6c43663cc4b38d72ee5189e",
+        "sha256": "ffeefc5250a8b839172637c0592eed19258076acb06af4703e5c4d2a998d45ee",
         "role": "Implements the installed-package MCP demonstration used by the getting-started verification flow."
       },
       {
@@ -1004,7 +1004,7 @@
       },
       {
         "path": "tests/unit/test_installed_mcp_demo.py",
-        "sha256": "5dfef53cffd3f81464dfd71af42864426ecf5577b9201d65d1547bb35630784b",
+        "sha256": "f5d4a719a7902b364b551a3cbc4a816ccd7f46e5d9abbc87bf2d53cb0180053b",
         "role": "Proves the documented installed MCP verification flow, including progress-aware stall detection."
       }
     ],
