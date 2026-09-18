@@ -1198,7 +1198,7 @@ def test_saved_session_restores_selected_plate_after_all_scope_payload(
     )
     monkeypatch.setattr(
         "objectstate.object_state.ObjectStateRegistry.load_history_from_file",
-        lambda path: calls.append(("history", path)),
+        lambda path, *, migration: calls.append(("history", path)),
     )
 
     consumed = session.consume()

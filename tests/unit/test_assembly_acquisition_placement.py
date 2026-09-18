@@ -12,6 +12,7 @@ from openhcs.processing.backends.assemblers.assemble_stack_cupy import (
 )
 from openhcs.processing.backends.assemblers.blending import TileBlendMethod
 from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
+from openhcs.utils.environment import OpenHCSProcessEnvironment
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
 
@@ -117,7 +118,12 @@ def test_overlapping_seam_resamples_pixels_and_blend_coverage_together(assemble,
 
 def test_cpu_and_gpu_share_the_same_site_contraction_contract():
     functions = [assemble_stack_cpu]
-    if MemoryType.CUPY.is_installed():
+    # CPU-only mode excludes GPU framework declarations from the registry
+    # surface; the comparison admits the cupy declaration through the same
+    # process-admission authority the registry itself consults.
+    if MemoryType.CUPY.is_installed() and not (
+        OpenHCSProcessEnvironment.cpu_only_mode()
+    ):
         functions.append(assemble_stack_cupy)
     for function in functions:
         metadata = OpenHCSRegistry.metadata_for_declared_callable(function)

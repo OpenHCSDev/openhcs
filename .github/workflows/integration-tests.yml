@@ -85,6 +85,12 @@ permissions:
   actions: read
   contents: read
 
+env:
+  # Repository and fixture text is UTF-8 by contract. Forcing interpreter-wide
+  # UTF-8 keeps every locale-mediated text read independent of the runner's
+  # environment, including ZMQ server and benchmark-runner subprocesses.
+  PYTHONUTF8: "1"
+
 concurrency:
   group: integration-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
