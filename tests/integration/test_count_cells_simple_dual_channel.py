@@ -238,9 +238,7 @@ def persisted_special_output_probe(image):
         plate_dir,
         global_config.path_planning_config,
     )
-    analysis_results_dir = PathPlannerPathAuthority.analysis_results_dir_for(
-        output_plate_root / global_config.path_planning_config.sub_dir
-    )
+    analysis_results_dir = output_plate_root / global_config.materialization_results_path
     analysis_results_dir.mkdir(parents=True)
     stale_csv_path = analysis_results_dir / "A01_stale_counts_step0_details.csv"
     stale_csv_path.write_text(
