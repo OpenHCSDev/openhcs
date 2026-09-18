@@ -17,7 +17,15 @@ from typing import Any, TypeVar, get_type_hints
 import numpy as np
 from arraybridge import ArrayGeometry
 from python_introspect import dataclass_from_mapping
+from zmqruntime.viewer_protocol import (
+    ViewerWireField,
+    ViewerWireMapping,
+    ViewerWirePayload,
+)
+from openhcs.serialization.json import to_jsonable
+from collections.abc import Mapping
 
+from openhcs.constants.constants import AllComponents
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.runtime_array_values import (
     DataBackedRuntimeArrayPayload,
@@ -39,6 +47,7 @@ from openhcs.core.source_image_provenance import (
     common_source_component_metadata,
 )
 from openhcs.core.source_metadata import (
+    SourceMetadataScalar,
     SourceMetadataValue,
     SourceVoxelSpacing,
     SourceVoxelSpacingFields,
@@ -113,8 +122,68 @@ class ImagePayloadMetadata(
     source_plane_dtypes: tuple[str | None, ...] = ()
     physical_border_edges_yx: PhysicalBorderEdgesYX = None
     mask_defines_border: bool | None = None
-    source_channel_axis: int | None = None
-    plane_axis: RuntimePlaneAxis | None = None
+    source_channel_axis: int | None = field(
+        default=None, metadata={ViewerWireField.IMAGE_METADATA: True}
+    )
+    plane_axis: RuntimePlaneAxis | None = field(
+        default=None, metadata={ViewerWireField.IMAGE_METADATA: True}
+    )
+
+    @classmethod
+    def viewer_field_names(cls) -> frozenset[str]:
+        """Derive the viewer projection from its actual metadata declarations."""
+        return frozenset(
+            member.name
+            for member in fields(cls)
+            if member.metadata.get(ViewerWireField.IMAGE_METADATA, False)
+        )
+
+    def to_viewer_image_metadata(self) -> ViewerWireMapping:
+        return ViewerWirePayload.mapping(
+            {
+                name: to_jsonable(getattr(self, name))
+                for name in self.viewer_field_names()
+            },
+            context="viewer image metadata",
+        )
+
+    @classmethod
+    def from_viewer_image_metadata(
+        cls, values: Mapping[str, object]
+    ) -> "ImagePayloadMetadata":
+        """Decode only declaration-owned viewer fields, never hidden source records."""
+        if not isinstance(values, Mapping):
+            raise TypeError("Viewer image metadata requires a mapping.")
+        extras = set(values) - cls.viewer_field_names()
+        if extras:
+            raise ValueError(f"Undeclared viewer metadata fields: {sorted(extras)!r}.")
+        return cls.from_mapping(values)
+
+    @classmethod
+    def from_mapping(cls, values: Mapping[str, object]) -> "ImagePayloadMetadata":
+        """Restore all declared metadata fields through their canonical codecs."""
+        decoded = dict(values)
+        if "source_provenance" in decoded:
+            decoded["source_provenance"] = SourceImageProvenance.from_mapping(
+                decoded["source_provenance"]
+            )
+        return dataclass_from_mapping(cls, decoded)
+
+    def retained_plane_component_values(
+        self,
+    ) -> dict[str, tuple[SourceMetadataScalar, ...]]:
+        """Derive varying source coordinates of the retained nominal plane axis.
+
+        Source provenance can also describe contributors after a projection.
+        Only a retained plane-axis declaration makes those coordinates a pixel
+        axis; artifact storage/grouping axes do not declare that image domain.
+        """
+
+        if self.plane_axis is None:
+            return {}
+        return self.source_provenance.varying_plane_component_values(
+            tuple(AllComponents)
+        )
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, object]) -> "ImagePayloadMetadata":
@@ -675,7 +744,10 @@ class ImagePayloadMetadata(
 
     def source_plane_metadata_records(self) -> tuple["ImagePayloadMetadata", ...]:
         """Return one scalar metadata record per represented source plane."""
-        if self.source_plane_metadata_count == 1:
+        if (
+            self.source_plane_metadata_count == 1
+            and not self.source_provenance.source_plane_count
+        ):
             return (self,)
         return tuple(
             self.for_source_plane(plane_index)
@@ -1092,6 +1164,10 @@ class ImagePayloadMetadata(
 class ImagePayloadMetadataCarrier(ABC):
     """Nominal contract for image payloads that carry runtime metadata."""
 
+    @abstractmethod
+    def image_data(self) -> Any:
+        """Return concrete pixels in the payload's declared image domain."""
+
     @property
     @abstractmethod
     def metadata(self) -> ImagePayloadMetadata:
@@ -1119,6 +1195,10 @@ class ImageMetadataPayload(DataBackedRuntimeArrayPayload, ImagePayloadMetadataCa
             )
         if not self.metadata.has_values:
             raise ValueError("ImageMetadataPayload.metadata cannot be empty.")
+
+    def image_data(self) -> Any:
+        """Return the concrete image pixels carried by this payload."""
+        return self.data
 
     def with_data(
         self,
@@ -1167,6 +1247,10 @@ class MaskedImagePayload(DataBackedRuntimeArrayPayload, ImagePayloadMetadataCarr
                 f"domain; got mask {mask_shape!r} for image {data_shape!r}."
             )
 
+    def image_data(self) -> Any:
+        """Return the concrete image pixels carried by this payload."""
+        return self.data
+
     def with_data(self, data: Any, mask: Any | None = None) -> "MaskedImagePayload":
         """Return the same semantic image mask attached to replacement data."""
         return type(self)(
@@ -1178,8 +1262,8 @@ class MaskedImagePayload(DataBackedRuntimeArrayPayload, ImagePayloadMetadataCarr
 
 def image_payload_data(payload: Any) -> Any:
     """Return concrete image pixels from a runtime image payload."""
-    if isinstance(payload, (MaskedImagePayload, ImageMetadataPayload)):
-        return payload.data
+    if isinstance(payload, ImagePayloadMetadataCarrier):
+        return payload.image_data()
     return payload
 
 

@@ -54,6 +54,7 @@ from openhcs.core.steps.function_outputs import (
     ProducedMemoryPathsAuthority,
     StreamOutputsAuthority,
 )
+from openhcs.microscopes.microscope_interfaces import MetadataHandler
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
@@ -215,6 +216,9 @@ class ParserStub:
 
 
 class MetadataHandlerStub:
+    get_metadata_pixel_size = MetadataHandler.get_metadata_pixel_size
+    get_metadata_grid_dimensions = MetadataHandler.get_metadata_grid_dimensions
+
     def __init__(self, values=None):
         self.values = values or {}
 
@@ -657,6 +661,7 @@ def test_stream_outputs_restore_manifest_image_metadata_after_memory_serializati
     assert stream_request.source.item_fields == {
         "spatial_origin_yx": [0, 0],
         "source_spatial_shape_yx": [2, 3],
+        "image_metadata": image_metadata.to_viewer_image_metadata(),
     }
     assert stream_request.source.metadata.metadata_by_index == (
         expected_viewer_metadata(source_metadata),
@@ -995,7 +1000,12 @@ def test_stream_outputs_projects_semantic_image_stack_before_viewer_backend():
     assert backend == "napari_stream"
     assert [item.shape for item in streamed_data] == [(3, 4, 3), (3, 4, 3)]
     stream_request = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
-    assert stream_request.source.item_fields == {"source_channel_axis": -1}
+    assert stream_request.source.item_fields == {
+        "source_channel_axis": -1,
+        "image_metadata": ImagePayloadMetadata(
+            source_channel_axis=-1
+        ).to_viewer_image_metadata(),
+    }
     assert stream_request.source.metadata.metadata_by_index == (
         expected_viewer_metadata(first_metadata),
         expected_viewer_metadata(second_metadata),
@@ -1116,12 +1126,19 @@ def test_stream_outputs_partitions_one_producer_by_image_axis_fields():
     scalar_batch, color_batch = filemanager.saved_batches
     assert scalar_batch[1] == [scalar_path]
     assert color_batch[1] == [color_path]
-    assert (
-        scalar_batch[3][ViewerStreamKwarg.STREAM_REQUEST.value].source.item_fields == {}
-    )
+    assert scalar_batch[3][
+        ViewerStreamKwarg.STREAM_REQUEST.value
+    ].source.item_fields == {
+        "image_metadata": ImagePayloadMetadata().to_viewer_image_metadata()
+    }
     assert color_batch[3][
         ViewerStreamKwarg.STREAM_REQUEST.value
-    ].source.item_fields == {"source_channel_axis": -1}
+    ].source.item_fields == {
+        "source_channel_axis": -1,
+        "image_metadata": ImagePayloadMetadata(
+            source_channel_axis=-1
+        ).to_viewer_image_metadata(),
+    }
 
 
 def test_stream_outputs_rejects_unidentified_stack_without_per_slice_metadata():
@@ -1346,9 +1363,20 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     images_dir.mkdir(parents=True)
     first_image = images_dir / "A01_s1_w1.tif"
     later_image = images_dir / "B03_s1_w1.tif"
-    first_image.write_bytes(b"first")
+    from polystore.memory import MemoryStorageBackend
+    from openhcs.core.image_file_serialization import ImageFileFormat
 
-    filemanager = FileManager({Backend.DISK.value: DiskStorageBackend()})
+    first_pixels = np.zeros((4, 5), dtype=np.uint16)
+    ImageFileFormat.require_path(first_image).write(first_image, first_pixels)
+
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    filemanager.ensure_directory(images_dir, Backend.MEMORY.value)
+    filemanager.save(first_pixels, str(first_image), Backend.MEMORY.value)
     owner_context = context_stub(filemanager)
     owner_context.metadata_cache = {
         AllComponents.WELL: {"A01": None, "B03": None},
@@ -1373,7 +1401,7 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     )["subdirectories"]["images"]
     assert initial_metadata["wells"] == {"A01": None}
 
-    later_image.write_bytes(b"later")
+    ImageFileFormat.require_path(later_image).write(later_image, first_pixels)
     follower_context = context_stub(filemanager)
     follower_plan = function_step_plan("final")
     follower_plan.axis_id = "B03"

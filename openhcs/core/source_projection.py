@@ -5,13 +5,15 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, replace, fields
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
-from typing import Any, ClassVar, Mapping, cast
+from typing import Any, ClassVar, Mapping, cast, get_type_hints
 from urllib.parse import quote
 
 from polystore.virtual_workspace import SourcePixelRef
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.serialization.json import to_jsonable
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ArtifactType, ImageArtifactType
@@ -605,6 +607,7 @@ class SourceProjection:
     artifact_kind: type[ArtifactType]
     source_metadata: SourceMetadataMapping
     component_labels: Mapping[str, str | None]
+    image_metadata: ClassVar[ImagePayloadMetadata | None] = None
 
     @property
     def identity_key(self) -> tuple[object, ...]:
@@ -673,6 +676,25 @@ class SourcePlaneProjection(SourceProjection):
 
     def __post_init__(self) -> None:
         _normalize_projection(self)
+
+    @classmethod
+    def image_metadata_wire_field(cls) -> str:
+        """Derive the optional full-metadata field from its nominal declaration."""
+        annotations = get_type_hints(cls)
+        matches = tuple(
+            declared.name
+            for declared in fields(cls)
+            if annotations[declared.name] == ImagePayloadMetadata | None
+        )
+        if len(matches) != 1:
+            raise ValueError(
+                "Primary source projection requires one image metadata declaration."
+            )
+        return matches[0]
+
+    def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
+        if self.image_metadata is not None:
+            payload[self.image_metadata_wire_field()] = to_jsonable(self.image_metadata)
 
     def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
         return self.image_metadata
@@ -872,10 +894,12 @@ class SourceProjectionMetadataSerializer:
         available_backends: Mapping[str, bool] | None = None,
         main: bool | None = None,
         results_dir: str | None = None,
+        projection_paths: tuple[tuple[SourceProjection, str], ...] | None = None,
     ) -> dict[str, Any]:
         """Return an OpenHCS subdirectory metadata dictionary."""
 
-        projection_paths = self.projection_paths(projection_set)
+        if projection_paths is None:
+            projection_paths = self.projection_paths(projection_set)
         execution_anchors = projection_set.execution_anchor_projections
         metadata: dict[str, Any] = {
             "microscope_handler_name": microscope_handler_name,

@@ -12,7 +12,7 @@ from openhcs.core.source_bindings import (
     SourceBindingsConfig,
     source_bindings_defaults_to_base,
 )
-from openhcs.core.virtual_workspace_metadata import FIELDS
+from openhcs.core.virtual_workspace_metadata import FIELDS, METADATA_CONFIG
 from openhcs.microscopes.microscope_base import MicroscopeHandler
 from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
 from openhcs.microscopes.microscope_interfaces import MetadataHandler
@@ -124,36 +124,17 @@ class SourceBindingsHandler(MicroscopeHandler):
         plate_path: Union[str, Path],
         filemanager: FileManager,
     ) -> Path:
+        """Rebuild declared sources on explicit initialization.
+
+        This handler resolves current declarations and physical source files.
+        Replaying persisted projection metadata belongs to the OpenHCS handler.
+        """
         from openhcs.core.source_binding_workspace import (
             materialize_source_binding_workspace,
         )
 
         plate_root = Path(plate_path)
         self.plate_folder = plate_root
-        metadata_path = plate_root / OpenHCSMetadataHandler.METADATA_FILENAME
-        if filemanager.exists(str(metadata_path), Backend.DISK.value):
-            from openhcs.core.source_workspace_projection import (
-                VirtualWorkspaceSourceProjection,
-            )
-
-            metadata = self.metadata_handler.source_workspace_metadata_document(
-                plate_root
-            )
-            workspace_metadata = self.metadata_handler.workspace_mapping_metadata(
-                plate_root
-            )
-            if (
-                workspace_metadata is not None
-                and workspace_metadata.get(FIELDS.SOURCE_BINDINGS_DECLARATION_IDENTITY)
-                == self._source_bindings_config.declaration_identity()
-                and VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
-                    plate_root,
-                    metadata,
-                )
-                is not None
-            ):
-                self._register_virtual_workspace_backend(plate_root, filemanager)
-                return plate_root
         materialize_source_binding_workspace(
             plate_root,
             plate_root,
@@ -173,6 +154,7 @@ class SourceBindingsHandler(MicroscopeHandler):
         plate_path: Path,
         filemanager: FileManager,
     ) -> tuple[Path, ...]:
+        managed_paths = METADATA_CONFIG.managed_paths(plate_path)
         return tuple(
             Path(path)
             for path in filemanager.list_files(
@@ -180,4 +162,5 @@ class SourceBindingsHandler(MicroscopeHandler):
                 Backend.DISK.value,
                 recursive=True,
             )
+            if Path(path) not in managed_paths
         )

@@ -245,7 +245,7 @@ class VirtualWorkspaceSourceProjection:
             payload,
             source_metadata=source_metadata,
             source_alias=projection.source_alias,
-            persisted_metadata=projection.persisted_image_metadata(),
+            persisted_metadata=projection.image_metadata,
         )
 
     def project_unbound_payload(
@@ -270,7 +270,7 @@ class VirtualWorkspaceSourceProjection:
             source_metadata=source_metadata,
             source_alias=source_alias,
             persisted_metadata=(
-                None if projection is None else projection.persisted_image_metadata()
+                None if projection is None else projection.image_metadata
             ),
         )
 
@@ -296,9 +296,15 @@ class VirtualWorkspaceSourceProjection:
         metadata = (
             current_metadata
             if persisted_metadata is None
-            else persisted_metadata.with_source_spatial_context_from(
-                current_metadata
-            ).with_missing_intensity_from(current_metadata)
+            else persisted_metadata.with_source_context_from(current_metadata)
+        )
+        metadata = metadata.replace_fields(
+            source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
+                current_metadata.source_spatial_domain,
+                image_shape_yx=current_metadata.spatial_shape_yx(
+                    image_payload_data(payload)
+                ),
+            )
         )
         if source_metadata is not None and persisted_metadata is None:
             metadata = metadata.with_source_component_metadata(source_metadata)

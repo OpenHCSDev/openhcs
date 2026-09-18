@@ -154,9 +154,7 @@ class OpenHCSAgentContext:
                 KnowledgeBaseService,
             )
 
-            self._knowledge_base_service = KnowledgeBaseService.from_path_policy(
-                self.path_policy
-            )
+            self._knowledge_base_service = KnowledgeBaseService()
         return self._knowledge_base_service
 
     @property

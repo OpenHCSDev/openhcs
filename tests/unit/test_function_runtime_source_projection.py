@@ -381,6 +381,78 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
     assert image_payload_metadata(stack).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
 
 
+def test_workspace_replay_preserves_collapsed_semantic_identity(
+    tmp_path: Path,
+) -> None:
+    workspace_root = tmp_path / "workspace"
+    source_paths = tuple(
+        tmp_path / "source" / f"A14_s{site:03d}_w1_z001_t001.tif" for site in (1, 2)
+    )
+    persisted_metadata = ImagePayloadMetadata(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(str(path) for path in source_paths),
+            component_metadata=tuple(
+                {
+                    "well": "A14",
+                    "site": site,
+                    "channel": 1,
+                    "z_index": 1,
+                    "timepoint": 1,
+                }
+                for site in (1, 2)
+            ),
+        ),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    ).collapse_leading_plane_axis()
+    projection_set = SourceProjectionSet(
+        (
+            SourcePlaneProjection(
+                address=OpenHCSPlaneAddress.from_values("A14", 1, 1, 1, 1),
+                ref=SourcePixelRef("disk", "/outputs/A14_mosaic.tif"),
+                source_alias="neurite",
+                image_metadata=persisted_metadata,
+            ),
+        )
+    )
+    subdirectory = projection_set.metadata_dict(
+        parser=SourceSchemaFilenameParser(),
+        microscope_handler_name="source_bindings",
+        source_filename_parser_name="SourceSchemaFilenameParser",
+        grid_dimensions=[1, 1],
+        pixel_size=1.0,
+    )
+    projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+        workspace_root,
+        {"subdirectories": {".": subdirectory}},
+    )
+    virtual_path = subdirectory["image_files"][0]
+    projected = projection.project_payload(
+        VirtualWorkspacePathLookup.from_paths(
+            virtual_path,
+            str(workspace_root / virtual_path),
+        ),
+        ImagePayloadMetadata.for_array_payload(
+            np.zeros((4, 5), dtype=np.float32),
+            source_path="/outputs/A14_mosaic.tif",
+        ).payload_with(np.zeros((4, 5), dtype=np.float32)),
+    )
+
+    replayed_metadata = image_payload_metadata(projected)
+    semantic_components = replayed_metadata.source_component_metadata
+    assert semantic_components is not None
+    assert "site" not in semantic_components
+    assert replayed_metadata.source_image_names == ("neurite",)
+    assert replayed_metadata.source_provenance.source_plane_count == 0
+    assert (
+        replayed_metadata.source_provenance.source_image_provenance_planes.contributor_count
+        == 2
+    )
+    assert {
+        contributor.source_identity.component_metadata["site"]
+        for contributor in replayed_metadata.source_provenance.source_image_provenance_planes.contributors
+    } == {1, 2}
+
+
 @pytest.mark.parametrize(
     "source_binding_plan",
     (

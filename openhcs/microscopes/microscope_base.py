@@ -29,6 +29,7 @@ from metaclass_registry import (
 from polystore.filemanager import FileManager
 from polystore.streaming.viewer_transport import ViewerMicroscopeHandlerABC
 from polystore.virtual_workspace import SourcePixelRef
+from objectstate.lazy_factory import replace_raw
 
 # Import interfaces from the base interfaces module
 from openhcs.microscopes.microscope_interfaces import (
@@ -40,7 +41,7 @@ from openhcs.microscopes.microscope_interfaces import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from openhcs.core.config import MaterializationBackend
+    from openhcs.core.config import MaterializationBackend, PipelineConfig
     from openhcs.core.source_bindings import SourceBindingsConfig
 
 # Dictionary to store registered metadata handlers for auto-detection
@@ -65,17 +66,45 @@ def register_metadata_handler(handler_class, metadata_handler_class):
 class MicroscopeSourceSelectionRole(str, Enum):
     """How a registered handler should participate in source selection."""
 
-    FORMAT_SPECIFIC = ("format_specific", True)
-    BROAD_STRUCTURED_STORE = ("broad_structured_store", True)
-    DECLARED_FILE_FALLBACK = ("declared_file_fallback", True)
-    REMOTE_SERVICE = ("remote_service", False)
-    PREPARED_WORKSPACE = ("prepared_workspace", True)
+    FORMAT_SPECIFIC = ("format_specific", True, True)
+    BROAD_STRUCTURED_STORE = ("broad_structured_store", True, True)
+    DECLARED_FILE_FALLBACK = ("declared_file_fallback", True, True)
+    REMOTE_SERVICE = ("remote_service", False, True)
+    PREPARED_WORKSPACE = ("prepared_workspace", True, False)
 
-    def __new__(cls, value: str, requires_local_directory: bool):
+    def __new__(
+        cls,
+        value: str,
+        requires_local_directory: bool,
+        allows_declared_source_override: bool,
+    ):
         member = str.__new__(cls, value)
         member._value_ = value
         member.requires_local_directory = requires_local_directory
+        member._allows_declared_source_override = allows_declared_source_override
         return member
+
+    def bindings_may_select_handler(self, *, projects_bindings: bool) -> bool:
+        """Prepared receipts cannot be replaced by new raw-source declarations."""
+        return self._allows_declared_source_override and not projects_bindings
+
+    def require_registered_microscope(self) -> Microscope:
+        """Resolve a unique role owner, never choose by registry insertion order."""
+        matches = tuple(
+            name
+            for name, handler_class in MICROSCOPE_HANDLERS.items()
+            if handler_class.source_selection_role() is self
+        )
+        if len(matches) != 1:
+            raise ValueError(
+                f"Source role {self.value!r} requires exactly one registered microscope "
+                f"handler; found {matches!r}."
+            )
+        return Microscope(matches[0])
+
+    def pipeline_config_for_source(self, base: "PipelineConfig") -> "PipelineConfig":
+        """Select this intrinsic source owner without resolving other lazy fields."""
+        return replace_raw(base, microscope=self.require_registered_microscope())
 
     def require_available_source(self, source_path: Path) -> None:
         """Enforce the path availability owned by this source role."""
@@ -403,8 +432,8 @@ class MicroscopeHandler(ViewerMicroscopeHandlerABC, ABC, metaclass=AutoRegisterM
         metadata_dict[FIELDS.GRID_DIMENSIONS] = (
             self.metadata_handler.get_grid_dimensions(plate_path)
         )
-        metadata_dict[FIELDS.PIXEL_SIZE] = self.metadata_handler.get_pixel_size(
-            plate_path
+        metadata_dict[FIELDS.PIXEL_SIZE] = (
+            self.metadata_handler.get_metadata_pixel_size(plate_path)
         )
 
         writer.merge_subdirectory_metadata(
@@ -925,7 +954,9 @@ def create_microscope_handler(
         declared_handler_class = MICROSCOPE_HANDLERS.get(microscope_type)
         if not source_bindings.is_empty and (
             declared_handler_class is None
-            or not declared_handler_class.projects_declared_source_bindings()
+            or declared_handler_class.source_selection_role().bindings_may_select_handler(
+                projects_bindings=declared_handler_class.projects_declared_source_bindings()
+            )
         ):
             microscope_type = source_bindings.microscope_handler_name
             logger.info(

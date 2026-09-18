@@ -25,6 +25,7 @@ from typing import (
 )
 
 from openhcs.constants.constants import AllComponents, Backend, Microscope
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
@@ -320,8 +321,27 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
             )
         return tuple(dims)
 
+    def get_metadata_grid_dimensions(self, plate_path: Union[str, Path]) -> list[int]:
+        """Preserve explicitly unknown source layout without inventing a grid."""
+        dims = self._load_metadata(plate_path).get(FIELDS.GRID_DIMENSIONS)
+        if dims == []:
+            return []
+        return list(self.get_grid_dimensions(plate_path))
+
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
-        """Get pixel size from OpenHCS metadata."""
+        """Resolve physical calibration before the legacy numeric metadata view."""
+        metadata = self._load_metadata(plate_path)
+        spacings = tuple(
+            SourceVoxelSpacing.from_source_metadata(source)
+            for source in metadata.get(FIELDS.SOURCE_METADATA, {}).values()
+        )
+        return SourceVoxelSpacing.resolve_physical_pixel_size(
+            spacings,
+            legacy_metadata_pixel_size=self.get_metadata_pixel_size(plate_path),
+        )
+
+    def get_metadata_pixel_size(self, plate_path: Union[str, Path]) -> float:
+        """Read the serialized numeric view without asserting coordinate units."""
         pixel_size = self._load_metadata(plate_path).get(FIELDS.PIXEL_SIZE)
         if not isinstance(pixel_size, (float, int)):
             raise ValueError(
@@ -1116,10 +1136,12 @@ class OpenHCSMetadataGenerator(OpenHCSMetadataBase):
             )  # Just the directory name, not full path
 
         if request.grid_dimensions is None:
-            grid_dimensions = handler.metadata_handler.get_grid_dimensions(
+            grid_dimensions = handler.metadata_handler.get_metadata_grid_dimensions(
                 context.input_dir
             )
-            pixel_size = handler.metadata_handler.get_pixel_size(context.input_dir)
+            pixel_size = handler.metadata_handler.get_metadata_pixel_size(
+                context.input_dir
+            )
         else:
             grid_dimensions = request.grid_dimensions
             pixel_size = request.pixel_size

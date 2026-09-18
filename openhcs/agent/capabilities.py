@@ -14,6 +14,7 @@ from math import isfinite
 from typing import ClassVar, Generic, Self, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
+from zmqruntime.client import EndpointShutdownResult
 
 from openhcs.agent.dto.architecture import (
     ArchitectureTopic,
@@ -155,10 +156,11 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
 )
 from openhcs.agent.dto.viewer import (
+    ViewerWindowCloseRequest,
+    ViewerWindowImageIntensityRequest,
+    ViewerWindowImageIntensityResult,
     ViewerWindowImageSampleRequest,
     ViewerWindowImageSampleResult,
-    ViewerWindowIntensityWindowRequest,
-    ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
     ViewerWindowNavigationRequest,
@@ -174,6 +176,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowStateResult,
     ViewerWindowValidationRequest,
     ViewerWindowValidationSummaryResult,
+    ViewerWindowViewportRequest,
+    ViewerWindowViewportResult,
 )
 from openhcs.serialization.json import to_jsonable
 
@@ -229,8 +233,15 @@ class LocalStdioCapabilityTransportSemantics(CapabilityTransportSemanticsABC):
             "unrecognized arbitrary-file folder. "
             "Choose the state owner from user intent. A UI-visible request uses capabilities for "
             "the already-running OpenHCS GUI; use a headless route only when UI visibility is not "
-            "required. Both routes project the same typed declarations. One pipeline is a "
-            "PipelineDocument containing PipelineConfig and an ordered list[FunctionStep]. Use "
+            "required. Both routes project the same typed declarations. "
+            "Use exposed MCP capabilities for UI and viewer interaction; do not inject "
+            "keyboard or mouse input through operating-system automation or a viewer console. "
+            "When an operation is missing, search the capability registry and record the "
+            "missing contract. During authorised engineering work, extend the existing "
+            "declaration-owned MCP/viewer control path in its owning package and validate "
+            "the running endpoint. Do not add a bypass or mirror metadata or state. "
+            "One pipeline is a PipelineDocument containing PipelineConfig and an ordered "
+            "list[FunctionStep]. Use "
             f"{agent_capabilities.describe_config_schema.name} to obtain authoritative nested "
             "configuration fields and valid values. Search/read focused knowledge with "
             f"{agent_capabilities.search_knowledge.name} and "
@@ -2097,9 +2108,11 @@ class StreamPlateFilesToViewerCapability(PlatePathCapability):
     security_requirements = ("AgentPathPolicy readable root",)
     input_contract = PlateFileStreamRequest
     output_contract = PlateFileStreamResult
-    request_invocation = AgentFromFieldsServiceInvocation(
+    connection_request_invocation = AgentConnectionRequestServiceInvocation(
         service=lambda context: context.plate_streaming_service,
-        method=lambda service, request: service.stream_files(request),
+        method=lambda service, request, connection: service.stream_files(
+            request, ui_bridge_connection=connection
+        ),
     )
 
 
@@ -2723,6 +2736,32 @@ class ViewerSnapshotWindowCapability(ViewerWindowCliConnectionCapability):
     )
 
 
+class CloseViewerWindowCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_close_viewer_window"
+    kind = CapabilityKind.TOOL
+    title = "Close viewer window"
+    description = (
+        "Closes one explicitly selected running viewer through its declared ZMQ "
+        "lifecycle endpoint and verifies that the viewer process terminates. "
+        "Requires confirmed=true."
+    )
+    service = "viewer_window"
+    mutating = True
+    side_effects = ("closes_viewer_window", "terminates_viewer_process")
+    runtime_requirements = ("running_openhcs_viewer_server",)
+    security_requirements = ("explicit_user_confirmation",)
+    input_contract = ViewerWindowCloseRequest
+    output_contract = EndpointShutdownResult
+    exposition = ViewerWindowCliConnectionCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.CONTROL,
+        role=CapabilityRole.EXPERT,
+    )
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.close_window(request),
+    )
+
+
 class GetViewerWindowStateCapability(ViewerWindowCliConnectionCapability):
     name = "openhcs_get_viewer_window_state"
     cli_command = "viewer-state"
@@ -2829,6 +2868,53 @@ class SummarizeViewerWindowRoisCapability(ViewerWindowCliConnectionCapability):
     )
 
 
+class SetViewerViewportCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_set_viewer_viewport"
+    kind = CapabilityKind.TOOL
+    title = "Set native viewer viewport"
+    description = (
+        "Sets finite native 2D camera center (three world coordinates) and positive zoom. "
+        "Read native_viewport from viewer state to preserve either member. Returns actual "
+        "native readback, without changing pixels, axes, selection or layer transforms. "
+        "Unsupported viewer modes fail closed. Settle and snapshot after presentation changes."
+    )
+    service = "viewer_window"
+    mutating = True
+    side_effects = ("mutates_viewer_window_presentation",)
+    runtime_requirements = ("running_openhcs_viewer_server",)
+    data_exposure = ("viewer_native_viewport",)
+    input_contract = ViewerWindowViewportRequest
+    output_contract = ViewerWindowViewportResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.viewport(request),
+    )
+
+
+class SetViewerImageIntensityCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_set_viewer_image_intensity"
+    kind = CapabilityKind.TOOL
+    title = "Set native viewer image intensity"
+    description = (
+        "Applies complete finite ordered contrast_limits and positive finite gamma "
+        "to one mounted native image route, without changing source pixels, "
+        "segmentation, transforms, camera, axes or layer selection. Read current "
+        "native_intensity from viewer state to preserve either member. Returns "
+        "actual native presentation readback, not an echo of the request."
+    )
+    service = "viewer_window"
+    mutating = True
+    side_effects = ("mutates_viewer_window_presentation",)
+    runtime_requirements = ("running_openhcs_viewer_server",)
+    data_exposure = ("viewer_native_image_intensity",)
+    input_contract = ViewerWindowImageIntensityRequest
+    output_contract = ViewerWindowImageIntensityResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.image_intensity(request),
+    )
+
+
 class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
     name = "openhcs_navigate_viewer_window"
     cli_command = "navigate-viewer"
@@ -2878,34 +2964,6 @@ class IsolateViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):
     request_invocation = AgentViewerWindowRequestServiceInvocation(
         service=lambda context: context.viewer_window_service,
         method=lambda service, request: service.isolate_layers(request),
-    )
-
-
-class ApplyViewerIntensityWindowCapability(ViewerWindowCliConnectionCapability):
-    name = "openhcs_apply_viewer_intensity_window"
-    cli_command = "viewer-intensity-window"
-    kind = CapabilityKind.TOOL
-    title = "Apply viewer intensity window"
-    description = (
-        "Computes one finite percentile window over the actual routed image "
-        "payload records matching a semantic route coordinate and applies the "
-        "resolved absolute limits to the native Napari image layer. Omitted "
-        "axis_indices select every real payload coordinate on the route; sparse "
-        "display padding is never sampled."
-    )
-    service = "viewer_window"
-    mutating = True
-    side_effects = ("mutates_viewer_window_contrast",)
-    runtime_requirements = ("running_openhcs_viewer_server",)
-    data_exposure = (
-        "viewer_payload_identities",
-        "viewer_image_intensity_statistics",
-    )
-    input_contract = ViewerWindowIntensityWindowRequest
-    output_contract = ViewerWindowIntensityWindowResult
-    request_invocation = AgentViewerWindowRequestServiceInvocation(
-        service=lambda context: context.viewer_window_service,
-        method=lambda service, request: service.apply_intensity_window(request),
     )
 
 
@@ -3213,7 +3271,14 @@ class UiSnapshotWindowCapability(UiWindowCapability):
     cli_command = "window-snapshot"
     kind = CapabilityKind.TOOL
     title = "Snapshot UI window"
-    description = "Captures one running UI window or visible Qt top-level dialog to a PNG resource path."
+    description = (
+        "Captures a running Qt window to PNG. Immediate capture returns the image; "
+        "renderer observations arm an operation_id before a normal UI mutation. "
+        "Use operation wait/status to obtain its completed result_payload. "
+        "flash_maximum_alpha captures an actual maximum-alpha painted frame; "
+        "no_flash requires an inactive baseline and observes target-window starts "
+        "and paint frames across the bounded interval."
+    )
     service = "ui_bridge"
     mutating = True
     side_effects = ("writes_agent_output_file",)
