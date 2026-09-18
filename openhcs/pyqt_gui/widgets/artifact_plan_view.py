@@ -78,7 +78,9 @@ class ArtifactPlanViewRow:
     def planned_path(self) -> str:
         return "" if self.plan is None else self.plan.path
 
-    def with_runtime_address(self, address: RuntimeArtifactAddress) -> "ArtifactPlanViewRow":
+    def with_runtime_address(
+        self, address: RuntimeArtifactAddress
+    ) -> "ArtifactPlanViewRow":
         return replace(
             self,
             runtime_location=f"{address.location.backend}:{address.location.path}",

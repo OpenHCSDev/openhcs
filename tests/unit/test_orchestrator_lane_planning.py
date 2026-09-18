@@ -232,7 +232,6 @@ def test_worker_axis_completion_stops_before_terminal_plate_steps() -> None:
     assert worker_execution_module._completed_axis_step_count(context, 33) == 32
 
 
-
 def test_compiled_plate_execution_request_uses_bundle_as_runtime_authority():
     runtime_environment = _runtime_environment(
         use_threading=True,

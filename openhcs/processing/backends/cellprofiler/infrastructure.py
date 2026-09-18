@@ -1111,8 +1111,7 @@ def _declared_semantic_blocks(
     current: list[ModuleSetting] = []
     for index, setting in enumerate(records):
         if not current and not any(
-            setting_name_matches(setting.name, family)
-            for family in semantic_settings
+            setting_name_matches(setting.name, family) for family in semantic_settings
         ):
             continue
         current.append(setting)
@@ -1131,9 +1130,7 @@ def _setting_count(
     block: Sequence[ModuleSetting],
     setting_name: str | SettingNameFamily,
 ) -> int:
-    return sum(
-        setting_name_matches(setting.name, setting_name) for setting in block
-    )
+    return sum(setting_name_matches(setting.name, setting_name) for setting in block)
 
 
 def _image_plane_source(value: str) -> ImagePlaneSource:

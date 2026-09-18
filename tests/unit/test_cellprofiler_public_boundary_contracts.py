@@ -15,7 +15,6 @@ from openhcs.processing.backends.cellprofiler.illumination import (
     IlluminationCorrectionMethod,
 )
 
-
 PROJECT_ROOT = Path(__file__).parents[2]
 
 

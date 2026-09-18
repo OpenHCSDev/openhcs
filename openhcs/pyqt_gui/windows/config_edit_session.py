@@ -158,10 +158,7 @@ class ConfigEditSession(Generic[ConfigT]):
 
     def restore_global_context_if_dirty(self) -> bool:
         """Restore only the live context that preceded this edit session."""
-        if (
-            not self.is_global_config
-            or not self.global_context_dirty
-        ):
+        if not self.is_global_config or not self.global_context_dirty:
             return False
         set_live_global_config(
             self.config_class,

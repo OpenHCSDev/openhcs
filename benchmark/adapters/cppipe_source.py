@@ -12,7 +12,6 @@ from urllib.request import urlopen
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.datasets.registry import get_dataset_spec
 
-
 CPPipeReferenceMaterializer = Callable[[str, Path], Path]
 
 

@@ -76,6 +76,7 @@ class CellProfilerMeasurementFeature:
         )
         return tuple(dict.fromkeys(child_names))
 
+
 class CellProfilerMeasurementFeatureParser(ABC, metaclass=AutoRegisterMeta):
     """Registered parser/renderer for one CellProfiler measurement feature family."""
 
@@ -176,7 +177,9 @@ class CellProfilerChildCountFeatureParser(CellProfilerMeasurementFeatureParser):
     ) -> CellProfilerMeasurementFeature:
         normalized = object_name.strip()
         if not normalized:
-            raise ValueError("Child-count feature requires a non-empty child object name.")
+            raise ValueError(
+                "Child-count feature requires a non-empty child object name."
+            )
         return CellProfilerMeasurementFeature(
             name=f"{self.prefix}{normalized}{self.suffix}",
             kind=CellProfilerMeasurementFeatureKind.CHILD_COUNT,
@@ -187,7 +190,10 @@ class CellProfilerChildCountFeatureParser(CellProfilerMeasurementFeatureParser):
 def count_feature_object_name(feature_name: str | None) -> str | None:
     """Return the object-set name encoded by a CellProfiler Count_* feature."""
     parsed = CellProfilerMeasurementFeature.parse(feature_name)
-    if parsed is None or parsed.kind is not CellProfilerMeasurementFeatureKind.OBJECT_COUNT:
+    if (
+        parsed is None
+        or parsed.kind is not CellProfilerMeasurementFeatureKind.OBJECT_COUNT
+    ):
         return None
     return parsed.object_name
 
@@ -195,14 +201,15 @@ def count_feature_object_name(feature_name: str | None) -> str | None:
 def child_count_feature_child_name(feature_name: str | None) -> str | None:
     """Return the child object name encoded by Children_<object>_Count."""
     parsed = CellProfilerMeasurementFeature.parse(feature_name)
-    if parsed is None or parsed.kind is not CellProfilerMeasurementFeatureKind.CHILD_COUNT:
+    if (
+        parsed is None
+        or parsed.kind is not CellProfilerMeasurementFeatureKind.CHILD_COUNT
+    ):
         return None
     return parsed.object_name
 
 
 __all__ = declared_public_names(
     globals(),
-    extra_names=(
-        "measurement_values_for_feature",
-    ),
+    extra_names=("measurement_values_for_feature",),
 )

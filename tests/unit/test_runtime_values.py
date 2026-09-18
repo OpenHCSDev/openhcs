@@ -1489,9 +1489,11 @@ def test_source_context_preserves_target_payload_channel_axis_domain() -> None:
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.zeros((1, 2, 4, 5, 3), dtype=np.float32), None)
 
-    contextualized = image_payload_metadata(target).with_source_context_from(
-        image_payload_metadata(source)
-    ).attach_source_context_to(target)
+    contextualized = (
+        image_payload_metadata(target)
+        .with_source_context_from(image_payload_metadata(source))
+        .attach_source_context_to(target)
+    )
 
     metadata = image_payload_metadata(contextualized)
     assert metadata.normalized_source_channel_axis(contextualized) == 4
@@ -1504,7 +1506,9 @@ def test_source_context_preserves_target_payload_channel_axis_domain() -> None:
     assert metadata.source_image_names == ("OrigColor",)
 
 
-def test_composed_image_metadata_distinguishes_bundle_union_from_stack_consensus() -> None:
+def test_composed_image_metadata_distinguishes_bundle_union_from_stack_consensus() -> (
+    None
+):
     first = ImagePayloadMetadata(
         source_component_metadata={
             "well": "A01",
@@ -3500,9 +3504,13 @@ def test_derived_image_payload_context_preserves_declared_resized_spatial_domain
             source_shape_yx=(4, 5),
         )
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
-    output = image_payload_metadata(source).with_spatial_resize((4, 15)).payload_with(
-        np.ones((4, 15), dtype=np.float32),
-        None,
+    output = (
+        image_payload_metadata(source)
+        .with_spatial_resize((4, 15))
+        .payload_with(
+            np.ones((4, 15), dtype=np.float32),
+            None,
+        )
     )
 
     result = image_payload_metadata(source).derive_payload(source, output)

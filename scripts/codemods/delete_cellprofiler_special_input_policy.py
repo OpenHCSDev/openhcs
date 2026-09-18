@@ -7,7 +7,6 @@ from pathlib import Path
 
 import libcst as cst
 
-
 POLICY_MODULE = "openhcs.interop.cellprofiler.runtime.special_input_policies"
 POLICY_NAME = "CellProfilerSpecialInputPolicyMixin"
 

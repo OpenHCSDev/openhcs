@@ -2,7 +2,10 @@ import numpy as np
 import pytest
 
 from openhcs.core.aligned_image_payload import AlignedImageStack
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+from openhcs.core.runtime_object_label_domains import (
+    ObjectLabelDomain,
+    ObjectLabelDomainScope,
+)
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,

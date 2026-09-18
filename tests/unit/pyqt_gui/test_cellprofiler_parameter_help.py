@@ -48,14 +48,15 @@ def test_parameter_help_content_uses_parameter_window_not_docstring_mirror(
         assert isinstance(window.content_area, HelpDocumentBrowser)
         assert window.content_area.current_document is not None
         assert (
-            window.content_area.current_document.markup
-            is HelpDocumentFormat.MARKDOWN
+            window.content_area.current_document.markup is HelpDocumentFormat.MARKDOWN
         )
         assert "source_filters" in window.content_area.toPlainText()
         assert "Filters limiting" in window.content_area.toPlainText()
         assert window.width() >= HELP_WINDOW_MIN_WIDTH
         assert window.minimumWidth() >= HELP_WINDOW_MIN_WIDTH
-        assert window.content_area.minimumHeight() == window.content_area.maximumHeight()
+        assert (
+            window.content_area.minimumHeight() == window.content_area.maximumHeight()
+        )
         assert window.height() >= window.sizeHint().height()
     finally:
         if HelpWindowManager._help_window is not None:
@@ -287,7 +288,10 @@ def test_nested_dataclass_form_uses_nested_dataclass_help_target(
     from PyQt6.QtWidgets import QApplication
     from objectstate import ObjectState
     from openhcs.core.config import PathPlanningConfig, PipelineConfig
-    from pyqt_reactive.forms.parameter_form_manager import FormManagerConfig, ParameterFormManager
+    from pyqt_reactive.forms.parameter_form_manager import (
+        FormManagerConfig,
+        ParameterFormManager,
+    )
     from pyqt_reactive.theming import ColorScheme
     from pyqt_reactive.services.parameter_help_service import source_dataclass_type
 
@@ -302,6 +306,9 @@ def test_nested_dataclass_form_uses_nested_dataclass_help_target(
     nested_manager = manager.nested_managers["path_planning_config"]
 
     assert source_dataclass_type(nested_manager.function_target) is PathPlanningConfig
-    assert source_dataclass_type(
-        nested_manager.labels["output_dir_suffix"].help_context.help_target
-    ) is PathPlanningConfig
+    assert (
+        source_dataclass_type(
+            nested_manager.labels["output_dir_suffix"].help_context.help_target
+        )
+        is PathPlanningConfig
+    )

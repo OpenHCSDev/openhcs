@@ -165,7 +165,9 @@ def test_plate_scope_rejects_relative_compilation_root_at_construction() -> None
         CompilationPlateScope.from_path("relative/plate")
 
 
-def test_input_declarations_validate_kind_and_output_declarations_do_not_probe() -> None:
+def test_input_declarations_validate_kind_and_output_declarations_do_not_probe() -> (
+    None
+):
     resolver, filemanager = _resolver()
 
     with pytest.raises(NotADirectoryError, match="not a directory"):
@@ -185,7 +187,9 @@ def test_input_declarations_validate_kind_and_output_declarations_do_not_probe()
     assert filemanager.validation_calls == []
 
 
-def test_dataclass_resolution_returns_absolute_copy_and_preserves_authored_value() -> None:
+def test_dataclass_resolution_returns_absolute_copy_and_preserves_authored_value() -> (
+    None
+):
     resolver, _filemanager = _resolver()
     authored = DeclaredPathConfig()
 

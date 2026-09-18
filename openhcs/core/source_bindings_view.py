@@ -65,13 +65,17 @@ class SourceSelectorView:
                 for item in selector.components
             ),
             metadata=tuple((item.field, item.value) for item in selector.metadata),
-            filters=tuple(SourceFilterView.from_clause(item) for item in selector.filters),
+            filters=tuple(
+                SourceFilterView.from_clause(item) for item in selector.filters
+            ),
             inherit_current_scope=selector.inherit_current_scope,
         )
 
     @staticmethod
     def component_name(component: object) -> str:
-        return component.value if isinstance(component, AllComponents) else str(component)
+        return (
+            component.value if isinstance(component, AllComponents) else str(component)
+        )
 
     @property
     def is_empty(self) -> bool:
@@ -328,7 +332,9 @@ class SourceInventory:
     def __post_init__(self) -> None:
         candidates = tuple(self.candidates)
         if any(not isinstance(item, SourceCandidate) for item in candidates):
-            raise TypeError("SourceInventory.candidates must contain SourceCandidate values.")
+            raise TypeError(
+                "SourceInventory.candidates must contain SourceCandidate values."
+            )
         object.__setattr__(self, "candidates", candidates)
         object.__setattr__(self, "source_root", Path(self.source_root))
 

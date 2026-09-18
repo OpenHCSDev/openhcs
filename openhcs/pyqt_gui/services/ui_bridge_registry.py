@@ -19,7 +19,6 @@ from openhcs.pyqt_gui.services.ui_bridge_contracts import (
     UiWindowProviderABC,
 )
 
-
 UiBridgeProvider: TypeAlias = (
     UiCodeDocumentProviderABC
     | UiStateSurfaceProviderABC
@@ -112,7 +111,9 @@ class UiBridgeSurfaceRegistry:
         self._state_surface_providers: dict[str, UiStateSurfaceProviderABC] = {}
         self._action_providers: dict[str, UiActionProviderABC] = {}
         self._window_providers: dict[str, UiWindowProviderABC] = {}
-        self._object_state_scope_providers: dict[str, UiObjectStateScopeProviderABC] = {}
+        self._object_state_scope_providers: dict[str, UiObjectStateScopeProviderABC] = (
+            {}
+        )
         self._live_overview_contributors: list[UiLiveOverviewContributorABC] = []
 
     def register_code_document_provider(

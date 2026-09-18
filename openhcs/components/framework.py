@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar, List, Optional, Type
 from enum import Enum
 
-T = TypeVar('T', bound=Enum)
+T = TypeVar("T", bound=Enum)
 _auto_default_group_by = object()
 
 
@@ -17,19 +17,19 @@ _auto_default_group_by = object()
 class ComponentConfiguration(Generic[T]):
     """
     Generic configuration for any enum-based component system.
-    
+
     This class encapsulates the configuration for a component system where:
     - Components are defined by an enum
     - One component serves as the multiprocessing axis
     - Default variable components and group_by are specified
     - Generic constraint validation is enforced: group_by ∉ variable_components
     """
-    
+
     all_components: tuple[T, ...]
     multiprocessing_axis: T
     default_variable: List[T]
     default_group_by: Optional[T]
-    
+
     def __post_init__(self):
         """Validate configuration constraints."""
         # Ensure multiprocessing_axis is in all_components
@@ -38,7 +38,7 @@ class ComponentConfiguration(Generic[T]):
                 f"multiprocessing_axis {self.multiprocessing_axis.value} "
                 f"must be in all_components"
             )
-        
+
         # Ensure default_variable components are in all_components
         for component in self.default_variable:
             if component not in self.all_components:
@@ -46,17 +46,17 @@ class ComponentConfiguration(Generic[T]):
                     f"default_variable component {component.value} "
                     f"must be in all_components"
                 )
-        
+
         # Ensure default_group_by is in all_components (if specified)
         if self.default_group_by and self.default_group_by not in self.all_components:
             raise ValueError(
                 f"default_group_by {self.default_group_by.value} "
                 f"must be in all_components"
             )
-        
+
         # Validate default combination
         self.validate_combination(self.default_variable, self.default_group_by)
-    
+
     def validate_combination(self, variable: List[T], group_by: Optional[T]) -> None:
         """
         Validate that group_by is not in variable_components.
@@ -100,7 +100,9 @@ class ComponentConfiguration(Generic[T]):
         """
         return list(self.get_remaining_components())
 
-    def get_available_group_by_components(self, exclude_variable: Optional[List[T]] = None) -> List[T]:
+    def get_available_group_by_components(
+        self, exclude_variable: Optional[List[T]] = None
+    ) -> List[T]:
         """
         Get components that can be used as group_by, excluding variable components.
 
@@ -120,13 +122,13 @@ class ComponentConfiguration(Generic[T]):
 
 class ComponentConfigurationFactory:
     """Factory for creating ComponentConfiguration instances."""
-    
+
     @staticmethod
     def create_configuration(
         component_enum: Type[T],
         multiprocessing_axis: T,
         default_variable: Optional[List[T]] = None,
-        default_group_by: Optional[T] | object = _auto_default_group_by
+        default_group_by: Optional[T] | object = _auto_default_group_by,
     ) -> ComponentConfiguration[T]:
         """
         Create a ComponentConfiguration for the given enum with dynamic component resolution.
@@ -175,9 +177,9 @@ class ComponentConfigurationFactory:
                 default_group_by
                 if default_group_by is not _auto_default_group_by
                 else None
-            )
+            ),
         )
-    
+
     @staticmethod
     def create_openhcs_default_configuration():
         """
@@ -204,5 +206,5 @@ class ComponentConfigurationFactory:
             _ComponentTemplate,
             multiprocessing_axis=_ComponentTemplate.WELL,
             default_variable=[_ComponentTemplate.SITE],
-            default_group_by=_ComponentTemplate.CHANNEL
+            default_group_by=_ComponentTemplate.CHANNEL,
         )

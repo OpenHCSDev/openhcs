@@ -10,29 +10,30 @@ Framework-agnostic - can be used by any UI framework (PyQt, Textual, etc.).
 import copy
 from typing import Union, List, Dict, Tuple, Optional, Callable, Any
 
+
 class PatternDataManager:
     """
     Pure data operations for function patterns.
-    
+
     Handles List↔Dict conversions, cloning, and data transformations
     with order determinism and immutable operations.
     """
-    
+
     @staticmethod
     def clone_pattern(pattern: Union[List, Dict]) -> Union[List, Dict]:
         """
         Deep clone preserving callable references exactly.
-        
+
         Args:
             pattern: Pattern to clone (List or Dict)
-            
+
         Returns:
             Deep cloned pattern with preserved callable references
         """
         if pattern is None:
             return []
         return copy.deepcopy(pattern)
-    
+
     @staticmethod
     def convert_list_to_dict(pattern: List) -> Dict:
         """
@@ -49,7 +50,7 @@ class PatternDataManager:
 
         # Return empty dict - user will add experimental component keys manually
         return {}
-    
+
     @staticmethod
     def convert_dict_to_list(pattern: Dict) -> Union[List, Dict]:
         """
@@ -70,7 +71,7 @@ class PatternDataManager:
 
         # Keep as dict if it has keys
         return pattern
-    
+
     @staticmethod
     def extract_func_and_kwargs(func_item) -> Tuple[Optional[Callable], Dict]:
         """
@@ -99,21 +100,21 @@ class PatternDataManager:
         if callable(func_item):
             return func_item, {}
         return None, {}
-    
+
     @staticmethod
     def validate_pattern_structure(pattern: Union[List, Dict]) -> bool:
         """
         Basic structural validation of pattern.
-        
+
         Args:
             pattern: Pattern to validate
-            
+
         Returns:
             True if structure is valid, False otherwise
         """
         if pattern is None:
             return True
-        
+
         if isinstance(pattern, list):
             # Validate list items are callables or (callable, dict) tuples
             for item in pattern:
@@ -123,7 +124,7 @@ class PatternDataManager:
                 if not isinstance(kwargs, dict):
                     return False
             return True
-        
+
         elif isinstance(pattern, dict):
             # Validate dict values are lists of callables
             for key, value in pattern.items():
@@ -133,20 +134,22 @@ class PatternDataManager:
                 if not PatternDataManager.validate_pattern_structure(value):
                     return False
             return True
-        
+
         else:
             return False
-    
+
     @staticmethod
-    def get_current_functions(pattern: Union[List, Dict], key: Any, is_dict: bool) -> List:
+    def get_current_functions(
+        pattern: Union[List, Dict], key: Any, is_dict: bool
+    ) -> List:
         """
         Extract function list for current context.
-        
+
         Args:
             pattern: Full pattern (List or Dict)
             key: Current key (for Dict patterns)
             is_dict: Whether pattern is currently in dict mode
-            
+
         Returns:
             List of functions for current context
         """
@@ -156,21 +159,22 @@ class PatternDataManager:
             return pattern
         else:
             return []
-    
+
     @staticmethod
-    def update_pattern_functions(pattern: Union[List, Dict], key: Any, is_dict: bool, 
-                               new_functions: List) -> Union[List, Dict]:
+    def update_pattern_functions(
+        pattern: Union[List, Dict], key: Any, is_dict: bool, new_functions: List
+    ) -> Union[List, Dict]:
         """
         Update functions in pattern for current context.
-        
+
         Returns new pattern object (immutable operation).
-        
+
         Args:
             pattern: Original pattern
             key: Current key (for Dict patterns)
             is_dict: Whether pattern is in dict mode
             new_functions: New function list
-            
+
         Returns:
             New pattern with updated functions
         """
@@ -183,16 +187,16 @@ class PatternDataManager:
         else:
             # Fallback - return original pattern
             return copy.deepcopy(pattern)
-    
+
     @staticmethod
     def add_new_key(pattern: Dict, new_key: str) -> Dict:
         """
         Add new key to dict pattern.
-        
+
         Args:
             pattern: Dict pattern
             new_key: Key to add
-            
+
         Returns:
             New dict with added key
         """
@@ -200,7 +204,7 @@ class PatternDataManager:
         if new_key not in new_pattern:
             new_pattern[new_key] = []
         return new_pattern
-    
+
     @staticmethod
     def remove_key(pattern: Dict, key_to_remove: Any) -> Union[List, Dict]:
         """

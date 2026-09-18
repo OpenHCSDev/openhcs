@@ -75,9 +75,7 @@ def test_compiled_cleanup_visits_only_assigned_framework_devices(monkeypatch) ->
     monkeypatch.setattr(
         MemoryType,
         "cleanup_loaded",
-        lambda memory_type, device_id=None: cleaned.append(
-            (memory_type, device_id)
-        ),
+        lambda memory_type, device_id=None: cleaned.append((memory_type, device_id)),
     )
     assignment = FrameworkDeviceAssignment.from_mapping(
         {
@@ -121,6 +119,4 @@ def test_compiled_cleanup_attempts_every_binding_before_reporting_failures(
         (MemoryType.JAX, 4),
         (MemoryType.TORCH, 5),
     ]
-    assert [str(error) for error in caught.value.exceptions] == [
-        "cupy cleanup failed"
-    ]
+    assert [str(error) for error in caught.value.exceptions] == ["cupy cleanup failed"]

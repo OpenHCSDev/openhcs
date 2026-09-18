@@ -214,9 +214,7 @@ def test_compiled_main_flow_edge_selects_exact_producer_identity(
     )
     compiled = replace(
         compiled,
-        groups=(
-            replace(compiled.default_group, invocations=(invocation,)),
-        ),
+        groups=(replace(compiled.default_group, invocations=(invocation,)),),
     )
     consumer = SimpleNamespace(
         axis_id="A01",

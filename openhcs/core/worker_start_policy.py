@@ -10,6 +10,8 @@ from typing import Mapping
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import MultiprocessingStartMethod
 from openhcs.core.context.processing_context import ProcessingContext
+
+
 @dataclass(frozen=True)
 class WorkerStartStepFacts:
     """Worker-start-relevant facts from one compiled step plan."""
@@ -134,9 +136,11 @@ def resolve_worker_start_context(
         return _decision(
             requested,
             requested,
-            "linux CPU/server execution honors configured worker start method"
-            if server_mode
-            else "linux CPU execution honors configured worker start method",
+            (
+                "linux CPU/server execution honors configured worker start method"
+                if server_mode
+                else "linux CPU execution honors configured worker start method"
+            ),
         )
 
     if allow_unsafe_fork:

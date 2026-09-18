@@ -10,12 +10,8 @@ from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProje
 def test_path_planner_scopes_source_metadata_to_compilation_axis() -> None:
     projection = VirtualWorkspaceSourceProjection(
         source_refs_by_virtual_path={
-            "A01_s001_w1_z001_t001.tif": SourcePixelRef(
-                "disk", "/source/A01_w1.tif"
-            ),
-            "A12_s002_w1_z001_t001.tif": SourcePixelRef(
-                "disk", "/source/A12_w1.tif"
-            ),
+            "A01_s001_w1_z001_t001.tif": SourcePixelRef("disk", "/source/A01_w1.tif"),
+            "A12_s002_w1_z001_t001.tif": SourcePixelRef("disk", "/source/A12_w1.tif"),
         },
         source_metadata_by_path={
             "A01_s001_w1_z001_t001.tif": {

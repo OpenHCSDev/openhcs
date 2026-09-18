@@ -38,7 +38,8 @@ def __getattr__(name):
     except KeyError as exc:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from exc
 
+
 __all__ = [
-    'ProcessingContext',
-    'Step',
+    "ProcessingContext",
+    "Step",
 ]

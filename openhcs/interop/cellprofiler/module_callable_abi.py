@@ -262,6 +262,7 @@ class CellProfilerModuleCallableABI:
         """Validate one raw callable ABI against its callable artifact declarations."""
 
         from openhcs.core.aligned_image_payload import AlignedImageStack
+
         module_name = contract.module_name
         if not isinstance(module_name, str) or not module_name:
             raise ValueError("CellProfiler callable contract requires a module name.")
@@ -294,13 +295,10 @@ class CellProfilerModuleCallableABI:
                 "artifact-output slot(s)."
             )
         typed_variants = matching_variants
-        if (
-            len(canonical_outputs) > 1
-            and not any(
-                annotation_accepts_runtime_type(slots[0], AlignedImageStack)
-                for slots in typed_variants
-                if slots
-            )
+        if len(canonical_outputs) > 1 and not any(
+            annotation_accepts_runtime_type(slots[0], AlignedImageStack)
+            for slots in typed_variants
+            if slots
         ):
             raise ValueError(
                 f"callable {func.__name__!r} carries {len(canonical_outputs)} "
@@ -365,6 +363,7 @@ class CellProfilerModuleCallableABI:
                     "ColumnarRows; raw records and sequences erase the declared "
                     "measurement schema."
                 )
+
     @classmethod
     def binding_current_image(
         cls,

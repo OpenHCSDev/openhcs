@@ -7,7 +7,6 @@ from pathlib import Path
 
 import libcst as cst
 
-
 QUERY_BY_ATTRIBUTE = {
     "image_input_bindings": ("ArtifactInputPlan", "ImageArtifactType"),
     "object_input_bindings": ("ArtifactInputPlan", "ObjectLabelsArtifactType"),

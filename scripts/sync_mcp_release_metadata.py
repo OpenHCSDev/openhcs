@@ -19,7 +19,6 @@ import tomllib
 from packaging.requirements import Requirement
 from packaging.version import Version
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 INIT_PATH = REPO_ROOT / "openhcs" / "__init__.py"
 PYPROJECT_PATH = REPO_ROOT / "pyproject.toml"

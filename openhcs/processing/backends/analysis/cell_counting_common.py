@@ -337,7 +337,9 @@ class ColocalizationAnalysis:
         colocalized_pairs: list[tuple[int, int]] = []
         overlap_positions: list[tuple[float, float]] = []
         for first_index, first_position in enumerate(chan_1_result.cell_positions):
-            for second_index, second_position in enumerate(chan_2_result.cell_positions):
+            for second_index, second_position in enumerate(
+                chan_2_result.cell_positions
+            ):
                 if (
                     self.distance(first_position, second_position)
                     > self.INTENSITY_PAIRING_DISTANCE_THRESHOLD

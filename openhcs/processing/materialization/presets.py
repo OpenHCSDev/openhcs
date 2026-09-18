@@ -167,9 +167,7 @@ def json_materializer(
 ) -> MaterializationSpec:
     """Compatibility helper for JSON analysis outputs in absorbed functions."""
 
-    resolved_suffix = suffix or (
-        f"_{analysis_type}.json" if analysis_type else ".json"
-    )
+    resolved_suffix = suffix or (f"_{analysis_type}.json" if analysis_type else ".json")
     return json_only(
         source=source,
         suffix=resolved_suffix,
@@ -266,4 +264,7 @@ def text_only(
     suffix: str = ".txt",
     allowed_backends: Optional[List[str]] = None,
 ) -> MaterializationSpec:
-    return MaterializationSpec(TextOptions(source=source, filename_suffix=suffix), allowed_backends=allowed_backends)
+    return MaterializationSpec(
+        TextOptions(source=source, filename_suffix=suffix),
+        allowed_backends=allowed_backends,
+    )

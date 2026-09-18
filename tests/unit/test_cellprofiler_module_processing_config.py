@@ -149,7 +149,10 @@ def test_processing_config_uses_callable_contract_without_module_identity() -> N
         pass
 
     inherited = ProcessingConfig()
-    assert MissingModuleName.processing_config(
-        callable_contract=CallableContract.from_callable(relate_objects),
-        inherited=inherited,
-    ) == inherited
+    assert (
+        MissingModuleName.processing_config(
+            callable_contract=CallableContract.from_callable(relate_objects),
+            inherited=inherited,
+        )
+        == inherited
+    )

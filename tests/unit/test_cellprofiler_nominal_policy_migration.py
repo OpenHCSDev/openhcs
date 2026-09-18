@@ -18,9 +18,7 @@ def _class_name(node: ast.expr) -> str:
 def _class_definitions() -> dict[str, list[tuple[Path, ast.ClassDef]]]:
     definitions: dict[str, list[tuple[Path, ast.ClassDef]]] = {}
     source_paths = {
-        *(
-            REPO_ROOT / "openhcs/interop/cellprofiler"
-        ).rglob("*.py"),
+        *(REPO_ROOT / "openhcs/interop/cellprofiler").rglob("*.py"),
         *BACKEND_ROOT.glob("*.py"),
     }
     for path in sorted(source_paths):
@@ -189,9 +187,7 @@ def test_enum_text_coercion_remains_at_cellprofiler_source_boundaries() -> None:
                 isinstance(node, ast.Call)
                 and isinstance(node.func, (ast.Name, ast.Attribute))
                 and (
-                    node.func.id
-                    if isinstance(node.func, ast.Name)
-                    else node.func.attr
+                    node.func.id if isinstance(node.func, ast.Name) else node.func.attr
                 )
                 == "coerce_cellprofiler_enum"
             ):
@@ -201,10 +197,7 @@ def test_enum_text_coercion_remains_at_cellprofiler_source_boundaries() -> None:
             enclosing_class: ast.ClassDef | None = None
             ancestor = parents.get(node)
             while ancestor is not None:
-                if (
-                    enclosing_function is None
-                    and isinstance(ancestor, ast.FunctionDef)
-                ):
+                if enclosing_function is None and isinstance(ancestor, ast.FunctionDef):
                     enclosing_function = ancestor
                 if isinstance(ancestor, ast.ClassDef):
                     enclosing_class = ancestor

@@ -5,6 +5,7 @@ Goal: ONE path for both base and lazy classes.
 Instead of patching Field objects after @dataclass, rebuild the class
 with correct defaults from the start.
 """
+
 import dataclasses
 from dataclasses import dataclass, field, fields, MISSING, make_dataclass
 from typing import Set, Type, Optional
@@ -14,23 +15,23 @@ import copy
 def get_inherited_field_names(cls: Type) -> Set[str]:
     """Get names of fields inherited from parent classes (not defined in cls itself)."""
     # Fields explicitly defined in this class (in its own __annotations__)
-    own_annotations = getattr(cls, '__annotations__', {})
+    own_annotations = getattr(cls, "__annotations__", {})
     # But we need to check what's ACTUALLY defined in this class vs inherited
-    
+
     # Get all field names from parent classes
     parent_fields = set()
     for base in cls.__mro__[1:]:  # Skip cls itself
         if dataclasses.is_dataclass(base):
             parent_fields.update(base.__dataclass_fields__.keys())
-    
+
     # Fields in this class that are also in parents = inherited (unless redefined)
     # A field is "inherited" if it's in parent_fields but NOT in cls's own __annotations__
-    
+
     # Get cls's OWN annotations (not inherited)
     own_defined = set()
-    if '__annotations__' in cls.__dict__:  # Check cls.__dict__, not getattr
-        own_defined = set(cls.__dict__['__annotations__'].keys())
-    
+    if "__annotations__" in cls.__dict__:  # Check cls.__dict__, not getattr
+        own_defined = set(cls.__dict__["__annotations__"].keys())
+
     inherited = parent_fields - own_defined
     return inherited
 
@@ -38,50 +39,52 @@ def get_inherited_field_names(cls: Type) -> Set[str]:
 def rebuild_with_none_defaults(
     cls: Type,
     field_names_to_none: Optional[Set[str]] = None,
-    new_name: Optional[str] = None
+    new_name: Optional[str] = None,
 ) -> Type:
     """
     Rebuild a dataclass via make_dataclass with None defaults for specified fields.
-    
+
     Args:
         cls: The dataclass to rebuild
-        field_names_to_none: Fields that should have default=None. 
+        field_names_to_none: Fields that should have default=None.
                             If None, ALL fields get default=None.
         new_name: Optional new class name (for lazy classes)
-    
+
     Returns:
         A new class with the same fields but modified defaults
     """
     if not dataclasses.is_dataclass(cls):
         raise ValueError(f"{cls} is not a dataclass")
-    
+
     if field_names_to_none is None:
         # All fields get None (for lazy classes)
         field_names_to_none = {f.name for f in fields(cls)}
-    
+
     # Build field definitions
     field_defs = []
     for f in fields(cls):
         if f.name in field_names_to_none:
             # Force None default
-            field_defs.append((f.name, f.type, field(default=None, metadata=f.metadata)))
+            field_defs.append(
+                (f.name, f.type, field(default=None, metadata=f.metadata))
+            )
         else:
             # Preserve original field (copy to avoid sharing)
             field_defs.append((f.name, f.type, copy.copy(f)))
-    
+
     # Collect non-dunder methods and class attributes to preserve
     namespace = {}
     for key, value in cls.__dict__.items():
-        if key.startswith('__') and key.endswith('__'):
+        if key.startswith("__") and key.endswith("__"):
             continue  # Skip dunders (make_dataclass will generate them)
-        if key == '__dataclass_fields__':
+        if key == "__dataclass_fields__":
             continue  # Will be regenerated
         namespace[key] = value
-    
+
     # For bases, we need to keep them for isinstance() to work.
     # make_dataclass with explicit field definitions should override inherited fields.
     bases = cls.__bases__
-    
+
     # Create new class
     new_cls = make_dataclass(
         new_name or cls.__name__,
@@ -89,16 +92,17 @@ def rebuild_with_none_defaults(
         bases=bases,
         namespace=namespace,
     )
-    
+
     # Preserve module and qualname
     new_cls.__module__ = cls.__module__
     if new_name is None:
         new_cls.__qualname__ = cls.__qualname__
-    
+
     return new_cls
 
 
 # ============ TESTS ============
+
 
 @dataclass
 class Parent:
@@ -144,21 +148,28 @@ print(f"Child.__bases__: {Child.__bases__}")
 # Test with nested dataclass
 print("\n=== Nested dataclass test ===")
 
+
 @dataclass
 class NestedConfig:
     value: int = 42
+
 
 @dataclass
 class ParentWithNested:
     nested: NestedConfig = field(default_factory=NestedConfig)
     name: str = "parent"
 
+
 @dataclass
 class ChildWithNested(ParentWithNested):
     extra: bool = True
 
-print(f"ChildWithNested inherited: {get_inherited_field_names(ChildWithNested)}")
-NewChildWithNested = rebuild_with_none_defaults(ChildWithNested, get_inherited_field_names(ChildWithNested))
-print(f"NewChildWithNested fields: {[(f.name, f.default, f.default_factory) for f in fields(NewChildWithNested)]}")
-print(f"NewChildWithNested(): {NewChildWithNested()}")
 
+print(f"ChildWithNested inherited: {get_inherited_field_names(ChildWithNested)}")
+NewChildWithNested = rebuild_with_none_defaults(
+    ChildWithNested, get_inherited_field_names(ChildWithNested)
+)
+print(
+    f"NewChildWithNested fields: {[(f.name, f.default, f.default_factory) for f in fields(NewChildWithNested)]}"
+)
+print(f"NewChildWithNested(): {NewChildWithNested()}")

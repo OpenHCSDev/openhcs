@@ -168,9 +168,7 @@ def test_prepare_cellprofiler_input_workspace_preserves_external_object_inputs(
     fixture.create_source_file("A01_s1_O.TIF")
     fixture.write_incomplete_processing_cppipe("ExampleFly")
 
-    result = CellProfilerPlateWorkspacePreparer(
-        fixture.plate_root
-    ).prepare()
+    result = CellProfilerPlateWorkspacePreparer(fixture.plate_root).prepare()
 
     assert result.execution_plate_path == (
         fixture.plate_root / ".openhcs_cellprofiler" / "ExampleFly_source_workspace"
@@ -184,8 +182,7 @@ def test_prepare_cellprofiler_input_workspace_preserves_external_object_inputs(
         result.pipeline_config.source_bindings_config
     ).binding_declarations
     assert any(
-        binding.alias == "Nuclei"
-        and binding.artifact_kind is ObjectLabelsArtifactType
+        binding.alias == "Nuclei" and binding.artifact_kind is ObjectLabelsArtifactType
         for binding in bindings
     )
 
@@ -231,9 +228,7 @@ def test_prepare_cellprofiler_input_workspace_refreshes_stale_root_metadata(
     fixture.write_names_and_types_cppipe("BBBC022_Analysis_Final")
     (fixture.plate_root / "openhcs_metadata.json").write_text("{}", encoding="utf-8")
 
-    result = CellProfilerPlateWorkspacePreparer.from_paths(
-        fixture.plate_root
-    ).prepare()
+    result = CellProfilerPlateWorkspacePreparer.from_paths(fixture.plate_root).prepare()
 
     assert result.original_source_root == fixture.plate_root
     assert result.execution_plate_path == (
@@ -283,7 +278,7 @@ class CellProfilerPlateWorkspaceFixture:
                     "    Image set matching method:Order",
                     "    Assignments count:1",
                     "    Single images count:0",
-                    "    Select the rule criteria:and (file does contain \"D.TIF\")",
+                    '    Select the rule criteria:and (file does contain "D.TIF")',
                     "    Name to assign these images:OrigBlue",
                     "    Select the image type:Grayscale image",
                     "",
@@ -320,11 +315,11 @@ class CellProfilerPlateWorkspaceFixture:
                     "    Image set matching method:Order",
                     "    Assignments count:2",
                     "    Single images count:0",
-                    "    Select the rule criteria:and (file does contain \"D.TIF\")",
+                    '    Select the rule criteria:and (file does contain "D.TIF")',
                     "    Name to assign these images:OrigBlue",
                     "    Name to assign these objects:UnusedObjects",
                     "    Select the image type:Grayscale image",
-                    "    Select the rule criteria:and (file does contain \"O.TIF\")",
+                    '    Select the rule criteria:and (file does contain "O.TIF")',
                     "    Name to assign these images:UnusedImage",
                     "    Name to assign these objects:Nuclei",
                     "    Select the image type:Objects",

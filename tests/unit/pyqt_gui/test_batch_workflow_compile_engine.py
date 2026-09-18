@@ -602,8 +602,12 @@ class CompilePlateRowHostHarness:
         PlateManagerWidget.require_pipeline_definition_mutation_allowed
     )
     plate_has_active_work = PlateManagerWidget.plate_has_active_work
-    plate_has_pending_definition_work = PlateManagerWidget.plate_has_pending_definition_work
-    require_plate_work_admission_allowed = PlateManagerWidget.require_plate_work_admission_allowed
+    plate_has_pending_definition_work = (
+        PlateManagerWidget.plate_has_pending_definition_work
+    )
+    require_plate_work_admission_allowed = (
+        PlateManagerWidget.require_plate_work_admission_allowed
+    )
 
     def emit_progress_started(self, total: int) -> None:
         self.progress_started.append(total)

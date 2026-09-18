@@ -239,9 +239,10 @@ def test_public_processing_schema_response_is_json_safe_and_self_routing():
     assert fields_by_path["processing_config"]["nested_schema_path"] == (
         "processing_config"
     )
-    assert fields_by_path["processing_config.variable_components"][
-        "enum_values"
-    ] == ["site", "channel", "z_index", "timepoint"]
-    assert fields_by_path["processing_config.group_by"]["enum_values"][-1] == (
-        "NONE"
-    )
+    assert fields_by_path["processing_config.variable_components"]["enum_values"] == [
+        "site",
+        "channel",
+        "z_index",
+        "timepoint",
+    ]
+    assert fields_by_path["processing_config.group_by"]["enum_values"][-1] == ("NONE")

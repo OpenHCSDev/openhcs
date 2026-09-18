@@ -70,7 +70,6 @@ from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
 
-
 RuntimeObjectValuesByLabel = dict[
     RuntimeMeasurementFeatureKey,
     dict[ObjectInstanceKey, float],
@@ -461,8 +460,9 @@ class ObjectLabelMeasurementCompletion(ObjectLabelMeasurementState):
         policy: RuntimeEquivalencePolicy,
         measurement_fact_counts: RuntimeMeasurementFactCounterMapping,
         required_keys: RuntimeRequiredMeasurementKeys,
-        object_identifier_subjects: frozenset[RuntimeMeasurementSubjectKey]
-        | None = None,
+        object_identifier_subjects: (
+            frozenset[RuntimeMeasurementSubjectKey] | None
+        ) = None,
         object_location_subjects: frozenset[RuntimeMeasurementSubjectKey] | None = None,
         object_location_aggregate_subjects: frozenset[
             RuntimeMeasurementSubjectKey

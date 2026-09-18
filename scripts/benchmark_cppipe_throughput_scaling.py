@@ -93,8 +93,7 @@ def main() -> int:
         )
         if missing_references:
             raise FileNotFoundError(
-                "Missing required native references: "
-                + ", ".join(missing_references)
+                "Missing required native references: " + ", ".join(missing_references)
             )
     observations = run_throughput_scaling_suite(
         cases,
@@ -121,6 +120,7 @@ def main() -> int:
     for path in figure_paths:
         print(path)
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

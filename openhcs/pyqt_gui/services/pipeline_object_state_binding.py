@@ -426,12 +426,10 @@ class PipelineObjectStateBinding:
             func_scope_id = f"{scope_id}{SCOPE_SEGMENT_SEPARATOR}{token}"
             existing_func_state = ObjectStateRegistry.get_by_scope(func_scope_id)
             if existing_func_state is not None:
-                existing_func_state = (
-                    FunctionPatternCodeDocumentService.synchronize_existing_function_state(
-                        state=existing_func_state,
-                        parent_state=step_state,
-                        entry=FunctionPatternValue(func_obj, kwargs),
-                    )
+                existing_func_state = FunctionPatternCodeDocumentService.synchronize_existing_function_state(
+                    state=existing_func_state,
+                    parent_state=step_state,
+                    entry=FunctionPatternValue(func_obj, kwargs),
                 )
                 function_states[func_scope_id] = existing_func_state
                 continue

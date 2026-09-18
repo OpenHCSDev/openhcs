@@ -293,7 +293,9 @@ def _image_pixels_equivalent(
         atol=policy.image_abs_tolerance,
         equal_nan=True,
     )
-    different_fraction = 1.0 - (float(np.count_nonzero(close_pixels)) / close_pixels.size)
+    different_fraction = 1.0 - (
+        float(np.count_nonzero(close_pixels)) / close_pixels.size
+    )
     return different_fraction <= policy.image_max_different_fraction
 
 

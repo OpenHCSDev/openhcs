@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Generic, TypeVar
 
-
 _ActionT = TypeVar("_ActionT", bound=Enum)
 _WidgetT = TypeVar("_WidgetT")
 WidgetActionSyncCallable = Callable[[], None]
