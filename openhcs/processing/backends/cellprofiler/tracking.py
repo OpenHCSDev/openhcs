@@ -34,7 +34,7 @@ from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode,
     required_variable_components,
     special_inputs,
-    )
+)
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_object_labels import (
@@ -115,7 +115,7 @@ class TrackObjectsObjectMeasurementRowPolicy(CellProfilerObjectMeasurementRowPol
 
     explicit_row_ownership_required = True
 
-    def row_is_object_scoped(self, row: 'RuntimeCallableArgument') -> bool:
+    def row_is_object_scoped(self, row: "RuntimeCallableArgument") -> bool:
         row_mapping = measurement_row_mapping(row)
         return measurement_row_has_object_identity(row_mapping)
 
@@ -149,8 +149,10 @@ class TrackObjectsModule(
 
         @classmethod
         def for_request(cls, module_type, request):
-            object_name = module_type.runtime_object_measurement_row_policy().table_object_owner(
-                request.callable_contract.artifact_inputs.specs
+            object_name = (
+                module_type.runtime_object_measurement_row_policy().table_object_owner(
+                    request.callable_contract.artifact_inputs.specs
+                )
             )
             if object_name is None:
                 raise ValueError(
@@ -341,7 +343,9 @@ class TrackObjectsModule(
     )
     default_output_image_name = "TrackedCells"
     tracked_objects_binding = SettingToKeywordBinding.input(
-        tracked_objects_setting, ObjectLabelsArtifactType, runtime_parameter_name="labels"
+        tracked_objects_setting,
+        ObjectLabelsArtifactType,
+        runtime_parameter_name="labels",
     )
 
     @classmethod
@@ -623,6 +627,7 @@ class TrackObjectsModule(
             unmapped_kwargs,
             bound.setting_coverage,
         )
+
 
 class TrackingMethod(Enum):
     """CellProfiler TrackObjects tracking method."""
@@ -1406,15 +1411,13 @@ def _tracking_transition_counts(
     split_count = sum((1 for count in current_counts.values() if count > 1))
     if previous_labels is None:
         return (0, int(split_count), 0)
-    lost_count, overlap_merge_count = (
-        ObjectTrackingBackendStrategy.for_memory_type(
-            backend_provider=tracking_backend_provider
-        ).overlap_transition_counts(
-            previous_labels,
-            current_labels,
-            previous_track_labels,
-            current_track_labels,
-        )
+    lost_count, overlap_merge_count = ObjectTrackingBackendStrategy.for_memory_type(
+        backend_provider=tracking_backend_provider
+    ).overlap_transition_counts(
+        previous_labels,
+        current_labels,
+        previous_track_labels,
+        current_track_labels,
     )
     track_merge_count = sum(
         (
@@ -1427,6 +1430,7 @@ def _tracking_transition_counts(
     )
     merge_count = max(overlap_merge_count, track_merge_count)
     return (int(lost_count), int(split_count), int(merge_count))
+
 
 def _positive_value_counts(values: np.ndarray) -> dict[int, int]:
     counts: dict[int, int] = {}

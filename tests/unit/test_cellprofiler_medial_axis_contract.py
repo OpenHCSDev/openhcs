@@ -45,9 +45,7 @@ def test_medial_axis_contract_publishes_declared_skeleton_image() -> None:
             available_artifact_producers=artifact_producers_for_outputs(
                 (threshold,),
                 groups=(None,),
-                invocation_keys=(
-                    FunctionInvocationKey("threshold", "default", 0),
-                ),
+                invocation_keys=(FunctionInvocationKey("threshold", "default", 0),),
             ),
         ),
     )

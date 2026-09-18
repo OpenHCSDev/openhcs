@@ -266,9 +266,7 @@ def update_measurement_table_cell_hash(digest: Any, value: object) -> None:
         for key, nested_value in value.items():
             update_measurement_table_cell_hash(digest, key)
             update_measurement_table_cell_hash(digest, nested_value)
-        digest.update(
-            pickle.dumps(("mapping_end",), protocol=pickle.HIGHEST_PROTOCOL)
-        )
+        digest.update(pickle.dumps(("mapping_end",), protocol=pickle.HIGHEST_PROTOCOL))
         return
     if isinstance(value, tuple):
         digest.update(
@@ -287,7 +285,9 @@ def update_measurement_table_cell_hash(digest: Any, value: object) -> None:
         digest.update(pickle.dumps(("list_end",), protocol=pickle.HIGHEST_PROTOCOL))
         return
     digest.update(
-        pickle.dumps((type(value).__name__, repr(value)), protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dumps(
+            (type(value).__name__, repr(value)), protocol=pickle.HIGHEST_PROTOCOL
+        )
     )
 
 
@@ -473,7 +473,9 @@ def runtime_measurement_cell_is_present(value: object) -> bool:
 def runtime_measurement_value_is_present(value: object) -> bool:
     """Return presence semantics for scalar or nested runtime measurement values."""
     if runtime_value_is_mapping(value):
-        return any(runtime_measurement_value_is_present(nested) for nested in value.values())
+        return any(
+            runtime_measurement_value_is_present(nested) for nested in value.values()
+        )
     return runtime_measurement_cell_is_present(value)
 
 
@@ -533,13 +535,10 @@ def runtime_cell_signature_counters_equivalent(
 
     reference_exact, reference_numbers = split_approximate_numeric_signatures(reference)
     candidate_exact, candidate_numbers = split_approximate_numeric_signatures(candidate)
-    return (
-        reference_exact == candidate_exact
-        and finite_numeric_values_equivalent(
-            reference_numbers,
-            candidate_numbers,
-            policy,
-        )
+    return reference_exact == candidate_exact and finite_numeric_values_equivalent(
+        reference_numbers,
+        candidate_numbers,
+        policy,
     )
 
 
@@ -702,9 +701,8 @@ def unmatched_numeric_values(
     unmatched_candidate: list[float] = []
     reference_index = 0
     candidate_index = 0
-    while (
-        reference_index < len(reference_values)
-        and candidate_index < len(candidate_values)
+    while reference_index < len(reference_values) and candidate_index < len(
+        candidate_values
     ):
         reference_value = reference_values[reference_index]
         candidate_value = candidate_values[candidate_index]

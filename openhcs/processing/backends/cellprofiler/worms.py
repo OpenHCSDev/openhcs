@@ -872,14 +872,16 @@ class StraightenWormsModule(
     @classmethod
     def finalize_module_blocks_for_invocation(
         cls,
-        blocks, *,
+        blocks,
+        *,
         invocation: NormalizedFunctionItem,
         step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ModuleBlock, ...]:
         """Reconstruct all ordered input/output image pairs exactly once."""
 
         blocks = super().finalize_module_blocks_for_invocation(
-            blocks, invocation=invocation,
+            blocks,
+            invocation=invocation,
             step_context=step_context,
         )
         reconstructed: list[ModuleBlock] = []
@@ -3179,8 +3181,10 @@ class IdentifyDeadWormsModule(
 
         @classmethod
         def for_request(cls, module_type, request):
-            object_outputs = request.callable_contract.artifact_outputs.of_artifact_type(
-                ObjectLabelsArtifactType
+            object_outputs = (
+                request.callable_contract.artifact_outputs.of_artifact_type(
+                    ObjectLabelsArtifactType
+                )
             )
             if len(object_outputs) != 1:
                 raise ValueError(

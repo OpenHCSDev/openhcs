@@ -324,6 +324,10 @@ class ObjectLabelValue(
     def __array__(self, dtype: Any | None = None) -> Any:
         return np.asarray(self.labels, dtype=dtype)
 
+    def image_data(self) -> np.ndarray:
+        """Return dense categorical pixels for image-domain consumers."""
+        return object_label_dense_array(self)
+
     def array_payload_data(self) -> Any:
         return self.labels
 
@@ -385,7 +389,9 @@ class ObjectLabelValue(
     def measurement_plane_domains(self) -> tuple[tuple[int, ...], ...]:
         """Return object-ID domains in declared measurement-plane order."""
         domain = self.object_label_domain()
-        return ObjectLabelPlaneDomainStrategy.for_enum_member(domain.scope).plane_domains(
+        return ObjectLabelPlaneDomainStrategy.for_enum_member(
+            domain.scope
+        ).plane_domains(
             self,
             domain=domain,
         )
@@ -926,6 +932,7 @@ class ObjectLabelPayload(ObjectLabelValue):
             SourceImageProvenance.from_init_values(source_provenance_values)
         )
         self.normalize_object_label_metadata("ObjectLabelPayload")
+
 
 ObjectLabelData = np.ndarray | SparseIJVLabelRows
 

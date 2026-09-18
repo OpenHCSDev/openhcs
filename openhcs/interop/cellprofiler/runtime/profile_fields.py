@@ -13,7 +13,10 @@ from openhcs.core.runtime_image_values import (
     image_payload_data,
 )
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerMeasurementImage
-from openhcs.core.steps.function_runtime import RuntimeCallableArgument, RuntimeProfileFieldValue
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableArgument,
+    RuntimeProfileFieldValue,
+)
 
 
 def object_label_stage_profile_fields(

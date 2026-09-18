@@ -558,9 +558,7 @@ def test_debug_artifact_projection_rejects_value_without_selected_plan():
     with pytest.raises(ValueError, match="values require selected exact plans"):
         DebugArtifactRefProjection.from_artifact_plans(
             artifact_plans={selected_plan.ref(): selected_plan},
-            artifact_values={
-                unselected_plan.ref(): np.zeros((2, 3), dtype=np.float32)
-            },
+            artifact_values={unselected_plan.ref(): np.zeros((2, 3), dtype=np.float32)},
             cursor=DebugRuntimeFixture.cursor(),
         )
 
@@ -601,9 +599,8 @@ def test_debug_artifact_boundary_has_no_name_key_reconstruction():
                     semantic_key = node.key
                 elif isinstance(node, ast.Subscript):
                     semantic_key = node.slice
-                elif (
-                    isinstance(node, ast.Compare)
-                    and any(isinstance(operator, (ast.In, ast.NotIn)) for operator in node.ops)
+                elif isinstance(node, ast.Compare) and any(
+                    isinstance(operator, (ast.In, ast.NotIn)) for operator in node.ops
                 ):
                     semantic_key = node.left
                 elif (
@@ -613,7 +610,10 @@ def test_debug_artifact_boundary_has_no_name_key_reconstruction():
                     and node.args
                 ):
                     semantic_key = node.args[0]
-                if isinstance(semantic_key, ast.Attribute) and semantic_key.attr == "name":
+                if (
+                    isinstance(semantic_key, ast.Attribute)
+                    and semantic_key.attr == "name"
+                ):
                     violations.append((str(path), node.lineno, method.name))
 
     assert violations == []

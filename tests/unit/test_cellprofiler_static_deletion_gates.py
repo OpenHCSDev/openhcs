@@ -9,7 +9,6 @@ from functools import cache
 from pathlib import Path
 import warnings
 
-
 PROJECT_ROOT = Path(__file__).parents[2]
 PLAN_PATH = (
     PROJECT_ROOT

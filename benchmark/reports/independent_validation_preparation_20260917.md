@@ -10,11 +10,11 @@ result and does not claim that an OpenHCS pipeline passed any biological metric.
 All source bytes were downloaded outside Git and verified against the
 declaration-owned byte counts and SHA-256 digests before extraction.
 
-| Dataset | Verified inputs | Normalized authoring planes | Trusted references | Preserved partition/source sets |
-|---|---:|---:|---:|---|
-| BBBC039 | images, masks, metadata | 200 | 200 decoded instance-label arrays | train 100, validation 50, test 50; 200 plate/well/site sets |
-| BBBC007 | images, outlines | 32 | 32 manual outlines | 16 paired DNA/actin sets |
-| BBBC013 | images, Logan reproduction package, three plate maps | 192 | no pixel references | 96 paired GFP/DNA wells |
+| Dataset | Verified inputs | Development planes | Held-out planes | Trusted held-out references | Preserved split |
+|---|---|---:|---:|---:|---|
+| BBBC039 | images, masks, metadata | 4 | 50 | 50 decoded instance-label arrays | lexicographic first four official validation fields; all 50 official test fields held out |
+| BBBC007 | images, outlines | 8 | 24 | 24 manual outlines | four salted-hash-selected pairs; remaining 12 pairs held out |
+| BBBC013 | images, Logan reproduction package, three plate maps | 8 | 184 | no pixel references | A04, B08, E04 and F08; remaining 92 wells held out |
 
 BBBC039's plate metadata is part of source identity. Two well/site coordinates
 occur on two distinct plates; omitting plate would collapse two of the 200
@@ -32,18 +32,21 @@ concentration, and control roles from the prepared source manifest.
 
 ## Local prepared state
 
-The audited preparation run is outside Git at:
+The current audited preparation run is outside Git at:
 
 ```text
-/home/ts/.cache/openhcs/independent_validation/prepared_20260917_0355
+/home/ts/.cache/openhcs/independent_validation/runs/prepared_current_20260917_v3
 ```
 
 Generated `source_bindings.py` declarations were imported successfully for all
-three datasets. Their reflected aliases/grouping fields are:
+three datasets. The BBBC039 imported-metadata join includes plate, well, site
+and channel, preventing the two repeated well/site coordinates on different
+plates from collapsing. Their reflected development aliases/grouping fields
+are:
 
 | Dataset | Named bindings | Execution grouping | Runtime variable components |
 |---|---|---|---|
-| BBBC039 | `dna` | plate + well | site only when a group has multiple sites |
+| BBBC039 | `dna` | plate + well | none in the four-field development surface |
 | BBBC007 | `dna`, `actin` | well | site |
 | BBBC013 | `gfp`, `dna` | well | none |
 
@@ -71,10 +74,17 @@ do
 done
 ```
 
-For a blind run, mount only `<run>/<dataset>/authoring` while the agent authors
-and validates the pipeline. Freeze the final pipeline hash before mounting
-`trusted_scoring`. A same-user unrestricted shell can traverse sibling paths,
-so actual blindness requires a container or sandbox mount boundary.
+Each provenance record binds the exact split declaration, selected source-set
+identities, and SHA-256 digests of the generated source manifests and source
+bindings. The authoring surface also contains a self-contained, SHA-bound
+`pipeline_template.py` derived from the same source-binding declaration; this
+avoids relying on a shared import working directory across compiler, UI and
+execution-server processes. For a blind run, mount only
+`<run>/<dataset>/authoring` while the agent authors and validates the pipeline.
+Freeze the final pipeline hash before mounting `frozen_execution`; keep
+`trusted_scoring` evaluator-only. A same-user unrestricted shell can traverse
+sibling paths, so actual filesystem blindness requires a container or sandbox
+mount boundary.
 
 ## Remaining execution work
 
@@ -82,7 +92,8 @@ so actual blindness requires a container or sandbox mount boundary.
    model route, and attempt budget.
 2. Preserve MCP events, compile refusals, frozen pipeline source, materialized
    artifacts, and multi-percentile raw/result overlays.
-3. Mount trusted references only after pipeline freeze and score exactly once,
-   except for preregistered infrastructure invalidation.
+3. Disclose held-out execution inputs only after pipeline freeze; keep trusted
+   references evaluator-only and score exactly once, except for preregistered
+   infrastructure invalidation.
 4. Report independent truth, deterministic parity, operational autonomy, and
    visual QC separately.

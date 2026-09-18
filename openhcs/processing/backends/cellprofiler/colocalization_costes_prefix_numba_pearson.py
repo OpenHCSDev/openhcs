@@ -50,7 +50,9 @@ def _correlation_slopes_numba(
 
 
 @njit(cache=True)
-def _regression_line_numba(first: np.ndarray, second: np.ndarray) -> tuple[bool, float, float]:
+def _regression_line_numba(
+    first: np.ndarray, second: np.ndarray
+) -> tuple[bool, float, float]:
     count = 0
     sum_x = 0.0
     sum_y = 0.0
@@ -134,7 +136,9 @@ def _pearson_below_threshold_numba(
 
 
 @njit(cache=True)
-def _max_pair_numba(first: np.ndarray, second: np.ndarray) -> tuple[float, float, float]:
+def _max_pair_numba(
+    first: np.ndarray, second: np.ndarray
+) -> tuple[float, float, float]:
     first_max = 0.0
     second_max = 0.0
     for index in range(first.size):
@@ -338,6 +342,7 @@ def _linear_costes_sorted_events_numba(
 
     return threshold_1, threshold_2
 
+
 @njit(cache=True)
 def _integer_unit_interval_codes_for_scale_numba(
     values: np.ndarray,
@@ -532,8 +537,6 @@ def _prefix_pearson_from_group_count_numba(
         _prefix_value_numba(prefix_y2, group_count),
         _prefix_value_numba(prefix_xy, group_count),
     )
-
-
 
 
 @njit(cache=True)

@@ -17,7 +17,6 @@ from openhcs.agent.services.runtime_server_service import (
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.pyqt_gui.windows.live_measurements_window import LiveMeasurementsWindow
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PRODUCTION_ROOT = REPO_ROOT / "openhcs"
 
@@ -158,8 +157,7 @@ def test_production_zmq_consumers_receive_config_objects() -> None:
             if name not in required_config_calls:
                 continue
             if any(
-                keyword.arg in {"config", "zmq_config"}
-                for keyword in node.keywords
+                keyword.arg in {"config", "zmq_config"} for keyword in node.keywords
             ):
                 continue
             missing.append(f"{path.relative_to(REPO_ROOT)}:{node.lineno}:{name}")

@@ -1,6 +1,49 @@
 {
-  "schema_version": 1,
   "provenance": {
-    "native_input_domain_strategy": "selected_wells"
-  }
+    "cellprofiler_version": "4.2.8.1",
+    "cppipe_path": "/home/ts/code/projects/openhcs/benchmark/reference_exports/official30_value_completion_20260914/cp_tutorial_translocation_start.cppipe",
+    "csv_output_count": 0,
+    "execution_cppipe_path": "/home/ts/code/projects/openhcs/.benchmark-run-five-verified-mCbdZN/tool_outputs/CellProfiler_CellProfiler_tutorials_cp_tutorial_translocation_start/native_cellprofiler_headless/cp_tutorial_translocation_start.cppipe",
+    "image_output_count": 1,
+    "native_input_dir": "/tmp/openhcsnativecellprofiler/inlmlcijcjekmahg/input",
+    "native_input_domain_strategy": "selected_wells",
+    "native_numpy_disabled_cpu_features": "AVX512_SKX,X86_V4",
+    "native_selected_source_file_count": 3,
+    "native_selected_source_flattened": true,
+    "native_selected_source_mode": "file_list",
+    "native_selected_source_staging_root": "/tmp/openhcsnativecellprofiler/inlmlcijcjekmahg",
+    "native_selected_wells": [
+      "A01"
+    ],
+    "native_source_workspace": "/home/ts/code/projects/openhcs/.benchmark-run-five-verified-mCbdZN/tool_outputs/CellProfiler_CellProfiler_tutorials_cp_tutorial_translocation_start/native_cellprofiler_selected_source_workspace",
+    "phase_timing_records": [
+      {
+        "cached": false,
+        "phase": "RESOLVE_SOURCE",
+        "pipeline_name": "cp_tutorial_translocation_start",
+        "run_id": "CellProfiler_tutorials:cp_tutorial_translocation_start:native_cellprofiler",
+        "seconds": 0.6291341101750731,
+        "tool": "CellProfiler"
+      },
+      {
+        "cached": false,
+        "phase": "EXECUTE_NATIVE_CP",
+        "pipeline_name": "cp_tutorial_translocation_start",
+        "run_id": "CellProfiler_tutorials:cp_tutorial_translocation_start:native_cellprofiler",
+        "seconds": 2.6963382149115205,
+        "tool": "CellProfiler"
+      },
+      {
+        "cached": false,
+        "phase": "SNAPSHOT_OUTPUTS",
+        "pipeline_name": "cp_tutorial_translocation_start",
+        "run_id": "CellProfiler_tutorials:cp_tutorial_translocation_start:native_cellprofiler",
+        "seconds": 0.003208327107131481,
+        "tool": "CellProfiler"
+      }
+    ],
+    "pipeline_source": "native_cppipe",
+    "pythonhashseed": "0"
+  },
+  "schema_version": 1
 }

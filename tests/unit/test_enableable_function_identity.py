@@ -178,7 +178,9 @@ def test_local_projection_and_catalog_warmup_share_callable_identity(
         warmed = RegistryService.registered_callable(cellprofiler_backend.crop)
 
         assert local_key == "openhcs:cellprofiler_crop"
-        assert warmed_catalog[local_key].import_identity == local_metadata.import_identity
+        assert (
+            warmed_catalog[local_key].import_identity == local_metadata.import_identity
+        )
         assert warmed is local
     finally:
         RegistryService.clear_metadata_cache()

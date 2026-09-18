@@ -96,6 +96,7 @@ from openhcs.agent.runtime_platform import AgentRuntimePlatformAuthority
 from openhcs.agent.services.ui_bridge_service import (
     UI_BRIDGE_PROTOCOL_VERSION,
     UiBridgeDescriptorDirectoryAuthority,
+    UiBridgeDescriptorReader,
     UiBridgeGatewayABC,
     UiBridgeGatewayResponseError,
     UiBridgeProcessAdvertisedDescriptorCatalog,
@@ -115,6 +116,15 @@ BRIDGE_ID = "bridge-1"
 AUTH_TOKEN = "secret"
 WINDOW_ID = "main"
 PLATE_MANAGER_STATE_PAYLOAD_SCHEMA = "openhcs.ui.plate_manager_state.v1"
+
+
+@pytest.fixture(autouse=True)
+def _isolate_host_process_advertisements(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        UiBridgeProcessAdvertisedDescriptorCatalog,
+        "proc_root",
+        tmp_path / "empty-proc",
+    )
 
 
 class FakeSnapshotRestoreResult:
@@ -838,7 +848,7 @@ def test_descriptor_catalog_uses_exact_environment_selector(monkeypatch, tmp_pat
     monkeypatch.setattr(
         UiBridgeProcessAdvertisedDescriptorCatalog,
         "descriptor_paths",
-        classmethod(lambda cls: ()),
+        classmethod(lambda cls: (discovered_directory / "ui_bridge_other.json",)),
     )
 
     catalog = UiBridgeService().list_bridges()
@@ -866,6 +876,7 @@ def test_ui_bridge_service_resolves_projected_graphical_viewer_launch_context(
             {
                 "DISPLAY": ":19",
                 "XDG_RUNTIME_DIR": "/run/user/1000",
+                "QT_QPA_PLATFORM": "offscreen",
                 "OPENHCS_CPU_ONLY": "true",
                 "SECRET_TOKEN": "do-not-forward",
             }
@@ -1006,6 +1017,44 @@ def test_descriptor_resolver_rejects_dead_process(monkeypatch, tmp_path):
     assert status.descriptor_status == "stale_ui_bridge_descriptor"
     assert status.errors[0].code == "stale_ui_bridge_descriptor"
     assert "not running" in status.errors[0].message
+
+
+def test_descriptor_catalog_removes_dead_process_before_application_compatibility(
+    monkeypatch,
+    tmp_path,
+):
+    descriptor_directory = tmp_path / "descriptors"
+    descriptor_directory.mkdir()
+    descriptor_path = UiBridgeDescriptorFile(
+        descriptor_directory / "ui_bridge_old.json",
+        BRIDGE_ID,
+        token=AUTH_TOKEN,
+    ).write()
+    payload = json.loads(descriptor_path.read_text(encoding="utf-8"))
+    payload["application"]["version"] = "0.7.22"
+    descriptor_path.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
+    monkeypatch.setattr(
+        UiBridgeDescriptorDirectoryAuthority,
+        "descriptor_dirs",
+        classmethod(lambda cls: (descriptor_directory,)),
+    )
+    monkeypatch.setattr(
+        UiBridgeProcessAdvertisedDescriptorCatalog,
+        "descriptor_paths",
+        classmethod(lambda cls: ()),
+    )
+    monkeypatch.setattr(
+        AgentRuntimePlatformAuthority,
+        "process_started_at_unix",
+        staticmethod(lambda _pid: None),
+    )
+
+    catalog = UiBridgeService().list_bridges()
+
+    assert catalog.bridges == ()
+    assert catalog.errors == ()
+    assert not descriptor_path.exists()
 
 
 def test_descriptor_resolver_rejects_reused_process_identity(monkeypatch, tmp_path):
@@ -1186,7 +1235,7 @@ def test_descriptor_resolution_uses_process_advertised_descriptor(
     assert gateway.connections[0].auth_token == AUTH_TOKEN
 
 
-def test_configured_descriptor_directory_disables_process_advertised_fallback(
+def test_configured_descriptor_directory_includes_process_advertised_descriptor(
     monkeypatch,
     tmp_path,
 ):
@@ -1211,10 +1260,95 @@ def test_configured_descriptor_directory_disables_process_advertised_fallback(
         proc_root,
     )
 
-    status = UiBridgeService().status()
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).status()
 
+    assert status.reachable is True
+    assert status.descriptor_status == "ok"
+    assert status.descriptor_file_path == str(descriptor.path.resolve())
+
+
+def test_descriptor_catalog_unions_default_and_process_advertised_live_bridges(
+    monkeypatch,
+    tmp_path,
+):
+    default_directory = tmp_path / "default"
+    custom_directory = tmp_path / "custom"
+    default_directory.mkdir()
+    custom_directory.mkdir()
+    default_path = UiBridgeDescriptorFile(
+        default_directory / "ui_bridge_default.json",
+        "default-bridge",
+        token="default-token",
+    ).write()
+    custom_path = UiBridgeDescriptorFile(
+        custom_directory / "ui_bridge_custom.json",
+        "custom-bridge",
+        token="custom-token",
+    ).write()
+    monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
+    monkeypatch.setattr(
+        UiBridgeDescriptorDirectoryAuthority,
+        "descriptor_dirs",
+        classmethod(lambda cls: (default_directory,)),
+    )
+    monkeypatch.setattr(
+        UiBridgeProcessAdvertisedDescriptorCatalog,
+        "descriptor_paths",
+        classmethod(lambda cls: (custom_path,)),
+    )
+
+    catalog = UiBridgeService().list_bridges()
+    status = UiBridgeService(gateway=_FakeUiBridgeGateway()).status()
+
+    assert [bridge.bridge_instance_id for bridge in catalog.bridges] == [
+        "default-bridge",
+        "custom-bridge",
+    ]
+    assert [bridge.descriptor_file_path for bridge in catalog.bridges] == [
+        str(default_path.resolve()),
+        str(custom_path.resolve()),
+    ]
     assert status.reachable is False
-    assert status.errors[0].code == "ui_bridge_unavailable"
+    assert status.descriptor_status == "ambiguous_ui_bridge"
+    assert {bridge.bridge_instance_id for bridge in status.descriptors} == {
+        "default-bridge",
+        "custom-bridge",
+    }
+
+
+def test_descriptor_catalog_reads_duplicate_resolved_path_once(monkeypatch, tmp_path):
+    descriptor_directory = tmp_path / "descriptors"
+    descriptor_directory.mkdir()
+    descriptor_path = UiBridgeDescriptorFile(
+        descriptor_directory / "ui_bridge_duplicate.json",
+        BRIDGE_ID,
+        token=AUTH_TOKEN,
+    ).write()
+    alias_path = descriptor_directory / ".." / "descriptors" / descriptor_path.name
+    monkeypatch.delenv("OPENHCS_UI_BRIDGE_DESCRIPTOR", raising=False)
+    monkeypatch.setattr(
+        UiBridgeDescriptorDirectoryAuthority,
+        "descriptor_dirs",
+        classmethod(lambda cls: (descriptor_directory,)),
+    )
+    monkeypatch.setattr(
+        UiBridgeProcessAdvertisedDescriptorCatalog,
+        "descriptor_paths",
+        classmethod(lambda cls: (alias_path, descriptor_path)),
+    )
+    observed_paths = []
+    original_read = UiBridgeDescriptorReader.read
+
+    def observe_read(path):
+        observed_paths.append(path)
+        return original_read(path)
+
+    monkeypatch.setattr(UiBridgeDescriptorReader, "read", observe_read)
+
+    catalog = UiBridgeService().list_bridges()
+
+    assert [bridge.bridge_instance_id for bridge in catalog.bridges] == [BRIDGE_ID]
+    assert observed_paths == [descriptor_path.resolve()]
 
 
 def test_service_forwards_fake_gateway_requests(monkeypatch, tmp_path):

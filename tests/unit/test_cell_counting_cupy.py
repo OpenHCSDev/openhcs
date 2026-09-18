@@ -14,9 +14,7 @@ def test_watershed_partition_roundtrips_through_declared_cupy_device(
     monkeypatch.setattr(
         MemoryType,
         "device_id_of",
-        lambda memory_type, _value: 3
-        if memory_type is MemoryType.CUPY
-        else None,
+        lambda memory_type, _value: 3 if memory_type is MemoryType.CUPY else None,
     )
     monkeypatch.setattr(
         MemoryType,

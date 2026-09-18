@@ -10,7 +10,6 @@ from polystore.filemanager import FileManager
 
 from openhcs.constants.constants import Backend
 
-
 VISIBLE_SOURCE_ROOT_ENV = "OPENHCS_BENCHMARK_VISIBLE_SOURCE_ROOT"
 DEFAULT_VISIBLE_SOURCE_ROOT = Path("/tmp") / "openhcs_benchmark_visible_sources"
 VISIBLE_SOURCE_TARGET_MARKER = ".openhcs_visible_source_target.txt"
@@ -34,15 +33,23 @@ def resolve_visible_source_path(path: Path) -> Path:
     filemanager = _visible_source_filemanager()
     backend = Backend.DISK.value
     alias_source_path = _alias_source_path(source_path)
-    alias_root = Path(os.environ.get(VISIBLE_SOURCE_ROOT_ENV, DEFAULT_VISIBLE_SOURCE_ROOT))
+    alias_root = Path(
+        os.environ.get(VISIBLE_SOURCE_ROOT_ENV, DEFAULT_VISIBLE_SOURCE_ROOT)
+    )
     filemanager.ensure_directory(alias_root, backend)
-    alias_path = alias_root / f"{alias_source_path.name}_{_path_digest(alias_source_path)}"
-    if filemanager.exists(alias_path, backend) or filemanager.is_symlink(alias_path, backend):
+    alias_path = (
+        alias_root / f"{alias_source_path.name}_{_path_digest(alias_source_path)}"
+    )
+    if filemanager.exists(alias_path, backend) or filemanager.is_symlink(
+        alias_path, backend
+    ):
         alias_is_symlink = filemanager.is_symlink(alias_path, backend)
         if (
             filemanager.is_dir(alias_path, backend)
             and not alias_is_symlink
-            and _alias_matches_source(filemanager, alias_path, alias_source_path, backend)
+            and _alias_matches_source(
+                filemanager, alias_path, alias_source_path, backend
+            )
             and _alias_tree_matches_source(
                 filemanager,
                 alias_path,
@@ -61,7 +68,9 @@ def resolve_visible_source_path(path: Path) -> Path:
 
 
 def _is_visible_path(path: Path) -> bool:
-    return all(part in {path.anchor, ""} or not part.startswith(".") for part in path.parts)
+    return all(
+        part in {path.anchor, ""} or not part.startswith(".") for part in path.parts
+    )
 
 
 def _path_digest(path: Path) -> str:
@@ -121,7 +130,9 @@ def _alias_tree_matches_source(
 ) -> bool:
     metadata_filename = _openhcs_metadata_filename()
     if source_path.is_file():
-        expected_files = () if source_path.name == metadata_filename else (Path(source_path.name),)
+        expected_files = (
+            () if source_path.name == metadata_filename else (Path(source_path.name),)
+        )
     else:
         _, source_files = filemanager.collect_dirs_and_files(
             source_path,

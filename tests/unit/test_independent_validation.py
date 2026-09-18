@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import runpy
 from pathlib import Path
 
 import imageio.v3 as iio
@@ -15,9 +16,11 @@ from benchmark.contracts.validation import (
 )
 from benchmark.datasets.registry import get_dataset_spec
 from benchmark.validation.corpus import (
+    ValidationCorpusPreparer,
     derive_validation_dsl_contract,
     freeze_pipeline,
     source_bindings_for_validation,
+    split_validation_records,
     verify_frozen_pipeline,
 )
 from benchmark.validation.references import (
@@ -96,6 +99,7 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
                 "images/plate-1_well-A01_site-1_channel-DNA.tif"
             ),
             source_set_id="1_A01_1",
+            selection_key="first.tif",
             partition=ValidationPartition.TRAINING,
             well="A01",
             site="1",
@@ -108,6 +112,7 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
                 "images/plate-1_well-A01_site-2_channel-DNA.tif"
             ),
             source_set_id="1_A01_2",
+            selection_key="second.tif",
             partition=ValidationPartition.TRAINING,
             well="A01",
             site="2",
@@ -130,6 +135,28 @@ def test_source_bindings_and_dsl_contract_derive_from_dataset_declaration():
     assert contract.source_set_count == 2
 
 
+def test_generated_pipeline_template_is_self_contained(tmp_path):
+    validation = get_dataset_spec("BBBC039_nuclei_segmentation").independent_validation
+    assert validation is not None
+    template = tmp_path / "pipeline_template.py"
+
+    ValidationCorpusPreparer._write_pipeline_template(
+        template,
+        source_bindings_for_validation(validation),
+    )
+
+    source = template.read_text(encoding="utf-8")
+    namespace = runpy.run_path(str(template))
+    assert "from source_bindings import" not in source
+    assert namespace["pipeline_steps"] == []
+    assert tuple(
+        join.image_metadata_field
+        for join in namespace["pipeline_config"]
+        .source_bindings_config.imported_metadata_tables[0]
+        .joins
+    ) == ("plate", "well", "site")
+
+
 def test_paired_source_bindings_do_not_join_consumed_channel_component():
     validation = get_dataset_spec("BBBC007_cell_boundaries").independent_validation
     assert validation is not None
@@ -149,10 +176,63 @@ def test_paired_source_bindings_do_not_join_consumed_channel_component():
     ) == ("DNA", "ACTIN")
 
 
+def test_trial_splits_are_declaration_owned_disjoint_and_counted():
+    for dataset_id, expected in (
+        ("BBBC039_nuclei_segmentation", (4, 50)),
+        ("BBBC007_cell_boundaries", (4, 12)),
+        ("BBBC013_u2os_translocation_bmp", (4, 92)),
+    ):
+        validation = get_dataset_spec(dataset_id).independent_validation
+        assert validation is not None
+        assert (
+            validation.trial_split.expected_development_source_sets,
+            validation.trial_split.expected_held_out_source_sets,
+        ) == expected
+
+
+def test_trial_split_hides_held_out_sets_before_freeze():
+    validation = get_dataset_spec(
+        "BBBC013_u2os_translocation_bmp"
+    ).independent_validation
+    assert validation is not None
+    records = tuple(
+        ValidationImageRecord(
+            source_relative_path=Path(f"{well}_{channel}.bmp"),
+            canonical_relative_path=Path("images") / f"{well}_{channel}.bmp",
+            source_set_id=f"{well}_1",
+            selection_key=well,
+            partition=ValidationPartition.COMPLETE,
+            well=well,
+            site="1",
+            channel=channel,
+        )
+        for well in (
+            "A04",
+            "B08",
+            "E04",
+            "F08",
+            *(f"X{index:03d}" for index in range(92)),
+        )
+        for channel in ("GFP", "DNA")
+    )
+
+    development, held_out = split_validation_records(validation, records)
+
+    assert {record.selection_key for record in development} == {
+        "A04",
+        "B08",
+        "E04",
+        "F08",
+    }
+    assert not (
+        {record.source_set_id for record in development}
+        & {record.source_set_id for record in held_out}
+    )
+
+
 def test_pipeline_freeze_fails_closed_after_bytes_change(tmp_path):
     dataset_id = "BBBC039_nuclei_segmentation"
-    scoring_root = tmp_path / dataset_id / "trusted_scoring"
-    scoring_root.mkdir(parents=True)
+    (tmp_path / dataset_id).mkdir(parents=True)
     pipeline = tmp_path / "pipeline.py"
     pipeline.write_text("pipeline = 1\n", encoding="utf-8")
 

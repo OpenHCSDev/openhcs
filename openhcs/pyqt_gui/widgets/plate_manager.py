@@ -51,6 +51,7 @@ from openhcs.agent.ui_bridge_identities import (
     PlateManagerWidgetIdentity,
 )
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.microscopes.microscope_base import MicroscopeSourceSelectionRole
 from openhcs.core.input_workspace import (
     InputWorkspacePreparationRequest,
     InputWorkspacePreparationResult,
@@ -1216,6 +1217,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         *,
         plate_root: Path | str | None = None,
         cppipe_path: Path | str | None = None,
+        source_role: MicroscopeSourceSelectionRole | None = None,
     ) -> ObjectState:
         """
         Create an orchestrator for a plate (in CREATED state, not initialized).
@@ -1253,6 +1255,10 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         saved_config = self.plate_configs.get(str(plate_path))
         if saved_config:
             orchestrator.apply_pipeline_config(saved_config)
+        if source_role is not None:
+            orchestrator.apply_pipeline_config(
+                source_role.pipeline_config_for_source(orchestrator.pipeline_config)
+            )
 
         # Register Orchestrator ObjectState (single source of truth for time-travel)
         # Uses __objectstate_delegate__ to extract params from pipeline_config
@@ -1306,7 +1312,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         self._ensure_context()
         selected_items = self.get_selected_items()
         for row in selected_items:
-            self.require_pipeline_definition_mutation_allowed(row.scope_id)
+            self.require_plate_work_admission_allowed(row.scope_id)
         self._validate_plates_for_operation(selected_items, PlateOperation.INIT)
         plate_paths = tuple(row.scope_id for row in selected_items)
         self.plate_init_pending.update(plate_paths)
@@ -1798,7 +1804,10 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
                 )
 
         # Create orchestrator and add to root scope list (do not change selection)
-        self._create_orchestrator_for_plate(output_plate_root)
+        self._create_orchestrator_for_plate(
+            output_plate_root,
+            source_role=MicroscopeSourceSelectionRole.PREPARED_WORKSPACE,
+        )
         new_paths = list(current_paths)
         new_paths.append(output_plate_root)
 
@@ -2364,10 +2373,14 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         selection_available = all(
             not self.plate_has_active_work(plate.scope_id) for plate in selected_plates
         )
+        definition_available = all(
+            not self.plate_has_pending_definition_work(plate.scope_id)
+            for plate in selected_plates
+        )
 
         # Update button states (logic extracted from Textual version)
         self.buttons["del_plate"].setEnabled(has_selection and selection_available)
-        self.buttons["edit_config"].setEnabled(has_initialized and selection_available)
+        self.buttons["edit_config"].setEnabled(has_initialized and definition_available)
         self.buttons["init_plate"].setEnabled(has_selection and selection_available)
         endpoint_status = self.execution_endpoint_status
         compile_action = CompilationActionProjection.from_status(endpoint_status)
@@ -2433,30 +2446,33 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         self,
         plate_path: str | None = None,
     ) -> None:
-        """Protect only scopes owned by outstanding initialization/compile/run work."""
+        """Protect definition preparation; submitted execution owns its snapshot."""
 
-        conflicts = (
-            self.plate_has_active_work(plate_path)
-            if plate_path is not None
-            else bool(
-                self.plate_terminal_activity_status.active_plates
-                or self.plate_init_pending
-                or self.plate_compile_pending
-            )
-        )
-        if conflicts:
+        if self.plate_has_pending_definition_work(plate_path):
             raise RuntimeError(
                 "Pipeline definitions cannot change while the affected plate has "
-                "active initialization, compilation, or execution. Other plates remain editable."
+                "active initialization or compilation. Other plates remain editable."
             )
+
+    def plate_has_pending_definition_work(self, plate_path: str | None = None) -> bool:
+        """Project work that is still preparing a definition from its owners."""
+        pending_plates = self.plate_init_pending | self.plate_compile_pending
+        return (
+            bool(pending_plates) if plate_path is None else plate_path in pending_plates
+        )
 
     def plate_has_active_work(self, plate_path: str) -> bool:
         """Project outstanding work from its existing lifecycle owners."""
-        return (
-            self.plate_terminal_activity_status.is_active(plate_path)
-            or plate_path in self.plate_init_pending
-            or plate_path in self.plate_compile_pending
-        )
+        return self.plate_terminal_activity_status.is_active(
+            plate_path
+        ) or self.plate_has_pending_definition_work(plate_path)
+
+    def require_plate_work_admission_allowed(self, plate_path: str) -> None:
+        """Keep initialization/compilation from replacing an active plate job."""
+        if self.plate_has_active_work(plate_path):
+            raise RuntimeError(
+                "The affected plate has active initialization, compilation, or execution."
+            )
 
     def require_pipeline_definition_mutation_allowed_for_scope(
         self,
@@ -2547,7 +2563,7 @@ class PlateManagerWidget(OpenHCSSingleRowActionManagerMixin, AbstractManagerWidg
         return pipeline_steps
 
     def notify_pipeline_definition_changed(self, plate_path: str) -> None:
-        """Invalidate compiled/run state after the Pipeline ObjectState changes."""
+        """Invalidate future compilation after the Pipeline ObjectState changes."""
         self.require_pipeline_definition_mutation_allowed(plate_path)
         PlateManagerCodeWorkflow(self).invalidate_orchestrator_compilation_state(
             plate_path

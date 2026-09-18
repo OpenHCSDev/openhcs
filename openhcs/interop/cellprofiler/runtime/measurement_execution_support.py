@@ -37,7 +37,10 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     measurement_table_rows,
 )
 from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
-from openhcs.core.steps.function_runtime import RuntimeCallableArgument, RuntimeFunctionOutput
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableArgument,
+    RuntimeFunctionOutput,
+)
 from openhcs.interop.cellprofiler.runtime.profile_fields import (
     dense_label_argument_stage_profile_fields,
     object_label_stage_profile_fields,

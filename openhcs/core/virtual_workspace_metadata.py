@@ -13,9 +13,9 @@ from typing import Any, Callable, TypeAlias
 from polystore.atomic import LOCK_CONFIG, FileLockError, atomic_update_json
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ArtifactType
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.constants.constants import AllComponents
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
     SourceMetadataMapping,
@@ -28,7 +28,10 @@ from openhcs.core.source_projection import (
     SourcePlaneProjection,
     SourceProjection,
     SourceProjectionMetadataSerializer,
+    SourceProjectionSet,
 )
+from openhcs.core.source_tile_geometry import SourceTileLayout
+from openhcs.core.source_metadata import SourceVoxelSpacing
 
 
 @dataclass(frozen=True)
@@ -42,6 +45,14 @@ class OpenHCSMetadataConfig:
     SUBDIRECTORIES_KEY: str = "subdirectories"
     AVAILABLE_BACKENDS_KEY: str = "available_backends"
     DEFAULT_TIMEOUT: float = LOCK_CONFIG.DEFAULT_TIMEOUT
+
+    def metadata_path(self, plate_root: str | Path) -> Path:
+        return Path(plate_root) / self.METADATA_FILENAME
+
+    def managed_paths(self, plate_root: str | Path) -> tuple[Path, Path]:
+        """Files this metadata transaction owns, not scientific source artifacts."""
+        path = self.metadata_path(plate_root)
+        return path, LOCK_CONFIG.lock_path(path)
 
 
 METADATA_CONFIG = OpenHCSMetadataConfig()
@@ -93,6 +104,7 @@ class AtomicMetadataWriter:
                         }
                     else:
                         subdirectory[key] = value
+                self._update_projection_geometry(subdirectory)
             return data
 
         self._execute_update(
@@ -124,38 +136,54 @@ class AtomicMetadataWriter:
         self,
         metadata_path: str | Path,
         subdirectory_name: str,
-        serializer: SourceProjectionMetadataSerializer,
-        projection_paths: tuple[tuple[SourceProjection, str], ...],
+        projection_metadata: Mapping[str, Any] | None = None,
     ) -> None:
-        """Merge produced projection records without replacing plate metadata."""
+        """Merge exact produced paths under one lock, preserving other wells."""
 
-        def update(data: dict[str, Any] | None) -> dict[str, Any]:
+        def update(data):
             data = self._ensure_subdirectories_structure(data)
             subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
                 subdirectory_name, {}
             )
-            existing_paths = dict(
-                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-                    subdirectory
-                ).entries
-            )
-            existing_paths.update(
-                {path: projection for projection, path in projection_paths}
-            )
-            subdirectory.update(
-                serializer.projection_fields(
-                    tuple(
-                        (projection, path)
-                        for path, projection in existing_paths.items()
-                    )
+            for key in (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA):
+                subdirectory[key] = {
+                    **subdirectory.get(key, {}),
+                    **({} if projection_metadata is None else projection_metadata[key]),
+                }
+            entries = {
+                record["virtual_path"]: record
+                for record in subdirectory.get(FIELDS.SOURCE_PROJECTION, [])
+            }
+            if projection_metadata is not None:
+                entries.update(
+                    {
+                        record["virtual_path"]: record
+                        for record in projection_metadata[FIELDS.SOURCE_PROJECTION]
+                    }
                 )
-            )
+            subdirectory[FIELDS.SOURCE_PROJECTION] = list(entries.values())
+            self._update_projection_geometry(subdirectory)
             return data
 
-        self._execute_update(
-            metadata_path,
-            update,
-            {METADATA_CONFIG.SUBDIRECTORIES_KEY: {}},
+        self._execute_update(metadata_path, update)
+
+    @staticmethod
+    def _update_projection_geometry(subdirectory: dict[str, Any]) -> None:
+        entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+            subdirectory
+        ).entries
+        if not entries:
+            return
+        unique_projections: dict[tuple[object, ...], SourceProjection] = {}
+        for projection in entries.values():
+            unique_projections.setdefault(projection.identity_key, projection)
+        projections = SourceProjectionSet(tuple(unique_projections.values()))
+        subdirectory[FIELDS.GRID_DIMENSIONS] = (
+            SourceTileLayout.metadata_grid_dimensions(projections)
+        )
+        subdirectory[FIELDS.PIXEL_SIZE] = SourceVoxelSpacing.metadata_pixel_size(
+            SourceVoxelSpacing.from_source_metadata(projection.source_metadata)
+            for projection in projections.plane_projections
         )
 
     def _execute_update(
@@ -182,38 +210,7 @@ class AtomicMetadataWriter:
 def get_metadata_path(plate_root: str | Path) -> Path:
     """Return the canonical metadata path for one OpenHCS plate root."""
 
-    return Path(plate_root) / METADATA_CONFIG.METADATA_FILENAME
-
-
-@dataclass(frozen=True)
-class OpenHCSMetadataFields:
-    """Field identities declared by the OpenHCS metadata contract."""
-
-    SUBDIRECTORIES: str = METADATA_CONFIG.SUBDIRECTORIES_KEY
-    IMAGE_FILES: str = "image_files"
-    AVAILABLE_BACKENDS: str = METADATA_CONFIG.AVAILABLE_BACKENDS_KEY
-    SOURCE_METADATA: str = SourceProjectionMetadataSerializer.SOURCE_METADATA_FIELD
-    SOURCE_PROJECTION: str = SourceProjectionMetadataSerializer.SOURCE_PROJECTION_FIELD
-    SOURCE_DIAGNOSTICS: str = "source_diagnostics"
-    SOURCE_BINDINGS_DECLARATION_IDENTITY: str = "source_bindings_declaration_identity"
-    WORKSPACE_MAPPING: str = SourceProjectionMetadataSerializer.WORKSPACE_MAPPING_FIELD
-    GRID_DIMENSIONS: str = "grid_dimensions"
-    PIXEL_SIZE: str = "pixel_size"
-    SOURCE_FILENAME_PARSER_NAME: str = "source_filename_parser_name"
-    MICROSCOPE_HANDLER_NAME: str = "microscope_handler_name"
-    CHANNELS: str = "channels"
-    WELLS: str = "wells"
-    SITES: str = "sites"
-    Z_INDEXES: str = "z_indexes"
-    TIMEPOINTS: str = "timepoints"
-    OBJECTIVES: str = "objectives"
-    ACQUISITION_DATETIME: str = "acquisition_datetime"
-    PLATE_NAME: str = "plate_name"
-    DEFAULT_SUBDIRECTORY: str = "."
-    MICROSCOPE_TYPE: str = "openhcsdata"
-
-
-FIELDS = OpenHCSMetadataFields()
+    return METADATA_CONFIG.metadata_path(plate_root)
 
 
 def component_metadata_field(component: AllComponents) -> str:
@@ -223,6 +220,51 @@ def component_metadata_field(component: AllComponents) -> str:
         raise TypeError("Metadata fields require an exact AllComponents member")
     suffix = "es" if component.value.endswith("x") else "s"
     return f"{component.value}{suffix}"
+
+
+@dataclass(frozen=True)
+class OpenHCSMetadataFields:
+    """Field identities declared by the OpenHCS metadata contract.
+
+    Shared keys derive from the source-projection serializer declarations so
+    the persisted contract has exactly one spelling per field.
+    """
+
+    SUBDIRECTORIES: str = METADATA_CONFIG.SUBDIRECTORIES_KEY
+    IMAGE_FILES: str = SourceProjectionMetadataSerializer.IMAGE_FILES_FIELD
+    AVAILABLE_BACKENDS: str = (
+        SourceProjectionMetadataSerializer.AVAILABLE_BACKENDS_FIELD
+    )
+    SOURCE_METADATA: str = SourceProjectionMetadataSerializer.SOURCE_METADATA_FIELD
+    SOURCE_PROJECTION: str = SourceProjectionMetadataSerializer.SOURCE_PROJECTION_FIELD
+    SOURCE_DIAGNOSTICS: str = (
+        SourceProjectionMetadataSerializer.SOURCE_DIAGNOSTICS_FIELD
+    )
+    SOURCE_BINDINGS_DECLARATION_IDENTITY: str = "source_bindings_declaration_identity"
+    WORKSPACE_MAPPING: str = SourceProjectionMetadataSerializer.WORKSPACE_MAPPING_FIELD
+    GRID_DIMENSIONS: str = SourceProjectionMetadataSerializer.GRID_DIMENSIONS_FIELD
+    PIXEL_SIZE: str = SourceProjectionMetadataSerializer.PIXEL_SIZE_FIELD
+    SOURCE_FILENAME_PARSER_NAME: str = (
+        SourceProjectionMetadataSerializer.SOURCE_FILENAME_PARSER_NAME_FIELD
+    )
+    MICROSCOPE_HANDLER_NAME: str = (
+        SourceProjectionMetadataSerializer.MICROSCOPE_HANDLER_NAME_FIELD
+    )
+    CHANNELS: str = component_metadata_field(AllComponents.CHANNEL)
+    WELLS: str = component_metadata_field(AllComponents.WELL)
+    SITES: str = component_metadata_field(AllComponents.SITE)
+    Z_INDEXES: str = component_metadata_field(AllComponents.Z_INDEX)
+    TIMEPOINTS: str = component_metadata_field(AllComponents.TIMEPOINT)
+    # Declared legacy collection fields without a current AllComponents member;
+    # readers still consume them from persisted plates.
+    OBJECTIVES: str = "objectives"
+    ACQUISITION_DATETIME: str = "acquisition_datetime"
+    PLATE_NAME: str = "plate_name"
+    DEFAULT_SUBDIRECTORY: str = "."
+    MICROSCOPE_TYPE: str = "openhcsdata"
+
+
+FIELDS = OpenHCSMetadataFields()
 
 
 JsonScalar: TypeAlias = str | int | float | bool | None
@@ -315,7 +357,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         cls,
         subdirectory: OpenHCSSubdirectoryPayload,
     ) -> "VirtualWorkspaceSourceProjectionEntries":
-        records = subdirectory.get(FIELDS.SOURCE_PROJECTION)
+        records = subdirectory.get("source_projection")
         if records is None:
             return cls(MappingProxyType({}))
         if not isinstance(records, Sequence) or isinstance(records, str):
@@ -368,7 +410,7 @@ class VirtualWorkspaceSourceProjectionEntries:
         source_alias = cls._optional_text(record, "source_alias")
         if projection_role is SourceProjectionRole.PRIMARY_PLANE:
             image_metadata_value = record.get(
-                SourceProjectionMetadataSerializer.IMAGE_METADATA_FIELD
+                SourcePlaneProjection.image_metadata_wire_field()
             )
             projection: SourceProjection = SourcePlaneProjection(
                 address=address,

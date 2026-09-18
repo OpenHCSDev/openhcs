@@ -416,13 +416,15 @@ class ExportToDatabaseModule(ArtifactExportModule):
                 "ExportToDatabase custom CPA filter fields are not represented "
                 "by the public callable."
             )
-        bound = bound.with_consumed_settings(
-            cls.database_type_setting,
-        ).with_kwargs(
-            {"selected_objects": cls._selected_objects(module)}
-        ).with_consumed_settings(
-            cls.objects_choice_setting,
-            cls.objects_list_setting,
+        bound = (
+            bound.with_consumed_settings(
+                cls.database_type_setting,
+            )
+            .with_kwargs({"selected_objects": cls._selected_objects(module)})
+            .with_consumed_settings(
+                cls.objects_choice_setting,
+                cls.objects_list_setting,
+            )
         )
         bound = bound.with_kwargs(
             {"image_channels": cls.property_image_channels(module)}
@@ -474,14 +476,16 @@ class ExportToDatabaseModule(ArtifactExportModule):
     @classmethod
     def finalize_module_blocks_for_invocation(
         cls,
-        blocks, *,
+        blocks,
+        *,
         invocation: NormalizedFunctionItem,
         step_context: ArtifactDeclarationStepContext,
     ) -> tuple[ModuleBlock, ...]:
         """Reconstruct compound settings needed by exact public compilation."""
 
         blocks = super().finalize_module_blocks_for_invocation(
-            blocks, invocation=invocation,
+            blocks,
+            invocation=invocation,
             step_context=step_context,
         )
         signature = inspect.signature(cls.require_callable())
@@ -527,7 +531,9 @@ class ExportToDatabaseModule(ArtifactExportModule):
             *cls._property_image_setting_records(image_channels),
             *cls._group_setting_records(group_fields),
         )
-        return tuple(cls._block_with_records(block, compound_records) for block in blocks)
+        return tuple(
+            cls._block_with_records(block, compound_records) for block in blocks
+        )
 
     @classmethod
     def artifact_contract_inputs(
@@ -949,9 +955,7 @@ def export_to_database(
         calculate_per_image_median=calculate_per_image_median,
         calculate_per_image_standard_deviation=(calculate_per_image_standard_deviation),
         write_image_thumbnails=write_image_thumbnails,
-        thumbnail_image_names=(
-            thumbnail_image_names if write_image_thumbnails else ()
-        ),
+        thumbnail_image_names=(thumbnail_image_names if write_image_thumbnails else ()),
         auto_scale_thumbnail_intensities=auto_scale_thumbnail_intensities,
     )
     resolved_channels = (

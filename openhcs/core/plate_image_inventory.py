@@ -13,7 +13,8 @@ import numpy as np
 from polystore.base import ImageSamplingRequest, ImageSamplingResult
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import FileFormat
+from openhcs.constants.constants import Backend, FileFormat
+from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.plate_file_inventory import PlateFileInventoryQuery, PlateFileKind
 from openhcs.core.pipeline.path_planner import PathPlannerPathAuthority
 from openhcs.core.source_workspace_projection import (
@@ -313,6 +314,7 @@ class PlateResultFileRecord:
     full_path: str
     file_format: FileFormat
     metadata: Mapping[str, JsonValue] = field(default_factory=dict)
+    source_ref: SourcePixelRef | None = None
 
     @property
     def full_path_obj(self) -> Path:
@@ -332,6 +334,31 @@ class PlateFileRecord:
     relative_path: str | None = None
     full_path: str | None = None
     file_format: FileFormat | None = None
+    source_ref: SourcePixelRef | None = None
+
+    def require_image_source_ref(self) -> SourcePixelRef:
+        """Return the inventory-authored source for an admitted native image."""
+        if self.streamable_image_path is None or self.source_ref is None:
+            raise ValueError("Streamable image requires an inventory source reference.")
+        return self.source_ref
+
+    @property
+    def streamable_image_path(self) -> str | None:
+        """Expose ordinary images and registered native image secondaries."""
+        if self.kind is PlateFileKind.IMAGE:
+            return self.key
+        path = self.full_path or self.key
+        if self.kind is PlateFileKind.RESULT and ImageFileFormat.is_image_path(path):
+            ImageFileFormat.require_path(path)  # Fail closed on ambiguous declarations.
+            return path
+        return None
+
+    @property
+    def streamable_roi_path(self) -> str | None:
+        """Expose ROI artifacts through their declared result format."""
+        if self.kind is PlateFileKind.RESULT and self.file_format is FileFormat.ROI:
+            return self.full_path or self.key
+        return None
 
     @classmethod
     def from_image(cls, record: PlateImageRecord) -> "PlateFileRecord":
@@ -342,6 +369,7 @@ class PlateFileRecord:
             virtual_path=record.virtual_path,
             full_virtual_path=record.full_virtual_path,
             source_path=record.source_path,
+            source_ref=record.source_ref,
         )
 
     @classmethod
@@ -353,6 +381,7 @@ class PlateFileRecord:
             relative_path=record.relative_path,
             full_path=record.full_path,
             file_format=record.file_format,
+            source_ref=record.source_ref,
         )
 
     def matches(self, query: "PlateFileInventoryQuery") -> bool:
@@ -845,12 +874,22 @@ class PlateResultFileInventory:
                     full_path=str(file_path),
                     file_format=file_format,
                     metadata=metadata,
+                    source_ref=(
+                        SourcePixelRef(
+                            backend=Backend.DISK.value,
+                            backend_address=str(file_path),
+                        )
+                        if ImageFileFormat.is_image_path(file_path)
+                        else None
+                    ),
                 )
             )
         return tuple(records), scanned_file_count
 
     @staticmethod
     def _result_file_format(file_path: Path) -> FileFormat | None:
+        if ImageFileFormat.is_image_path(file_path):
+            return ImageFileFormat.require_path(file_path).browser_file_format
         if file_path.name.endswith(FileFormat.ROI.value[0]):
             return FileFormat.ROI
         suffix = file_path.suffix.lower()

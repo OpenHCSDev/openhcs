@@ -32,9 +32,7 @@ class _TestMeasurementRow:
 
 def test_table_payload_accepts_only_nominal_columnar_rows() -> None:
     assert is_table_payload(
-        _TestColumnarRows(
-            {"value": (1.0,)}, fields=(FieldSpec("value", float),)
-        )
+        _TestColumnarRows({"value": (1.0,)}, fields=(FieldSpec("value", float),))
     )
 
 

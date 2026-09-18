@@ -20,6 +20,7 @@ from openhcs.core.runtime_measurements import (
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
 )
+
 MeasurementTableSelection = tuple[MeasurementTable, ...] | None
 MeasurementTablesByObject = Mapping[str, tuple[MeasurementTable, ...]]
 MutableMeasurementTablesByObject = dict[str, tuple[MeasurementTable, ...]]

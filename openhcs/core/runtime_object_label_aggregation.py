@@ -61,7 +61,9 @@ class DenseObjectLabelAggregation:
         return np.bincount(
             self.labels,
             minlength=self.object_count + 1,
-        )[1:].astype(float, copy=False)
+        )[
+            1:
+        ].astype(float, copy=False)
 
     def sum(self, values: object) -> np.ndarray:
         """Return per-object sums for values aligned with ``labels``."""

@@ -83,9 +83,7 @@ class CellProfilerInvocationContractProvider(InvocationContractProvider):
         )
 
         try:
-            module_type = CellProfilerModule.for_callable_contract(
-                invocation.contract
-            )
+            module_type = CellProfilerModule.for_callable_contract(invocation.contract)
         except (TypeError, ValueError) as exc:
             raise type(exc)(
                 f"CellProfiler contract lookup failed for step "

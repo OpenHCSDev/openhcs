@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
-
 WORKER_PROFILE_DIR_ENV = "OPENHCS_WORKER_PROFILE_DIR"
 
 

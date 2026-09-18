@@ -26,7 +26,10 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneProjection
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneProjection,
+)
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
@@ -280,9 +283,7 @@ def test_stack_broadcast_input_projects_selected_plane_and_preserves_stack() -> 
     source_stack = ImagePayloadMetadata(
         source_image_names=(source.name,),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-            paths=tuple(
-                f"/plate/A01_s1_w0_z{index + 1:03}.tif" for index in range(3)
-            ),
+            paths=tuple(f"/plate/A01_s1_w0_z{index + 1:03}.tif" for index in range(3)),
             component_metadata=source_plane_metadata,
         ),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
@@ -436,9 +437,7 @@ def test_stack_broadcast_input_collapses_singleton_for_larger_source_stack() -> 
     source_stack = ImagePayloadMetadata(
         source_image_names=(source.name,),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-            paths=tuple(
-                f"/plate/A01_s1_w0_z{index + 1:03}.tif" for index in range(3)
-            ),
+            paths=tuple(f"/plate/A01_s1_w0_z{index + 1:03}.tif" for index in range(3)),
             component_metadata=source_plane_metadata,
         ),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
@@ -523,9 +522,9 @@ def test_artifact_availability_accepts_one_exact_input_occurrence() -> None:
         kind=ObjectLabelsArtifactType,
     )
 
-    assert tuple(edge.key.input_index for edge in adapter.request.artifact_inputs.values()) == (
-        0,
-    )
+    assert tuple(
+        edge.key.input_index for edge in adapter.request.artifact_inputs.values()
+    ) == (0,)
 
 
 def test_artifact_availability_preserves_repeated_exact_role_occurrences() -> None:
@@ -546,7 +545,9 @@ def test_artifact_availability_preserves_repeated_exact_role_occurrences() -> No
         kind=ObjectLabelsArtifactType,
     )
 
-    assert tuple(edge.key.input_index for edge in adapter.request.artifact_inputs.values()) == (
+    assert tuple(
+        edge.key.input_index for edge in adapter.request.artifact_inputs.values()
+    ) == (
         0,
         1,
     )
@@ -674,7 +675,9 @@ def test_callable_abi_keeps_main_flow_artifacts_in_trailing_slots() -> None:
         CellProfilerModuleCallableABI.validate_callable_artifact_abi(func, contract)
 
 
-def test_owned_binding_files_do_not_restore_partition_or_special_input_mirrors() -> None:
+def test_owned_binding_files_do_not_restore_partition_or_special_input_mirrors() -> (
+    None
+):
     project_root = Path(__file__).parents[2]
     source = "\n".join(
         (project_root / relative).read_text(encoding="utf-8")

@@ -95,7 +95,9 @@ def test_dual_editor_title_prefixes_current_step_number() -> None:
     assert presentation.header_text == "Edit Step: 3. Measure"
 
 
-def test_dual_editor_pipeline_reorder_refreshes_title_number_with_scope_colors() -> None:
+def test_dual_editor_pipeline_reorder_refreshes_title_number_with_scope_colors() -> (
+    None
+):
     plate_scope = "plate::dual-title-test"
     ScopeTokenService.clear_scope(plate_scope)
     tracked_step = FunctionStep(name="Tracked")

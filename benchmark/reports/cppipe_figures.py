@@ -25,7 +25,6 @@ from benchmark.contracts.dataset import BenchmarkCategory
 from benchmark.datasets.cppipe_case_catalog import DEFAULT_BENCHMARK_CATEGORY
 from benchmark.datasets.cppipe_case_catalog import official_cp3_case_category
 
-
 CASE_NAME_FIELD = "case_name"
 ASSAY_CATEGORY_FIELD = "assay_category"
 MODULE_CATEGORY_FIELD = "module_category"
@@ -274,7 +273,9 @@ class BenchmarkFigureStyle:
     def color_for_method(self, method_index: int) -> str:
         return self.method_colors[method_index % len(self.method_colors)]
 
-    def decorate_axis(self, axis, *, metric: FigureMetricSpec, panel_index: int) -> None:
+    def decorate_axis(
+        self, axis, *, metric: FigureMetricSpec, panel_index: int
+    ) -> None:
         axis.grid(axis="y", color=self.grid_color, linewidth=0.8, alpha=0.8)
         axis.set_axisbelow(True)
         axis.spines["top"].set_visible(False)
@@ -327,13 +328,19 @@ class LinearAxisBreakPolicy:
             lower_values = present[:index]
             reference_index = min(
                 len(lower_values) - 1,
-                max(0, math.floor((len(lower_values) - 1) * self.lower_reference_quantile)),
+                max(
+                    0,
+                    math.floor((len(lower_values) - 1) * self.lower_reference_quantile),
+                ),
             )
             lower_reference = lower_values[reference_index]
             upper_bottom = present[index]
             if upper_bottom < lower_reference * self.outlier_ratio:
                 continue
-            if upper_bottom * self.upper_window_bottom <= present[index - 1] * self.lower_padding:
+            if (
+                upper_bottom * self.upper_window_bottom
+                <= present[index - 1] * self.lower_padding
+            ):
                 continue
             candidates.append((upper_bottom / present[index - 1], index))
         if candidates:
@@ -506,7 +513,9 @@ def generate_cppipe_benchmark_figures(
             output_formats=output_formats,
         )
     )
-    category_rows = tuple(_category_metric_rows(rows, category_key=ASSAY_CATEGORY_FIELD))
+    category_rows = tuple(
+        _category_metric_rows(rows, category_key=ASSAY_CATEGORY_FIELD)
+    )
     module_rows = tuple(_category_metric_rows(rows, category_key=MODULE_CATEGORY_FIELD))
     category_csv_path = output_dir / "cppipe_comparison_category_metrics_long.csv"
     _write_metric_rows(category_csv_path, (*category_rows, *module_rows))
@@ -567,7 +576,9 @@ def generate_grouped_benchmark_metric_figures(
     )
     outputs: list[Path] = []
     for metric in metrics:
-        if not any(METRIC_PROJECTION.value(row, metric) is not None for row in request.rows):
+        if not any(
+            METRIC_PROJECTION.value(row, metric) is not None for row in request.rows
+        ):
             continue
         outputs.extend(
             _plot_grouped_metric(
@@ -839,9 +850,7 @@ def _plot_grouped_metric(
         max(len(panel) for panel in panels) * request.group_width_inches,
     )
     fig_height = (
-        SINGLE_PANEL_HEIGHT_INCHES
-        if len(panels) == 1
-        else MULTI_PANEL_HEIGHT_INCHES
+        SINGLE_PANEL_HEIGHT_INCHES if len(panels) == 1 else MULTI_PANEL_HEIGHT_INCHES
     )
     with FIGURE_STYLE.context():
         fig, axes = plt.subplots(
@@ -1302,7 +1311,9 @@ class SpeedupDistributionReport:
         summary_markdown = (
             self.output_dir / f"{self.filename_prefix}_summary_statistics.md"
         )
-        cdf_csv = self.output_dir / f"{self.filename_prefix}_cumulative_distribution.csv"
+        cdf_csv = (
+            self.output_dir / f"{self.filename_prefix}_cumulative_distribution.csv"
+        )
         self.write_summary_statistics(summary_csv)
         self.write_summary_markdown(summary_markdown)
         self.write_cdf_csv(cdf_csv)
@@ -1448,12 +1459,12 @@ class SpeedupDistributionReport:
             axis.legend(frameon=False, loc="upper right")
             outputs: list[Path] = []
             suffix = (
-                "_cumulative_distribution_log"
-                if log_x
-                else "_cumulative_distribution"
+                "_cumulative_distribution_log" if log_x else "_cumulative_distribution"
             )
             for output_format in self.output_formats:
-                output_path = self.output_dir / f"{self.filename_prefix}{suffix}.{output_format}"
+                output_path = (
+                    self.output_dir / f"{self.filename_prefix}{suffix}.{output_format}"
+                )
                 FIGURE_STYLE.save(fig, output_path)
                 outputs.append(output_path)
             plt.close(fig)
@@ -1499,7 +1510,9 @@ def generate_speedup_distribution_artifacts(
     clean_series = tuple(
         SpeedupDistributionSeries(
             item.label,
-            tuple(value for value in item.values if math.isfinite(value) and value > 0.0),
+            tuple(
+                value for value in item.values if math.isfinite(value) and value > 0.0
+            ),
         )
         for item in series
     )
@@ -1625,6 +1638,7 @@ def _draw_reference_lines(axis, *, metric: FigureMetricSpec, log_y: bool) -> Non
         fontsize=7.8,
         color=FIGURE_STYLE.target_color,
     )
+
 
 def _plain_log_tick_label(value: float, position: int) -> str:
     del position

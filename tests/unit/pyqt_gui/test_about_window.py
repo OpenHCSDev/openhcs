@@ -24,14 +24,20 @@ def test_about_window_projects_package_identity_and_runtime(qapp) -> None:
             window.findChild(QLabel, "about_openhcs_version").text()
             == f"Version {OPENHCS_VERSION}"
         )
-        assert "Open High-Content Screening" in window.findChild(
-            QLabel,
-            "about_openhcs_description",
-        ).text()
-        assert "Python " in window.findChild(
-            QLabel,
-            "about_openhcs_runtime",
-        ).text()
+        assert (
+            "Open High-Content Screening"
+            in window.findChild(
+                QLabel,
+                "about_openhcs_description",
+            ).text()
+        )
+        assert (
+            "Python "
+            in window.findChild(
+                QLabel,
+                "about_openhcs_runtime",
+            ).text()
+        )
     finally:
         window.close()
 

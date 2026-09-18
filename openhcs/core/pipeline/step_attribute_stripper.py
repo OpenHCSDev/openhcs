@@ -101,7 +101,9 @@ class StepAttributeStripper:
             attributes = set(vars(step).keys())
 
             # Log attributes being stripped
-            logger.debug(f"Stripping {len(attributes)} attributes from step '{step_name}': {attributes}")
+            logger.debug(
+                f"Stripping {len(attributes)} attributes from step '{step_name}': {attributes}"
+            )
 
             # Delete all attributes
             for attr in list(attributes):
@@ -111,13 +113,19 @@ class StepAttributeStripper:
                     # Check if this is a reserved attribute that cannot be deleted
                     if _class_defines_attribute(step_type, attr) and not slot_names:
                         # This is likely a class attribute or method, not an instance attribute
-                        logger.debug(f"Skipping class attribute/method '{attr}' on step '{step_name}'")
+                        logger.debug(
+                            f"Skipping class attribute/method '{attr}' on step '{step_name}'"
+                        )
                         continue
 
                     # If deletion failed for other reasons, raise an error
                     if attr in slot_names:
-                        raise RuntimeError(ERROR_RESERVED_ATTRIBUTE.format(step_name, attr)) from e
-                    raise ValueError(ERROR_ATTRIBUTE_DELETION_FAILED.format(attr, step_name)) from e
+                        raise RuntimeError(
+                            ERROR_RESERVED_ATTRIBUTE.format(step_name, attr)
+                        ) from e
+                    raise ValueError(
+                        ERROR_ATTRIBUTE_DELETION_FAILED.format(attr, step_name)
+                    ) from e
 
             # Verify that all attributes have been stripped
             remaining_attrs = set(vars(step).keys())

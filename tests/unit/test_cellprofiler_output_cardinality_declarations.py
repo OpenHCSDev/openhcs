@@ -74,8 +74,7 @@ def _reconstruct(
         ),
         available_artifacts=available_artifacts,
         main_flow_artifacts=ArtifactSpecCollection(
-            spec.for_plan_type(ArtifactInputPlan)
-            for spec in main_flow_artifacts
+            spec.for_plan_type(ArtifactInputPlan) for spec in main_flow_artifacts
         ),
     )
     blocks, consumed = module_type.module_blocks_for_invocation(
@@ -114,12 +113,15 @@ def test_color_to_gray_plain_split_declares_every_callable_output() -> None:
         blocks[0],
         ColorToGrayModule.output_image_setting,
     ) == ("OrigRed", "OrigGreen", "OrigBlue")
-    assert contracts[0].artifact_outputs.names_of_artifact_type(
-        ImageArtifactType
-    ) == ("OrigRed", "OrigGreen", "OrigBlue")
-    assert ColorToGrayModule.main_flow_output_specs(
-        contracts[0].main_flow_outputs.specs
-    ) == contracts[0].canonical_return_output_specs.specs
+    assert contracts[0].artifact_outputs.names_of_artifact_type(ImageArtifactType) == (
+        "OrigRed",
+        "OrigGreen",
+        "OrigBlue",
+    )
+    assert (
+        ColorToGrayModule.main_flow_output_specs(contracts[0].main_flow_outputs.specs)
+        == contracts[0].canonical_return_output_specs.specs
+    )
 
 
 def test_gray_to_color_plain_rgb_uses_three_current_image_inputs() -> None:
@@ -138,17 +140,17 @@ def test_gray_to_color_plain_rgb_uses_three_current_image_inputs() -> None:
 
     assert consumed == ()
     assert len(blocks) == 1
-    assert contracts[0].artifact_inputs.names_of_artifact_type(
-        ImageArtifactType
-    ) == ("Red", "Green", "Blue")
+    assert contracts[0].artifact_inputs.names_of_artifact_type(ImageArtifactType) == (
+        "Red",
+        "Green",
+        "Blue",
+    )
     assert (
         len(contracts[0].artifact_outputs.names_of_artifact_type(ImageArtifactType))
         == 1
     )
     output = contracts[0].artifact_outputs.of_artifact_type(ImageArtifactType)[0]
-    first_input = (
-        contracts[0].artifact_inputs.of_artifact_type(ImageArtifactType)[0]
-    )
+    first_input = contracts[0].artifact_inputs.of_artifact_type(ImageArtifactType)[0]
     assert output.relations == (GroupLineageSourceRelation(source=first_input.ref()),)
     assert (
         image_payload_consumption_from_callable(gray_to_color)
@@ -178,9 +180,10 @@ def test_gray_to_color_sparse_rgb_excludes_inactive_channel_role() -> None:
     )
 
     assert len(blocks) == 1
-    assert contracts[0].artifact_inputs.names_of_artifact_type(
-        ImageArtifactType
-    ) == ("Actin", "DNA")
+    assert contracts[0].artifact_inputs.names_of_artifact_type(ImageArtifactType) == (
+        "Actin",
+        "DNA",
+    )
     assert consumed == (
         green_binding.require_parameter_name(),
         blue_binding.require_parameter_name(),
@@ -259,16 +262,12 @@ def test_neighbors_inherits_neighbor_identity_and_preserves_fixed_output_slots()
         MeasureObjectNeighborsModule.output_image_setting,
     )
     assert len(output_names) == 2
-    assert contracts[0].artifact_outputs.names_of_artifact_type(
-        ImageArtifactType
-    ) == (output_names[1],)
-    retained_image = (
-        contracts[0]
-        .artifact_outputs
-        .require_by_name_and_artifact_type(
-            output_names[1],
-            ImageArtifactType,
-        )
+    assert contracts[0].artifact_outputs.names_of_artifact_type(ImageArtifactType) == (
+        output_names[1],
+    )
+    retained_image = contracts[0].artifact_outputs.require_by_name_and_artifact_type(
+        output_names[1],
+        ImageArtifactType,
     )
     assert retained_image.relations == (
         SourceStackLineageSourceRelation(
@@ -277,9 +276,9 @@ def test_neighbors_inherits_neighbor_identity_and_preserves_fixed_output_slots()
     )
     assert (
         len(
-            contracts[0]
-            .artifact_outputs
-            .names_of_artifact_type(MeasurementsArtifactType)
+            contracts[0].artifact_outputs.names_of_artifact_type(
+                MeasurementsArtifactType
+            )
         )
         == 1
     )
@@ -303,9 +302,7 @@ def test_track_objects_plain_invocation_uses_cp_no_retained_image_default() -> N
     )
     assert setting_values(blocks[0], TrackObjectsModule.retain_image_setting) == ("No",)
     assert setting_values(blocks[0], TrackObjectsModule.output_image_setting) == ()
-    assert (
-        contracts[0].artifact_outputs.names_of_artifact_type(ImageArtifactType) == ()
-    )
+    assert contracts[0].artifact_outputs.names_of_artifact_type(ImageArtifactType) == ()
 
 
 def test_track_objects_public_retained_image_kwargs_define_exact_output() -> None:
@@ -329,9 +326,9 @@ def test_track_objects_public_retained_image_kwargs_define_exact_output() -> Non
     assert setting_values(blocks[0], TrackObjectsModule.output_image_setting) == (
         "TrackedNuclei",
     )
-    assert contracts[0].artifact_outputs.names_of_artifact_type(
-        ImageArtifactType
-    ) == ("TrackedNuclei",)
+    assert contracts[0].artifact_outputs.names_of_artifact_type(ImageArtifactType) == (
+        "TrackedNuclei",
+    )
     TrackObjectsModule.validate_callable_artifact_abi(track_objects, contracts[0])
 
 
@@ -348,9 +345,7 @@ def test_track_objects_explicitly_disabled_retained_image_remains_public() -> No
 
     assert consumed == ()
     assert setting_values(blocks[0], TrackObjectsModule.retain_image_setting) == ("No",)
-    assert (
-        contracts[0].artifact_outputs.names_of_artifact_type(ImageArtifactType) == ()
-    )
+    assert contracts[0].artifact_outputs.names_of_artifact_type(ImageArtifactType) == ()
 
 
 def test_measure_image_quality_consumes_explicit_repeated_selection() -> None:
@@ -372,6 +367,7 @@ def test_measure_image_quality_consumes_explicit_repeated_selection() -> None:
         blocks[0],
         MeasureImageQualityModule.image_measurement_binding.setting_name,
     ) == ("RNA", "DNA")
-    assert contracts[0].artifact_inputs.names_of_artifact_type(
-        ImageArtifactType
-    ) == ("RNA", "DNA")
+    assert contracts[0].artifact_inputs.names_of_artifact_type(ImageArtifactType) == (
+        "RNA",
+        "DNA",
+    )

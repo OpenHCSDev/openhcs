@@ -29,13 +29,11 @@ def run_command(cmd, check=True):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Install openhcs in development mode"
-    )
+    parser = argparse.ArgumentParser(description="Install openhcs in development mode")
     parser.add_argument(
         "--extras",
         default="dev,gui",
-        help="Comma-separated list of extras to install (default: dev,gui)"
+        help="Comma-separated list of extras to install (default: dev,gui)",
     )
     args = parser.parse_args()
 
@@ -46,9 +44,9 @@ def main():
     cmd = [sys.executable, "-m", "pip", "install", "-e", f".{extras_spec}"]
     run_command(cmd)
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Development installation complete!")
-    print("="*60)
+    print("=" * 60)
     print("\nThe setup.py automatically detected development mode")
     print("and is using local external modules from the external/ directory.")
     print("\nYou can now run openhcs with:")

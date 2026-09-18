@@ -41,7 +41,9 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.interop.cellprofiler.measurement_lookup import (
     child_count_feature_child_name,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import ObjectMeasurementTableIndex
+from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
+    ObjectMeasurementTableIndex,
+)
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
@@ -157,8 +159,7 @@ class RelationshipPlaneProjectionResolution:
                     f"slice_count={relationship.payload.slice_count!r}."
                 )
             if relationship.payload.slice_indices and any(
-                slice_index != 0
-                for slice_index in relationship.payload.slice_indices
+                slice_index != 0 for slice_index in relationship.payload.slice_indices
             ):
                 raise ValueError(
                     "Slice-aligned relationship records must use payload-local "
@@ -418,10 +419,7 @@ class RelationshipChildCountLabelMeasurement(ObjectLabelMeasurementSliceRequest)
             )
         if relationship_slice_indices:
             return relationship_slice_indices
-        if (
-            relationship.payload.source_ids
-            and relationship.payload.slice_count != 1
-        ):
+        if relationship.payload.source_ids and relationship.payload.slice_count != 1:
             raise ValueError(
                 "Non-empty multi-slice relationships require one slice_index per pair."
             )

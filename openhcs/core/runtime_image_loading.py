@@ -124,6 +124,12 @@ class ImagePayloadSourceMetadataContext:
                 source_channel_axis=source_channel_axis,
                 plane_axis=plane_axis,
             )
+        metadata = metadata.replace_fields(
+            source_spatial_domain=existing_metadata.source_spatial_domain.with_native_image_context(
+                metadata.source_spatial_domain,
+                image_shape_yx=source_spatial_shape_yx,
+            )
+        )
         return metadata.with_source_context_from(
             existing_metadata
         ).with_missing_intensity_from(existing_metadata)

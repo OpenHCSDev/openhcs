@@ -8,7 +8,10 @@ from pathlib import Path
 import imageio.v3 as imageio
 import numpy as np
 
-from openhcs.core.equivalence.arrays import canonical_numpy_array, semantic_array_payload
+from openhcs.core.equivalence.arrays import (
+    canonical_numpy_array,
+    semantic_array_payload,
+)
 from openhcs.core.equivalence.policy import RuntimeEquivalencePolicy
 
 

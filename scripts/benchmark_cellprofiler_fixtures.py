@@ -45,9 +45,7 @@ def _benchmark_threshold_diagnostics(path: Path, repeats: int) -> tuple[float, f
 
     fixture = np.load(path)
     final_threshold = float(np.asarray(fixture["final_threshold"]).reshape(-1)[0])
-    original_threshold = float(
-        np.asarray(fixture["original_threshold"]).reshape(-1)[0]
-    )
+    original_threshold = float(np.asarray(fixture["original_threshold"]).reshape(-1)[0])
 
     def call() -> object:
         return cellprofiler_threshold_diagnostics(

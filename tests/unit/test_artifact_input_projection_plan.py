@@ -67,9 +67,7 @@ def test_dynamic_producer_coordinate_requires_matching_invocation_dispatch() -> 
     projection = _projection(
         storage_plan,
         invocation_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
-        producer_selection_scope=ComponentGroupScope.dynamic(
-            AllComponents.CHANNEL
-        ),
+        producer_selection_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         consumer_variable_components=(AllComponents.TIMEPOINT,),
     )
 
@@ -77,7 +75,9 @@ def test_dynamic_producer_coordinate_requires_matching_invocation_dispatch() -> 
         projection.validate_axis_projection(storage_plan)
 
 
-def test_existing_producer_stack_is_retained_when_consumer_relabels_third_axis() -> None:
+def test_existing_producer_stack_is_retained_when_consumer_relabels_third_axis() -> (
+    None
+):
     storage_plan = ArtifactInputPlan(
         name="objects",
         path="/memory/objects.pkl",
@@ -95,14 +95,17 @@ def test_existing_producer_stack_is_retained_when_consumer_relabels_third_axis()
     )
 
     assert storage_plan.retains_producer_stack(consumer_components)
-    assert storage_plan.runtime_variable_components(
-        consumer_components
-    ) == consumer_components
+    assert (
+        storage_plan.runtime_variable_components(consumer_components)
+        == consumer_components
+    )
     assert projection.projected_variable_components(storage_plan) == ComponentSet()
     projection.validate_axis_projection(storage_plan)
 
 
-def test_scalar_consumer_requires_coordinate_for_each_producer_stack_component() -> None:
+def test_scalar_consumer_requires_coordinate_for_each_producer_stack_component() -> (
+    None
+):
     storage_plan = ArtifactInputPlan(
         name="objects",
         path="/memory/objects.pkl",
@@ -135,17 +138,16 @@ def test_transposed_producer_group_axis_requires_old_stack_coordinate() -> None:
         storage_plan,
         invocation_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         producer_selection_scope=storage_plan.producer_group_scope(),
-        component_scopes=(
-            ComponentGroupScope.dynamic(AllComponents.CHANNEL),
-        ),
+        component_scopes=(ComponentGroupScope.dynamic(AllComponents.CHANNEL),),
         consumer_variable_components=consumer_components.as_tuple(),
     )
 
     assert storage_plan.composes_producer_groups(consumer_components)
     assert not storage_plan.retains_producer_stack(consumer_components)
-    assert storage_plan.runtime_variable_components(
-        consumer_components
-    ) == consumer_components
+    assert (
+        storage_plan.runtime_variable_components(consumer_components)
+        == consumer_components
+    )
     with pytest.raises(ValueError, match="site.*without an exact coordinate"):
         projection.validate_axis_projection(storage_plan)
 

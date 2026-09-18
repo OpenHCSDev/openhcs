@@ -602,6 +602,12 @@ class CompilePlateRowHostHarness:
         PlateManagerWidget.require_pipeline_definition_mutation_allowed
     )
     plate_has_active_work = PlateManagerWidget.plate_has_active_work
+    plate_has_pending_definition_work = (
+        PlateManagerWidget.plate_has_pending_definition_work
+    )
+    require_plate_work_admission_allowed = (
+        PlateManagerWidget.require_plate_work_admission_allowed
+    )
 
     def emit_progress_started(self, total: int) -> None:
         self.progress_started.append(total)
@@ -745,8 +751,9 @@ def test_run_and_debug_reserve_before_connect_and_release_on_connection_failure(
     async def connect():
         assert host.execution_state is ManagerExecutionState.RUNNING
         assert host.plate_terminal_activity_status.active_plates == ("/target",)
+        host.require_pipeline_definition_mutation_allowed("/target")
         with pytest.raises(RuntimeError, match="affected plate"):
-            host.require_pipeline_definition_mutation_allowed("/target")
+            host.require_plate_work_admission_allowed("/target")
         with pytest.raises(RuntimeError, match="already active"):
             workflow.require_execution_admission(["/another"])
         raise RuntimeError("controlled connection failure")

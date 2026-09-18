@@ -22,14 +22,16 @@ from openhcs.interop.cellprofiler.module_declarations import (
 from openhcs.core.artifacts import ImageArtifactType
 
 
-class GaussianFilterModule(
-    CellProfilerModule
-):
+class GaussianFilterModule(CellProfilerModule):
     module_name = "GaussianFilter"
     function_name = "gaussian_filter"
     validated = True
     confidence = 1.0
-    setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (SettingToKeywordBinding.input("Select the input image", ImageArtifactType),SettingToKeywordBinding.output("Name the output image", ImageArtifactType),SettingToKeywordBinding("Sigma", "sigma", parse_cellprofiler_float),)
+    setting_bindings: ClassVar[tuple[SettingToKeywordBinding, ...]] = (
+        SettingToKeywordBinding.input("Select the input image", ImageArtifactType),
+        SettingToKeywordBinding.output("Name the output image", ImageArtifactType),
+        SettingToKeywordBinding("Sigma", "sigma", parse_cellprofiler_float),
+    )
 
 
 import numpy as np

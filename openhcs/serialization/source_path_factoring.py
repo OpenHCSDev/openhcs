@@ -56,9 +56,7 @@ class SourcePathFactoringPlan:
         occurrences: Iterable[Path],
     ) -> "SourcePathFactoringPlan":
         normalized = tuple(
-            _lexically_normalized(path)
-            for path in occurrences
-            if path.is_absolute()
+            _lexically_normalized(path) for path in occurrences if path.is_absolute()
         )
         counts = Counter(normalized)
         ordered_values = tuple(dict.fromkeys(normalized))
@@ -136,16 +134,12 @@ class OpenHCSPythonSourceDocument:
         collector = SourcePathOccurrenceCollector()
         discovery_context = FormatContext(
             clean_mode=self.clean_mode,
-            extensions=MappingProxyType(
-                {SourcePathOccurrenceCollector: collector}
-            ),
+            extensions=MappingProxyType({SourcePathOccurrenceCollector: collector}),
         )
         to_source(self.body, discovery_context)
         plan = SourcePathFactoringPlan.from_occurrences(collector.values)
         body_items = (
-            self.body.items
-            if isinstance(self.body, CodeBlock)
-            else (self.body,)
+            self.body.items if isinstance(self.body, CodeBlock) else (self.body,)
         )
         items: tuple[object, ...] = body_items
         if plan.bindings:
@@ -194,7 +188,7 @@ def _descendant_expression(
     root: Path,
     value: Path,
 ) -> FactoredPathSourceLiteral:
-    relative_parts = value.parts[len(root.parts):]
+    relative_parts = value.parts[len(root.parts) :]
     code = root_name
     for part in relative_parts:
         code = f"{code} / {part!r}"

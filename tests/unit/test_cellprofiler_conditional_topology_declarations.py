@@ -271,11 +271,14 @@ def test_align_measurements_observe_every_exact_image_output_name() -> None:
         MeasurementsArtifactType
     )
 
-    assert tuple(
-        relation.source.name
-        for relation in measurements.relations
-        if isinstance(relation, ImageMeasurementSubjectRelation)
-    ) == output_names
+    assert (
+        tuple(
+            relation.source.name
+            for relation in measurements.relations
+            if isinstance(relation, ImageMeasurementSubjectRelation)
+        )
+        == output_names
+    )
 
 
 def test_define_grid_callable_variant_owns_object_topology() -> None:

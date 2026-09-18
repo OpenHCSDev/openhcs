@@ -106,7 +106,7 @@ class CompileBatchWorkflowService:
         loop = asyncio.get_event_loop()
         plate_paths = [row.scope_id for row in selected_items]
         for plate_path in plate_paths:
-            self.host.require_pipeline_definition_mutation_allowed(plate_path)
+            self.host.require_plate_work_admission_allowed(plate_path)
         for plate_path in plate_paths:
             previous_execution_id = (
                 self.host.plate_terminal_activity_status.supersede_terminal(plate_path)

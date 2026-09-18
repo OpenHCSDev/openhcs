@@ -21,7 +21,6 @@ from openhcs.agent.dto.architecture import (
 from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.exceptions import AgentFacingErrorMixin
 
-
 InspectableSymbol: TypeAlias = Callable | type
 
 
@@ -69,10 +68,7 @@ class ArchitectureTopicProjection(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     def projection_instances(cls) -> tuple["ArchitectureTopicProjection", ...]:
-        return tuple(
-            projection_type()
-            for projection_type in cls.projection_types()
-        )
+        return tuple(projection_type() for projection_type in cls.projection_types())
 
     @classmethod
     def for_topic_id(cls, topic_id: str) -> "ArchitectureTopicProjection":
@@ -81,10 +77,11 @@ class ArchitectureTopicProjection(ABC, metaclass=AutoRegisterMeta):
             if normalized == projection.required_topic_id().casefold():
                 return projection
         known = ", ".join(
-            projection.required_topic_id()
-            for projection in cls.projection_instances()
+            projection.required_topic_id() for projection in cls.projection_instances()
         )
-        raise ValueError(f"Unknown architecture topic {topic_id!r}. Known topics: {known}")
+        raise ValueError(
+            f"Unknown architecture topic {topic_id!r}. Known topics: {known}"
+        )
 
     def summary_dto(self) -> ArchitectureTopicSummary:
         return ArchitectureTopicSummary(
@@ -267,6 +264,7 @@ class SourceSemanticsArchitectureTopic(ArchitectureTopicProjection):
             CellProfilerPlateWorkspacePreparer,
             prepare_cellprofiler_input_workspace,
         )
+
         return (
             InternalApiSymbolSpec(
                 "source.MetadataExtractionRule",
@@ -403,8 +401,7 @@ class ArchitectureSymbolNotCuratedError(AgentFacingErrorMixin, ValueError):
         curated_specs: tuple[tuple[str, InternalApiSymbolSpec], ...],
     ) -> None:
         topic_by_symbol_id = {
-            spec.symbol_id: topic_id
-            for topic_id, spec in curated_specs
+            spec.symbol_id: topic_id for topic_id, spec in curated_specs
         }
         closest_ids = get_close_matches(
             symbol_id,
@@ -443,7 +440,9 @@ class SourceLocation:
 def _source_location(symbol: InspectableSymbol) -> SourceLocation:
     path = inspect.getsourcefile(symbol)
     if path is None:
-        raise ValueError(f"Architecture symbol has no source file: {_import_path(symbol)}")
+        raise ValueError(
+            f"Architecture symbol has no source file: {_import_path(symbol)}"
+        )
     _lines, line_number = inspect.getsourcelines(symbol)
     return SourceLocation(
         source_path=_repo_relative_path(Path(path)),

@@ -14,6 +14,7 @@ from types import SimpleNamespace
 
 import pytest
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from zmqruntime.client import EndpointShutdownResult
 from zmqruntime.config import TransportMode
 
 import openhcs
@@ -103,6 +104,7 @@ from openhcs.agent.services.ui_bridge_service import (
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
@@ -154,6 +156,9 @@ class _ProjectedViewerWindowService(ViewerWindowService):
 
     def isolate_layers(self, request):
         return self._delegate.isolate_layers(request)
+
+    def image_intensity(self, request):
+        return self._delegate.image_intensity(request)
 
     def apply_intensity_window(self, request):
         return self._delegate.apply_intensity_window(request)
@@ -308,6 +313,16 @@ def test_mcp_server_publishes_canonical_instructions():
     assert "openhcs_describe_config_schema" in built.instructions
     assert "already-running OpenHCS GUI" in built.instructions
     assert "same typed declarations" in built.instructions
+    assert (
+        "Use exposed MCP capabilities for UI and viewer interaction"
+        in built.instructions
+    )
+    assert "do not inject keyboard or mouse input" in built.instructions
+    assert (
+        "declaration-owned MCP/viewer control path in its owning package"
+        in built.instructions
+    )
+    assert "Do not add a bypass or mirror metadata or state" in built.instructions
     assert "names begin" not in built.instructions
     assert "compile before running" in built.instructions
     assert "structured execution results" in built.instructions
@@ -6412,6 +6427,7 @@ def test_mcp_dev_client_stream_plate_files_command_projects_tool_arguments():
         "transport_mode": "ipc",
         "persistent": True,
         "fresh_viewer": True,
+        "source_receipt": None,
         "plate_path": "/tmp/example-plate-openhcs",
     }
 
@@ -10786,6 +10802,7 @@ def _operation_receipt_dev_result(
     tool: str = "openhcs_ui_wait_for_operation_receipt",
     operation_id: str = "operation-1",
     status: str = "completed",
+    errors: tuple[dict[str, object], ...] = (),
 ):
     return dev_client.McpDevToolResult(
         tool=tool,
@@ -10805,7 +10822,7 @@ def _operation_receipt_dev_result(
                 },
                 "completed_at_unix": None if status == "running" else 2.0,
                 "outcome": status,
-                "errors": [],
+                "errors": list(errors),
                 "warnings": [],
             },
         ),
@@ -11347,6 +11364,69 @@ def test_mcp_dev_client_selected_workflow_receipt_owns_poll_continuation(
         "skip_reason": expected_skip_reason,
         "action_status": "accepted",
     }
+
+
+def test_mcp_dev_client_selected_workflow_completed_rejection_stops_polling(
+    monkeypatch,
+):
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    import openhcs.mcp.dev_client as dev_client
+    import openhcs.mcp.dev_client_commands.ui as ui_commands
+
+    calls: list[dev_client.McpDevToolCall] = []
+
+    async def fake_call_tool(session, call, timeout_seconds):
+        calls.append(call)
+        if call.name == "openhcs_ui_selected_plate_workflow":
+            return _accepted_workflow_dev_result(dev_client, tool=call.name)
+        if call.name == "openhcs_ui_wait_for_operation_receipt":
+            return _operation_receipt_dev_result(
+                dev_client,
+                tool=call.name,
+                errors=(
+                    {
+                        "code": "confirmation_required",
+                        "message": "Confirmation was required.",
+                        "hint": None,
+                        "exception_type": None,
+                        "path": None,
+                    },
+                ),
+            )
+        return dev_client.McpDevToolResult(
+            tool=call.name,
+            mcp_error=False,
+            payloads=(
+                {
+                    "current_revision_token": "baseline",
+                    "payload": {"object_state_token": 1, "rows": []},
+                },
+            ),
+        )
+
+    monkeypatch.setattr(ui_commands, "call_mcp_tool", fake_call_tool)
+    args = dev_client._build_parser().parse_args(
+        ("selected-workflow", "compile_plate", "--wait")
+    )
+
+    response = asyncio.run(
+        dev_client.McpDevCommandSpec.for_name("selected-workflow").run_session(
+            SimpleNamespace(server_spec=dev_client.McpDevServerSpec(sys.executable)),
+            args,
+        )
+    )
+
+    assert [call.name for call in calls] == [
+        "openhcs_ui_get_state_surface",
+        "openhcs_ui_selected_plate_workflow",
+        "openhcs_ui_wait_for_operation_receipt",
+    ]
+    assert response.results[-1].payloads[0]["poll_status"] == "failed"
+    assert response.results[-1].payloads[0]["skip_reason"] == (
+        "operation_receipt_failed"
+    )
 
 
 def test_mcp_dev_client_selected_workflow_wait_rejects_stale_terminal_state(
@@ -12811,6 +12891,57 @@ def test_mcp_viewer_snapshot_binding_projects_request():
     assert request.timeout_ms == 1000
     assert request.output_dir_path == "/tmp/snapshots"
     assert request.capture_scope is WindowSnapshotCaptureScope.WINDOW
+
+
+def test_mcp_viewer_close_binding_requires_confirmation_and_projects_result():
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    class _ViewerWindowService:
+        def __init__(self):
+            self.close_requests = []
+
+        def close_window(self, request):
+            self.close_requests.append(request)
+            return EndpointShutdownResult(
+                succeeded=True,
+                endpoint_terminated=True,
+            )
+
+    viewer_window_service = _ViewerWindowService()
+    built = server.build_server(
+        SimpleNamespace(viewer_window_service=viewer_window_service)
+    )
+    listed_tools = built.list_tools()
+    tools = (
+        asyncio.run(listed_tools) if inspect.isawaitable(listed_tools) else listed_tools
+    )
+    close_schema = {tool.name: tool.inputSchema for tool in tools}[
+        "openhcs_close_viewer_window"
+    ]
+
+    result = asyncio.run(
+        asyncio.wait_for(
+            built.call_tool(
+                "openhcs_close_viewer_window",
+                {
+                    "port": 5555,
+                    "timeout_ms": 1000,
+                    "confirmed": True,
+                },
+            ),
+            timeout=2,
+        )
+    )
+    payload = json.loads(_direct_tool_text(result))
+
+    assert payload == {"succeeded": True, "endpoint_terminated": True}
+    assert len(viewer_window_service.close_requests) == 1
+    request = viewer_window_service.close_requests[0]
+    assert request.connection.port == 5555
+    assert request.timeout_ms == 1000
+    assert request.confirmed is True
+    assert "confirmed" in close_schema["required"]
 
 
 def test_mcp_ui_snapshot_binding_projects_request_and_connection():
@@ -14754,8 +14885,9 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
     } == {key: "1" for key in native_thread_count_environment_keys()}
     assert "OPENHCS_UNRELATED_TEST_VALUE" not in environment
     assert dev_client.McpDevServerSpec(sys.executable).process_args() == (
-        "-m",
-        "openhcs.mcp",
+        *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+            "openhcs.mcp"
+        ),
         "--surface",
         "full",
     )
@@ -15099,6 +15231,7 @@ def test_mcp_server_exposes_execution_session_tools():
     assert "openhcs_submit_pipeline_execution" in tool_names
     assert "openhcs_get_execution_status" in tool_names
     assert "openhcs_viewer_snapshot_window" in tool_names
+    assert "openhcs_close_viewer_window" in tool_names
     assert "openhcs_get_viewer_window_state" in tool_names
     assert "openhcs_get_viewer_window_payloads" in tool_names
     assert "openhcs_sample_viewer_window_image" in tool_names
@@ -15271,6 +15404,7 @@ def test_viewer_capabilities_advertise_payload_coordinate_validation():
     navigation_capability = capabilities["openhcs_navigate_viewer_window"]
     isolate_capability = capabilities["openhcs_isolate_viewer_window_layers"]
     validation_capability = capabilities["openhcs_validate_viewer_window_state"]
+    close_capability = capabilities["openhcs_close_viewer_window"]
 
     assert "viewer_payload_summaries" in state_capability.data_exposure
     assert "viewer_shape_bounds" in state_capability.data_exposure
@@ -15288,6 +15422,9 @@ def test_viewer_capabilities_advertise_payload_coordinate_validation():
     assert "viewer_coordinate_coverage" in validation_capability.data_exposure
     assert "viewer_payload_spatial_compatibility" in validation_capability.data_exposure
     assert "routed coordinate coverage" in validation_capability.description
+    assert close_capability.output_type == "EndpointShutdownResult"
+    assert "explicit_user_confirmation" in close_capability.security_requirements
+    assert "terminates_viewer_process" in close_capability.side_effects
 
 
 def test_object_state_capabilities_advertise_resolved_previews():
@@ -15697,3 +15834,86 @@ def test_mcp_isolate_viewer_projects_one_bulk_service_result():
     assert payload["layer_count"] == 2
     assert payload["errors"] == []
     assert len(viewer_window_service.isolation_requests) == 1
+
+
+def test_mcp_native_image_intensity_derives_typed_value_and_returns_native_state():
+    from openhcs.agent.dto.viewer import ViewerWindowImageIntensityResult
+    from zmqruntime.viewer_protocol import ViewerNativeImageIntensityPresentation
+
+    class Service:
+        def __init__(self):
+            self.requests = []
+
+        def image_intensity(self, request):
+            self.requests.append(request)
+            return ViewerWindowImageIntensityResult(
+                schema_version=SCHEMA_VERSION,
+                connection=request.connection,
+                observed=True,
+                applied=True,
+                route_key=request.intensity.route_key,
+                native_intensity=ViewerNativeImageIntensityPresentation((0, 100), 1.1),
+            )
+
+    service = Service()
+    built = server.build_server(_viewer_mcp_context(service))
+    result = asyncio.run(
+        built.call_tool(
+            "openhcs_set_viewer_image_intensity",
+            {
+                "port": 5555,
+                "route_key": "image",
+                "presentation": {"contrast_limits": [10, 80], "gamma": 1.5},
+            },
+        )
+    )
+    payload = json.loads(_direct_tool_text(result))
+    assert payload["applied"] is True, payload
+    assert payload["native_intensity"] == {"contrast_limits": [0, 100], "gamma": 1.1}
+    assert isinstance(
+        service.requests[0].intensity.presentation,
+        ViewerNativeImageIntensityPresentation,
+    )
+    assert service.requests[0].intensity.presentation.gamma == 1.5
+    assert service.requests[0].timeout_ms == VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
+
+    from mcp.server.fastmcp.exceptions import ToolError
+
+    for invalid in (
+        {"contrast_limits": [10, 10], "gamma": 1},
+        {"contrast_limits": [0, 100], "gamma": 0},
+        {"contrast_limits": [0, float("inf")], "gamma": 1},
+    ):
+        with pytest.raises(ToolError):
+            asyncio.run(
+                built.call_tool(
+                    "openhcs_set_viewer_image_intensity",
+                    {
+                        "port": 5555,
+                        "route_key": "image",
+                        "presentation": invalid,
+                    },
+                )
+            )
+    assert len(service.requests) == 1
+
+
+def test_native_image_intensity_generic_cli_preserves_tool_declaration_arguments():
+    import openhcs.mcp.dev_client as dev_client
+
+    args = dev_client._build_parser().parse_args(
+        [
+            "call",
+            "openhcs_set_viewer_image_intensity",
+            "--arguments",
+            '{"port":5585,"route_key":"image","presentation":{"contrast_limits":[10,100],"gamma":1.25},"timeout_ms":500}',
+        ]
+    )
+    call = dev_client._calls_from_args(args)[0]
+    assert call.name == "openhcs_set_viewer_image_intensity"
+    assert call.arguments["route_key"] == "image"
+    assert call.arguments["presentation"] == {
+        "contrast_limits": [10.0, 100.0],
+        "gamma": 1.25,
+    }
+    assert call.arguments["timeout_ms"] == 500

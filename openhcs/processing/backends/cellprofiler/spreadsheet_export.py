@@ -195,7 +195,9 @@ class SpreadsheetColumnSelection:
             self.subject
         ) == normalize_runtime_identifier(subject) and normalize_runtime_identifier(
             self.feature
-        ) == normalize_runtime_identifier(feature)
+        ) == normalize_runtime_identifier(
+            feature
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -472,10 +474,13 @@ def _measurement_tables(
             default_subject="Image",
             default_scope=MeasurementScope.IMAGE,
         )
-    return OrderedDict(
-        (subject, _cellprofiler_rows(rows))
-        for subject, rows in accumulator.row_mappings_by_subject().items()
-    ), accumulator.object_subjects()
+    return (
+        OrderedDict(
+            (subject, _cellprofiler_rows(rows))
+            for subject, rows in accumulator.row_mappings_by_subject().items()
+        ),
+        accumulator.object_subjects(),
+    )
 
 
 def _source_metadata_measurement_rows(

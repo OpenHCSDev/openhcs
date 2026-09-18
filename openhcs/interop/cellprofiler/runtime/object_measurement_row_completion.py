@@ -61,7 +61,9 @@ ObjectMeasurementRowKey = tuple[int | None, ObjectMeasurementAxisKey]
 ObjectMeasurementConcreteRowKey = tuple[int, ObjectMeasurementAxisKey]
 ObjectMeasurementConcreteRowKeys = list[ObjectMeasurementConcreteRowKey]
 ObjectMeasurementSliceRowKeys = list[tuple[int, ObjectMeasurementAxisKey]]
-ObjectMeasurementProjectedRowKey = tuple[int | None, tuple[RuntimeCallableArgument, ...]]
+ObjectMeasurementProjectedRowKey = tuple[
+    int | None, tuple[RuntimeCallableArgument, ...]
+]
 ObjectMeasurementProjectedRowKeysTuple = tuple[ObjectMeasurementProjectedRowKey, ...]
 ObjectMeasurementPresentRowKey = tuple[int, tuple[RuntimeCallableArgument, ...]]
 ObjectMeasurementPresentRowKeySet = set[ObjectMeasurementPresentRowKey]
@@ -334,8 +336,7 @@ class ObjectMeasurementRowCompletionSchema:
     ) -> tuple[RuntimeCallableArgument, ...]:
         """Return one exact axis key directly from declared row columns."""
         axis_values = tuple(
-            rows.column_values(field_name)[row_index]
-            for field_name in self.axis_fields
+            rows.column_values(field_name)[row_index] for field_name in self.axis_fields
         )
         missing_fields = tuple(
             field_name
@@ -594,9 +595,11 @@ class ObjectMeasurementRowCompletionSchema:
                 positive_label_extents=positive_label_extents,
             )
             columns[field_name] = tuple(
-                MEASUREMENT_SPARSE_CELL
-                if value is MISSING_MEASUREMENT_ROW_VALUE
-                else value
+                (
+                    MEASUREMENT_SPARSE_CELL
+                    if value is MISSING_MEASUREMENT_ROW_VALUE
+                    else value
+                )
                 for value in values
             )
         return MeasurementSparseColumnarRows(
@@ -618,10 +621,7 @@ class ObjectMeasurementRowCompletionSchema:
         object_id_field_names = MeasurementRowAxisField.object_id_field_names()
         row: dict[str, RuntimeCallableArgument] = {}
         for field_name in self.field_names:
-            if (
-                field_name in object_id_field_names
-                or field_name in axis_values
-            ):
+            if field_name in object_id_field_names or field_name in axis_values:
                 continue
             missing_value = row_policy.missing_measurement_value(
                 object_id=object_id,
@@ -693,7 +693,9 @@ class ObjectMeasurementRowIdentityProjectionResult:
                 object_row_identity=self.rows.object_row_identity,
             ),
             row_keys=ObjectMeasurementProjectedRowKeys(
-                tuple(self.row_keys.entries[row_index] for row_index in selected_indices)
+                tuple(
+                    self.row_keys.entries[row_index] for row_index in selected_indices
+                )
             ),
             measured_row_keys=ObjectMeasurementProjectedRowKeys(measured_row_keys),
             axis_keys=self.axis_keys,

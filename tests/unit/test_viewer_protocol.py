@@ -18,6 +18,7 @@ import openhcs.runtime.viewer_protocol as viewer_protocol
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import StreamingViewerRuntimeConfig
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.viewer_controls import (
     ViewerIntensityWindowControlOptions,
     ViewerStateControlOptions,
@@ -597,7 +598,7 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
         }
     )
     expected_existing = {
-        "QT_QPA_PLATFORM": "offscreen",
+        "QT_QPA_PLATFORM": "xcb",
         "QT_X11_NO_MITSHM": "1",
         "vblank_mode": "0",
     }
@@ -612,6 +613,18 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
         expected_existing["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
     assert linux_existing == expected_existing
 
+    linux_custom = ViewerQtEnvironmentPolicy(ViewerProcessPlatform.LINUX).apply_to(
+        {"QT_QPA_PLATFORM": "wayland"}
+    )
+    expected_custom = {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_X11_NO_MITSHM": "1",
+        "vblank_mode": "0",
+    }
+    if plugin_path is not None:
+        expected_custom["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
+    assert linux_custom == expected_custom
+
     darwin_env = ViewerQtEnvironmentPolicy(ViewerProcessPlatform.DARWIN).apply_to({})
     expected_darwin = {"QT_QPA_PLATFORM": "cocoa"}
     if plugin_path is not None:
@@ -625,13 +638,29 @@ def test_viewer_qt_environment_policy_applies_platform_rows():
     assert windows_env == expected_windows
 
 
+def test_projected_graphical_viewer_replaces_noninteractive_qt_platform():
+    launch_context = ViewerLaunchContext.projected_graphical_session(
+        {
+            "DISPLAY": ":23",
+            "QT_QPA_PLATFORM": "offscreen",
+        }
+    )
+
+    environment = launch_context.child_environment({"QT_QPA_PLATFORM": "offscreen"})
+    ViewerQtEnvironmentPolicy(ViewerProcessPlatform.LINUX).apply_to(environment)
+
+    assert environment["DISPLAY"] == ":23"
+    assert environment["QT_QPA_PLATFORM"] == "xcb"
+
+
 def test_detached_viewer_entrypoint_generates_public_process_call(tmp_path):
+    import_authority = OpenHCSRuntimeImportAuthority.current()
     python_code = DetachedViewerServerEntrypointSpec(
         viewer_type=ViewerType.NAPARI,
         module_name="openhcs.runtime.napari_viewer_server",
         function_name="run_napari_viewer_process",
     ).python_code(
-        tmp_path,
+        import_authority,
         transport_mode=TransportMode.IPC,
         arguments=DetachedViewerPythonArguments.from_literals(
             1234,
@@ -644,7 +673,7 @@ def test_detached_viewer_entrypoint_generates_public_process_call(tmp_path):
     assert "run_napari_viewer_process" in python_code
     assert "openhcs.runtime.napari_viewer_server" in python_code
     assert " import _napari_viewer_process" not in python_code
-    assert str(tmp_path) in python_code
+    assert str(import_authority.import_root) in python_code
     assert "TransportMode.IPC" in python_code
     assert 'if os.name == "posix"' in python_code
     assert "hasattr" not in python_code
@@ -678,6 +707,57 @@ def test_detached_viewer_launch_request_owns_log_and_python_command(tmp_path):
     assert launch.cwd == tmp_path
     assert "TransportMode.TCP" in launch.python_code
     assert launch.command() == [sys.executable, "-c", launch.python_code]
+
+
+def test_detached_viewer_import_root_is_independent_of_runtime_cwd(tmp_path):
+    selected_root = tmp_path / "selected"
+    selected_package = selected_root / "openhcs"
+    selected_package.mkdir(parents=True)
+    (selected_package / "__init__.py").write_text("", encoding="utf-8")
+    marker = tmp_path / "viewer-source.txt"
+    (selected_package / "viewer_probe.py").write_text(
+        "from pathlib import Path\n"
+        "def run_probe(marker, transport_mode):\n"
+        "    del transport_mode\n"
+        "    Path(marker).write_text('selected', encoding='utf-8')\n",
+        encoding="utf-8",
+    )
+
+    competing_cwd = tmp_path / "runtime-cwd"
+    competing_package = competing_cwd / "openhcs"
+    competing_package.mkdir(parents=True)
+    (competing_package / "__init__.py").write_text("", encoding="utf-8")
+    (competing_package / "viewer_probe.py").write_text(
+        "from pathlib import Path\n"
+        "def run_probe(marker, transport_mode):\n"
+        "    del transport_mode\n"
+        "    Path(marker).write_text('competing', encoding='utf-8')\n",
+        encoding="utf-8",
+    )
+    spec = DetachedViewerServerEntrypointSpec(
+        viewer_type=ViewerType.NAPARI,
+        module_name="openhcs.viewer_probe",
+        function_name="run_probe",
+    )
+    request = spec.launch_request(
+        port=4322,
+        transport_mode=TransportMode.TCP,
+        arguments=DetachedViewerPythonArguments.from_literals(str(marker)).append(
+            DetachedViewerPythonExpression.symbol("transport_mode")
+        ),
+        log_file=tmp_path / "viewer.log",
+        cwd=competing_cwd,
+        import_authority=OpenHCSRuntimeImportAuthority(selected_root),
+    )
+
+    subprocess.run(
+        request.command(),
+        cwd=request.cwd,
+        check=True,
+        timeout=10,
+    )
+
+    assert marker.read_text(encoding="utf-8") == "selected"
 
 
 def test_process_resource_cleanup_stops_only_execution_owned_viewer(

@@ -382,8 +382,9 @@ class ExecutionRuntimeProjection:
     def from_generic_projection(
         cls,
         generic_projection: GenericExecutionProjection[PlateRuntimeState],
-        events_by_identity: Mapping[PlateRuntimeIdentity, Sequence[ProgressEvent]]
-        | None = None,
+        events_by_identity: (
+            Mapping[PlateRuntimeIdentity, Sequence[ProgressEvent]] | None
+        ) = None,
     ) -> "ExecutionRuntimeProjection":
         projection = cls()
 

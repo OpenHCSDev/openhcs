@@ -305,6 +305,7 @@ from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     MaskedImagePayload,
     image_payload_data,
+    image_payload_mask,
     image_payload_metadata,
     with_image_payload_data,
 )
@@ -968,11 +969,21 @@ class ObjectIntensityMeasurementContext(ObjectIntensityMeasurementAxisContext):
 class ObjectIntensityMeasurementRequest(ObjectIntensityMeasurementContext):
     """Executable request for one object-intensity image/label plane."""
 
-    image: np.ndarray
+    image: ImageIntensityOutput
 
     @property
     def measurement_image(self) -> np.ndarray:
-        return np.asarray(self.image)
+        image = np.asarray(image_payload_data(self.image))
+        mask = image_payload_mask(self.image)
+        if mask is None:
+            return image
+        mask_array = np.asarray(mask, dtype=bool)
+        if mask_array.shape != image.shape:
+            raise ValueError(
+                "Object-intensity image mask must match the measurement domain; "
+                f"got {mask_array.shape!r} and {image.shape!r}."
+            )
+        return np.where(mask_array, image, np.nan)
 
     @property
     def dense_labels(self) -> np.ndarray:
@@ -1054,15 +1065,27 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
     ) -> tuple[np.ndarray, ...]:
         """Return CellProfiler 4.2 maximum positions in the label domain."""
         label_ids = np.arange(1, labels.object_count + 1, dtype=np.int32)
+        valid_foreground = (labels.relabeled_labels > 0) & np.isfinite(image)
         shape_backend = ShapeMeasurementBackendStrategy.for_memory_type(
             MemoryType.NUMPY,
             backend_provider=self.backend_provider,
         )
-        return shape_backend.maximum_position_of_labels(
+        positions = shape_backend.maximum_position_of_labels(
             image,
             labels.relabeled_labels,
             label_ids,
-            mask=labels.relabeled_labels > 0,
+            mask=valid_foreground,
+        )
+        if not bool(np.any(valid_foreground)):
+            return positions
+        measured_labels = np.unique(labels.relabeled_labels[valid_foreground])
+        unmeasured = ~np.isin(label_ids, measured_labels)
+        if not bool(np.any(unmeasured)):
+            return positions
+        first_foreground_position = np.argwhere(valid_foreground)[0]
+        return tuple(
+            np.where(unmeasured, first_foreground_position[axis], coordinates)
+            for axis, coordinates in enumerate(positions)
         )
 
     def maximum_intensity_positions_batch(
@@ -1071,6 +1094,11 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
         labels: ObjectIntensityPreparedLabels,
     ) -> tuple[tuple[np.ndarray, ...], ...]:
         """Return exact maximum positions without repeating foreground scans."""
+        if not bool(np.all(np.isfinite(images))):
+            return tuple(
+                self.maximum_intensity_positions(image, labels) for image in images
+            )
+
         foreground_index = labels.foreground_index
         image_batch = np.asarray(images)
         image_shape = image_batch.shape[1:]
@@ -1161,31 +1189,35 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
             labels.label_to_index,
             arrays[0].astype(np.int64, copy=False),
         )
-        return ObjectIntensityArrays(
-            object_labels=object_labels.astype(np.int32, copy=False),
-            integrated_intensity=arrays[1],
-            mean_intensity=arrays[2],
-            std_intensity=arrays[3],
-            min_intensity=arrays[4],
-            max_intensity=arrays[5],
-            integrated_intensity_edge=arrays[6],
-            mean_intensity_edge=arrays[7],
-            std_intensity_edge=arrays[8],
-            min_intensity_edge=arrays[9],
-            max_intensity_edge=arrays[10],
-            mass_displacement=arrays[11],
-            lower_quartile_intensity=lower,
-            median_intensity=median,
-            mad_intensity=mad,
-            upper_quartile_intensity=upper,
-            center_mass_intensity_x=arrays[12],
-            center_mass_intensity_y=arrays[13],
-            center_mass_intensity_z=np.zeros(object_count, dtype=np.float64),
-            max_intensity_x=np.zeros(object_count, dtype=np.float64),
-            max_intensity_y=np.zeros(object_count, dtype=np.float64),
-            max_intensity_z=np.zeros(object_count, dtype=np.float64),
-        ).with_max_intensity_positions(
-            self.maximum_intensity_positions(image_array, labels)
+        return (
+            ObjectIntensityArrays(
+                object_labels=object_labels.astype(np.int32, copy=False),
+                integrated_intensity=arrays[1],
+                mean_intensity=arrays[2],
+                std_intensity=arrays[3],
+                min_intensity=arrays[4],
+                max_intensity=arrays[5],
+                integrated_intensity_edge=arrays[6],
+                mean_intensity_edge=arrays[7],
+                std_intensity_edge=arrays[8],
+                min_intensity_edge=arrays[9],
+                max_intensity_edge=arrays[10],
+                mass_displacement=arrays[11],
+                lower_quartile_intensity=lower,
+                median_intensity=median,
+                mad_intensity=mad,
+                upper_quartile_intensity=upper,
+                center_mass_intensity_x=arrays[12],
+                center_mass_intensity_y=arrays[13],
+                center_mass_intensity_z=np.zeros(object_count, dtype=np.float64),
+                max_intensity_x=np.zeros(object_count, dtype=np.float64),
+                max_intensity_y=np.zeros(object_count, dtype=np.float64),
+                max_intensity_z=np.zeros(object_count, dtype=np.float64),
+            )
+            .with_unmeasured_object_semantics(arrays[0])
+            .with_max_intensity_positions(
+                self.maximum_intensity_positions(image_array, labels)
+            )
         )
 
     def measure_prepared_batch(
@@ -1500,6 +1532,8 @@ def _object_intensity_batch_key(
     request: RuntimeBatchInvocationRequest,
 ) -> tuple[tuple[str, Hashable], ...] | None:
     if request.execution_mode is not ImagePayloadExecutionMode.FULL_STACK:
+        return None
+    if image_payload_mask(request.image) is not None:
         return None
     semantic_group_key = request.semantic_group_key
     if semantic_group_key is None:

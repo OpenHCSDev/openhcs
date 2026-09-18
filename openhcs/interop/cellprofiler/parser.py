@@ -270,11 +270,14 @@ class CPPipeParser:
         filemanager: FileManagerLike | None,
         backend: Backend,
     ) -> str:
+        # CPPipe documents are UTF-8 by CellProfiler's writer contract; decoding
+        # through the process locale makes parsing depend on each reader's
+        # environment (ZMQ servers and benchmark runners run with C locales).
         if filemanager is None:
-            return path.read_text()
+            return path.read_text(encoding="utf-8")
         content = filemanager.load(str(path), backend.value)
         if isinstance(content, bytes):
-            return content.decode()
+            return content.decode("utf-8")
         if not isinstance(content, str):
             raise TypeError(
                 "CPPipeParser expected FileManager.load to return str or bytes "

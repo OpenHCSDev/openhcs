@@ -70,8 +70,7 @@ class RuntimeOutputSnapshot:
                 tuple(RuntimeTableSnapshot.from_csv(path) for path in table_paths(root))
             ),
             images=tuple(
-                RuntimeImageSnapshot.from_image_file(path)
-                for path in image_paths(root)
+                RuntimeImageSnapshot.from_image_file(path) for path in image_paths(root)
             ),
         )
 
@@ -143,7 +142,9 @@ class CommonStemRuntimeTableNamespaceAdapter(RuntimeTableNamespaceAdapter):
         return tuple(
             replace(
                 table,
-                path=table.path.with_name(f"{table.path.stem[len(prefix):]}{table.path.suffix}"),
+                path=table.path.with_name(
+                    f"{table.path.stem[len(prefix):]}{table.path.suffix}"
+                ),
             )
             for table in tables
         )
@@ -159,7 +160,7 @@ def _common_table_namespace_prefix(
     if "_" not in shared:
         return None
     prefix = shared[: shared.rfind("_") + 1]
-    suffixes = tuple(stem[len(prefix):] for stem in stems)
+    suffixes = tuple(stem[len(prefix) :] for stem in stems)
     if not prefix or any(not suffix for suffix in suffixes):
         return None
     if all(_table_has_object_identity(table) for table in tables):
@@ -168,11 +169,10 @@ def _common_table_namespace_prefix(
 
 
 def _table_has_object_identity(table: RuntimeTableSnapshot) -> bool:
-    normalized_header = {
-        _normalize_table_header_field(field)
-        for field in table.header
-    }
-    return bool(normalized_header & set(MeasurementRowAxisField.object_id_field_names()))
+    normalized_header = {_normalize_table_header_field(field) for field in table.header}
+    return bool(
+        normalized_header & set(MeasurementRowAxisField.object_id_field_names())
+    )
 
 
 def _normalize_table_header_field(field: str) -> str:

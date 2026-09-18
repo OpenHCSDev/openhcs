@@ -16,7 +16,7 @@ def sample_parameters():
         "int_param": 42,
         "float_param": 3.14,
         "bool_param": True,
-        "optional_param": None
+        "optional_param": None,
     }
 
 
@@ -24,12 +24,13 @@ def sample_parameters():
 def sample_parameter_types():
     """Provide sample parameter types for testing parameter forms."""
     from typing import Optional
+
     return {
         "string_param": str,
         "int_param": int,
         "float_param": float,
         "bool_param": bool,
-        "optional_param": Optional[str]
+        "optional_param": Optional[str],
     }
 
 
@@ -60,8 +61,9 @@ def mock_color_scheme():
     import os
 
     # Skip PyQt6 imports in CPU-only mode
-    if os.getenv('OPENHCS_CPU_ONLY', 'false').lower() == 'true':
+    if os.getenv("OPENHCS_CPU_ONLY", "false").lower() == "true":
         pytest.skip("PyQt6 GUI tests skipped in CPU-only mode")
 
     from openhcs.pyqt_gui.shared.color_scheme import PyQt6ColorScheme
+
     return PyQt6ColorScheme()

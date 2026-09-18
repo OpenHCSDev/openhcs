@@ -212,6 +212,8 @@ class UiBridgeOperationContractABC(ABC, metaclass=AutoRegisterMeta):
     requires_auth: ClassVar[bool] = True
     request_type: ClassVar[type | None] = None
     bridge_features: ClassVar[tuple[UiBridgeFeature, ...]] = ()
+    success_outcome: ClassVar[str] = "completed"
+    failure_error_code: ClassVar[str] = "ui_bridge_operation_failed"
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -778,6 +780,8 @@ class UiBridgeNavigateWindowOperation(
     request_type = UiWindowNavigateRequest
     response_type = UiWindowNavigateResult
     bridge_features = (UiBridgeFeature.UI_WINDOW_NAVIGATION,)
+    success_outcome = "navigated"
+    failure_error_code = "ui_window_navigation_failed"
 
 
 class UiBridgeCloseWindowOperation(
@@ -804,6 +808,8 @@ class UiBridgeSnapshotWindowOperation(
     request_type = UiWindowSnapshotRequest
     response_type = UiWindowSnapshotResult
     bridge_features = (UiBridgeFeature.UI_WINDOW_SNAPSHOTS,)
+    success_outcome = "captured"
+    failure_error_code = "ui_window_snapshot_failed"
 
 
 class UiBridgeWidgetTreeOperation(
@@ -1583,6 +1589,7 @@ class UiBridgeDescriptorReader:
                 resolved_path,
             )
             cls._validate_descriptor_process(descriptor)
+            cls._validate_descriptor_compatibility(descriptor)
         except Exception as exc:
             return UiBridgeDescriptorReadResult(
                 descriptor=None,
@@ -1605,19 +1612,24 @@ class UiBridgeDescriptorReader:
         descriptor_path: Path,
     ) -> UiBridgeDescriptorFile:
         del cls
-        if descriptor_payload.bridge_protocol_version != UI_BRIDGE_PROTOCOL_VERSION:
-            raise ValueError(
-                "Unsupported UI bridge protocol version: "
-                f"{descriptor_payload.bridge_protocol_version}"
-            )
-        OPENHCS_ENDPOINT_APPLICATION.compatibility_with(
-            descriptor_payload.application
-        ).require_match()
         return project_dataclass(
             UiBridgeDescriptorFile,
             descriptor_payload,
             descriptor_file_path=str(descriptor_path),
         )
+
+    @staticmethod
+    def _validate_descriptor_compatibility(
+        descriptor: UiBridgeDescriptorFile,
+    ) -> None:
+        if descriptor.bridge_protocol_version != UI_BRIDGE_PROTOCOL_VERSION:
+            raise ValueError(
+                "Unsupported UI bridge protocol version: "
+                f"{descriptor.bridge_protocol_version}"
+            )
+        OPENHCS_ENDPOINT_APPLICATION.compatibility_with(
+            descriptor.application
+        ).require_match()
 
     @staticmethod
     def _validate_descriptor_file_path(path: Path) -> None:
@@ -1702,39 +1714,27 @@ class UiBridgeDescriptorCatalog:
         if selected_path is not None:
             return (UiBridgeDescriptorReader.read(selected_path),)
 
+        descriptor_paths: list[Path] = []
         results: list[UiBridgeDescriptorReadResult] = []
         for directory in UiBridgeDescriptorDirectoryAuthority.descriptor_dirs():
             if not directory.exists():
                 continue
             for path in sorted(directory.glob("ui_bridge_*.json")):
-                result = UiBridgeDescriptorReader.read(path)
-                if result.stale_process_descriptor:
-                    cls._remove_stale_process_descriptor(result.path)
-                    continue
-                results.append(result)
-        if cls._has_live_descriptor(results):
-            return tuple(results)
-        if environ.get(UiBridgeDescriptorEnvironment.descriptor_directory_path_key):
-            return tuple(results)
-        cls._extend_with_process_advertised_descriptors(results)
-        return tuple(results)
+                descriptor_paths.append(path)
+        descriptor_paths.extend(
+            UiBridgeProcessAdvertisedDescriptorCatalog.descriptor_paths()
+        )
 
-    @staticmethod
-    def _has_live_descriptor(results: list[UiBridgeDescriptorReadResult]) -> bool:
-        return any(result.ok and result.descriptor is not None for result in results)
-
-    @classmethod
-    def _extend_with_process_advertised_descriptors(
-        cls,
-        results: list[UiBridgeDescriptorReadResult],
-    ) -> None:
-        seen_paths = {result.path for result in results}
-        for path in UiBridgeProcessAdvertisedDescriptorCatalog.descriptor_paths():
-            resolved_path = path.expanduser().resolve(strict=False)
-            if resolved_path in seen_paths:
+        for path in dict.fromkeys(
+            AgentRuntimePlatformAuthority.resolved_path(path)
+            for path in descriptor_paths
+        ):
+            result = UiBridgeDescriptorReader.read(path)
+            if result.stale_process_descriptor:
+                cls._remove_stale_process_descriptor(result.path)
                 continue
-            results.append(UiBridgeDescriptorReader.read(resolved_path))
-            seen_paths.add(resolved_path)
+            results.append(result)
+        return tuple(results)
 
     @staticmethod
     def _remove_stale_process_descriptor(path: Path) -> None:
@@ -2646,11 +2646,11 @@ class UiBridgeService:
         request: UiWindowSnapshotRequest,
         errors: tuple[AgentError, ...],
     ) -> UiWindowSnapshotResult:
-        return UiWindowSnapshotResult(
+        return project_dataclass(
+            UiWindowSnapshotResult,
+            request,
             schema_version=SCHEMA_VERSION,
             window_id=request.window_id,
-            output_dir_path=request.output_dir_path,
-            capture_scope=request.capture_scope,
             captured=False,
             errors=errors,
         )

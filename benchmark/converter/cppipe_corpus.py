@@ -14,7 +14,6 @@ from benchmark.datasets.cache import (
     default_cellprofiler_examples_root,
 )
 
-
 DEFAULT_CELLPROFILER_EXAMPLES_ROOT = default_cellprofiler_examples_root()
 
 

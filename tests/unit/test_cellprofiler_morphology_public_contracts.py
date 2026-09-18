@@ -262,9 +262,10 @@ def test_registry_morphology_owners_compile_exact_public_function_step_abi(
 
     assert module_type is not None
     assert module_type.module_name == case.module_name
-    assert tuple(
-        spec.artifact_type for spec in contract.artifact_inputs
-    ) == case.input_types
+    assert (
+        tuple(spec.artifact_type for spec in contract.artifact_inputs)
+        == case.input_types
+    )
     assert tuple(spec.artifact_type for spec in contract.artifact_outputs) == (
         case.output_types
     )

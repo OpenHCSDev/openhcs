@@ -14,6 +14,16 @@ import zmq
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.identity import StreamProducerIdentity
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureSpec
+from zmqruntime.client import (
+    EndpointShutdownMode,
+    EndpointShutdownResult,
+    ZMQClient,
+)
+from zmqruntime.viewer_protocol import (
+    ViewerNativeImageIntensityPresentation,
+    ViewerNativeLayerTransform,
+    ViewerNativeViewportPresentation,
+)
 
 import openhcs.core.plate_image_inventory as core_plate_image_inventory
 from openhcs.agent.dto.common import (
@@ -26,7 +36,11 @@ from openhcs.agent.dto.common import (
 )
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.viewer import (
+    ViewerWindowCloseRequest,
+    ViewerWindowControlRequest,
     ViewerWindowDescriptor,
+    ViewerWindowImageIntensityRequest,
+    ViewerWindowImageIntensityResult,
     ViewerWindowImageSampleRequest,
     ViewerWindowImageSampleResult,
     ViewerWindowIntensityPayloadIdentity,
@@ -55,6 +69,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowValidationPolicy,
     ViewerWindowValidationRequest,
     ViewerWindowValidationSummaryResult,
+    ViewerWindowViewportRequest,
+    ViewerWindowViewportResult,
     viewer_window_probe_from_state,
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
@@ -1056,6 +1072,14 @@ class ViewerWindowGatewayABC(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def image_intensity(self, request: ViewerWindowImageIntensityRequest) -> JsonObject:
+        raise NotImplementedError
+
+    @abstractmethod
+    def viewport(self, request: ViewerWindowViewportRequest) -> JsonObject:
+        raise NotImplementedError
+
+    @abstractmethod
     def navigate_window(self, request: ViewerWindowNavigationRequest) -> JsonObject:
         raise NotImplementedError
 
@@ -1064,6 +1088,9 @@ class ViewerWindowGatewayABC(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def close_window(self, request: ViewerWindowCloseRequest) -> EndpointShutdownResult:
+        """Close the exact viewer endpoint and prove process termination."""
+
     def apply_intensity_window(
         self,
         request: ViewerWindowIntensityWindowRequest,
@@ -1080,96 +1107,104 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         self._context_factory = context_factory
 
     def snapshot_window(self, request: ViewerWindowSnapshotRequest) -> JsonObject:
-        return self._send_control_message(
-            request,
-            ViewerControlMessageType.SCREENSHOT,
-            request,
-        )
+        message = {
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.SCREENSHOT.value,
+            ViewerControlResponseField.PAYLOAD.value: request,
+        }
+        return self._send_control_message(request, message)
 
     def window_state(self, request: ViewerWindowStateRequest) -> JsonObject:
-        return self._send_control_message(
-            request,
-            ViewerControlMessageType.STATE,
-            request.state_controls,
-        )
+        message: dict[str, object] = {
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.STATE.value,
+            ViewerControlResponseField.PAYLOAD.value: request.state_controls,
+        }
+        return self._send_control_message(request, message)
 
     def window_payloads(self, request: ViewerWindowPayloadRequest) -> JsonObject:
+        message: dict[str, object] = {
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.PAYLOADS.value,
+            ViewerControlResponseField.PAYLOAD.value: request.payload_projection,
+        }
+        return self._send_control_message(request, message)
+
+    def image_intensity(self, request: ViewerWindowImageIntensityRequest) -> JsonObject:
         return self._send_control_message(
             request,
-            ViewerControlMessageType.PAYLOADS,
-            request.payload_projection,
+            {
+                ViewerControlResponseField.TYPE.value: ViewerControlMessageType.IMAGE_INTENSITY.value,
+                ViewerControlResponseField.PAYLOAD.value: request.intensity,
+            },
+        )
+
+    def viewport(self, request: ViewerWindowViewportRequest) -> JsonObject:
+        return self._send_control_message(
+            request,
+            {
+                ViewerControlResponseField.TYPE.value: ViewerControlMessageType.VIEWPORT.value,
+                ViewerControlResponseField.PAYLOAD.value: request.presentation,
+            },
         )
 
     def navigate_window(self, request: ViewerWindowNavigationRequest) -> JsonObject:
-        return self._send_control_message(
-            request,
-            ViewerControlMessageType.NAVIGATE,
-            request.navigation,
-        )
+        message: dict[str, object] = {
+            ViewerControlResponseField.TYPE.value: ViewerControlMessageType.NAVIGATE.value,
+            ViewerControlResponseField.PAYLOAD.value: request.navigation,
+        }
+        return self._send_control_message(request, message)
 
     def isolate_layers(self, request: ViewerWindowLayerIsolationRequest) -> JsonObject:
-        return self._send_control_message(
-            request,
-            ViewerControlMessageType.ISOLATE_LAYERS,
-            request.isolation,
+        message: dict[str, object] = {
+            ViewerControlResponseField.TYPE.value: (
+                ViewerControlMessageType.ISOLATE_LAYERS.value
+            ),
+            ViewerControlResponseField.PAYLOAD.value: request.isolation,
+        }
+        return self._send_control_message(request, message)
+
+    def close_window(self, request: ViewerWindowCloseRequest) -> EndpointShutdownResult:
+        return ZMQClient.shutdown_endpoint_on_port(
+            port=request.connection.require_port("Viewer close"),
+            mode=EndpointShutdownMode.FORCE,
+            timeout=request.timeout_ms / 1000.0,
+            transport_mode=request.connection.transport_mode,
+            host=request.connection.host,
+            config=OPENHCS_ZMQ_CONFIG,
         )
 
     def apply_intensity_window(
         self,
         request: ViewerWindowIntensityWindowRequest,
     ) -> JsonObject:
-        return self._send_control_message(
-            request,
-            ViewerControlMessageType.APPLY_INTENSITY_WINDOW,
-            request.intensity_window,
-        )
+        message: dict[str, object] = {
+            ViewerControlResponseField.TYPE: (
+                ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
+            ),
+            ViewerControlResponseField.PAYLOAD.value: request.intensity_window,
+        }
+        return self._send_control_message(request, message)
 
     def _send_control_message(
         self,
-        request: (
-            ViewerWindowSnapshotRequest
-            | ViewerWindowStateRequest
-            | ViewerWindowPayloadRequest
-            | ViewerWindowNavigationRequest
-            | ViewerWindowLayerIsolationRequest
-            | ViewerWindowIntensityWindowRequest
-        ),
-        message_type: ViewerControlMessageType,
-        payload: object,
+        request: ViewerWindowControlRequest,
+        message: Mapping[str, object],
     ) -> JsonObject:
         connection = request.connection
-        message = ViewerControlMessageRequest(
-            endpoint=ViewerRuntimeEndpoint(
-                transport=connection.transport_endpoint(),
-                config=OPENHCS_ZMQ_CONFIG,
-            ),
-            message_type=message_type.value,
-            payload=payload,
-            timeout=request.timeout_ms / 1000,
-        )
-        control_url = message.endpoint.control_url()
-        timeout_ms = int(message.timeout * 1000)
-        message.endpoint.application_compatibility(
-            timeout_ms=timeout_ms,
-        ).require_match()
+        control_url = connection.zmq_control_url(OPENHCS_ZMQ_CONFIG)
         context = self._context_factory()
         socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.LINGER, 0)
-        socket.setsockopt(zmq.RCVTIMEO, timeout_ms)
-        socket.setsockopt(zmq.SNDTIMEO, timeout_ms)
+        socket.setsockopt(zmq.RCVTIMEO, request.timeout_ms)
+        socket.setsockopt(zmq.SNDTIMEO, request.timeout_ms)
         poller = zmq.Poller()
         try:
             socket.connect(control_url)
-            socket.send(
-                pickle.dumps(message.to_wire_mapping()),
-                flags=zmq.DONTWAIT,
-            )
+            socket.send(pickle.dumps(message), flags=zmq.DONTWAIT)
             poller.register(socket, zmq.POLLIN)
-            events = dict(poller.poll(timeout_ms))
+            events = dict(poller.poll(request.timeout_ms))
             if events.get(socket) != zmq.POLLIN:
                 raise TimeoutError(
                     "Viewer control request timed out after "
-                    f"{timeout_ms}ms waiting for {control_url}."
+                    f"{request.timeout_ms}ms waiting for {control_url}."
                 )
             response = pickle.loads(socket.recv(flags=zmq.DONTWAIT))
         finally:
@@ -1231,6 +1266,11 @@ class ViewerWindowService:
                     "viewer_window_snapshot_response_invalid", exc
                 ),
             )
+
+    def close_window(self, request: ViewerWindowCloseRequest) -> EndpointShutdownResult:
+        """Close one explicitly confirmed viewer through the generic endpoint owner."""
+
+        return self._gateway.close_window(request)
 
     def _writable_snapshot_request(
         self,
@@ -1374,6 +1414,79 @@ class ViewerWindowService:
                 error=AgentError.from_exception(
                     "viewer_window_payloads_response_invalid", exc
                 ),
+            )
+
+    def viewport(
+        self, request: ViewerWindowViewportRequest
+    ) -> ViewerWindowViewportResult:
+        try:
+            response = self._gateway.viewport(request)
+            status = self._required_scalar(
+                response, ViewerControlResponseField.STATUS, str, "a string"
+            )
+            if status != self.SUCCESS_STATUS:
+                raise ValueError(
+                    self._required_scalar(
+                        response, ViewerControlResponseField.MESSAGE, str, "a string"
+                    )
+                )
+            presentation = ViewerNativeViewportPresentation.from_wire_mapping(
+                self._required_mapping(response, ViewerControlField.NATIVE_VIEWPORT)
+            )
+            return ViewerWindowViewportResult(
+                schema_version=SCHEMA_VERSION,
+                connection=request.connection,
+                observed=True,
+                applied=True,
+                native_viewport=presentation,
+            )
+        except Exception as error:
+            return ViewerWindowViewportResult.from_error(
+                connection=request.connection,
+                error=AgentError.from_exception("viewer_viewport_failed", error),
+            )
+
+    def image_intensity(
+        self,
+        request: ViewerWindowImageIntensityRequest,
+    ) -> ViewerWindowImageIntensityResult:
+        try:
+            response = self._gateway.image_intensity(request)
+            state = self._state_result_from_response(
+                connection=request.connection,
+                response=response,
+                include_response=False,
+            )
+            target = next(
+                (
+                    layer
+                    for layer in state.layers
+                    if layer.route_key == request.intensity.route_key
+                ),
+                None,
+            )
+            if not state.errors and (
+                target is None or not target.mounted or target.native_intensity is None
+            ):
+                raise ValueError(
+                    "Native image intensity acknowledgement has no mounted image snapshot."
+                )
+            return ViewerWindowImageIntensityResult(
+                schema_version=SCHEMA_VERSION,
+                connection=request.connection,
+                observed=state.observed,
+                applied=not state.errors,
+                route_key=target.route_key if target is not None else None,
+                native_intensity=(
+                    target.native_intensity if target is not None else None
+                ),
+                errors=state.errors,
+                warnings=state.warnings,
+            )
+        except Exception as exc:
+            return ViewerWindowImageIntensityResult.from_error(
+                connection=request.connection,
+                error=AgentError.from_exception("viewer_image_intensity_failed", exc),
             )
 
     def navigate_window(
@@ -2057,14 +2170,17 @@ class ViewerWindowService:
         status = self._required_scalar(
             response, ViewerControlResponseField.STATUS, str, "a string"
         )
+        errors: tuple[AgentError, ...] = ()
         if status != self.SUCCESS_STATUS:
             message = self._required_scalar(
                 response, ViewerControlResponseField.MESSAGE, str, "a string"
             )
-            return ViewerWindowStateResult.from_error(
-                connection=connection,
-                error=AgentError(code="viewer_window_state_failed", message=message),
-            )
+            error = AgentError(code="viewer_window_state_failed", message=message)
+            if ViewerControlField.VIEWER.value not in response:
+                return ViewerWindowStateResult.from_error(
+                    connection=connection, error=error
+                )
+            errors = (error,)
 
         viewer_payload = self._required_mapping(response, ViewerControlField.VIEWER)
         layer_payloads = self._required_sequence(
@@ -2075,6 +2191,7 @@ class ViewerWindowService:
             schema_version=SCHEMA_VERSION,
             connection=connection,
             observed=True,
+            errors=errors,
             viewer=ViewerWindowDescriptor.from_wire_fields(
                 viewer_wire_value=self._required_scalar(
                     viewer_payload,
@@ -2095,6 +2212,13 @@ class ViewerWindowService:
             layers=tuple(
                 self._layer_state_from_payload(layer_payload)
                 for layer_payload in layer_payloads
+            ),
+            native_viewport=(
+                None
+                if response.get(ViewerControlField.NATIVE_VIEWPORT.value) is None
+                else ViewerNativeViewportPresentation.from_wire_mapping(
+                    self._required_mapping(response, ViewerControlField.NATIVE_VIEWPORT)
+                )
             ),
             active_dimension_label_route=self._optional_typed(
                 response,
@@ -2437,10 +2561,15 @@ class ViewerWindowService:
                 ViewerLayerField.DATA_SHAPE,
                 int,
             ),
-            translate=self._required_typed_tuple(
-                payload,
-                ViewerLayerField.TRANSLATE,
-                float,
+            native_transform=ViewerNativeLayerTransform.from_wire_mapping(
+                self._required_mapping(payload, ViewerLayerField.NATIVE_TRANSFORM)
+            ),
+            native_intensity=(
+                None
+                if payload[ViewerLayerField.NATIVE_INTENSITY.value] is None
+                else ViewerNativeImageIntensityPresentation.from_wire_mapping(
+                    self._required_mapping(payload, ViewerLayerField.NATIVE_INTENSITY)
+                )
             ),
             visible=self._required_scalar(
                 payload, ViewerLayerField.VISIBLE, bool, "a boolean"

@@ -175,7 +175,9 @@ class DebugRuntimeProjection:
         cls,
         runtime_projection: ExecutionRuntimeProjection | None = None,
     ) -> "DebugRuntimeProjection":
-        return cls(runtime_projection=runtime_projection or ExecutionRuntimeProjection())
+        return cls(
+            runtime_projection=runtime_projection or ExecutionRuntimeProjection()
+        )
 
     @property
     def has_active_frame(self) -> bool:
@@ -245,7 +247,9 @@ class DebugRuntimeProjectionBuilder:
             terminal_summary=source.terminal_summary,
             current_frame=current_frame,
             last_frame=last_frame,
-            timeline=tuple(DebugTimelineNode(DebugRuntimeFrame(record)) for record in records),
+            timeline=tuple(
+                DebugTimelineNode(DebugRuntimeFrame(record)) for record in records
+            ),
             records=records,
         )
 
@@ -262,7 +266,9 @@ class DebugRuntimeProjectionBuilder:
                     continue
                 if session_id is not None and record.session_id != session_id:
                     continue
-                records.append(record.with_snapshot(source.snapshot_for_id(record.snapshot_id)))
+                records.append(
+                    record.with_snapshot(source.snapshot_for_id(record.snapshot_id))
+                )
         return tuple(sorted(records, key=lambda record: record.event.timestamp))
 
     def _last_frame(
@@ -376,7 +382,5 @@ def is_debug_projection_export(name: str, value: object) -> bool:
 
 
 __all__ = tuple(
-    name
-    for name, value in globals().items()
-    if is_debug_projection_export(name, value)
+    name for name, value in globals().items() if is_debug_projection_export(name, value)
 )

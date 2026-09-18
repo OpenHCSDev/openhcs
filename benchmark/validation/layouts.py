@@ -129,6 +129,7 @@ class PartitionedInstanceMaskLayout(ValidationCorpusLayoutStrategy):
                     / partition.value
                     / canonical_name,
                     source_set_id=source_set_id,
+                    selection_key=image_path.name,
                     partition=partition,
                     well=well,
                     site=site,
@@ -228,8 +229,17 @@ class PairedManualOutlinesLayout(ValidationCorpusLayoutStrategy):
         records: list[ValidationImageRecord] = []
         references: list[ValidationReferenceRecord] = []
         seen_planes: set[tuple[str, str, str]] = set()
+        image_paths = tuple(sorted(images_root.rglob("*.tif")))
+        selection_key_by_pair = {
+            pair_key: image_path.name
+            for image_path in image_paths
+            for pair_key, _, channel in (
+                (self._plane_identity(image_path.relative_to(images_root))),
+            )
+            if channel == "DNA"
+        }
 
-        for image_path in sorted(images_root.rglob("*.tif")):
+        for image_path in image_paths:
             relative = image_path.relative_to(images_root)
             pair_key, site, channel = self._plane_identity(relative)
             well = group_wells[relative.parts[0]]
@@ -245,6 +255,7 @@ class PairedManualOutlinesLayout(ValidationCorpusLayoutStrategy):
                     source_relative_path=image_path.relative_to(raw_root),
                     canonical_relative_path=Path("images") / canonical_name,
                     source_set_id=f"{well}_{site}",
+                    selection_key=selection_key_by_pair[pair_key],
                     partition=ValidationPartition.COMPLETE,
                     well=well,
                     site=site,
@@ -373,6 +384,7 @@ class TranslocationPlateLayout(ValidationCorpusLayoutStrategy):
                     source_relative_path=image_path.relative_to(raw_root),
                     canonical_relative_path=Path("images") / canonical_name,
                     source_set_id=f"{well}_1",
+                    selection_key=well,
                     partition=ValidationPartition.COMPLETE,
                     well=well,
                     site="1",

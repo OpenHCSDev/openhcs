@@ -1763,9 +1763,7 @@ class ConcatenatedColumnarRowColumns(Mapping[str, Sequence[object]]):
             self,
             "_batch_columns",
             tuple(
-                MappingProxyType(
-                    {str(column): column for column in row_batch.columns}
-                )
+                MappingProxyType({str(column): column for column in row_batch.columns})
                 for row_batch in self.row_batches
             ),
         )
@@ -2058,9 +2056,7 @@ def measurement_rows_with_source_provenance(
                 f"slice_index={slice_index}, but provenance declares "
                 f"{source_provenance.source_plane_count} runtime plane(s)."
             )
-        return source_provenance.for_source_plane(
-            slice_index
-        ).source_component_metadata
+        return source_provenance.for_source_plane(slice_index).source_component_metadata
 
     for component in AllComponents:
         values = tuple(
@@ -2123,9 +2119,7 @@ def measurement_rows_with_source_provenance(
         for row_index in range(row_count)
         for names in (source_names_for_row(row_index),)
     )
-    if not all(
-        is_structural_missing_measurement_cell(value) for value in source_names
-    ):
+    if not all(is_structural_missing_measurement_cell(value) for value in source_names):
         source_field = MeasurementRowAxisField.SOURCE_IMAGE_NAME.value
         existing_source_names = projection.columns.get(source_field)
         if existing_source_names is None:
@@ -2181,9 +2175,7 @@ class MeasurementTableRowLayout(str, Enum):
         has_feature_field = bool(
             field_names & MeasurementRowAxisField.feature_name_field_names()
         )
-        has_value_field = bool(
-            field_names & MeasurementRowValueField.field_names()
-        )
+        has_value_field = bool(field_names & MeasurementRowValueField.field_names())
         if has_feature_field and not has_value_field:
             raise ValueError(
                 "Long-form measurement rows must declare both a feature field "
@@ -2243,9 +2235,10 @@ class WideMeasurementRowProjectionStrategy(MeasurementRowLayoutProjectionStrateg
 
 def measurement_row_semantic_field_names() -> frozenset[str]:
     """Return fields that identify a payload as a measurement row."""
-    return frozenset(
-        field.value for field in MeasurementRowAxisField
-    ) | MeasurementRowValueField.field_names()
+    return (
+        frozenset(field.value for field in MeasurementRowAxisField)
+        | MeasurementRowValueField.field_names()
+    )
 
 
 def carries_measurement_row_semantics(row: object) -> bool:
@@ -2317,9 +2310,7 @@ def measurement_table_row_layouts(rows: object) -> frozenset[MeasurementTableRow
         (isinstance(row, ObjectMeasurementValueRow) for row in row_sequence)
     ):
         return frozenset((MeasurementTableRowLayout.LONG,))
-    return frozenset(
-        (MeasurementTableRowLayout.for_row(row) for row in row_sequence)
-    )
+    return frozenset((MeasurementTableRowLayout.for_row(row) for row in row_sequence))
 
 
 def normalize_measurement_table_rows(
