@@ -10,7 +10,7 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "a9aeaace1fa0275ec0c2ad540195ad58c18c96d783560222b2516d57401aacd9",
+        "sha256": "a2c46adc10b7a718b0e931dcec8bc524c4caec9867d208524cc7833d43f83d80",
         "role": "Detached Napari endpoint startup and application event-loop integration."
       },
       {
@@ -223,7 +223,7 @@
       },
       {
         "path": "openhcs/runtime/viewer_protocol.py",
-        "sha256": "710f5bbd7bb47c081656bfff33768f85b0fbb4627e75239f81099248df608bae",
+        "sha256": "69a509618d677be7de974b849457ffdbd2391dfe6c2229bf8584c4a517d4d9b5",
         "role": "Distinguishes external viewer clients from owned viewer processes during failed-bootstrap rollback."
       },
       {
@@ -441,7 +441,7 @@
       },
       {
         "path": "openhcs/processing/backends/lib_registry/registry_service.py",
-        "sha256": "e539893636ed1acf5fb5bde160326f1cf348b61cf62ce57aa9ead950bff9fd70",
+        "sha256": "046d3d088f685a993ddad6b5923cf63beef84b201127b72ae32af6721dd5ad63",
         "role": "Canonical callable catalogue preparation, declaration-local projection, lookup caching, and complete derived-view clearing."
       }
     ],
@@ -583,7 +583,7 @@
       },
       {
         "path": "openhcs/core/steps/function_outputs.py",
-        "sha256": "e9ef37811db8de288d6417dc7131ee3cae657a00734e379493d0d1b010327bed",
+        "sha256": "0a90e80c02fd19a9d8ae80e6c9b28345d616e47e3f82e999ce29b84ddb290218",
         "role": "Declaration-owned OpenHCS metadata targets, typed projection persistence, and completed-plate deduplication across compiled axes."
       },
       {
@@ -909,7 +909,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "10ba0935230d43f0ed8b2031e8690e12fa6840d26ba5bec2a7ed66fcf2c5fa17",
+        "sha256": "5632d571e3b3ff3b9a57c7dccd747c09c4e55e7f0b02eca72540e9138c4a7f6f",
         "role": "Proves same-client reuse, exact observation serialization, terminal caching, and one-time client release."
       }
     ],
@@ -1394,7 +1394,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1446,7 +1446,7 @@
       },
       {
         "path": "openhcs/runtime/viewer_protocol.py",
-        "sha256": "710f5bbd7bb47c081656bfff33768f85b0fbb4627e75239f81099248df608bae",
+        "sha256": "69a509618d677be7de974b849457ffdbd2391dfe6c2229bf8584c4a517d4d9b5",
         "role": "OpenHCS viewer persistence policy, exact process ownership, platform policy, readiness, and settlement contracts."
       },
       {
@@ -1456,12 +1456,12 @@
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "a9aeaace1fa0275ec0c2ad540195ad58c18c96d783560222b2516d57401aacd9",
+        "sha256": "a2c46adc10b7a718b0e931dcec8bc524c4caec9867d208524cc7833d43f83d80",
         "role": "Applies bounded shape projection and preflighted layer isolation inside the owning Napari Qt process."
       },
       {
         "path": "openhcs/agent/services/viewer_window_service.py",
-        "sha256": "4370342a1cfdf9cde7113f7274e57bfa3ab64ecb8d8cbfec5c5b415fa63a4b35",
+        "sha256": "2be1c0a11bd100323185ef17a20a76f330bf3789c1ee31dd39d57afa330656ec",
         "role": "Projects one typed bulk viewer response into agent results without client-side state mirroring or per-layer round trips."
       },
       {
@@ -1496,17 +1496,17 @@
       },
       {
         "path": "tests/unit/test_viewer_protocol.py",
-        "sha256": "da102feb78edbf64c639e3f22d3b590516108bf7f6f074f2a38432ee3527e71b",
+        "sha256": "91150953182f454c8931f831d42506c04700b6f4d48455f617b0bdb80dd7074b",
         "role": "Proves execution cleanup stops exact non-persistent processes while persistent viewers remain available for typed lifecycle shutdown."
       },
       {
         "path": "tests/unit/test_viewer_result_element_selection.py",
-        "sha256": "55020f61d39723560dfb542cdefda4dd520d23679102b9a0e27fbf2a13e3750f",
+        "sha256": "c5d426dad09204e682d7bcda063b4e897c69458b119edbe4ffd19e4ea9a3f920",
         "role": "Proves bulk isolation validates every route and navigation before any visibility, selection, or axis mutation."
       },
       {
         "path": "tests/unit/test_napari_streaming_handlers.py",
-        "sha256": "071d4a1a953266d8450b42db508db0baa632f3b9f8acb0229958855187972c01",
+        "sha256": "bb9f4449ae8bf4df2e32d274278f60a1224743bd3470c1e14fe7c51148e36b01",
         "role": "Proves one global ROI-member budget and metadata-only shape projection across payload records."
       },
       {
@@ -1624,7 +1624,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1695,7 +1695,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
@@ -1976,7 +1976,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "559c2e4a899ab2da3c7bf230aeb34bef45307185b058c71208d2bd2021f75bbe",
+        "sha256": "9e84b4ba85a64c6b03a909da90e5d3655e407e278bf469f711a537b65975e09e",
         "role": "Spawns the execution server with the ArrayBridge-projected child environment and carries typed execution transport."
       },
       {
@@ -2006,12 +2006,12 @@
       },
       {
         "path": "tests/unit/test_zmq_execution_server_process.py",
-        "sha256": "fb89e590de84265f1a6662b0a7f9647517b31638596ecba3b08e26feef58505b",
+        "sha256": "710f6f723e90679c21a87e10710db8faaf8556ef8376cb93b7ba891f01855e83",
         "role": "Proves capability-preparation mode does not construct or bind the execution server."
       },
       {
         "path": "openhcs/processing/backends/lib_registry/registry_service.py",
-        "sha256": "e539893636ed1acf5fb5bde160326f1cf348b61cf62ce57aa9ead950bff9fd70",
+        "sha256": "046d3d088f685a993ddad6b5923cf63beef84b201127b72ae32af6721dd5ad63",
         "role": "Prepares the canonical catalogue in a child environment projected by ArrayBridge declarations."
       },
       {
@@ -2026,7 +2026,7 @@
       },
       {
         "path": "tests/unit/test_library_registry_discovery.py",
-        "sha256": "37124d970423a26f6422534bc5003e64d8082589dbf03ce2fc565307fe296327",
+        "sha256": "a7ee2d3a2002ea291876c27aa2dce51a889cea6be9a3055602c76f1e9cf76f1b",
         "role": "Proves source-revision cache invalidation, stable optional-runtime admission, declaration-owned projection, runtime-owned external-signature exclusions, and no partial catalogue after failure."
       },
       {
@@ -2101,7 +2101,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "10ba0935230d43f0ed8b2031e8690e12fa6840d26ba5bec2a7ed66fcf2c5fa17",
+        "sha256": "5632d571e3b3ff3b9a57c7dccd747c09c4e55e7f0b02eca72540e9138c4a7f6f",
         "role": "Proves same-client status reuse, progress serialization, terminal caching, and one-time client release."
       },
       {
@@ -2620,7 +2620,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2721,7 +2721,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2767,7 +2767,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2881,7 +2881,7 @@
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "21c0c98f4a11518af2cf27b09eb607e76882dcdf8a38ac8c4dfc88aa0902e632",
+        "sha256": "082c6f95ab0ab2d7c88d452d4f47d84624bdc884c678186000aa4cc0a0ff6384",
         "role": "MCP dev-client session, declaration-derived command surface validation, receipt decoding, skip-reason-owned summary status, timeout, and workflow-owned terminal-state criteria."
       },
       {
@@ -2906,7 +2906,7 @@
       },
       {
         "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "68265e8d117a3d564beb8c662fcd380fdffa16bf92a440b08e81eb8372982a31",
+        "sha256": "d70ed2e4782eda50ca2781cf69259803921fcdfb16a24a80fa3ddd58e70cf9d7",
         "role": "Declares the default viewer control timeout."
       },
       {
@@ -2916,12 +2916,12 @@
       },
       {
         "path": "openhcs/mcp/dev_client_commands/viewer.py",
-        "sha256": "93a1c1e532907677f6fdabe069af3b7f0db08cef673b6ce974056449deae9a50",
+        "sha256": "bd7ef93e740ffbca98efe249d87f72ab09de92e795c1bc4036677f07bdfa4152",
         "role": "Declares the development-client viewer state, payload, ROI-summary, navigation, and isolation command surfaces."
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "a78d83c6be2f7b5019d4d0705126215af15ad65ce82ea985b7e29f54b6da7ef7",
+        "sha256": "6d9c048e0cbf096bcbbda62488bd1ba1a0b0cf2cde3dab8b5908db8801c471e2",
         "role": "Regression proof for selected-surface preflight, stale-row rejection, idempotent initialization, and every declared or malformed bridge-receipt continuation outcome."
       },
       {
@@ -2946,7 +2946,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_execution_client.py",
-        "sha256": "559c2e4a899ab2da3c7bf230aeb34bef45307185b058c71208d2bd2021f75bbe",
+        "sha256": "9e84b4ba85a64c6b03a909da90e5d3655e407e278bf469f711a537b65975e09e",
         "role": "Owns the total headless submission budget and the pre-dispatch timeout boundary documented for MCP developers."
       },
       {
@@ -2986,7 +2986,7 @@
       },
       {
         "path": "tests/unit/agent/test_agent_services.py",
-        "sha256": "10ba0935230d43f0ed8b2031e8690e12fa6840d26ba5bec2a7ed66fcf2c5fa17",
+        "sha256": "5632d571e3b3ff3b9a57c7dccd747c09c4e55e7f0b02eca72540e9138c4a7f6f",
         "role": "Proves exact progress projection from the submitting client and one-time release at terminal status."
       },
       {
@@ -3471,7 +3471,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3660,7 +3660,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],

@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "e3a5adcc0b503de04cb05f3f9c24db218e3dd830b10584d3816f5469d6c812d1",
+        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -1186,7 +1186,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "9fb94ea2aeb070fb74534a8643d8f736667b3fa3a12794552046207d0eeef8f5",
+        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1440,7 +1440,7 @@
       },
       {
         "path": "external/zmqruntime/src/zmqruntime/viewer_protocol.py",
-        "sha256": "d7abf09b11fd285f501c505b54f367fd045f4874b2e313cce1827f43ef449a27",
+        "sha256": "5580efffddca2f723b11a652f482fbdb52ebae657620fad95217b313997b9fc9",
         "role": "Defines the generic viewer-control transport protocol."
       }
     ],
@@ -1878,7 +1878,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "e3a5adcc0b503de04cb05f3f9c24db218e3dd830b10584d3816f5469d6c812d1",
+        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -1893,7 +1893,7 @@
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "21c0c98f4a11518af2cf27b09eb607e76882dcdf8a38ac8c4dfc88aa0902e632",
+        "sha256": "082c6f95ab0ab2d7c88d452d4f47d84624bdc884c678186000aa4cc0a0ff6384",
         "role": "Resolves tool identity and compatible profiles from the capability declarations at the shared call boundary."
       },
       {
@@ -1913,7 +1913,7 @@
       },
       {
         "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "68265e8d117a3d564beb8c662fcd380fdffa16bf92a440b08e81eb8372982a31",
+        "sha256": "d70ed2e4782eda50ca2781cf69259803921fcdfb16a24a80fa3ddd58e70cf9d7",
         "role": "Declares viewer control requests and their default timeout."
       },
       {
@@ -2003,7 +2003,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "a78d83c6be2f7b5019d4d0705126215af15ad65ce82ea985b7e29f54b6da7ef7",
+        "sha256": "6d9c048e0cbf096bcbbda62488bd1ba1a0b0cf2cde3dab8b5908db8801c471e2",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
