@@ -146,6 +146,19 @@ class ViewerLayerIsolationField(str, Enum):
     MISSING_ROUTE_KEYS = "missing_route_keys"
 
 
+class ViewerIntensityWindowField(str, Enum):
+    """Route-global image intensity-window response fields."""
+
+    ROUTE_KEY = "route_key"
+    REQUESTED_PERCENTILES = "requested_percentiles"
+    AXIS_INDICES = "axis_indices"
+    RESOLVED_LIMITS = "resolved_limits"
+    MATCHED_PAYLOAD_COUNT = "matched_payload_count"
+    MATCHED_PAYLOAD_IDENTITIES = "matched_payload_identities"
+    CONTRIBUTING_PAYLOAD_COUNT = "contributing_payload_count"
+    CONTRIBUTING_PIXEL_COUNT = "contributing_pixel_count"
+
+
 class ViewerLayerField(str, Enum):
     """Viewer layer-state response payload fields."""
 

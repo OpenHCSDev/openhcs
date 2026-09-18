@@ -79,6 +79,8 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.dto.viewer import (
     VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
     ViewerWindowDescriptor,
+    ViewerWindowIntensityPayloadIdentity,
+    ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationResult,
     ViewerWindowLayerPayloads,
     ViewerWindowLayerState,
@@ -102,6 +104,7 @@ from openhcs.agent.services.ui_bridge_service import (
 from openhcs.agent.services.viewer_window_service import ViewerWindowService
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 
@@ -156,6 +159,8 @@ class _ProjectedViewerWindowService(ViewerWindowService):
 
     def image_intensity(self, request):
         return self._delegate.image_intensity(request)
+    def apply_intensity_window(self, request):
+        return self._delegate.apply_intensity_window(request)
 
 
 def _viewer_mcp_context(viewer_window_service):
@@ -14879,8 +14884,9 @@ def test_mcp_dev_client_server_spec_preserves_gui_session_environment(monkeypatc
     } == {key: "1" for key in native_thread_count_environment_keys()}
     assert "OPENHCS_UNRELATED_TEST_VALUE" not in environment
     assert dev_client.McpDevServerSpec(sys.executable).process_args() == (
-        "-m",
-        "openhcs.mcp",
+        *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+            "openhcs.mcp"
+        ),
         "--surface",
         "full",
     )
@@ -15685,6 +15691,31 @@ def test_mcp_intensity_window_projects_typed_route_coordinate_request():
     class _ViewerWindowService:
         def __init__(self):
             self.requests = []
+
+        def apply_intensity_window(self, request):
+            self.requests.append(request)
+            controls = request.intensity_window
+            return ViewerWindowIntensityWindowResult(
+                schema_version=SCHEMA_VERSION,
+                connection=request.connection,
+                applied=True,
+                route_key=controls.route_key,
+                axis_indices=dict(controls.axis_indices),
+                requested_percentiles=(
+                    controls.low_percentile,
+                    controls.high_percentile,
+                ),
+                resolved_limits=(11.0, 220.0),
+                matched_payload_count=1,
+                matched_payload_identities=(
+                    ViewerWindowIntensityPayloadIdentity(
+                        path="A01.tif",
+                        axis_indices=(0, 1),
+                    ),
+                ),
+                contributing_payload_count=1,
+                contributing_pixel_count=4096,
+            )
 
     viewer_window_service = _ViewerWindowService()
     built = server.build_server(_viewer_mcp_context(viewer_window_service))

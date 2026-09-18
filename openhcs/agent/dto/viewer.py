@@ -38,6 +38,7 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.path_policy import DEFAULT_AGENT_WINDOW_SNAPSHOT_DIR
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.viewer_controls import (
+    ViewerIntensityWindowControlOptions,
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
@@ -448,6 +449,47 @@ class ViewerWindowLayerIsolationRequest(ViewerWindowControlRequest):
                 "visible_route_keys": list(self.isolation.requested_visible_route_keys),
                 "selected_route_key": self.isolation.selected_route_key,
                 "axis_indices": dict(self.isolation.axis_indices),
+            }
+        )
+        return payload
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowIntensityWindowRequest(ViewerWindowControlRequest):
+    """Apply a route-global window over payloads matching semantic coordinates."""
+
+    intensity_window: ViewerIntensityWindowControlOptions
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        connection: ExecutionConnectionSpec,
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+        route_key: str,
+        axis_indices: dict[str, int] | None = None,
+        low_percentile: float = 1.0,
+        high_percentile: float = 99.0,
+    ) -> Self:
+        return cls(
+            connection=connection,
+            timeout_ms=timeout_ms,
+            intensity_window=ViewerIntensityWindowControlOptions.from_overrides(
+                route_key=route_key,
+                axis_indices=axis_indices,
+                low_percentile=low_percentile,
+                high_percentile=high_percentile,
+            ),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        payload = self.connection_tool_arguments()
+        payload.update(
+            {
+                "route_key": self.intensity_window.route_key,
+                "axis_indices": dict(self.intensity_window.axis_indices),
+                "low_percentile": float(self.intensity_window.low_percentile),
+                "high_percentile": float(self.intensity_window.high_percentile),
             }
         )
         return payload
@@ -1079,6 +1121,55 @@ class ViewerWindowLayerIsolationResult(
     current_step: tuple[int, ...] = ()
     axis_labels: tuple[str, ...] = ()
     visible_layers: tuple[ViewerWindowLayerVisibilityRecord, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowIntensityPayloadIdentity:
+    """Auditable routed payload record used for an intensity window."""
+
+    path: str
+    components: JsonObject = field(default_factory=dict)
+    axis_indices: tuple[int, ...] = ()
+    aggregate_axis_indices: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowIntensityWindowResult(
+    AgentResultEnvelope,
+    ExecutionConnectionProjection,
+):
+    """Typed outcome of one route-global native viewer contrast mutation."""
+
+    applied: bool
+    route_key: str
+    axis_indices: dict[str, int] = field(default_factory=dict)
+    requested_percentiles: tuple[float, float] = (1.0, 99.0)
+    resolved_limits: tuple[float, float] | None = None
+    matched_payload_count: int = 0
+    matched_payload_identities: tuple[ViewerWindowIntensityPayloadIdentity, ...] = ()
+    contributing_payload_count: int = 0
+    contributing_pixel_count: int = 0
+
+    @classmethod
+    def from_request_error(
+        cls,
+        *,
+        request: ViewerWindowIntensityWindowRequest,
+        error: AgentError,
+    ) -> Self:
+        controls = request.intensity_window
+        return cls(
+            schema_version=SCHEMA_VERSION,
+            connection=request.connection,
+            applied=False,
+            route_key=controls.route_key,
+            axis_indices=dict(controls.axis_indices),
+            requested_percentiles=(
+                float(controls.low_percentile),
+                float(controls.high_percentile),
+            ),
+            errors=(error,),
+        )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

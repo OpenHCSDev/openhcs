@@ -1256,6 +1256,28 @@ class FijiUnsupportedPayloadsControlPlan(FijiControlMessagePlan):
         )
 
 
+class FijiUnsupportedIntensityWindowControlPlan(FijiControlMessagePlan):
+    """Fail closed because Fiji lacks routed native layer contrast authority."""
+
+    wire_value = ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
+
+    def response(
+        self,
+        context: FijiControlRequestContext,
+        payload: object | None,
+    ) -> FijiControlMessageResponse:
+        del context, payload
+        return FijiControlMessageResponse(
+            ViewerControlReplyHeader(
+                ViewerProtocolStatus.ERROR,
+                response_type="intensity_window_ack",
+                message=(
+                    "Viewer intensity-window control is supported only by Napari; "
+                    "Fiji has no routed native image-layer contrast authority."
+                ),
+            ),
+        )
+
 class FijiRunMacroControlPlan(FijiControlMessagePlan):
     """Execute an ImageJ macro inside the managed PyImageJ process."""
 

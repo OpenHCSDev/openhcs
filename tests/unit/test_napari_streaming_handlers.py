@@ -3746,6 +3746,9 @@ def test_napari_control_dispatch_registry_is_module_local_and_eager():
     assert registry[ViewerControlMessageType.CLEAR_STATE.value] is (
         napari_viewer_server.NapariClearStateControlMessageAction
     )
+    assert registry[ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value] is (
+        napari_viewer_server.NapariIntensityWindowControlMessageAction
+    )
 
 
 def test_napari_endpoint_lifecycle_capabilities_derive_from_registered_actions():

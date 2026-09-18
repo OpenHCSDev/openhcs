@@ -207,6 +207,22 @@ def test_fiji_control_dispatch_registry_is_module_local_and_eager() -> None:
     assert registry[ViewerControlMessageType.SETTLE.value] is FijiSettleControlPlan
 
 
+def test_fiji_intensity_window_control_fails_closed_as_unsupported() -> None:
+    response = FijiControlMessageAuthority(
+        FijiControlRequestContext(
+            FijiWindowRegistry(),
+            object(),
+            FijiBatchSettlementState(),
+        )
+    ).response_for(
+        {"type": ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value}
+    )
+
+    wire_response = response.to_wire_mapping()
+    assert wire_response["status"] == "error"
+    assert "supported only by Napari" in wire_response["message"]
+
+
 def test_fiji_settlement_reports_typed_terminal_progress() -> None:
     response = FijiControlMessageAuthority(
         FijiControlRequestContext(

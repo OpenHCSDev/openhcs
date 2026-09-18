@@ -66,6 +66,7 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerSurface,
 )
 from openhcs.core.virtual_workspace_metadata import FIELDS
+from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 
 
 @pytest.mark.parametrize("backend", [Backend.ZARR.value, "custom-array-store"])
@@ -236,6 +237,9 @@ class MetadataHandlerStub:
     def get_grid_dimensions(self, _root):
         return (1, 1)
 
+    def get_metadata_grid_dimensions(self, root):
+        return list(self.get_grid_dimensions(root))
+
     def get_pixel_size(self, _root):
         return 1.0
 
@@ -244,6 +248,14 @@ class MetadataHandlerStub:
 
     def get_metadata_pixel_size(self, root):
         return self.get_pixel_size(root)
+
+
+class UnknownLayoutMetadataHandlerStub(MetadataHandlerStub):
+    def get_grid_dimensions(self, _root):
+        raise AssertionError("Metadata serialization requested a strict grid artifact.")
+
+    def get_metadata_grid_dimensions(self, _root):
+        return []
 
 
 class ContextStub:
@@ -266,6 +278,34 @@ def context_stub(filemanager, parser=None):
     context.axis_id = "A01"
     context.step_axis_filters = {}
     return context
+
+
+def test_openhcs_metadata_handler_preserves_unknown_layout_for_serialization(
+    tmp_path,
+):
+    plate_root = tmp_path / "plate"
+    images_dir = plate_root / "images"
+    images_dir.mkdir(parents=True)
+    (plate_root / "openhcs_metadata.json").write_text(
+        json.dumps(
+            {
+                FIELDS.SUBDIRECTORIES: {
+                    "images": {
+                        FIELDS.GRID_DIMENSIONS: [],
+                        FIELDS.IMAGE_FILES: [],
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    handler = OpenHCSMetadataHandler(
+        FileManager({Backend.DISK.value: DiskStorageBackend()})
+    )
+
+    assert handler.get_metadata_grid_dimensions(images_dir) == []
+    with pytest.raises(ValueError, match="list of two integers"):
+        handler.get_grid_dimensions(images_dir)
 
 
 def function_step_plan(
@@ -1287,6 +1327,42 @@ def test_metadata_writer_skips_owner_without_image_outputs():
     )
 
     OpenHCSMetadataWriter.write(context, plan)
+
+
+def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifact(
+    tmp_path,
+):
+    plate_root = tmp_path / "output_plate"
+    output_dir = plate_root / "images"
+    output_dir.mkdir(parents=True)
+    output_path = output_dir / "A01_s1_w1.tif"
+    output_path.write_bytes(b"produced image")
+    context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    context.microscope_handler.metadata_handler = UnknownLayoutMetadataHandlerStub(
+        {"channel": {"1": "DNA"}}
+    )
+    context.metadata_cache = {
+        AllComponents.WELL: {"A01": None},
+        AllComponents.SITE: {"1": None},
+        AllComponents.CHANNEL: {"1": "DNA"},
+        AllComponents.Z_INDEX: {"1": None},
+        AllComponents.TIMEPOINT: {"1": None},
+    }
+    plan = function_step_plan("Segment nuclei")
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.write_backend = Backend.DISK.value
+    plan.create_openhcs_metadata = True
+    record_output_path(context, plan, output_path)
+
+    OpenHCSMetadataWriter.write(context, plan)
+
+    subdirectory = json.loads(
+        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+    )[FIELDS.SUBDIRECTORIES]["images"]
+    assert subdirectory[FIELDS.GRID_DIMENSIONS] == []
 
 
 @pytest.mark.parametrize("metadata_writer", (False, True))

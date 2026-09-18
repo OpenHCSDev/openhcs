@@ -80,6 +80,9 @@ class _NavigationResponseGateway(ViewerWindowGatewayABC):
         del request
         return self.response
 
+    def apply_intensity_window(self, request):
+        raise AssertionError(request)
+
 
 class _DimensionLabelOverlay:
     def __init__(self) -> None:

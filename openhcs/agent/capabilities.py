@@ -161,6 +161,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowImageIntensityResult,
     ViewerWindowImageSampleRequest,
     ViewerWindowImageSampleResult,
+    ViewerWindowIntensityWindowRequest,
+    ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
     ViewerWindowNavigationRequest,
@@ -2964,6 +2966,34 @@ class IsolateViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):
     request_invocation = AgentViewerWindowRequestServiceInvocation(
         service=lambda context: context.viewer_window_service,
         method=lambda service, request: service.isolate_layers(request),
+    )
+
+
+class ApplyViewerIntensityWindowCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_apply_viewer_intensity_window"
+    cli_command = "viewer-intensity-window"
+    kind = CapabilityKind.TOOL
+    title = "Apply viewer intensity window"
+    description = (
+        "Computes one finite percentile window over the actual routed image "
+        "payload records matching a semantic route coordinate and applies the "
+        "resolved absolute limits to the native Napari image layer. Omitted "
+        "axis_indices select every real payload coordinate on the route; sparse "
+        "display padding is never sampled."
+    )
+    service = "viewer_window"
+    mutating = True
+    side_effects = ("mutates_viewer_window_contrast",)
+    runtime_requirements = ("running_openhcs_viewer_server",)
+    data_exposure = (
+        "viewer_payload_identities",
+        "viewer_image_intensity_statistics",
+    )
+    input_contract = ViewerWindowIntensityWindowRequest
+    output_contract = ViewerWindowIntensityWindowResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.apply_intensity_window(request),
     )
 
 
