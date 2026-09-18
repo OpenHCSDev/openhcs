@@ -88,7 +88,7 @@ def _get_all_overlapping_pairs_gpu(positions: "cp.ndarray", tile_shape: tuple) -
         & (cp.arange(N)[:, None] != cp.arange(N)[None, :])
     )
 
-    print(f"🔍 GPU DIRECT ADJACENCY: Checking all {N}×{N} pairs for overlaps")
+    logger.debug("GPU direct adjacency: checking all %d×%d pairs for overlaps", N, N)
 
     # VECTORIZED: Keep everything on GPU, eliminate CPU transfers
     overlapping_pairs = cp.where(valid_overlap)
@@ -155,8 +155,10 @@ def _get_all_overlapping_pairs_gpu(positions: "cp.ndarray", tile_shape: tuple) -
             elif below_cpu[idx]:
                 edge_pairs.append((i, j, "bottom", y_overlap_val))
 
-    print(
-        f"✅ GPU: Found {len(edge_pairs)} total edge overlaps from {len(indices_i_cpu)} overlapping pairs"
+    logger.debug(
+        "GPU: found %d total edge overlaps from %d overlapping pairs",
+        len(edge_pairs),
+        len(indices_i_cpu),
     )
     return edge_pairs
 
@@ -370,32 +372,44 @@ def assemble_stack_cupy(
     if not bool(cp.isfinite(positions).all()):
         raise ValueError("positions must contain finite XY pixel coordinates.")
 
-    # Debug: Print positions information
-    print(
-        f"Assembly: Received {positions.shape[0]} positions for {image_tiles.shape[0]} tiles"
+    logger.debug(
+        "Assembly: received %d positions for %d tiles",
+        positions.shape[0],
+        image_tiles.shape[0],
     )
-    print(
-        f"Position range: X=[{float(cp.min(positions[:, 0])):.1f}, {float(cp.max(positions[:, 0])):.1f}], Y=[{float(cp.min(positions[:, 1])):.1f}, {float(cp.max(positions[:, 1])):.1f}]"
+    logger.debug(
+        "Position range: X=[%.1f, %.1f], Y=[%.1f, %.1f]",
+        float(cp.min(positions[:, 0])),
+        float(cp.max(positions[:, 0])),
+        float(cp.min(positions[:, 1])),
+        float(cp.max(positions[:, 1])),
     )
-    print(f"First 3 positions: {positions[:3].tolist()}")
+    logger.debug("First 3 positions: %s", positions[:3].tolist())
 
-    # Debug: Check image tile statistics
-    print(f"🔥 ASSEMBLY DEBUG: Image tiles shape: {image_tiles.shape}")
-    print(f"🔥 ASSEMBLY DEBUG: Image tiles dtype: {image_tiles.dtype}")
-    for i in range(min(3, image_tiles.shape[0])):
-        tile_min = float(cp.min(image_tiles[i]))
-        tile_max = float(cp.max(image_tiles[i]))
-        tile_mean = float(cp.mean(image_tiles[i]))
-        tile_nonzero = int(cp.count_nonzero(image_tiles[i]))
-        print(
-            f"🔥 ASSEMBLY DEBUG: Tile {i}: min={tile_min:.3f}, max={tile_max:.3f}, mean={tile_mean:.3f}, nonzero={tile_nonzero}"
-        )
+    logger.debug("Image tiles shape: %s", image_tiles.shape)
+    logger.debug("Image tiles dtype: %s", image_tiles.dtype)
+    if logger.isEnabledFor(logging.DEBUG):
+        for i in range(min(3, image_tiles.shape[0])):
+            tile_min = float(cp.min(image_tiles[i]))
+            tile_max = float(cp.max(image_tiles[i]))
+            tile_mean = float(cp.mean(image_tiles[i]))
+            tile_nonzero = int(cp.count_nonzero(image_tiles[i]))
+            logger.debug(
+                "Tile %d: min=%.3f, max=%.3f, mean=%.3f, nonzero=%d",
+                i,
+                tile_min,
+                tile_max,
+                tile_mean,
+                tile_nonzero,
+            )
 
-    # Debug: Check if tiles are all zeros
     total_nonzero = int(cp.count_nonzero(image_tiles))
     total_pixels = int(cp.prod(cp.array(image_tiles.shape)))
-    print(
-        f"🔥 ASSEMBLY DEBUG: Total nonzero pixels: {total_nonzero}/{total_pixels} ({100*total_nonzero/total_pixels:.1f}%)"
+    logger.debug(
+        "Total nonzero pixels: %d/%d (%.1f%%)",
+        total_nonzero,
+        total_pixels,
+        100 * total_nonzero / total_pixels,
     )
 
     if image_tiles.shape[0] != positions.shape[0]:
@@ -448,11 +462,14 @@ def assemble_stack_cupy(
     canvas_width = canvas_max_x - canvas_min_x
     canvas_height = canvas_max_y - canvas_min_y
 
-    # Debug: Print canvas information
-    print(
-        f"Canvas: {int(canvas_width)}x{int(canvas_height)} pixels, origin=({float(canvas_min_x):.1f}, {float(canvas_min_y):.1f})"
+    logger.debug(
+        "Canvas: %dx%d pixels, origin=(%.1f, %.1f)",
+        int(canvas_width),
+        int(canvas_height),
+        float(canvas_min_x),
+        float(canvas_min_y),
     )
-    print(f"Tile size: {tile_w}x{tile_h} pixels")
+    logger.debug("Tile size: %dx%d pixels", tile_w, tile_h)
 
     if canvas_width <= 0 or canvas_height <= 0:
         logger.warning(
