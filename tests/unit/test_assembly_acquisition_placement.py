@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from scipy.ndimage import center_of_mass
 
+from openhcs.constants.constants import MemoryType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.processing.backends.assemblers.assemble_stack_cpu import assemble_stack_cpu
 from openhcs.processing.backends.assemblers.assemble_stack_cupy import (
@@ -115,7 +116,10 @@ def test_overlapping_seam_resamples_pixels_and_blend_coverage_together(assemble,
 
 
 def test_cpu_and_gpu_share_the_same_site_contraction_contract():
-    for function in (assemble_stack_cpu, assemble_stack_cupy):
+    functions = [assemble_stack_cpu]
+    if MemoryType.CUPY.is_installed():
+        functions.append(assemble_stack_cupy)
+    for function in functions:
         metadata = OpenHCSRegistry.metadata_for_declared_callable(function)
         assert metadata.contract is ProcessingContract.VOLUMETRIC_TO_SLICE
 
