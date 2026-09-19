@@ -13,7 +13,6 @@ from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 from PIL import Image
 
-
 OUTPUT_PATH = Path("docs/openhcs_cellprofiler_lab_meeting.pptx")
 FIGURE_DIR = Path("/tmp/openhcs_labmeeting_prelim/cppipe_figures_20260505_v7_compact")
 PROJECTED_FIGURE_DIR = Path(
@@ -209,8 +208,13 @@ EXAMPLE_TILES: tuple[ImageTile, ...] = (
 )
 
 CP_EXAMPLE_TILES: tuple[ImageTile, ...] = (
-    ImageTile("Colocalization", CP_EXAMPLE_IMAGE_DIR / "examplecolocalization_orig_1.png"),
-    ImageTile("Colocalization mask", CP_EXAMPLE_IMAGE_DIR / "examplecolocalization_masked_1.png"),
+    ImageTile(
+        "Colocalization", CP_EXAMPLE_IMAGE_DIR / "examplecolocalization_orig_1.png"
+    ),
+    ImageTile(
+        "Colocalization mask",
+        CP_EXAMPLE_IMAGE_DIR / "examplecolocalization_masked_1.png",
+    ),
     ImageTile("Human nuclei", CP_EXAMPLE_IMAGE_DIR / "humannuclei_3.jpg"),
     ImageTile("Human color overlay", CP_EXAMPLE_IMAGE_DIR / "humancolornucleism_2.jpg"),
     ImageTile("Fly image", CP_EXAMPLE_IMAGE_DIR / "fruitflyimg_1.jpg"),
@@ -232,11 +236,11 @@ def main() -> None:
         *(
             logo_path
             for logo_path in (
-        LOGO_IMAGE_DIR / "omero_logo.png",
-        LOGO_IMAGE_DIR / "fiji_logo.png",
-        LOGO_IMAGE_DIR / "cp_logo_text.png",
-        LOGO_IMAGE_DIR / "napari_logo-300x300-1.png",
-        LOGO_IMAGE_DIR / "cellprofilershuffle2_1.png",
+                LOGO_IMAGE_DIR / "omero_logo.png",
+                LOGO_IMAGE_DIR / "fiji_logo.png",
+                LOGO_IMAGE_DIR / "cp_logo_text.png",
+                LOGO_IMAGE_DIR / "napari_logo-300x300-1.png",
+                LOGO_IMAGE_DIR / "cellprofilershuffle2_1.png",
             )
             if not logo_path.exists()
         ),
@@ -283,7 +287,9 @@ def add_title(slide, text: str, *, top: float = 0.35, font_size: int = 30) -> No
 
 
 def add_footer(slide, text: str) -> None:
-    box = slide.shapes.add_textbox(Inches(0.55), Inches(7.08), Inches(12.0), Inches(0.25))
+    box = slide.shapes.add_textbox(
+        Inches(0.55), Inches(7.08), Inches(12.0), Inches(0.25)
+    )
     p = box.text_frame.paragraphs[0]
     p.text = text
     p.font.size = Pt(8.5)
@@ -293,7 +299,9 @@ def add_footer(slide, text: str) -> None:
 def add_title_slide(prs: Presentation) -> None:
     slide = blank_slide(prs)
     add_accent_bar(slide)
-    title = slide.shapes.add_textbox(Inches(0.75), Inches(1.35), Inches(8.89), Inches(0.73))
+    title = slide.shapes.add_textbox(
+        Inches(0.75), Inches(1.35), Inches(8.89), Inches(0.73)
+    )
     frame = title.text_frame
     frame.clear()
     p = frame.paragraphs[0]
@@ -302,7 +310,10 @@ def add_title_slide(prs: Presentation) -> None:
     p.font.size = Pt(38)
     p.font.color.rgb = NAVY
 
-    add_footer(slide, "Prepared for lab meeting | v7 figures | 25-pipeline and 33-pipeline figure sets in progress")
+    add_footer(
+        slide,
+        "Prepared for lab meeting | v7 figures | 25-pipeline and 33-pipeline figure sets in progress",
+    )
 
 
 def add_bullet_slide(prs: Presentation, spec: BulletSlide) -> None:
@@ -310,13 +321,17 @@ def add_bullet_slide(prs: Presentation, spec: BulletSlide) -> None:
     add_accent_bar(slide)
     add_title(slide, spec.title)
     if spec.subtitle:
-        subtitle = slide.shapes.add_textbox(Inches(0.7), Inches(1.05), Inches(11.2), Inches(0.4))
+        subtitle = slide.shapes.add_textbox(
+            Inches(0.7), Inches(1.05), Inches(11.2), Inches(0.4)
+        )
         p = subtitle.text_frame.paragraphs[0]
         p.text = spec.subtitle
         p.font.size = Pt(17)
         p.font.color.rgb = TEAL
 
-    body = slide.shapes.add_textbox(Inches(0.9), Inches(1.7), Inches(11.45), Inches(4.8))
+    body = slide.shapes.add_textbox(
+        Inches(0.9), Inches(1.7), Inches(11.45), Inches(4.8)
+    )
     frame = body.text_frame
     frame.clear()
     for index, bullet in enumerate(spec.bullets):
@@ -335,7 +350,9 @@ def add_cellprofiler_context_slide(prs: Presentation) -> None:
     add_accent_bar(slide)
     add_title(slide, "CellProfiler History", font_size=30)
 
-    subtitle = slide.shapes.add_textbox(Inches(0.7), Inches(1.05), Inches(5.65), Inches(0.45))
+    subtitle = slide.shapes.add_textbox(
+        Inches(0.7), Inches(1.05), Inches(5.65), Inches(0.45)
+    )
     p = subtitle.text_frame.paragraphs[0]
     p.text = "A trusted image-analysis workhorse since the early 2000s"
     p.font.size = Pt(17)
@@ -348,7 +365,9 @@ def add_cellprofiler_context_slide(prs: Presentation) -> None:
         "Industry links go back to the original paper: Merck and Novartis fellowships helped support early development.",
         "NIH RePORTER lists $6.16M for Broad/Carpenter image-based profiling grant R35GM122547 from FY2017-2026.",
     )
-    body = slide.shapes.add_textbox(Inches(0.1575), Inches(1.856), Inches(6.82), Inches(5.47))
+    body = slide.shapes.add_textbox(
+        Inches(0.1575), Inches(1.856), Inches(6.82), Inches(5.47)
+    )
     frame = body.text_frame
     frame.clear()
     for index, bullet in enumerate(bullets):
@@ -455,7 +474,9 @@ def add_integration_slide(prs: Presentation) -> None:
         WHITE,
         NAVY,
     )
-    note = slide.shapes.add_textbox(Inches(0.95), Inches(6.15), Inches(11.4), Inches(0.5))
+    note = slide.shapes.add_textbox(
+        Inches(0.95), Inches(6.15), Inches(11.4), Inches(0.5)
+    )
     p = note.text_frame.paragraphs[0]
     p.text = "Message: OpenHCS is a bridge, not a replacement for the tools biologists already know."
     p.font.size = Pt(18)
@@ -516,7 +537,9 @@ def add_architecture_slide(prs: Presentation) -> None:
         NAVY,
     )
 
-    note = slide.shapes.add_textbox(Inches(0.9), Inches(6.05), Inches(11.5), Inches(0.65))
+    note = slide.shapes.add_textbox(
+        Inches(0.9), Inches(6.05), Inches(11.5), Inches(0.65)
+    )
     p = note.text_frame.paragraphs[0]
     p.text = "Key point: OpenHCS is not just clicking Run in CellProfiler. It converts the pipeline and runs it directly."
     p.font.size = Pt(18)
@@ -556,7 +579,9 @@ def add_sources_slide(prs: Presentation) -> None:
     )
 
 
-def add_node(slide, x: float, y: float, w: float, h: float, title: str, subtitle: str, fill, line) -> None:
+def add_node(
+    slide, x: float, y: float, w: float, h: float, title: str, subtitle: str, fill, line
+) -> None:
     shape = slide.shapes.add_shape(
         MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE,
         Inches(x),
@@ -582,8 +607,12 @@ def add_node(slide, x: float, y: float, w: float, h: float, title: str, subtitle
     p.font.color.rgb = SLATE
 
 
-def add_lane(slide, left, top, width, height, title: str, body: str, fill, line) -> None:
-    shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, left, top, width, height)
+def add_lane(
+    slide, left, top, width, height, title: str, body: str, fill, line
+) -> None:
+    shape = slide.shapes.add_shape(
+        MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, left, top, width, height
+    )
     shape.fill.solid()
     shape.fill.fore_color.rgb = fill
     shape.line.color.rgb = line
@@ -679,7 +708,9 @@ def add_image_tile(
     height,
     show_title: bool = False,
 ) -> None:
-    frame = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, left, top, width, height)
+    frame = slide.shapes.add_shape(
+        MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, left, top, width, height
+    )
     frame.fill.solid()
     frame.fill.fore_color.rgb = WHITE
     frame.line.color.rgb = TEAL
@@ -694,7 +725,12 @@ def add_image_tile(
         picture_height,
     )
     if show_title:
-        box = slide.shapes.add_textbox(left + Inches(0.08), top + height - Inches(0.33), width - Inches(0.16), Inches(0.22))
+        box = slide.shapes.add_textbox(
+            left + Inches(0.08),
+            top + height - Inches(0.33),
+            width - Inches(0.16),
+            Inches(0.22),
+        )
         p = box.text_frame.paragraphs[0]
         p.text = tile.title
         p.font.bold = True
@@ -704,7 +740,9 @@ def add_image_tile(
 
 
 def add_mosaic_tile(slide, tile: ImageTile, *, left, top, width, height) -> None:
-    frame = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, left, top, width, height)
+    frame = slide.shapes.add_shape(
+        MSO_AUTO_SHAPE_TYPE.RECTANGLE, left, top, width, height
+    )
     frame.fill.solid()
     frame.fill.fore_color.rgb = WHITE
     frame.line.color.rgb = WHITE
@@ -746,7 +784,13 @@ def add_picture_contained(slide, path: Path, left, top, width, height) -> None:
         rendered_width = height * image_ratio
         rendered_left = left + (width - rendered_width) / 2
         rendered_top = top
-    slide.shapes.add_picture(str(path), rendered_left, rendered_top, width=rendered_width, height=rendered_height)
+    slide.shapes.add_picture(
+        str(path),
+        rendered_left,
+        rendered_top,
+        width=rendered_width,
+        height=rendered_height,
+    )
 
 
 def add_picture_cover(slide, path: Path, left, top, width, height):

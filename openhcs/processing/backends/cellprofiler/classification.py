@@ -11,7 +11,8 @@ from openhcs.core.aligned_image_payload import (
     pack_aligned_image_outputs,
 )
 from openhcs.core.artifacts import (
-    ObjectLabelsArtifactType, ArtifactSpecCollection,
+    ObjectLabelsArtifactType,
+    ArtifactSpecCollection,
     ImageArtifactType,
     SourceStackLineageSourceRelation,
 )
@@ -32,7 +33,10 @@ from openhcs.core.source_bindings import StepSourceBindingsConfig
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
     CellProfilerObjectMeasurementVectorBinding,
 )
-from openhcs.core.steps.function_runtime import RuntimeCallableArgument, RuntimeCallableKwargs
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableArgument,
+    RuntimeCallableKwargs,
+)
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     block_setting_value,
@@ -63,7 +67,9 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     FormattingMeasurementFeatureTemplate,
     ModuleOwnedResultMeasurementRows,
 )
-from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
+from openhcs.interop.cellprofiler.runtime.artifact_binding import (
+    RuntimeInputBindingRequest,
+)
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
@@ -135,6 +141,7 @@ class _ClassificationRuleValuesRuntimeParameter(KeywordRuntimeParameter):
 
 class ClassifyObjectsMeasurementInputPolicy:
     """Resolve ClassifyObjects label and measurement-vector inputs."""
+
     measurement_value_parameters: ClassVar[
         tuple[type[KeywordRuntimeParameter], ...]
     ] = (
@@ -188,7 +195,8 @@ class ClassifyObjectsMeasurementInputPolicy:
                             request,
                             object_ref=object_spec,
                             feature_name=_classification_rule_measurement_feature(
-                                rule, request.adapter.request.require_callable_contract().module_name
+                                rule,
+                                request.adapter.request.require_callable_contract().module_name,
                             ),
                             labels=measurement_labels,
                         )
@@ -612,14 +620,16 @@ class ClassifyObjectsSingleMeasurementModule(
     @classmethod
     def finalize_module_blocks_for_invocation(
         cls,
-        blocks, *,
+        blocks,
+        *,
         invocation,
         step_context,
     ) -> tuple[ModuleBlock, ...]:
         """Restore complete repeated classification groups from public behavior."""
 
         blocks = super().finalize_module_blocks_for_invocation(
-            blocks, invocation=invocation,
+            blocks,
+            invocation=invocation,
             step_context=step_context,
         )
         rules = invocation.kwargs_dict.get("classification_rules")
@@ -628,15 +638,14 @@ class ClassifyObjectsSingleMeasurementModule(
                 str(invocation.kwargs_dict.get("retained_image_name") or "")
             )
             return tuple(
-                    cls._block_with_scalar_classification_output(
-                        block,
-                        retained_image_name=retained_image_name,
-                    )
-                    for block in blocks
+                cls._block_with_scalar_classification_output(
+                    block,
+                    retained_image_name=retained_image_name,
                 )
+                for block in blocks
+            )
         if not isinstance(rules, tuple) or any(
-            not isinstance(rule, SingleMeasurementClassificationRule)
-            for rule in rules
+            not isinstance(rule, SingleMeasurementClassificationRule) for rule in rules
         ):
             raise TypeError(
                 "ClassifyObjects classification_rules must be a tuple of "

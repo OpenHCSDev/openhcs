@@ -80,9 +80,7 @@ def test_image_browser_delegates_columns_filters_and_well_sync_to_table_owner(
 
         plate = _PlateSelectionRecorder()
         browser.plate_view_widget = plate
-        assert table_browser.set_column_filter_selection(
-            "well", ("A01 | label",)
-        )
+        assert table_browser.set_column_filter_selection("well", ("A01 | label",))
         assert tuple(table_browser.filtered_items) == ("a.tif",)
         assert plate.selected == {"A01"}
 
@@ -104,8 +102,7 @@ def test_image_browser_delegates_columns_filters_and_well_sync_to_table_owner(
         header = table_browser.table_widget.horizontalHeader()
         columns = presentation.columns
         assert tuple(
-            columns[header.logicalIndex(index)].key
-            for index in range(header.count())
+            columns[header.logicalIndex(index)].key for index in range(header.count())
         ) == ("channel", "filename", "well")
         assert table_browser.table_widget.isColumnHidden(1)
         assert panel.column_filters["well"].isHidden()

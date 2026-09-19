@@ -5,18 +5,19 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, replace, fields
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
-from typing import Any, ClassVar, Mapping, cast
+from typing import Any, ClassVar, Mapping, cast, get_type_hints
 from urllib.parse import quote
 
 from polystore.virtual_workspace import SourcePixelRef
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.serialization.json import to_jsonable
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.artifacts import ArtifactType, ImageArtifactType
 from openhcs.core.components.component_values import OpenHCSComponentValues
-from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.artifacts import ArtifactType, ImageArtifactType
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
@@ -38,7 +39,6 @@ from openhcs.core.source_metadata import (
     source_metadata_dict,
     source_metadata_scalar,
 )
-from openhcs.serialization.json import to_jsonable
 
 
 class SourceDatasetConflictError(ValueError):
@@ -605,6 +605,7 @@ class SourceProjection:
     artifact_kind: type[ArtifactType]
     source_metadata: SourceMetadataMapping
     component_labels: Mapping[str, str | None]
+    image_metadata: ClassVar[ImagePayloadMetadata | None] = None
 
     @property
     def identity_key(self) -> tuple[object, ...]:
@@ -638,11 +639,6 @@ class SourceProjection:
     def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
         """Add projection-specific fields to the nominal wire payload."""
 
-    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
-        """Return leaf-owned semantic image metadata when this is an image plane."""
-
-        return None
-
     def matches_binding(self, binding: NamedSourceBinding) -> bool:
         """Return whether this projection represents one exact source binding."""
 
@@ -673,6 +669,25 @@ class SourcePlaneProjection(SourceProjection):
 
     def __post_init__(self) -> None:
         _normalize_projection(self)
+
+    @classmethod
+    def image_metadata_wire_field(cls) -> str:
+        """Derive the optional full-metadata field from its nominal declaration."""
+        annotations = get_type_hints(cls)
+        matches = tuple(
+            declared.name
+            for declared in fields(cls)
+            if annotations[declared.name] == ImagePayloadMetadata | None
+        )
+        if len(matches) != 1:
+            raise ValueError(
+                "Primary source projection requires one image metadata declaration."
+            )
+        return matches[0]
+
+    def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
+        if self.image_metadata is not None:
+            payload[self.image_metadata_wire_field()] = to_jsonable(self.image_metadata)
 
     def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
         return self.image_metadata
@@ -856,6 +871,15 @@ class SourceProjectionMetadataSerializer:
     SOURCE_METADATA_FIELD: ClassVar[str] = "source_metadata"
     SOURCE_PROJECTION_FIELD: ClassVar[str] = "source_projection"
     IMAGE_METADATA_FIELD: ClassVar[str] = "image_metadata"
+    MICROSCOPE_HANDLER_NAME_FIELD: ClassVar[str] = "microscope_handler_name"
+    SOURCE_FILENAME_PARSER_NAME_FIELD: ClassVar[str] = "source_filename_parser_name"
+    GRID_DIMENSIONS_FIELD: ClassVar[str] = "grid_dimensions"
+    PIXEL_SIZE_FIELD: ClassVar[str] = "pixel_size"
+    IMAGE_FILES_FIELD: ClassVar[str] = "image_files"
+    AVAILABLE_BACKENDS_FIELD: ClassVar[str] = "available_backends"
+    MAIN_FIELD: ClassVar[str] = "main"
+    RESULTS_DIR_FIELD: ClassVar[str] = "results_dir"
+    SOURCE_DIAGNOSTICS_FIELD: ClassVar[str] = "source_diagnostics"
 
     parser: Any
     image_extension: str = ".tif"
@@ -872,17 +896,19 @@ class SourceProjectionMetadataSerializer:
         available_backends: Mapping[str, bool] | None = None,
         main: bool | None = None,
         results_dir: str | None = None,
+        projection_paths: tuple[tuple[SourceProjection, str], ...] | None = None,
     ) -> dict[str, Any]:
         """Return an OpenHCS subdirectory metadata dictionary."""
 
-        projection_paths = self.projection_paths(projection_set)
+        if projection_paths is None:
+            projection_paths = self.projection_paths(projection_set)
         execution_anchors = projection_set.execution_anchor_projections
         metadata: dict[str, Any] = {
-            "microscope_handler_name": microscope_handler_name,
-            "source_filename_parser_name": source_filename_parser_name,
-            "grid_dimensions": list(grid_dimensions),
-            "pixel_size": pixel_size,
-            "image_files": [
+            self.MICROSCOPE_HANDLER_NAME_FIELD: microscope_handler_name,
+            self.SOURCE_FILENAME_PARSER_NAME_FIELD: source_filename_parser_name,
+            self.GRID_DIMENSIONS_FIELD: list(grid_dimensions),
+            self.PIXEL_SIZE_FIELD: pixel_size,
+            self.IMAGE_FILES_FIELD: [
                 path
                 for projection, path in projection_paths
                 if projection in execution_anchors
@@ -896,7 +922,7 @@ class SourceProjectionMetadataSerializer:
                 )
                 for component in AllComponents
             },
-            "available_backends": dict(
+            self.AVAILABLE_BACKENDS_FIELD: dict(
                 available_backends
                 if available_backends is not None
                 else self._available_backends(projection_set)
@@ -904,11 +930,11 @@ class SourceProjectionMetadataSerializer:
             **self.projection_fields(projection_paths),
         }
         if main is not None:
-            metadata["main"] = main
+            metadata[self.MAIN_FIELD] = main
         if results_dir is not None:
-            metadata["results_dir"] = results_dir
+            metadata[self.RESULTS_DIR_FIELD] = results_dir
         if projection_set.diagnostics:
-            metadata["source_diagnostics"] = [
+            metadata[self.SOURCE_DIAGNOSTICS_FIELD] = [
                 dict(diagnostic.metadata_payload())
                 for diagnostic in projection_set.diagnostics
             ]
@@ -1095,9 +1121,6 @@ class SourceProjectionMetadataSerializer:
             )
         if projection.component_labels:
             payload["component_labels"] = dict(projection.component_labels)
-        image_metadata = projection.persisted_image_metadata()
-        if image_metadata is not None:
-            payload[self.IMAGE_METADATA_FIELD] = to_jsonable(image_metadata)
         projection.extend_serialized_payload(payload)
         return payload
 

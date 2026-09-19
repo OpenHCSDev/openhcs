@@ -37,7 +37,10 @@ def test_execution_status_poller_handles_status_error():
     events: list[str] = []
 
     policy = CallbackExecutionStatusPollPolicy(
-        poll_status_fn=lambda _execution_id: {"status": "error", "error": "unavailable"},
+        poll_status_fn=lambda _execution_id: {
+            "status": "error",
+            "error": "unavailable",
+        },
         poll_interval_seconds_value=0.0,
         on_status_error_fn=lambda execution_id, message: events.append(
             f"error:{execution_id}:{message}"

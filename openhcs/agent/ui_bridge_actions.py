@@ -104,6 +104,32 @@ class MainWindowAction(str, Enum):
             ),
         ),
     )
+    EXIT = (
+        "exit",
+        "Exit OpenHCS (disconnect expected)",
+        (
+            "runs_main_window_close_cleanup",
+            "exits_ui_process",
+            "retires_ui_bridge_descriptor",
+        ),
+        True,
+        lambda window: window.exit_action.isEnabled(),
+        lambda window: window.exit_action.trigger(),
+        AgentError(
+            code="application_exit_unavailable",
+            message="The OpenHCS Exit action is not currently available.",
+        ),
+        (
+            AgentWarning(
+                code="ui_exit_disconnect_expected",
+                message=(
+                    "exit returns an accepted receipt before the UI process and "
+                    "bridge disconnect. Verify process and descriptor retirement "
+                    "without polling the vanished bridge."
+                ),
+            ),
+        ),
+    )
 
 
 class PlateManagerAction(ManagerButtonPresentationMixin, str, Enum):

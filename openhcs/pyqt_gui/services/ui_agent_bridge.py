@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
-from typing import TypeAlias
+from typing import TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 from objectstate.object_state import ObjectStateRegistry
@@ -21,7 +21,14 @@ from pyqt_reactive.services.ui_thread_dispatch import (
     UiThreadDispatcher,
 )
 
-from openhcs.agent.dto.common import SCHEMA_VERSION, AgentError, AgentWarning
+from openhcs.agent.dto.common import (
+    SCHEMA_VERSION,
+    AgentError,
+    AgentWarning,
+    AgentResultEnvelope,
+)
+from openhcs.serialization.json import to_jsonable
+from python_introspect import project_dataclass
 from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
 from openhcs.core.function_reference import FunctionReference
 from openhcs.agent.dto.ui_bridge import (
@@ -94,8 +101,10 @@ from openhcs.agent.services.ui_bridge_service import (
     UiBridgeInvokeActionOperation,
     UiBridgeInvokeWidgetActionOperation,
     UiBridgeMutateObjectStateFieldOperation,
+    UiBridgeNavigateWindowOperation,
     UiBridgeOperationContractABC,
     UiBridgeRestoreSnapshotOperation,
+    UiBridgeSnapshotWindowOperation,
     UiBridgeSwitchBranchOperation,
     UiBridgeTimeTravelHeadOperation,
 )
@@ -132,6 +141,8 @@ from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeNamespaceField,
     PlateManagerOrchestratorCodePayload,
 )
+
+UiBridgeObservedResultT = TypeVar("UiBridgeObservedResultT", bound=AgentResultEnvelope)
 
 ORCHESTRATOR_CODE_DOCUMENT_PAYLOAD_HINT = (
     "Use the plate-manager orchestrator code document shape: "
@@ -698,6 +709,7 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
         outcome: str | None,
         errors: tuple[AgentError, ...] = (),
         warnings: tuple[AgentWarning, ...] = (),
+        result: AgentResultEnvelope | None = None,
     ) -> UiBridgeOperationRef:
         with self._lock:
             operation = self._operations[operation_id]
@@ -708,9 +720,73 @@ class UiBridgeOperationTracker(UiLiveOverviewContributorABC):
                 outcome=outcome,
                 errors=errors,
                 warnings=warnings,
+                result_payload=None if result is None else to_jsonable(result),
             )
             self._operations[operation_id] = completed
         return completed
+
+    def complete_result(
+        self, operation_id: str, result: AgentResultEnvelope
+    ) -> UiBridgeOperationRef:
+        """Project one typed completion through its registered declaration owner."""
+        operation = self.get(operation_id)
+        contract = UiBridgeOperationContractABC.for_name(
+            operation.identity.operation_name
+        )
+        if not isinstance(result, contract.response_type):
+            raise TypeError(
+                f"{contract.require_name()} requires {contract.response_type.__qualname__}."
+            )
+        return self.complete(
+            operation_id,
+            status=(
+                UiBridgeOperationStatus.FAILED
+                if result.errors
+                else UiBridgeOperationStatus.COMPLETED
+            ),
+            outcome="error" if result.errors else contract.success_outcome,
+            errors=result.errors,
+            warnings=result.warnings,
+            result=result,
+        )
+
+    def fail_exception(
+        self, operation_id: str, error: Exception
+    ) -> UiBridgeOperationRef:
+        operation = self.get(operation_id)
+        contract = UiBridgeOperationContractABC.for_name(
+            operation.identity.operation_name
+        )
+        return self.complete(
+            operation_id,
+            status=UiBridgeOperationStatus.FAILED,
+            outcome="error",
+            errors=(AgentError.from_exception(contract.failure_error_code, error),),
+        )
+
+    def observe(
+        self,
+        contract: type[UiBridgeOperationContractABC],
+        target_id: str,
+        invoke: Callable[
+            [Callable[[UiBridgeObservedResultT], None]], UiBridgeObservedResultT
+        ],
+    ) -> tuple[UiBridgeOperationRef, UiBridgeObservedResultT]:
+        """Use this tracker for one asynchronously completed typed operation."""
+        operation = self.start(contract.require_name(), target_id)
+        try:
+            result = invoke(
+                partial(self.complete_result, operation.identity.operation_id)
+            )
+            if (
+                result.errors
+                and self.get(operation.identity.operation_id).completed_at_unix is None
+            ):
+                self.complete_result(operation.identity.operation_id, result)
+        except Exception as exc:
+            self.fail_exception(operation.identity.operation_id, exc)
+            raise
+        return operation, result
 
     def get(self, operation_id: str) -> UiBridgeOperationRef:
         with self._lock:
@@ -1819,9 +1895,24 @@ class UiAgentBridgeService:
         self,
         request: UiWindowNavigateRequest,
     ) -> UiWindowNavigateResult:
-        return self._dispatcher.call(
-            lambda: self._registry.window_provider(request.window_id).navigate(request)
-        )
+        def navigate() -> UiWindowNavigateResult:
+            provider = self._registry.window_provider(request.window_id)
+            if not request.has_target:
+                return provider.navigate(request)
+            operation, result = self._operation_tracker.observe(
+                UiBridgeNavigateWindowOperation,
+                request.window_id,
+                partial(provider.navigate, request),
+            )
+            # Accepted target dispatch is not terminal execution or exposure.
+            return replace(
+                result,
+                operation_id=operation.identity.operation_id,
+                navigated=False,
+                target_exposed=None,
+            )
+
+        return self._dispatcher.call(navigate)
 
     def close_window(self, request: UiWindowCloseRequest) -> UiWindowCloseResult:
         return self._dispatcher.call(
@@ -1832,9 +1923,22 @@ class UiAgentBridgeService:
         self,
         request: UiWindowSnapshotRequest,
     ) -> UiWindowSnapshotResult:
-        return self._dispatcher.call(
-            lambda: self._registry.window_provider(request.window_id).snapshot(request)
-        )
+        def capture() -> UiWindowSnapshotResult:
+            provider = self._registry.window_provider(request.window_id)
+            if not request.frame_condition.observes:
+                return provider.snapshot(request)
+            operation, result = self._operation_tracker.observe(
+                UiBridgeSnapshotWindowOperation,
+                request.window_id,
+                partial(provider.snapshot, request),
+            )
+            return project_dataclass(
+                UiWindowSnapshotResult,
+                result,
+                operation_id=operation.identity.operation_id,
+            )
+
+        return self._dispatcher.call(capture)
 
     def widget_tree(
         self,

@@ -35,7 +35,9 @@ class TimeTravelNavigationTarget:
 
     @property
     def is_function_target(self) -> bool:
-        return self.kind == FUNCTION_TOKEN_TARGET_KIND or is_function_field_path(self.value)
+        return self.kind == FUNCTION_TOKEN_TARGET_KIND or is_function_field_path(
+            self.value
+        )
 
     def to_field_path(self) -> str:
         if self.kind == FUNCTION_TOKEN_TARGET_KIND:
@@ -154,10 +156,9 @@ def should_include_time_travel_scope(scope: TimeTravelSourceScope) -> bool:
     if scope.changed_scope_id == scope.triggering_scope:
         return True
 
-    if (
-        parse_function_scope_ref(scope.changed_scope_id) is not None
-        and scope.changed_scope_id.startswith(f"{scope.triggering_scope}::")
-    ):
+    if parse_function_scope_ref(
+        scope.changed_scope_id
+    ) is not None and scope.changed_scope_id.startswith(f"{scope.triggering_scope}::"):
         return False
 
     return False

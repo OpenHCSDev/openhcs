@@ -19,7 +19,6 @@ from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.runtime_stores import StoredRuntimeValue
 
-
 ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION = 5
 
 
@@ -94,9 +93,7 @@ class ZMQRuntimeExecutionObservationExport:
                 for axis_id, records in self.records_by_axis.items()
             },
             exports=self.exports,
-            source_image_set_identity_policy=(
-                self.source_image_set_identity_policy
-            ),
+            source_image_set_identity_policy=(self.source_image_set_identity_policy),
         )
 
     @property

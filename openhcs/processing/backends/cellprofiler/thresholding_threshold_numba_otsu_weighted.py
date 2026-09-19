@@ -25,7 +25,6 @@ def weighted_otsu_threshold_numba_compatible(
     return float(_sorted_weighted_otsu_threshold_numba(values_array, int(bin_count)))
 
 
-
 @njit(cache=True)
 def _sorted_weighted_otsu_threshold_numba(
     values: np.ndarray,
@@ -54,11 +53,9 @@ def _sorted_weighted_otsu_threshold_numba(
     candidate_count = 0
     for candidate_index in range(0, size - 1, step):
         high_index = candidate_index + 1
-        score = (
-            variance[candidate_index] * float(candidate_index)
-            + reversed_variance[size - 1 - high_index]
-            * float(size - high_index)
-        )
+        score = variance[candidate_index] * float(candidate_index) + reversed_variance[
+            size - 1 - high_index
+        ] * float(size - high_index)
         if score < best_score:
             best_score = score
             best_candidate = candidate_count
@@ -152,10 +149,9 @@ def _counted_sorted_weighted_otsu_threshold_numba(
             background_sum,
             background_square,
         )
-        score = (
-            foreground_variance * float(candidate_index)
-            + background_variance * float(background_count)
-        )
+        score = foreground_variance * float(
+            candidate_index
+        ) + background_variance * float(background_count)
         if score < best_score:
             best_score = score
             best_candidate = candidate_count

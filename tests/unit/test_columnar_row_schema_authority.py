@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).parents[2]
 
 
@@ -135,8 +134,7 @@ def _mirrored_dataclass_fields(tree: ast.Module) -> tuple[tuple[str, str], ...]:
 
 
 def test_semantic_mirror_detector_rejects_repeated_dataclass_row_schema() -> None:
-    tree = ast.parse(
-        """
+    tree = ast.parse("""
 @dataclass
 class MirroredRows(ColumnarRows):
     value: int
@@ -145,15 +143,13 @@ class MirroredRows(ColumnarRows):
     @property
     def columns(self):
         return {"value": (self.value,)}
-"""
-    )
+""")
 
     assert _mirrored_dataclass_fields(tree) == (("MirroredRows", "value"),)
 
 
 def test_semantic_mirror_detector_resolves_nominal_field_names() -> None:
-    tree = ast.parse(
-        """
+    tree = ast.parse("""
 @dataclass
 class MirroredRows(ColumnarRows):
     slice_index: int
@@ -169,8 +165,7 @@ class MirroredRows(ColumnarRows):
             MeasurementRowAxisField.SLICE_INDEX.value: (self.slice_index,),
             MeasurementRowValueField.RESULT_VALUE.value: (self.result_value,),
         }
-"""
-    )
+""")
 
     assert _mirrored_dataclass_fields(tree) == (
         ("MirroredRows", "result_value"),

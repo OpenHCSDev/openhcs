@@ -9,7 +9,6 @@ import shutil
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-
 _MANIFEST_SCHEMA = runpy.run_path(
     str(
         Path(__file__).resolve().parents[1]

@@ -1,7 +1,6 @@
 """OpenHCS tool adapter."""
 
 from __future__ import annotations
-from openhcs.core.pipeline_document import PipelineDocumentAuthority
 
 import hashlib
 import importlib.util
@@ -18,25 +17,27 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
+from zmqruntime.execution import ExecutionSubmissionResponse, ExecutionWaitResult
+
 from benchmark.adapters.cppipe_source import (
     CPPipeSourceRequest,
     CPPipeSourceResolution,
     materialize_cppipe_reference,
     resolve_cppipe_source,
 )
-from benchmark.contracts.tool_adapter import (
-    BenchmarkResult,
-    ToolAdapter,
-    ToolExecutionError,
-    ToolNotInstalledError,
-)
-from benchmark.contracts.metric import MetricCollector
 from benchmark.cellprofiler_export_equivalence import (
     cellprofiler_database_export_equivalence,
 )
 from benchmark.cellprofiler_reference_exports import (
     CellProfilerReferenceArtifactComparison,
     CellProfilerReferenceExportPlan,
+)
+from benchmark.contracts.metric import MetricCollector
+from benchmark.contracts.tool_adapter import (
+    BenchmarkResult,
+    ToolAdapter,
+    ToolExecutionError,
+    ToolNotInstalledError,
 )
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import (
@@ -45,13 +46,14 @@ from openhcs.core.config import (
     LazyCompilationDebugConfig,
 )
 from openhcs.core.equivalence import RuntimeEquivalencePolicy, RuntimeEquivalenceReport
+from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.equivalence.report import (
     RuntimeEquivalenceDifference,
     RuntimeEquivalenceDifferenceKind,
 )
-from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
+from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.runtime_equivalence import (
     runtime_reference_artifact_equivalence,
 )
@@ -69,7 +71,6 @@ from openhcs.runtime.zmq_execution_client import (
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
 )
-from zmqruntime.execution import ExecutionSubmissionResponse, ExecutionWaitResult
 
 logger = logging.getLogger(__name__)
 
@@ -257,7 +258,7 @@ def _reference_export_equivalence(
     plan: CellProfilerReferenceExportPlan,
     *,
     reference_root: Path,
-    candidate_root: Path,
+    candidate_paths: Sequence[Path],
 ) -> tuple[
     RuntimeEquivalenceReport,
     tuple[CellProfilerReferenceArtifactComparison, ...],
@@ -265,7 +266,7 @@ def _reference_export_equivalence(
     """Apply declaration-owned numeric-image and categorical-label contracts."""
 
     try:
-        comparisons = plan.compare_output_roots(reference_root, candidate_root)
+        comparisons = plan.compare_observed_outputs(reference_root, candidate_paths)
     except ValueError as exc:
         return (
             RuntimeEquivalenceReport(
@@ -555,6 +556,7 @@ class OpenHCSAdapter(ToolAdapter):
             ensure_global_config_context,
             rebuild_lazy_config_with_new_global_reference,
         )
+
         from openhcs.core.config import (
             AnalysisConsolidationConfig,
             MaterializationBackend,
@@ -730,7 +732,7 @@ class OpenHCSAdapter(ToolAdapter):
                     ) = _reference_export_equivalence(
                         reference_export_plan,
                         reference_root=equivalence_reference,
-                        candidate_root=execution_output_root / "images_results",
+                        candidate_paths=observation.exports.image_outputs,
                     )
                 else:
                     reference_snapshot = RuntimeOutputSnapshot.from_output_root(

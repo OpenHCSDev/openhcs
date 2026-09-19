@@ -139,7 +139,9 @@ class WatershedModule(
         segmentation_image_setting, ImageArtifactType
     )
     intensity_image_binding = SettingToKeywordBinding.input(
-        intensity_image_setting, ImageArtifactType, runtime_parameter_name="topology_inputs"
+        intensity_image_setting,
+        ImageArtifactType,
+        runtime_parameter_name="topology_inputs",
     )
     output_object_binding = SettingToKeywordBinding.output(
         output_object_setting, ObjectLabelsArtifactType
@@ -162,10 +164,13 @@ class WatershedModule(
         "declump_method",
         normalize_cellprofiler_setting_name,
     )
-    setting_bindings = (output_object_binding,segmentation_image_binding,
+    setting_bindings = (
+        output_object_binding,
+        segmentation_image_binding,
         markers_binding,
         intensity_image_binding,
-        mask_binding,watershed_method_binding,
+        mask_binding,
+        watershed_method_binding,
         SettingToKeywordBinding(
             advanced_setting,
             "use_advanced_settings",
@@ -226,7 +231,8 @@ class WatershedModule(
             maximum_seeds_setting,
             "max_seeds",
             parse_cellprofiler_int,
-        ),)
+        ),
+    )
 
     @classmethod
     def active_artifact_bindings(
@@ -391,7 +397,9 @@ from openhcs.core.pipeline.function_contracts import special_inputs
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.image_shapes import trailing_spatial_factors
 from openhcs.core.runtime_profile import RuntimeProfileLogger
-from openhcs.core.runtime_object_label_domains import DenseObjectLabelConsecutiveRelabelingStrategy
+from openhcs.core.runtime_object_label_domains import (
+    DenseObjectLabelConsecutiveRelabelingStrategy,
+)
 from openhcs.core.runtime_image_values import (
     image_payload_data,
 )

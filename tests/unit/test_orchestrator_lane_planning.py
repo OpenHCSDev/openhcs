@@ -59,7 +59,6 @@ from openhcs.core.orchestrator.worker_lanes import (
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext, ProgressPhase
-from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponse,
     ViewerPersistenceMode,
@@ -231,27 +230,6 @@ def test_worker_axis_completion_stops_before_terminal_plate_steps() -> None:
     )
 
     assert worker_execution_module._completed_axis_step_count(context, 33) == 32
-
-
-def test_step_progress_consumes_materialization_receipt_without_reprojection(
-    monkeypatch,
-) -> None:
-    monkeypatch.setattr(
-        worker_execution_module,
-        "replayed_step_execution_observation",
-        lambda *_args, **_kwargs: pytest.fail(
-            "materialized outputs were projected a second time"
-        ),
-    )
-
-    progress_context = worker_execution_module._runtime_observation_progress_context(
-        (),
-        plan=SimpleNamespace(),
-        context=SimpleNamespace(),
-        step_observation=StepExecutionObservation.empty(),
-    )
-
-    assert progress_context is None
 
 
 def test_compiled_plate_execution_request_uses_bundle_as_runtime_authority():

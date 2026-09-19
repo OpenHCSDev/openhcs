@@ -93,12 +93,10 @@ def test_config_patch_nested_collection_near_miss_uses_json_shape() -> None:
     assert result.valid is False
     error = result.errors[0]
     assert error.path == (
-        'ConfigPatch.values["source_bindings_config"]["bindings"][]'
-        '["artifct_kind"]'
+        'ConfigPatch.values["source_bindings_config"]["bindings"][]' '["artifct_kind"]'
     )
     assert (
-        'ConfigPatch.values["source_bindings_config"]["bindings"][]'
-        '["artifact_kind"]'
+        'ConfigPatch.values["source_bindings_config"]["bindings"][]' '["artifact_kind"]'
     ) in (error.hint or "")
 
 
@@ -128,9 +126,7 @@ def test_mcp_projects_typed_architecture_and_config_diagnostics() -> None:
 
     assert architecture_error["code"] == "architecture_symbol_not_curated"
     assert ListArchitectureTopicsCapability.name in architecture_error["hint"]
-    assert architecture_error["exception_type"] == (
-        "ArchitectureSymbolNotCuratedError"
-    )
+    assert architecture_error["exception_type"] == ("ArchitectureSymbolNotCuratedError")
     assert config_payload["valid"] is False
     assert config_error["code"] == "config_patch_unknown_field"
     assert DescribeConfigSchemaCapability.name in config_error["hint"]

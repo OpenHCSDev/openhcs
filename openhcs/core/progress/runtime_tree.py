@@ -347,9 +347,7 @@ class ActiveWorkerStatus(
     strategy_key = "active"
 
     def status(self, context: RuntimeTreeWorkerStatusContext) -> str:
-        return (
-            f"⚙️ {context.count_for_state(PlateRuntimeState.EXECUTING)} active"
-        )
+        return f"⚙️ {context.count_for_state(PlateRuntimeState.EXECUTING)} active"
 
 
 class FailedWorkerStatus(ActiveWorkerStatus):
@@ -1039,13 +1037,15 @@ class RuntimeTreeProjectionBuilder:
                     current_step_idx, f"Step {current_step_idx + 1}"
                 )
                 step_context = RuntimeTreeStepStatusContext(step_event=step_event)
-                step_name, step_status, step_percent = (
-                    RuntimeTreeStepStatusStrategy.for_context(
-                        step_context
-                    ).step_name_status_percent(
-                        context=step_context,
-                        fallback_step_name=fallback_step_name,
-                    )
+                (
+                    step_name,
+                    step_status,
+                    step_percent,
+                ) = RuntimeTreeStepStatusStrategy.for_context(
+                    step_context
+                ).step_name_status_percent(
+                    context=step_context,
+                    fallback_step_name=fallback_step_name,
                 )
 
                 children.append(

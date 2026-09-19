@@ -51,7 +51,9 @@ from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
     ObjectLabelMeasurementSliceRequest,
     object_label_measurement_values_cache,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import ObjectMeasurementTableIndex
+from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
+    ObjectMeasurementTableIndex,
+)
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
 )
@@ -79,7 +81,10 @@ class CellProfilerMeasurementVector:
 
     @property
     def runtime_value(self) -> RuntimeCallableArgument:
-        if self.plane_projection is None or self.plane_projection.plane_index is not None:
+        if (
+            self.plane_projection is None
+            or self.plane_projection.plane_index is not None
+        ):
             if len(self.slices) != 1:
                 raise ValueError(
                     "A non-stacked object-measurement vector requires exactly one "

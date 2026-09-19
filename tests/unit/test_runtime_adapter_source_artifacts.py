@@ -42,7 +42,8 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeArtifactInputRequest,
     RuntimeArtifactTypeStrategy,
 )
-from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
+from openhcs.microscopes import create_microscope_handler
+from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
 
@@ -124,7 +125,15 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
         workspace_backend=Backend.DISK,
         source_files=(primary_path, illumination_path, labels_path),
     )
-    microscope_handler = SourceBindingsHandler(filemanager, source_bindings)
+    # This opens the persisted projection; it does not ingest workspace files
+    # as a new raw source folder. Physical inputs remain in source_root.
+    microscope_handler = create_microscope_handler(
+        microscope_type="auto",
+        plate_folder=workspace_root,
+        filemanager=filemanager,
+        source_bindings_config=source_bindings,
+    )
+    assert isinstance(microscope_handler, OpenHCSMicroscopeHandler)
     microscope_handler.initialize_workspace(workspace_root, filemanager)
     projection_cache = VirtualWorkspaceSourceProjectionCache()
     context = SimpleNamespace(

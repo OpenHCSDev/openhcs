@@ -51,6 +51,8 @@ if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.output_record_request import (
         CellProfilerOutputRecordRequest,
     )
+
+
 class DirectParentReferenceFeatureMarker(ObjectReferenceFeatureMarker):
     """Semantic marker for a child's direct parent-object reference."""
 
@@ -166,7 +168,10 @@ class RelationshipMeasurementRows:
         entries: list[
             tuple[ArtifactSpec, ObjectRelationshipDeclaration, ObjectRelationship]
         ] = []
-        for spec, relation in self.request.callable_contract.artifact_outputs.relation_refs(
+        for (
+            spec,
+            relation,
+        ) in self.request.callable_contract.artifact_outputs.relation_refs(
             ObjectRelationshipDeclaration
         ):
             declaration = relation

@@ -62,6 +62,7 @@ from openhcs.mcp.control_timeout import (
     McpViewerTimeoutPolicy,
 )
 from openhcs.pyqt_gui.config import UIConfigCacheEnvironment
+from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.serialization.json import to_jsonable
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -312,8 +313,9 @@ class McpDevServerSpec:
 
     def process_args(self) -> tuple[str, ...]:
         return (
-            "-m",
-            self.module_name,
+            *OpenHCSRuntimeImportAuthority.current().module_process_arguments(
+                self.module_name
+            ),
             "--surface",
             self.surface_profile.name,
         )
@@ -1981,17 +1983,16 @@ def workflow_result_target_scope_ids(result: McpDevToolResult) -> tuple[str, ...
     return () if payload is None else payload.action_result.target_scope_ids
 
 
-def ui_bridge_operation_result_status(
+def ui_bridge_operation_result(
     result: McpDevToolResult,
-) -> UiBridgeOperationStatus | None:
+) -> UiBridgeOperationRef | None:
     """Decode a bridge-operation receipt through its declared result schema."""
 
     try:
-        operation = dataclass_from_mapping(
+        return dataclass_from_mapping(
             UiBridgeOperationRef,
             first_payload_mapping(result),
         )
-        return UiBridgeOperationStatus(operation.status)
     except (TypeError, ValueError):
         return None
 
@@ -2001,10 +2002,14 @@ def workflow_operation_receipt_skip_reason(
 ) -> WorkflowPollSkipReason | None:
     """Return why a bridge receipt prevents domain-state polling, if any."""
 
-    receipt_status = ui_bridge_operation_result_status(result)
-    if receipt_status is None:
+    operation = ui_bridge_operation_result(result)
+    if operation is None or operation.errors:
         return WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
-    return receipt_status.select_completion(
+    try:
+        status = UiBridgeOperationStatus(operation.status)
+    except ValueError:
+        return WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED
+    return status.select_completion(
         active=WorkflowPollSkipReason.OPERATION_RECEIPT_TIMEOUT,
         succeeded=None,
         failed=WorkflowPollSkipReason.OPERATION_RECEIPT_FAILED,

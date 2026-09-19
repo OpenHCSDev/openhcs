@@ -83,7 +83,9 @@ def test_execution_facts_use_compiled_step_plan_semantics() -> None:
         )
     }
 
-    assert WorkerStartExecutionFacts.from_compiled_contexts(compiled_contexts).gpu_enabled
+    assert WorkerStartExecutionFacts.from_compiled_contexts(
+        compiled_contexts
+    ).gpu_enabled
 
 
 def test_execution_facts_treat_numpy_contexts_as_cpu() -> None:

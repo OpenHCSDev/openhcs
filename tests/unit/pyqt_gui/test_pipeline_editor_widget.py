@@ -37,6 +37,7 @@ from openhcs.core.execution_state import ManagerExecutionState
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.pyqt_gui.widgets.plate_manager import PlateManagerWidget
 from openhcs.processing.backends.cellprofiler import correct_illumination_apply
 from openhcs.processing.backends.cellprofiler.illumination import (
     IlluminationCorrectionMethod,
@@ -138,6 +139,13 @@ class PlateTerminalStatusRecorder:
 class PlateManagerDefinitionChangeRecorder:
     """Minimal plate-manager surface for pipeline invalidation notifications."""
 
+    plate_has_pending_definition_work = (
+        PlateManagerWidget.plate_has_pending_definition_work
+    )
+    require_pipeline_definition_mutation_allowed = (
+        PlateManagerWidget.require_pipeline_definition_mutation_allowed
+    )
+
     def __init__(self) -> None:
         self.changed_plates: list[str] = []
         self.plate_configs: dict[str, PipelineConfig] = {}
@@ -145,6 +153,8 @@ class PlateManagerDefinitionChangeRecorder:
         self.plate_compiled_data: dict[str, object] = {}
         self.plate_terminal_activity_status = PlateTerminalStatusRecorder()
         self.execution_state = ManagerExecutionState.IDLE
+        self.plate_init_pending = set()
+        self.plate_compile_pending = set()
 
     def notify_pipeline_definition_changed(self, plate_path: str) -> None:
         self.changed_plates.append(plate_path)
@@ -152,16 +162,6 @@ class PlateManagerDefinitionChangeRecorder:
     def plate_has_active_work(self, plate_path: str) -> bool:
         del plate_path
         return self.execution_state.busy
-
-    def require_pipeline_definition_mutation_allowed(
-        self,
-        plate_path: str | None = None,
-    ) -> None:
-        del plate_path
-        if self.execution_state is not ManagerExecutionState.IDLE:
-            raise RuntimeError(
-                "Pipeline definitions cannot change while plate execution is active."
-            )
 
     def authored_pipeline_config_for_code_document(
         self,
@@ -196,10 +196,19 @@ class PlateManagerDefinitionChangeRecorder:
 class PlateManagerCompiledStateRecorder:
     """Minimal plate-manager compiled-state authority for editor tests."""
 
+    plate_has_pending_definition_work = (
+        PlateManagerWidget.plate_has_pending_definition_work
+    )
+    require_pipeline_definition_mutation_allowed = (
+        PlateManagerWidget.require_pipeline_definition_mutation_allowed
+    )
+
     def __init__(self) -> None:
         self.plate_compiled_data: dict[str, object] = {}
         self.plate_terminal_activity_status = PlateTerminalStatusRecorder()
         self.execution_state = ManagerExecutionState.IDLE
+        self.plate_init_pending = set()
+        self.plate_compile_pending = set()
 
     def plate_has_active_work(self, plate_path: str) -> bool:
         del plate_path
@@ -230,16 +239,6 @@ class PlateManagerCompiledStateRecorder:
     def debug_terminal_summary_for_plate(self, plate_path: str):
         del plate_path
         return None
-
-    def require_pipeline_definition_mutation_allowed(
-        self,
-        plate_path: str | None = None,
-    ) -> None:
-        del plate_path
-        if self.execution_state is not ManagerExecutionState.IDLE:
-            raise RuntimeError(
-                "Pipeline definitions cannot change while plate execution is active."
-            )
 
 
 def test_pipeline_editor_constructor_connects_debug_toolbar_signal() -> None:
@@ -577,9 +576,7 @@ def test_step_code_mode_applies_callable_pattern_through_parameter_form() -> Non
         ObjectStateRegistry.clear()
 
 
-def test_pipeline_editor_code_document_rejects_active_execution_before_mutation() -> (
-    None
-):
+def test_pipeline_editor_code_document_applies_during_execution() -> None:
     QtApplicationHarness.app()
     ObjectStateRegistry.clear()
 
@@ -597,26 +594,21 @@ def test_pipeline_editor_code_document_rejects_active_execution_before_mutation(
 
     try:
         assert driver is not None
-        with pytest.raises(
-            RuntimeError,
-            match="cannot change while plate execution is active",
-        ):
-            driver.apply_source(
-                PipelineDocumentAuthority.render(
-                    PipelineDocumentAuthority.from_values(
-                        pipeline_config=PipelineConfig(),
-                        pipeline_steps=[FunctionStep(name="Replacement")],
-                    )
+        driver.apply_source(
+            PipelineDocumentAuthority.render(
+                PipelineDocumentAuthority.from_values(
+                    pipeline_config=PipelineConfig(),
+                    pipeline_steps=[FunctionStep(name="Replacement")],
                 )
             )
+        )
 
-        assert [step.name for step in widget.pipeline_steps] == ["Original"]
+        assert [step.name for step in widget.pipeline_steps] == ["Replacement"]
         assert [
             step.name
             for step in PipelineObjectStateBinding.steps_for_plate(TEST_PLATE_SCOPE)
-        ] == ["Original"]
-        assert plate_manager.plate_configs[TEST_PLATE_SCOPE] is original_config
-        assert plate_manager.changed_plates == []
+        ] == ["Replacement"]
+        assert plate_manager.changed_plates == [TEST_PLATE_SCOPE]
     finally:
         widget.close()
         ObjectStateRegistry.clear()
@@ -1243,6 +1235,42 @@ def test_reconstructed_pipeline_preserves_explicit_default_function_kwarg() -> N
         reconstructed = PipelineObjectStateBinding.steps_for_plate("plate")
 
         assert reconstructed[0].func == (threshold_image, {"threshold": 1})
+    finally:
+        ObjectStateRegistry.clear()
+
+
+def test_pipeline_diff_adds_and_removes_compile_time_function_kwarg() -> None:
+    """Code-mode diffs rebuild child state when callable fields change."""
+
+    def process(image):
+        return image
+
+    ObjectStateRegistry.clear()
+    ScopeTokenService.clear_scope("plate")
+    try:
+        PipelineObjectStateBinding.update_plate_steps(
+            "plate",
+            [FunctionStep(func=process, name="Process")],
+        )
+        PipelineObjectStateBinding.update_plate_steps(
+            "plate",
+            [
+                FunctionStep(
+                    func=(process, {"artifact_name": "Nuclei"}),
+                    name="Process",
+                )
+            ],
+        )
+
+        [with_identity] = PipelineObjectStateBinding.steps_for_plate("plate")
+        assert with_identity.func == (process, {"artifact_name": "Nuclei"})
+
+        PipelineObjectStateBinding.update_plate_steps(
+            "plate",
+            [FunctionStep(func=process, name="Process")],
+        )
+        [without_identity] = PipelineObjectStateBinding.steps_for_plate("plate")
+        assert without_identity.func is process
     finally:
         ObjectStateRegistry.clear()
 

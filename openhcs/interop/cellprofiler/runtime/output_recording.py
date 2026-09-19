@@ -92,8 +92,7 @@ class CellProfilerOutputRecorder(
         runtime_adapter = callable_contract.runtime_adapter
         recorded_refs = (
             frozenset(plan.ref() for plan in active_output_plans)
-            if runtime_adapter is not None
-            and runtime_adapter.manages_artifact_outputs
+            if runtime_adapter is not None and runtime_adapter.manages_artifact_outputs
             else frozenset()
         )
         return MappingProxyType(

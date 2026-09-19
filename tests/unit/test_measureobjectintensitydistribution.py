@@ -10,7 +10,10 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.measurement_row_materialization import columnar_row_values
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementRowAxisField
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+from openhcs.core.runtime_object_label_domains import (
+    ObjectLabelDomain,
+    ObjectLabelDomainScope,
+)
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,

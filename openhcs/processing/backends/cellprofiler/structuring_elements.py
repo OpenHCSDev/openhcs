@@ -142,9 +142,9 @@ def build_structuring_element(
         raise ValueError(f"Structuring element size must be positive: {size!r}")
     if not isinstance(structuring_element, StructuringElement):
         raise TypeError("Structuring element must be a StructuringElement member")
-    return StructuringElementFactory.for_structuring_element(
-        structuring_element
-    ).build(size)
+    return StructuringElementFactory.for_structuring_element(structuring_element).build(
+        size
+    )
 
 
 def adapt_structuring_element_rank(

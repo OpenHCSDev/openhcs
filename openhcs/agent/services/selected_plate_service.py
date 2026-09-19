@@ -24,7 +24,9 @@ from openhcs.agent.dto.ui_bridge import (
     UiStateSurfaceDocument,
     UiStateSurfaceRequest,
 )
-from openhcs.agent.ui_bridge_identities import PlateManagerStateSurfaceIdentityDeclaration
+from openhcs.agent.ui_bridge_identities import (
+    PlateManagerStateSurfaceIdentityDeclaration,
+)
 from openhcs.agent.services.plate_inspection_service import PlateInspectionService
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.agent.services.ui_bridge_service import UiBridgeService
@@ -342,10 +344,13 @@ class SelectedPlateService:
             source_root = selected_row.get("source_plate_root")
             if isinstance(source_root, str) and source_root:
                 plate_root = source_root
-        return SelectedPlateTargetRoot(
-            plate_root=plate_root,
-            microscope_type=microscope_type,
-        ), None
+        return (
+            SelectedPlateTargetRoot(
+                plate_root=plate_root,
+                microscope_type=microscope_type,
+            ),
+            None,
+        )
 
     @staticmethod
     def selected_plate_row_from_state_surface(
@@ -411,9 +416,8 @@ class SelectedPlateService:
                     "plate images."
                 ),
             )
-        if (
-            not isinstance(selected_row.get("plate_root"), str)
-            or not selected_row.get("plate_root")
+        if not isinstance(selected_row.get("plate_root"), str) or not selected_row.get(
+            "plate_root"
         ):
             return None, AgentError(
                 code="ui_selected_plate_root_unavailable",
@@ -443,9 +447,7 @@ class SelectedPlateService:
                 max_sample_files=1,
                 max_component_values=0,
                 max_parse_failure_samples=0,
-                max_files_to_parse=(
-                    PlateInspectionDefaults.DEFAULT_MAX_FILES_TO_PARSE
-                ),
+                max_files_to_parse=(PlateInspectionDefaults.DEFAULT_MAX_FILES_TO_PARSE),
             )
         )
         if inspection.errors:

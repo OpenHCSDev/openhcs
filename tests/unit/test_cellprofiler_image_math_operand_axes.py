@@ -47,7 +47,9 @@ def test_image_math_preserves_declared_runtime_slice_as_one_operand() -> None:
 
     result = image_math(image, operation=ImageMathOperation.INVERT)
 
-    np.testing.assert_allclose(image_payload_data(result), 1.0 - image_payload_data(image))
+    np.testing.assert_allclose(
+        image_payload_data(result), 1.0 - image_payload_data(image)
+    )
     assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 

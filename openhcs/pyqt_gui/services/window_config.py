@@ -10,7 +10,6 @@ from collections.abc import Callable
 
 from PyQt6.QtWidgets import QDialog, QWidget
 
-
 WindowPresentationLeaf = Callable[[QWidget], None]
 
 

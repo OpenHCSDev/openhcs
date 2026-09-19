@@ -128,8 +128,7 @@ def write_phase_timing_jsonl(
 ) -> None:
     """Write phase timing records as newline-delimited JSON."""
     content = "".join(
-        json.dumps(record.as_payload(), sort_keys=True) + "\n"
-        for record in records
+        json.dumps(record.as_payload(), sort_keys=True) + "\n" for record in records
     )
     _save_text(path, content, filemanager=filemanager, backend=backend)
 

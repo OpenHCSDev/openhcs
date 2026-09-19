@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -295,8 +296,47 @@ class CellProfilerReferenceExportPlan:
     ) -> tuple[CellProfilerReferenceArtifactComparison, ...]:
         """Compare the exact declared output inventory under owned semantics."""
 
-        reference_paths = self._declared_output_paths(reference_root, "reference")
-        candidate_paths = self._declared_output_paths(candidate_root, "candidate")
+        reference_paths = self._declared_output_paths(
+            image_paths(reference_root),
+            "reference",
+            require_exact_inventory=True,
+        )
+        candidate_paths = self._declared_output_paths(
+            image_paths(candidate_root),
+            "candidate",
+            require_exact_inventory=True,
+        )
+        return self._compare_declared_paths(reference_paths, candidate_paths)
+
+    def compare_observed_outputs(
+        self,
+        reference_root: Path,
+        candidate_paths: Sequence[Path],
+    ) -> tuple[CellProfilerReferenceArtifactComparison, ...]:
+        """Compare declared exports selected from runtime-observed output paths."""
+
+        reference_paths = self._declared_output_paths(
+            image_paths(reference_root),
+            "reference",
+            require_exact_inventory=True,
+        )
+        selected_candidate_paths = self._declared_output_paths(
+            candidate_paths,
+            "candidate",
+            require_exact_inventory=False,
+        )
+        return self._compare_declared_paths(
+            reference_paths,
+            selected_candidate_paths,
+        )
+
+    def _compare_declared_paths(
+        self,
+        reference_paths: dict[str, Path],
+        candidate_paths: dict[str, Path],
+    ) -> tuple[CellProfilerReferenceArtifactComparison, ...]:
+        """Apply each declaration's semantic comparison to selected paths."""
+
         return tuple(
             CellProfilerReferenceArtifactComparison.compare(
                 artifact,
@@ -308,18 +348,23 @@ class CellProfilerReferenceExportPlan:
 
     def _declared_output_paths(
         self,
-        output_root: Path,
+        output_paths: Sequence[Path],
         side: str,
+        *,
+        require_exact_inventory: bool,
     ) -> dict[str, Path]:
         """Select exactly one image file for each declaration-owned export."""
 
-        root = Path(output_root)
         observed: dict[str, list[Path]] = {}
-        for path in image_paths(root):
+        for path in output_paths:
             observed.setdefault(path.name, []).append(path)
         expected_names = {artifact.output_filename for artifact in self.artifacts}
         observed_names = set(observed)
-        if observed_names != expected_names:
+        missing_names = expected_names - observed_names
+        unexpected_names = (
+            observed_names - expected_names if require_exact_inventory else set()
+        )
+        if missing_names or unexpected_names:
             raise ValueError(
                 f"{side} output inventory differs: "
                 f"expected={sorted(expected_names)!r}, "

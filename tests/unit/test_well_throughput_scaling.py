@@ -82,9 +82,7 @@ def test_native_execution_baselines_from_summary_csv(tmp_path: Path) -> None:
 
     baselines = native_execution_baselines_from_summary_csv(path)
 
-    assert baselines == {
-        "Example": NativeCellProfilerExecutionBaseline("Example", 2.5)
-    }
+    assert baselines == {"Example": NativeCellProfilerExecutionBaseline("Example", 2.5)}
     assert baselines["Example"].projected_execution_seconds(12) == 30.0
 
 
@@ -135,7 +133,9 @@ def test_requested_well_throughput_axes_override_manifest_modes(
         manifest_path=manifest_path,
     )
 
-    assert tuple((mode.name, mode.well_count, mode.worker_count) for mode in plan.modes) == (
+    assert tuple(
+        (mode.name, mode.well_count, mode.worker_count) for mode in plan.modes
+    ) == (
         ("2w_1c", 2, 1),
     )
 
@@ -168,10 +168,10 @@ def test_well_throughput_csv_round_trip_preserves_resume_identity(
         total_seconds=3.0,
         wells_per_second=6.0,
         successful_wells=12,
-            native_single_sample_execution_seconds=10.0,
-            projected_native_execution_seconds=120.0,
-            projected_execution_speedup=60.0,
-            peak_memory_mb=512.0,
+        native_single_sample_execution_seconds=10.0,
+        projected_native_execution_seconds=120.0,
+        projected_execution_speedup=60.0,
+        peak_memory_mb=512.0,
     )
 
     write_well_throughput_csv(path, (row,))
@@ -280,7 +280,9 @@ def test_failed_result_records_error_without_speedup() -> None:
     assert result.error_message == "shape mismatch"
 
 
-def test_rerun_missing_memory_filters_completed_rows(monkeypatch, tmp_path: Path) -> None:
+def test_rerun_missing_memory_filters_completed_rows(
+    monkeypatch, tmp_path: Path
+) -> None:
     from benchmark import well_throughput_scaling
 
     case = type(
@@ -438,7 +440,9 @@ def test_run_suite_reruns_existing_error_rows(monkeypatch, tmp_path: Path) -> No
     assert rows == (rerun,)
 
 
-def test_run_suite_passes_memory_limit_to_case_runner(monkeypatch, tmp_path: Path) -> None:
+def test_run_suite_passes_memory_limit_to_case_runner(
+    monkeypatch, tmp_path: Path
+) -> None:
     from benchmark import well_throughput_scaling
 
     case = type(
@@ -551,8 +555,9 @@ def test_generate_well_throughput_figures_writes_linear_log_and_points(
     assert all(output.exists() for output in outputs)
     summary_rows = tuple(
         csv.DictReader(
-            (tmp_path / "figures" / "well_throughput_speedup_summary_statistics.csv")
-            .open(encoding="utf-8", newline="")
+            (
+                tmp_path / "figures" / "well_throughput_speedup_summary_statistics.csv"
+            ).open(encoding="utf-8", newline="")
         )
     )
     assert tuple(row["label"] for row in summary_rows) == ("1w_1t", "16w_4c")
@@ -585,7 +590,9 @@ def test_linear_axis_break_policy_prefers_earliest_dominant_outlier_cluster() ->
     assert 130.0 < high_bottom < 200.0
 
 
-def test_presentation_axis_band_policy_keeps_normal_mid_and_outlier_bars_readable() -> None:
+def test_presentation_axis_band_policy_keeps_normal_mid_and_outlier_bars_readable() -> (
+    None
+):
     bands = PresentationAxisBandPolicy().bands_for(
         (
             5.5,
@@ -733,8 +740,11 @@ def test_well_throughput_presentation_report_uses_existing_figure_pack(
 
     summary_rows = tuple(
         csv.DictReader(
-            (tmp_path / "figures" / "05_speedup_by_core_and_wells_per_core_summary.csv")
-            .open(encoding="utf-8", newline="")
+            (
+                tmp_path
+                / "figures"
+                / "05_speedup_by_core_and_wells_per_core_summary.csv"
+            ).open(encoding="utf-8", newline="")
         )
     )
     assert len(summary_rows) == 9
@@ -806,14 +816,12 @@ def test_module_abstraction_coverage_table_maps_existing_family_coverage(
     grouped_rows = table.grouped_rows()
 
     assert tuple(
-        row.module_name
-        for row in grouped_rows[ModuleAbstractionCoverageKind.EXPLICIT]
+        row.module_name for row in grouped_rows[ModuleAbstractionCoverageKind.EXPLICIT]
     ) == ("MeasureObjectSizeShape",)
     assert tuple(
         row.module_name
         for row in grouped_rows[ModuleAbstractionCoverageKind.SHARED_ABSTRACTION]
     ) == ("MeasureObjectIntensity",)
     assert tuple(
-        row.module_name
-        for row in grouped_rows[ModuleAbstractionCoverageKind.UNCOVERED]
+        row.module_name for row in grouped_rows[ModuleAbstractionCoverageKind.UNCOVERED]
     ) == ("UncoveredModule",)

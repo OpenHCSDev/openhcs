@@ -17,7 +17,6 @@ from openhcs.mcp.http import hosted_capability_registry
 from openhcs.mcp.http_auth import McpHttpAuthenticationMode
 from openhcs.resources.brand import BRAND_PRIMARY_COLOR
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LOCAL_PLUGIN_ROOT = REPO_ROOT / "packaging" / "codex" / "openhcs"
 LOCAL_PLUGIN_MANIFEST = LOCAL_PLUGIN_ROOT / ".codex-plugin" / "plugin.json"

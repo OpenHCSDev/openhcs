@@ -169,7 +169,8 @@ def _cellprofiler_branchpoints_table() -> np.ndarray:
             and label(
                 CellProfilerLookupPattern(index - 2**4).array,
                 four_connectivity,
-            )[1] > 2
+            )[1]
+            > 2
             for index in range(512)
         ],
         dtype=bool,
@@ -201,19 +202,21 @@ def _make_table(
 
     return np.array(
         [
-            value
-            if (
-                matches(index, 0, 0, 0)
-                and matches(index, 1, 0, 1)
-                and matches(index, 2, 0, 2)
-                and matches(index, 3, 1, 0)
-                and matches(index, 4, 1, 1)
-                and matches(index, 5, 1, 2)
-                and matches(index, 6, 2, 0)
-                and matches(index, 7, 2, 1)
-                and matches(index, 8, 2, 2)
+            (
+                value
+                if (
+                    matches(index, 0, 0, 0)
+                    and matches(index, 1, 0, 1)
+                    and matches(index, 2, 0, 2)
+                    and matches(index, 3, 1, 0)
+                    and matches(index, 4, 1, 1)
+                    and matches(index, 5, 1, 2)
+                    and matches(index, 6, 2, 0)
+                    and matches(index, 7, 2, 1)
+                    and matches(index, 8, 2, 2)
+                )
+                else not value
             )
-            else not value
             for index in range(512)
         ],
         bool,
@@ -396,9 +399,7 @@ def rebuild_worm_from_control_points_approx(
     segment_labels[index[1:]] = 1
     segment_labels = np.cumsum(segment_labels)
     order_within_segment = np.arange(len(rows)) - index[segment_labels]
-    fractions = order_within_segment.astype(float) / count[segment_labels].astype(
-        float
-    )
+    fractions = order_within_segment.astype(float) / count[segment_labels].astype(float)
     point_radii = (
         radii[segment_labels] * (1.0 - fractions)
         + radii[segment_labels + 1] * fractions
@@ -417,9 +418,7 @@ def rebuild_worm_from_control_points_approx(
 
     rows = (rows[:, np.newaxis] + row_offsets[np.newaxis, :]).flatten()
     columns = (columns[:, np.newaxis] + column_offsets[np.newaxis, :]).flatten()
-    radius_mask = (
-        point_radii[:, np.newaxis] >= distances[np.newaxis, :]
-    ).flatten()
+    radius_mask = (point_radii[:, np.newaxis] >= distances[np.newaxis, :]).flatten()
     rows = rows[radius_mask]
     columns = columns[radius_mask]
 
@@ -434,10 +433,7 @@ def rebuild_worm_from_control_points_approx(
 
     height, width = shape
     in_bounds = (
-        (rows >= 0)
-        & (columns >= 0)
-        & (rows < int(height))
-        & (columns < int(width))
+        (rows >= 0) & (columns >= 0) & (rows < int(height)) & (columns < int(width))
     )
     return rows[in_bounds], columns[in_bounds]
 

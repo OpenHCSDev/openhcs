@@ -20,6 +20,7 @@ from openhcs.mcp.dev_client_rendering import (
 )
 from openhcs.mcp.dev_client_renderers.viewer import ViewerValidationRenderer
 
+
 class ObjectStateScopeRenderer(McpDevOutputRenderer):
     """Compact renderer for ObjectState scope catalogs."""
 
@@ -50,7 +51,9 @@ class ObjectStateScopeRenderer(McpDevOutputRenderer):
             lines.append("Scopes:")
             for scope in scopes:
                 lines.append(cls._scope_line(scope))
-                fields = McpDevPayloadProjection.sequence_of_mappings(scope.get("fields"))
+                fields = McpDevPayloadProjection.sequence_of_mappings(
+                    scope.get("fields")
+                )
                 if fields:
                     lines.extend(
                         f"  {line}"
@@ -125,9 +128,13 @@ class ObjectStateScopeRenderer(McpDevOutputRenderer):
     @staticmethod
     def _scope_mark(scope: Mapping[str, JsonValue]) -> str:
         marks: list[str] = []
-        if scope.get("has_unsaved_changes") is True or optional_int(scope.get("dirty_field_count")) not in (None, 0):
+        if scope.get("has_unsaved_changes") is True or optional_int(
+            scope.get("dirty_field_count")
+        ) not in (None, 0):
             marks.append("*")
-        if scope.get("has_default_overrides") is True or optional_int(scope.get("signature_diff_field_count")) not in (None, 0):
+        if scope.get("has_default_overrides") is True or optional_int(
+            scope.get("signature_diff_field_count")
+        ) not in (None, 0):
             marks.append("_")
         return "".join(marks) or "-"
 
@@ -188,7 +195,13 @@ class ObjectStateFieldRenderer(McpDevOutputRenderer):
                     f"unsaved={McpDevPayloadProjection.text(scope.get('has_unsaved_changes'))} "
                     f"overrides={McpDevPayloadProjection.text(scope.get('has_default_overrides'))}"
                 )
-                lines.extend(cls.field_lines(McpDevPayloadProjection.sequence_of_mappings(scope.get("fields"))))
+                lines.extend(
+                    cls.field_lines(
+                        McpDevPayloadProjection.sequence_of_mappings(
+                            scope.get("fields")
+                        )
+                    )
+                )
         return "\n".join(lines)
 
     @staticmethod
@@ -258,8 +271,7 @@ class ObjectStateFieldRenderer(McpDevOutputRenderer):
         field: Mapping[str, JsonValue],
     ) -> bool:
         return (
-            cls._value_is_none(field, "raw_value_is_none", "raw_value_preview")
-            is True
+            cls._value_is_none(field, "raw_value_is_none", "raw_value_preview") is True
             and cls._value_is_none(
                 field,
                 "resolved_value_is_none",
@@ -274,8 +286,7 @@ class ObjectStateFieldRenderer(McpDevOutputRenderer):
         field: Mapping[str, JsonValue],
     ) -> bool:
         return (
-            cls._value_is_none(field, "raw_value_is_none", "raw_value_preview")
-            is False
+            cls._value_is_none(field, "raw_value_is_none", "raw_value_preview") is False
             and cls._value_is_none(
                 field,
                 "resolved_value_is_none",
@@ -400,23 +411,19 @@ class ObjectStateFieldRenderer(McpDevOutputRenderer):
             filters.append(
                 "scope_ids="
                 + ",".join(
-                    McpDevPayloadProjection.text(item)
-                    for item in requested_scope_ids
+                    McpDevPayloadProjection.text(item) for item in requested_scope_ids
                 )
             )
         if isinstance(field_paths, list) and field_paths:
             filters.append(
                 "field_paths="
-                + ",".join(
-                    McpDevPayloadProjection.text(item) for item in field_paths
-                )
+                + ",".join(McpDevPayloadProjection.text(item) for item in field_paths)
             )
         if isinstance(field_path_contains, list) and field_path_contains:
             filters.append(
                 "contains="
                 + ",".join(
-                    McpDevPayloadProjection.text(item)
-                    for item in field_path_contains
+                    McpDevPayloadProjection.text(item) for item in field_path_contains
                 )
             )
         field_filter = payload.get("field_filter")
@@ -465,7 +472,9 @@ class ObjectStateFieldHelpRenderer(McpDevOutputRenderer):
             lines.extend(ObjectStateFieldRenderer.field_lines((field,)))
         target_summary = payload.get("target_summary")
         if isinstance(target_summary, str) and target_summary:
-            lines.append(f"Target summary: {cls._compact_target_summary(target_summary)}")
+            lines.append(
+                f"Target summary: {cls._compact_target_summary(target_summary)}"
+            )
         summary = payload.get("summary")
         if isinstance(summary, str) and summary:
             lines.append(f"Summary: {summary}")
@@ -474,7 +483,9 @@ class ObjectStateFieldHelpRenderer(McpDevOutputRenderer):
             lines.append("Description:")
             lines.append(description)
         if payload.get("description_truncated") is True:
-            lines.append("Description truncated; rerun with a larger max_description_chars.")
+            lines.append(
+                "Description truncated; rerun with a larger max_description_chars."
+            )
         return "\n".join(lines)
 
     @staticmethod

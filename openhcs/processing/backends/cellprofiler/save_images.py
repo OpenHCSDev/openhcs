@@ -586,14 +586,16 @@ class SaveImagesModule(
     @classmethod
     def finalize_module_blocks_for_invocation(
         cls,
-        blocks, *,
+        blocks,
+        *,
         invocation: "NormalizedFunctionItem",
         step_context: "ArtifactDeclarationStepContext",
     ) -> tuple[ModuleBlock, ...]:
         """Select the exact saved-image source named by the active public callable."""
 
         blocks = super().finalize_module_blocks_for_invocation(
-            blocks, invocation=invocation,
+            blocks,
+            invocation=invocation,
             step_context=step_context,
         )
         if invocation.contract.function_name != cls.function_variants[0]:

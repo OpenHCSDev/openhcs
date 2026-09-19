@@ -393,7 +393,7 @@ class CellProfilerModuleArtifactContracts:
                     binding=binding,
                     invocation_key=invocation_key,
                     step_context=step_context,
-                )
+                ),
             )
             for binding in missing_bindings
         )
@@ -451,9 +451,7 @@ class CellProfilerModuleArtifactContracts:
                     for spec in assigned_specs
                 )
                 candidate_position += len(assigned_specs)
-            return (
-                tuple(records),
-            )
+            return (tuple(records),)
         if any(not specs for specs in candidate_specs):
             return ()
         candidates_by_lineage: list[dict[ArtifactSpecRef, ArtifactSpec]] = []

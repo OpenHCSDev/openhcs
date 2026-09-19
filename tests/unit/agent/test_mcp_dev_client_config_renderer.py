@@ -143,7 +143,7 @@ def test_config_schema_renderer_preserves_shared_response_errors() -> None:
     assert rendered.startswith("Config schema: unavailable\n")
     assert (
         "- mcp_server_stale: The OpenHCS MCP server source changed after this "
-        "process started. hint=\"Restart the MCP client/server process.\""
+        'process started. hint="Restart the MCP client/server process."'
     ) in rendered
     assert "type=<none>" not in rendered
 
@@ -177,8 +177,7 @@ def test_config_schema_renderer_filters_and_bounds_reflected_fields() -> None:
     )
 
     assert (
-        "Config schema: type=PipelineConfig path=<root> "
-        "authoring=ConfigPatch.values"
+        "Config schema: type=PipelineConfig path=<root> " "authoring=ConfigPatch.values"
     ) in rendered
     assert "Fields: total=3 matched=2 shown=1 registries=1 types=1" in rendered
     assert "Filter: contains=lazy" in rendered

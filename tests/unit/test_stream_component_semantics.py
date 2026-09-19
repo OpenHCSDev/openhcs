@@ -2,6 +2,9 @@ from types import MappingProxyType
 
 import pytest
 
+from openhcs.constants.constants import AllComponents
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import ORIGINAL_SOURCE_METADATA_FIELD
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -118,6 +121,33 @@ def test_stream_viewer_component_metadata_projector_requires_source_metadata():
         projector.project_required(index=3, metadata=None)
 
 
+@pytest.mark.parametrize("well", (1, "1", "A01"))
+def test_stream_source_declared_domains_reuse_route_component_projection(well):
+    source_metadata = StreamSourceComponentMetadataItems.from_values(
+        (
+            {
+                "well": well,
+                "Site": "02",
+                "ChannelNumber": 5,
+                "custom_axis": "unchanged",
+                "undeclared": "omitted",
+            },
+            None,
+        )
+    )
+    order = ("well", "site", "channel", "custom_axis")
+    declared_items = source_metadata.domain_metadata_items(order)
+    route_items = (
+        StreamSourceComponentMetadataItems.from_values(source_metadata.values[:1])
+        .viewer_source_metadata(order)
+        .metadata_by_index
+    )
+    assert declared_items == route_items
+    assert declared_items == (
+        {"well": str(well), "site": 2, "channel": 5, "custom_axis": "unchanged"},
+    )
+
+
 def test_stream_image_metadata_projects_exact_source_spatial_domain_in_band():
     fields = StreamImagePayloadMetadataProjector.item_fields(
         ImagePayloadMetadata(
@@ -132,4 +162,97 @@ def test_stream_image_metadata_projects_exact_source_spatial_domain_in_band():
     assert fields == {
         "spatial_origin_yx": (3, 5),
         "source_spatial_shape_yx": (20, 30),
+        "image_metadata": ImagePayloadMetadata(
+            source_spatial_domain=SourceSpatialDomain((3, 5), (20, 30))
+        ).to_viewer_image_metadata(),
     }
+
+
+def _plane_metadata(axis, coordinates):
+    return ImagePayloadMetadata(
+        plane_axis=axis,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(
+                f"/source/plane-{index}.tif" for index in range(len(coordinates))
+            ),
+            component_metadata=coordinates,
+        ),
+    )
+
+
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("component", tuple(AllComponents))
+def test_retained_image_plane_domain_does_not_require_artifact_storage_axes(
+    axis, component
+):
+    metadata = _plane_metadata(
+        axis,
+        ({component.value: "1"}, {component.value: "2"}),
+    )
+
+    fields = StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+        metadata, ()
+    )
+
+    assert fields["plane_axis"] == axis.value
+    assert fields["plane_component_values"] == {component.value: ("1", "2")}
+    assert (
+        metadata.retained_plane_component_values() == fields["plane_component_values"]
+    )
+
+
+def test_projected_contributors_do_not_declare_a_retained_pixel_plane_domain():
+    metadata = _plane_metadata(None, ({"channel": "1"}, {"channel": "2"}))
+
+    assert metadata.retained_plane_component_values() == {}
+    wire = StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+        metadata, (AllComponents.CHANNEL,)
+    )
+    assert "plane_axis" not in wire
+    assert "plane_component_values" not in wire
+    assert (
+        ImagePayloadMetadata.from_viewer_image_metadata(
+            wire["image_metadata"]
+        ).plane_axis
+        is None
+    )
+
+
+@pytest.mark.parametrize("storage_components", [(), (AllComponents.CHANNEL,)])
+def test_retained_plane_domain_rejects_multiple_varying_components(storage_components):
+    metadata = _plane_metadata(
+        RuntimePlaneAxis.SOURCE_BINDING,
+        ({"channel": "1", "z_index": "1"}, {"channel": "2", "z_index": "2"}),
+    )
+
+    with pytest.raises(ValueError, match="multiple varying OpenHCS components"):
+        StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+            metadata, storage_components
+        )
+
+
+def test_singleton_plane_projection_remains_exactly_compiler_owned():
+    metadata = _plane_metadata(
+        RuntimePlaneAxis.RUNTIME_SLICE,
+        ({"site": "3", "channel": "7"},),
+    )
+
+    assert StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+        metadata, (AllComponents.SITE,)
+    )["plane_component_values"] == {"site": ("3",)}
+    with pytest.raises(ValueError, match="exactly one exact component"):
+        StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+            metadata, ()
+        )
+
+
+def test_singleton_plane_projection_rejects_ambiguous_compiler_components():
+    metadata = _plane_metadata(
+        RuntimePlaneAxis.RUNTIME_SLICE,
+        ({"site": "3", "channel": "7"},),
+    )
+
+    with pytest.raises(ValueError, match="exactly one"):
+        StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+            metadata, (AllComponents.SITE, AllComponents.CHANNEL)
+        )

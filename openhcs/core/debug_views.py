@@ -464,19 +464,14 @@ class DebugViewTable:
         projection_value = data["projection"]
         return cls(
             columns=tuple(str(column) for column in data["columns"]),
-            rows=tuple(
-                tuple(str(value) for value in row)
-                for row in data["rows"]
-            ),
+            rows=tuple(tuple(str(value) for value in row) for row in data["rows"]),
             projection=(
                 None
                 if projection_value is None
                 else DebugViewTableProjection(str(projection_value))
             ),
             empty_message=(
-                None
-                if data["empty_message"] is None
-                else str(data["empty_message"])
+                None if data["empty_message"] is None else str(data["empty_message"])
             ),
         )
 
@@ -511,10 +506,7 @@ def _debug_table_jsonable(value: object) -> object:
     if isinstance(value, list):
         return [_debug_table_jsonable(item) for item in value]
     if isinstance(value, Mapping):
-        return {
-            str(key): _debug_table_jsonable(item)
-            for key, item in value.items()
-        }
+        return {str(key): _debug_table_jsonable(item) for key, item in value.items()}
     if is_dataclass(value):
         return {
             field.name: _debug_table_jsonable(getattr(value, field.name))
@@ -561,10 +553,7 @@ class DebugViewSection:
 
     @property
     def is_empty(self) -> bool:
-        return (
-            (self.table is None or not self.table.rows)
-            and not self.text
-        )
+        return (self.table is None or not self.table.rows) and not self.text
 
     def to_json_dict(self) -> dict[str, object]:
         return {
@@ -582,11 +571,7 @@ class DebugViewSection:
         return cls(
             kind=DebugViewSectionKind(str(data["kind"])),
             title=str(data["title"]),
-            table=(
-                None
-                if table is None
-                else DebugViewTable.from_json_dict(table)
-            ),
+            table=(None if table is None else DebugViewTable.from_json_dict(table)),
             text=None if data["text"] is None else str(data["text"]),
         )
 
@@ -655,8 +640,7 @@ class DebugViewModel:
         return cls(
             title=str(data["title"]),
             sections=tuple(
-                DebugViewSection.from_json_dict(section)
-                for section in data["sections"]
+                DebugViewSection.from_json_dict(section) for section in data["sections"]
             ),
         )
 
@@ -670,7 +654,5 @@ def is_debug_view_export(name: str, value: object) -> bool:
 
 
 __all__ = tuple(
-    name
-    for name, value in globals().items()
-    if is_debug_view_export(name, value)
+    name for name, value in globals().items() if is_debug_view_export(name, value)
 )

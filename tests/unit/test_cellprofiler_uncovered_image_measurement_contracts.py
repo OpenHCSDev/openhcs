@@ -115,9 +115,12 @@ def test_uncovered_image_modules_compile_image_then_measurement_outputs() -> Non
             MeasurementsArtifactType,
         )
         measurement = contract.artifact_outputs.specs[1]
-        assert ImageMeasurementSubjectRelation(
-            source=ArtifactSpec.output(output_name, ImageArtifactType).ref()
-        ) in measurement.relations
+        assert (
+            ImageMeasurementSubjectRelation(
+                source=ArtifactSpec.output(output_name, ImageArtifactType).ref()
+            )
+            in measurement.relations
+        )
 
 
 def test_uncovered_image_callables_return_schema_bearing_measurement_rows() -> None:
@@ -151,9 +154,9 @@ def test_uncovered_image_callables_return_schema_bearing_measurement_rows() -> N
 
 
 def test_flip_rotation_uses_exact_native_output_qualified_feature_name() -> None:
-    image = ImagePayloadMetadata(
-        source_path="/input/DNA.tif"
-    ).payload_with(np.ones((4, 4), dtype=np.float32), None)
+    image = ImagePayloadMetadata(source_path="/input/DNA.tif").payload_with(
+        np.ones((4, 4), dtype=np.float32), None
+    )
     rotated, rows = flip_and_rotate(image, rotation_angle=12.5)
 
     table = _recorded_table(
@@ -178,9 +181,9 @@ def test_find_maxima_retains_diagnostic_schema_without_inventing_cp_features() -
         np.eye(5, dtype=np.float32),
         min_distance=1,
     )
-    maxima_payload = ImagePayloadMetadata(
-        source_path="/input/DNA.tif"
-    ).payload_with(maxima, None)
+    maxima_payload = ImagePayloadMetadata(source_path="/input/DNA.tif").payload_with(
+        maxima, None
+    )
 
     table = _recorded_table(
         module_type=FindMaximaModule,
@@ -242,24 +245,30 @@ def test_find_maxima_selects_one_stacked_invocation_for_masked_modes() -> None:
         )
 
         assert contract.artifact_inputs.names() == input_names
-        assert FindMaximaModule.resolve_function(
-            module,
-            contract=contract,
-            source_bindings=StepSourceBindingsConfig(),
-        ) is expected_callable
-
-    assert FindMaximaModule._exclude_mode(
-        ModuleBlock(
-            name="FindMaxima",
-            module_num=1,
-            setting_records=[
-                ModuleSetting(
-                    "Method for excluding background",
-                    "Within Objects",
-                )
-            ],
+        assert (
+            FindMaximaModule.resolve_function(
+                module,
+                contract=contract,
+                source_bindings=StepSourceBindingsConfig(),
+            )
+            is expected_callable
         )
-    ) is ExcludeMode.OBJECTS
+
+    assert (
+        FindMaximaModule._exclude_mode(
+            ModuleBlock(
+                name="FindMaxima",
+                module_num=1,
+                setting_records=[
+                    ModuleSetting(
+                        "Method for excluding background",
+                        "Within Objects",
+                    )
+                ],
+            )
+        )
+        is ExcludeMode.OBJECTS
+    )
 
 
 def test_synthetic_cppipe_import_and_public_transport_round_trip(

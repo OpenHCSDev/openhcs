@@ -85,6 +85,12 @@ permissions:
   actions: read
   contents: read
 
+env:
+  # Repository and fixture text is UTF-8 by contract. Forcing interpreter-wide
+  # UTF-8 keeps every locale-mediated text read independent of the runner's
+  # environment, including ZMQ server and benchmark-runner subprocesses.
+  PYTHONUTF8: "1"
+
 concurrency:
   group: integration-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
@@ -1899,15 +1905,16 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # Run the real 30-case headless comparator once. The cross-OS/Python matrix
-  # above owns generated public-boundary coverage; this lane owns semantic
-  # parity against committed native CellProfiler outputs.
+  # Run the canonical 30-case headless value comparator once. The cross-OS/
+  # Python matrix above owns generated public-boundary coverage; this lane owns
+  # semantic parity against committed native CellProfiler outputs.
   official30-headless-parity:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 90
     env:
       OPENHCS_CP_NATIVE_REFERENCE_ROOT: ${{ github.workspace }}/benchmark/native_refs/official30_scoped_rows
+      OPENHCS_REFERENCE_EXPORT_PIPELINES_ROOT: ${{ github.workspace }}/benchmark/reference_exports/official30_value_completion_20260914
       OPENHCS_CPU_ONLY: true
       QT_QPA_PLATFORM: offscreen
       MPLBACKEND: Agg
@@ -1972,7 +1979,8 @@ jobs:
           cases = load_comparison_cases(manifest_path)
           if len(cases) != 30:
               raise RuntimeError(
-                  f"Official30 manifest resolved {len(cases)} cases, expected 30."
+                  "Official30 manifest resolved "
+                  f"{len(cases)} cases, expected 30."
               )
           missing = tuple(
               (case.name, path)
@@ -1984,10 +1992,10 @@ jobs:
               raise FileNotFoundError(
                   f"Official30 acquisition left missing inputs: {missing!r}"
               )
-          print("Materialized 30 manifest-owned Official30 cases.")
+          print("Materialized the canonical 30 Official30 value cases.")
           PY
 
-      - name: Run all 30 headless parity cases over ZMQ
+      - name: Run all 30 value-comparison cases over ZMQ
         env:
           CELLPROFILER_EXAMPLES_ROOT: ${{ runner.temp }}/openhcs-official30/cellprofiler-examples
           OPENHCS_BENCHMARK_DATASET_CACHE_ROOT: ${{ runner.temp }}/openhcs-official30/datasets
@@ -2005,11 +2013,11 @@ jobs:
         with:
           name: official30-headless-parity
           path: |
-            ${{ runner.temp }}/openhcs-official30/pytest/**/baseline/observations.jsonl
-            ${{ runner.temp }}/openhcs-official30/pytest/**/baseline/observations.csv
-            ${{ runner.temp }}/openhcs-official30/pytest/**/baseline/phase_timing.csv
-            ${{ runner.temp }}/openhcs-official30/pytest/**/baseline/summary.csv
-            ${{ runner.temp }}/openhcs-official30/pytest/**/baseline/suite_metadata.json
+            ${{ runner.temp }}/openhcs-official30/pytest/**/official30/observations.jsonl
+            ${{ runner.temp }}/openhcs-official30/pytest/**/official30/observations.csv
+            ${{ runner.temp }}/openhcs-official30/pytest/**/official30/phase_timing.csv
+            ${{ runner.temp }}/openhcs-official30/pytest/**/official30/summary.csv
+            ${{ runner.temp }}/openhcs-official30/pytest/**/official30/suite_metadata.json
           if-no-files-found: warn
           retention-days: 14
 

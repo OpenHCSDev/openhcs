@@ -152,6 +152,10 @@ class DualEditorWindowNavigationDriver(WindowNavigationDriver):
             return
         driver.execute(request)
 
+    def target_exposed(self, request: RegisteredWindowNavigationRequest) -> bool | None:
+        driver = self.driver_for_field_path(request.field_path)
+        return None if driver is None else driver.target_exposed(request)
+
     def driver_for_field_path(
         self,
         field_path: str | None,

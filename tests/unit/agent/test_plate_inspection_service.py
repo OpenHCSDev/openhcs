@@ -420,6 +420,7 @@ def test_plate_inspection_auto_surfaces_native_parser_for_incomplete_export(
 
 
 def test_registered_handler_selection_roles_are_owned_polymorphically() -> None:
+    from openhcs.microscopes.imagexpress import ImageXpressHandler
     from openhcs.microscopes.opera_phenix import OperaPhenixHandler
 
     assert (
@@ -440,6 +441,53 @@ def test_registered_handler_selection_roles_are_owned_polymorphically() -> None:
     assert "not a valid native dataset" in (
         OperaPhenixHandler.source_selection_guidance()
     )
+    assert ImageXpressHandler.supports_explicit_incomplete_export() is False
+    assert "not a valid native dataset" in (
+        ImageXpressHandler.source_selection_guidance()
+    )
+
+
+def test_imagexpress_loose_tiffs_do_not_advertise_native_metadata_readiness(
+    tmp_path: Path,
+) -> None:
+    from openhcs.microscopes.imagexpress import ImageXpressMetadataHandler
+
+    for channel in (1, 2):
+        tifffile.imwrite(
+            tmp_path / f"plate_A01_s1_w{channel}.tif",
+            np.full((8, 8), channel, dtype=np.uint16),
+        )
+    manager = bioformats_filemanager()
+    with pytest.raises(ValueError, match="requires declared metadata"):
+        ImageXpressMetadataHandler(manager).get_grid_dimensions(tmp_path)
+    service = PlateInspectionService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,),
+            writable_roots=(tmp_path,),
+        ),
+        filemanager_factory=type(
+            "BioFormatsFileManagerFactory",
+            (),
+            {"create": staticmethod(bioformats_filemanager)},
+        )(),
+    )
+    result = service.inspect(
+        PlatePathInspectionRequest.from_fields(plate_path=str(tmp_path))
+    )
+    candidates = tuple(
+        candidate
+        for candidate in result.format_specific_handler_candidates
+        if candidate.microscope_type == "imagexpress"
+    )
+    assert len(candidates) == 1
+    assert candidates[0].recognizes_all_tested_files
+    assert candidates[0].metadata_detected is False
+    assert result.workflow_advice.probable_native_ingestion_owners == ()
+    assert result.workflow_advice.ingestion_owner == "source_bindings"
+    assert result.workflow_advice.ingestion_route is (
+        PlateInspectionIngestionRoute.SOURCE_BINDINGS_HANDLER
+    )
+    assert "Do not explicitly select" in result.workflow_advice.message
 
 
 def test_synthetic_plate_generation_service_writes_inspectable_plate(tmp_path: Path):

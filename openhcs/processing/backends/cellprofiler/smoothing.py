@@ -20,9 +20,7 @@ from openhcs.interop.cellprofiler.module_declarations import (
 from openhcs.core.artifacts import ImageArtifactType
 
 
-class ReducenoiseModule(
-    CellProfilerModule
-):
+class ReducenoiseModule(CellProfilerModule):
     module_name = "Reducenoise"
     aliases = ("ReduceNoise",)
     function_name = "reducenoise"
@@ -30,23 +28,28 @@ class ReducenoiseModule(
     confidence = 1.0
     input_image_setting = "Select the input image"
     output_image_setting = "Name the output image"
-    setting_bindings = (SettingToKeywordBinding.input(input_image_setting, ImageArtifactType),SettingToKeywordBinding.output(output_image_setting, ImageArtifactType),SettingToKeywordBinding("Size", "patch_size", parse_cellprofiler_int),
+    setting_bindings = (
+        SettingToKeywordBinding.input(input_image_setting, ImageArtifactType),
+        SettingToKeywordBinding.output(output_image_setting, ImageArtifactType),
+        SettingToKeywordBinding("Size", "patch_size", parse_cellprofiler_int),
         SettingToKeywordBinding("Distance", "patch_distance", parse_cellprofiler_int),
         SettingToKeywordBinding(
             "Cut-off distance", "cutoff_distance", parse_cellprofiler_float
-        ),)
+        ),
+    )
 
 
-class SmoothModule(
-    CellProfilerModule
-):
+class SmoothModule(CellProfilerModule):
     module_name = "Smooth"
     function_name = "smooth"
     validated = True
     confidence = 1.0
     input_image_setting = "Select the input image"
     output_image_setting = "Name the output image"
-    setting_bindings = (SettingToKeywordBinding.input(input_image_setting, ImageArtifactType),SettingToKeywordBinding.output(output_image_setting, ImageArtifactType),SettingToKeywordBinding("Select smoothing method", "smoothing_method"),
+    setting_bindings = (
+        SettingToKeywordBinding.input(input_image_setting, ImageArtifactType),
+        SettingToKeywordBinding.output(output_image_setting, ImageArtifactType),
+        SettingToKeywordBinding("Select smoothing method", "smoothing_method"),
         SettingToKeywordBinding(
             "Calculate artifact diameter automatically?", "auto_object_size"
         ),
@@ -54,7 +57,8 @@ class SmoothModule(
         SettingToKeywordBinding(
             "Edge intensity difference", "edge_intensity_difference"
         ),
-        SettingToKeywordBinding("Clip intensities to 0 and 1?", "clip_polynomial"),)
+        SettingToKeywordBinding("Clip intensities to 0 and 1?", "clip_polynomial"),
+    )
 
 
 from abc import ABC, abstractmethod
@@ -723,9 +727,7 @@ def reducenoise(
 def smooth_batch(request: RuntimePure2DSliceBatchRequest) -> list[Any]:
     slices_2d = request.slices_2d
     kwargs = request.kwargs
-    smoothing_method = kwargs.get(
-        "smoothing_method", SmoothingMethod.GAUSSIAN_FILTER
-    )
+    smoothing_method = kwargs.get("smoothing_method", SmoothingMethod.GAUSSIAN_FILTER)
     pixel_stack = np.ascontiguousarray(
         np.stack(
             [

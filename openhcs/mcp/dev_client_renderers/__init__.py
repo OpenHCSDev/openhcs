@@ -20,6 +20,5 @@ def ensure_dev_client_renderers_registered() -> None:
         import_module(f"{__name__}.{module_name}")
     _registered = True
 
-__all__ = (
-    "ensure_dev_client_renderers_registered",
-)
+
+__all__ = ("ensure_dev_client_renderers_registered",)

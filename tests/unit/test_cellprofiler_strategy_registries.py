@@ -56,13 +56,15 @@ from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
 )
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+from openhcs.core.runtime_object_label_domains import (
+    ObjectLabelDomain,
+    ObjectLabelDomainScope,
+)
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
 )
-
 
 JSON_SAFE_REGISTRY_KEY_TYPES = (str, int, float, bool, type(None))
 

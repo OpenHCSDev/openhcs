@@ -94,9 +94,7 @@ def test_colocalization_saved_mask_projects_its_declared_source_plane() -> None:
         do_overlap=False,
         do_costes=False,
         threshold_mask_groups=(group,),
-        threshold_mask_outputs=(
-            ColocalizationThresholdMaskRuntimeOutput(group, 1),
-        ),
+        threshold_mask_outputs=(ColocalizationThresholdMaskRuntimeOutput(group, 1),),
     )
 
     metadata = image_payload_metadata(output)
@@ -223,17 +221,15 @@ def test_straighten_worms_projects_sources_into_warped_spatial_domain(
     image = (
         ImagePayloadBundleContext.from_payloads(source_payloads).compose()
         if plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-        else ImagePayloadMetadata.compose(source_payloads).replace_fields(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
-        ).payload_with(
+        else ImagePayloadMetadata.compose(source_payloads)
+        .replace_fields(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+        .payload_with(
             np.stack(tuple(image_payload_data(payload) for payload in source_payloads)),
             None,
         )
     )
     labels = ObjectLabelPayload(
-        variant_data=ObjectLabelVariantData(
-            labels=np.zeros((8, 8), dtype=np.int32)
-        )
+        variant_data=ObjectLabelVariantData(labels=np.zeros((8, 8), dtype=np.int32))
     )
 
     output, _rows, _labels = inspect.unwrap(straighten_worms)(

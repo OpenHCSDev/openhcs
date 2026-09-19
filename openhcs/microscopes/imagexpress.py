@@ -43,6 +43,11 @@ class ImageXpressHandler(MicroscopeHandler):
     # Class attribute for automatic metadata handler registration (set after class definition)
     _metadata_handler_class = None
 
+    @classmethod
+    def supports_explicit_incomplete_export(cls) -> bool:
+        """Native initialization requires the declared ImageXpress metadata file."""
+        return False
+
     def __init__(self, filemanager: FileManager, pattern_format: Optional[str] = None):
         # Initialize parser with filemanager, respecting its interface
         self.parser = ImageXpressFilenameParser(filemanager, pattern_format)

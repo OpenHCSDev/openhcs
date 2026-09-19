@@ -1,0 +1,31 @@
+case_name,assay_category,module_category,n,equivalent_count,median_native_execution_seconds,median_openhcs_execution_seconds,median_native_total_phase_seconds,median_openhcs_total_phase_seconds,median_native_peak_memory_mb,median_openhcs_peak_memory_mb,median_speedup,median_total_phase_speedup,speedup_target,meets_execution_speedup_target,meets_total_phase_speedup_target,meets_speedup_target,min_parity_accuracy
+ExampleColocalization,,,1,1,,23.73915672302246,,75.36690320121124,,1754.28125,,,5.0,False,False,False,1.0
+ExampleCometAssay,,,1,1,,3.977323532104492,,23.650710825342685,,1987.4140625,,,5.0,False,False,False,1.0
+ExampleFly,,,1,1,,3.336738348007202,,42.62116839597002,,1706.21875,,,5.0,False,False,False,1.0
+ExampleFlyURL,,,1,1,,1.8456001281738281,,22.049583107233047,,1645.171875,,,5.0,False,False,False,1.0
+ExampleHuman,,,1,1,,2.625161647796631,,29.20021765725687,,1597.12890625,,,5.0,False,False,False,1.0
+ExampleIlluminationCorrection_Example1_AllMethod,,,1,1,,6.128801345825195,,25.67784007266164,,1996.84375,,,5.0,False,False,False,1.0
+ExampleIlluminationCorrection_Example1_EachMethod,,,1,1,5.50986026506871,0.14450597763061523,7.209928595926613,8.690060406923294,,1570.83984375,38.12894355936583,0.8296753139002954,5.0,True,False,True,1.0
+ExampleIlluminationCorrection_Example2,,,1,1,54.3014833801426,2.884080648422241,56.25130246160552,18.73815464740619,,1811.83203125,18.828004483802715,3.001965963035322,5.0,True,False,True,1.0
+ExampleIlluminationCorrection_Example3,,,1,1,2.8186310650780797,0.5744342803955078,4.164266390260309,11.93246147222817,,1599.67578125,4.906794669596327,0.3489863679805126,5.0,False,False,False,1.0
+ExampleImagingFlowCytometryObjectsInGrid,,,1,1,,44.374935150146484,,225.51070470316336,,3978.3359375,,,5.0,False,False,False,1.0
+ExampleNeighbors,,,1,1,,3.3283605575561523,,33.992765702307224,,1952.7890625,,,5.0,False,False,False,1.0
+ExamplePercentPositive,,,1,1,,1.0084357261657715,,15.693001678679138,,1873.484375,,,5.0,False,False,False,1.0
+ExampleSpeckles,,,1,1,,1.4320347309112549,,14.821364047005773,,1994.4375,,,5.0,False,False,False,1.0
+ExampleTrackObjects,,,1,1,,5.9050257205963135,,25.6576383295469,,2594.91796875,,,5.0,False,False,False,1.0
+ExampleTumor,,,1,1,,1.7101571559906006,,14.379728470463306,,2114.359375,,,5.0,False,False,False,1.0
+ExampleUntangleAndStraightenWorms,,,1,1,,1.3454406261444092,,15.541636012028903,,1921.609375,,,5.0,False,False,False,1.0
+ExampleUntangleWorms,,,1,1,,1.8538017272949219,,16.64995084097609,,1962.16796875,,,5.0,False,False,False,1.0
+ExampleUntangleWormsBrightField,,,1,1,,4.063510894775391,,24.05820939876139,,2079.46484375,,,5.0,False,False,False,1.0
+ExampleVitra,,,1,1,,4.685768365859985,,31.271149141248316,,2093.13671875,,,5.0,False,False,False,1.0
+ExampleWoundHealing,,,1,1,,5.253041505813599,,21.019314545206726,,2248.66015625,,,5.0,False,False,False,1.0
+ExampleYeastColonies,,,1,1,,5.6127707958221436,,42.25737067731097,,2179.38671875,,,5.0,False,False,False,1.0
+ExampleYeastPatches,,,1,1,,3.74049973487854,,24.37108107889071,,2155.63671875,,,5.0,False,False,False,1.0
+cp4_supplement_combine_objects,Object-combination benchmark,Object set algebra,1,1,2.249841494951397,0.14460039138793945,2.440028702840209,7.8352842214517295,,1813.65625,15.559027699416362,0.31141546801324815,5.0,True,False,True,1.0
+cp_tutorial_3d_monolayer,3D monolayer morphology,3D segmentation + measurement,1,1,,22.361229181289673,,67.67983252368867,,2492.06640625,,,5.0,False,False,False,1.0
+cp_tutorial_advanced_segmentation_final,Cell Painting morphology,Advanced segmentation + measurement,1,1,,28.94228219985962,,191.4449101453647,,2324.328125,,,5.0,False,False,False,1.0
+cp_tutorial_beginner_segmentation_final,Cell morphology,Segmentation + intensity measurement,1,1,,10.99771761894226,,89.5173049424775,,2026.0078125,,,5.0,False,False,False,1.0
+cp_tutorial_pixel_based_classification,Pixel classification,Pixel classification,1,1,,1.6673905849456787,,14.441721332725137,,2032.43359375,,,5.0,False,False,False,1.0
+cp_tutorial_quality_control,Cell Painting quality control,Image quality measurement,1,1,,1.6602771282196045,,24.459097715560347,,1901.02734375,,,5.0,False,False,False,1.0
+cp_tutorial_translocation_final,Translocation assay,Segmentation + classification,1,1,,2.390281915664673,,19.543889857362956,,1918.23828125,,,5.0,False,False,False,1.0
+cp_tutorial_translocation_start,Translocation assay,Starter nuclei segmentation,1,1,2.6963382149115205,0.3775002956390381,3.328680652193725,9.856196708977222,,1859.3203125,7.142612194109992,0.33772465693200865,5.0,True,False,True,1.0

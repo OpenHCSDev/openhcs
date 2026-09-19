@@ -122,7 +122,7 @@ def install_wheel(wheel_path: Path, verbose: bool = True) -> bool:
             [sys.executable, "-m", "pip", "install", str(wheel_path)],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
         )
         if verbose:
             print("[openhcs] Successfully installed zeroc-ice!")
@@ -145,8 +145,11 @@ def verify_installation(verbose: bool = True) -> bool:
     """
     try:
         import Ice
+
         if verbose:
-            print(f"[openhcs] zeroc-ice is already installed (Ice version: {Ice.stringVersion()})")
+            print(
+                f"[openhcs] zeroc-ice is already installed (Ice version: {Ice.stringVersion()})"
+            )
         return True
     except ImportError:
         return False
@@ -181,8 +184,12 @@ def install_zeroc_ice(verbose: bool = True, dest_dir: Optional[Path] = None) -> 
     # Validate Python version
     if python_version not in SUPPORTED_PYTHON_VERSIONS:
         if verbose:
-            print(f"[openhcs] Warning: Python {python_version} may not have a pre-built zeroc-ice wheel.")
-            print(f"[openhcs] Supported versions: {', '.join(SUPPORTED_PYTHON_VERSIONS)}")
+            print(
+                f"[openhcs] Warning: Python {python_version} may not have a pre-built zeroc-ice wheel."
+            )
+            print(
+                f"[openhcs] Supported versions: {', '.join(SUPPORTED_PYTHON_VERSIONS)}"
+            )
             print(f"[openhcs] Continuing anyway...")
 
     # Get wheel URL
@@ -199,8 +206,12 @@ def install_zeroc_ice(verbose: bool = True, dest_dir: Optional[Path] = None) -> 
 
     if wheel_path is None:
         if verbose:
-            print("[openhcs] Download failed. zeroc-ice will not be installed automatically.")
-            print("[openhcs] Please install manually: python scripts/install_omero_deps.py")
+            print(
+                "[openhcs] Download failed. zeroc-ice will not be installed automatically."
+            )
+            print(
+                "[openhcs] Please install manually: python scripts/install_omero_deps.py"
+            )
         return False
 
     # Install wheel
@@ -208,7 +219,9 @@ def install_zeroc_ice(verbose: bool = True, dest_dir: Optional[Path] = None) -> 
         print("[openhcs] Installing zeroc-ice...")
     if not install_wheel(wheel_path, verbose=verbose):
         if verbose:
-            print("[openhcs] Installation failed. Please install manually: python scripts/install_omero_deps.py")
+            print(
+                "[openhcs] Installation failed. Please install manually: python scripts/install_omero_deps.py"
+            )
         return False
 
     if verbose:

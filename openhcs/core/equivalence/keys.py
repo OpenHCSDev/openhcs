@@ -27,6 +27,7 @@ from openhcs.core.runtime_measurements import (
     ObjectCoreMeasurementFeature,
 )
 
+
 @dataclass(frozen=True, slots=True)
 class RuntimeMeasurementSubjectKey:
     """Canonical measured subject for semantic measurement comparison."""
@@ -907,9 +908,7 @@ def _measurement_qualifier_parts_only(parts: tuple[str, ...]) -> bool:
 def normalized_measurement_feature_name_parts(feature_name: str) -> tuple[str, ...]:
     """Return normalized runtime feature-name parts for semantic projection."""
     return tuple(
-        part
-        for part in normalize_runtime_identifier(feature_name).split("_")
-        if part
+        part for part in normalize_runtime_identifier(feature_name).split("_") if part
     )
 
 
@@ -945,7 +944,9 @@ def _directional_pair_feature_name_and_source(
 
     canonical_feature_name, direction_index = alias
     directed_source_name = (
-        source_pair.reversed_source_name if direction_index == 2 else source_pair.source_name
+        source_pair.reversed_source_name
+        if direction_index == 2
+        else source_pair.source_name
     )
     return canonical_feature_name, directed_source_name
 
@@ -1080,11 +1081,9 @@ def _should_strip_category_prefix(
     if parts[: len(prefix)] != prefix or len(parts) <= len(prefix):
         return False
     suffix = parts[len(prefix) :]
-    pair_correlation_feature_name = (
-        runtime_measurement_dialect_for_cache_id(
-            dialect_id
-        ).resolved_pair_correlation_feature_name()
-    )
+    pair_correlation_feature_name = runtime_measurement_dialect_for_cache_id(
+        dialect_id
+    ).resolved_pair_correlation_feature_name()
     if pair_correlation_feature_name is not None and prefix == (
         pair_correlation_feature_name,
     ):

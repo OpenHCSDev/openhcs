@@ -302,10 +302,7 @@ def test_adapter_free_cellprofiler_module_keeps_raw_runtime_callable() -> None:
     assert plan is not None
     assert plan.contract.runtime_adapter is None
     assert plan.contract.resolve_runtime_callable() is save_images
-    assert (
-        plan.contract.artifact_inputs.names()
-        == ("ImageToSave",)
-    )
+    assert plan.contract.artifact_inputs.names() == ("ImageToSave",)
     assert plan.contract.main_flow_outputs.names() == ()
     assert plan.contract.canonical_return_output_specs.names() == ()
     assert plan.contract.trailing_return_output_specs.names() == ("SavedImage",)
@@ -377,9 +374,7 @@ def test_public_compile_time_provider_uses_step_order_for_repeated_modules():
     )
     invocation = next(compiled.iter_invocations())
 
-    assert [
-        spec.name for spec in invocation.contract.artifact_outputs
-    ] == [
+    assert [spec.name for spec in invocation.contract.artifact_outputs] == [
         "SecondIllum",
     ]
 
@@ -414,9 +409,7 @@ def test_cellprofiler_compile_time_contract_provider_derives_single_source_input
 
     assert provider is not None
     invocation = next(normalize_function_pattern(step.func).iter_items())
-    contract = provider.plans[
-        (0, invocation.key)
-    ].contract
+    contract = provider.plans[(0, invocation.key)].contract
     assert [spec.name for spec in contract.artifact_inputs] == ["OrigStain1"]
     assert [spec.name for spec in contract.artifact_outputs] == [
         "IllumStain1",
@@ -465,12 +458,8 @@ def test_cellprofiler_compile_time_contract_provider_scopes_grouped_source_bindi
 
     assert provider is not None
     invocations = tuple(normalize_function_pattern(step.func).iter_items())
-    first_contract = provider.plans[
-        (0, invocations[0].key)
-    ].contract
-    second_contract = provider.plans[
-        (0, invocations[1].key)
-    ].contract
+    first_contract = provider.plans[(0, invocations[0].key)].contract
+    second_contract = provider.plans[(0, invocations[1].key)].contract
     assert [spec.name for spec in first_contract.artifact_inputs] == ["OrigStain1"]
     assert [spec.name for spec in first_contract.artifact_outputs] == [
         "IllumStain1",

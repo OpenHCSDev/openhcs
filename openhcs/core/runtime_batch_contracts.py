@@ -26,7 +26,6 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
-
 F = TypeVar("F", bound=Callable)
 RuntimeSliceDataT = TypeVar("RuntimeSliceDataT")
 RuntimeSliceResultT = TypeVar("RuntimeSliceResultT")
@@ -105,7 +104,10 @@ class RuntimeBatchInvocationRequest(RuntimeImageExecutionContext):
         contract executor by returning ``None``.
         """
 
-        if self.execution_mode is not ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK:
+        if (
+            self.execution_mode
+            is not ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+        ):
             return self
         if not isinstance(self.image, AlignedImageStack):
             raise TypeError(
@@ -243,6 +245,7 @@ class RuntimeBatchExecutor(ABC, metaclass=AutoRegisterMeta):
     ) -> list[RuntimeSliceResultT]:
         """Execute one runtime batch domain."""
 
+
 @dataclass(frozen=True, slots=True)
 class RuntimeBatchCallableFamily:
     """Callable plus its raw processing ancestor for inherited batch contracts."""
@@ -337,9 +340,7 @@ def runtime_batch_executors_from_callable(
     if declared is None:
         declared = {}
     if not isinstance(declared, Mapping):
-        raise TypeError(
-            f"{executors_field.owner_label(func)} must be a mapping."
-        )
+        raise TypeError(f"{executors_field.owner_label(func)} must be a mapping.")
     batch_executors: dict[RuntimeBatchExecutionDomain, Callable] = {}
     for raw_domain, executor in declared.items():
         domain = (
@@ -381,8 +382,8 @@ def runtime_batch_executor(
             raise TypeError(
                 f"{func!r} cannot carry runtime batch executor metadata."
             ) from exc
-        namespace[RuntimeBatchCallableMetadataField.EXECUTORS.value] = (
-            MappingProxyType(batch_executors)
+        namespace[RuntimeBatchCallableMetadataField.EXECUTORS.value] = MappingProxyType(
+            batch_executors
         )
         return func
 

@@ -12,7 +12,6 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
 
-
 AUTO_REGISTER_REGISTRY_ATTRIBUTE = "__registry__"
 
 

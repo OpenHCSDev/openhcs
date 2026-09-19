@@ -99,9 +99,8 @@ class GenericValidator(Generic[T]):
             self.config.validate_combination(variable_components, group_by)
 
             # 2. Validate dict pattern requirements
-            if (
-                isinstance(func_pattern, dict)
-                and (group_by is None or group_by.value is None)
+            if isinstance(func_pattern, dict) and (
+                group_by is None or group_by.value is None
             ):
                 return ValidationResult(
                     is_valid=False,

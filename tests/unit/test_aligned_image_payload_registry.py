@@ -19,9 +19,9 @@ from openhcs.core.aligned_image_payload import (
 
 
 @pytest.fixture
-def isolated_strategy_registry() -> Iterator[
-    dict[str, type[AlignedImageStackKwargResolutionStrategy]]
-]:
+def isolated_strategy_registry() -> (
+    Iterator[dict[str, type[AlignedImageStackKwargResolutionStrategy]]]
+):
     registry = AlignedImageStackKwargResolutionStrategy.__registry__
     snapshot = registry.copy()
     AlignedImageStackKwargResolutionStrategy.registered_strategy_types.cache_clear()
@@ -47,7 +47,9 @@ def test_existing_aligned_kwarg_strategies_register_automatically() -> None:
     }
 
     assert type(AlignedImageStackKwargResolutionStrategy.__registry__) is dict
-    assert set(AlignedImageStackKwargResolutionStrategy.__registry__.values()) == expected
+    assert (
+        set(AlignedImageStackKwargResolutionStrategy.__registry__.values()) == expected
+    )
     assert len(AlignedImageStackKwargResolutionStrategy.__registry__) == len(expected)
 
 
@@ -59,9 +61,7 @@ def test_dynamic_aligned_kwarg_strategy_registers_at_class_definition(
     class DynamicKwarg:
         pass
 
-    class DynamicKwargResolutionStrategy(
-        AlignedImageStackKwargResolutionStrategy
-    ):
+    class DynamicKwargResolutionStrategy(AlignedImageStackKwargResolutionStrategy):
         value_type = DynamicKwarg
 
         def resolve(
@@ -77,12 +77,15 @@ def test_dynamic_aligned_kwarg_strategy_registers_at_class_definition(
         isolated_strategy_registry[DynamicKwargResolutionStrategy.value_type_label]
         is DynamicKwargResolutionStrategy
     )
-    assert type(
-        AlignedImageStackKwargResolutionStrategy.require_nominal_value(
-            DynamicKwarg(),
-            context="dynamic aligned kwarg",
+    assert (
+        type(
+            AlignedImageStackKwargResolutionStrategy.require_nominal_value(
+                DynamicKwarg(),
+                context="dynamic aligned kwarg",
+            )
         )
-    ) is DynamicKwargResolutionStrategy
+        is DynamicKwargResolutionStrategy
+    )
 
 
 def test_aligned_kwarg_strategy_resolution_follows_exact_value_mro(
@@ -130,9 +133,12 @@ def test_aligned_kwarg_strategy_resolution_follows_exact_value_mro(
         BaseKwargResolutionStrategy,
         PassThroughAlignedKwargResolutionStrategy,
     )
-    assert type(
-        AlignedImageStackKwargResolutionStrategy.require_nominal_value(
-            MostDerivedKwarg(),
-            context="MRO-aligned kwarg",
+    assert (
+        type(
+            AlignedImageStackKwargResolutionStrategy.require_nominal_value(
+                MostDerivedKwarg(),
+                context="MRO-aligned kwarg",
+            )
         )
-    ) is DerivedKwargResolutionStrategy
+        is DerivedKwargResolutionStrategy
+    )

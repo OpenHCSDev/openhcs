@@ -1701,9 +1701,7 @@ def test_calculate_math_selects_measurements_by_nominal_feature_owner() -> None:
         "object_intensity_measurements",
         "shape_measurements",
     )
-    assert tuple(
-        spec.group_scope_sources() for spec in selected_measurements
-    ) == (
+    assert tuple(spec.group_scope_sources() for spec in selected_measurements) == (
         (crop_blue.for_plan_type(ArtifactInputPlan).ref(),),
         (nuclei.for_plan_type(ArtifactInputPlan).ref(),),
     )

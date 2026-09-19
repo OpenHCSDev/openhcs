@@ -366,13 +366,11 @@ def test_plate_manager_normalizes_persisted_multi_cppipe_scope_to_logical_rows(
             final_scope,
         ]
         assert (
-            ObjectStateRegistry.get_object(start_scope)
-            .selected_pipeline_path
+            ObjectStateRegistry.get_object(start_scope).selected_pipeline_path
             == start_cppipe
         )
         assert (
-            ObjectStateRegistry.get_object(final_scope)
-            .selected_pipeline_path
+            ObjectStateRegistry.get_object(final_scope).selected_pipeline_path
             == final_cppipe
         )
         close_widget(widget)

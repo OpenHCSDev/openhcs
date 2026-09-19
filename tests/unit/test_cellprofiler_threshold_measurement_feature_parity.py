@@ -21,7 +21,9 @@ from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.runtime_artifact_values import ArtifactKey, RuntimeValue
 from openhcs.core.runtime_equivalence import runtime_reference_artifact_equivalence
-from openhcs.core.runtime_execution_validation import RuntimeArtifactExecutionObservation
+from openhcs.core.runtime_execution_validation import (
+    RuntimeArtifactExecutionObservation,
+)
 from openhcs.core.runtime_exports import RuntimeExportObservation
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementRowAxisField

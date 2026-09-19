@@ -9,8 +9,7 @@ import math
 import numpy as np
 from numba import njit
 
-
-CELLPROFILER_THRESHOLD_ENTROPY_DELTA = 2.0 ** -8
+CELLPROFILER_THRESHOLD_ENTROPY_DELTA = 2.0**-8
 CELLPROFILER_THRESHOLD_ENTROPY_BINS = 256
 
 
@@ -95,9 +94,7 @@ def _threshold_weighted_variance_from_sums(
     bg_mean = bg_sum / bg_count
     fg_variance = fg_sumsq / fg_count - fg_mean * fg_mean
     bg_variance = bg_sumsq / bg_count - bg_mean * bg_mean
-    return (
-        fg_variance * fg_count + bg_variance * bg_count
-    ) / (fg_count + bg_count)
+    return (fg_variance * fg_count + bg_variance * bg_count) / (fg_count + bg_count)
 
 
 @njit(cache=True)
@@ -210,10 +207,9 @@ def _threshold_diagnostics_unmasked_finite_numba(
                 clipped = value
 
             noise_value = noise[y, x]
-            log_smoothed_value = (
-                math.log2(clipped + delta) * noise_value
-                + (1.0 - noise_value) * math.log2(clipped)
-            )
+            log_smoothed_value = math.log2(clipped + delta) * noise_value + (
+                1.0 - noise_value
+            ) * math.log2(clipped)
             if log_smoothed_value > 0.0:
                 log_smoothed_value = 0.0
             smoothed_logs[smoothed_index] = log_smoothed_value
@@ -353,10 +349,9 @@ def _threshold_diagnostics_numba(
                 clipped = value
 
             noise_value = noise[y, x]
-            log_smoothed_value = (
-                math.log2(clipped + delta) * noise_value
-                + (1.0 - noise_value) * math.log2(clipped)
-            )
+            log_smoothed_value = math.log2(clipped + delta) * noise_value + (
+                1.0 - noise_value
+            ) * math.log2(clipped)
             if log_smoothed_value > 0.0:
                 log_smoothed_value = 0.0
             smoothed_logs[smoothed_index] = log_smoothed_value
@@ -429,8 +424,7 @@ def smooth_with_deterministic_noise(image: np.ndarray, *, bits: int) -> np.ndarr
     image_copy = np.clip(image, delta, 1)
     noise = _deterministic_normal_noise(image_copy.shape)
     result = np.exp2(
-        np.log2(image_copy + delta) * noise
-        + (1 - noise) * np.log2(image_copy)
+        np.log2(image_copy + delta) * noise + (1 - noise) * np.log2(image_copy)
     )
     result[result > 1] = 1
     result[result < 0] = 0

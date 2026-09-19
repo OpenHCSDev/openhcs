@@ -34,7 +34,7 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
-    )
+)
 from openhcs.core.runtime_artifact_queries import MeasurementTableAxisProjection
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_tabular_values import (

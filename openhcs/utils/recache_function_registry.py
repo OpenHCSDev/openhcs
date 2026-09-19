@@ -331,7 +331,9 @@ def main():
         print("\n✅ Complete success: Registry recached and audit table generated!")
         sys.exit(0)
     else:
-        print("\n⚠️  Registry recached successfully, but audit table generation failed!")
+        print(
+            "\n⚠️  Registry recached successfully, but audit table generation failed!"
+        )
         sys.exit(1)
 
 

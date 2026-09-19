@@ -993,7 +993,9 @@ def test_projection_uses_declared_row_identity_aliases_as_structural_fields() ->
         field
         for field in object_table.columns
         if field.name == "Cells_Number_Object_Number"
-    ) == (FieldSpec("Cells_Number_Object_Number", int),)
+    ) == (
+        FieldSpec("Cells_Number_Object_Number", int),
+    )
     assert _field_rows(object_table) == (
         {
             "ImageNumber": 1,

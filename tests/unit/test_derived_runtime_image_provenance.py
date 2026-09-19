@@ -139,9 +139,7 @@ def test_image_artifact_normalization_names_each_aligned_image_payload() -> None
 
 def test_derived_singleton_runtime_plane_projects_by_output_name() -> None:
     metadata = ImagePayloadMetadata(
-        source_image_provenance_planes=SourceImageProvenancePlanes(
-            (_source_plane(1),)
-        ),
+        source_image_provenance_planes=SourceImageProvenancePlanes((_source_plane(1),)),
         source_image_names=("OrigGreen",),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
@@ -173,9 +171,7 @@ def test_derived_singleton_runtime_plane_projects_by_output_name() -> None:
 
 def test_declared_singleton_name_owns_projection_over_nested_source_name() -> None:
     metadata = ImagePayloadMetadata(
-        source_image_provenance_planes=SourceImageProvenancePlanes(
-            (_source_plane(1),)
-        ),
+        source_image_provenance_planes=SourceImageProvenancePlanes((_source_plane(1),)),
         source_image_names=("OrigGreenOverlay",),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )

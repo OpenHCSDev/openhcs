@@ -5,7 +5,6 @@ from __future__ import annotations
 from enum import Enum
 from pathlib import Path
 
-
 DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH = Path(
     "docs/source/development/mcp_knowledge_base_manifest.json"
 )
