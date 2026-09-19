@@ -644,6 +644,13 @@ class VirtualWorkspaceSourceProjectionCache:
         return filtered
 
 
+# One process-level default: the projection authority owns its cache, so
+# callers that do not thread one explicitly (per-axis compile initialization)
+# reuse the plate's derived projection instead of re-ingesting its metadata
+# document for every axis. Document identity is the invalidation signal.
+DEFAULT_SOURCE_PROJECTION_CACHE = VirtualWorkspaceSourceProjectionCache()
+
+
 @dataclass(frozen=True, slots=True)
 class VirtualWorkspaceSourceProjectionAuthority:
     """Projection authority for source-workspace metadata owned by a plate handler."""
@@ -684,7 +691,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
                 metadata_handler,
                 filemanager,
             ),
-            cache=cache,
+            cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
         )
 
     @staticmethod

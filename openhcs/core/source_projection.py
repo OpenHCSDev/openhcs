@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field, replace, fields
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
+from functools import lru_cache
 from typing import Any, ClassVar, Mapping, cast, get_type_hints
 from urllib.parse import quote
 
@@ -649,6 +650,33 @@ class SourceProjection:
         )
 
 
+def declared_optional_payload_field(cls, payload_type: type) -> str:
+    """Derive the one declared field carrying ``payload_type | None``.
+
+    Class-level derivation: the wire field is owned by the projection's
+    dataclass declaration, so it is computed once per (class, payload type)
+    and reused by serialization and ingest for every record.
+    """
+
+    annotations = get_type_hints(cls)
+    matches = tuple(
+        declared.name
+        for declared in fields(cls)
+        if annotations[declared.name] == payload_type | None
+    )
+    if len(matches) != 1:
+        raise ValueError(
+            f"{cls.__name__} requires exactly one declared field carrying "
+            f"optional {payload_type.__name__}."
+        )
+    return matches[0]
+
+
+declared_optional_payload_field = lru_cache(maxsize=None)(
+    declared_optional_payload_field
+)
+
+
 @dataclass(frozen=True, slots=True)
 class SourcePlaneProjection(SourceProjection):
     """One canonical primary plane mapped to one source pixel reference."""
@@ -673,17 +701,8 @@ class SourcePlaneProjection(SourceProjection):
     @classmethod
     def image_metadata_wire_field(cls) -> str:
         """Derive the optional full-metadata field from its nominal declaration."""
-        annotations = get_type_hints(cls)
-        matches = tuple(
-            declared.name
-            for declared in fields(cls)
-            if annotations[declared.name] == ImagePayloadMetadata | None
-        )
-        if len(matches) != 1:
-            raise ValueError(
-                "Primary source projection requires one image metadata declaration."
-            )
-        return matches[0]
+
+        return declared_optional_payload_field(cls, ImagePayloadMetadata)
 
     def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
         if self.image_metadata is not None:
