@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from zmqruntime import ZMQConfig
 from zmqruntime.config import (
+    ZMQConfig,
     NonBlankString,
     PositiveFloat,
     PositiveInteger,

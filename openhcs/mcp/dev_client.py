@@ -37,6 +37,7 @@ from openhcs.mcp.dev_client_core import (
     WorkflowStatePollPolicy as WorkflowStatePollPolicy,
     _command_failed,
     captured_server_stderr_tail,
+    open_mcp_dev_session,
     parse_json_object,
     require_json_object_payload,
     state_surface_tool_arguments as state_surface_tool_arguments,
@@ -106,6 +107,7 @@ class McpDevClient:
         surface_profile: LocalCapabilitySurfaceProfile | None = None,
         initialize_timeout_seconds: float = DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS,
         server_stderr: TextIO | None = None,
+        use_resident_server: bool | None = None,
     ) -> None:
         self.server_spec = McpDevServerSpec(
             python_executable,
@@ -129,15 +131,23 @@ class McpDevClient:
             else server_stderr
         )
         self._session = McpDevStdioSession(self.server_spec, self._server_stderr)
+        self._session_cm = None
+        self._use_resident_server = use_resident_server
         self._session_started = False
         self._closed = False
 
     async def _start(self) -> None:
-        await self._session.__aenter__()
-        self._session_started = True
-        await self._session.initialize(
-            timeout_seconds=self.initialize_timeout_seconds,
+        self._session_cm = open_mcp_dev_session(
+            self.server_spec,
+            self._server_stderr,
+            initialize_timeout_seconds=self.initialize_timeout_seconds,
+            use_resident_server=self._use_resident_server,
+            stdio_session_factory=lambda: McpDevStdioSession(
+                self.server_spec, self._server_stderr
+            ),
         )
+        self._session = await self._session_cm.__aenter__()
+        self._session_started = True
 
     def start(self) -> "McpDevClient":
         """Start and initialize the owned stdio session."""
@@ -206,8 +216,9 @@ class McpDevClient:
         if self._closed:
             return
         try:
-            if self._session_started:
-                self._runner.run(self._session.__aexit__(None, None, None))
+            if self._session_started and self._session_cm is not None:
+                self._runner.run(self._session_cm.__aexit__(None, None, None))
+                self._session_cm = None
         finally:
             self._session_started = False
             self._runner.close()
@@ -296,6 +307,16 @@ def _add_common_options(
             choices=LocalCapabilitySurfaceProfile.names(),
             help="MCP capability surface used by the fresh server.",
         )
+        parser.add_argument(
+            "--resident",
+            dest="resident_server",
+            action=argparse.BooleanOptionalAction,
+            help=(
+                "Reuse a resident MCP server over a unix socket across "
+                "command invocations. --no-resident uses a fresh stdio "
+                "server per command."
+            ),
+        )
         return
 
     parser.add_argument(
@@ -320,6 +341,17 @@ def _add_common_options(
         choices=LocalCapabilitySurfaceProfile.names(),
         default=FullLocalCapabilitySurfaceProfile.name,
         help="MCP capability surface used by the fresh server (default: full).",
+    )
+    parser.add_argument(
+        "--resident",
+        dest="resident_server",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Reuse a resident MCP server over a unix socket across command "
+            "invocations (default). --no-resident uses a fresh stdio server "
+            "per command."
+        ),
     )
 
 
@@ -388,6 +420,7 @@ def _run_persistent_shell(
                 args.timeout_seconds,
                 DEFAULT_REGISTRY_DISCOVERY_TIMEOUT_SECONDS,
             ),
+            use_resident_server=getattr(args, "resident_server", True),
         ) as client:
             while True:
                 if command_lines is None:

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 import logging
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
@@ -164,10 +165,36 @@ def build_bootstrapped_server(
         )
 
 
+MCP_SERVE_TRANSPORT_ARGUMENT = "--serve"
+MCP_SERVE_TRANSPORT_SOCKET = "socket"
+MCP_SERVE_TRANSPORT_STDIO = "stdio"
+MCP_SOCKET_PATH_ARGUMENT = "--socket-path"
+MCP_SOCKET_IDLE_EXIT_ARGUMENT = "--idle-exit-seconds"
+
+
 def run_bootstrapped_server(
     capability_surface_profile: "LocalCapabilitySurfaceProfile | None" = None,
+    *,
+    serve_transport: str = MCP_SERVE_TRANSPORT_STDIO,
+    socket_path=None,
+    idle_exit_seconds: float | None = None,
 ) -> None:
-    """Run the OpenHCS MCP server with transport-owned protocol stdout."""
+    """Run the OpenHCS MCP server on the requested transport.
+
+    The stdio transport owns the process protocol channel for exactly one
+    session, matching MCP host clients. The socket transport keeps one
+    constructed server resident and serves each client connection as an
+    independent session, which lets development clients reuse server
+    construction across command invocations.
+    """
+
+    if serve_transport == MCP_SERVE_TRANSPORT_SOCKET:
+        _run_resident_socket_server(
+            capability_surface_profile,
+            socket_path=socket_path,
+            idle_exit_seconds=idle_exit_seconds,
+        )
+        return
     from openhcs.mcp.stdio import McpStdioTransport
 
     with McpStdioTransport.reserve_process_stdio() as stdio_transport:
@@ -185,6 +212,54 @@ def run_bootstrapped_server(
                     McpBootstrapFailurePhase.RUN_SERVER,
                 )
             )
+
+
+def _run_resident_socket_server(
+    capability_surface_profile: "LocalCapabilitySurfaceProfile | None" = None,
+    *,
+    socket_path=None,
+    idle_exit_seconds: float | None = None,
+) -> None:
+    """Build the server once and keep serving sessions on a unix socket."""
+
+    from openhcs.mcp.socket import (
+        MCP_SOCKET_IDLE_EXIT_SECONDS_DEFAULT,
+        McpSocketTransport,
+        mcp_dev_socket_path,
+    )
+
+    surface_name = (
+        capability_surface_profile.name
+        if capability_surface_profile is not None
+        else "default"
+    )
+    resolved_socket_path = (
+        Path(socket_path)
+        if socket_path is not None
+        else mcp_dev_socket_path(surface_name)
+    )
+    transport = McpSocketTransport(
+        resolved_socket_path,
+        idle_exit_seconds=(
+            MCP_SOCKET_IDLE_EXIT_SECONDS_DEFAULT
+            if idle_exit_seconds is None
+            else idle_exit_seconds
+        ),
+    )
+    try:
+        server = (
+            build_bootstrapped_server()
+            if capability_surface_profile is None
+            else build_bootstrapped_server(capability_surface_profile)
+        )
+    except Exception as exc:
+        transport._log(
+            "build_failed",
+            exception_type=type(exc).__name__,
+            message=str(exc),
+        )
+        raise SystemExit(1) from exc
+    transport.serve(server)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -207,6 +282,27 @@ def _build_parser() -> argparse.ArgumentParser:
             "runtime-server, fallback, and expert-only tools."
         ),
     )
+    parser.add_argument(
+        MCP_SERVE_TRANSPORT_ARGUMENT,
+        choices=(MCP_SERVE_TRANSPORT_STDIO, MCP_SERVE_TRANSPORT_SOCKET),
+        default=MCP_SERVE_TRANSPORT_STDIO,
+        help=(
+            "Protocol transport. stdio serves one session on the process "
+            "channel for MCP host clients; socket keeps the constructed "
+            "server resident for development clients."
+        ),
+    )
+    parser.add_argument(
+        MCP_SOCKET_PATH_ARGUMENT,
+        default=None,
+        help="Unix socket path for the resident socket transport.",
+    )
+    parser.add_argument(
+        MCP_SOCKET_IDLE_EXIT_ARGUMENT,
+        type=float,
+        default=None,
+        help="Seconds of connection inactivity before the resident server exits.",
+    )
     return parser
 
 
@@ -218,6 +314,12 @@ def main(argv: Sequence[str] | None = None) -> None:
         if os.getenv(MCP_VERBOSE_ENVIRONMENT_VARIABLE) is None:
             logging.disable(logging.INFO)
         args = _build_parser().parse_args(argv)
-        run_bootstrapped_server(LocalCapabilitySurfaceProfile.for_name(args.surface))
+        idle_exit_seconds = getattr(args, "idle_exit_seconds", None)
+        run_bootstrapped_server(
+            LocalCapabilitySurfaceProfile.for_name(args.surface),
+            serve_transport=args.serve,
+            socket_path=getattr(args, "socket_path", None),
+            idle_exit_seconds=idle_exit_seconds,
+        )
     finally:
         logging.disable(disabled_level)

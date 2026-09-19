@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -1186,7 +1186,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1261,7 +1261,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Owns declaration-derived child-process environments for optional array frameworks."
       }
     ],
@@ -1619,7 +1619,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares framework capabilities, callable memory metadata, and the child-process import environment owned by each MemoryType member."
       },
       {
@@ -1804,7 +1804,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Embeds the persisted generic list-preview policy in UIConfig."
       },
       {
@@ -1878,22 +1878,22 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
         "path": "openhcs/mcp/dev_client_commanding.py",
-        "sha256": "ecf8052a2a5fa58f39bf3bbbb5447424c516564f3ff15b41cd2a6af7dcb370b3",
+        "sha256": "406e1923d7668e93bdba6dde1a8056117f880b5d0b480927d8fa87f1ad5dcafa",
         "role": "Validates one-shot development commands against the selected surface before starting an MCP subprocess."
       },
       {
         "path": "openhcs/mcp/dev_client.py",
-        "sha256": "6c354b95fc527aecfb39519b711c54ebed66183916fd21746fc6202f350deee1",
+        "sha256": "cb91fcaf3040ff9bc41d6145b71aac8249b42b0369ce8547531cccf7f76dcb3a",
         "role": "Validates commands before dispatch through an initialized persistent development session."
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "082c6f95ab0ab2d7c88d452d4f47d84624bdc884c678186000aa4cc0a0ff6384",
+        "sha256": "6b05721536e92ed0f9ce4fdd0b6ebd4dbc75201277d1df1d625bf87456d5a57e",
         "role": "Resolves tool identity and compatible profiles from the capability declarations at the shared call boundary."
       },
       {
@@ -1923,7 +1923,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Declares UIConfig and projects its unique execution endpoint without constructing unrelated UI configuration."
       },
       {
@@ -2003,7 +2003,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "82edae86d12e1fca90bea762d836d16946b6d8113bcd456d18b4ad7aa53a0a6f",
+        "sha256": "dedb131fb88ba9b6f8e39253e6a016458592915930cb0fcc0ae5a7db2abd25aa",
         "role": "Proves MCP registration, declaration-derived development-client surface preflight, and rejection of undeclared native capture."
       },
       {
@@ -2230,7 +2230,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares reusable memory types together with framework capability and device behaviour."
       },
       {

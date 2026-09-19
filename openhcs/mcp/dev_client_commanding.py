@@ -40,6 +40,7 @@ from openhcs.mcp.dev_client_core import (
     McpDevToolCall,
     McpDevToolListResponse,
     McpToolArgumentAuthority,
+    open_mcp_dev_session,
     add_request_factory_option,
     add_runtime_connection_options,
     add_ui_connection_options,
@@ -129,7 +130,7 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         server_spec: McpDevServerSpec,
         args: argparse.Namespace,
     ) -> McpDevToolBatchResponse | McpDevToolListResponse:
-        """Execute this command through one freshly initialized stdio session."""
+        """Execute this command through one initialized MCP dev session."""
         prepared_calls = self.calls_from_args(args)
         for call in prepared_calls:
             call.require_surface_profile(server_spec.surface_profile)
@@ -140,9 +141,12 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
             errors="replace",
         ) as server_stderr:
             try:
-                async with McpDevStdioSession(server_spec, server_stderr) as session:
-                    phase = McpDevClientPhase.INITIALIZE
-                    await session.initialize(timeout_seconds=self.timeout_seconds(args))
+                async with open_mcp_dev_session(
+                    server_spec,
+                    server_stderr,
+                    initialize_timeout_seconds=self.timeout_seconds(args),
+                    use_resident_server=getattr(args, "resident_server", None),
+                ) as session:
                     phase = self.execution_phase
                     payload = await self.run_session(
                         session,

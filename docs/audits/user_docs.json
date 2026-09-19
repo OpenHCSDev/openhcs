@@ -168,7 +168,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -555,7 +555,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Owns framework capabilities and the canonical callable memory-metadata keys used by function declarations."
       },
       {
@@ -697,7 +697,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -747,7 +747,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares framework capabilities, callable memory metadata, and the child-process import environment owned by each MemoryType member."
       },
       {
@@ -914,7 +914,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1157,7 +1157,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Embeds the persisted generic list-preview policy in UIConfig."
       },
       {
@@ -1340,7 +1340,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -1621,7 +1621,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2035,7 +2035,7 @@
       },
       {
         "path": "external/zmqruntime/src/zmqruntime/__init__.py",
-        "sha256": "deae02b6920c8f5dd315fd2e508d44c877f39028ca4d40aaab4e7087e6c492b6",
+        "sha256": "37f3e14f58b4c1dda3d338a3a2fb075aefea215f6f25b69f44091891341755ef",
         "role": "Exports the generic ZMQ runtime contracts used by viewer and execution endpoints."
       },
       {
@@ -2087,7 +2087,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Owns the callable memory metadata and framework capabilities named by the memory-integration route."
       }
     ],
@@ -2119,7 +2119,7 @@
     "authority": [
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares framework capabilities, callable memory metadata, and the child-process import environment owned by each MemoryType member."
       },
       {
@@ -2288,7 +2288,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2534,7 +2534,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Declares UI configuration, including logging, theming, viewer, and execution-server settings."
       },
       {
@@ -2762,7 +2762,7 @@
       },
       {
         "path": "openhcs/mcp/bootstrap.py",
-        "sha256": "b61f7f806c956f2155f6d220dbcde486fcd658122ac163526c694505a9b8f18b",
+        "sha256": "64b2ef9a4f4fe50154b4c921a7617b2e7c9dcf8bb475df7423e37e8395a8b250",
         "role": "Builds the installed MCP server, registers its tools and resources, and starts the selected transport."
       },
       {
@@ -2798,7 +2798,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2868,7 +2868,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Declares UI configuration, including logging, theming, viewer, and execution-server settings."
       },
       {
@@ -3421,7 +3421,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
@@ -3537,7 +3537,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Owns the explicit canonical UI configuration file selector."
       }
     ],
@@ -3816,7 +3816,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Declares UI configuration, including logging, theming, viewer, and execution-server settings."
       },
       {
@@ -3862,7 +3862,7 @@
     "authority": [
       {
         "path": "openhcs/mcp/bootstrap.py",
-        "sha256": "b61f7f806c956f2155f6d220dbcde486fcd658122ac163526c694505a9b8f18b",
+        "sha256": "64b2ef9a4f4fe50154b4c921a7617b2e7c9dcf8bb475df7423e37e8395a8b250",
         "role": "Builds the installed MCP server, registers its tools and resources, and starts the selected transport."
       },
       {
@@ -3877,7 +3877,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -3892,7 +3892,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "82edae86d12e1fca90bea762d836d16946b6d8113bcd456d18b4ad7aa53a0a6f",
+        "sha256": "dedb131fb88ba9b6f8e39253e6a016458592915930cb0fcc0ae5a7db2abd25aa",
         "role": "Proves MCP server tool registration, request handling, and lifecycle behaviour."
       },
       {

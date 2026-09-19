@@ -14876,7 +14876,14 @@ def test_mcp_dev_client_reports_startup_transport_failure():
 
     async def call_missing_server_module():
         args = dev_client._build_parser().parse_args(
-            ("call", "openhcs_health_check", "--json", "--timeout-seconds", "2")
+            (
+                "call",
+                "openhcs_health_check",
+                "--json",
+                "--timeout-seconds",
+                "2",
+                "--no-resident",
+            )
         )
         return await dev_client.McpDevCommandSpec.for_name("call").run(
             dev_client.McpDevServerSpec(
@@ -14893,7 +14900,9 @@ def test_mcp_dev_client_reports_startup_transport_failure():
     assert payload["server"]["module"] == "openhcs.mcp_missing"
     assert payload["results"] == []
     assert error["code"] == "mcp_transport_failed"
-    assert error["phase"] == "initialize"
+    # Session bring-up (spawn plus initialize) is one transport phase now:
+    # the resident-first selection owns both steps before any tool call.
+    assert error["phase"] == "start_server"
     assert error["causes"]
 
 
@@ -15092,7 +15101,7 @@ def test_mcp_bootstrap_main_quiets_info_logs_and_restores_logging(monkeypatch):
     observed_disable_levels: list[int] = []
     original_disable_level = logging.root.manager.disable
 
-    def record_run(_surface_profile) -> None:
+    def record_run(_surface_profile, **kwargs) -> None:
         observed_disable_levels.append(logging.root.manager.disable)
 
     monkeypatch.delenv(bootstrap.MCP_VERBOSE_ENVIRONMENT_VARIABLE, raising=False)

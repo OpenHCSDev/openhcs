@@ -16,6 +16,9 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowIntensityWindowRequest,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowNavigationRequest,
+    ViewerNativeViewportPresentation,
+    ViewerWindowViewportRequest,
+    ViewerWindowViewportResult,
     ViewerWindowPayloadRequest,
     ViewerWindowRoiSummaryRequest,
     ViewerWindowSnapshotRequest,
@@ -834,5 +837,65 @@ class ViewerIntensityWindowCommandSpec(SingleToolCommandSpec):
             axis_indices=parse_navigation_axis_indices(args.axis_index),
             low_percentile=args.low_percentile,
             high_percentile=args.high_percentile,
+        )
+        return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())
+
+
+class SetViewerViewportCommandSpec(SingleToolCommandSpec):
+    capability = agent_capabilities.set_viewer_viewport
+
+    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
+        add_viewer_port_argument(parser)
+        parser.add_argument(
+            "--center",
+            action="append",
+            required=True,
+            metavar="FLOAT",
+            help=(
+                "Native 2D camera center as three world coordinates; "
+                "repeat for y/x or pass all three members."
+            ),
+        )
+        parser.add_argument(
+            "--zoom",
+            type=float,
+            help="Positive canvas-per-world zoom; omit to preserve the current zoom.",
+        )
+        parser.add_argument(
+            "--json",
+            action="store_true",
+            help="Render the complete MCP JSON response.",
+        )
+        add_viewer_connection_options(parser)
+
+    def tool_arguments(
+        self,
+        args: argparse.Namespace,
+    ) -> dict[str, JsonValue]:
+        connection = ViewerConnectionArguments.from_args(
+            args,
+            allow_positional_value_after_port_option=True,
+        )
+        center = tuple(float(value) for value in args.center)
+        if len(center) == 2:
+            center = (0.0, center[0], center[1])
+        if len(center) != 3:
+            raise SystemExit("--center requires two or three finite world coordinates.")
+        presentation = ViewerNativeViewportPresentation(
+            center=center,
+            zoom=args.zoom if args.zoom is not None else 1.0,
+        )
+        request = ViewerWindowViewportRequest.from_fields(
+            connection=ExecutionConnectionSpec(
+                host=connection.host,
+                port=connection.port,
+                transport_mode=connection.transport_mode,
+            ),
+            timeout_ms=(
+                connection.timeout_ms
+                if connection.timeout_ms is not None
+                else VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
+            ),
+            presentation=presentation,
         )
         return McpToolArgumentAuthority.from_payload(request.as_tool_arguments())

@@ -7,9 +7,12 @@ import asyncio
 import inspect
 import json
 import os
+import subprocess
 import sys
+import time
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -61,7 +64,7 @@ from openhcs.mcp.control_timeout import (
     McpUiBridgeTimeoutPolicy,
     McpViewerTimeoutPolicy,
 )
-from openhcs.pyqt_gui.config import UIConfigCacheEnvironment
+from openhcs.agent.ui_bridge_environment import UIConfigCacheEnvironment
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.serialization.json import to_jsonable
 from openhcs.utils.environment import OpenHCSProcessEnvironment
@@ -1324,6 +1327,271 @@ class McpDevStdioSession:
                     )
                 raise McpDevProtocolError("MCP subprocess closed stdout.")
             self._stdout_buffer.extend(chunk)
+
+
+class McpDevSocketSession(McpDevStdioSession):
+    """MCP JSON-RPC session over a resident server's unix socket.
+
+    The socket transport speaks the identical newline-framed JSON-RPC wire
+    format as the stdio transport, so every protocol method above is reused;
+    only channel ownership differs (one socket stream pair instead of one
+    subprocess pipe pair).
+    """
+
+    def __init__(
+        self,
+        server_spec: McpDevServerSpec,
+        server_stderr: TextIO,
+        socket_path: Path,
+    ) -> None:
+        super().__init__(server_spec, server_stderr)
+        self.socket_path = socket_path
+        self._reader: asyncio.StreamReader | None = None
+        self._writer: asyncio.StreamWriter | None = None
+
+    async def __aenter__(self) -> "McpDevSocketSession":
+        self._reader, self._writer = await asyncio.open_unix_connection(
+            str(self.socket_path)
+        )
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback,
+    ) -> None:
+        del exc_type, exc_value, traceback
+        if self._writer is not None:
+            self._writer.close()
+            try:
+                await self._writer.wait_closed()
+            except (BrokenPipeError, OSError):
+                pass
+            self._writer = None
+            self._reader = None
+
+    def require_process(self) -> asyncio.subprocess.Process:
+        raise McpDevProtocolError("Socket sessions do not own a subprocess.")
+
+    async def write_message(self, message: Mapping[str, JsonValue]) -> None:
+        if self._writer is None:
+            raise McpDevProtocolError("MCP socket session is not connected.")
+        payload = json.dumps(message, separators=(",", ":")).encode("utf-8") + b"\n"
+        self._writer.write(payload)
+        await self._writer.drain()
+
+    async def read_message(self, *, timeout_seconds: float) -> Mapping[str, JsonValue]:
+        if self._reader is None:
+            raise McpDevProtocolError("MCP socket session is not connected.")
+        line = await self._read_json_line(self._reader, timeout_seconds)
+        try:
+            message = json.loads(line.decode("utf-8"))
+        except json.JSONDecodeError as exc:
+            raise McpDevProtocolError("MCP socket emitted invalid JSON.") from exc
+        if not isinstance(message, Mapping):
+            raise McpDevProtocolError("MCP socket emitted a non-object message.")
+        return cast(Mapping[str, JsonValue], message)
+
+
+class McpDevTransportAuthority:
+    """Select the dev-client transport: resident socket first, stdio fallback.
+
+    The resident socket is entry-point policy: the interactive CLI enables it
+    by default (its per-command processes must not pay server construction per
+    call), while library callers and unit tests keep the deterministic
+    per-command stdio session unless they explicitly request residency or set
+    the daemon environment variable.
+    """
+
+    daemon_environment_variable = "OPENHCS_MCP_DEV_DAEMON"
+    socket_ready_timeout_seconds = 12.0
+    daemon_failure_marker_window_seconds = 300.0
+
+    @classmethod
+    def daemon_enabled(cls) -> bool:
+        """Return whether the daemon environment variable opts in."""
+
+        return os.getenv(cls.daemon_environment_variable, "").strip().lower() in {
+            "1",
+            "on",
+            "true",
+            "yes",
+        }
+
+    @classmethod
+    def spawn_failure_marker_path(cls, socket_path: Path) -> Path:
+        return socket_path.with_name(socket_path.name + ".spawn-failed")
+
+    @classmethod
+    def record_spawn_failure(cls, socket_path: Path) -> None:
+        """Record one failed resident-server bring-up for a cooldown window."""
+
+        marker = cls.spawn_failure_marker_path(socket_path)
+        try:
+            marker.write_text(str(time.time()), encoding="utf-8")
+        except OSError:
+            pass
+
+    @classmethod
+    def recent_spawn_failure(cls, socket_path: Path) -> bool:
+        marker = cls.spawn_failure_marker_path(socket_path)
+        try:
+            recorded = float(marker.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return False
+        return (time.time() - recorded) < cls.daemon_failure_marker_window_seconds
+
+    @classmethod
+    def clear_spawn_failure(cls, socket_path: Path) -> None:
+        try:
+            cls.spawn_failure_marker_path(socket_path).unlink()
+        except FileNotFoundError:
+            return
+        except OSError:
+            return
+
+    @classmethod
+    def resident_server_launch_arguments(
+        cls,
+        server_spec: McpDevServerSpec,
+        socket_path: Path,
+    ) -> tuple[str, ...]:
+        """Project one server spec to resident-server process arguments."""
+
+        from openhcs.mcp.bootstrap import (
+            MCP_SERVE_TRANSPORT_ARGUMENT,
+            MCP_SERVE_TRANSPORT_SOCKET,
+            MCP_SOCKET_PATH_ARGUMENT,
+        )
+
+        return (
+            *server_spec.process_args(),
+            MCP_SERVE_TRANSPORT_ARGUMENT,
+            MCP_SERVE_TRANSPORT_SOCKET,
+            MCP_SOCKET_PATH_ARGUMENT,
+            str(socket_path),
+        )
+
+    @classmethod
+    def spawn_resident_server(
+        cls,
+        server_spec: McpDevServerSpec,
+        socket_path: Path,
+        server_stderr: TextIO,
+    ) -> subprocess.Popen:
+        """Launch one detached resident server for this checkout/surface.
+
+        The resident process always logs to the shared daemon log file so a
+        startup failure stays diagnosable after the client returns.
+        """
+
+        from openhcs.mcp.socket import MCP_SOCKET_SESSION_LOG_FILE_NAME
+
+        socket_path.parent.mkdir(parents=True, exist_ok=True)
+        log_file = open(socket_path.parent / MCP_SOCKET_SESSION_LOG_FILE_NAME, "ab")
+        try:
+            return subprocess.Popen(
+                (
+                    server_spec.python_executable,
+                    *cls.resident_server_launch_arguments(server_spec, socket_path),
+                ),
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL,
+                env=server_spec.environment(),
+                start_new_session=True,
+            )
+        finally:
+            log_file.close()
+
+
+@asynccontextmanager
+async def open_mcp_dev_session(
+    server_spec: McpDevServerSpec,
+    server_stderr: TextIO,
+    *,
+    initialize_timeout_seconds: float,
+    use_resident_server: bool | None = None,
+    stdio_session_factory: Callable[[], McpDevStdioSession] | None = None,
+):
+    """Yield an initialized MCP dev session, reusing the resident server.
+
+    Transport selection: connect to the resident server's socket when it is
+    live, otherwise launch one detached resident server and wait for it. When
+    the socket transport is unavailable or disabled, fall back to the
+    per-command stdio session without changing any protocol behavior.
+    """
+
+    from openhcs.mcp.socket import (
+        mcp_dev_socket_path,
+        probe_socket_alive,
+        wait_for_socket,
+    )
+
+    def _default_stdio_session() -> McpDevStdioSession:
+        return McpDevStdioSession(server_spec, server_stderr)
+
+    new_stdio_session = stdio_session_factory or _default_stdio_session
+
+    resident_requested = (
+        McpDevTransportAuthority.daemon_enabled()
+        if use_resident_server is None
+        else use_resident_server
+    )
+    if not resident_requested:
+        async with new_stdio_session() as session:
+            await session.initialize(timeout_seconds=initialize_timeout_seconds)
+            yield session
+        return
+
+    socket_path = mcp_dev_socket_path(server_spec.surface_profile.name)
+
+    @asynccontextmanager
+    async def _socket_session():
+        async with McpDevSocketSession(server_spec, server_stderr, socket_path) as s:
+            await s.initialize(timeout_seconds=initialize_timeout_seconds)
+            yield s
+
+    if probe_socket_alive(socket_path):
+        McpDevTransportAuthority.clear_spawn_failure(socket_path)
+        try:
+            async with _socket_session() as session:
+                yield session
+            return
+        except (OSError, McpDevProtocolError, McpDevJsonRpcError):
+            pass
+
+    if McpDevTransportAuthority.recent_spawn_failure(socket_path):
+        async with new_stdio_session() as session:
+            await session.initialize(timeout_seconds=initialize_timeout_seconds)
+            yield session
+        return
+
+    try:
+        McpDevTransportAuthority.spawn_resident_server(
+            server_spec,
+            socket_path,
+            server_stderr,
+        )
+    except OSError:
+        async with new_stdio_session() as session:
+            await session.initialize(timeout_seconds=initialize_timeout_seconds)
+            yield session
+        return
+
+    if not wait_for_socket(
+        socket_path,
+        timeout_seconds=McpDevTransportAuthority.socket_ready_timeout_seconds,
+    ):
+        McpDevTransportAuthority.record_spawn_failure(socket_path)
+        async with new_stdio_session() as session:
+            await session.initialize(timeout_seconds=initialize_timeout_seconds)
+            yield session
+        return
+
+    async with _socket_session() as session:
+        yield session
 
 
 def captured_server_stderr_tail(
