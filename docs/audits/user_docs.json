@@ -1157,7 +1157,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Embeds the persisted generic list-preview policy in UIConfig."
       },
       {
@@ -1340,7 +1340,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
+        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -1477,7 +1477,7 @@
       },
       {
         "path": "openhcs/core/source_workspace_projection.py",
-        "sha256": "f40b90c3f6a661a8c8fdb6995e89dcbb6a3e6053597c569d9e8e97846d25a5e2",
+        "sha256": "eeb629edcf353e46e125762b85084744723eafa98b7b2b8cd7ce925a578d3304",
         "role": "Projects source bindings and persisted semantic metadata into the concrete workspace identities compiled for execution."
       },
       {
@@ -2534,7 +2534,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Declares UI configuration, including logging, theming, viewer, and execution-server settings."
       },
       {
@@ -2762,7 +2762,7 @@
       },
       {
         "path": "openhcs/mcp/bootstrap.py",
-        "sha256": "b61f7f806c956f2155f6d220dbcde486fcd658122ac163526c694505a9b8f18b",
+        "sha256": "64b2ef9a4f4fe50154b4c921a7617b2e7c9dcf8bb475df7423e37e8395a8b250",
         "role": "Builds the installed MCP server, registers its tools and resources, and starts the selected transport."
       },
       {
@@ -2868,7 +2868,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Declares UI configuration, including logging, theming, viewer, and execution-server settings."
       },
       {
@@ -3537,7 +3537,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Owns the explicit canonical UI configuration file selector."
       }
     ],
@@ -3816,7 +3816,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Declares UI configuration, including logging, theming, viewer, and execution-server settings."
       },
       {
@@ -3862,7 +3862,7 @@
     "authority": [
       {
         "path": "openhcs/mcp/bootstrap.py",
-        "sha256": "b61f7f806c956f2155f6d220dbcde486fcd658122ac163526c694505a9b8f18b",
+        "sha256": "64b2ef9a4f4fe50154b4c921a7617b2e7c9dcf8bb475df7423e37e8395a8b250",
         "role": "Builds the installed MCP server, registers its tools and resources, and starts the selected transport."
       },
       {
@@ -3877,7 +3877,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
+        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {

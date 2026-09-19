@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
+        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -1804,7 +1804,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Embeds the persisted generic list-preview policy in UIConfig."
       },
       {
@@ -1878,22 +1878,22 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "abbb38ef0f66b694545fc9f6a04b78e2c80d65a8581abf0061083aa681bd6887",
+        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
         "path": "openhcs/mcp/dev_client_commanding.py",
-        "sha256": "ecf8052a2a5fa58f39bf3bbbb5447424c516564f3ff15b41cd2a6af7dcb370b3",
+        "sha256": "406e1923d7668e93bdba6dde1a8056117f880b5d0b480927d8fa87f1ad5dcafa",
         "role": "Validates one-shot development commands against the selected surface before starting an MCP subprocess."
       },
       {
         "path": "openhcs/mcp/dev_client.py",
-        "sha256": "6c354b95fc527aecfb39519b711c54ebed66183916fd21746fc6202f350deee1",
+        "sha256": "cb91fcaf3040ff9bc41d6145b71aac8249b42b0369ce8547531cccf7f76dcb3a",
         "role": "Validates commands before dispatch through an initialized persistent development session."
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "082c6f95ab0ab2d7c88d452d4f47d84624bdc884c678186000aa4cc0a0ff6384",
+        "sha256": "d310495b5994ade0d4fcd60f70cd746a1e17478dbbbbb0938b8b9aefbc3413f3",
         "role": "Resolves tool identity and compatible profiles from the capability declarations at the shared call boundary."
       },
       {
@@ -1923,7 +1923,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/config.py",
-        "sha256": "9445a28a1963f684a05dda963e8296318cf4acae10b4c8b354b3653123bf386a",
+        "sha256": "a3eece2e5b2926fc6fc0edd197221da451ab7c0d0d6f4ffc8bb2ff865ad74bd4",
         "role": "Declares UIConfig and projects its unique execution endpoint without constructing unrelated UI configuration."
       },
       {
