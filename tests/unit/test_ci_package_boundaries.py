@@ -12,6 +12,8 @@ import tomllib
 from pathlib import Path
 
 import yaml
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 
 from scripts.run_installed_tests import (
     _prepare_installed_test_runtime,
@@ -195,6 +197,29 @@ def test_installed_acceptance_separates_source_and_public_dependency_proofs() ->
     assert "scripts/run_installed_tests.py --coverage" in workflow_text
     assert "tests/unit/pyqt_gui/test_progress_tree_aggregation.py" in workflow_text
     assert "pip','install','-e" not in workflow_text
+
+
+def test_python_314_core_candidate_uses_installed_wheels_without_centrosome() -> None:
+    metadata = tomllib.loads(PACKAGE_METADATA.read_text(encoding="utf-8"))
+    workflow = yaml.safe_load(
+        (WORKFLOW_ROOT / "integration-tests.yml").read_text(encoding="utf-8")
+    )
+    job = workflow["jobs"]["python-314-core-tests"]
+
+    assert Version("3.14") in SpecifierSet(metadata["project"]["requires-python"])
+    assert (
+        "Programming Language :: Python :: 3.14" in metadata["project"]["classifiers"]
+    )
+    setup_step = next(
+        step for step in job["steps"] if step.get("name") == "Setup Python 3.14"
+    )
+    assert setup_step["with"]["python-version"] == "3.14"
+    install_steps = "\n".join(step.get("run", "") for step in job["steps"])
+    assert "sudo apt-get install -y libegl1" in install_steps
+    assert "--dependency-source submodules" in install_steps
+    assert "--extras dev,mcp" in install_steps
+    assert "cellprofiler-compat" not in install_steps
+    assert "scripts/run_installed_tests.py" in install_steps
 
 
 def test_desktop_candidate_canary_precedes_dependency_publication() -> None:

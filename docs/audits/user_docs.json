@@ -168,7 +168,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
+        "sha256": "7c1303955e30f6cc513542b9a16d20af3663b9524c7a8ba7ff2407e368d883d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -697,7 +697,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
+        "sha256": "7c1303955e30f6cc513542b9a16d20af3663b9524c7a8ba7ff2407e368d883d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -904,7 +904,7 @@
   },
   {
     "path": "docs/source/getting_started/getting_started.rst",
-    "source_sha256": "4df7bb06440fad690a9aff30183034996b664ccad4f648a66c407c75c46838ce",
+    "source_sha256": "151b7d49018e4ef31c21bd96729c1ccd3af746a82a5d239bd27bf163474c067c",
     "audience": [
       "new desktop users",
       "Python installers"
@@ -914,7 +914,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
+        "sha256": "7c1303955e30f6cc513542b9a16d20af3663b9524c7a8ba7ff2407e368d883d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -999,7 +999,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "d93b55b19447e3b1d30a18cf3792a411a18e357c7c89b07cb9557fbbeeecef24",
+        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
         "role": "Exercises Windows and macOS native installers and their staged-update transition in installed environments."
       },
       {
@@ -1621,7 +1621,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
+        "sha256": "7c1303955e30f6cc513542b9a16d20af3663b9524c7a8ba7ff2407e368d883d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2288,7 +2288,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
+        "sha256": "7c1303955e30f6cc513542b9a16d20af3663b9524c7a8ba7ff2407e368d883d7",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2419,7 +2419,7 @@
   },
   {
     "path": "docs/source/guides/testing_guide.rst",
-    "source_sha256": "4c96b73e8f492d065eff454c5d2abf1fe446297fc2d7a56a112f0ec33480cbd9",
+    "source_sha256": "a97cdebde99a0f82333f0711447f405e33bb6f99cbc89f7b9f24687e43437c9d",
     "audience": [
       "contributors",
       "integration-test operators"
@@ -2439,7 +2439,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "d93b55b19447e3b1d30a18cf3792a411a18e357c7c89b07cb9557fbbeeecef24",
+        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
         "role": "Defines the operating-system integration matrix, dependency setup, installed-wheel live GUI/MCP operation, retained application and three-stage installer screenshot artifacts, pytest commands, and source-gate coverage artifacts used by CI."
       },
       {
@@ -2509,7 +2509,7 @@
       },
       {
         "path": "tests/unit/test_ci_package_boundaries.py",
-        "sha256": "a27e18725006ddbc0f71dcb13f5f45ccb05e6aa2e95a35cc79b8a44beaec2f0a",
+        "sha256": "691efcdafe66255c55ae11411b441930bdb58161cd74e2580c2531a486863303",
         "role": "Proves source-gate coverage fails closed, website validation uses local candidate owners, and cross-platform candidate and published GUI canaries retain their typed screenshot evidence."
       },
       {
@@ -2798,7 +2798,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
+        "sha256": "7c1303955e30f6cc513542b9a16d20af3663b9524c7a8ba7ff2407e368d883d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -3421,7 +3421,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
+        "sha256": "7c1303955e30f6cc513542b9a16d20af3663b9524c7a8ba7ff2407e368d883d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
@@ -3882,7 +3882,7 @@
       },
       {
         "path": "packaging/mcpb/openhcs/manifest.json",
-        "sha256": "e10fedf2f227f3aa0c93db32f45985ecc9e75aae78e8aa4b30a43959f8a49609",
+        "sha256": "620973a06eca792d6beb719e9ee22fde8addfedb7891ceb794e14b58ebf2c756",
         "role": "Declares the packaged MCP server command, arguments, compatibility, and client-visible metadata."
       },
       {

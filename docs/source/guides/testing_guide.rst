@@ -59,7 +59,10 @@ CI coverage
 ``.github/workflows/integration-tests.yml`` is the authority for the current
 matrix. It covers Python and operating-system boundaries, disk/zarr with
 ImageXpress and OperaPhenix, submodule and published-dependency installation,
-and wheel integration. A dedicated source job runs ``tests/pyqt_gui`` with
+and wheel integration. A dedicated Python 3.14 job builds and installs the
+candidate wheel, excludes the unavailable CellProfiler parity oracle, and runs
+the core callable, debug, and MCP tests against that installation. A dedicated
+source job runs ``tests/pyqt_gui`` with
 offscreen Qt against the exact pinned pyqt-reactive wheel. Dedicated Linux jobs
 run OMERO on supported Python versions with an explicit ZeroC Ice wheel.
 The unit/core job uses Xvfb, the XCB Qt backend and Mesa software OpenGL so native
