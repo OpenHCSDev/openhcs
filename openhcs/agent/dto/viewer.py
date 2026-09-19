@@ -25,6 +25,8 @@ from zmqruntime.viewer_protocol import (
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
+    AgentCliArgumentSpec,
+    AgentCliRequest,
     AgentError,
     AgentResourceRef,
     AgentResultEnvelope,
@@ -1343,3 +1345,28 @@ def viewer_window_probe_from_state(
         errors=state.errors,
         warnings=state.warnings,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerEndpointDiscoveryRequest(AgentCliRequest):
+    """Request one sweep of the local IPC directory for viewer endpoints."""
+
+    @classmethod
+    def agent_cli_argument_specs(cls) -> tuple[AgentCliArgumentSpec, ...]:
+        return ()
+
+    @classmethod
+    def from_fields(cls) -> "ViewerEndpointDiscoveryRequest":
+        return cls()
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {}
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerEndpointDiscoveryResult:
+    """One viewer-endpoint sweep's classification."""
+
+    schema_version: str
+    endpoints: tuple[dict[str, JsonValue], ...] = ()
+    errors: tuple[AgentError, ...] = ()
