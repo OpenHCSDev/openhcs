@@ -406,11 +406,11 @@
         "parameters": {}
       },
       "source": {
-        "sha256": "0181f583a0342d501cfc416d8c761e42416013ac94e6964ed38365b7905a06a6",
+        "sha256": "cdb0efd43a2c3952827ba13998fcd7ffb1a65027db824bf0d0aa01c0c177a440",
         "width": 2304,
         "height": 1842,
         "duration_seconds": null,
-        "format": "png"
+        "format": "PNG"
       },
       "scientific_evidence": null,
       "published": [
@@ -418,7 +418,7 @@
           "role": "image",
           "media_type": "image/webp",
           "path": "current-neurite-result.webp",
-          "sha256": "e55ea2fda442740f58e93f4773419c53026faa4b3336d0148039ea996f65f551"
+          "sha256": "6c6d0b6dc7953218284661d86595ded62f373617cb6c70b7ff3d74b2a339f9bd"
         }
       ]
     },
@@ -435,11 +435,11 @@
         "parameters": {}
       },
       "source": {
-        "sha256": "0eede1372cef4849261dea08368354dbb70b6100254c14de447685c7aa6f5632",
+        "sha256": "c40867fd6b129cf19fc419e0edfef91ad6f89dbdc67bb039d979b467750f5025",
         "width": 2304,
         "height": 1842,
         "duration_seconds": null,
-        "format": "png"
+        "format": "PNG"
       },
       "scientific_evidence": null,
       "published": [
@@ -447,7 +447,7 @@
           "role": "image",
           "media_type": "image/webp",
           "path": "stitched-neurite-overview.webp",
-          "sha256": "537df1dbc4e2ccc3ae6b96245daf79a504dee29e8b8b498a7a2f12c2dd43bd0b"
+          "sha256": "3ca4c739791821ed4636d453b7c472ce06698df528f9fa57cb02ff0e3d698755"
         }
       ]
     },
