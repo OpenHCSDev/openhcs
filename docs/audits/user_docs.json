@@ -2025,7 +2025,7 @@
     "authority": [
       {
         "path": "openhcs/runtime/fiji_viewer_server.py",
-        "sha256": "3380eda81d92fa9e59de657539da60782046f79d5907e0d633d05863de4825f1",
+        "sha256": "61adf66d68a1e12bd1b59466f6192d01163f264f69bf42b47c543b58294bb843",
         "role": "Implements Fiji stream reception, image-stack updates, ROI handling, and endpoint lifecycle."
       },
       {
@@ -2664,7 +2664,7 @@
     "authority": [
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "a2c46adc10b7a718b0e931dcec8bc524c4caec9867d208524cc7833d43f83d80",
+        "sha256": "f91f862a241b3e817122ef8c703cfa38830c01df42d78058c8a05298e55215e2",
         "role": "Implements Napari stream reception, layer updates, ROI navigation, and endpoint lifecycle."
       },
       {
@@ -2699,12 +2699,12 @@
       },
       {
         "path": "tests/unit/test_napari_streaming_handlers.py",
-        "sha256": "bb9f4449ae8bf4df2e32d274278f60a1224743bd3470c1e14fe7c51148e36b01",
+        "sha256": "ff748551885454356def167c5661254440a705638fe5b6a98ef684bebc8dfc67",
         "role": "Proves Napari streaming updates layers and carries ROI navigation through the declared protocol."
       },
       {
         "path": "tests/unit/test_viewer_result_element_selection.py",
-        "sha256": "c5d426dad09204e682d7bcda063b4e897c69458b119edbe4ffd19e4ea9a3f920",
+        "sha256": "a08532745300afb45d8ac3f5e6b5e186f1e28ec0e261876a7e87d9d0b5faba7f",
         "role": "Proves isolation preflights every requested route and selected-route axis before changing live Napari state."
       },
       {
@@ -3892,7 +3892,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "6d9c048e0cbf096bcbbda62488bd1ba1a0b0cf2cde3dab8b5908db8801c471e2",
+        "sha256": "82edae86d12e1fca90bea762d836d16946b6d8113bcd456d18b4ad7aa53a0a6f",
         "role": "Proves MCP server tool registration, request handling, and lifecycle behaviour."
       },
       {
@@ -3994,22 +3994,22 @@
       },
       {
         "path": "openhcs/runtime/napari_viewer_server.py",
-        "sha256": "a2c46adc10b7a718b0e931dcec8bc524c4caec9867d208524cc7833d43f83d80",
+        "sha256": "f91f862a241b3e817122ef8c703cfa38830c01df42d78058c8a05298e55215e2",
         "role": "Implements Napari stream reception, layer updates, ROI navigation, and endpoint lifecycle."
       },
       {
         "path": "openhcs/runtime/fiji_viewer_server.py",
-        "sha256": "3380eda81d92fa9e59de657539da60782046f79d5907e0d633d05863de4825f1",
+        "sha256": "61adf66d68a1e12bd1b59466f6192d01163f264f69bf42b47c543b58294bb843",
         "role": "Implements Fiji stream reception, image-stack updates, ROI handling, and endpoint lifecycle."
       },
       {
         "path": "tests/unit/test_napari_streaming_handlers.py",
-        "sha256": "bb9f4449ae8bf4df2e32d274278f60a1224743bd3470c1e14fe7c51148e36b01",
+        "sha256": "ff748551885454356def167c5661254440a705638fe5b6a98ef684bebc8dfc67",
         "role": "Proves Napari streaming updates layers and carries ROI navigation through the declared protocol."
       },
       {
         "path": "tests/unit/test_viewer_result_element_selection.py",
-        "sha256": "c5d426dad09204e682d7bcda063b4e897c69458b119edbe4ffd19e4ea9a3f920",
+        "sha256": "a08532745300afb45d8ac3f5e6b5e186f1e28ec0e261876a7e87d9d0b5faba7f",
         "role": "Proves focused layer isolation is rejected before mutation when any route or axis is invalid."
       },
       {
