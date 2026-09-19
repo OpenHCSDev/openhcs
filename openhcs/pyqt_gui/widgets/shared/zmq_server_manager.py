@@ -61,7 +61,6 @@ class ZMQServerManagerWidget(UiLiveOverviewWidget, ZMQServerBrowserWidgetABC):
 
     _progress_registry_changed = pyqtSignal()
 
-    @staticmethod
     def _schedule_orphan_viewer_sweep(self) -> None:
         """Report live viewer endpoints this process does not own once.
 
@@ -97,6 +96,7 @@ class ZMQServerManagerWidget(UiLiveOverviewWidget, ZMQServerBrowserWidgetABC):
 
         threading.Thread(target=_sweep, daemon=True, name="viewer-sweep").start()
 
+    @staticmethod
     def _execution_scan_service(
         config: OpenHCSZMQConfig,
     ) -> ZMQServerScanService:
