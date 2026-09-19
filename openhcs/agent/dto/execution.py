@@ -33,7 +33,7 @@ from openhcs.agent.dto.common import (
 from openhcs.agent.ui_bridge_identities import (
     PlateManagerOrchestratorCodeDocumentIdentity,
 )
-from openhcs.core.debug_views import DebugViewModel
+from openhcs.core.debug_view_models import DebugViewModel
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
@@ -800,6 +800,194 @@ class RuntimeDebugInspectionRequest(
         payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
         payload["debug_session_id"] = self.debug_session_id
         return payload
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeDebugCommandRequest(
+    RuntimeServerConnectionToolRequest,
+    ExecutionConnectionProjection,
+):
+    """Request one debug-worker command on a paused OpenHCS debug session.
+
+    The command_type value is validated fail-closed by the runtime-server
+    service against the DebugCommandType authority; this declaration carries
+    the wire value only so the dev client stays on the lightweight debug
+    payload module.
+    """
+
+    debug_session_id: str
+    command_type: str
+    timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms
+
+    @classmethod
+    def agent_cli_argument_specs(cls) -> tuple[AgentCliArgumentSpec, ...]:
+        return (
+            AgentCliArgumentSpec(
+                field_name="debug_session_id",
+                positional=True,
+                help="Exact debug session id reported by the execution server.",
+            ),
+            AgentCliArgumentSpec(
+                field_name="command_type",
+                positional=True,
+                help=(
+                    "DebugWorkerCommandRequest command type: toggle, step, "
+                    "run, run_to_pause, restart, choose_source_group, "
+                    "random_source_group, or stop."
+                ),
+            ),
+        )
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        debug_session_id: str,
+        command_type: str,
+        host: str = "localhost",
+        port: int | None = None,
+        transport_mode: TransportMode | None = None,
+        persistent: bool = True,
+        timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> "RuntimeDebugCommandRequest":
+        return cls(
+            connection=ExecutionConnectionSpec(
+                host=host,
+                port=port,
+                transport_mode=transport_mode,
+                persistent=persistent,
+            ),
+            debug_session_id=debug_session_id,
+            command_type=command_type,
+            timeout_ms=(
+                OPENHCS_ZMQ_CONFIG.control_timeout_ms
+                if timeout_ms is None
+                else timeout_ms
+            ),
+        )
+
+    def as_tool_arguments(self) -> JsonObject:
+        payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
+        payload["debug_session_id"] = self.debug_session_id
+        payload["command_type"] = self.command_type
+        return payload
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeDebugCommandResult(ExecutionConnectionProjection):
+    """One debug-worker command's resulting paused-worker status."""
+
+    schema_version: str
+    debug_session_id: str
+    command_type: str
+    worker_state: str | None = None
+    cursor: JsonValue = None
+    errors: tuple[AgentError, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeDebugArtifactExportRequest(
+    RuntimeServerConnectionToolRequest,
+    ExecutionConnectionProjection,
+):
+    """Request server-side export of one paused debug worker's artifact.
+
+    The export_root path is validated against the agent path-policy writable
+    roots by the runtime-server service before the control-channel request is
+    issued.
+    """
+
+    debug_session_id: str
+    artifact_ref: str
+    export_root: str
+    snapshot_store_ref: str | None = None
+    snapshot_store_backend: str | None = None
+    timeout_ms: int = OPENHCS_ZMQ_CONFIG.control_timeout_ms
+
+    @classmethod
+    def agent_cli_argument_specs(cls) -> tuple[AgentCliArgumentSpec, ...]:
+        return (
+            AgentCliArgumentSpec(
+                field_name="debug_session_id",
+                positional=True,
+                help="Exact debug session id reported by the execution server.",
+            ),
+            AgentCliArgumentSpec(
+                field_name="artifact_ref",
+                positional=True,
+                help="Artifact ref string as reported by runtime-debug-values.",
+            ),
+            AgentCliArgumentSpec(
+                field_name="export_root",
+                flags=("--export-root",),
+                help="Writable agent root directory receiving the export.",
+            ),
+            AgentCliArgumentSpec(
+                field_name="snapshot_store_ref",
+                flags=("--snapshot-store-ref",),
+                help="Optional snapshot store reference for materialization.",
+            ),
+            AgentCliArgumentSpec(
+                field_name="snapshot_store_backend",
+                flags=("--snapshot-store-backend",),
+                help="Optional snapshot store backend for materialization.",
+            ),
+        )
+
+    @classmethod
+    def from_fields(
+        cls,
+        *,
+        debug_session_id: str,
+        artifact_ref: str,
+        export_root: str,
+        snapshot_store_ref: str | None = None,
+        snapshot_store_backend: str | None = None,
+        host: str = "localhost",
+        port: int | None = None,
+        transport_mode: TransportMode | None = None,
+        persistent: bool = True,
+        timeout_ms: int | None = OPENHCS_ZMQ_CONFIG.control_timeout_ms,
+    ) -> "RuntimeDebugArtifactExportRequest":
+        return cls(
+            connection=ExecutionConnectionSpec(
+                host=host,
+                port=port,
+                transport_mode=transport_mode,
+                persistent=persistent,
+            ),
+            debug_session_id=debug_session_id,
+            artifact_ref=artifact_ref,
+            export_root=export_root,
+            snapshot_store_ref=snapshot_store_ref,
+            snapshot_store_backend=snapshot_store_backend,
+            timeout_ms=(
+                OPENHCS_ZMQ_CONFIG.control_timeout_ms
+                if timeout_ms is None
+                else timeout_ms
+            ),
+        )
+
+    def as_tool_arguments(self) -> JsonObject:
+        payload = dict(RuntimeServerConnectionToolRequest.as_tool_arguments(self))
+        payload["debug_session_id"] = self.debug_session_id
+        payload["artifact_ref"] = self.artifact_ref
+        payload["export_root"] = self.export_root
+        payload["snapshot_store_ref"] = self.snapshot_store_ref
+        payload["snapshot_store_backend"] = self.snapshot_store_backend
+        return payload
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeDebugArtifactExportResult(ExecutionConnectionProjection):
+    """One debug artifact export's resulting exported reference."""
+
+    schema_version: str
+    debug_session_id: str
+    artifact_ref: str
+    export_root: str
+    exported_ref: str | None = None
+    errors: tuple[AgentError, ...] = ()
 
 
 def execution_status_from_response(

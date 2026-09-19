@@ -12,7 +12,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Declares the published README, Python range, package dependencies, optional surfaces, console commands, and project links."
       },
       {
@@ -57,7 +57,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Declares the MCP discovery, authoring, execution, UI, and viewer-review capabilities and their surface policies."
       },
       {

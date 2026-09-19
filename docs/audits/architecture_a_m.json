@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -1186,7 +1186,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1261,7 +1261,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Owns declaration-derived child-process environments for optional array frameworks."
       }
     ],
@@ -1619,7 +1619,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares framework capabilities, callable memory metadata, and the child-process import environment owned by each MemoryType member."
       },
       {
@@ -1878,7 +1878,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -2230,7 +2230,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares reusable memory types together with framework capability and device behaviour."
       },
       {

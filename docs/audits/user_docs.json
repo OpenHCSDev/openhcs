@@ -168,7 +168,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -555,7 +555,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Owns framework capabilities and the canonical callable memory-metadata keys used by function declarations."
       },
       {
@@ -697,7 +697,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -747,7 +747,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares framework capabilities, callable memory metadata, and the child-process import environment owned by each MemoryType member."
       },
       {
@@ -914,7 +914,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1340,7 +1340,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {
@@ -1621,7 +1621,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2035,7 +2035,7 @@
       },
       {
         "path": "external/zmqruntime/src/zmqruntime/__init__.py",
-        "sha256": "deae02b6920c8f5dd315fd2e508d44c877f39028ca4d40aaab4e7087e6c492b6",
+        "sha256": "37f3e14f58b4c1dda3d338a3a2fb075aefea215f6f25b69f44091891341755ef",
         "role": "Exports the generic ZMQ runtime contracts used by viewer and execution endpoints."
       },
       {
@@ -2087,7 +2087,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Owns the callable memory metadata and framework capabilities named by the memory-integration route."
       }
     ],
@@ -2119,7 +2119,7 @@
     "authority": [
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares framework capabilities, callable memory metadata, and the child-process import environment owned by each MemoryType member."
       },
       {
@@ -2288,7 +2288,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2798,7 +2798,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -3421,7 +3421,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
@@ -3877,7 +3877,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "03b34a0c65aabe38126048d1c965deb30ebb1cd1495a84f77ffc385aa8152e65",
+        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
         "role": "Declares the agent capability catalogue and safety metadata exposed through MCP self-description."
       },
       {

@@ -51,6 +51,10 @@ from openhcs.agent.dto.execution import (
     PipelineExecutionSubmissionRequest,
     PipelineSourceArtifactPlanInspectionRequest,
     PipelineSourceOrchestratorSessionRequest,
+    RuntimeDebugArtifactExportRequest,
+    RuntimeDebugArtifactExportResult,
+    RuntimeDebugCommandRequest,
+    RuntimeDebugCommandResult,
     RuntimeDebugInspectionRequest,
     RuntimeDebugInspectionResult,
     RuntimeExecutionStatus,
@@ -2713,6 +2717,62 @@ class InspectDebugRuntimeValuesCapability(RuntimeServerCliConnectionCapability):
     request_invocation = AgentFromFieldsServiceInvocation(
         service=lambda context: context.runtime_server_service,
         method=lambda service, request: service.runtime_debug_inspection_from_request(
+            request
+        ),
+    )
+
+
+class SendDebugCommandCapability(RuntimeServerCliConnectionCapability):
+    name = "openhcs_send_debug_command"
+    cli_command = "runtime-debug-command"
+    kind = CapabilityKind.TOOL
+    title = "Send debug worker command"
+    description = (
+        "Sends one DebugWorkerCommandRequest command type (toggle, step, run, "
+        "run_to_pause, restart, choose_source_group, random_source_group, stop) "
+        "to a paused OpenHCS debug worker and returns the resulting worker "
+        "status. Fails closed against the DebugCommandType authority."
+    )
+    service = "runtime_server"
+    mutating = True
+    side_effects = ("mutates_debug_worker_state",)
+    runtime_requirements = (
+        "running_openhcs_execution_server",
+        "paused_debug_session",
+    )
+    data_exposure = ("runtime_debug_worker_status",)
+    input_contract = RuntimeDebugCommandRequest
+    output_contract = RuntimeDebugCommandResult
+    request_invocation = AgentFromFieldsServiceInvocation(
+        service=lambda context: context.runtime_server_service,
+        method=lambda service, request: service.debug_command_from_request(request),
+    )
+
+
+class ExportDebugArtifactCapability(RuntimeServerCliConnectionCapability):
+    name = "openhcs_export_debug_artifact"
+    cli_command = "runtime-debug-export"
+    kind = CapabilityKind.TOOL
+    title = "Export debug artifact"
+    description = (
+        "Requests server-side export/materialization of one artifact ref "
+        "reported by runtime-debug-values into a writable agent root, and "
+        "returns the exported reference. The export root is validated against "
+        "the agent path-policy writable roots before the request is issued."
+    )
+    service = "runtime_server"
+    mutating = True
+    side_effects = ("writes_debug_artifact_export",)
+    runtime_requirements = (
+        "running_openhcs_execution_server",
+        "paused_debug_session",
+    )
+    data_exposure = ("runtime_artifact_export",)
+    input_contract = RuntimeDebugArtifactExportRequest
+    output_contract = RuntimeDebugArtifactExportResult
+    request_invocation = AgentFromFieldsServiceInvocation(
+        service=lambda context: context.runtime_server_service,
+        method=lambda service, request: service.debug_artifact_export_from_request(
             request
         ),
     )

@@ -233,7 +233,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Framework-local device scopes, installed-framework cleanup, and device discovery owned by ArrayBridge memory declarations."
       },
       {
@@ -904,7 +904,7 @@
       },
       {
         "path": "openhcs/agent/dto/execution.py",
-        "sha256": "4123b51efd4ed20951f162148813211aa41f7a90157a1776d004fdb7d6895b58",
+        "sha256": "0229c06d84a0e7c56f9bb4c6d565c5ada9bbd67a79872a751913122f72542f0a",
         "role": "Declares the typed public job status and delegates terminal semantics to the generic lifecycle declaration."
       },
       {
@@ -1394,7 +1394,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1624,7 +1624,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1644,7 +1644,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Owns declaration-derived child-process environments for optional array frameworks."
       },
       {
@@ -1695,7 +1695,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
@@ -1754,7 +1754,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_config.py",
-        "sha256": "a5b9e0a0a63309686cf2473b86431a2945659ffdbbc2bc3edf72483f474b67ee",
+        "sha256": "842b25ffd542f99923dafb2f67d23bac0263f38d85e64ef1bdbaba3da671b792",
         "role": "OpenHCS-owned ZMQConfig subtype and process-level transport fields."
       },
       {
@@ -2106,7 +2106,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Owns the framework child environment consumed by catalogue preparation and server startup."
       }
     ],
@@ -2374,7 +2374,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Memory role taxonomy and framework execution-device scopes."
       },
       {
@@ -2503,7 +2503,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Framework declarations, device discovery, and device-scope ownership."
       },
       {
@@ -2620,7 +2620,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2640,7 +2640,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Declares framework capabilities, callable memory metadata, and the child-process import environment owned by each MemoryType member."
       },
       {
@@ -2721,7 +2721,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2767,7 +2767,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2886,7 +2886,7 @@
       },
       {
         "path": "openhcs/runtime/zmq_config.py",
-        "sha256": "a5b9e0a0a63309686cf2473b86431a2945659ffdbbc2bc3edf72483f474b67ee",
+        "sha256": "842b25ffd542f99923dafb2f67d23bac0263f38d85e64ef1bdbaba3da671b792",
         "role": "Declares the execution-submission deadline separately from short execution control deadlines."
       },
       {
@@ -2981,7 +2981,7 @@
       },
       {
         "path": "openhcs/agent/dto/execution.py",
-        "sha256": "4123b51efd4ed20951f162148813211aa41f7a90157a1776d004fdb7d6895b58",
+        "sha256": "0229c06d84a0e7c56f9bb4c6d565c5ada9bbd67a79872a751913122f72542f0a",
         "role": "Declares the public typed execution status and progress observation result."
       },
       {
@@ -3471,7 +3471,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3542,7 +3542,7 @@
       },
       {
         "path": "openhcs/agent/services/runtime_server_service.py",
-        "sha256": "15370111d357546f8cb232c6fcedc98ee97e1ad171ab441a6c3c9bd98271b70f",
+        "sha256": "1dce7bdfd78c10affde9f1df27c1a5c79054555df4db96360d3e946b9c16f6f0",
         "role": "Bounded runtime-server and paused-debug inspection service."
       },
       {
@@ -3588,7 +3588,7 @@
       },
       {
         "path": "external/arraybridge/src/arraybridge/types.py",
-        "sha256": "17f6892c99d9e3a281982ce21e3b5f924be9ab31e473e9038dbb2e45cf7cb9a9",
+        "sha256": "7b94760d57e54008d7adf4e4d37dca45d8a2c288a9dc8400be00c26148cf7624",
         "role": "Pyclesperanto framework device discovery, execution scope, and cleanup authority."
       },
       {
@@ -3660,7 +3660,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "863761b3604c1440dbc78797a215abe8d1eaa846dc27841babde828b0e56254c",
+        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],

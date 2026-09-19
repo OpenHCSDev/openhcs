@@ -7,6 +7,10 @@ from dataclasses import replace
 
 from openhcs.agent.dto.common import AgentError, JsonObject, SCHEMA_VERSION
 from openhcs.agent.dto.execution import (
+    RuntimeDebugArtifactExportRequest,
+    RuntimeDebugArtifactExportResult,
+    RuntimeDebugCommandRequest,
+    RuntimeDebugCommandResult,
     ExecutionConnectionSpec,
     RuntimeDebugInspectionRequest,
     RuntimeDebugInspectionResult,
@@ -20,7 +24,8 @@ from openhcs.agent.dto.execution import (
     runtime_execution_status_from_response,
     unreachable_runtime_server_info,
 )
-from openhcs.core.debug_views import DebugViewModel
+from openhcs.core.debug_view_models import DebugViewModel
+from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 from zmqruntime.config import TransportMode
@@ -83,6 +88,33 @@ class RuntimeServerGatewayABC(ABC):
         timeout_ms: int,
     ) -> DebugViewModel:
         """Return the exact paused-worker runtime view when supported."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def send_debug_command(
+        self,
+        connection: ExecutionConnectionSpec,
+        debug_session_id: str,
+        command_type: str,
+        *,
+        timeout_ms: int,
+    ) -> "DebugPausedWorkerStatus":
+        """Send one debug-worker command and return the resulting status."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def export_debug_artifact(
+        self,
+        connection: ExecutionConnectionSpec,
+        debug_session_id: str,
+        artifact_ref: str,
+        export_root: str,
+        snapshot_store_ref: str | None,
+        snapshot_store_backend: str | None,
+        *,
+        timeout_ms: int,
+    ) -> str:
+        """Export one paused debug worker's artifact and return its ref."""
         raise NotImplementedError
 
     @abstractmethod
@@ -150,6 +182,44 @@ class ZMQRuntimeServerGateway(RuntimeServerGatewayABC):
             connection,
             timeout_ms=timeout_ms,
         ).get_debug_runtime_inspection(debug_session_id=debug_session_id)
+
+    def send_debug_command(
+        self,
+        connection: ExecutionConnectionSpec,
+        debug_session_id: str,
+        command_type: str,
+        *,
+        timeout_ms: int,
+    ) -> "DebugPausedWorkerStatus":
+        return self._client(
+            connection,
+            timeout_ms=timeout_ms,
+        ).send_debug_worker_command(
+            debug_session_id=debug_session_id,
+            command_type=command_type,
+        ).status
+
+    def export_debug_artifact(
+        self,
+        connection: ExecutionConnectionSpec,
+        debug_session_id: str,
+        artifact_ref: str,
+        export_root: str,
+        snapshot_store_ref: str | None,
+        snapshot_store_backend: str | None,
+        *,
+        timeout_ms: int,
+    ) -> str:
+        return self._client(
+            connection,
+            timeout_ms=timeout_ms,
+        ).export_debug_artifact(
+            debug_session_id=debug_session_id,
+            artifact_ref=artifact_ref,
+            export_root=export_root,
+            snapshot_store_ref=snapshot_store_ref,
+            snapshot_store_backend=snapshot_store_backend,
+        ).exported_ref
 
     def scan(
         self,
@@ -406,6 +476,156 @@ class RuntimeServerService:
     ) -> RuntimeDebugInspectionResult:
         return self.runtime_debug_inspection(
             debug_session_id=request.debug_session_id,
+            host=request.connection.host,
+            port=request.connection.port,
+            transport_mode=request.connection.transport_mode,
+            persistent=request.connection.persistent,
+            timeout_ms=request.timeout_ms,
+        )
+
+    def debug_command(
+        self,
+        *,
+        debug_session_id: str,
+        command_type: str,
+        host: str = "localhost",
+        port: int | None = None,
+        transport_mode: TransportMode | None = None,
+        persistent: bool = True,
+        timeout_ms: int | None = None,
+    ) -> RuntimeDebugCommandResult:
+        timeout_ms = (
+            self._config.control_timeout_ms if timeout_ms is None else timeout_ms
+        )
+        connection = ExecutionConnectionSpec(host, port, transport_mode, persistent)
+        try:
+            status = self._gateway.send_debug_command(
+                connection,
+                debug_session_id,
+                command_type,
+                timeout_ms=timeout_ms,
+            )
+        except Exception as exc:
+            return RuntimeDebugCommandResult(
+                schema_version=SCHEMA_VERSION,
+                connection=connection,
+                debug_session_id=debug_session_id,
+                command_type=command_type,
+                errors=(
+                    AgentError.from_exception(
+                        "runtime_debug_command_error",
+                        exc,
+                        hint=(
+                            "Confirm the command type against the "
+                            "DebugCommandType authority and that the session "
+                            "is a paused OpenHCS debug worker owned by this "
+                            "execution server."
+                        ),
+                    ),
+                ),
+            )
+        status_record = status.to_dict() if hasattr(status, "to_dict") else {}
+        return RuntimeDebugCommandResult(
+            schema_version=SCHEMA_VERSION,
+            connection=connection,
+            debug_session_id=debug_session_id,
+            command_type=command_type,
+            worker_state=(
+                str(status_record.get("state"))
+                if status_record.get("state") is not None
+                else None
+            ),
+            cursor=status_record.get("cursor"),
+        )
+
+    def debug_command_from_request(
+        self,
+        request: RuntimeDebugCommandRequest,
+    ) -> RuntimeDebugCommandResult:
+        return self.debug_command(
+            debug_session_id=request.debug_session_id,
+            command_type=request.command_type,
+            host=request.connection.host,
+            port=request.connection.port,
+            transport_mode=request.connection.transport_mode,
+            persistent=request.connection.persistent,
+            timeout_ms=request.timeout_ms,
+        )
+
+    def debug_artifact_export(
+        self,
+        *,
+        debug_session_id: str,
+        artifact_ref: str,
+        export_root: str,
+        snapshot_store_ref: str | None = None,
+        snapshot_store_backend: str | None = None,
+        host: str = "localhost",
+        port: int | None = None,
+        transport_mode: TransportMode | None = None,
+        persistent: bool = True,
+        timeout_ms: int | None = None,
+    ) -> RuntimeDebugArtifactExportResult:
+        connection = ExecutionConnectionSpec(host, port, transport_mode, persistent)
+
+        def failure(exc: Exception) -> RuntimeDebugArtifactExportResult:
+            return RuntimeDebugArtifactExportResult(
+                schema_version=SCHEMA_VERSION,
+                connection=connection,
+                debug_session_id=debug_session_id,
+                artifact_ref=artifact_ref,
+                export_root=export_root,
+                errors=(
+                    AgentError.from_exception(
+                        "runtime_debug_export_error",
+                        exc,
+                        hint=(
+                            "Confirm the artifact ref against "
+                            "runtime-debug-values and that export_root is "
+                            "inside the agent writable roots."
+                        ),
+                    ),
+                ),
+            )
+
+        try:
+            AgentPathPolicy.from_environment().assert_writable(export_root)
+        except Exception as exc:
+            return failure(exc)
+        timeout_ms = (
+            self._config.control_timeout_ms if timeout_ms is None else timeout_ms
+        )
+        try:
+            exported_ref = self._gateway.export_debug_artifact(
+                connection,
+                debug_session_id,
+                artifact_ref,
+                export_root,
+                snapshot_store_ref,
+                snapshot_store_backend,
+                timeout_ms=timeout_ms,
+            )
+        except Exception as exc:
+            return failure(exc)
+        return RuntimeDebugArtifactExportResult(
+            schema_version=SCHEMA_VERSION,
+            connection=connection,
+            debug_session_id=debug_session_id,
+            artifact_ref=artifact_ref,
+            export_root=export_root,
+            exported_ref=exported_ref,
+        )
+
+    def debug_artifact_export_from_request(
+        self,
+        request: RuntimeDebugArtifactExportRequest,
+    ) -> RuntimeDebugArtifactExportResult:
+        return self.debug_artifact_export(
+            debug_session_id=request.debug_session_id,
+            artifact_ref=request.artifact_ref,
+            export_root=request.export_root,
+            snapshot_store_ref=request.snapshot_store_ref,
+            snapshot_store_backend=request.snapshot_store_backend,
             host=request.connection.host,
             port=request.connection.port,
             transport_mode=request.connection.transport_mode,
