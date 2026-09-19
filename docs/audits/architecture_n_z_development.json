@@ -593,7 +593,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Callable-declared input, output, and execution framework roles consumed by compilation."
       },
       {
@@ -827,7 +827,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Callable ABI including input/output/execution memory roles, runtime-owned parameter projection, and artifact contracts."
       },
       {
@@ -1276,7 +1276,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/filemanager.py",
-        "sha256": "82988d67e9811b5e550bd7373ce1e03f51acbbe82a9243e72744f769d08fbe59",
+        "sha256": "877a2b10731b12904b1784a5b42c9e39688e3a84f7f86018c1c2beee96ea2296",
         "role": "Generic FileManager storage and backend composition."
       }
     ],
@@ -1301,7 +1301,7 @@
     "authority": [
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Callable ABI including input/output/execution memory roles, runtime-owned parameter projection, and artifact contracts."
       },
       {
@@ -1384,7 +1384,7 @@
     "authority": [
       {
         "path": "external/PolyStore/src/polystore/filemanager.py",
-        "sha256": "82988d67e9811b5e550bd7373ce1e03f51acbbe82a9243e72744f769d08fbe59",
+        "sha256": "877a2b10731b12904b1784a5b42c9e39688e3a84f7f86018c1c2beee96ea2296",
         "role": "Generic FileManager storage and backend composition."
       },
       {
@@ -1394,7 +1394,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1481,7 +1481,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/filemanager.py",
-        "sha256": "82988d67e9811b5e550bd7373ce1e03f51acbbe82a9243e72744f769d08fbe59",
+        "sha256": "877a2b10731b12904b1784a5b42c9e39688e3a84f7f86018c1c2beee96ea2296",
         "role": "Generic FileManager storage and backend composition."
       },
       {
@@ -1624,7 +1624,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1695,7 +1695,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
@@ -2354,7 +2354,7 @@
     "authority": [
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Callable ABI including input/output/execution memory roles, runtime-owned parameter projection, and artifact contracts."
       },
       {
@@ -2620,7 +2620,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2645,7 +2645,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "OpenHCS callable declaration projection for input, output, and execution frameworks."
       },
       {
@@ -2721,7 +2721,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2767,7 +2767,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2901,7 +2901,7 @@
       },
       {
         "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "236ee6e6cabc50d85eaa0cd5c88cbb50042850f4db7937bb0ec2f06a5ab4887e",
+        "sha256": "585b1701b01b92bfce91437a60881afa769e36de9126807c3f4fcaf0ffc006fb",
         "role": "Declares the default UI bridge connection timeout."
       },
       {
@@ -3471,7 +3471,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3603,7 +3603,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Compiler-visible projection of all declared callable memory roles."
       },
       {
@@ -3660,7 +3660,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -3768,7 +3768,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Callable ABI and input/output/execution framework declaration authority."
       },
       {
@@ -3860,7 +3860,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/filemanager.py",
-        "sha256": "82988d67e9811b5e550bd7373ce1e03f51acbbe82a9243e72744f769d08fbe59",
+        "sha256": "877a2b10731b12904b1784a5b42c9e39688e3a84f7f86018c1c2beee96ea2296",
         "role": "Generic FileManager storage and backend composition."
       }
     ],

@@ -11,6 +11,10 @@ from typing import Any, ClassVar, Mapping
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 
+from openhcs.core.image_payload_execution_mode import (
+    ImagePayloadExecutionMode,
+)
+
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactSpecRef
 from openhcs.core.memory import (
@@ -742,14 +746,6 @@ class PassThroughAlignedKwargResolutionStrategy(
     ) -> Any:
         del resolver
         return value
-
-
-class ImagePayloadExecutionMode(Enum):
-    """How a runtime executor should interpret a resolved image payload."""
-
-    NATURAL = "natural"
-    FULL_STACK = "full_stack"
-    ALIGNED_MULTI_IMAGE_STACK = "aligned_multi_image_stack"
 
 
 @dataclass(frozen=True, slots=True)
