@@ -6,7 +6,6 @@ from pathlib import Path
 
 import libcst as cst
 
-
 ROOT_PATH = Path("openhcs/interop/cellprofiler/module_declarations.py")
 OWNER_PATH = Path("openhcs/interop/cellprofiler/module_settings.py")
 
@@ -61,7 +60,10 @@ def main() -> None:
         if name in TOP_LEVEL_NAMES:
             moved_top_level.append(statement)
             continue
-        if not isinstance(statement, cst.ClassDef) or statement.name.value != "CellProfilerModule":
+        if (
+            not isinstance(statement, cst.ClassDef)
+            or statement.name.value != "CellProfilerModule"
+        ):
             root_body.append(statement)
             continue
         retained: list[cst.BaseStatement] = []

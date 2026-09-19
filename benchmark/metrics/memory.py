@@ -24,16 +24,16 @@ class MemoryMetric(MetricCollector):
         include_children: bool = True,
         *,
         max_memory_mb: float | None = None,
-        on_limit_exceeded: Callable[[float, tuple[psutil.Process, ...]], None] | None = None,
+        on_limit_exceeded: (
+            Callable[[float, tuple[psutil.Process, ...]], None] | None
+        ) = None,
         limit_callback_interval_seconds: float = 0.5,
         interrupt_main_on_limit: bool = False,
     ):
         self.interval = interval_seconds
         self.include_children = include_children
         self.max_memory_bytes = (
-            int(max_memory_mb * 1024 * 1024)
-            if max_memory_mb is not None
-            else None
+            int(max_memory_mb * 1024 * 1024) if max_memory_mb is not None else None
         )
         self.on_limit_exceeded = on_limit_exceeded
         self.limit_callback_interval_seconds = limit_callback_interval_seconds

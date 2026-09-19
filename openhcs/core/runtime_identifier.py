@@ -24,8 +24,7 @@ def normalize_runtime_source_name(source_name: str | None) -> str | None:
     normalized = "__".join(
         part
         for part in (
-            normalize_runtime_identifier(part)
-            for part in str(source_name).split("__")
+            normalize_runtime_identifier(part) for part in str(source_name).split("__")
         )
         if part
     )
@@ -38,10 +37,7 @@ def runtime_source_name_tokens(source_name: str | None) -> tuple[str, ...]:
     if normalized is None:
         return ()
     return tuple(
-        token
-        for part in normalized.split("__")
-        for token in part.split("_")
-        if token
+        token for part in normalized.split("__") for token in part.split("_") if token
     )
 
 

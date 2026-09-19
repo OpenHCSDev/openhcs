@@ -50,20 +50,42 @@ Preparation verifies byte size and SHA-256 before extraction. It writes:
 ```text
 <run>/<dataset>/
 ├── authoring/
-│   ├── images/
+│   ├── images/                  # declared development source sets only
 │   ├── source_manifest.csv
 │   ├── source_bindings.py
+│   ├── pipeline_template.py     # self-contained derived runnable declaration
 │   └── OPENHCS_AUTHORING.md
+├── frozen_execution/
+│   ├── images/                  # disclosed only after pipeline freeze
+│   ├── source_manifest.csv
+│   └── source_bindings.py
 ├── trusted_scoring/
-│   ├── references/             # absent for BBBC013
+│   ├── references/              # absent for BBBC013
+│   ├── source_manifest.csv      # held-out assay metadata for the evaluator
 │   └── reference_manifest.csv
+├── frozen_pipeline_receipt.json # created only when the pipeline is frozen
 └── provenance.json
 ```
 
-Give an authoring agent **only** the `authoring/` directory. Run it in a
-container or sandbox that mounts no parent directory and no acquisition cache.
-Directory naming is an organizational boundary, not an access-control boundary
-against an unrestricted same-user shell.
+The split is part of each dataset declaration. BBBC039 uses the
+lexicographically first four official validation fields for development and all
+50 official test fields for held-out execution. BBBC007 reproduces the pinned
+`SHA256("slas-20260915:" + DNA_basename)` four-field development selection and
+holds out the other 12 pairs. BBBC013 uses A04, B08, E04 and F08 for development
+and holds out the other 92 wells.
+
+Give an authoring agent **only** the `authoring/` directory. After freezing the
+pipeline, expose `frozen_execution/` for an unchanged held-out run; only the
+evaluator receives `trusted_scoring/`. Run the authoring process in a container
+or sandbox that mounts no parent directory and no acquisition cache. Directory
+naming alone is not an access-control boundary against an unrestricted
+same-user shell.
+
+Authoring starts from `pipeline_template.py`. The generator embeds the same
+declaration-owned lazy source-binding configuration in that source document, so
+the compiler, UI and separate execution-server process do not require a sibling
+module on a shared `PYTHONPATH`. `source_bindings.py` remains the inspectable
+standalone projection of that declaration.
 
 ## OpenHCS reasoning being evaluated
 
@@ -94,8 +116,10 @@ python -m benchmark.validation freeze BBBC039_nuclei_segmentation pipeline.py \
   --corpus-root "$OPENHCS_VALIDATION_RUN"
 ```
 
-Only after this succeeds may the trusted scorer receive its sibling directory.
-Scoring fails closed if the pipeline path disappears or its SHA-256 changes.
+Only after this succeeds may held-out execution receive `frozen_execution/`.
+The trusted scorer alone receives `trusted_scoring/`. Scoring fails closed if
+the pipeline path disappears or its SHA-256 changes. The freeze receipt is
+stored at the dataset root, not inside either post-freeze data surface.
 
 For BBBC039/BBBC007, provide a prediction manifest whose paths are relative to
 the manifest directory:

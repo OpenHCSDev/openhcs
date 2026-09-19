@@ -19,7 +19,6 @@ from openhcs.mcp.dev_client_rendering import (
 )
 from openhcs.serialization.json import to_jsonable
 
-
 DEBUG_SESSION_ID = "debug-session-renderer"
 
 
@@ -147,9 +146,7 @@ def test_runtime_debug_renderer_projects_section_text_without_kind_dispatch() ->
 
 def test_runtime_debug_renderer_preserves_errors_and_raw_json_escape_hatch() -> None:
     parser = _build_parser()
-    args = parser.parse_args(
-        ("runtime-debug-values", "7787", DEBUG_SESSION_ID)
-    )
+    args = parser.parse_args(("runtime-debug-values", "7787", DEBUG_SESSION_ID))
     rendered = McpDevCommandSpec.for_name("runtime-debug-values").render_response(
         _runtime_debug_error_response(),
         args,

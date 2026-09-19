@@ -25,7 +25,6 @@ from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
 )
 
-
 PROJECT_ROOT = Path(__file__).parents[2]
 
 

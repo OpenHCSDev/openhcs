@@ -24,7 +24,6 @@ from benchmark.datasets.visible_source import resolve_visible_source_path
 from benchmark.metrics.memory import MemoryMetric
 from benchmark.metrics.time import TimeMetric
 
-
 JOB_ROWS_CSV = "throughput_jobs.csv"
 BATCH_ROWS_CSV = "throughput_batches.csv"
 SUMMARY_ROWS_CSV = "throughput_summary.csv"
@@ -375,9 +374,7 @@ def _run_openhcs_throughput_job(spec: ThroughputJobSpec) -> ThroughputJobResult:
         phase_seconds = _phase_seconds(provenance)
         difference_count = provenance.get("equivalence_difference_count")
         equivalent = (
-            int(difference_count) == 0
-            if difference_count is not None
-            else None
+            int(difference_count) == 0 if difference_count is not None else None
         )
         job_result = ThroughputJobResult(
             case_name=spec.case_name,
@@ -444,10 +441,14 @@ def _batch_result(
         replicas=replicas,
         successful_jobs=successful_jobs,
         equivalent_jobs=(
-            sum(1 for value in equivalent_values if value) if equivalent_values else None
+            sum(1 for value in equivalent_values if value)
+            if equivalent_values
+            else None
         ),
         wall_seconds=wall_seconds,
-        throughput_jobs_per_second=replicas / wall_seconds if wall_seconds > 0.0 else 0.0,
+        throughput_jobs_per_second=(
+            replicas / wall_seconds if wall_seconds > 0.0 else 0.0
+        ),
         speedup_vs_sequential=speedup,
         parallel_efficiency=speedup / worker_count if speedup is not None else None,
         peak_memory_mb=peak_memory_mb,
@@ -529,7 +530,9 @@ def _discard_job_outputs(output_root: Path) -> None:
     if not resolved.is_dir():
         raise NotADirectoryError(f"Throughput output is not a directory: {resolved}")
     if resolved == resolved.parent:
-        raise ValueError(f"Refusing unsafe throughput output discard target: {resolved}")
+        raise ValueError(
+            f"Refusing unsafe throughput output discard target: {resolved}"
+        )
     shutil.rmtree(resolved)
 
 

@@ -6,13 +6,25 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
-from openhcs.core.function_patterns import FunctionInvocationKey, normalize_function_pattern
+from openhcs.core.function_patterns import (
+    FunctionInvocationKey,
+    normalize_function_pattern,
+)
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
-from openhcs.core.runtime_measurements import MeasurementRowAxisField, MeasurementRowValueField
-from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope, PresentObjectLabelIdsDomainDeclaration
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_measurements import (
+    MeasurementRowAxisField,
+    MeasurementRowValueField,
+)
+from openhcs.core.runtime_object_label_domains import (
+    ObjectLabelDomainScope,
+    PresentObjectLabelIdsDomainDeclaration,
+)
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+)
 from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
     ObjectLabelPayload,
@@ -82,9 +94,7 @@ def test_public_roundtrip_publishes_default_tracked_image_for_tile() -> None:
         ArtifactSpec.output("OutlineImage", ImageArtifactType),
         ArtifactSpec.output("Embryos", ObjectLabelsArtifactType),
     )
-    output_parameter = (
-        TrackObjectsModule.output_image_binding.require_parameter_name()
-    )
+    output_parameter = TrackObjectsModule.output_image_binding.require_parameter_name()
     track_step = FunctionStep(
         func=(
             track_objects,
@@ -106,9 +116,7 @@ def test_public_roundtrip_publishes_default_tracked_image_for_tile() -> None:
     (restored_step,) = FunctionStepTransportAuthority.pipeline_steps_from_namespace(
         namespace
     )
-    track_invocation = next(
-        normalize_function_pattern(restored_step.func).iter_items()
-    )
+    track_invocation = next(normalize_function_pattern(restored_step.func).iter_items())
     assert output_parameter not in track_invocation.kwargs_dict
 
     producer_key = FunctionInvocationKey(
@@ -145,11 +153,9 @@ def test_public_roundtrip_publishes_default_tracked_image_for_tile() -> None:
         consumed_kwarg_names=consumed,
         step_context=track_context,
     )
-    tracked_output = (
-        track_contract.artifact_outputs.require_by_name_and_artifact_type(
-            TrackObjectsModule.default_output_image_name,
-            ImageArtifactType,
-        )
+    tracked_output = track_contract.artifact_outputs.require_by_name_and_artifact_type(
+        TrackObjectsModule.default_output_image_name,
+        ImageArtifactType,
     )
     assert tracked_output.plan_type is ArtifactOutputPlan
 
@@ -179,9 +185,7 @@ def test_public_roundtrip_publishes_default_tracked_image_for_tile() -> None:
         available_artifact_producers=(
             *track_context.available_artifact_producers,
             *artifact_producers_for_outputs(
-                track_contract.artifact_outputs.for_plan_type(
-                    ArtifactOutputPlan
-                ).specs,
+                track_contract.artifact_outputs.for_plan_type(ArtifactOutputPlan).specs,
                 groups=(None,),
                 invocation_keys=(track_invocation.key,),
             ),
@@ -206,9 +210,7 @@ def test_public_roundtrip_publishes_default_tracked_image_for_tile() -> None:
         ImageArtifactType,
     )
 
-    assert (
-        tracked_output.ref().for_plan_type(ArtifactInputPlan) == tracked_input.ref()
-    )
+    assert tracked_output.ref().for_plan_type(ArtifactInputPlan) == tracked_input.ref()
 
 
 def test_track_objects_uses_numba_tracking_backend_by_default():

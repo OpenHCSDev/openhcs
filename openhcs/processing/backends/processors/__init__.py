@@ -13,12 +13,12 @@ from __future__ import annotations
 import importlib
 
 __all__ = [
-    'numpy_processor',
-    'cupy_processor',
-    'torch_processor',
-    'tensorflow_processor',
-    'jax_processor',
-    'pyclesperanto_processor'
+    "numpy_processor",
+    "cupy_processor",
+    "torch_processor",
+    "tensorflow_processor",
+    "jax_processor",
+    "pyclesperanto_processor",
 ]
 
 

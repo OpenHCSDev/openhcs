@@ -198,7 +198,9 @@ class FilterObjectsRuntimeInputPlan:
             if raw_measurement_features is None
             else tuple(str(value) for value in raw_measurement_features)
         )
-        output_specs = request.adapter.request.require_callable_contract().artifact_outputs
+        output_specs = (
+            request.adapter.request.require_callable_contract().artifact_outputs
+        )
         output_objects = output_specs.of_artifact_type(ObjectLabelsArtifactType)
         removed_output_relations = tuple(
             (spec, relation)

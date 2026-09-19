@@ -1,0 +1,64 @@
+{
+  "date": "2026-09-15",
+  "manifest_sha256": "2264276b0e7d9e905c498136333f6dab49f6ff1c059ce44db7815eb2d3b7096d",
+  "source_files": [
+    {
+      "filename": "BBBC007_images.zip",
+      "bytes": 6435776,
+      "sha256": "b7009e2fce0a3152a5c9adda916eaa699d09696f4bd02a7d05d12d041e30c6d1"
+    },
+    {
+      "filename": "BBBC007_outlines.zip",
+      "bytes": 652531,
+      "sha256": "6a5246f9a9d743d22eafdb409fae638a8461af97e9ff9c4a92f25eba236224d3"
+    },
+    {
+      "filename": "BBBC013_images.zip",
+      "bytes": 32404692,
+      "sha256": "c059b569d96f70ad5626fad144867e6ece4353622119c46a8af8f9794f1e7985"
+    },
+    {
+      "filename": "BBBC013_platemap_all.txt",
+      "bytes": 513,
+      "sha256": "e8db6666271d47962fa7d2abfa3ea965352b8e87bee461f2983d0f667bc7ff08"
+    },
+    {
+      "filename": "BBBC013_visual_plate_map.png",
+      "bytes": 88476,
+      "sha256": "e243a7d9b8ac1fba58b84ca26517119427c7ce88cfc471ee971601b5bdc0dec8"
+    },
+    {
+      "filename": "BBBC039_images.zip",
+      "bytes": 77915748,
+      "sha256": "6f30a5d4fe38c928ded972704f085975f8dc0d65d9aa366df00e5a9d449fddd7"
+    },
+    {
+      "filename": "BBBC039_masks.zip",
+      "bytes": 2753811,
+      "sha256": "f9e6043d8ca56344a4886f96a700d804d6ee982f31e2b2cd3194af2a053c2710"
+    },
+    {
+      "filename": "BBBC039_metadata.zip",
+      "bytes": 17816,
+      "sha256": "a2c1f900bed9ba92a99553efd4c2ae98598433691c7401d818653ab61110deb2"
+    }
+  ],
+  "field_counts": {
+    "BBBC039": {
+      "development": 4,
+      "held_out": 50
+    },
+    "BBBC007": {
+      "development": 4,
+      "held_out": 12
+    },
+    "BBBC013": {
+      "development": 4,
+      "held_out": 92
+    }
+  },
+  "verified_input_channels": 278,
+  "verified_evaluation_files": 90,
+  "RGB_registration_pixels_removed_to_black": 2218,
+  "scientific_agent_scores_available": false
+}

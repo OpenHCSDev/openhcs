@@ -156,7 +156,9 @@ class KnowledgeBaseDocumentRequest(AgentCliRequest):
         resolved_document_id = document_id
         resolved_section_id = section_id
         if resolved_section_id is None and "#" in resolved_document_id:
-            resolved_document_id, resolved_section_id = resolved_document_id.split("#", 1)
+            resolved_document_id, resolved_section_id = resolved_document_id.split(
+                "#", 1
+            )
         return cls.from_fields(
             document_id=resolved_document_id,
             section_id=resolved_section_id,

@@ -18,13 +18,8 @@ class RoiData:
     def __post_init__(self) -> None:
         row_count = len(self.data)
         if len(self.shape_type) != row_count:
-            raise ValueError(
-                f"ROI shape types must contain {row_count} values"
-            )
-        if any(
-            not isinstance(shape_type, ShapeType)
-            for shape_type in self.shape_type
-        ):
+            raise ValueError(f"ROI shape types must contain {row_count} values")
+        if any(not isinstance(shape_type, ShapeType) for shape_type in self.shape_type):
             raise TypeError("ROI shape types must be Napari ShapeType members")
         if self.names is not None and len(self.names) != row_count:
             raise ValueError(f"ROI names must contain {row_count} values")

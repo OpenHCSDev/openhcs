@@ -18,8 +18,11 @@ from openhcs.core.compiled_execution import (
     CompiledRuntimeEnvironmentPlan,
     CompiledWorkerStartPlan,
 )
-from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
-from openhcs.core.config import MultiprocessingStartMethod
+from openhcs.core.compiled_step_plan import (
+    FrameworkDeviceAssignment,
+    RuntimeArtifactMaterializationPlan,
+)
+from openhcs.core.config import AnalysisConsolidationConfig, MultiprocessingStartMethod
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.measurement_row_materialization import (
@@ -41,6 +44,8 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.pipeline.artifact_planning import TerminalMaterializationSpec
+from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 
 
 def _runtime_environment() -> CompiledRuntimeEnvironmentPlan:
@@ -120,7 +125,11 @@ def test_compiled_execution_bundle_derives_runtime_observation_mode(
     context = ProcessingContext(
         axis_id="A01",
         step_plans={
-            index: SimpleNamespace(execution_scope=execution_scope)
+            index: SimpleNamespace(
+                execution_scope=execution_scope,
+                runtime_artifact_materialization=RuntimeArtifactMaterializationPlan.disabled(),
+                artifact_outputs={},
+            )
             for index, execution_scope in enumerate(execution_scopes)
         },
     )
@@ -138,6 +147,52 @@ def test_compiled_execution_bundle_derives_runtime_observation_mode(
         )
         is expected_mode
     )
+
+
+@pytest.mark.parametrize(
+    ("consolidation_enabled", "persistent_enabled", "spec_type", "expected"),
+    (
+        (True, True, MaterializationSpec, True),
+        (False, True, MaterializationSpec, False),
+        (True, False, MaterializationSpec, False),
+        (True, True, TerminalMaterializationSpec, False),
+        (True, True, None, False),
+    ),
+)
+def test_consolidation_retains_declared_persistent_export_records(
+    consolidation_enabled, persistent_enabled, spec_type, expected
+):
+    output = ArtifactOutputPlan(
+        name="measurements",
+        path="/memory/measurements.csv",
+        artifact_type=MeasurementsArtifactType,
+        materialization=spec_type(CsvOptions()) if spec_type is not None else None,
+    )
+    context = ProcessingContext(
+        axis_id="A01",
+        analysis_consolidation_config=AnalysisConsolidationConfig(
+            enabled=consolidation_enabled
+        ),
+        step_plans={
+            0: SimpleNamespace(
+                execution_scope=FunctionStepExecutionScope.AXIS,
+                runtime_artifact_materialization=RuntimeArtifactMaterializationPlan(
+                    persistent_enabled=persistent_enabled,
+                    persistent_backend="disk" if persistent_enabled else None,
+                ),
+                artifact_outputs={"measurements": output},
+            )
+        },
+    )
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=(),
+        runtime_contexts={"A01": context},
+        transport_contexts={"A01": context},
+        worker_assignments={},
+        runtime_environment=_runtime_environment(),
+    )
+
+    assert bundle.requires_parent_runtime_observation is expected
 
 
 def test_runtime_observation_mode_can_only_be_strengthened() -> None:

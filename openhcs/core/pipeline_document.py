@@ -57,9 +57,7 @@ class PipelineDocumentAuthority:
             raise ValueError(f"Pipeline document must define {steps_field!r}.")
 
         pipeline_config = (
-            namespace[config_field]
-            if config_field in namespace
-            else PipelineConfig()
+            namespace[config_field] if config_field in namespace else PipelineConfig()
         )
         pipeline_steps = namespace[steps_field]
         cls._require_pipeline_config(pipeline_config)

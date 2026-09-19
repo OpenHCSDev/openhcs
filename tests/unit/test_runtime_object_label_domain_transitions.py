@@ -86,9 +86,7 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
     )
     labels = ObjectLabelSet(
         name="Cells",
-        variant_data=ObjectLabelVariantData(
-            labels=np.zeros((3, 4, 5), dtype=np.int32)
-        ),
+        variant_data=ObjectLabelVariantData(labels=np.zeros((3, 4, 5), dtype=np.int32)),
         source_provenance=SourceImageProvenance(
             source_image_provenance_planes=source_planes,
             source_image_names=("MembFinal",) * 3,
@@ -104,9 +102,7 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
 
     assert reference_metadata.plane_axis is None
     assert reference_metadata.source_provenance.source_plane_count == 0
-    assert (
-        reference_metadata.source_image_provenance_planes.contributor_count == 3
-    )
+    assert reference_metadata.source_image_provenance_planes.contributor_count == 3
     assert reference_metadata.source_image_names == ()
     assert reference_metadata.source_provenance.represented_source_image_names == (
         "MembFinal",
@@ -115,6 +111,4 @@ def test_payload_measurement_reference_keeps_volume_planes_as_contributors() -> 
         (reference_image,),
         mode=ImagePayloadMetadataCompositionMode.BUNDLE,
     )
-    assert composed.source_provenance.represented_source_image_names == (
-        "MembFinal",
-    )
+    assert composed.source_provenance.represented_source_image_names == ("MembFinal",)

@@ -46,9 +46,7 @@ def test_typed_cache_round_trip_and_load_hook(tmp_path) -> None:
     assert type(restored) is _CurrentRoot
     assert type(restored.nested) is _CurrentNested
     assert loaded == [restored]
-    assert cache_file.read_text(encoding="utf-8").startswith(
-        "# OpenHCS configuration"
-    )
+    assert cache_file.read_text(encoding="utf-8").startswith("# OpenHCS configuration")
 
 
 def test_cache_rejects_stale_root_type_without_compatibility_migration(
@@ -101,9 +99,7 @@ def test_failed_atomic_replace_preserves_previous_cache(
 
     monkeypatch.setattr(
         "openhcs.core.config_cache.os.replace",
-        lambda source, target: (_ for _ in ()).throw(
-            OSError("replace failed")
-        ),
+        lambda source, target: (_ for _ in ()).throw(OSError("replace failed")),
     )
 
     assert save_config_sync(replacement, spec) is False

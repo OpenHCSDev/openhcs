@@ -28,7 +28,12 @@ from openhcs.core.artifacts import (
     RelationshipsArtifactType,
 )
 from openhcs.core.function_patterns import CompiledFunctionInvocation
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisProjector, RuntimePlaneAxisValueProjection, RuntimePlaneProjection
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisProjector,
+    RuntimePlaneAxisValueProjection,
+    RuntimePlaneProjection,
+)
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -205,7 +210,9 @@ class FailedDebugBoundary:
 
     progress_status: ClassVar[ProgressStatus] = ProgressStatus.ERROR
     boundary_outcome: ClassVar[DebugBoundaryOutcome] = DebugBoundaryOutcome.FAILED
-    timeline_node_state: ClassVar[DebugTimelineNodeState] = DebugTimelineNodeState.FAILED
+    timeline_node_state: ClassVar[DebugTimelineNodeState] = (
+        DebugTimelineNodeState.FAILED
+    )
 
 
 class ReportsOutputArtifactsDebugBoundary:
@@ -267,7 +274,9 @@ class DebugPausedWorkerStatus:
             "debug_session_id": self.debug_session_id,
             "state": self.state.value,
             "cursor": (
-                None if self.cursor is None else DebugJsonCodec.cursor_to_record(self.cursor)
+                None
+                if self.cursor is None
+                else DebugJsonCodec.cursor_to_record(self.cursor)
             ),
         }
 
@@ -277,7 +286,9 @@ class DebugPausedWorkerStatus:
         return cls(
             debug_session_id=str(payload["debug_session_id"]),
             state=DebugPausedWorkerState(str(payload["state"])),
-            cursor=None if cursor is None else DebugJsonCodec.cursor_from_record(cursor),
+            cursor=(
+                None if cursor is None else DebugJsonCodec.cursor_from_record(cursor)
+            ),
         )
 
     @classmethod
@@ -829,11 +840,7 @@ class DebugInvocationParameter:
             )
         facts = [*projection_facts, *facts]
 
-        value_text = (
-            value_type
-            if not facts
-            else f"{value_type}({', '.join(facts)})"
-        )
+        value_text = value_type if not facts else f"{value_type}({', '.join(facts)})"
         if len(value_text) > 512:
             value_text = f"{value_text[:509]}..."
         return cls(name=name, value_repr=value_text)
@@ -908,17 +915,12 @@ class DebugSnapshot(DebugBoundaryState):
                 ref.to_json_dict() for ref in self.output_artifact_refs
             ],
             "preview_refs": [ref.to_json_dict() for ref in self.preview_refs],
-            "measurement_refs": [
-                ref.to_json_dict() for ref in self.measurement_refs
-            ],
-            "relationship_refs": [
-                ref.to_json_dict() for ref in self.relationship_refs
-            ],
+            "measurement_refs": [ref.to_json_dict() for ref in self.measurement_refs],
+            "relationship_refs": [ref.to_json_dict() for ref in self.relationship_refs],
             "timing_seconds": self.timing_seconds,
             "exception": self.exception,
             "invocation_parameters": [
-                parameter.to_json_dict()
-                for parameter in self.invocation_parameters
+                parameter.to_json_dict() for parameter in self.invocation_parameters
             ],
         }
 
@@ -1276,7 +1278,10 @@ class DebugArtifactExportPlan:
         return self.export_root / f"{self.artifact_ref.name}{suffix}"
 
     def export(self) -> Path:
-        if self.artifact_ref.storage_backend is not None and self.filemanager is not None:
+        if (
+            self.artifact_ref.storage_backend is not None
+            and self.filemanager is not None
+        ):
             return self._export_vfs_payload()
         source_path = self.source_path
         if not source_path.exists():
@@ -1303,7 +1308,9 @@ class DebugArtifactExportPlan:
         elif isinstance(payload, str):
             destination_path.write_text(payload, encoding="utf-8")
         else:
-            destination_path.write_text(json.dumps(payload, default=repr), encoding="utf-8")
+            destination_path.write_text(
+                json.dumps(payload, default=repr), encoding="utf-8"
+            )
         return destination_path
 
 
@@ -1339,8 +1346,12 @@ class DebugWarmReplayArtifactReusePlan:
             snapshot_store=snapshot_store,
         )
 
-    def prepare(self, context: object) -> tuple[DebugWarmReplayArtifactAvailability, ...]:
-        hydration_context = DebugArtifactHydrationContext.from_execution_context(context)
+    def prepare(
+        self, context: object
+    ) -> tuple[DebugWarmReplayArtifactAvailability, ...]:
+        hydration_context = DebugArtifactHydrationContext.from_execution_context(
+            context
+        )
         return tuple(
             self._prepare_ref(hydration_context, artifact_ref)
             for artifact_ref in self.artifact_refs
@@ -1348,7 +1359,9 @@ class DebugWarmReplayArtifactReusePlan:
 
     def require_available(self, context: object) -> None:
         results = self.prepare(context)
-        missing = tuple(result.artifact_ref for result in results if not result.available)
+        missing = tuple(
+            result.artifact_ref for result in results if not result.available
+        )
         if missing:
             missing_text = ", ".join(
                 f"{ref.kind.value}:{ref.name}@{ref.storage_ref}" for ref in missing
@@ -1453,16 +1466,13 @@ class DebugArtifactHydrationContext:
                 for ref in snapshot.output_artifact_refs
             ),
             preview_refs=tuple(
-                self.ref_with_content_digest(ref)
-                for ref in snapshot.preview_refs
+                self.ref_with_content_digest(ref) for ref in snapshot.preview_refs
             ),
             measurement_refs=tuple(
-                self.ref_with_content_digest(ref)
-                for ref in snapshot.measurement_refs
+                self.ref_with_content_digest(ref) for ref in snapshot.measurement_refs
             ),
             relationship_refs=tuple(
-                self.ref_with_content_digest(ref)
-                for ref in snapshot.relationship_refs
+                self.ref_with_content_digest(ref) for ref in snapshot.relationship_refs
             ),
             timing_seconds=snapshot.timing_seconds,
             exception=snapshot.exception,
@@ -1509,7 +1519,9 @@ class DebugArtifactHydrationContext:
     ) -> bool:
         if self.filemanager is None:
             return False
-        if not self.filemanager.exists(source_ref.storage_ref, source_ref.storage_backend):
+        if not self.filemanager.exists(
+            source_ref.storage_ref, source_ref.storage_backend
+        ):
             return False
         if self.filemanager.is_dir(source_ref.storage_ref, source_ref.storage_backend):
             return self._hydrate_vfs_directory(
@@ -1575,9 +1587,13 @@ class DebugArtifactHydrationContext:
     def _vfs_content_digest(self, artifact_ref: DebugArtifactRef) -> str | None:
         if self.filemanager is None or artifact_ref.storage_backend is None:
             return None
-        if not self.filemanager.exists(artifact_ref.storage_ref, artifact_ref.storage_backend):
+        if not self.filemanager.exists(
+            artifact_ref.storage_ref, artifact_ref.storage_backend
+        ):
             return None
-        if self.filemanager.is_dir(artifact_ref.storage_ref, artifact_ref.storage_backend):
+        if self.filemanager.is_dir(
+            artifact_ref.storage_ref, artifact_ref.storage_backend
+        ):
             source_root = Path(artifact_ref.storage_ref)
             digest = hashlib.sha256()
             for source_file in self.filemanager.list_files(
@@ -1587,7 +1603,9 @@ class DebugArtifactHydrationContext:
             ):
                 relative_path = str(Path(source_file).relative_to(source_root))
                 digest.update(relative_path.encode("utf-8"))
-                payload = self.filemanager.load(source_file, artifact_ref.storage_backend)
+                payload = self.filemanager.load(
+                    source_file, artifact_ref.storage_backend
+                )
                 digest.update(self._payload_digest_bytes(payload))
             return digest.hexdigest()
         payload = self.filemanager.load(
@@ -1889,9 +1907,7 @@ class DebugProgressEventRequest(DebugSessionRequest):
 
     def to_progress_event(self) -> ProgressEvent:
         if self.debug_event.axis_id is None:
-            raise ValueError(
-                "DebugProgressEventRequest requires debug_event.axis_id."
-            )
+            raise ValueError("DebugProgressEventRequest requires debug_event.axis_id.")
         return ProgressEvent(
             identity=ProgressIdentity(
                 execution_id=self.execution_id,
@@ -1913,9 +1929,7 @@ class DebugProgressEventRequest(DebugSessionRequest):
             error=self.debug_event.exception,
             traceback=self.debug_event.traceback_text,
             worker_slot=self.worker_slot,
-            owned_wells=(
-                None if self.owned_wells is None else list(self.owned_wells)
-            ),
+            owned_wells=(None if self.owned_wells is None else list(self.owned_wells)),
         )
 
 
@@ -1947,9 +1961,7 @@ class DebugPausedWorkerController:
             if self._context is None:
                 raise RuntimeError("Debug worker context is not available.")
             if self._state is not DebugPausedWorkerState.PAUSED:
-                raise RuntimeError(
-                    "Runtime inspection requires a paused debug worker."
-                )
+                raise RuntimeError("Runtime inspection requires a paused debug worker.")
             from openhcs.core.debug_views import DebugViewModel
 
             return DebugViewModel.from_runtime_value_store(
@@ -2211,9 +2223,7 @@ class DebugExecutionConfig:
             raise ValueError("DebugExecutionConfig.debug_session_id cannot be empty.")
         if not isinstance(self.command_type, DebugCommandType):
             self.command_type = DebugCommandType(str(self.command_type))
-        self.pause_step_indices = tuple(
-            int(index) for index in self.pause_step_indices
-        )
+        self.pause_step_indices = tuple(int(index) for index in self.pause_step_indices)
         if not isinstance(self.replay_mode, DebugReplayMode):
             self.replay_mode = DebugReplayMode(str(self.replay_mode))
         self.start_step_index = int(self.start_step_index)
@@ -2453,9 +2463,7 @@ class DebugExecutionPolicy(ABC, metaclass=AutoRegisterMeta):
         )
         if payload is None:
             return NoOpDebugExecutionPolicy()
-        return ProgressDebugExecutionPolicy(
-            DebugExecutionConfig.from_payload(payload)
-        )
+        return ProgressDebugExecutionPolicy(DebugExecutionConfig.from_payload(payload))
 
     @classmethod
     def from_config(
@@ -2602,6 +2610,7 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         request: DebugSinkInstallRequest,
     ) -> None:
         from openhcs.core.progress import emit_event
+
         invocation_strategy = DebugInvocationExecutionStrategy.for_config(self.config)
         pause_controller = (
             DebugPausedWorkerRegistry.controller_for(self.config.debug_session_id)
@@ -2706,7 +2715,9 @@ class ProgressDebugExecutionPolicy(DebugExecutionPolicy):
         context: DebugExecutionContext,
     ) -> "DebugSnapshotStore":
         if self.config.snapshot_store_ref is None:
-            raise RuntimeError("snapshot_store_ref is required for debug snapshot storage.")
+            raise RuntimeError(
+                "snapshot_store_ref is required for debug snapshot storage."
+            )
         if self.config.snapshot_store_backend is None:
             return LocalDebugSnapshotStore(
                 root_path=Path(self.config.snapshot_store_ref),
@@ -2806,7 +2817,9 @@ class ProgressDebugEventSink(DebugEventSink):
         self.snapshot_store_backend = snapshot_store_backend
         self.worker_slot = worker_slot
         self.owned_wells = owned_wells
-        self.invocation_strategy = invocation_strategy or NeverStopDebugInvocationExecutionStrategy()
+        self.invocation_strategy = (
+            invocation_strategy or NeverStopDebugInvocationExecutionStrategy()
+        )
         self.pause_controller = pause_controller
 
     def record(self, event: DebugEvent) -> None:
@@ -2865,7 +2878,9 @@ class LocalSnapshotProgressDebugEventSink(DebugEventSink):
         self.snapshot_store_backend = snapshot_store_backend
         self.worker_slot = worker_slot
         self.owned_wells = owned_wells
-        self.invocation_strategy = invocation_strategy or NeverStopDebugInvocationExecutionStrategy()
+        self.invocation_strategy = (
+            invocation_strategy or NeverStopDebugInvocationExecutionStrategy()
+        )
         self.pause_controller = pause_controller
 
     def record(self, event: DebugEvent) -> None:

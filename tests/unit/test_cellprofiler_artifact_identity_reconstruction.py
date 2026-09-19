@@ -65,9 +65,7 @@ class _ContractProvider(InvocationContractProvider):
 
 
 def _input_ref_occurrence(*names: str) -> tuple[ArtifactSpecRef, ...]:
-    return tuple(
-        ArtifactSpec.input(name, ImageArtifactType).ref() for name in names
-    )
+    return tuple(ArtifactSpec.input(name, ImageArtifactType).ref() for name in names)
 
 
 def test_binding_occurrence_equivalence_preserves_declared_cardinality() -> None:
@@ -85,10 +83,12 @@ def test_binding_occurrence_equivalence_preserves_declared_cardinality() -> None
         _input_ref_occurrence("Protein"),
     )
 
-    assert CellProfilerModuleArtifactContracts.artifact_input_ref_occurrences_equivalent(
-        binding=main_flow_binding,
-        target=ordered_occurrences,
-        candidate=tuple(reversed(ordered_occurrences)),
+    assert (
+        CellProfilerModuleArtifactContracts.artifact_input_ref_occurrences_equivalent(
+            binding=main_flow_binding,
+            target=ordered_occurrences,
+            candidate=tuple(reversed(ordered_occurrences)),
+        )
     )
     assert not CellProfilerModuleArtifactContracts.artifact_input_ref_occurrences_equivalent(
         binding=main_flow_binding,
@@ -205,14 +205,10 @@ def test_authored_identity_remains_visible_through_compiled_artifact_graph() -> 
         step_index=0,
         source_bindings=source_bindings,
     )
-    authored_invocation = next(
-        normalize_function_pattern(step.func).iter_items()
-    )
-    blocks, consumed_names = (
-        MeasureObjectIntensityModule.module_blocks_for_invocation(
-            invocation=authored_invocation,
-            step_context=step_context,
-        )
+    authored_invocation = next(normalize_function_pattern(step.func).iter_items())
+    blocks, consumed_names = MeasureObjectIntensityModule.module_blocks_for_invocation(
+        invocation=authored_invocation,
+        step_context=step_context,
     )
     (numbered_blocks,), _next_module_num = (
         MeasureObjectIntensityModule.number_step_invocation_blocks(
@@ -235,10 +231,13 @@ def test_authored_identity_remains_visible_through_compiled_artifact_graph() -> 
     (object_input,) = contract.artifact_inputs.of_artifact_type(
         ObjectLabelsArtifactType
     )
-    assert object_input.ref() == ArtifactSpec.input(
-        "Cells",
-        ObjectLabelsArtifactType,
-    ).ref()
+    assert (
+        object_input.ref()
+        == ArtifactSpec.input(
+            "Cells",
+            ObjectLabelsArtifactType,
+        ).ref()
+    )
     assert object_input.parameter_name == "labels"
 
     output_plans = {
@@ -318,12 +317,18 @@ RelateObjects:[module_num:4|enabled:True]
     relate_step = next(step for step in steps if step.name == "RelateObjects")
     (invocation,) = tuple(normalize_function_pattern(relate_step.func).iter_items())
 
-    assert invocation.kwargs_dict[
-        RelateObjectsModule.parent_objects_binding.require_parameter_name()
-    ] == "Nuclei"
-    assert invocation.kwargs_dict[
-        RelateObjectsModule.child_objects_binding.require_parameter_name()
-    ] == "Cells"
+    assert (
+        invocation.kwargs_dict[
+            RelateObjectsModule.parent_objects_binding.require_parameter_name()
+        ]
+        == "Nuclei"
+    )
+    assert (
+        invocation.kwargs_dict[
+            RelateObjectsModule.child_objects_binding.require_parameter_name()
+        ]
+        == "Cells"
+    )
 
 
 def test_dynamic_contract_composition_rejects_runtime_parameter_drift() -> None:

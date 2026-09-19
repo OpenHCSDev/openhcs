@@ -23,6 +23,7 @@ from benchmark.contracts.validation import (
     ValidationArtifactKind,
     ValidationImageRecord,
     ValidationReferenceRecord,
+    ValidationSourceSetSelection,
 )
 from benchmark.datasets.acquire import (
     DatasetArchiveMaterializer,
@@ -31,7 +32,8 @@ from benchmark.datasets.acquire import (
 from benchmark.datasets.registry import get_dataset_spec
 from benchmark.validation.layouts import ValidationCorpusLayoutStrategy
 from benchmark.validation.references import ValidationReferenceStrategy
-from openhcs.constants import AllComponents
+from openhcs.constants import AllComponents, Microscope
+from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
 from openhcs.core.source_bindings import (
     ComponentSelector,
     ImportedMetadataJoin,
@@ -105,24 +107,57 @@ class ValidationCorpusPreparer:
         )
         layout = ValidationCorpusLayoutStrategy.for_layout(validation.layout)
         records, references = layout.normalize(raw_root, validation)
+        development_records, held_out_records = split_validation_records(
+            validation,
+            records,
+        )
+        held_out_source_set_ids = {record.source_set_id for record in held_out_records}
+        held_out_references = tuple(
+            reference
+            for reference in references
+            if reference.source_set_id in held_out_source_set_ids
+        )
         authoring_root = dataset_root / "authoring"
+        held_out_root = dataset_root / "frozen_execution"
         scoring_root = dataset_root / "trusted_scoring"
         authoring_root.mkdir(parents=True)
+        held_out_root.mkdir(parents=True)
         scoring_root.mkdir(parents=True)
 
-        self._materialize_authoring_images(raw_root, authoring_root, records)
+        self._materialize_images(raw_root, authoring_root, development_records)
+        self._materialize_images(raw_root, held_out_root, held_out_records)
         source_manifest_path = authoring_root / "source_manifest.csv"
-        self._write_source_manifest(source_manifest_path, records)
-        self._materialize_references(raw_root, scoring_root, references)
+        self._write_source_manifest(source_manifest_path, development_records)
+        self._write_source_manifest(
+            held_out_root / "source_manifest.csv",
+            held_out_records,
+        )
+        self._write_source_manifest(
+            scoring_root / "source_manifest.csv",
+            held_out_records,
+        )
+        self._materialize_references(raw_root, scoring_root, held_out_references)
         self._write_reference_manifest(
             scoring_root / "reference_manifest.csv",
-            references,
+            held_out_references,
         )
 
         source_bindings = source_bindings_for_validation(validation)
         source_bindings_path = authoring_root / "source_bindings.py"
         self._write_source_bindings(source_bindings_path, source_bindings)
-        dsl_contract = derive_validation_dsl_contract(validation, records)
+        pipeline_template_path = authoring_root / "pipeline_template.py"
+        self._write_pipeline_template(
+            pipeline_template_path,
+            source_bindings,
+        )
+        self._write_source_bindings(
+            held_out_root / "source_bindings.py",
+            source_bindings,
+        )
+        dsl_contract = derive_validation_dsl_contract(
+            validation,
+            development_records,
+        )
         self._write_authoring_guide(
             authoring_root / "OPENHCS_AUTHORING.md",
             spec,
@@ -158,6 +193,51 @@ class ValidationCorpusPreparer:
                     "partition_counts": _partition_counts(records),
                     "input_plane_count": len(records),
                     "reference_count": len(references),
+                    "trial_split": _json_value(validation.trial_split),
+                    "development": {
+                        "source_set_count": len(
+                            {record.source_set_id for record in development_records}
+                        ),
+                        "input_plane_count": len(development_records),
+                        "source_set_ids": sorted(
+                            {record.source_set_id for record in development_records}
+                        ),
+                    },
+                    "held_out": {
+                        "source_set_count": len(held_out_source_set_ids),
+                        "input_plane_count": len(held_out_records),
+                        "reference_count": len(held_out_references),
+                        "source_set_ids": sorted(held_out_source_set_ids),
+                    },
+                    "derived_surfaces": {
+                        "authoring": {
+                            "source_manifest_sha256": _sha256(
+                                authoring_root / "source_manifest.csv"
+                            ),
+                            "source_bindings_sha256": _sha256(
+                                authoring_root / "source_bindings.py"
+                            ),
+                            "pipeline_template_sha256": _sha256(
+                                authoring_root / "pipeline_template.py"
+                            ),
+                        },
+                        "frozen_execution": {
+                            "source_manifest_sha256": _sha256(
+                                held_out_root / "source_manifest.csv"
+                            ),
+                            "source_bindings_sha256": _sha256(
+                                held_out_root / "source_bindings.py"
+                            ),
+                        },
+                        "trusted_scoring": {
+                            "source_manifest_sha256": _sha256(
+                                scoring_root / "source_manifest.csv"
+                            ),
+                            "reference_manifest_sha256": _sha256(
+                                scoring_root / "reference_manifest.csv"
+                            ),
+                        },
+                    },
                     "authoring_tracks": [
                         _json_value(track) for track in validation.authoring_tracks
                     ],
@@ -167,8 +247,9 @@ class ValidationCorpusPreparer:
                     ],
                     "dsl_contract": _json_value(dsl_contract),
                     "blindness_boundary": (
-                        "Only authoring/ is supplied to an authoring agent. "
-                        "trusted_scoring/ is mounted only after pipeline freeze."
+                        "Only authoring/ is supplied before pipeline freeze. "
+                        "frozen_execution/ is disclosed after freeze for unchanged "
+                        "execution; trusted_scoring/ remains evaluator-only."
                     ),
                 },
                 indent=2,
@@ -181,9 +262,11 @@ class ValidationCorpusPreparer:
             dataset_id=dataset_id,
             root=dataset_root,
             authoring_root=authoring_root,
+            held_out_root=held_out_root,
             scoring_root=scoring_root,
             source_manifest_path=source_manifest_path,
             source_bindings_path=source_bindings_path,
+            pipeline_template_path=pipeline_template_path,
             provenance_path=provenance_path,
         )
 
@@ -230,14 +313,14 @@ class ValidationCorpusPreparer:
         return validation
 
     @staticmethod
-    def _materialize_authoring_images(
+    def _materialize_images(
         raw_root: Path,
-        authoring_root: Path,
+        destination_root: Path,
         records: tuple[ValidationImageRecord, ...],
     ) -> None:
         for record in records:
             source = raw_root / record.source_relative_path
-            target = authoring_root / record.canonical_relative_path
+            target = destination_root / record.canonical_relative_path
             _hardlink_or_copy(source, target)
 
     @staticmethod
@@ -335,6 +418,47 @@ class ValidationCorpusPreparer:
         )
 
     @staticmethod
+    def _write_pipeline_template(
+        path: Path,
+        config: SourceBindingsConfig,
+    ) -> None:
+        """Write a self-contained pipeline declaration for isolated runtimes."""
+
+        from pycodify import Assignment, BlankLine, CodeBlock, generate_python_source
+
+        import openhcs.serialization.pycodify_formatters  # noqa: F401
+
+        lazy_config = LazySourceBindingsConfig(
+            metadata_rules=config.metadata_rules,
+            match_plan=config.match_plan,
+            source_filters=config.source_filters,
+            bindings=config.bindings,
+            imported_metadata_tables=config.imported_metadata_tables,
+            grouping_metadata_fields=config.grouping_metadata_fields,
+        )
+        pipeline_config = PipelineConfig(
+            microscope=Microscope.SOURCE_BINDINGS,
+            source_bindings_config=lazy_config,
+        )
+        path.write_text(
+            generate_python_source(
+                CodeBlock.from_items(
+                    (
+                        Assignment("pipeline_config", pipeline_config),
+                        BlankLine(),
+                        Assignment("pipeline_steps", []),
+                    )
+                ),
+                header=(
+                    "# Derived OpenHCS pipeline template; add typed FunctionStep "
+                    "declarations below"
+                ),
+                clean_mode=True,
+            ),
+            encoding="utf-8",
+        )
+
+    @staticmethod
     def _write_authoring_guide(
         path: Path,
         spec: DatasetSpec,
@@ -350,11 +474,12 @@ class ValidationCorpusPreparer:
             f"- {transition}" for transition in dsl_contract.compiled_transitions
         )
         path.write_text(
-            f"""# {spec.id} blind OpenHCS authoring surface
+            f"""# {spec.id} blind OpenHCS development surface
 
 Use this directory as the complete filesystem mount for the authoring agent.
-It contains inputs and public metadata only. Manual references, accepted metric
-values, and the trusted scorer are deliberately outside this tree.
+It contains declared development inputs and public metadata only. Held-out
+inputs, manual references, accepted metric values, and the trusted scorer are
+deliberately outside this tree.
 
 ## OpenHCS DSL contract
 
@@ -363,7 +488,11 @@ values, and the trusted scorer are deliberately outside this tree.
 - Variable components: {", ".join(dsl_contract.variable_components) or "none"}
 - Source sets: {dsl_contract.source_set_count}
 - Source planes: {dsl_contract.source_plane_count}
-- Source bindings: import `source_bindings_config` from `source_bindings.py`.
+- Source-binding projection: inspect `source_bindings_config` in
+  `source_bindings.py`; do not import it from the runnable pipeline.
+- Runnable source: start from `pipeline_template.py`; it embeds the same derived
+  source-binding declaration so compiler, UI and execution-server processes do
+  not depend on a shared Python import working directory.
 - Preserve typed artifacts and materialization declarations in the frozen pipeline.
 
 The compiled dimensional transitions expected from the source declaration are:
@@ -378,9 +507,10 @@ For a registered-custom track, add a typed function through OpenHCS registration
 so its signature drives the UI, Python document, MCP schema, and compiler. Do not
 inject code into a viewer or bypass the pipeline runtime.
 
-Freeze the final pipeline before the trusted scoring surface is mounted. Preserve
-every authoring attempt, compile refusal, generated source file, materialized
-artifact, MCP event record, and multi-percentile raw/result overlay.
+Freeze the final pipeline before the held-out execution or trusted scoring
+surface is mounted. Preserve every authoring attempt, compile refusal, generated
+source file, materialized artifact, MCP event record, and multi-percentile
+raw/result overlay.
 """,
             encoding="utf-8",
         )
@@ -507,6 +637,98 @@ def derive_validation_dsl_contract(
     )
 
 
+def split_validation_records(
+    validation: IndependentValidationSpec,
+    records: tuple[ValidationImageRecord, ...],
+) -> tuple[tuple[ValidationImageRecord, ...], tuple[ValidationImageRecord, ...]]:
+    """Derive disjoint development and held-out planes from one owned split."""
+
+    grouped_records: dict[str, list[ValidationImageRecord]] = {}
+    for record in records:
+        grouped_records.setdefault(record.source_set_id, []).append(record)
+    grouped: dict[str, tuple[ValidationImageRecord, ...]] = {}
+    for source_set_id, source_set_records in grouped_records.items():
+        source_set = tuple(source_set_records)
+        partitions = {record.partition for record in source_set}
+        selection_keys = {record.selection_key for record in source_set}
+        if len(partitions) != 1 or len(selection_keys) != 1:
+            raise ValidationCorpusPreparationError(
+                f"Validation source set {source_set_id!r} has inconsistent "
+                "partition or selection identity."
+            )
+        grouped[source_set_id] = source_set
+
+    development_ids = _selected_source_set_ids(
+        grouped,
+        validation.trial_split.development,
+    )
+    held_out_ids = _selected_source_set_ids(
+        grouped,
+        validation.trial_split.held_out,
+        excluded=development_ids,
+    )
+    overlap = development_ids & held_out_ids
+    if overlap:
+        raise ValidationCorpusPreparationError(
+            f"Development and held-out source sets overlap: {sorted(overlap)!r}."
+        )
+    if len(development_ids) != validation.trial_split.expected_development_source_sets:
+        raise ValidationCorpusPreparationError(
+            "Development split contains "
+            f"{len(development_ids)} source sets; expected "
+            f"{validation.trial_split.expected_development_source_sets}."
+        )
+    if len(held_out_ids) != validation.trial_split.expected_held_out_source_sets:
+        raise ValidationCorpusPreparationError(
+            f"Held-out split contains {len(held_out_ids)} source sets; expected "
+            f"{validation.trial_split.expected_held_out_source_sets}."
+        )
+    development = tuple(
+        record for record in records if record.source_set_id in development_ids
+    )
+    held_out = tuple(
+        record for record in records if record.source_set_id in held_out_ids
+    )
+    return development, held_out
+
+
+def _selected_source_set_ids(
+    grouped: dict[str, tuple[ValidationImageRecord, ...]],
+    selection: ValidationSourceSetSelection,
+    *,
+    excluded: frozenset[str] | set[str] = frozenset(),
+) -> set[str]:
+    candidates = tuple(
+        (source_set_id, source_set[0])
+        for source_set_id, source_set in grouped.items()
+        if source_set_id not in excluded
+        and source_set[0].partition in selection.partitions
+    )
+    if selection.include_selection_keys:
+        requested = set(selection.include_selection_keys)
+        candidates = tuple(
+            candidate
+            for candidate in candidates
+            if candidate[1].selection_key in requested
+        )
+        found = {record.selection_key for _, record in candidates}
+        missing = requested - found
+        if missing:
+            raise ValidationCorpusPreparationError(
+                f"Declared validation selection keys are missing: {sorted(missing)!r}."
+            )
+    ordered = sorted(
+        candidates,
+        key=lambda candidate: (
+            selection.order.key(candidate[1].selection_key, salt=selection.salt),
+            candidate[0],
+        ),
+    )
+    if selection.limit is not None:
+        ordered = ordered[: selection.limit]
+    return {source_set_id for source_set_id, _ in ordered}
+
+
 def freeze_pipeline(
     dataset_id: str,
     pipeline_path: Path,
@@ -519,16 +741,15 @@ def freeze_pipeline(
     if not pipeline_path.is_file():
         raise FileNotFoundError(f"Pipeline document does not exist: {pipeline_path}")
     dataset_root = Path(corpus_root).expanduser().resolve() / dataset_id
-    scoring_root = dataset_root / "trusted_scoring"
-    if not scoring_root.is_dir():
-        raise FileNotFoundError(f"Prepared scoring root does not exist: {scoring_root}")
+    if not dataset_root.is_dir():
+        raise FileNotFoundError(f"Prepared dataset root does not exist: {dataset_root}")
     receipt = FrozenPipelineReceipt(
         dataset_id=dataset_id,
         pipeline_path=pipeline_path,
         pipeline_sha256=_sha256(pipeline_path),
         created_at_utc=datetime.now(UTC).isoformat(),
     )
-    receipt_path = scoring_root / "frozen_pipeline_receipt.json"
+    receipt_path = dataset_root / "frozen_pipeline_receipt.json"
     if receipt_path.exists():
         raise FileExistsError(
             f"Pipeline is already frozen for this corpus: {receipt_path}"
@@ -550,7 +771,6 @@ def verify_frozen_pipeline(
     receipt_path = (
         Path(corpus_root).expanduser().resolve()
         / dataset_id
-        / "trusted_scoring"
         / "frozen_pipeline_receipt.json"
     )
     payload = json.loads(receipt_path.read_text(encoding="utf-8"))

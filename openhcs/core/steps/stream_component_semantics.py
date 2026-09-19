@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, ClassVar, TypeAlias
+from typing import ClassVar, Iterable, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
@@ -15,12 +15,12 @@ from polystore.streaming.viewer_transport import (
     DisplayModeToken,
     IndexedViewerStreamSourceMetadata,
     PathMappedViewerStreamSourceMetadata,
-    ViewerDisplayConfigABC,
     ViewerStreamBackendKwargs,
     ViewerStreamMessageContext,
     ViewerStreamProducer,
     ViewerStreamSourceIdentity,
     ViewerStreamSourceMetadata,
+    ViewerDisplayConfigABC,
 )
 from zmqruntime.viewer_protocol import (
     ViewerComponentMetadataPayload,
@@ -30,10 +30,8 @@ from zmqruntime.viewer_protocol import (
 
 from openhcs.constants.constants import AllComponents, get_multiprocessing_axis
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_geometry,
-)
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
+
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
@@ -47,12 +45,12 @@ from openhcs.core.streaming_config_factory import (
 )
 from openhcs.runtime.viewer_component_system import (
     ComponentValue,
+    ViewerComponentMetadataNormalizer,
+    ViewerComponentValueParser,
     ViewerComponentAxisSemantics,
     ViewerComponentAxisSemanticsAuthority,
     ViewerComponentLayout,
-    ViewerComponentMetadataNormalizer,
     ViewerComponentValueDomainPayload,
-    ViewerComponentValueParser,
     ViewerObjectDisplayConfigInput,
 )
 
@@ -65,25 +63,22 @@ class StreamImagePayloadMetadataProjector:
     """Project image-axis declarations into viewer batch-item fields."""
 
     @classmethod
-    def item_fields_for_payload(
+    def partition_indices(
         cls,
-        payload: Any,
-        metadata: ImagePayloadMetadata,
+        metadata_items: Iterable[ImagePayloadMetadata | None],
         component_order: tuple[str, ...],
-    ) -> dict[str, ViewerWireValue]:
-        """Project and validate one loaded payload before viewer dispatch."""
-
-        fields = cls._item_fields(
-            metadata,
-            tuple(
-                component
-                for component_name in component_order
-                if (component := AllComponents.from_value(component_name)) is not None
-            ),
-            project_singleton=True,
-        )
-        cls._validate_payload_axes(payload, metadata, fields)
-        return fields
+    ) -> tuple[tuple[int, ...], ...]:
+        """Group ordered items by the metadata common to one wire batch."""
+        partitions: list[tuple[dict[str, ViewerWireValue], list[int]]] = []
+        for index, metadata in enumerate(metadata_items):
+            item_fields = cls.item_fields(metadata, component_order)
+            for partition_fields, indices in partitions:
+                if partition_fields == item_fields:
+                    indices.append(index)
+                    break
+            else:
+                partitions.append((item_fields, [index]))
+        return tuple(tuple(indices) for _fields, indices in partitions)
 
     @classmethod
     def item_fields(
@@ -109,7 +104,7 @@ class StreamImagePayloadMetadataProjector:
         metadata: ImagePayloadMetadata | None,
         plane_components: tuple[AllComponents, ...],
     ) -> dict[str, ViewerWireValue]:
-        """Project metadata through exact compiler-owned plane components."""
+        """Project retained image planes, with compiler-owned singleton identity."""
 
         return cls._item_fields(
             metadata,
@@ -128,6 +123,9 @@ class StreamImagePayloadMetadataProjector:
         if metadata is None:
             return {}
         item_fields = metadata.source_spatial_domain.to_viewer_wire_mapping()
+        item_fields[ViewerWireField.IMAGE_METADATA.value] = (
+            metadata.to_viewer_image_metadata()
+        )
         if metadata.source_channel_axis is not None:
             item_fields[ViewerWireField.SOURCE_CHANNEL_AXIS.value] = (
                 metadata.source_channel_axis
@@ -136,9 +134,7 @@ class StreamImagePayloadMetadataProjector:
             return item_fields
 
         item_fields[ViewerWireField.PLANE_AXIS.value] = metadata.plane_axis.value
-        plane_component_values = (
-            metadata.source_provenance.varying_plane_component_values(plane_components)
-        )
+        plane_component_values = metadata.retained_plane_component_values()
         if (
             not plane_component_values
             and metadata.source_provenance.source_plane_count == 1
@@ -188,65 +184,6 @@ class StreamImagePayloadMetadataProjector:
                 f"{tuple(values)!r} from {plane_components!r}."
             )
         return values
-
-    @staticmethod
-    def _validate_payload_axes(
-        payload: Any,
-        metadata: ImagePayloadMetadata,
-        item_fields: Mapping[str, ViewerWireValue],
-    ) -> None:
-        """Require every non-spatial payload axis to have one declared meaning."""
-
-        geometry = image_payload_geometry(
-            payload,
-            value_name="Viewer stream image payload",
-        )
-        spatial_axes = metadata.spatial_axes_yx(payload)
-        if spatial_axes is None:
-            raise ValueError(
-                "Viewer stream image payload requires two declared spatial axes."
-            )
-        channel_axis = metadata.normalized_source_channel_axis(payload)
-        aggregate_axes = tuple(
-            axis
-            for axis in range(geometry.ndim)
-            if axis not in spatial_axes and axis != channel_axis
-        )
-        plane_domain = ViewerComponentValueDomainPayload.from_wire_mapping(
-            item_fields.get(ViewerWireField.PLANE_COMPONENT_VALUES.value, {}),
-            context="Viewer stream image plane component values",
-        )
-        if not aggregate_axes:
-            if metadata.plane_axis is not None or plane_domain:
-                raise ValueError(
-                    "Viewer stream image payload declares a plane axis without a "
-                    "payload-local aggregate axis."
-                )
-            return
-        if metadata.plane_axis is None:
-            raise ValueError(
-                "Viewer stream image payload exposes non-spatial axes without an "
-                "exact source channel or plane-axis declaration: "
-                f"{aggregate_axes!r}."
-            )
-        if aggregate_axes != (0,):
-            raise ValueError(
-                "Viewer stream image payload supports one declared leading plane "
-                f"axis, got payload axes {aggregate_axes!r}."
-            )
-        if len(plane_domain.entries) != 1:
-            raise ValueError(
-                "Viewer stream aggregate payload axis requires exactly one "
-                "plane_component_values declaration."
-            )
-        plane_entry = plane_domain.entries[0]
-        plane_extent = geometry.shape[0]
-        if len(plane_entry.values) != plane_extent:
-            raise ValueError(
-                "Viewer stream aggregate payload component axis cardinality "
-                f"mismatch: {plane_entry.component!r} declares "
-                f"{len(plane_entry.values)} value(s) for extent {plane_extent}."
-            )
 
 
 class StreamComponentNameMetadata(dict[str, dict[str, ComponentDisplayName]]):
@@ -411,8 +348,16 @@ class StreamSourceComponentMetadataItems:
             for identity in identities
         )
 
-    def domain_metadata_items(self) -> StreamComponentDomainMetadataItems:
-        return tuple(dict(metadata) for metadata in self.values if metadata is not None)
+    def domain_metadata_items(
+        self,
+        component_order: tuple[str, ...],
+    ) -> StreamComponentDomainMetadataItems:
+        projector = StreamViewerComponentMetadataProjector(component_order)
+        return tuple(
+            projector.project(metadata)
+            for metadata in self.values
+            if metadata is not None
+        )
 
     def viewer_source_metadata(
         self,
@@ -816,7 +761,9 @@ class StreamComponentMessageExtraAuthority:
     def metadata_items(self) -> StreamComponentDomainMetadataItems:
         return (
             *self.domain_providers.domain_metadata_items(),
-            *self.source_metadata_items.domain_metadata_items(),
+            *self.source_metadata_items.domain_metadata_items(
+                self.layout.component_order
+            ),
         )
 
     @property

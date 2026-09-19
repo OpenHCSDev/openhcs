@@ -19,7 +19,10 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+)
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
 from openhcs.core.runtime_image_values import (
@@ -106,8 +109,8 @@ def test_executor_owns_the_closed_mode_processing_contract_matrix(
         if image_mode is ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
         else (
             ImagePayloadMetadata(
-                    plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
-                ).payload_with(np.zeros((2, 2, 3), dtype=np.float32), None)
+                plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+            ).payload_with(np.zeros((2, 2, 3), dtype=np.float32), None)
             if processing_contract is ProcessingContract.VOLUMETRIC_TO_SLICE
             else np.zeros((2, 3), dtype=np.float32)
         )
@@ -171,17 +174,20 @@ def test_aligned_pure_2d_consumes_unique_declared_source_binding_plane() -> None
         artifact_inputs=(image_spec,),
     )
     source_stack = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-                paths=("/tmp/site-1.tif", "/tmp/site-2.tif"),
-                component_metadata=(({"site": "1"}), ({"site": "2"})),
-            ),
-        ).payload_with(np.stack(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/tmp/site-1.tif", "/tmp/site-2.tif"),
+            component_metadata=(({"site": "1"}), ({"site": "2"})),
+        ),
+    ).payload_with(
+        np.stack(
             (
                 np.zeros((2, 3), dtype=np.float32),
                 np.ones((2, 3), dtype=np.float32),
             )
-        ), None)
+        ),
+        None,
+    )
     composition = compose_aligned_image_payload(
         "DispatchProbeModule image inputs ('DNA',)",
         (source_stack,),
@@ -214,19 +220,22 @@ def test_declared_unaligned_input_joins_runtime_slices_before_pure_2d_execution(
 
     spatial_domain = SourceSpatialDomain(source_shape_yx=(2, 3))
     source_stack = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-            source_spatial_domain=spatial_domain,
-            source_image_names=("Raw", "Raw"),
-        ).payload_with(np.stack(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_spatial_domain=spatial_domain,
+        source_image_names=("Raw", "Raw"),
+    ).payload_with(
+        np.stack(
             (
                 np.full((2, 3), 11, dtype=np.float32),
                 np.full((2, 3), 22, dtype=np.float32),
             )
-        ), None)
+        ),
+        None,
+    )
     illumination = ImagePayloadMetadata(
-            source_spatial_domain=spatial_domain,
-            source_image_names=("Illum",),
-        ).payload_with(np.full((2, 3), 3, dtype=np.float32), None)
+        source_spatial_domain=spatial_domain,
+        source_image_names=("Illum",),
+    ).payload_with(np.full((2, 3), 3, dtype=np.float32), None)
 
     with pytest.raises(ValueError, match="explicit runtime-slice owner"):
         compose_aligned_image_payload(
@@ -286,12 +295,12 @@ def test_aligned_execution_preserves_each_slice_inner_source_binding_axis(
         return image[0]
 
     pair = ImagePayloadMetadata(
-            plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
-            source_image_names=("Orig", "Illum"),
-            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-                paths=("/tmp/orig.tif", "/tmp/illum.pkl"),
-            ),
-        ).payload_with(np.zeros((2, 2, 3), dtype=np.float32), None)
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+        source_image_names=("Orig", "Illum"),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/tmp/orig.tif", "/tmp/illum.pkl"),
+        ),
+    ).payload_with(np.zeros((2, 2, 3), dtype=np.float32), None)
     callable_contract = _compiled_contract(
         dispatch_probe,
         processing_contract,
@@ -722,8 +731,7 @@ def test_aligned_stack_rejects_canonical_output_surface_count_mismatch() -> None
         return AlignedImageStack((np.asarray(image), np.asarray(image)))
 
     output_specs = tuple(
-        ArtifactSpec.output(f"Aligned{index}", ImageArtifactType)
-        for index in range(3)
+        ArtifactSpec.output(f"Aligned{index}", ImageArtifactType) for index in range(3)
     )
     callable_contract = _compiled_contract(
         dispatch_probe,

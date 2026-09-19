@@ -7,6 +7,7 @@ Tests core concepts:
 3. to_object() reconstruction
 4. Type-based invalidation
 """
+
 import dataclasses
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Any, Dict, Optional, Set
@@ -18,9 +19,11 @@ logger = logging.getLogger(__name__)
 
 # ========== Test Dataclasses ==========
 
+
 @dataclass
 class WellFilterConfig:
     """Base well filter config."""
+
     well_filter: Optional[int] = None
     enabled: bool = True
 
@@ -28,12 +31,14 @@ class WellFilterConfig:
 @dataclass
 class StepWellFilterConfig(WellFilterConfig):
     """Step-level well filter config (inherits from base)."""
+
     step_specific_param: Optional[str] = None
 
 
 @dataclass
 class NapariStreamingConfig:
     """Napari streaming config."""
+
     window_size: int = 10
     buffer_size: int = 100
 
@@ -41,6 +46,7 @@ class NapariStreamingConfig:
 @dataclass
 class GlobalPipelineConfig:
     """Test global config with nested dataclasses."""
+
     well_filter_config: Optional[WellFilterConfig] = None
     napari_streaming_config: Optional[NapariStreamingConfig] = None
     some_top_level_param: str = "default"
@@ -49,12 +55,14 @@ class GlobalPipelineConfig:
 @dataclass
 class FunctionStep:
     """Function step with nested config."""
+
     name: str = "step"
     step_well_filter_config: Optional[StepWellFilterConfig] = None
     processing_config: Optional[Any] = None
 
 
 # ========== Prototype Flat ObjectState ==========
+
 
 class FlatObjectState:
     """Prototype of flat ObjectState with dotted paths."""
@@ -67,7 +75,7 @@ class FlatObjectState:
         self._cached_object: Optional[Any] = None
 
         # Extract all parameters flat
-        self._extract_all_parameters_flat(object_instance, prefix='')
+        self._extract_all_parameters_flat(object_instance, prefix="")
 
     def _extract_all_parameters_flat(self, obj: Any, prefix: str) -> None:
         """Recursively extract parameters into flat dict with dotted paths.
@@ -86,7 +94,7 @@ class FlatObjectState:
             field_type = field.type
 
             # Build dotted path
-            dotted_path = f'{prefix}.{field_name}' if prefix else field_name
+            dotted_path = f"{prefix}.{field_name}" if prefix else field_name
 
             # Get current value (bypassing lazy resolution)
             try:
@@ -110,16 +118,21 @@ class FlatObjectState:
                 # Store the CONTAINER type (the type that has this field)
                 self._path_to_type[dotted_path] = obj_type
 
-                logger.info(f"  Extracted: {dotted_path} = {current_value} (container={obj_type.__name__})")
+                logger.info(
+                    f"  Extracted: {dotted_path} = {current_value} (container={obj_type.__name__})"
+                )
 
     def _get_nested_dataclass_type(self, field_type: Any) -> Optional[type]:
         """Check if field_type is a dataclass (handles Optional[T])."""
         # Handle Optional[T]
-        if hasattr(field_type, '__origin__'):
+        if hasattr(field_type, "__origin__"):
             from typing import Union
+
             if field_type.__origin__ is Union:
                 # Get non-None types
-                non_none_types = [arg for arg in field_type.__args__ if arg is not type(None)]
+                non_none_types = [
+                    arg for arg in field_type.__args__ if arg is not type(None)
+                ]
                 if len(non_none_types) == 1:
                     field_type = non_none_types[0]
 
@@ -139,7 +152,7 @@ class FlatObjectState:
             return self._cached_object
 
         logger.info("Reconstructing object from flat parameters...")
-        self._cached_object = self._reconstruct_from_prefix('')
+        self._cached_object = self._reconstruct_from_prefix("")
         return self._cached_object
 
     def _reconstruct_from_prefix(self, prefix: str) -> Any:
@@ -161,7 +174,7 @@ class FlatObjectState:
             if obj_type is None:
                 raise ValueError(f"No type mapping for prefix: {prefix}")
 
-        prefix_dot = f'{prefix}.' if prefix else ''
+        prefix_dot = f"{prefix}." if prefix else ""
 
         # Collect direct fields and nested prefixes
         direct_fields = {}
@@ -171,11 +184,11 @@ class FlatObjectState:
             if not path.startswith(prefix_dot):
                 continue
 
-            remainder = path[len(prefix_dot):]
+            remainder = path[len(prefix_dot) :]
 
-            if '.' in remainder:
+            if "." in remainder:
                 # This is a nested field - collect the first component
-                first_component = remainder.split('.')[0]
+                first_component = remainder.split(".")[0]
                 nested_prefixes.add(first_component)
             else:
                 # Direct field of this object
@@ -183,7 +196,7 @@ class FlatObjectState:
 
         # Reconstruct nested dataclasses first
         for nested_name in nested_prefixes:
-            nested_path = f'{prefix_dot}{nested_name}'
+            nested_path = f"{prefix_dot}{nested_name}"
             nested_obj = self._reconstruct_from_prefix(nested_path)
             direct_fields[nested_name] = nested_obj
 
@@ -191,7 +204,9 @@ class FlatObjectState:
         filtered_fields = {k: v for k, v in direct_fields.items() if v is not None}
 
         # Instantiate the dataclass
-        logger.info(f"  Reconstructing {obj_type.__name__} with fields: {list(filtered_fields.keys())}")
+        logger.info(
+            f"  Reconstructing {obj_type.__name__} with fields: {list(filtered_fields.keys())}"
+        )
         return obj_type(**filtered_fields)
 
     def update_parameter(self, dotted_path: str, value: Any) -> None:
@@ -221,26 +236,29 @@ class FlatObjectState:
             # Check if target_type is in the MRO of path_type
             if target_type in path_type.__mro__:
                 # Check if path ends with the field_name
-                if path.endswith(f'.{field_name}') or path == field_name:
+                if path.endswith(f".{field_name}") or path == field_name:
                     self._invalid_fields.add(path)
-                    logger.info(f"  ✓ Invalidated: {path} (container={path_type.__name__})")
+                    logger.info(
+                        f"  ✓ Invalidated: {path} (container={path_type.__name__})"
+                    )
 
         self._cached_object = None
 
 
 # ========== Tests ==========
 
+
 def test_extraction():
     """Test 1: Parameter extraction with dotted paths."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TEST 1: Parameter Extraction with Dotted Paths")
-    print("="*80)
+    print("=" * 80)
 
     # Create a test instance with nested configs
     config = GlobalPipelineConfig(
         well_filter_config=WellFilterConfig(well_filter=2, enabled=True),
         napari_streaming_config=NapariStreamingConfig(window_size=20),
-        some_top_level_param="custom"
+        some_top_level_param="custom",
     )
 
     state = FlatObjectState(config)
@@ -248,7 +266,9 @@ def test_extraction():
     print("\nExtracted parameters:")
     for path, value in sorted(state.parameters.items()):
         container_type = state._path_to_type.get(path)
-        print(f"  {path:50s} = {str(value):20s} (container={container_type.__name__ if container_type else 'N/A'})")
+        print(
+            f"  {path:50s} = {str(value):20s} (container={container_type.__name__ if container_type else 'N/A'})"
+        )
 
     print("\nPath-to-type mapping:")
     for path, typ in sorted(state._path_to_type.items()):
@@ -256,11 +276,11 @@ def test_extraction():
 
     # Validate expected paths exist
     expected_paths = [
-        'well_filter_config.well_filter',
-        'well_filter_config.enabled',
-        'napari_streaming_config.window_size',
-        'napari_streaming_config.buffer_size',
-        'some_top_level_param'
+        "well_filter_config.well_filter",
+        "well_filter_config.enabled",
+        "napari_streaming_config.window_size",
+        "napari_streaming_config.buffer_size",
+        "some_top_level_param",
     ]
 
     for path in expected_paths:
@@ -271,15 +291,15 @@ def test_extraction():
 
 def test_reconstruction():
     """Test 2: Object reconstruction from flat parameters."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TEST 2: Object Reconstruction from Flat Parameters")
-    print("="*80)
+    print("=" * 80)
 
     # Create original
     original = GlobalPipelineConfig(
         well_filter_config=WellFilterConfig(well_filter=2, enabled=True),
         napari_streaming_config=NapariStreamingConfig(window_size=20),
-        some_top_level_param="custom"
+        some_top_level_param="custom",
     )
 
     # Flatten
@@ -295,18 +315,26 @@ def test_reconstruction():
 
     # Verify equality
     assert reconstructed.some_top_level_param == original.some_top_level_param
-    assert reconstructed.well_filter_config.well_filter == original.well_filter_config.well_filter
-    assert reconstructed.well_filter_config.enabled == original.well_filter_config.enabled
-    assert reconstructed.napari_streaming_config.window_size == original.napari_streaming_config.window_size
+    assert (
+        reconstructed.well_filter_config.well_filter
+        == original.well_filter_config.well_filter
+    )
+    assert (
+        reconstructed.well_filter_config.enabled == original.well_filter_config.enabled
+    )
+    assert (
+        reconstructed.napari_streaming_config.window_size
+        == original.napari_streaming_config.window_size
+    )
 
     print("\n✓ Reconstruction successful - all fields match!")
 
 
 def test_update_and_invalidation():
     """Test 3: Update parameter and check invalidation."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TEST 3: Update Parameter and Cache Invalidation")
-    print("="*80)
+    print("=" * 80)
 
     config = GlobalPipelineConfig(
         well_filter_config=WellFilterConfig(well_filter=2),
@@ -324,7 +352,7 @@ def test_update_and_invalidation():
     assert obj1 is obj2, "Should return same cached object"
 
     # Update parameter - should invalidate cache
-    state.update_parameter('well_filter_config.well_filter', 5)
+    state.update_parameter("well_filter_config.well_filter", 5)
 
     # Third call - should recompute
     obj3 = state.to_object()
@@ -337,18 +365,16 @@ def test_update_and_invalidation():
 
 def test_type_based_invalidation():
     """Test 4: Type-based invalidation with MRO."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TEST 4: Type-Based Invalidation (Sibling Inheritance)")
-    print("="*80)
+    print("=" * 80)
 
     # Create a FunctionStep with StepWellFilterConfig
     step = FunctionStep(
         name="my_step",
         step_well_filter_config=StepWellFilterConfig(
-            well_filter=3,
-            enabled=False,
-            step_specific_param="test"
-        )
+            well_filter=3, enabled=False, step_specific_param="test"
+        ),
     )
 
     state = FlatObjectState(step)
@@ -360,22 +386,24 @@ def test_type_based_invalidation():
     # Simulate: WellFilterConfig.well_filter changed in another scope
     # Should invalidate StepWellFilterConfig.well_filter (sibling inheritance)
     print("\nInvalidating WellFilterConfig.well_filter...")
-    state.invalidate_by_type_and_field(WellFilterConfig, 'well_filter')
+    state.invalidate_by_type_and_field(WellFilterConfig, "well_filter")
 
     print(f"\nInvalid fields: {state._invalid_fields}")
 
     # Should have invalidated step_well_filter_config.well_filter
-    expected_invalid = 'step_well_filter_config.well_filter'
-    assert expected_invalid in state._invalid_fields, f"Should invalidate {expected_invalid}"
+    expected_invalid = "step_well_filter_config.well_filter"
+    assert (
+        expected_invalid in state._invalid_fields
+    ), f"Should invalidate {expected_invalid}"
 
     print(f"\n✓ Type-based invalidation working - {expected_invalid} was invalidated!")
 
 
 def test_field_prefix_pattern():
     """Test 5: PFM field_prefix pattern."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TEST 5: PFM Field Prefix Pattern")
-    print("="*80)
+    print("=" * 80)
 
     config = GlobalPipelineConfig(
         well_filter_config=WellFilterConfig(well_filter=2, enabled=True),
@@ -384,23 +412,23 @@ def test_field_prefix_pattern():
     state = FlatObjectState(config)
 
     # Simulate root PFM (field_prefix = '')
-    root_prefix = ''
+    root_prefix = ""
 
     # Simulate nested PFM (field_prefix = 'well_filter_config')
-    nested_prefix = 'well_filter_config'
+    nested_prefix = "well_filter_config"
 
     # Root PFM accesses top-level params
     def get_field_value(prefix: str, field_name: str):
-        dotted_path = f'{prefix}.{field_name}' if prefix else field_name
+        dotted_path = f"{prefix}.{field_name}" if prefix else field_name
         return state.parameters.get(dotted_path)
 
     # Test root access
-    top_level_value = get_field_value(root_prefix, 'some_top_level_param')
+    top_level_value = get_field_value(root_prefix, "some_top_level_param")
     print(f"Root PFM accessing 'some_top_level_param': {top_level_value}")
 
     # Test nested access
-    well_filter_value = get_field_value(nested_prefix, 'well_filter')
-    enabled_value = get_field_value(nested_prefix, 'enabled')
+    well_filter_value = get_field_value(nested_prefix, "well_filter")
+    enabled_value = get_field_value(nested_prefix, "enabled")
     print(f"Nested PFM accessing 'well_filter': {well_filter_value}")
     print(f"Nested PFM accessing 'enabled': {enabled_value}")
 
@@ -412,17 +440,16 @@ def test_field_prefix_pattern():
 
 def test_none_handling():
     """Test 6: None value handling (lazy resolution)."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("TEST 6: None Value Handling (Lazy Resolution)")
-    print("="*80)
+    print("=" * 80)
 
     # Create config with some None values (lazy)
     config = GlobalPipelineConfig(
         well_filter_config=WellFilterConfig(
-            well_filter=None,  # Lazy - should inherit
-            enabled=True
+            well_filter=None, enabled=True  # Lazy - should inherit
         ),
-        some_top_level_param="custom"
+        some_top_level_param="custom",
     )
 
     state = FlatObjectState(config)
@@ -435,7 +462,9 @@ def test_none_handling():
     reconstructed = state.to_object()
 
     print("\nReconstructed object:")
-    print(f"  well_filter_config.well_filter: {reconstructed.well_filter_config.well_filter}")
+    print(
+        f"  well_filter_config.well_filter: {reconstructed.well_filter_config.well_filter}"
+    )
     print(f"  well_filter_config.enabled: {reconstructed.well_filter_config.enabled}")
 
     # The reconstructed object should have None for well_filter (not set in filtered_fields)
@@ -448,9 +477,9 @@ def test_none_handling():
 # ========== Main ==========
 
 if __name__ == "__main__":
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("FLAT OBJECTSTATE PROTOTYPE - DRY RUN")
-    print("="*80)
+    print("=" * 80)
 
     try:
         test_extraction()
@@ -460,9 +489,9 @@ if __name__ == "__main__":
         test_field_prefix_pattern()
         test_none_handling()
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("✓ ALL TESTS PASSED - FLAT OBJECTSTATE DESIGN IS SOUND!")
-        print("="*80)
+        print("=" * 80)
 
     except AssertionError as e:
         print(f"\n✗ TEST FAILED: {e}")

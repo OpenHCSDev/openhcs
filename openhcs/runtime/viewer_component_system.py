@@ -11,6 +11,9 @@ from typing import ClassVar, Generic, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta, LazyDiscoveryDict, RegistryConfig
 from polystore.streaming_constants import StreamingDataType
+from polystore.streaming.receivers.core.metadata_presentation import (
+    ComponentMetadataPresentationABC,
+)
 from zmqruntime.viewer_protocol import (
     ViewerBatchDisplayPayload,
     ViewerBatchContextWireField,
@@ -31,7 +34,6 @@ ComponentValue: TypeAlias = str | int | float | bool | tuple | None
 ComponentWireValue: TypeAlias = ComponentValue | Sequence[ComponentValue]
 ComponentMap: TypeAlias = dict[str, ComponentValue]
 ComponentValues: TypeAlias = dict[str, list[ComponentValue]]
-ComponentCoordinate: TypeAlias = tuple[ComponentValue, ...]
 ComponentDomainKey: TypeAlias = str | tuple[str, ...] | tuple[str, tuple[str, ...]]
 ComponentModeMap: TypeAlias = dict[str, str]
 DisplayModeValue: TypeAlias = str | Enum
@@ -311,6 +313,18 @@ class ViewerComponentValueDomainEntry:
         unique_values = sorted(set(values), key=ViewerComponentValueOrdering.key)
         return cls(component=component, values=tuple(unique_values))
 
+    @classmethod
+    def from_declared_values(
+        cls, component: str, values: Sequence[ComponentValue]
+    ) -> "ViewerComponentValueDomainEntry":
+        """Preserve pixel-plane order, refusing ambiguous coordinate assignments."""
+        ordered_values = tuple(values)
+        if len(set(ordered_values)) != len(ordered_values):
+            raise ValueError(
+                "Declared plane coordinates must be unique after normalization."
+            )
+        return cls(component=component, values=ordered_values)
+
 
 @dataclass(frozen=True, slots=True)
 class ViewerComponentValueDomainPayload:
@@ -359,6 +373,41 @@ class ViewerComponentValueDomainPayload:
         *,
         context: str,
     ) -> "ViewerComponentValueDomainPayload":
+        """Project observed membership with its established sort/dedup contract."""
+        return cls(
+            tuple(
+                ViewerComponentValueDomainEntry.from_values(
+                    entry.component, entry.values
+                )
+                for entry in cls._wire_entries(payload, context=context)
+            )
+        )
+
+    @classmethod
+    def from_ordered_wire_mapping(
+        cls,
+        payload: Mapping[str, Sequence[ComponentWireValue]],
+        *,
+        context: str,
+    ) -> "ViewerComponentValueDomainPayload":
+        """Decode an explicitly ordered pixel-plane coordinate declaration."""
+        return cls(
+            tuple(
+                ViewerComponentValueDomainEntry.from_declared_values(
+                    entry.component, entry.values
+                )
+                for entry in cls._wire_entries(payload, context=context)
+            )
+        )
+
+    @classmethod
+    def _wire_entries(
+        cls,
+        payload: Mapping[str, Sequence[ComponentWireValue]],
+        *,
+        context: str,
+    ) -> tuple[ViewerComponentValueDomainEntry, ...]:
+        """Parse and normalize external coordinates once for either projection."""
         normalizer = ViewerComponentMetadataNormalizer()
         entries = []
         for component, raw_values in payload.items():
@@ -368,7 +417,7 @@ class ViewerComponentValueDomainPayload:
                 )
             component_name = str(component)
             entries.append(
-                ViewerComponentValueDomainEntry.from_values(
+                ViewerComponentValueDomainEntry(
                     component_name,
                     tuple(
                         normalizer.normalize_value(
@@ -382,7 +431,7 @@ class ViewerComponentValueDomainPayload:
                     ),
                 )
             )
-        return cls(tuple(entries))
+        return tuple(entries)
 
     def component_values(self) -> ComponentValues:
         return {entry.component: list(entry.values) for entry in self.entries}
@@ -679,7 +728,7 @@ class ViewerComponentNameMetadataStore:
 
 
 @dataclass(frozen=True, kw_only=True)
-class ViewerComponentNameMetadata:
+class ViewerComponentNameMetadata(ComponentMetadataPresentationABC[ComponentValue]):
     """Component-value display names shared by viewer receivers."""
 
     ABBREVIATIONS: ClassVar[Mapping[str, str]] = {
@@ -736,33 +785,16 @@ class ViewerComponentNameMetadata:
             return None
         return str(name)
 
-    def compact_label(self, component: str, value: ComponentValue) -> str:
-        name = self.display_name(component, value)
-        if name is not None:
-            return name
-        return f"{self.abbreviation(component)} {value}"
-
     def abbreviation(self, component: str) -> str:
         if component in self.ABBREVIATIONS:
             return self.ABBREVIATIONS[component]
         return component
 
-    def axis_label(self, component: str, value: ComponentValue) -> str:
-        name = self.display_name(component, value)
-        if name is None:
-            return self.compact_label(component, value)
-
+    def named_axis_label(self, component: str, value: ComponentValue, name: str) -> str:
         formatter = self.METADATA_FORMATTERS.get(component)
         if formatter is not None:
             return formatter(value, name)
         return f"{component.title()} {value}: {name}"
-
-    def axis_labels(
-        self,
-        component: str,
-        values: Sequence[ComponentValue],
-    ) -> list[str]:
-        return [self.axis_label(component, value) for value in values]
 
     def compact_tuple_labels(
         self,
@@ -1040,6 +1072,75 @@ class ViewerRouteComponentValueTracker(ViewerComponentValueDomain):
         return (route_key, tuple(axis_components))
 
 
+class ViewerDisplayAxisDomainContract(ABC):
+    """Axis-domain contract observed by viewer layer projection."""
+
+    @abstractmethod
+    def record_display_axis_values(
+        self,
+        axis_components: Sequence[str],
+        layer_items: Sequence[ViewerComponentAddressedItem],
+    ) -> None:
+        """Record observed values for the shared viewer axis domain."""
+
+    @abstractmethod
+    def record_display_component_values(
+        self,
+        axis_components: Sequence[str],
+        component_values: ComponentValues,
+    ) -> None:
+        """Record declared values represented by aggregate payload axes."""
+
+    @abstractmethod
+    def display_axis_values_for(
+        self,
+        axis_components: Sequence[str],
+    ) -> ComponentValues:
+        """Return observed values for the shared viewer axis domain."""
+
+
+@dataclass(slots=True)
+class ViewerDisplayAxisDomain(
+    ViewerComponentValueDomain,
+    ViewerDisplayAxisDomainContract,
+):
+    """Track shared viewer axis values for one stack-component layout."""
+
+    def record_display_axis_values(
+        self,
+        axis_components: Sequence[str],
+        layer_items: Sequence[ViewerComponentAddressedItem],
+    ) -> None:
+        ViewerComponentValueDomain.update(
+            self,
+            tuple(axis_components),
+            axis_components,
+            layer_items,
+        )
+
+    def record_display_component_values(
+        self,
+        axis_components: Sequence[str],
+        component_values: ComponentValues,
+    ) -> None:
+        ViewerComponentValueDomain.update_component_values(
+            self,
+            tuple(axis_components),
+            axis_components,
+            component_values,
+        )
+
+    def display_axis_values_for(
+        self,
+        axis_components: Sequence[str],
+    ) -> ComponentValues:
+        return ViewerComponentValueDomain.values_for(
+            self,
+            tuple(axis_components),
+            axis_components,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class ViewerLayerAxisProjection:
     """Route-local component axes projected into a shared viewer coordinate domain."""
@@ -1047,9 +1148,11 @@ class ViewerLayerAxisProjection:
     projected_axis_components: tuple[str, ...]
     component_values: ComponentValues
     routed_component_values: ComponentValues
-    routed_component_coordinates: tuple[ComponentCoordinate, ...]
     axis_offsets: tuple[int, ...]
     scalar_component_values: ComponentValues = field(default_factory=dict)
+    routed_component_coordinates: tuple[ComponentCoordinate, ...] = field(
+        default_factory=tuple
+    )
 
     def axis_shape(self) -> tuple[int, ...]:
         """Return the viewer-domain stack shape for projected component axes."""
@@ -1089,25 +1192,25 @@ class ViewerLayerAxisProjection:
         return tuple(sorted(expected_indices - occupied_indices))
 
     def expected_indices(self) -> set[tuple[int, ...]]:
-        """Return viewer coordinates backed by routed payload identities."""
+        """Return all viewer coordinates implied by the projected axis domains."""
         if not self.projected_axis_components:
             return {()}
-        return {
-            tuple(
-                ViewerComponentCoordinateAuthority.value_index(
-                    value=value,
-                    component_values=self.component_values,
-                    component=component,
-                    context="viewer routed coordinate",
-                )
-                for component, value in zip(
-                    self.projected_axis_components,
-                    coordinate,
-                    strict=True,
+        return set(
+            product(
+                *(
+                    tuple(
+                        ViewerComponentCoordinateAuthority.index(
+                            components={component: value},
+                            component_values=self.component_values,
+                            component=component,
+                            context="viewer route domain",
+                        )
+                        for value in self.routed_component_values[component]
+                    )
+                    for component in self.projected_axis_components
                 )
             )
-            for coordinate in self.routed_component_coordinates
-        }
+        )
 
     def require_matching_scalar_components(
         self,
@@ -1243,7 +1346,6 @@ class ViewerLayerAxisProjectionRequest:
     """Typed domain bundle for projecting layer-local axes into viewer axes."""
 
     requested_components: tuple[str, ...]
-    route_component_coordinates: tuple[ComponentCoordinate, ...]
     route_domain: ViewerComponentValueDomainView
     viewer_domain: ViewerComponentValueDomainView
     declared_domain: ViewerComponentValueDomainView
@@ -1253,16 +1355,13 @@ class ViewerLayerAxisProjectionRequest:
         cls,
         *,
         projected_axis_components: Sequence[str],
-        route_component_coordinates: Sequence[Sequence[ComponentValue]],
+        route_component_coordinates: Sequence[Sequence[ComponentValue]] = (),
         route_component_values: ComponentValues,
         viewer_component_values: ComponentValues,
         declared_component_values: ComponentValues,
     ) -> "ViewerLayerAxisProjectionRequest":
         return cls(
             requested_components=tuple(projected_axis_components),
-            route_component_coordinates=tuple(
-                tuple(coordinate) for coordinate in route_component_coordinates
-            ),
             route_domain=ViewerComponentValueDomainView(
                 route_component_values,
                 "route",
@@ -1297,84 +1396,24 @@ class ViewerLayerAxisProjectionRequestAuthority:
         component_axis_semantics: ViewerComponentAxisSemantics,
         layer_items: Sequence[ViewerComponentAddressedItem],
         route_value_tracker: ViewerRouteComponentValueTracker,
-        aggregate_component_values: ComponentValues,
+        display_axis_domain: ViewerDisplayAxisDomainContract,
     ) -> ViewerLayerAxisProjectionRequest:
         axis_components = component_axis_semantics.layout.components_for_mode(
             ViewerComponentMode.STACK
         )
         route_value_tracker.update(route_key, axis_components, layer_items)
-        if aggregate_component_values:
-            route_value_tracker.update_component_values(
-                route_key,
-                axis_components,
-                aggregate_component_values,
-            )
-        declared_component_values = component_axis_semantics.required_component_values(
-            axis_components
-        )
+        display_axis_domain.record_display_axis_values(axis_components, layer_items)
         return ViewerLayerAxisProjectionRequest.from_component_values(
             projected_axis_components=axis_components,
-            route_component_coordinates=(
-                ViewerLayerAxisProjectionRequestAuthority.route_coordinates(
-                    axis_components=axis_components,
-                    layer_items=layer_items,
-                    aggregate_component_values=aggregate_component_values,
-                )
-            ),
             route_component_values=route_value_tracker.values_for(
                 route_value_tracker.domain_key(route_key, axis_components),
                 axis_components,
             ),
             viewer_component_values=declared_component_values,
-            declared_component_values=declared_component_values,
+            declared_component_values=(
+                component_axis_semantics.required_component_values(axis_components)
+            ),
         )
-
-    @staticmethod
-    def route_coordinates(
-        *,
-        axis_components: Sequence[str],
-        layer_items: Sequence[ViewerComponentAddressedItem],
-        aggregate_component_values: ComponentValues,
-    ) -> tuple[ComponentCoordinate, ...]:
-        """Return exact routed coordinates, preserving cross-axis identity."""
-
-        aggregate_components = tuple(
-            component
-            for component in axis_components
-            if component in aggregate_component_values
-        )
-        aggregate_coordinates = tuple(
-            product(
-                *(
-                    aggregate_component_values[component]
-                    for component in aggregate_components
-                )
-            )
-        )
-        if not aggregate_coordinates:
-            aggregate_coordinates = ((),)
-
-        coordinates: set[ComponentCoordinate] = set()
-        for item in layer_items:
-            for aggregate_coordinate in aggregate_coordinates:
-                components = {
-                    **item.address.components,
-                    **dict(
-                        zip(
-                            aggregate_components,
-                            aggregate_coordinate,
-                            strict=True,
-                        )
-                    ),
-                }
-                coordinates.add(
-                    ViewerComponentCoordinateAuthority.value_tuple(
-                        components,
-                        axis_components,
-                        context="viewer routed item",
-                    )
-                )
-        return tuple(sorted(coordinates, key=ViewerComponentValueOrdering.tuple_key))
 
 
 class ViewerLayerAxisProjector:
@@ -1402,15 +1441,6 @@ class ViewerLayerAxisProjector:
             routed_component_values={
                 axis.component: axis.routed_values for axis in projected_axes
             },
-            routed_component_coordinates=tuple(
-                dict.fromkeys(
-                    tuple(
-                        coordinate[request.requested_components.index(axis.component)]
-                        for axis in projected_axes
-                    )
-                    for coordinate in request.route_component_coordinates
-                )
-            ),
             axis_offsets=tuple(axis.axis_offset for axis in projected_axes),
             scalar_component_values=scalar_component_values,
         )
@@ -1458,23 +1488,6 @@ class ViewerComponentCoordinateAuthority:
             component,
             context=context,
         )
-        return cls.value_index(
-            value=value,
-            component_values=component_values,
-            component=component,
-            context=context,
-        )
-
-    @classmethod
-    def value_index(
-        cls,
-        *,
-        value: ComponentValue,
-        component_values: ComponentAxisValues,
-        component: str,
-        context: str,
-    ) -> int:
-        """Return the positional index for one semantic component value."""
         values = cls.required_axis_values(
             component_values,
             component,

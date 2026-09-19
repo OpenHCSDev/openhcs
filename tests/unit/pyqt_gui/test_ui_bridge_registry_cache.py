@@ -25,8 +25,7 @@ def test_ui_bridge_nominal_result_registries_round_trip_cache_keys(
             "XDG_CACHE_HOME": str(tmp_path / "cache"),
         }
     )
-    script = textwrap.dedent(
-        """
+    script = textwrap.dedent("""
         import json
 
         from metaclass_registry.cache import (
@@ -67,8 +66,7 @@ def test_ui_bridge_nominal_result_registries_round_trip_cache_keys(
             registry_keys[root.__name__] = tuple(registry)
 
         print(json.dumps(registry_keys, sort_keys=True))
-        """
-    )
+        """)
 
     completed = subprocess.run(
         (sys.executable, "-c", script),

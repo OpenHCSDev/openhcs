@@ -7,7 +7,6 @@ from pathlib import Path
 
 import libcst as cst
 
-
 DEFAULT_PATHS = (
     Path("openhcs/interop/cellprofiler/runtime/object_input_policies.py"),
     Path("openhcs/interop/cellprofiler/runtime/object_measurement_vectors.py"),

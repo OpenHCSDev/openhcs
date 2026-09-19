@@ -10,7 +10,6 @@ import json
 from pathlib import Path
 from typing import Iterable, Iterator
 
-
 PROJECT_ROOT = Path(__file__).parents[2]
 DEFAULT_ROOTS = (
     PROJECT_ROOT / "openhcs/processing/backends/cellprofiler",

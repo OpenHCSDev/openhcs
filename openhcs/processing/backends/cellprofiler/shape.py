@@ -431,7 +431,7 @@ from openhcs.core.pipeline.function_contracts import (
     ObjectLabelInputExecutionMode,
     object_label_input_execution_mode,
     special_inputs,
-    )
+)
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
 )
@@ -857,7 +857,8 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             ): props["eccentricity"],
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.ORIENTATION
-            ): np.asarray(props["orientation"], dtype=float) * (180 / np.pi),
+            ): np.asarray(props["orientation"], dtype=float)
+            * (180 / np.pi),
             _shape_feature(
                 MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_X
             ): center_x,
@@ -989,9 +990,7 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             centroid[object_index] = region.centroid
             bounds[object_index] = region.bbox
             bounding_box_volume[object_index] = region.area_bbox
-            inertia_tensor_eigenvalues[object_index] = (
-                region.inertia_tensor_eigvals
-            )
+            inertia_tensor_eigenvalues[object_index] = region.inertia_tensor_eigvals
             extent[object_index] = region.extent
             equivalent_diameter[object_index] = region.equivalent_diameter_area
             euler_number[object_index] = region.euler_number
@@ -1156,8 +1155,7 @@ class ObjectSizeShapeMeasurementRowsRequest(
             ).rows()
             dimensions = tuple(
                 dict.fromkeys(
-                    object_label_dense_array(plane).ndim
-                    for plane in measurement_planes
+                    object_label_dense_array(plane).ndim for plane in measurement_planes
                 )
             )
             if len(dimensions) != 1:
@@ -1410,6 +1408,7 @@ class ShapeCoordinateFeatureFields:
                         np.asarray(feature_values[field], dtype=float) + offset_y
                     )
 
+
 class ShapeMeasurementBackendStrategy(
     CellProfilerBackendStrategyMixin, ABC, metaclass=AutoRegisterMeta
 ):
@@ -1523,6 +1522,7 @@ class NumbaShapeMeasurementMixin(ABC):
     ) -> tuple[np.ndarray, np.ndarray]:
         return feret_diameters_from_labels(labels, label_ids)
 
+
 class LegacyFastNumpyShapeMeasurementBackendStrategy(
     NumbaShapeMeasurementMixin, ShapeMeasurementBackendStrategy
 ):
@@ -1537,6 +1537,7 @@ class LegacyFastNumpyShapeMeasurementBackendStrategy(
 
     def prepare_backend(self) -> None:
         self.prepare_numba_shape_leaves()
+
 
 class NumbaNumpyShapeMeasurementBackendStrategy(
     NumbaShapeMeasurementMixin, ShapeMeasurementBackendStrategy

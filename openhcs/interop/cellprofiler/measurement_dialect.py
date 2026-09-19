@@ -17,7 +17,13 @@ from openhcs.core.measurement_lookup_dialect import (
     RuntimeMeasurementLookupDialect,
     RuntimeMeasurementObjectDomainPolicy,
 )
-from openhcs.core.runtime_measurements import MeasurementRowAxisField, MeasurementScope, ObjectCoreMeasurementFeature, RuntimeMeasurementRowIdentityContract, RuntimeMeasurementFeatureDeclaration
+from openhcs.core.runtime_measurements import (
+    MeasurementRowAxisField,
+    MeasurementScope,
+    ObjectCoreMeasurementFeature,
+    RuntimeMeasurementRowIdentityContract,
+    RuntimeMeasurementFeatureDeclaration,
+)
 from openhcs.interop.cellprofiler import (
     measurement_semantic_profiles as _measurement_semantic_profiles,  # noqa: F401
 )
@@ -52,9 +58,7 @@ class CellProfilerSpatialGridMeasurementFeature(Enum):
         """Render the exact CellProfiler feature for one canonical grid field."""
 
         matching = tuple(
-            feature
-            for feature in cls
-            if feature.canonical_field_name == field_name
+            feature for feature in cls if feature.canonical_field_name == field_name
         )
         if len(matching) != 1:
             raise ValueError(
@@ -62,6 +66,7 @@ class CellProfilerSpatialGridMeasurementFeature(Enum):
                 f"field {field_name!r}."
             )
         return f"DefinedGrid_{grid_name}_{matching[0].cellprofiler_field_name}"
+
 
 CELLPROFILER_OBJECT_NUMBER_FEATURE_PARTS = tuple(
     part.casefold()
@@ -80,6 +85,8 @@ CELLPROFILER_CORE_MEASUREMENT_FEATURE_PART_ALIASES = MappingProxyType(
         },
     }
 )
+
+
 class CellProfilerMeasurementObjectDomainPolicy(RuntimeMeasurementObjectDomainPolicy):
     """Object-domain semantics for CellProfiler measurement rows."""
 

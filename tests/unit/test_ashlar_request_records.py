@@ -35,22 +35,24 @@ def test_cpu_public_function_projects_alignment_config(monkeypatch):
     image_stack = np.zeros((4, 8, 10), dtype=np.float32)
     monkeypatch.setattr(ashlar_main_cpu, "ArrayEdgeAligner", FakeAligner)
 
-    result_stack, positions = ashlar_main_cpu.ashlar_compute_tile_positions_cpu.__wrapped__(
-        image_stack,
-        (2, 2),
-        overlap_ratio=0.25,
-        pixel_size=0.5,
-        max_shift=12.0,
-        stitch_alpha=0.2,
-        max_error=3.0,
-        randomize=True,
-        verbose=True,
-        upsample_factor=7,
-        permutation_upsample=2,
-        permutation_samples=11,
-        min_permutation_samples=3,
-        max_permutation_tries=13,
-        window_size_factor=0.4,
+    result_stack, positions = (
+        ashlar_main_cpu.ashlar_compute_tile_positions_cpu.__wrapped__(
+            image_stack,
+            (2, 2),
+            overlap_ratio=0.25,
+            pixel_size=0.5,
+            max_shift=12.0,
+            stitch_alpha=0.2,
+            max_error=3.0,
+            randomize=True,
+            verbose=True,
+            upsample_factor=7,
+            permutation_upsample=2,
+            permutation_samples=11,
+            min_permutation_samples=3,
+            max_permutation_tries=13,
+            window_size_factor=0.4,
+        )
     )
 
     assert result_stack is image_stack
@@ -113,7 +115,9 @@ def test_cpu_aligner_consumes_alignment_config():
 
 
 def test_gpu_public_function_projects_alignment_config(monkeypatch):
-    gpu_module = importlib.import_module("openhcs.processing.backends.pos_gen.ashlar_main_gpu")
+    gpu_module = importlib.import_module(
+        "openhcs.processing.backends.pos_gen.ashlar_main_gpu"
+    )
 
     class FakeCuPy:
         ndarray = np.ndarray

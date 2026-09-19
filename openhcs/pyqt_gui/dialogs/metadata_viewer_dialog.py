@@ -121,7 +121,9 @@ class MetadataViewerDialog(BaseFormDialog):
             ).render(form_layout, document)
 
             # Update window title
-            self.setWindowTitle(f"{document.title} - {self.orchestrator.plate_path.name}")
+            self.setWindowTitle(
+                f"{document.title} - {self.orchestrator.plate_path.name}"
+            )
 
             logger.info(f"Loaded metadata for {self.orchestrator.plate_path}")
 

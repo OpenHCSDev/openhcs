@@ -406,9 +406,7 @@ class DirectedObjectRelationshipPayload(
                 raise ValueError(
                     "Multi-slice relationship pairs require explicit slice indices."
                 )
-            pairs_by_slice[0].extend(
-                zip(self.source_ids, self.target_ids, strict=True)
-            )
+            pairs_by_slice[0].extend(zip(self.source_ids, self.target_ids, strict=True))
         return tuple(
             (slice_index, tuple(pairs))
             for slice_index, pairs in enumerate(pairs_by_slice)

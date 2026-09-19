@@ -6,7 +6,6 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
@@ -14,6 +13,7 @@ from pyqt_reactive.services.parameter_help_service import (
     dataclass_parameter_descriptions,
 )
 from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from zmqruntime.client import EndpointShutdownResult
 from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionProgressObservation
 from zmqruntime.execution.server import ExecutionServer
@@ -36,6 +36,7 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.dto.functions import FunctionParameterSource
 from openhcs.agent.dto.pipeline import CreatePipelineRequest
 from openhcs.agent.dto.viewer import (
+    ViewerWindowCloseRequest,
     ViewerWindowIntensityPayloadIdentity,
     ViewerWindowIntensityWindowRequest,
     ViewerWindowLayerIsolationRequest,
@@ -81,7 +82,6 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpec,
-    ArtifactViewerStreaming,
     ObjectLabelsArtifactType,
     SpecialArtifactType,
 )
@@ -115,6 +115,7 @@ from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
+    ViewerControlResponseField,
     ViewerLayerIsolationField,
     ViewerNavigationControlOptions,
     ViewerPayloadControlOptions,
@@ -739,6 +740,20 @@ class _FailedRuntimeStatusGateway(_FakeRuntimeServerGateway):
 
 
 class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
+    def close_window(self, request):
+        self.requests.append(request)
+        return EndpointShutdownResult(succeeded=True, endpoint_terminated=True)
+
+    def viewport(self, request):
+        self.requests.append(request)
+        return {
+            "status": "success",
+            "native_viewport": request.presentation.to_wire_mapping(),
+        }
+
+    def image_intensity(self, request):
+        return self.window_state(request)
+
     def __init__(self) -> None:
         self.requests = []
 
@@ -846,7 +861,11 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
                         "channel": (0,),
                     },
                     "data_shape": (2, 1, 1, 16, 16),
-                    "translate": (0.0, 0.0, 0.0, 0.0, 0.0),
+                    "native_transform": {
+                        "scale": (1.0, 1.0, 1.0, 0.65, 0.65),
+                        "translate": (0.0, 0.0, 0.0, 0.0, 0.0),
+                    },
+                    "native_intensity": {"contrast_limits": (0.0, 100.0), "gamma": 1.0},
                     "visible": True,
                     "selected": True,
                     "pending_update": False,
@@ -984,6 +1003,10 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
         response[ViewerLayerIsolationField.MISSING_ROUTE_KEYS.value] = missing_routes
         return response
 
+    def image_intensity(self, request):
+        self.requests.append(request)
+        return self.window_state(request)
+
     def apply_intensity_window(self, request):
         self.requests.append(request)
         controls = request.intensity_window
@@ -1030,6 +1053,18 @@ class _UnmountedRouteViewerWindowGateway(_FakeViewerWindowGateway):
 
 
 class _MalformedViewerWindowGateway(ViewerWindowGatewayABC):
+    def close_window(self, request):
+        del request
+        return EndpointShutdownResult(succeeded=False, endpoint_terminated=False)
+
+    def viewport(self, request):
+        del request
+        return {"status": "success", "native_viewport": {"zoom": 1}}
+
+    def image_intensity(self, request):
+        del request
+        return {"status": "error", "message": "Rejected presentation"}
+
     def snapshot_window(self, request):
         del request
         return {"status": "error"}
@@ -1050,6 +1085,10 @@ class _MalformedViewerWindowGateway(ViewerWindowGatewayABC):
         del request
         return {"status": "success", "layers": ()}
 
+    def image_intensity(self, request):
+        del request
+        return {"status": "success"}
+
     def apply_intensity_window(self, request):
         del request
         return {"status": "success"}
@@ -1069,25 +1108,10 @@ class _CompactStateViewerWindowGateway(_FakeViewerWindowGateway):
         return state
 
 
-class _SparseCoordinateViewerWindowGateway(_FakeViewerWindowGateway):
+class _CoordinateGapViewerWindowGateway(_FakeViewerWindowGateway):
     def window_state(self, request):
         state = super().window_state(request)
         layer = dict(state["layers"][0])
-        component_values = list(layer["component_values"])
-        component_values[1] = {
-            **component_values[1],
-            "channel": 2,
-        }
-        layer["component_values"] = tuple(component_values)
-        payload_summaries = list(layer["payload_summaries"])
-        payload_summaries[1] = {
-            **payload_summaries[1],
-            "components": {
-                **payload_summaries[1]["components"],
-                "channel": 2,
-            },
-        }
-        layer["payload_summaries"] = tuple(payload_summaries)
         layer["axis_component_values"] = {
             "well": ("A14", "B13"),
             "site": (1,),
@@ -1136,7 +1160,10 @@ class _CollapsedComponentViewerWindowGateway(_FakeViewerWindowGateway):
             "channel": (0,),
         }
         layer["data_shape"] = (1, 16, 16)
-        layer["translate"] = (0.0, 0.0, 0.0)
+        layer["native_transform"] = {
+            "scale": (1.0, 0.65, 0.65),
+            "translate": (0.0, 0.0, 0.0),
+        }
         state["layers"] = (layer,)
         state["viewer_ndim"] = 3
         state["current_step"] = (0, 0, 0)
@@ -1232,7 +1259,6 @@ class _SilentZMQSocket:
     def __init__(self) -> None:
         self.closed = False
         self.sent_flags = []
-        self.sent_payload = None
 
     def setsockopt(self, option, value) -> None:
         del option, value
@@ -1241,7 +1267,7 @@ class _SilentZMQSocket:
         self.control_url = control_url
 
     def send(self, payload: bytes, *, flags: int = 0) -> None:
-        self.sent_payload = payload
+        del payload
         self.sent_flags.append(flags)
 
     def recv(self, *, flags: int = 0):
@@ -1284,11 +1310,6 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     context = _SilentZMQContext(socket)
     poller = _SilentZMQPoller()
     monkeypatch.setattr(viewer_window_service_module.zmq, "Poller", lambda: poller)
-    monkeypatch.setattr(
-        viewer_window_service_module.ViewerRuntimeEndpoint,
-        "application_compatibility",
-        lambda _endpoint, *, timeout_ms: SimpleNamespace(require_match=lambda: None),
-    )
     gateway = ZMQViewerWindowGateway(context_factory=lambda: context)
     service = ViewerWindowService(gateway=gateway)
 
@@ -1301,38 +1322,8 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert "timed out after 25ms" in result.errors[0].message
     assert poller.poll_timeouts == [25]
     assert socket.sent_flags == [viewer_window_service_module.zmq.DONTWAIT]
-    decoded_request = viewer_window_service_module.pickle.loads(socket.sent_payload)
-    assert decoded_request["type"] == "state"
-    assert type(next(iter(decoded_request))) is str
     assert socket.closed is True
     assert context.destroy_linger == 0
-
-
-def test_viewer_window_zmq_gateway_rejects_stale_viewer_before_control_dispatch(
-    monkeypatch,
-):
-    def reject_stale_viewer() -> None:
-        raise ValueError("stale viewer application")
-
-    def unexpected_context():
-        raise AssertionError("stale viewer must fail before opening a control context")
-
-    monkeypatch.setattr(
-        viewer_window_service_module.ViewerRuntimeEndpoint,
-        "application_compatibility",
-        lambda _endpoint, *, timeout_ms: SimpleNamespace(
-            require_match=reject_stale_viewer
-        ),
-    )
-    gateway = ZMQViewerWindowGateway(context_factory=unexpected_context)
-
-    result = ViewerWindowService(gateway=gateway).probe_window(
-        ViewerWindowStateRequest(connection=_viewer_connection(), timeout_ms=25)
-    )
-
-    assert result.reachable is False
-    assert result.errors[0].code == "viewer_window_state_failed"
-    assert result.errors[0].message == "stale viewer application"
 
 
 def test_function_catalog_search_and_describe_use_registry_ids(monkeypatch):
@@ -1440,10 +1431,6 @@ def test_function_catalog_projects_canonical_callable_artifact_specs(monkeypatch
     )
     assert tuple(spec.name for spec in runtime_contract.artifact_outputs) == (
         "objects",
-    )
-    assert (
-        runtime_contract.artifact_outputs[0].viewer_streaming
-        is ArtifactViewerStreaming.AUTOMATIC
     )
     assert runtime_contract.source_binding_rule is not None
     assert "canonical CallableContract artifact_inputs" in (
@@ -2002,6 +1989,27 @@ def test_viewer_window_service_snapshots_running_viewer():
     assert gateway.requests[0].capture_scope is WindowSnapshotCaptureScope.WINDOW
 
 
+def test_viewer_window_close_requires_confirmation_and_projects_shutdown_result():
+    with pytest.raises(ValueError, match="confirmed=true"):
+        ViewerWindowCloseRequest.from_fields(
+            connection=_viewer_connection(),
+            confirmed=False,
+        )
+
+    request = ViewerWindowCloseRequest.from_fields(
+        connection=_viewer_connection(),
+        confirmed=True,
+    )
+    gateway = _FakeViewerWindowGateway()
+    result = ViewerWindowService(gateway=gateway).close_window(request)
+
+    assert result == EndpointShutdownResult(
+        succeeded=True,
+        endpoint_terminated=True,
+    )
+    assert gateway.requests == [request]
+
+
 def test_viewer_window_service_reports_malformed_viewer_response():
     result = ViewerWindowService(
         gateway=_MalformedViewerWindowGateway()
@@ -2048,7 +2056,8 @@ def test_viewer_window_service_reads_running_viewer_state():
     assert layer.stack_axes == ("well", "site", "channel")
     assert layer.axis_labels == ("well", "site", "channel", "y", "x")
     assert layer.data_shape == (2, 1, 1, 16, 16)
-    assert layer.translate == (0.0, 0.0, 0.0, 0.0, 0.0)
+    assert layer.native_transform.translate == (0.0, 0.0, 0.0, 0.0, 0.0)
+    assert layer.native_transform.scale == (1.0, 1.0, 1.0, 0.65, 0.65)
     assert layer.axis_component_values == {
         "well": ("A14", "B13"),
         "site": (1,),
@@ -2283,8 +2292,8 @@ def test_viewer_window_zmq_gateway_projects_intensity_control_owner(monkeypatch)
     gateway = ZMQViewerWindowGateway()
     calls = []
 
-    def send_control_message(projected_request, message_type, payload):
-        calls.append((projected_request, message_type, payload))
+    def send_control_message(projected_request, message):
+        calls.append((projected_request, message))
         return {"status": "error", "message": "test"}
 
     monkeypatch.setattr(gateway, "_send_control_message", send_control_message)
@@ -2294,8 +2303,12 @@ def test_viewer_window_zmq_gateway_projects_intensity_control_owner(monkeypatch)
     assert calls == [
         (
             request,
-            ViewerControlMessageType.APPLY_INTENSITY_WINDOW,
-            request.intensity_window,
+            {
+                ViewerControlResponseField.TYPE.value: (
+                    ViewerControlMessageType.APPLY_INTENSITY_WINDOW.value
+                ),
+                ViewerControlResponseField.PAYLOAD.value: request.intensity_window,
+            },
         )
     ]
 
@@ -2532,16 +2545,17 @@ def test_viewer_window_service_validation_reports_axis_and_count_mismatch():
     ]
 
 
-def test_viewer_window_service_validation_accepts_sparse_routed_coordinates():
+def test_viewer_window_service_validation_reports_coordinate_gaps():
     result = ViewerWindowService(
-        gateway=_SparseCoordinateViewerWindowGateway()
+        gateway=_CoordinateGapViewerWindowGateway()
     ).validation_summary(ViewerWindowValidationRequest(connection=_viewer_connection()))
 
-    assert result.valid is True
-    assert result.layer_summaries[0].coordinate_gap_count == 4
-    assert result.layer_summaries[0].missing_payload_coordinate_count == 0
+    assert result.valid is False
+    assert result.layer_summaries[0].coordinate_gap_count == 2
+    assert result.layer_summaries[0].missing_payload_coordinate_count == 2
     assert [warning.code for warning in result.warnings] == [
         "viewer_layer_coordinate_gaps",
+        "viewer_payload_coordinates_missing",
     ]
 
 
@@ -3987,3 +4001,50 @@ def test_domain_expert_context_routes_by_visible_state_ownership():
     assert "compiled artifacts, bounded result samples" in context.content
     assert "=== UI-VISIBLE WORKFLOW ===" not in context.content
     assert "=== FOLDER ONBOARDING WORKFLOW ===" not in context.content
+
+
+def test_native_image_intensity_service_reads_actual_acknowledged_state():
+    from zmqruntime.viewer_protocol import ViewerNativeImageIntensityPresentation
+
+    from openhcs.agent.dto.viewer import ViewerWindowImageIntensityRequest
+
+    request = ViewerWindowImageIntensityRequest.from_fields(
+        connection=_viewer_connection(),
+        route_key="IdentifyPrimaryObjects|image",
+        presentation=ViewerNativeImageIntensityPresentation((10, 20), 2),
+    )
+    result = ViewerWindowService(gateway=_FakeViewerWindowGateway()).image_intensity(
+        request
+    )
+    assert result.applied is True
+    assert result.native_intensity == ViewerNativeImageIntensityPresentation(
+        (0, 100), 1
+    )
+    assert result.native_intensity != request.intensity.presentation
+    assert not result.errors
+    failed = ViewerWindowService(
+        gateway=_MalformedViewerWindowGateway()
+    ).image_intensity(request)
+    assert failed.applied is False
+    assert failed.errors
+
+    class PartialFailureGateway(_FakeViewerWindowGateway):
+        def image_intensity(self, request):
+            response = super().image_intensity(request)
+            response["status"] = "error"
+            response["message"] = "Native gamma setter rejected update"
+            response["layers"][0]["native_intensity"] = {
+                "contrast_limits": (10, 20),
+                "gamma": 1,
+            }
+            return response
+
+    partial = ViewerWindowService(gateway=PartialFailureGateway()).image_intensity(
+        request
+    )
+    assert partial.observed is True
+    assert partial.applied is False
+    assert partial.native_intensity == ViewerNativeImageIntensityPresentation(
+        (10, 20), 1
+    )
+    assert partial.errors[0].message == "Native gamma setter rejected update"

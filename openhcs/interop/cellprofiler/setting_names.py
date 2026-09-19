@@ -171,7 +171,9 @@ def setting_name_matches(
     expected: str | SettingNameFamily,
 ) -> bool:
     """Return whether a parsed CellProfiler setting label matches a family."""
-    decoded_actual = decode_cellprofiler_setting_literal(actual).strip().rstrip(":").strip()
+    decoded_actual = (
+        decode_cellprofiler_setting_literal(actual).strip().rstrip(":").strip()
+    )
     return any(
         decoded_actual
         == decode_cellprofiler_setting_literal(name).strip().rstrip(":").strip()
@@ -181,7 +183,9 @@ def setting_name_matches(
 
 def setting_name_startswith(actual: str, prefix: str | SettingNameFamily) -> bool:
     """Return whether a parsed CellProfiler setting label starts with a family."""
-    decoded_actual = decode_cellprofiler_setting_literal(actual).strip().rstrip(":").strip()
+    decoded_actual = (
+        decode_cellprofiler_setting_literal(actual).strip().rstrip(":").strip()
+    )
     return any(
         decoded_actual.startswith(
             decode_cellprofiler_setting_literal(name).strip().rstrip(":").strip()

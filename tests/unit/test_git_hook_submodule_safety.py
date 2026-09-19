@@ -7,7 +7,6 @@ from pathlib import Path
 import shutil
 import subprocess
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 HOOK_NAMES = ("post-checkout", "post-merge", "report-submodule-status")
 
@@ -67,8 +66,7 @@ def test_repository_hooks_never_move_submodule_worktrees(tmp_path: Path) -> None
     _git(parent, "add", marker.name)
     _git(parent, "restore", "--staged", marker.name)
     assert (
-        _git(parent / "external/demo", "rev-parse", "HEAD")
-        == recorded_submodule_head
+        _git(parent / "external/demo", "rev-parse", "HEAD") == recorded_submodule_head
     )
 
     _git(parent, "checkout", "-b", "fixture-merge")
@@ -76,6 +74,5 @@ def test_repository_hooks_never_move_submodule_worktrees(tmp_path: Path) -> None
     _git(parent, "checkout", "main")
     _git(parent, "merge", "--no-ff", "fixture-merge", "-m", "fixture merge")
     assert (
-        _git(parent / "external/demo", "rev-parse", "HEAD")
-        == recorded_submodule_head
+        _git(parent / "external/demo", "rev-parse", "HEAD") == recorded_submodule_head
     )

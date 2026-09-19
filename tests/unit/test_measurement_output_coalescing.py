@@ -117,9 +117,7 @@ def test_compiled_pattern_coalesces_repeated_exact_measurement_outputs(
     )
     merged_relations = tuple(
         dict.fromkeys(
-            relation
-            for output in local_outputs
-            for relation in output.relations
+            relation for output in local_outputs for relation in output.relations
         )
     )
     compiled = _compiled_measurement_pattern(local_outputs)

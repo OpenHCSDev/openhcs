@@ -10,7 +10,6 @@ from openhcs.agent.capabilities import (
     get_capability_registry,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 HOSTED_BOUNDARY_FILES = (
     REPO_ROOT / "openhcs" / "mcp" / "http.py",

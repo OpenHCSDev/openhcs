@@ -25,7 +25,8 @@ try:
 except ImportError:
     # If openhcs is not installed yet, try importing from build_utils
     import os
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
     from openhcs.build_utils.zeroc_ice_installer import install_zeroc_ice
 
 
@@ -65,7 +66,9 @@ def main() -> int:
         print()
         print("The installation failed. You can try manual installation:")
         print()
-        print("1. Download the wheel from: https://www.glencoesoftware.com/blog/2023/12/08/ice-binaries-for-omero.html")
+        print(
+            "1. Download the wheel from: https://www.glencoesoftware.com/blog/2023/12/08/ice-binaries-for-omero.html"
+        )
         print("2. Install manually: pip install /path/to/wheel")
         print()
         return 1

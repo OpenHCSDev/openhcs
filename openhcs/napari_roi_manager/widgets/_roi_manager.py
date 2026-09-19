@@ -192,9 +192,7 @@ class QRoiTableModel(QtCore.QAbstractTableModel):
                     str(value)
                     for value in features[RoiTableColumn.NAME.header].tolist()
                 ]
-            return [
-                f"ROI-{index:>04}" for index in range(self.rowCount())
-            ]
+            return [f"ROI-{index:>04}" for index in range(self.rowCount())]
         return [str(value) for value in self._layer.shape_type]
 
     def _name(self, row: int) -> str:

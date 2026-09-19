@@ -427,9 +427,8 @@ def test_runtime_measurement_snapshot_skips_absent_runtime_cells(
     assert snapshot.measurement_fact_counts[correlation] == {
         RuntimeCellSignature(RuntimeCellValueKind.NUMBER, "0.25"): 1,
     }
-    assert (
-        RuntimeCellSignature(RuntimeCellValueKind.TEXT, "None")
-        not in (snapshot.measurement_fact_counts[correlation])
+    assert RuntimeCellSignature(RuntimeCellValueKind.TEXT, "None") not in (
+        snapshot.measurement_fact_counts[correlation]
     )
 
 
@@ -7343,9 +7342,7 @@ def test_runtime_reference_artifact_equivalence_does_not_require_derived_reverse
         rows=MeasurementSparseColumnarRows.from_rows(
             (
                 {
-                    "Correlation_Correlation_CropBlue_CropGreen": (
-                        0.17873892711651423
-                    ),
+                    "Correlation_Correlation_CropBlue_CropGreen": (0.17873892711651423),
                     "Correlation_Slope_CropBlue_CropGreen": 0.0867360526866236,
                 },
             ),

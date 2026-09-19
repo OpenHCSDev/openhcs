@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -70,6 +71,59 @@ class ValidationFunctionSurface(Enum):
 
     CATALOG = "catalog"
     REGISTERED_CUSTOM = "registered_custom"
+
+
+class ValidationSelectionOrder(Enum):
+    """Deterministic ordering used to select development source sets."""
+
+    LEXICOGRAPHIC = "lexicographic"
+    SHA256 = "sha256"
+
+    def key(self, selection_key: str, *, salt: str) -> str:
+        """Return the stable sort key owned by this ordering declaration."""
+
+        if self is ValidationSelectionOrder.LEXICOGRAPHIC:
+            return selection_key
+        if self is ValidationSelectionOrder.SHA256:
+            return hashlib.sha256(f"{salt}:{selection_key}".encode()).hexdigest()
+        raise AssertionError(f"Unsupported validation selection order: {self!r}")
+
+
+@dataclass(frozen=True, slots=True)
+class ValidationSourceSetSelection:
+    """Declarative selection of source sets for one trial surface."""
+
+    partitions: tuple[ValidationPartition, ...]
+    include_selection_keys: tuple[str, ...] = ()
+    limit: int | None = None
+    order: ValidationSelectionOrder = ValidationSelectionOrder.LEXICOGRAPHIC
+    salt: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.partitions:
+            raise ValueError("Validation source-set selection needs a partition.")
+        if self.limit is not None and self.limit <= 0:
+            raise ValueError("Validation source-set selection limit must be positive.")
+        if len(self.include_selection_keys) != len(set(self.include_selection_keys)):
+            raise ValueError("Validation selection keys must be unique.")
+        if self.order is ValidationSelectionOrder.SHA256 and not self.salt:
+            raise ValueError("SHA-256 validation selection requires a declared salt.")
+
+
+@dataclass(frozen=True, slots=True)
+class ValidationTrialSplit:
+    """One provenance-bearing development/held-out split declaration."""
+
+    development: ValidationSourceSetSelection
+    held_out: ValidationSourceSetSelection
+    expected_development_source_sets: int
+    expected_held_out_source_sets: int
+
+    def __post_init__(self) -> None:
+        if self.expected_development_source_sets <= 0:
+            raise ValueError("Expected development source-set count must be positive.")
+        if self.expected_held_out_source_sets <= 0:
+            raise ValueError("Expected held-out source-set count must be positive.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,6 +236,7 @@ class IndependentValidationSpec:
     artifacts: tuple[ValidationArtifactSpec, ...]
     channels: tuple[ValidationChannelSpec, ...]
     expected_input_planes: int
+    trial_split: ValidationTrialSplit
     source_identity_fields: tuple[str, ...] = ("well", "site")
     execution_group_fields: tuple[str, ...] = ("well",)
     reference_decoder_revision: str | None = None
@@ -269,6 +324,7 @@ class ValidationImageRecord:
     source_relative_path: Path
     canonical_relative_path: Path
     source_set_id: str
+    selection_key: str
     partition: ValidationPartition
     well: str
     site: str
@@ -305,7 +361,9 @@ class PreparedValidationCorpus:
     dataset_id: str
     root: Path
     authoring_root: Path
+    held_out_root: Path
     scoring_root: Path
     source_manifest_path: Path
     source_bindings_path: Path
+    pipeline_template_path: Path
     provenance_path: Path

@@ -24,7 +24,12 @@ from enum import Enum
 from openhcs.core.memory import numpy as numpy_func
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.vfs_protocol import PlateInputDirectory
-from openhcs.processing.materialization import CsvOptions, JsonOptions, MaterializationSpec, TextOptions
+from openhcs.processing.materialization import (
+    CsvOptions,
+    JsonOptions,
+    MaterializationSpec,
+    TextOptions,
+)
 from openhcs.constants.constants import Backend
 
 logger = logging.getLogger(__name__)
@@ -32,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 class AggregationStrategy(Enum):
     """Aggregation strategies for different data types."""
+
     NUMERIC = "numeric"
     CATEGORICAL = "categorical"
     BOOLEAN = "boolean"
@@ -50,11 +56,11 @@ def extract_well_id(
 ) -> Optional[str]:
     """
     Extract well ID from filename using regex pattern.
-    
+
     Args:
         filename: Name of the file
         pattern: Regex pattern for well ID extraction
-        
+
     Returns:
         Well ID if found, None otherwise
     """
@@ -65,78 +71,92 @@ def extract_well_id(
 def detect_aggregation_strategy(series: pd.Series) -> AggregationStrategy:
     """
     Automatically detect the appropriate aggregation strategy for a data series.
-    
+
     Args:
         series: Pandas series to analyze
-        
+
     Returns:
         Appropriate aggregation strategy
     """
     # Check if boolean
-    if series.dtype == bool or set(series.dropna().unique()).issubset({0, 1, True, False}):
+    if series.dtype == bool or set(series.dropna().unique()).issubset(
+        {0, 1, True, False}
+    ):
         return AggregationStrategy.BOOLEAN
-    
+
     # Check if numeric
     if pd.api.types.is_numeric_dtype(series):
         return AggregationStrategy.NUMERIC
-    
+
     # Check if categorical (string/object with limited unique values)
     unique_ratio = len(series.unique()) / len(series)
     if unique_ratio < 0.5:  # Less than 50% unique values suggests categorical
         return AggregationStrategy.CATEGORICAL
-    
+
     return AggregationStrategy.MIXED
 
 
-def aggregate_series(series: pd.Series, strategy: AggregationStrategy) -> Dict[str, Any]:
+def aggregate_series(
+    series: pd.Series, strategy: AggregationStrategy
+) -> Dict[str, Any]:
     """
     Aggregate a pandas series based on the specified strategy.
-    
+
     Args:
         series: Series to aggregate
         strategy: Aggregation strategy to use
-        
+
     Returns:
         Dictionary of aggregated statistics
     """
     result = {}
-    
+
     if strategy == AggregationStrategy.NUMERIC:
-        result.update({
-            'count': len(series),
-            'mean': series.mean(),
-            'std': series.std(),
-            'min': series.min(),
-            'max': series.max(),
-            'sum': series.sum(),
-            'median': series.median()
-        })
-    
+        result.update(
+            {
+                "count": len(series),
+                "mean": series.mean(),
+                "std": series.std(),
+                "min": series.min(),
+                "max": series.max(),
+                "sum": series.sum(),
+                "median": series.median(),
+            }
+        )
+
     elif strategy == AggregationStrategy.BOOLEAN:
-        result.update({
-            'count': len(series),
-            'true_count': series.sum(),
-            'false_count': len(series) - series.sum(),
-            'true_percentage': (series.sum() / len(series)) * 100
-        })
-    
+        result.update(
+            {
+                "count": len(series),
+                "true_count": series.sum(),
+                "false_count": len(series) - series.sum(),
+                "true_percentage": (series.sum() / len(series)) * 100,
+            }
+        )
+
     elif strategy == AggregationStrategy.CATEGORICAL:
         value_counts = series.value_counts()
-        result.update({
-            'count': len(series),
-            'unique_values': len(series.unique()),
-            'most_common': value_counts.index[0] if len(value_counts) > 0 else None,
-            'most_common_count': value_counts.iloc[0] if len(value_counts) > 0 else 0,
-            'unique_values_list': ','.join(map(str, series.unique()))
-        })
-    
+        result.update(
+            {
+                "count": len(series),
+                "unique_values": len(series.unique()),
+                "most_common": value_counts.index[0] if len(value_counts) > 0 else None,
+                "most_common_count": (
+                    value_counts.iloc[0] if len(value_counts) > 0 else 0
+                ),
+                "unique_values_list": ",".join(map(str, series.unique())),
+            }
+        )
+
     else:  # MIXED
-        result.update({
-            'count': len(series),
-            'unique_values': len(series.unique()),
-            'data_type': str(series.dtype)
-        })
-    
+        result.update(
+            {
+                "count": len(series),
+                "unique_values": len(series.unique()),
+                "data_type": str(series.dtype),
+            }
+        )
+
     return result
 
 
@@ -145,9 +165,7 @@ def aggregate_series(series: pd.Series, strategy: AggregationStrategy) -> Dict[s
     ("consolidated_summary", MaterializationSpec(CsvOptions(filename_suffix=".csv"))),
     (
         "detailed_report",
-        MaterializationSpec(
-            TextOptions(filename_suffix=".txt")
-        ),
+        MaterializationSpec(TextOptions(filename_suffix=".txt")),
     ),
 )
 def consolidate_special_outputs(
@@ -160,10 +178,10 @@ def consolidate_special_outputs(
 ) -> Tuple[np.ndarray, Dict[str, Any], Dict[str, Any]]:
     """
     Consolidate special outputs from OpenHCS analysis into summary tables.
-    
+
     This function automatically detects CSV files with well-based naming patterns,
     groups them by output type, and creates comprehensive summary statistics.
-    
+
     Args:
         image_stack: Input image stack (dummy for OpenHCS compatibility)
         results_directory: Directory containing special output files
@@ -171,137 +189,153 @@ def consolidate_special_outputs(
         file_extensions: List of file extensions to process
         include_patterns: Optional list of filename patterns to include
         exclude_patterns: Optional list of filename patterns to exclude
-        
+
     Returns:
         Tuple of (image_stack, consolidated_summary, detailed_report)
     """
     from polystore.filemanager import FileManager
     from polystore.base import storage_registry
     from datetime import datetime
-    
+
     # Initialize FileManager
     filemanager = FileManager(storage_registry)
-    
+
     logger.info(f"Consolidating special outputs from: {results_directory}")
-    
+
     # Find all relevant files
     all_files = []
     for ext in file_extensions:
         pattern = f"*{ext}"
-        files = filemanager.list_files(results_directory, Backend.DISK.value, pattern=pattern, recursive=False)
+        files = filemanager.list_files(
+            results_directory, Backend.DISK.value, pattern=pattern, recursive=False
+        )
         all_files.extend(files)
-    
+
     logger.info(f"Found {len(all_files)} files with extensions {file_extensions}")
-    
+
     # Apply include/exclude filters
     if include_patterns:
-        all_files = [f for f in all_files if any(re.search(pattern, Path(f).name) for pattern in include_patterns)]
-    
+        all_files = [
+            f
+            for f in all_files
+            if any(re.search(pattern, Path(f).name) for pattern in include_patterns)
+        ]
+
     if exclude_patterns:
-        all_files = [f for f in all_files if not any(re.search(pattern, Path(f).name) for pattern in exclude_patterns)]
-    
+        all_files = [
+            f
+            for f in all_files
+            if not any(re.search(pattern, Path(f).name) for pattern in exclude_patterns)
+        ]
+
     logger.info(f"After filtering: {len(all_files)} files to process")
-    
+
     # Group files by well ID and output type
     wells_data = {}
     output_types = set()
-    
+
     for file_path in all_files:
         filename = Path(file_path).name
         well_id = extract_well_id(filename, well_pattern)
-        
+
         if not well_id:
             logger.warning(f"Could not extract well ID from {filename}, skipping")
             continue
-        
+
         # Extract output type (everything after well ID and before extension)
-        output_type = filename.replace(f"{well_id}_", "").replace(Path(filename).suffix, "")
+        output_type = filename.replace(f"{well_id}_", "").replace(
+            Path(filename).suffix, ""
+        )
         output_types.add(output_type)
-        
+
         if well_id not in wells_data:
             wells_data[well_id] = {}
-        
+
         wells_data[well_id][output_type] = file_path
-    
-    logger.info(f"Processing {len(wells_data)} wells with output types: {sorted(output_types)}")
-    
+
+    logger.info(
+        f"Processing {len(wells_data)} wells with output types: {sorted(output_types)}"
+    )
+
     # Process each output type and create summary statistics
     summary_table = []
     summary_stats = {}
-    
+
     for output_type in sorted(output_types):
         logger.info(f"Processing output type: {output_type}")
-        
+
         # Collect data for this output type across all wells
         type_data = []
         wells_with_type = []
-        
+
         for well_id, well_files in wells_data.items():
             if output_type in well_files:
                 try:
                     file_path = well_files[output_type]
                     df = pd.read_csv(file_path)
-                    
+
                     # Create well-level summary
-                    well_summary = {'well_id': well_id, 'output_type': output_type}
-                    
+                    well_summary = {"well_id": well_id, "output_type": output_type}
+
                     # Aggregate each column
                     for col in df.columns:
-                        if col in ['well_id', 'output_type']:
+                        if col in ["well_id", "output_type"]:
                             continue
-                        
+
                         strategy = detect_aggregation_strategy(df[col])
                         col_stats = aggregate_series(df[col], strategy)
-                        
+
                         # Prefix column stats with column name
                         for stat_name, stat_value in col_stats.items():
                             well_summary[f"{col}_{stat_name}"] = stat_value
-                    
+
                     type_data.append(well_summary)
                     wells_with_type.append(well_id)
-                    
+
                 except Exception as e:
                     logger.error(f"Error processing {file_path}: {e}")
                     continue
-        
+
         # Add to summary table
         summary_table.extend(type_data)
-        
+
         # Create type-level statistics
         if type_data:
             type_df = pd.DataFrame(type_data)
             type_stats = {
-                'wells_count': len(wells_with_type),
-                'wells_list': ','.join(sorted(wells_with_type))
+                "wells_count": len(wells_with_type),
+                "wells_list": ",".join(sorted(wells_with_type)),
             }
-            
+
             # Add aggregate statistics for numeric columns
             numeric_cols = type_df.select_dtypes(include=[np.number]).columns
             for col in numeric_cols:
-                if col != 'well_id':
+                if col != "well_id":
                     type_stats[f"{col}_mean"] = type_df[col].mean()
                     type_stats[f"{col}_std"] = type_df[col].std()
-            
+
             summary_stats[output_type] = type_stats
-    
+
     # Create consolidated summary
     consolidated_summary = {
-        'summary_table': summary_table,
-        'metadata': {
-            'timestamp': datetime.now().isoformat(),
-            'total_wells': len(wells_data),
-            'output_types': sorted(output_types),
-            'total_files_processed': len(all_files),
-            'well_pattern': well_pattern
-        }
+        "summary_table": summary_table,
+        "metadata": {
+            "timestamp": datetime.now().isoformat(),
+            "total_wells": len(wells_data),
+            "output_types": sorted(output_types),
+            "total_files_processed": len(all_files),
+            "well_pattern": well_pattern,
+        },
     }
-    
+
     # Create detailed report
     detailed_report = {
-        'summary_stats': summary_stats,
-        'metadata': consolidated_summary['metadata']
+        "summary_stats": summary_stats,
+        "metadata": consolidated_summary["metadata"],
     }
-    
-    logger.info(f"Consolidation complete: {len(summary_table)} well-output combinations processed")
-    
+
+    logger.info(
+        f"Consolidation complete: {len(summary_table)} well-output combinations processed"
+    )
+
     return image_stack, consolidated_summary, detailed_report

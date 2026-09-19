@@ -145,7 +145,9 @@ def monitor_config(
 
 
 def test_system_monitor_uses_compact_shared_manager_header(qapp, monkeypatch) -> None:
-    monkeypatch.setattr(system_monitor, "PersistentSystemMonitor", FakePersistentMonitor)
+    monkeypatch.setattr(
+        system_monitor, "PersistentSystemMonitor", FakePersistentMonitor
+    )
     monkeypatch.setattr(SystemMonitorWidget, "_load_pyqtgraph_async", lambda self: None)
 
     widget = SystemMonitorWidget()
@@ -180,7 +182,9 @@ def test_system_monitor_enables_opengl_plot_acceleration(monkeypatch) -> None:
     monkeypatch.setattr(
         system_monitor,
         "pg",
-        SimpleNamespace(setConfigOption=lambda name, value: config_calls.append((name, value))),
+        SimpleNamespace(
+            setConfigOption=lambda name, value: config_calls.append((name, value))
+        ),
     )
     fake_widget = make_widget(
         monitor_config=SimpleNamespace(use_opengl=True, antialiasing=True),
@@ -197,12 +201,16 @@ def test_system_monitor_enables_opengl_plot_acceleration(monkeypatch) -> None:
     assert SystemMonitorWidget._effective_plot_antialiasing(fake_widget) is True
 
 
-def test_system_monitor_disables_raster_antialiasing_when_opengl_fails(monkeypatch) -> None:
+def test_system_monitor_disables_raster_antialiasing_when_opengl_fails(
+    monkeypatch,
+) -> None:
     config_calls = []
     monkeypatch.setattr(
         system_monitor,
         "pg",
-        SimpleNamespace(setConfigOption=lambda name, value: config_calls.append((name, value))),
+        SimpleNamespace(
+            setConfigOption=lambda name, value: config_calls.append((name, value))
+        ),
     )
     fake_widget = make_widget(
         monitor_config=SimpleNamespace(use_opengl=True, antialiasing=True),
@@ -239,10 +247,7 @@ def test_metrics_update_queues_full_plot_data_on_visual_frame() -> None:
 
 
 def test_system_monitor_actions_execute_member_owned_signal_leaves() -> None:
-    signals = {
-        action: SimpleNamespace(emit=Mock())
-        for action in SystemMonitorAction
-    }
+    signals = {action: SimpleNamespace(emit=Mock()) for action in SystemMonitorAction}
     fake_widget = SimpleNamespace(
         show_global_config=signals[SystemMonitorAction.GLOBAL_CONFIG],
         show_log_viewer=signals[SystemMonitorAction.LOG_VIEWER],
@@ -294,14 +299,18 @@ def test_pyqtgraph_plot_update_uses_visual_frame_coordinator(monkeypatch) -> Non
 
 def test_pyqtgraph_update_uses_persistent_history_arrays() -> None:
     fake_widget = make_widget(
-        runtime=SimpleNamespace(history=SimpleNamespace(
-            cpu_history=deque([10.0, 20.0], maxlen=2),
-            ram_history=deque([30.0, 40.0], maxlen=2),
-            gpu_history=deque([0.0, 0.0], maxlen=2),
-            vram_history=deque([0.0, 0.0], maxlen=2),
-            time_stamps=deque([100.0, 101.0], maxlen=2),
-        )),
-        monitor_config=SimpleNamespace(update_interval_seconds=0.2, history_duration_seconds=60.0),
+        runtime=SimpleNamespace(
+            history=SimpleNamespace(
+                cpu_history=deque([10.0, 20.0], maxlen=2),
+                ram_history=deque([30.0, 40.0], maxlen=2),
+                gpu_history=deque([0.0, 0.0], maxlen=2),
+                vram_history=deque([0.0, 0.0], maxlen=2),
+                time_stamps=deque([100.0, 101.0], maxlen=2),
+            )
+        ),
+        monitor_config=SimpleNamespace(
+            update_interval_seconds=0.2, history_duration_seconds=60.0
+        ),
         _history_length=0,
         _history_x=None,
         _history_cpu=None,
@@ -324,8 +333,12 @@ def test_pyqtgraph_update_uses_persistent_history_arrays() -> None:
     SystemMonitorWidget.update_pyqtgraph_plots(fake_widget)
 
     assert np.array_equal(fake_widget._history_x, np.array([-0.2, 0.0]))
-    assert np.array_equal(fake_widget._history_cpu, np.array([10.0, 20.0], dtype=np.float32))
-    assert np.array_equal(fake_widget._history_ram, np.array([30.0, 40.0], dtype=np.float32))
+    assert np.array_equal(
+        fake_widget._history_cpu, np.array([10.0, 20.0], dtype=np.float32)
+    )
+    assert np.array_equal(
+        fake_widget._history_ram, np.array([30.0, 40.0], dtype=np.float32)
+    )
     assert len(fake_widget.cpu_curve.calls) == 1
     assert len(fake_widget.ram_curve.calls) == 1
     assert len(fake_widget.gpu_curve.calls) == 0
@@ -338,14 +351,18 @@ def test_pyqtgraph_update_uses_persistent_history_arrays() -> None:
 
 def test_pyqtgraph_update_downsamples_curve_views() -> None:
     fake_widget = make_widget(
-        runtime=SimpleNamespace(history=SimpleNamespace(
-            cpu_history=deque(range(10), maxlen=10),
-            ram_history=deque(range(10, 20), maxlen=10),
-            gpu_history=deque([0.0] * 10, maxlen=10),
-            vram_history=deque([0.0] * 10, maxlen=10),
-            time_stamps=deque(range(10), maxlen=10),
-        )),
-        monitor_config=SimpleNamespace(update_interval_seconds=1.0, history_duration_seconds=10.0),
+        runtime=SimpleNamespace(
+            history=SimpleNamespace(
+                cpu_history=deque(range(10), maxlen=10),
+                ram_history=deque(range(10, 20), maxlen=10),
+                gpu_history=deque([0.0] * 10, maxlen=10),
+                vram_history=deque([0.0] * 10, maxlen=10),
+                time_stamps=deque(range(10), maxlen=10),
+            )
+        ),
+        monitor_config=SimpleNamespace(
+            update_interval_seconds=1.0, history_duration_seconds=10.0
+        ),
         _history_length=0,
         _history_x=None,
         _history_cpu=None,
@@ -372,7 +389,9 @@ def test_pyqtgraph_update_downsamples_curve_views() -> None:
     assert np.array_equal(cpu_args[0], np.array([-9.0, -6.0, -3.0, 0.0]))
     assert np.array_equal(cpu_args[1], np.array([0.0, 3.0, 6.0, 9.0], dtype=np.float32))
     assert np.array_equal(ram_args[0], np.array([-9.0, -6.0, -3.0, 0.0]))
-    assert np.array_equal(ram_args[1], np.array([10.0, 13.0, 16.0, 19.0], dtype=np.float32))
+    assert np.array_equal(
+        ram_args[1], np.array([10.0, 13.0, 16.0, 19.0], dtype=np.float32)
+    )
     assert len(fake_widget.gpu_curve.calls) == 0
     assert len(fake_widget.vram_curve.calls) == 0
 
@@ -380,14 +399,18 @@ def test_pyqtgraph_update_downsamples_curve_views() -> None:
 def test_pyqtgraph_update_keeps_default_history_resolution_on_narrow_plot() -> None:
     data_length = 300
     fake_widget = make_widget(
-        runtime=SimpleNamespace(history=SimpleNamespace(
-            cpu_history=deque(range(data_length), maxlen=data_length),
-            ram_history=deque(range(data_length), maxlen=data_length),
-            gpu_history=deque([0.0] * data_length, maxlen=data_length),
-            vram_history=deque([0.0] * data_length, maxlen=data_length),
-            time_stamps=deque(range(data_length), maxlen=data_length),
-        )),
-        monitor_config=SimpleNamespace(update_interval_seconds=0.2, history_duration_seconds=60.0),
+        runtime=SimpleNamespace(
+            history=SimpleNamespace(
+                cpu_history=deque(range(data_length), maxlen=data_length),
+                ram_history=deque(range(data_length), maxlen=data_length),
+                gpu_history=deque([0.0] * data_length, maxlen=data_length),
+                vram_history=deque([0.0] * data_length, maxlen=data_length),
+                time_stamps=deque(range(data_length), maxlen=data_length),
+            )
+        ),
+        monitor_config=SimpleNamespace(
+            update_interval_seconds=0.2, history_duration_seconds=60.0
+        ),
         _history_length=0,
         _history_x=None,
         _history_cpu=None,
@@ -416,9 +439,13 @@ def test_pyqtgraph_update_keeps_default_history_resolution_on_narrow_plot() -> N
     assert cpu_args[1][-1] == np.float32(data_length - 1)
 
 
-def test_update_config_rebuilds_core_monitor_and_resets_plot_buffers(monkeypatch) -> None:
+def test_update_config_rebuilds_core_monitor_and_resets_plot_buffers(
+    monkeypatch,
+) -> None:
     FakePersistentMonitor.created.clear()
-    monkeypatch.setattr(system_monitor, "PersistentSystemMonitor", FakePersistentMonitor)
+    monkeypatch.setattr(
+        system_monitor, "PersistentSystemMonitor", FakePersistentMonitor
+    )
 
     old_config = monitor_config(update_fps=5.0, history_duration_seconds=60.0)
     new_config = monitor_config(update_fps=10.0, history_duration_seconds=30.0)
@@ -466,7 +493,9 @@ def test_update_config_rebuilds_core_monitor_and_resets_plot_buffers(monkeypatch
 
 def test_update_config_restarts_when_sampler_policy_changes(monkeypatch) -> None:
     FakePersistentMonitor.created.clear()
-    monkeypatch.setattr(system_monitor, "PersistentSystemMonitor", FakePersistentMonitor)
+    monkeypatch.setattr(
+        system_monitor, "PersistentSystemMonitor", FakePersistentMonitor
+    )
 
     old_config = monitor_config(enable_gpu_monitoring=True)
     new_config = replace(

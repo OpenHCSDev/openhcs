@@ -49,11 +49,12 @@ def exported_public_names(
     )
 
 
-def public_names_from_objects(*objects: Any, extra_names: Iterable[str] = ()) -> tuple[str, ...]:
+def public_names_from_objects(
+    *objects: Any, extra_names: Iterable[str] = ()
+) -> tuple[str, ...]:
     """Return public names from exported object identities plus explicit aliases."""
     return tuple(
-        item if isinstance(item, str) else item.__name__
-        for item in objects
+        item if isinstance(item, str) else item.__name__ for item in objects
     ) + tuple(extra_names)
 
 

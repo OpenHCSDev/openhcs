@@ -124,12 +124,12 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             name,
             artifact_type,
         )
-        edge_plan = self.request.require_artifact_input_edge(
-            spec.ref()
-        )
+        edge_plan = self.request.require_artifact_input_edge(spec.ref())
         storage_plan = edge_plan.storage_plan
         if storage_plan is None:
-            raise RuntimeError("Compiled artifact input occurrence lost its storage plan.")
+            raise RuntimeError(
+                "Compiled artifact input occurrence lost its storage plan."
+            )
         if storage_plan.artifact_type is not artifact_type:
             raise TypeError(
                 f"Compiled artifact input {name!r} has type "
@@ -210,9 +210,8 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
         kind: type[ArtifactType],
     ) -> None:
         """Fail loudly unless an artifact is declared, bound, or resolvable."""
-        declared_output = (
-            self.request.require_callable_contract()
-            .artifact_outputs.by_name_and_artifact_type(name, kind)
+        declared_output = self.request.require_callable_contract().artifact_outputs.by_name_and_artifact_type(
+            name, kind
         )
         if (
             declared_output is not None
@@ -614,9 +613,8 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
         name: str,
         expected_kind: ArtifactType,
     ) -> ArtifactOutputPlan:
-        declared_output = (
-            self.request.require_callable_contract()
-            .artifact_outputs.require_by_name_and_artifact_type(name, expected_kind)
+        declared_output = self.request.require_callable_contract().artifact_outputs.require_by_name_and_artifact_type(
+            name, expected_kind
         )
         return self.request.require_artifact_output_plan(declared_output.ref())
 

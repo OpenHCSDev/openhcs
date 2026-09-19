@@ -46,4 +46,7 @@ def test_object_state_callable_previews_use_import_paths():
     assert fields["bare_func"].raw_value_preview.text == expected_path
     assert fields["tuple_func"].raw_value_preview is not None
     assert expected_path in fields["tuple_func"].raw_value_preview.text
-    assert "<function preview_test_callable" not in fields["tuple_func"].raw_value_preview.text
+    assert (
+        "<function preview_test_callable"
+        not in fields["tuple_func"].raw_value_preview.text
+    )

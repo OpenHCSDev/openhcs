@@ -9,10 +9,8 @@ from pathlib import Path
 import re
 import statistics
 
-
 _PROFILE_RE = re.compile(
-    r"^\s*RUNTIME_PROFILE\s+(?P<label>\S+)\s+"
-    r"(?P<seconds>[0-9]+(?:\.[0-9]+)?)s\b"
+    r"^\s*RUNTIME_PROFILE\s+(?P<label>\S+)\s+" r"(?P<seconds>[0-9]+(?:\.[0-9]+)?)s\b"
 )
 
 

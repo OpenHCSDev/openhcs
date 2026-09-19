@@ -9,7 +9,6 @@ from types import SimpleNamespace
 
 import pytest
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RELATIONSHIP_BACKEND_PATH = (
     PROJECT_ROOT / "openhcs/processing/backends/cellprofiler/relationships.py"

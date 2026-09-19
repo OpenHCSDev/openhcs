@@ -81,9 +81,7 @@ def test_debug_progress_record_fails_loudly_for_malformed_debug_context() -> Non
     with pytest.raises(KeyError):
         DebugProgressRecord.from_progress_event(
             _event(
-                context={
-                    DebugProgressContext.progress_context_discriminator: "debug-1"
-                }
+                context={DebugProgressContext.progress_context_discriminator: "debug-1"}
             )
         )
 

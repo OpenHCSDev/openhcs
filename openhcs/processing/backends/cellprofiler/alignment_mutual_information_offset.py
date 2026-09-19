@@ -106,7 +106,10 @@ def mutual_information_offset_unmasked_numba(
                     best = information
                     row_offset = candidate_row
                     column_offset = candidate_column
-        if row_offset == previous_row_offset and column_offset == previous_column_offset:
+        if (
+            row_offset == previous_row_offset
+            and column_offset == previous_column_offset
+        ):
             return int(column_offset), int(row_offset)
 
 
@@ -438,7 +441,10 @@ def mutual_information_offset_numba(
                     best = information
                     row_offset = candidate_row
                     column_offset = candidate_column
-        if row_offset == previous_row_offset and column_offset == previous_column_offset:
+        if (
+            row_offset == previous_row_offset
+            and column_offset == previous_column_offset
+        ):
             return int(column_offset), int(row_offset)
 
 

@@ -5,6 +5,7 @@ Array-based EdgeAligner implementation that works directly with numpy arrays
 instead of file-based readers. This is the complete Ashlar algorithm modified
 to accept arrays directly.
 """
+
 from __future__ import annotations
 import logging
 import sys
@@ -21,6 +22,9 @@ from openhcs.processing.backends.pos_gen.ashlar_config import (
     AshlarAlignmentConfig,
     AshlarPositionRequest,
 )
+from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
+    TILE_POSITIONS_OUTPUT,
+)
 
 import warnings
 
@@ -32,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 class DataWarning(Warning):
     """Warnings about the content of user-provided image data."""
+
     pass
 
 
@@ -131,10 +136,7 @@ def ashlar_register_no_preprocessing(img1, img2, upsample=10):
     # Use skimage's phase cross correlation with error handling
     try:
         shift = skimage.registration.phase_cross_correlation(
-            img1w,
-            img2w,
-            upsample_factor=upsample,
-            normalization=None
+            img1w, img2w, upsample_factor=upsample, normalization=None
         )[0]
     except Exception as e:
         # If phase correlation fails, return large error
@@ -159,7 +161,9 @@ def ashlar_register_no_preprocessing(img1, img2, upsample=10):
             correlations.append(0.0)
 
     if not correlations or max(correlations) == 0:
-        logger.warning("Ashlar CPU: NO VALID CORRELATIONS - All correlations failed or zero")
+        logger.warning(
+            "Ashlar CPU: NO VALID CORRELATIONS - All correlations failed or zero"
+        )
         return np.array([0.0, 0.0]), np.inf
 
     idx = np.argmax(correlations)
@@ -173,10 +177,14 @@ def ashlar_register_no_preprocessing(img1, img2, upsample=10):
 
     # Log all correlation results at INFO level for user visibility
     if error > 1.0:  # High error threshold for Ashlar
-        logger.warning(f"Ashlar CPU: HIGH CORRELATION ERROR - Error={error:.4f}, Shift=({shift[0]:.2f}, {shift[1]:.2f})")
+        logger.warning(
+            f"Ashlar CPU: HIGH CORRELATION ERROR - Error={error:.4f}, Shift=({shift[0]:.2f}, {shift[1]:.2f})"
+        )
         logger.warning("  This indicates poor overlap or image quality between tiles")
     else:
-        logger.info(f"Ashlar CPU: Correlation - Error={error:.4f}, Shift=({shift[0]:.2f}, {shift[1]:.2f})")
+        logger.info(
+            f"Ashlar CPU: Correlation - Error={error:.4f}, Shift=({shift[0]:.2f}, {shift[1]:.2f})"
+        )
 
     return shift, error
 
@@ -221,10 +229,14 @@ def ashlar_nccw_no_preprocessing(img1, img2):
             error = 0
         else:
             # Instead of raising error, return large but finite error
-            logger.warning(f"Ashlar CPU: NCCW numerical precision issue - diff={diff:.6f}, using error=100.0")
+            logger.warning(
+                f"Ashlar CPU: NCCW numerical precision issue - diff={diff:.6f}, using error=100.0"
+            )
             error = 100.0  # Large error but not infinite
     else:
-        logger.warning(f"Ashlar CPU: NCCW invalid correlation - correlation={correlation:.6f}, total_amplitude={total_amplitude:.6f}")
+        logger.warning(
+            f"Ashlar CPU: NCCW invalid correlation - correlation={correlation:.6f}, total_amplitude={total_amplitude:.6f}"
+        )
         error = np.inf
 
     # Log all NCCW results at INFO level for user visibility
@@ -271,9 +283,9 @@ def ashlar_crop(img, offset, shape):
     # Ensure we have a valid region
     if end[0] <= start[0] or end[1] <= start[1]:
         # Return minimum valid region if bounds are invalid
-        return img[start[0]:start[0]+1, start[1]:start[1]+1]
+        return img[start[0] : start[0] + 1, start[1] : start[1] + 1]
 
-    return img[start[0]:end[0], start[1]:end[1]]
+    return img[start[0] : end[0], start[1] : end[1]]
 
 
 class ArrayEdgeAligner:
@@ -322,14 +334,13 @@ class ArrayEdgeAligner:
 
     def _build_neighbors_graph(self):
         """Build graph of neighboring (overlapping) tiles."""
-        pdist = scipy.spatial.distance.pdist(self.positions, metric='cityblock')
+        pdist = scipy.spatial.distance.pdist(self.positions, metric="cityblock")
         sp = scipy.spatial.distance.squareform(pdist)
         max_distance = self.tile_size.max() + 1
         edges = zip(*np.nonzero((sp > 0) & (sp < max_distance)))
         graph = nx.from_edgelist(edges)
         graph.add_nodes_from(range(len(self.positions)))
         return graph
-
 
     def run(self):
         """Run the complete Ashlar algorithm."""
@@ -342,10 +353,12 @@ class ArrayEdgeAligner:
 
     def check_overlaps(self):
         """Check if tiles actually overlap based on positions."""
-        overlaps = np.array([
-            self.tile_size - abs(self.positions[t1] - self.positions[t2])
-            for t1, t2 in self.neighbors_graph.edges
-        ])
+        overlaps = np.array(
+            [
+                self.tile_size - abs(self.positions[t1] - self.positions[t2])
+                for t1, t2 in self.neighbors_graph.edges
+            ]
+        )
         failures = np.any(overlaps < 1, axis=1) if len(overlaps) else []
         if len(failures) and all(failures):
             warn_data("No tiles overlap, attempting alignment anyway.")
@@ -367,10 +380,7 @@ class ArrayEdgeAligner:
             self.max_error = np.inf
             return
 
-        widths = np.array([
-            self.intersection(t1, t2).shape.min()
-            for t1, t2 in edges
-        ])
+        widths = np.array([self.intersection(t1, t2).shape.min() for t1, t2 in edges])
         w = widths.max()
         max_offset = self.tile_size[0] - w
 
@@ -378,7 +388,11 @@ class ArrayEdgeAligner:
         num_distant_pairs = num_tiles * (num_tiles - 1) // 2 - len(edges)
 
         # Reduce permutation count for small datasets
-        n = self.permutation_samples if num_distant_pairs > 8 else (num_distant_pairs + 1) * self.min_permutation_samples
+        n = (
+            self.permutation_samples
+            if num_distant_pairs > 8
+            else (num_distant_pairs + 1) * self.min_permutation_samples
+        )
         pairs = np.empty((n, 2), dtype=int)
         offsets = np.empty((n, 2), dtype=int)
 
@@ -409,8 +423,10 @@ class ArrayEdgeAligner:
                     ioff1, ioff2 = its.offsets[:, 0]
                     if (
                         its.shape[0] > its.shape[1]
-                        or o1 < ioff1 - w or o1 > ioff1 + w
-                        or o2 < ioff2 - w or o2 > ioff2 + w
+                        or o1 < ioff1 - w
+                        or o1 > ioff1 + w
+                        or o2 < ioff2 - w
+                        or o2 > ioff2 + w
                     ):
                         break
             else:
@@ -424,21 +440,22 @@ class ArrayEdgeAligner:
             # if self.verbose and (i % 10 == 9 or i == n - 1):
             #     sys.stdout.write(f'\r    quantifying alignment error {i + 1}/{n}')
             #     sys.stdout.flush()
-            img1 = self.image_stack[t1][offset1:offset1+w, :]
-            img2 = self.image_stack[t2][offset2:offset2+w, :]
-            _, errors[i] = ashlar_register_no_preprocessing(img1, img2, upsample=self.permutation_upsample)
+            img1 = self.image_stack[t1][offset1 : offset1 + w, :]
+            img2 = self.image_stack[t2][offset2 : offset2 + w, :]
+            _, errors[i] = ashlar_register_no_preprocessing(
+                img1, img2, upsample=self.permutation_upsample
+            )
         # if self.verbose:
         #     print()
         self.errors_negative_sampled = errors
         self.max_error = np.percentile(errors, self.alpha * 100)
-
 
     def register_all(self):
         """Register all neighboring tile pairs."""
         n = self.neighbors_graph.size()
         for i, (t1, t2) in enumerate(self.neighbors_graph.edges, 1):
             if self.verbose:
-                sys.stdout.write(f'\r    aligning edge {i}/{n}')
+                sys.stdout.write(f"\r    aligning edge {i}/{n}")
                 sys.stdout.flush()
             self.register_pair(t1, t2)
         if self.verbose:
@@ -501,10 +518,11 @@ class ArrayEdgeAligner:
         sx = 1 if p1[1] >= p2[1] else -1
         sy = 1 if p1[0] >= p2[0] else -1
         padding = its.padding * [sy, sx]
-        shift, error = ashlar_register_no_preprocessing(img1, img2, upsample=self.upsample_factor)
+        shift, error = ashlar_register_no_preprocessing(
+            img1, img2, upsample=self.upsample_factor
+        )
         shift += padding
         return shift, error
-
 
     def intersection(self, t1, t2, min_size=0, shift=None):
         """Calculate intersection region between two tiles."""
@@ -525,10 +543,6 @@ class ArrayEdgeAligner:
         img1 = self.crop(t1, its.offsets[0], its.shape)
         img2 = self.crop(t2, its.offsets[1], its.shape)
         return its, img1, img2
-
-
-
-
 
     def build_spanning_tree(self):
         """Build minimum spanning tree from registered edges."""
@@ -569,12 +583,10 @@ class ArrayEdgeAligner:
             # TODO: fill in shifts and positions with 0x2 arrays
             raise NotImplementedError("No images")
 
-
     def fit_model(self):
         """Fit linear model to handle disconnected components."""
         components = sorted(
-            nx.connected_components(self.spanning_tree),
-            key=len, reverse=True
+            nx.connected_components(self.spanning_tree), key=len, reverse=True
         )
         # Fit LR model on positions of largest connected component
         cc0 = list(components[0])
@@ -607,7 +619,9 @@ class ArrayEdgeAligner:
         self.lr.intercept_ -= self.origin
 
 
-def _calculate_initial_positions(image_stack: np.ndarray, grid_dims: tuple, overlap_ratio: float) -> np.ndarray:
+def _calculate_initial_positions(
+    image_stack: np.ndarray, grid_dims: tuple, overlap_ratio: float
+) -> np.ndarray:
     """Calculate initial grid positions based on overlap ratio."""
     grid_rows, grid_cols = grid_dims
     tile_height, tile_width = image_stack.shape[1:3]
@@ -625,7 +639,9 @@ def _calculate_initial_positions(image_stack: np.ndarray, grid_dims: tuple, over
     return np.array(positions, dtype=float)
 
 
-def _convert_ashlar_positions_to_openhcs(ashlar_positions: np.ndarray) -> List[Tuple[float, float]]:
+def _convert_ashlar_positions_to_openhcs(
+    ashlar_positions: np.ndarray,
+) -> List[Tuple[float, float]]:
     """Convert Ashlar positions to OpenHCS format."""
     positions = []
     for tile_idx in range(len(ashlar_positions)):
@@ -635,7 +651,7 @@ def _convert_ashlar_positions_to_openhcs(ashlar_positions: np.ndarray) -> List[T
 
 
 @artifact_inputs("grid_dimensions")
-@artifact_outputs("positions")
+@artifact_outputs(TILE_POSITIONS_OUTPUT)
 @numpy_func
 def ashlar_compute_tile_positions_cpu(
     image_stack: np.ndarray,
@@ -652,7 +668,7 @@ def ashlar_compute_tile_positions_cpu(
     permutation_samples: int = 1000,
     min_permutation_samples: int = 10,
     max_permutation_tries: int = 100,
-    window_size_factor: float = 0.15
+    window_size_factor: float = 0.15,
 ) -> Tuple[np.ndarray, List[Tuple[float, float]]]:
     """
     Compute tile positions using the complete Ashlar algorithm - pure position calculation only.
@@ -789,7 +805,9 @@ def ashlar_compute_tile_positions_cpu(
     )
     grid_rows, grid_cols = request.grid_dimensions
 
-    logger.info(f"Ashlar CPU: Processing {grid_rows}x{grid_cols} grid with {len(image_stack)} tiles")
+    logger.info(
+        f"Ashlar CPU: Processing {grid_rows}x{grid_cols} grid with {len(image_stack)} tiles"
+    )
 
     try:
         # Calculate initial grid positions
@@ -837,40 +855,42 @@ def ashlar_compute_tile_positions_cpu(
     return image_stack, positions
 
 
-def materialize_ashlar_cpu_positions(data: List[Tuple[float, float]], path: str, filemanager) -> str:
+def materialize_ashlar_cpu_positions(
+    data: List[Tuple[float, float]], path: str, filemanager
+) -> str:
     """Materialize Ashlar CPU tile positions as scientific CSV with grid metadata."""
-    csv_path = path.replace('.pkl', '_ashlar_positions.csv')
+    csv_path = path.replace(".pkl", "_ashlar_positions.csv")
 
-    df = pd.DataFrame(data, columns=['x_position_um', 'y_position_um'])
-    df['tile_id'] = range(len(df))
+    df = pd.DataFrame(data, columns=["x_position_um", "y_position_um"])
+    df["tile_id"] = range(len(df))
 
     # Estimate grid dimensions from position layout
-    unique_x = sorted(df['x_position_um'].unique())
-    unique_y = sorted(df['y_position_um'].unique())
+    unique_x = sorted(df["x_position_um"].unique())
+    unique_y = sorted(df["y_position_um"].unique())
 
     grid_cols = len(unique_x)
     grid_rows = len(unique_y)
 
     # Add grid coordinates
-    df['grid_row'] = df.index // grid_cols
-    df['grid_col'] = df.index % grid_cols
+    df["grid_row"] = df.index // grid_cols
+    df["grid_col"] = df.index % grid_cols
 
     # Add spacing information
     if len(unique_x) > 1:
         x_spacing = unique_x[1] - unique_x[0]
-        df['x_spacing_um'] = x_spacing
+        df["x_spacing_um"] = x_spacing
     else:
-        df['x_spacing_um'] = 0
+        df["x_spacing_um"] = 0
 
     if len(unique_y) > 1:
         y_spacing = unique_y[1] - unique_y[0]
-        df['y_spacing_um'] = y_spacing
+        df["y_spacing_um"] = y_spacing
     else:
-        df['y_spacing_um'] = 0
+        df["y_spacing_um"] = 0
 
     # Add metadata
-    df['algorithm'] = 'ashlar_cpu'
-    df['grid_dimensions'] = f"{grid_rows}x{grid_cols}"
+    df["algorithm"] = "ashlar_cpu"
+    df["grid_dimensions"] = f"{grid_rows}x{grid_cols}"
 
     csv_content = df.to_csv(index=False)
     filemanager.save(csv_content, csv_path, "disk")

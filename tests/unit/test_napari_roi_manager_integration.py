@@ -8,7 +8,6 @@ from packaging.requirements import Requirement
 import pytest
 import yaml
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 

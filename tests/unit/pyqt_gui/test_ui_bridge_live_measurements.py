@@ -167,7 +167,9 @@ def test_ast_inventory_finds_each_protocol_surface_only_on_its_widget_owner() ->
 
     for path in (repository_root / "openhcs" / "pyqt_gui").rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        for owner in (node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)):
+        for owner in (
+            node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+        ):
             for statement in owner.body:
                 if not isinstance(statement, ast.Assign) or not any(
                     isinstance(target, ast.Name)
@@ -228,7 +230,9 @@ def test_live_measurement_surface_projects_exact_bounded_preview_and_revision() 
         )
     )
 
-    assert declaration.surface_id in {surface.surface_id for surface in catalog.surfaces}
+    assert declaration.surface_id in {
+        surface.surface_id for surface in catalog.surfaces
+    }
     assert state.payload_schema == declaration.payload_schema
     assert state.payload["retained_entry_count"] == 1
     assert state.payload["visible_entry_count"] == 1
@@ -254,7 +258,9 @@ def test_live_measurement_surface_projects_exact_bounded_preview_and_revision() 
     assert poll.unchanged is True
 
 
-def test_live_measurement_surface_honors_plate_selection_and_populates_overview() -> None:
+def test_live_measurement_surface_honors_plate_selection_and_populates_overview() -> (
+    None
+):
     ObjectStateRegistry.clear()
     manager = _Manager()
     manager.live_measurement_model.add_notification(_notification())
@@ -284,9 +290,7 @@ def test_live_measurement_surface_honors_plate_selection_and_populates_overview(
         "value": "1",
     }
     assert section["metrics"][1]["value"] == "3"
-    assert section["items"][0]["label"] == (
-        "Neurite Outgrowth: PerNeuronMeasurements"
-    )
+    assert section["items"][0]["label"] == ("Neurite Outgrowth: PerNeuronMeasurements")
 
     manager.selected = [manager.plates[1]]
     filtered = bridge.get_state_surface(

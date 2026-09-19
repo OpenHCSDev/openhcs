@@ -12,7 +12,6 @@ from pathlib import Path
 
 from benchmark.contracts.tool_adapter import ToolNotInstalledError
 
-
 CELLPROFILER_EXECUTABLE_ENV = "CELLPROFILER_EXECUTABLE"
 OPENHCS_BENCHMARK_TOOL_ROOTS_ENV = "OPENHCS_BENCHMARK_TOOL_ROOTS"
 

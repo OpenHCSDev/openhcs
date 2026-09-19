@@ -7,16 +7,19 @@ in OpenHCS pipelines, replacing the hardcoded Well-based multiprocessing and fix
 """
 
 # Import from the new location (framework.py moved to openhcs/components/)
-from openhcs.components.framework import ComponentConfiguration, ComponentConfigurationFactory
+from openhcs.components.framework import (
+    ComponentConfiguration,
+    ComponentConfigurationFactory,
+)
 from .multiprocessing import MultiprocessingCoordinator
 from .validation import GenericValidator
 from .parser_metaprogramming import FilenameParseResult, GenericFilenameParser
 
 __all__ = [
-    'ComponentConfiguration',
-    'ComponentConfigurationFactory',
-    'MultiprocessingCoordinator',
-    'GenericValidator',
-    'GenericFilenameParser',
-    'FilenameParseResult',
+    "ComponentConfiguration",
+    "ComponentConfigurationFactory",
+    "MultiprocessingCoordinator",
+    "GenericValidator",
+    "GenericFilenameParser",
+    "FilenameParseResult",
 ]

@@ -168,7 +168,11 @@ class RuntimeValue:
                 "RuntimeValue execution_scope must be a RuntimeExecutionAxisScope."
             )
         expected_scope = execution_scope.for_group_coordinate(
-            output_plan.group_component if output_plan.single_group_key is not None else None,
+            (
+                output_plan.group_component
+                if output_plan.single_group_key is not None
+                else None
+            ),
             output_plan.single_group_key,
         )
         if isinstance(value, RuntimeValue):

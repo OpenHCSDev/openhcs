@@ -19,9 +19,7 @@ def test_source_bindings_pipeline_sources_preview_renders_palette_surface(qapp) 
     widget = SourceBindingsEditorWidget.from_bindings(StepSourceBindingsConfig())
     try:
         widget.set_preview_context(source_bindings=SourceBindingsConfig())
-        widget.setStyleSheet(
-            color_scheme.styles.generate_config_window_style()
-        )
+        widget.setStyleSheet(color_scheme.styles.generate_config_window_style())
         widget.set_scope_color_scheme(
             get_scope_color_scheme("plate::step_0", step_index=0)
         )

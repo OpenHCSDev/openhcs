@@ -1,4 +1,4 @@
-from __future__ import annotations 
+from __future__ import annotations
 
 import logging
 from typing import Dict, List, Optional, Tuple, Union
@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
 
 class FocusAnalyzer:
     """
@@ -58,10 +59,10 @@ class FocusAnalyzer:
     # with find_best_focus, select_best_focus, or compute_focus_metrics.
     # The weights determine the contribution of each focus metric to the final score:
     DEFAULT_WEIGHTS = {
-        'nvar': 0.3,  # Normalized variance (robust to illumination changes)
-        'lap': 0.3,   # Laplacian energy (sensitive to edges)
-        'ten': 0.2,   # Tenengrad variance (based on gradient magnitude)
-        'fft': 0.2    # FFT-based focus (frequency domain analysis)
+        "nvar": 0.3,  # Normalized variance (robust to illumination changes)
+        "lap": 0.3,  # Laplacian energy (sensitive to edges)
+        "ten": 0.2,  # Tenengrad variance (based on gradient magnitude)
+        "fft": 0.2,  # FFT-based focus (frequency domain analysis)
     }
 
     @staticmethod
@@ -99,7 +100,9 @@ class FocusAnalyzer:
         return np.mean(np.square(lap))
 
     @staticmethod
-    def tenengrad_variance(img: np.ndarray, ksize: int = 3, threshold: float = 0) -> float:
+    def tenengrad_variance(
+        img: np.ndarray, ksize: int = 3, threshold: float = 0
+    ) -> float:
         """
         Tenengrad variance focus measure.
         Based on gradient magnitude.
@@ -154,8 +157,7 @@ class FocusAnalyzer:
 
     @staticmethod
     def combined_focus_measure(
-        img: np.ndarray,
-        weights: Optional[Dict[str, float]] = None
+        img: np.ndarray, weights: Optional[Dict[str, float]] = None
     ) -> float:
         """
         Combined focus measure using multiple metrics.
@@ -200,10 +202,10 @@ class FocusAnalyzer:
 
         # Weighted combination
         score = (
-            weights.get('nvar', 0.3) * nvar +
-            weights.get('lap', 0.3) * lap +
-            weights.get('ten', 0.2) * ten +
-            weights.get('fft', 0.2) * fft
+            weights.get("nvar", 0.3) * nvar
+            + weights.get("lap", 0.3) * lap
+            + weights.get("ten", 0.2) * ten
+            + weights.get("fft", 0.2) * fft
         )
 
         return score
@@ -229,15 +231,15 @@ class FocusAnalyzer:
             return lambda img: FocusAnalyzer.combined_focus_measure(img, metric)
 
         # Otherwise, treat it as a string method name
-        if metric == 'combined':
+        if metric == "combined":
             return FocusAnalyzer.combined_focus_measure
-        if metric in ('nvar', 'normalized_variance'):
+        if metric in ("nvar", "normalized_variance"):
             return FocusAnalyzer.normalized_variance
-        if metric in ('lap', 'laplacian'):
+        if metric in ("lap", "laplacian"):
             return FocusAnalyzer.laplacian_energy
-        if metric in ('ten', 'tenengrad'):
+        if metric in ("ten", "tenengrad"):
             return FocusAnalyzer.tenengrad_variance
-        if metric == 'fft':
+        if metric == "fft":
             return FocusAnalyzer.adaptive_fft_focus
 
         # If we get here, the metric is unknown
@@ -245,8 +247,8 @@ class FocusAnalyzer:
 
     @staticmethod
     def find_best_focus(
-        image_stack: np.ndarray, # Changed from List[np.ndarray] to np.ndarray (Z, H, W)
-        metric: Union[str, Dict[str, float]] = "combined"
+        image_stack: np.ndarray,  # Changed from List[np.ndarray] to np.ndarray (Z, H, W)
+        metric: Union[str, Dict[str, float]] = "combined",
     ) -> Tuple[int, List[Tuple[int, float]]]:
         """
         Find the best focused image in a 3D stack using specified method.
@@ -261,27 +263,33 @@ class FocusAnalyzer:
             Tuple of (best_focus_index, focus_scores)
         """
         if not isinstance(image_stack, np.ndarray) or image_stack.ndim != 3:
-            raise TypeError("image_stack must be a 3D NumPy ndarray of shape (Z, H, W).")
-        
+            raise TypeError(
+                "image_stack must be a 3D NumPy ndarray of shape (Z, H, W)."
+            )
+
         focus_scores = []
         focus_func = FocusAnalyzer._get_focus_function(metric)
 
-        for i in range(image_stack.shape[0]): # Iterate over Z dimension
+        for i in range(image_stack.shape[0]):  # Iterate over Z dimension
             img_slice = image_stack[i, :, :]
             score = focus_func(img_slice)
             focus_scores.append((i, score))
-        
-        if not focus_scores: # Should not happen if image_stack is not empty
-             raise ValueError("Could not compute focus scores, image_stack might be empty or invalid.")
+
+        if not focus_scores:  # Should not happen if image_stack is not empty
+            raise ValueError(
+                "Could not compute focus scores, image_stack might be empty or invalid."
+            )
 
         best_focus_idx = max(focus_scores, key=lambda x: x[1])[0]
         return best_focus_idx, focus_scores
 
     @staticmethod
     def select_best_focus(
-        image_stack: np.ndarray, # Changed from List[np.ndarray] to np.ndarray (Z, H, W)
-        metric: Union[str, Dict[str, float]] = "combined"
-    ) -> Tuple[np.ndarray, int, List[Tuple[int, float]]]: # Return best image as (1,H,W)
+        image_stack: np.ndarray,  # Changed from List[np.ndarray] to np.ndarray (Z, H, W)
+        metric: Union[str, Dict[str, float]] = "combined",
+    ) -> Tuple[
+        np.ndarray, int, List[Tuple[int, float]]
+    ]:  # Return best image as (1,H,W)
         """
         Select the best focus plane from a 3D stack of images.
 
@@ -297,11 +305,19 @@ class FocusAnalyzer:
         best_idx, scores = FocusAnalyzer.find_best_focus(image_stack, metric)
         best_image_slice = image_stack[best_idx, :, :]
         # Return as a 3D array with a single Z-slice
-        return best_image_slice.reshape(1, best_image_slice.shape[0], best_image_slice.shape[1]), best_idx, scores
+        return (
+            best_image_slice.reshape(
+                1, best_image_slice.shape[0], best_image_slice.shape[1]
+            ),
+            best_idx,
+            scores,
+        )
 
     @staticmethod
-    def compute_focus_metrics(image_stack: np.ndarray, # Changed from List[np.ndarray]
-                             metric: Union[str, Dict[str, float]] = "combined") -> List[float]:
+    def compute_focus_metrics(
+        image_stack: np.ndarray,  # Changed from List[np.ndarray]
+        metric: Union[str, Dict[str, float]] = "combined",
+    ) -> List[float]:
         """
         Compute focus metrics for a 3D stack of images.
 
@@ -315,12 +331,14 @@ class FocusAnalyzer:
             List of focus scores for each image slice
         """
         if not isinstance(image_stack, np.ndarray) or image_stack.ndim != 3:
-            raise TypeError("image_stack must be a 3D NumPy ndarray of shape (Z, H, W).")
+            raise TypeError(
+                "image_stack must be a 3D NumPy ndarray of shape (Z, H, W)."
+            )
 
         focus_scores = []
         focus_func = FocusAnalyzer._get_focus_function(metric)
 
-        for i in range(image_stack.shape[0]): # Iterate over Z dimension
+        for i in range(image_stack.shape[0]):  # Iterate over Z dimension
             img_slice = image_stack[i, :, :]
             score = focus_func(img_slice)
             focus_scores.append(score)

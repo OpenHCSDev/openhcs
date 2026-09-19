@@ -3,9 +3,11 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import tifffile
 import pytest
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
+from polystore.memory import MemoryStorageBackend
 from polystore.streaming.viewer_transport import (
     ViewerDisplayConfigABC,
     ViewerStreamKwarg,
@@ -38,6 +40,9 @@ from openhcs.core.source_image_provenance import (
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
+    SOURCE_VOXEL_SPACING_FIELD,
+    SOURCE_VOXEL_SPACING_UNIT_FIELD,
+    SourceVoxelSpacing,
 )
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -54,12 +59,14 @@ from openhcs.core.steps.function_outputs import (
     ProducedMemoryPathsAuthority,
     StreamOutputsAuthority,
 )
+from openhcs.microscopes.microscope_interfaces import MetadataHandler
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
 )
 from openhcs.core.virtual_workspace_metadata import FIELDS
+from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 
 
 @pytest.mark.parametrize("backend", [Backend.ZARR.value, "custom-array-store"])
@@ -215,6 +222,9 @@ class ParserStub:
 
 
 class MetadataHandlerStub:
+    get_metadata_pixel_size = MetadataHandler.get_metadata_pixel_size
+    get_metadata_grid_dimensions = MetadataHandler.get_metadata_grid_dimensions
+
     def __init__(self, values=None):
         self.values = values or {}
 
@@ -227,8 +237,25 @@ class MetadataHandlerStub:
     def get_grid_dimensions(self, _root):
         return (1, 1)
 
+    def get_metadata_grid_dimensions(self, root):
+        return list(self.get_grid_dimensions(root))
+
     def get_pixel_size(self, _root):
         return 1.0
+
+    def get_metadata_grid_dimensions(self, root):
+        return list(self.get_grid_dimensions(root))
+
+    def get_metadata_pixel_size(self, root):
+        return self.get_pixel_size(root)
+
+
+class UnknownLayoutMetadataHandlerStub(MetadataHandlerStub):
+    def get_grid_dimensions(self, _root):
+        raise AssertionError("Metadata serialization requested a strict grid artifact.")
+
+    def get_metadata_grid_dimensions(self, _root):
+        return []
 
 
 class ContextStub:
@@ -251,6 +278,34 @@ def context_stub(filemanager, parser=None):
     context.axis_id = "A01"
     context.step_axis_filters = {}
     return context
+
+
+def test_openhcs_metadata_handler_preserves_unknown_layout_for_serialization(
+    tmp_path,
+):
+    plate_root = tmp_path / "plate"
+    images_dir = plate_root / "images"
+    images_dir.mkdir(parents=True)
+    (plate_root / "openhcs_metadata.json").write_text(
+        json.dumps(
+            {
+                FIELDS.SUBDIRECTORIES: {
+                    "images": {
+                        FIELDS.GRID_DIMENSIONS: [],
+                        FIELDS.IMAGE_FILES: [],
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    handler = OpenHCSMetadataHandler(
+        FileManager({Backend.DISK.value: DiskStorageBackend()})
+    )
+
+    assert handler.get_metadata_grid_dimensions(images_dir) == []
+    with pytest.raises(ValueError, match="list of two integers"):
+        handler.get_grid_dimensions(images_dir)
 
 
 def function_step_plan(
@@ -657,6 +712,7 @@ def test_stream_outputs_restore_manifest_image_metadata_after_memory_serializati
     assert stream_request.source.item_fields == {
         "spatial_origin_yx": [0, 0],
         "source_spatial_shape_yx": [2, 3],
+        "image_metadata": image_metadata.to_viewer_image_metadata(),
     }
     assert stream_request.source.metadata.metadata_by_index == (
         expected_viewer_metadata(source_metadata),
@@ -995,7 +1051,12 @@ def test_stream_outputs_projects_semantic_image_stack_before_viewer_backend():
     assert backend == "napari_stream"
     assert [item.shape for item in streamed_data] == [(3, 4, 3), (3, 4, 3)]
     stream_request = kwargs[ViewerStreamKwarg.STREAM_REQUEST.value]
-    assert stream_request.source.item_fields == {"source_channel_axis": -1}
+    assert stream_request.source.item_fields == {
+        "source_channel_axis": -1,
+        "image_metadata": ImagePayloadMetadata(
+            source_channel_axis=-1
+        ).to_viewer_image_metadata(),
+    }
     assert stream_request.source.metadata.metadata_by_index == (
         expected_viewer_metadata(first_metadata),
         expected_viewer_metadata(second_metadata),
@@ -1116,12 +1177,19 @@ def test_stream_outputs_partitions_one_producer_by_image_axis_fields():
     scalar_batch, color_batch = filemanager.saved_batches
     assert scalar_batch[1] == [scalar_path]
     assert color_batch[1] == [color_path]
-    assert (
-        scalar_batch[3][ViewerStreamKwarg.STREAM_REQUEST.value].source.item_fields == {}
-    )
+    assert scalar_batch[3][
+        ViewerStreamKwarg.STREAM_REQUEST.value
+    ].source.item_fields == {
+        "image_metadata": ImagePayloadMetadata().to_viewer_image_metadata()
+    }
     assert color_batch[3][
         ViewerStreamKwarg.STREAM_REQUEST.value
-    ].source.item_fields == {"source_channel_axis": -1}
+    ].source.item_fields == {
+        "source_channel_axis": -1,
+        "image_metadata": ImagePayloadMetadata(
+            source_channel_axis=-1
+        ).to_viewer_image_metadata(),
+    }
 
 
 def test_stream_outputs_rejects_unidentified_stack_without_per_slice_metadata():
@@ -1261,6 +1329,55 @@ def test_metadata_writer_skips_owner_without_image_outputs():
     OpenHCSMetadataWriter.write(context, plan)
 
 
+def test_metadata_writer_preserves_unknown_layout_without_resolving_grid_artifact(
+    tmp_path,
+):
+    plate_root = tmp_path / "output_plate"
+    output_dir = plate_root / "images"
+    output_dir.mkdir(parents=True)
+    output_path = output_dir / "A01_s1_w1.tif"
+    pixels = np.zeros((4, 5), dtype=np.uint16)
+    tifffile.imwrite(output_path, pixels)
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    context = context_stub(filemanager)
+    context.filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    context.filemanager.save(
+        ImageMetadataPayload(pixels, ImagePayloadMetadata(source_dtype="uint16")),
+        str(output_path),
+        Backend.MEMORY.value,
+    )
+    context.microscope_handler.metadata_handler = UnknownLayoutMetadataHandlerStub(
+        {"channel": {"1": "DNA"}}
+    )
+    context.metadata_cache = {
+        AllComponents.WELL: {"A01": None},
+        AllComponents.SITE: {"1": None},
+        AllComponents.CHANNEL: {"1": "DNA"},
+        AllComponents.Z_INDEX: {"1": None},
+        AllComponents.TIMEPOINT: {"1": None},
+    }
+    plan = function_step_plan("Segment nuclei")
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.write_backend = Backend.DISK.value
+    plan.create_openhcs_metadata = True
+    record_output_path(context, plan, output_path)
+
+    OpenHCSMetadataWriter.write(context, plan)
+
+    subdirectory = json.loads(
+        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+    )[FIELDS.SUBDIRECTORIES]["images"]
+    assert subdirectory[FIELDS.GRID_DIMENSIONS] == []
+
+
 @pytest.mark.parametrize("metadata_writer", (False, True))
 def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     tmp_path, metadata_writer
@@ -1269,8 +1386,16 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     output_dir = plate_root / "images"
     path = output_dir / "A01_s1_w1.tif"
     output_dir.mkdir(parents=True)
-    path.write_bytes(b"produced image")
-    context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    pixels = np.zeros((2, 4, 5), dtype=np.uint16)
+    tifffile.imwrite(path, pixels)
+    context = context_stub(
+        FileManager(
+            {
+                Backend.DISK.value: DiskStorageBackend(),
+                Backend.MEMORY.value: MemoryStorageBackend(),
+            }
+        )
+    )
     context.metadata_cache = {
         AllComponents.WELL: {"A01": None},
         AllComponents.SITE: {"1": None},
@@ -1285,7 +1410,17 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     plan.analysis_results_dir = str(plate_root / "images_results")
     plan.write_backend = Backend.DISK.value
     plan.create_openhcs_metadata = metadata_writer
+    context.step_plans = {plan.step_index: plan}
     metadata = ImagePayloadMetadata(
+        source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
+        source_component_metadata={
+            "well": "A01",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+            SOURCE_VOXEL_SPACING_FIELD: "0.5,0.5",
+            SOURCE_VOXEL_SPACING_UNIT_FIELD: "micrometers",
+        },
         source_provenance=SourceImageProvenance(
             source_component_metadata={
                 "well": "A01",
@@ -1297,7 +1432,7 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
                 paths=("/source/site-1.tif", "/source/site-2.tif"),
                 component_metadata=({"site": "1"}, {"site": "2"}),
             ),
-        )
+        ),
     )
     record_output_path(
         context,
@@ -1322,11 +1457,20 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
             source="collapsed mosaic",
         ),
     )
+    context.filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    context.filemanager.save(
+        ImageMetadataPayload(pixels, metadata),
+        str(path),
+        Backend.MEMORY.value,
+    )
     OpenHCSMetadataWriter.write(context, plan)
+    OpenHCSMetadataWriter.finalize_completed_plate({"A01": context})
 
     subdirectory = json.loads(
         (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
     )[FIELDS.SUBDIRECTORIES]["images"]
+    assert subdirectory[FIELDS.GRID_DIMENSIONS] == []
+    assert subdirectory[FIELDS.PIXEL_SIZE] == 0.5
     record = subdirectory[FIELDS.SOURCE_PROJECTION][0]
     restored = ImagePayloadMetadata.from_mapping(
         record[SourceProjectionMetadataSerializer.IMAGE_METADATA_FIELD]
@@ -1338,6 +1482,115 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     assert subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]["site"] == "1"
 
 
+class _QualifierIgnoringParserStub:
+    """Parse well/site/channel from filenames with an ignored output qualifier.
+
+    Mirrors the real source-schema parser behavior that produced same-address
+    outputs such as ``..._IllumActin.tif`` and ``..._IllumActinAvg.tif``.
+    """
+
+    def parse_filename(self, name):
+        parts = Path(name).stem.split("_")
+        well, site, channel = parts[0], parts[1], parts[2]
+        metadata = complete_component_metadata(
+            {
+                "well": well,
+                "site": site.removeprefix("s"),
+                "channel": channel.removeprefix("w"),
+                "extension": "".join(Path(name).suffixes),
+            }
+        )
+        return FilenameParseResult(
+            ((component, metadata.get(component.value)) for component in AllComponents),
+            extension=str(metadata["extension"]),
+        )
+
+    def bind_component_values(self, metadata, *, extension=None):
+        return FilenameParseResult.from_wire_mapping(
+            metadata,
+            extension=extension or ".tif",
+        )
+
+
+def test_produced_projection_derives_artifact_alias_for_same_address_outputs(
+    tmp_path,
+):
+    plate_root = tmp_path / "output_plate"
+    output_dir = plate_root / "images"
+    output_dir.mkdir(parents=True)
+    first = output_dir / "A01_s1_w1_IllumActin.tif"
+    second = output_dir / "A01_s1_w1_IllumActinAvg.tif"
+    pixels = np.zeros((4, 5), dtype=np.uint16)
+    tifffile.imwrite(first, pixels)
+    tifffile.imwrite(second, pixels)
+    context = context_stub(
+        FileManager(
+            {
+                Backend.DISK.value: DiskStorageBackend(),
+                Backend.MEMORY.value: MemoryStorageBackend(),
+            }
+        ),
+        parser=_QualifierIgnoringParserStub(),
+    )
+    context.filemanager.ensure_directory(output_dir, Backend.MEMORY.value)
+    context.filemanager.save(pixels, str(first), Backend.MEMORY.value)
+    context.filemanager.save(pixels, str(second), Backend.MEMORY.value)
+    context.metadata_cache = {
+        AllComponents.WELL: {"A01": None},
+        AllComponents.SITE: {"1": None},
+        AllComponents.CHANNEL: {"1": None},
+        AllComponents.Z_INDEX: {"1": None},
+        AllComponents.TIMEPOINT: {"1": None},
+    }
+    plan = function_step_plan("SaveImages")
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "images_results")
+    plan.write_backend = Backend.DISK.value
+    context.step_plans = {plan.step_index: plan}
+
+    record_output_path(
+        context,
+        plan,
+        str(first),
+        output_context=AlignedImageSliceContext.main_flow(
+            output_key="IllumActin",
+            artifact_kind=ImageArtifactType.value,
+        ),
+    )
+    record_output_path(
+        context,
+        plan,
+        str(second),
+        output_context=AlignedImageSliceContext.main_flow(
+            output_key="IllumActinAvg",
+            artifact_kind=ImageArtifactType.value,
+        ),
+    )
+
+    OpenHCSMetadataWriter.write(context, plan)
+
+    subdirectory = json.loads(
+        (plate_root / "openhcs_metadata.json").read_text(encoding="utf-8")
+    )[FIELDS.SUBDIRECTORIES]["images"]
+    projections = subdirectory[FIELDS.SOURCE_PROJECTION]
+    roles = {record["projection_role"] for record in projections}
+    assert roles == {"primary_plane", "source_artifact"}
+    artifacts = [
+        record
+        for record in projections
+        if record["projection_role"] == "source_artifact"
+    ]
+    assert [record["source_alias"] for record in artifacts] == ["IllumActinAvg"]
+    assert artifacts[0]["address"]["well"] == "A01"
+    mapping = subdirectory[FIELDS.WORKSPACE_MAPPING]
+    assert set(mapping) == {
+        "images/A01_s1_w1_IllumActin.tif",
+        "images/A01_s1_w1_IllumActinAvg.tif",
+    }
+
+
 def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     tmp_path,
 ):
@@ -1346,9 +1599,20 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     images_dir.mkdir(parents=True)
     first_image = images_dir / "A01_s1_w1.tif"
     later_image = images_dir / "B03_s1_w1.tif"
-    first_image.write_bytes(b"first")
+    from polystore.memory import MemoryStorageBackend
+    from openhcs.core.image_file_serialization import ImageFileFormat
 
-    filemanager = FileManager({Backend.DISK.value: DiskStorageBackend()})
+    first_pixels = np.zeros((4, 5), dtype=np.uint16)
+    ImageFileFormat.require_path(first_image).write(first_image, first_pixels)
+
+    filemanager = FileManager(
+        {
+            Backend.DISK.value: DiskStorageBackend(),
+            Backend.MEMORY.value: MemoryStorageBackend(),
+        }
+    )
+    filemanager.ensure_directory(images_dir, Backend.MEMORY.value)
+    filemanager.save(first_pixels, str(first_image), Backend.MEMORY.value)
     owner_context = context_stub(filemanager)
     owner_context.metadata_cache = {
         AllComponents.WELL: {"A01": None, "B03": None},
@@ -1373,7 +1637,7 @@ def test_completed_plate_metadata_includes_outputs_written_after_owner_axis(
     )["subdirectories"]["images"]
     assert initial_metadata["wells"] == {"A01": None}
 
-    later_image.write_bytes(b"later")
+    ImageFileFormat.require_path(later_image).write(later_image, first_pixels)
     follower_context = context_stub(filemanager)
     follower_plan = function_step_plan("final")
     follower_plan.axis_id = "B03"

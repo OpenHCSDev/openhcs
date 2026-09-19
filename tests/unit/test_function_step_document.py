@@ -99,6 +99,4 @@ def test_openhcs_codegen_provider_delegates_step_documents() -> None:
         source,
         declaration_type=FunctionStep,
         clean_mode=True,
-    ) == (
-        source
-    )
+    ) == (source)

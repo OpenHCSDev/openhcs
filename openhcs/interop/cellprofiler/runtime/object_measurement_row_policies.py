@@ -55,7 +55,10 @@ from openhcs.interop.cellprofiler.runtime.object_measurement_row_completion impo
 from openhcs.interop.cellprofiler.module_measurement_features import (
     CellProfilerModuleAuthority,
 )
-from openhcs.core.steps.function_runtime import RuntimeCallableArgument, RuntimeCallableKwargs
+from openhcs.core.steps.function_runtime import (
+    RuntimeCallableArgument,
+    RuntimeCallableKwargs,
+)
 from collections.abc import Mapping
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
@@ -167,7 +170,9 @@ class CellProfilerObjectMeasurementRowPolicy(
     def clear_source_when_rows_declare_object_name(cls) -> bool:
         """Retain the image-table owner for explicitly mixed-owner records."""
 
-        if cls.runtime_object_measurement_row_policy().requires_explicit_row_ownership():
+        if (
+            cls.runtime_object_measurement_row_policy().requires_explicit_row_ownership()
+        ):
             return False
         return super().clear_source_when_rows_declare_object_name()
 
@@ -867,7 +872,9 @@ class DeclaredDomainCompactMeasuredObjectMeasurementRowPolicy(
                 object_identity,
                 label_payload=label_payload,
             )
-        ordinal_by_axis_label: dict[tuple[RuntimeCallableArgument, ...], dict[int, int]] = {}
+        ordinal_by_axis_label: dict[
+            tuple[RuntimeCallableArgument, ...], dict[int, int]
+        ] = {}
         projected_rows: list[Mapping[str, RuntimeCallableArgument]] = []
         row_keys: list[tuple[int, tuple[RuntimeCallableArgument, ...]]] = []
         measured_row_keys: list[tuple[int, tuple[RuntimeCallableArgument, ...]]] = []

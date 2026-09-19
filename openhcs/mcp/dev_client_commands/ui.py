@@ -8,7 +8,10 @@ import json
 from collections.abc import Mapping
 from typing import cast
 
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope, WindowSnapshotFrameCondition
+from pyqt_reactive.services.window_snapshot import (
+    WindowSnapshotCaptureScope,
+    WindowSnapshotFrameCondition,
+)
 
 from openhcs.agent.capabilities import agent_capabilities
 from openhcs.agent.dto.common import JsonObject, JsonValue
@@ -1029,11 +1032,16 @@ class WindowSnapshotCommandSpec(CapabilityBackedCommandSpec):
         parser.add_argument("--create-if-missing", action="store_true")
         parser.add_argument(
             "--frame-condition",
-            choices=tuple(condition.value for condition in WindowSnapshotFrameCondition),
+            choices=tuple(
+                condition.value for condition in WindowSnapshotFrameCondition
+            ),
             default=WindowSnapshotFrameCondition.IMMEDIATE.value,
         )
         add_request_field_option(
-            parser, UiWindowSnapshotRequest, "observation_timeout_s", "--observation-timeout-s",
+            parser,
+            UiWindowSnapshotRequest,
+            "observation_timeout_s",
+            "--observation-timeout-s",
         )
         parser.add_argument(
             "--json",

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import json
 import os
 import platform
 import shutil
 import subprocess
 import sys
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
@@ -18,13 +18,17 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 from uuid import uuid4
 
+from objectstate.object_state import ObjectStateRegistry
 from packaging.version import InvalidVersion, Version
 from PyQt6.QtCore import QByteArray, QObject, QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import QMessageBox
-from objectstate.object_state import ObjectStateRegistry
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
+from pyqt_reactive.services.window_navigation import (
+    RegisteredWindowNavigationRequest,
+)
+from python_introspect import dataclass_from_mapping
 
 from openhcs import __version__ as OPENHCS_VERSION
 from openhcs.desktop_deployment import (
@@ -37,6 +41,8 @@ from openhcs.desktop_installation import DESKTOP_INSTALL_PROFILE
 from openhcs.mcp.bootstrap import MCP_INSTALLATION_POINTER_ENVIRONMENT_VARIABLE
 from openhcs.pyqt_gui.services.desktop_update_worker import DesktopUpdatePlan
 from openhcs.pyqt_gui.services.history_migration import DesktopHistoryUpgrade
+from openhcs.pyqt_gui.services.ui_window_ids import OpenHCSUiWindowId
+from openhcs.serialization.json import to_jsonable
 from openhcs.ui.shared.plate_manager_code_document import (
     PlateManagerCodeDocumentAuthority,
 )
@@ -57,6 +63,7 @@ _PROGRESS_THEME_DOCUMENT_NAME = "desktop-update-theme.json"
 _PROGRESS_BRAND_DOCUMENT_NAME = "desktop-update-brand.png"
 _UPDATE_ERROR_NAME = "update-error.txt"
 _SESSION_PURPOSE_NAME = "restart-purpose.txt"
+_SESSION_UI_STATE_NAME = "ui-state.json"
 UPDATE_SESSION_ARGUMENT = "--restore-update-session"
 
 
@@ -319,6 +326,65 @@ def _without_update_session_arguments(arguments: list[str]) -> tuple[str, ...]:
 
 
 @dataclass(frozen=True, slots=True)
+class DesktopRestartUiState:
+    """Typed non-declaration UI state preserved by a desktop restart."""
+
+    selected_plate_scope_id: str | None
+
+    @classmethod
+    def capture(cls, plate_manager) -> DesktopRestartUiState:
+        selected_scope_id = plate_manager.selected_plate_path or None
+        return cls(selected_plate_scope_id=selected_scope_id)
+
+    @classmethod
+    def read(cls, path: Path) -> DesktopRestartUiState:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            return dataclass_from_mapping(cls, payload)
+        except (json.JSONDecodeError, TypeError, ValueError) as error:
+            raise DesktopUpdateError("Saved desktop UI state is invalid.") from error
+
+    def write(self, path: Path) -> None:
+        path.write_text(
+            json.dumps(
+                to_jsonable(self),
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    def restore(self, plate_manager, *, plate_paths: tuple[str, ...]) -> None:
+        selected_scope_id = self.selected_plate_scope_id
+        if selected_scope_id is None:
+            return
+        requested_paths = tuple(str(path) for path in plate_paths)
+        if selected_scope_id not in requested_paths:
+            raise DesktopUpdateError(
+                "Saved plate selection is absent from the restored document: "
+                f"{selected_scope_id!r}."
+            )
+
+        request = RegisteredWindowNavigationRequest(
+            window=plate_manager,
+            requested_scope_id=OpenHCSUiWindowId.plate_manager,
+            item_id=selected_scope_id,
+        )
+        # Re-enter through the manager's selection owner so its semantic id,
+        # Qt row, and selection signal change as one operation. Updating only
+        # the semantic id lets the subsequent list refresh preserve the stale
+        # Qt row over the restored selection.
+        navigation = plate_manager.window_navigation_driver()
+        if not navigation.accepts(request):
+            raise DesktopUpdateError(
+                "Saved plate selection was not materialized in the restored manager: "
+                f"{selected_scope_id!r}."
+            )
+        navigation.execute(request)
+
+
+@dataclass(frozen=True, slots=True)
 class DesktopRestartSession:
     """Canonical plate-manager source plus ObjectState history for one restart."""
 
@@ -355,6 +421,10 @@ class DesktopRestartSession:
     @property
     def purpose_document(self) -> Path:
         return self.directory / _SESSION_PURPOSE_NAME
+
+    @property
+    def ui_state_document(self) -> Path:
+        return self.directory / _SESSION_UI_STATE_NAME
 
     @property
     def purpose(self) -> DesktopRestartPurpose:
@@ -420,6 +490,9 @@ class DesktopRestartSession:
         try:
             session.session_document.write_text(context.source, encoding="utf-8")
             ObjectStateRegistry.save_history_to_file(str(session.history_document))
+            DesktopRestartUiState.capture(plate_manager).write(
+                session.ui_state_document
+            )
             session.purpose_document.write_text(purpose.value, encoding="utf-8")
             if purpose.requires_update_assets:
                 shutil.copyfile(
@@ -528,6 +601,24 @@ class DesktopUpdateFailedAndRestored(DesktopRestartRestoreOutcomeABC):
 class ConsumedDesktopRestartSession(DesktopRestartSession):
     """Restart data that is no longer eligible for automatic restore."""
 
+    def _restore_declarations_and_history(self, code_workflow, payload) -> None:
+        """Restore history around the captured declaration authority.
+
+        ObjectState history addresses child states by occurrence token.  A fresh
+        process must first materialize those scopes, but their newly derived
+        tokens need not match the historical token ownership after an insertion
+        or reorder.  Reapplying the captured document through the normal workflow
+        reconciles the imported history with the current declaration rather than
+        allowing historical metadata to redefine it.
+        """
+
+        code_workflow.apply_payload(payload)
+        ObjectStateRegistry.load_history_from_file(
+            str(self.history_document), migration=DesktopHistoryUpgrade()
+        )
+        with ObjectStateRegistry.atomic_success("restore captured session declaration"):
+            code_workflow.apply_payload(payload)
+
     def restore(self, main_window) -> DesktopRestartRestoreOutcomeABC:
         """Decode and restore declarations and history from the recovery copy."""
 
@@ -545,10 +636,15 @@ class ConsumedDesktopRestartSession(DesktopRestartSession):
             else None
         )
         plate_manager = main_window.embedded_widgets.require_plate_manager()
-        plate_manager.code_execution_workflow.apply_payload(payload)
-        ObjectStateRegistry.load_history_from_file(
-            str(self.history_document), migration=DesktopHistoryUpgrade()
+        self._restore_declarations_and_history(
+            plate_manager.code_execution_workflow,
+            payload,
         )
+        if self.ui_state_document.is_file():
+            DesktopRestartUiState.read(self.ui_state_document).restore(
+                plate_manager,
+                plate_paths=payload.plate_paths,
+            )
         main_window.time_travel_widget.refresh()
         plate_manager.update_item_list()
         outcome = DesktopRestartRestoreOutcomeABC.from_restoration(

@@ -140,13 +140,15 @@ def test_mcp_capability_search_schema_and_results_follow_selected_surface():
         capability["workflow_group"] == CapabilityWorkflowGroup.VIEWER_REVIEW.value
         for capability in payload["capabilities"]
     )
-    assert all("roi" in capability["description"].casefold() for capability in payload["capabilities"])
+    assert all(
+        "roi" in capability["description"].casefold()
+        for capability in payload["capabilities"]
+    )
     selected_registry = get_capability_registry(
         capability_surface_profile=DesktopLocalCapabilitySurfaceProfile()
     )
     selected_specs = {
-        capability.name: capability
-        for capability in selected_registry.capabilities
+        capability.name: capability for capability in selected_registry.capabilities
     }
     for capability in payload["capabilities"]:
         declared = selected_specs[capability["name"]]
@@ -194,9 +196,7 @@ def test_widget_compaction_is_declaration_owned_without_transport_field_tables()
     assert declared_projection_fields
     assert all(
         callable(
-            declared_field.metadata[
-                COMPACT_FIELD_PROJECTION_METADATA_KEY
-            ].includes
+            declared_field.metadata[COMPACT_FIELD_PROJECTION_METADATA_KEY].includes
         )
         for declared_field in declared_projection_fields
     )

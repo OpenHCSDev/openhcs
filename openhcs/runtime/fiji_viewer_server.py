@@ -60,6 +60,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerSettlePhase,
     ViewerSettleProgress,
 )
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 logger = logging.getLogger(__name__)
@@ -1256,7 +1257,6 @@ class FijiUnsupportedPayloadsControlPlan(FijiControlMessagePlan):
         )
 
 
-@dataclass(frozen=True, slots=True)
 class FijiUnsupportedIntensityWindowControlPlan(FijiControlMessagePlan):
     """Fail closed because Fiji lacks routed native layer contrast authority."""
 
@@ -1840,6 +1840,9 @@ class FijiViewerServer(OpenHCSViewerServerABC):
             transport_mode=launch_config.transport_mode,
             config=launch_config.resolved_zmq_config,
         )
+        # Advertise the endpoint application identity on every heartbeat so
+        # clients can reject stale viewer endpoints before dispatch.
+        self.application = OPENHCS_ENDPOINT_APPLICATION
         self.ij = None  # PyImageJ instance
         self._shutdown_requested = False
         self.windows = FijiWindowRegistry()

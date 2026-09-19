@@ -111,9 +111,7 @@ class FrameworkDeviceAssignment:
         """Return the exact subset required by one compiled step."""
 
         selected = tuple(
-            binding
-            for binding in self.bindings
-            if binding.memory_type in memory_types
+            binding for binding in self.bindings if binding.memory_type in memory_types
         )
         if frozenset(binding.memory_type for binding in selected) != memory_types:
             missing = memory_types - frozenset(

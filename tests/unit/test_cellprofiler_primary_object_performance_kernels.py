@@ -5,7 +5,9 @@ import pytest
 
 from openhcs.core.config import DtypeConfig
 from openhcs.processing.backends.cellprofiler import morphology as morphology_backend
-from openhcs.processing.backends.cellprofiler import thresholding as thresholding_backend
+from openhcs.processing.backends.cellprofiler import (
+    thresholding as thresholding_backend,
+)
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     UnclumpMethod,
     WatershedMethod,
@@ -30,10 +32,7 @@ def _exhaustive_local_maxima_by_label(
     labels: np.ndarray,
     footprint: np.ndarray,
 ) -> np.ndarray:
-    offsets = (
-        np.argwhere(footprint)
-        - np.asarray(footprint.shape, dtype=np.int64) // 2
-    )
+    offsets = np.argwhere(footprint) - np.asarray(footprint.shape, dtype=np.int64) // 2
     maxima = np.zeros(image.shape, dtype=bool)
     for y, x in np.argwhere(labels > 0):
         label = labels[y, x]
@@ -42,8 +41,7 @@ def _exhaustive_local_maxima_by_label(
             neighbor_y = y + offset_y
             neighbor_x = x + offset_x
             if not (
-                0 <= neighbor_y < image.shape[0]
-                and 0 <= neighbor_x < image.shape[1]
+                0 <= neighbor_y < image.shape[0] and 0 <= neighbor_x < image.shape[1]
             ):
                 continue
             if labels[neighbor_y, neighbor_x] != label:
@@ -254,10 +252,11 @@ def test_primary_object_relabel_preserves_integer_input_dtype(
         "_relabel_sequential_numba",
         fake_relabel,
     )
-    relabeled, count = (
-        morphology_backend.NumbaNumpyMorphologyBackendStrategy().relabel_sequential(
-            labels
-        )
+    (
+        relabeled,
+        count,
+    ) = morphology_backend.NumbaNumpyMorphologyBackendStrategy().relabel_sequential(
+        labels
     )
 
     assert captured["dtype"] == np.dtype(np.int32)
@@ -290,7 +289,9 @@ def test_threshold_application_smoothing_promotes_at_filter_output_exactly(
         cval=0,
         truncate=4.0,
     )
-    weight_source = np.ones(shape, dtype=np.float64) if mask is None else mask.astype(float)
+    weight_source = (
+        np.ones(shape, dtype=np.float64) if mask is None else mask.astype(float)
+    )
     weight = ndi.gaussian_filter(
         weight_source,
         sigma=policy.sigma,

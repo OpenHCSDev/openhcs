@@ -2522,9 +2522,7 @@ class PathPlannerStepAssemblyStage:
         step_plan.output_dir = output_dir
         step_plan.output_plate_root = str(main_plate_root)
         step_plan.sub_dir = self.planner.cfg.sub_dir
-        step_plan.analysis_results_dir = str(
-            self.planner.paths.analysis_results_dir_for(Path(output_dir))
-        )
+        step_plan.analysis_results_dir = str(self.planner.paths.results_path())
         step_plan.pipeline_position = step_index
         step_plan.input_source = self.input_source(snapshot)
         step_plan.group_by = PathPlannerExecutionGroups.normalized_group_by(snapshot)
