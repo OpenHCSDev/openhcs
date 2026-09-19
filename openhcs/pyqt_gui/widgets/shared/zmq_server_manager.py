@@ -61,6 +61,41 @@ class ZMQServerManagerWidget(UiLiveOverviewWidget, ZMQServerBrowserWidgetABC):
 
     _progress_registry_changed = pyqtSignal()
 
+    def _schedule_orphan_viewer_sweep(self) -> None:
+        """Report live viewer endpoints this process does not own once.
+
+        Detached viewers outlive the desktop that spawned them, and this
+        process's viewer registry starts empty, so a sweep at panel startup
+        names every live foreign viewer instead of leaving them invisible.
+        """
+
+        import threading
+
+        from openhcs.agent.services.viewer_endpoint_discovery import (
+            discover_viewer_endpoints,
+        )
+
+        def _sweep() -> None:
+            try:
+                records = discover_viewer_endpoints()
+            except Exception as exc:
+                logger.warning("Viewer endpoint sweep failed: %s", exc)
+                return
+            for record in records:
+                if record.owned:
+                    continue
+                logger.warning(
+                    "Unowned live %s viewer on port %s (layers=%s, title=%r); "
+                    "close it explicitly via viewer-endpoints + close-viewer "
+                    "if it is orphaned.",
+                    record.viewer_type,
+                    record.port,
+                    record.layer_count,
+                    record.title,
+                )
+
+        threading.Thread(target=_sweep, daemon=True, name="viewer-sweep").start()
+
     @staticmethod
     def _execution_scan_service(
         config: OpenHCSZMQConfig,
@@ -137,6 +172,8 @@ class ZMQServerManagerWidget(UiLiveOverviewWidget, ZMQServerBrowserWidgetABC):
             sync_server_item=self._sync_server_item,
             sync_startup_endpoint=self._sync_startup_endpoint,
         )
+
+        self._schedule_orphan_viewer_sweep()
 
         # Coalesce progress events into redraws instead of polling while idle.
         self._progress_timer = QTimer()

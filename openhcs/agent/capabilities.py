@@ -160,6 +160,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiWindowSnapshotResult,
 )
 from openhcs.agent.dto.viewer import (
+    ViewerEndpointDiscoveryResult,
     ViewerWindowCloseRequest,
     ViewerWindowImageIntensityRequest,
     ViewerWindowImageIntensityResult,
@@ -1740,6 +1741,31 @@ class CapabilitiesResourceCapability(
     output_contract = AgentCapabilityRegistry
     no_argument_invocation = AgentNoArgumentFunctionInvocation(
         function=lambda: get_capability_registry(),
+    )
+
+
+class SweepViewerEndpointsCapability(DiscoveryCapability):
+    name = "openhcs_sweep_viewer_endpoints"
+    cli_command = "viewer-endpoints"
+    kind = CapabilityKind.TOOL
+    title = "Sweep viewer endpoints"
+    description = (
+        "Sweeps the local OpenHCS IPC directory for live viewer endpoints, "
+        "probes each through the viewer-window state authority, and classifies "
+        "every live viewer as owned or foreign relative to this process. "
+        "Dead sockets are filtered by a bind probe; non-viewer endpoint pairs "
+        "(execution, UI bridge) are excluded."
+    )
+    service = "viewer_endpoint_discovery"
+    exposition = DiscoveryCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.DIAGNOSTIC,
+        role=CapabilityRole.DIAGNOSTIC,
+    )
+    data_exposure = ("viewer_endpoint_inventory",)
+    output_contract = ViewerEndpointDiscoveryResult
+    no_argument_invocation = AgentNoArgumentServiceInvocation(
+        service=lambda context: context.viewer_endpoint_discovery_service,
+        method=lambda service: service.sweep(),
     )
 
 

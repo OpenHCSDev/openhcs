@@ -26,6 +26,9 @@ if TYPE_CHECKING:
     from openhcs.agent.services.plate_inspection_service import PlateInspectionService
     from openhcs.agent.services.plate_streaming_service import PlateStreamingService
     from openhcs.agent.services.runtime_server_service import RuntimeServerService
+    from openhcs.agent.services.viewer_endpoint_discovery import (
+        ViewerEndpointDiscoveryService,
+    )
     from openhcs.agent.services.selected_plate_service import SelectedPlateService
     from openhcs.agent.services.synthetic_plate_service import (
         SyntheticPlateGenerationService,
@@ -50,6 +53,7 @@ class OpenHCSAgentContext:
         "_plate_inspection_service",
         "_plate_streaming_service",
         "_runtime_server_service",
+        "_viewer_endpoint_discovery_service",
         "_selected_plate_service",
         "_synthetic_plate_service",
         "_ui_bridge_service",
@@ -71,6 +75,7 @@ class OpenHCSAgentContext:
         plate_inspection_service: "PlateInspectionService | None" = None,
         plate_streaming_service: "PlateStreamingService | None" = None,
         runtime_server_service: "RuntimeServerService | None" = None,
+        viewer_endpoint_discovery_service: "ViewerEndpointDiscoveryService | None" = None,
         selected_plate_service: "SelectedPlateService | None" = None,
         synthetic_plate_service: "SyntheticPlateGenerationService | None" = None,
         ui_bridge_service: "UiBridgeService | None" = None,
@@ -88,10 +93,21 @@ class OpenHCSAgentContext:
         self._plate_inspection_service = plate_inspection_service
         self._plate_streaming_service = plate_streaming_service
         self._runtime_server_service = runtime_server_service
+        self._viewer_endpoint_discovery_service = viewer_endpoint_discovery_service
         self._selected_plate_service = selected_plate_service
         self._synthetic_plate_service = synthetic_plate_service
         self._ui_bridge_service = ui_bridge_service
         self._viewer_window_service = viewer_window_service
+
+    @property
+    def viewer_endpoint_discovery_service(self) -> "ViewerEndpointDiscoveryService":
+        if self._viewer_endpoint_discovery_service is None:
+            from openhcs.agent.services.viewer_endpoint_discovery import (
+                ViewerEndpointDiscoveryService,
+            )
+
+            self._viewer_endpoint_discovery_service = ViewerEndpointDiscoveryService()
+        return self._viewer_endpoint_discovery_service
 
     @property
     def function_catalog(self) -> "FunctionCatalogServiceABC":

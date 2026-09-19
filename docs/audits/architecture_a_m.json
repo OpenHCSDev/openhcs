@@ -101,7 +101,7 @@
       },
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
+        "sha256": "961208f955c24d6a23063050eca770adc78b6dbc37c619dfd4042668a9c3bd18",
         "role": "Defines capability identity, transport availability, effects, and surface metadata on registered declarations."
       },
       {
@@ -1878,7 +1878,7 @@
     "authority": [
       {
         "path": "openhcs/agent/capabilities.py",
-        "sha256": "19de74dd94c31a3a7e56357cf0e218292a3e51931db76b953e05f973e3dd3860",
+        "sha256": "961208f955c24d6a23063050eca770adc78b6dbc37c619dfd4042668a9c3bd18",
         "role": "Declares capability identity, services, side effects, security, transport availability, and surface profiles."
       },
       {
@@ -1913,12 +1913,12 @@
       },
       {
         "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "d70ed2e4782eda50ca2781cf69259803921fcdfb16a24a80fa3ddd58e70cf9d7",
+        "sha256": "61b239ff84ee90b37285f2b10ffac37357f179eaef860c6026cb239ec8f9fd80",
         "role": "Declares viewer control requests and their default timeout."
       },
       {
         "path": "openhcs/mcp/context.py",
-        "sha256": "ff846339a7ad01d31546c3333ec92dbfab7572a64bb4e73ee5032fc6e862aaad",
+        "sha256": "7bb92e1357e02a0676243370179e5ff471d4e15c4c88b9a9f1d69b79f505c7cf",
         "role": "Composes local stdio authoring with the persisted desktop execution endpoint while keeping hosted HTTP self-contained."
       },
       {
