@@ -33,19 +33,6 @@ from pyqt_reactive.services.scope_token_service import (
     reconcile_occurrence_tokens,
 )
 
-from openhcs.core.steps.function_step import FunctionEntry, FunctionSpec, FunctionStep
-from openhcs.pyqt_gui.services.plate_manager_root_state import (
-    root_orchestrator_scope_ids,
-)
-from openhcs.pyqt_gui.services.step_scope_identity import (
-    SCOPE_SEGMENT_SEPARATOR,
-    FunctionStepScopeToken,
-)
-from openhcs.ui.shared.plate_scope_identity import (
-    PipelineScopeIdentity,
-    PlateScopeIdentity,
-)
-
 PipelineFunctionPattern = FunctionSpec | None
 FunctionPatternTokenTree = list[str] | dict[str, "FunctionPatternTokenTree"] | None
 

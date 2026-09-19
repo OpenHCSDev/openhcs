@@ -3287,7 +3287,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/pipeline_object_state_binding.py",
-        "sha256": "78000f4d7c75734f7c430444316557d7eca4a55216e7eb50abedd37f633a9039",
+        "sha256": "afb190ac9ac38e800c8fe04497bbb78a2f1b6381a21eb14890e3061c61ae5b0b",
         "role": "Owns fresh identity graphs for complete pipeline replacement and stable occurrence identities for incremental edits."
       },
       {
