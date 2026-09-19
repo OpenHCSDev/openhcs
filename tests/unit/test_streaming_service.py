@@ -4,7 +4,6 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
-import numpy as np
 import pytest
 import numpy as np
 from polystore.streaming.viewer_transport import ViewerStreamKwarg

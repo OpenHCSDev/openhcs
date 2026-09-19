@@ -35,15 +35,15 @@ from openhcs.runtime.napari_viewer_server import (
     NapariResultSelectionSurface,
     NapariViewerServer,
 )
-from openhcs.runtime.viewer_component_system import (
-    ViewerComponentAxisSemanticsAuthority,
-    ViewerComponentLayout,
-    ViewerLayerAxisProjection,
-)
 from openhcs.runtime.viewer_controls import (
     ViewerLayerIsolationControlOptions,
     ViewerNavigationControlOptions,
     ViewerResultElementCoordinateAuthority,
+)
+from openhcs.runtime.viewer_component_system import (
+    ViewerComponentAxisSemanticsAuthority,
+    ViewerComponentLayout,
+    ViewerLayerAxisProjection,
 )
 from openhcs.runtime.viewer_protocol import (
     ViewerControlResponseField,
@@ -79,9 +79,6 @@ class _NavigationResponseGateway(ViewerWindowGatewayABC):
     def isolate_layers(self, request):
         del request
         return self.response
-
-    def apply_intensity_window(self, request):
-        raise AssertionError(request)
 
 
 class _DimensionLabelOverlay:
@@ -240,7 +237,6 @@ def test_viewer_navigation_rejects_invalid_data_index(invalid_index: object) -> 
 
 def test_napari_navigation_selects_native_feature_row_and_projects_evidence(qtbot):
     from napari.components import ViewerModel
-
     from openhcs.napari_roi_manager import QRoiManager
 
     viewer = ViewerModel()
@@ -449,7 +445,6 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
         projected_axis_components=("channel", "z"),
         component_values={"channel": [0, 1, 2], "z": [0, 1, 2, 3]},
         routed_component_values={"channel": [0, 2], "z": [1, 3]},
-        routed_component_coordinates=((0, 1), (0, 3), (2, 1), (2, 3)),
         axis_offsets=(0, 0),
     )
     semantics = ViewerComponentAxisSemanticsAuthority.empty()

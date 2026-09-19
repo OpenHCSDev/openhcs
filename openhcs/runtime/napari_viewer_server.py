@@ -113,9 +113,10 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentMetadataPayload,
     ViewerComponentNameMetadata,
     ViewerComponentValueDomainPayload,
+    ViewerDisplayAxisDomain,
     ViewerDisplayBatchContext,
     ViewerLayerAxisProjection,
-    ViewerLayerAxisProjectionRequestAuthority,
+    ViewerLayerAxisProjectionRequest,
     ViewerLayerAxisProjector,
     ViewerMappingDisplayConfigInput,
     ViewerObjectDisplayConfigInput,
@@ -123,14 +124,10 @@ from openhcs.runtime.viewer_component_system import (
     ViewerStreamingDataTypeHandler,
     ViewerStreamingDataTypeHandlerMeta,
 )
-from openhcs.runtime.viewer_controls import (
-    ViewerIntensityWindowControlOptions,
-    ViewerResultElementCoordinateAuthority,
-)
+from openhcs.runtime.viewer_controls import ViewerResultElementCoordinateAuthority
 from openhcs.runtime.viewer_protocol import (
     NapariLayerKind,
     NapariViewerServerRequest,
-    OpenHCSViewerServerABC,
     ViewerBatchMessageType,
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
@@ -144,9 +141,10 @@ from openhcs.runtime.viewer_protocol import (
     ViewerLayerField,
     ViewerLayerIsolationControlOptions,
     ViewerLayerIsolationField,
+    ViewerLayerField,
     ViewerNavigationControlOptions,
-    ViewerPayloadField,
     ViewerPayloadProjectionOptions,
+    ViewerPayloadField,
     ViewerPayloadSummaryField,
     ViewerProtocolStatus,
     ViewerQtEnvironmentPolicy,
@@ -154,6 +152,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerSettleProgress,
     ViewerStateControlOptions,
 )
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
@@ -2003,14 +2002,43 @@ class NapariLayerDisplayPipeline:
         if aggregate_axis_bindings is None:
             aggregate_axis_bindings = NapariAggregateAxisBindingSet()
 
-        projection_request = (
-            ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
-                route_key=layer_key,
-                component_axis_semantics=component_axis_semantics,
-                layer_items=layer_items,
-                route_value_tracker=self.server.component_values,
-                aggregate_component_values=aggregate_axis_bindings.component_values,
+        axis_components = component_axis_semantics.layout.components_for_mode(
+            ViewerComponentMode.STACK
+        )
+        self.server.component_values.update(
+            layer_key,
+            axis_components,
+            layer_items,
+        )
+        self.server.display_axis_domain.record_display_axis_values(
+            axis_components,
+            layer_items,
+        )
+
+        aggregate_component_values = aggregate_axis_bindings.component_values
+        if aggregate_component_values:
+            self.server.component_values.update_component_values(
+                layer_key,
+                axis_components,
+                aggregate_component_values,
             )
+            self.server.display_axis_domain.record_display_component_values(
+                axis_components,
+                aggregate_component_values,
+            )
+
+        projection_request = ViewerLayerAxisProjectionRequest.from_component_values(
+            projected_axis_components=axis_components,
+            route_component_values=self.server.component_values.values_for(
+                self.server.component_values.domain_key(layer_key, axis_components),
+                axis_components,
+            ),
+            viewer_component_values=self.server.display_axis_domain.display_axis_values_for(
+                axis_components
+            ),
+            declared_component_values=component_axis_semantics.required_component_values(
+                axis_components
+            ),
         )
         return self.axis_projector.project(projection_request)
 
@@ -2822,27 +2850,11 @@ class NapariResultElementSelectionAuthority:
         layer: NapariLayerHandle,
         data_index: int,
     ) -> NapariResultElementSelectionState:
-        return cls.select_indices(layer, (data_index,))
-
-    @classmethod
-    def select_indices(
-        cls,
-        layer: NapariLayerHandle,
-        data_indices: Iterable[int],
-    ) -> NapariResultElementSelectionState:
-        """Select one exact, validated set of native feature rows."""
-
-        indices = tuple(sorted(set(data_indices)))
-        if not indices:
-            raise ValueError("Napari result selection must contain at least one row.")
-        for data_index in indices:
-            if isinstance(data_index, bool) or not isinstance(data_index, Integral):
-                raise TypeError("Napari result selection indices must be integers.")
-            cls.require_data_index(layer, int(data_index))
+        cls.require_data_index(layer, data_index)
         selectable_layer = cast(NapariShapesLayerHandle, layer)
-        selectable_layer.selected_data = set(indices)
+        selectable_layer.selected_data = {data_index}
         observed = cls.state(layer)
-        if observed.selected_data_indices != indices:
+        if observed.selected_data_indices != (data_index,):
             raise RuntimeError(
                 "Napari did not retain the requested native data selection."
             )
@@ -3175,16 +3187,6 @@ class NapariResultSelectionController:
             self._synchronizing_group_selection = False
         self._notify_selection_observers()
         return linked
-
-    def select_result_element(
-        self,
-        layer: NapariLayerHandle,
-        data_index: int,
-    ) -> tuple[tuple[NapariLayerHandle, tuple[int, ...]], ...]:
-        """Select the complete declared result subject containing one row."""
-
-        NapariResultElementSelectionAuthority.require_data_index(layer, data_index)
-        return self._synchronize_linked_group(layer, data_index)
 
     def _apply_selection(
         self,
@@ -5370,7 +5372,7 @@ class NapariControlTransportPump:
                     )
 
 
-class NapariViewerServer(OpenHCSViewerServerABC):
+class NapariViewerServer(StreamingVisualizerServer):
     """
     ZMQ server for Napari viewer that receives images from clients.
 
@@ -5408,6 +5410,10 @@ class NapariViewerServer(OpenHCSViewerServerABC):
             transport_mode=request.transport_mode,
             config=OPENHCS_ZMQ_CONFIG,
         )
+        # Advertise the endpoint application identity on every heartbeat so
+        # clients can reject stale viewer endpoints before dispatch.
+        self.application = OPENHCS_ENDPOINT_APPLICATION
+
         self.napari_window_title = request.viewer_title
         self.replace_layers = request.replace_layers
         self.viewer = None
@@ -5418,6 +5424,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
         self.component_name_metadata = ViewerComponentNameMetadata.empty()
 
         self.component_values = ViewerRouteComponentValueTracker()
+        self.display_axis_domain = ViewerDisplayAxisDomain()
         # Debouncing + locking for layer updates to prevent race conditions
         self.layer_update_lock = threading.Lock()  # Prevent concurrent updates
         self.layer_batch_processor_debounce_policy = NapariLayerBatchDebouncePolicy()
@@ -5559,6 +5566,7 @@ class NapariViewerServer(OpenHCSViewerServerABC):
             )
         self.component_groups.clear()
         self.component_values = ViewerRouteComponentValueTracker()
+        self.display_axis_domain = ViewerDisplayAxisDomain()
         self.component_name_metadata.clear()
         self.layer_route_state.clear_update_errors()
         self.batch_processors = NapariBatchProcessorStore(
