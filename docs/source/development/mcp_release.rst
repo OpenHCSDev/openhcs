@@ -130,6 +130,8 @@ that their declared version ranges can coexist, and test those installed
 wheels outside the checkout. These jobs run even when a changed dependency has
 not been released yet, so the publication gate cannot suppress feedback about
 the code that is actually on ``main``. The Linux wheel-candidate job runs the
+Python 3.14 core and MCP suite from an installed wheel without the unavailable
+CellProfiler parity oracle. The Linux wheel-candidate job also runs the
 live GUI/MCP probe before its installed integration suite. A complementary
 desktop candidate matrix builds the same recursively recorded first-party
 wheels and runs that probe on Windows and both macOS architectures. Each job

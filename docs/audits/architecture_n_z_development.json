@@ -1394,7 +1394,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "1028283d8fb4be1971ce937514dc15066ef6a47794fceebed07229146c7f2dd5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1624,7 +1624,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "1028283d8fb4be1971ce937514dc15066ef6a47794fceebed07229146c7f2dd5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1695,7 +1695,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "1028283d8fb4be1971ce937514dc15066ef6a47794fceebed07229146c7f2dd5",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
@@ -2620,7 +2620,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "1028283d8fb4be1971ce937514dc15066ef6a47794fceebed07229146c7f2dd5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2721,7 +2721,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "1028283d8fb4be1971ce937514dc15066ef6a47794fceebed07229146c7f2dd5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2767,7 +2767,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "1028283d8fb4be1971ce937514dc15066ef6a47794fceebed07229146c7f2dd5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3093,7 +3093,7 @@
   },
   {
     "path": "docs/source/development/mcp_release.rst",
-    "source_sha256": "455fd212c913ead54c90314290d42032d02254f720cd2e5a28b5fcc0e5bc88c6",
+    "source_sha256": "bde1e30ebac6a94bd105ba50f059ec6309b590e2547ef01954f68be1e729f00f",
     "audience": [
       "OpenHCS release maintainers"
     ],
@@ -3157,7 +3157,7 @@
       },
       {
         "path": "tests/unit/test_mcp_release_workflow.py",
-        "sha256": "a3f57cd3716a0820b5746c5ef99c4d0aefaab522f102cf6e044b07f76f3f31e2",
+        "sha256": "801c4b41931b1e725e8e42d8c0c30a78cd43cd63baeb6de5ed7bfb27d0273292",
         "role": "Proves immutable tag resolution, exact-SHA checkout, publication ordering, recovery, Registry policy, and publication-independent native candidate ownership."
       },
       {
@@ -3167,7 +3167,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "d93b55b19447e3b1d30a18cf3792a411a18e357c7c89b07cb9557fbbeeecef24",
+        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
         "role": "Cross-platform source-candidate and published-dependency readiness, installed-wheel live GUI/MCP operation with retained native screenshots, three-stage native-installer workflow proof, signing-helper parse, and staged-update validation matrix."
       },
       {
@@ -3252,7 +3252,7 @@
       },
       {
         "path": "tests/unit/test_ci_package_boundaries.py",
-        "sha256": "48dec76944bbabaa41d5995c27363c71c04f01c7b0fc4c940dfc10dd55ff44e2",
+        "sha256": "4c65faf50cfcc5fd000ed3ce02404bda8d7c79032a44a063ec2bf9bf445cdf55",
         "role": "Proves publication consumes central release requirements and that candidate and published GUI matrices retain their typed screenshot evidence."
       }
     ],
@@ -3407,7 +3407,7 @@
       },
       {
         "path": ".github/workflows/integration-tests.yml",
-        "sha256": "d93b55b19447e3b1d30a18cf3792a411a18e357c7c89b07cb9557fbbeeecef24",
+        "sha256": "5004ea5c0ba0d54d0e410628ccfc08701a941ace12742cd48afa8c811d2d35cf",
         "role": "Runs explicitly selected live OMERO variants and preserves component and table-service diagnostics on failure."
       }
     ],
@@ -3471,7 +3471,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "1028283d8fb4be1971ce937514dc15066ef6a47794fceebed07229146c7f2dd5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3646,7 +3646,7 @@
   },
   {
     "path": "docs/source/development/repository_setup.rst",
-    "source_sha256": "55889d7b25828a576f79afa2058f97b7e3d5842c7ba62ead8cf5c311d38c2016",
+    "source_sha256": "745235abe25f39764df948357b010f3e973815bd10cf89bbc91ce7d6e7b5070d",
     "audience": [
       "OpenHCS contributors setting up a source checkout"
     ],
@@ -3660,7 +3660,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "1028283d8fb4be1971ce937514dc15066ef6a47794fceebed07229146c7f2dd5",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],

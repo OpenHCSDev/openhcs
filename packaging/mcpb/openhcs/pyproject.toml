@@ -2,7 +2,7 @@
 name = "openhcs-mcpb-runtime"
 version = "0.8.5"
 description = "Managed runtime for the OpenHCS MCP Bundle"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11,<3.15"
 dependencies = [
     "openhcs[gui,mcp,viz]==0.8.5",
 ]

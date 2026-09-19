@@ -8,7 +8,8 @@ paths automatically.
 Requirements
 ------------
 
-- Python 3.11 through 3.13
+- Python 3.11 through 3.14; the optional CellProfiler parity oracle remains
+  limited to Python 3.13 or earlier
 - Git with submodule support
 - a virtual environment
 
