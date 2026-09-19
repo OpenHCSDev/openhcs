@@ -2872,6 +2872,7 @@ class SummarizeViewerWindowRoisCapability(ViewerWindowCliConnectionCapability):
 
 class SetViewerViewportCapability(ViewerWindowCliConnectionCapability):
     name = "openhcs_set_viewer_viewport"
+    cli_command = "viewer-viewport"
     kind = CapabilityKind.TOOL
     title = "Set native viewer viewport"
     description = (
