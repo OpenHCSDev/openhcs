@@ -32,13 +32,22 @@ def _uses_action(step: dict, action: str) -> bool:
 
 def _ci_python_versions() -> set[Version]:
     workflow = yaml.safe_load(INTEGRATION_WORKFLOW_PATH.read_text(encoding="utf-8"))
-    return {
+    versions = {
         Version(str(version))
         for job in workflow["jobs"].values()
         for version in job.get("strategy", {})
         .get("matrix", {})
         .get("python-version", ())
     }
+    versions.update(
+        Version(str(step["with"]["python-version"]))
+        for job in workflow["jobs"].values()
+        for step in job.get("steps", ())
+        if _uses_action(step, "actions/setup-python")
+        and "python-version" in step.get("with", {})
+        and "${{" not in str(step["with"]["python-version"])
+    )
+    return versions
 
 
 def test_registry_metadata_uses_the_project_authority_and_readme_marker():
