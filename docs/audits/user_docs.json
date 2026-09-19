@@ -97,7 +97,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Declares the compiler-visible callable metadata and contract terms defined by the glossary."
       },
       {
@@ -168,7 +168,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -540,7 +540,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Derives callable input, output, execution-framework, dimensional, artifact, and runtime requirements from declarations."
       },
       {
@@ -697,7 +697,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -880,7 +880,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/base.py",
-        "sha256": "71cb1089dac02ee4bf3d7e010882cb4f1d0523514d53d1a36cadb479d58b7fc1",
+        "sha256": "ae641affae21b61448816a14bd68b7f2f3fc0082f0f1fbe51079ed32520450b1",
         "role": "Declares the storage backend interface and lifecycle shared by local and remote materialisation backends."
       },
       {
@@ -914,7 +914,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1621,7 +1621,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2139,7 +2139,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Derives callable input, output, execution-framework, dimensional, artifact, and runtime requirements from declarations."
       },
       {
@@ -2233,7 +2233,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/filemanager.py",
-        "sha256": "82988d67e9811b5e550bd7373ce1e03f51acbbe82a9243e72744f769d08fbe59",
+        "sha256": "877a2b10731b12904b1784a5b42c9e39688e3a84f7f86018c1c2beee96ea2296",
         "role": "Delegates contextual save arguments and persistence to the selected DataSink instance."
       },
       {
@@ -2253,7 +2253,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/base.py",
-        "sha256": "71cb1089dac02ee4bf3d7e010882cb4f1d0523514d53d1a36cadb479d58b7fc1",
+        "sha256": "ae641affae21b61448816a14bd68b7f2f3fc0082f0f1fbe51079ed32520450b1",
         "role": "Declares the storage backend interface and lifecycle shared by local and remote materialisation backends."
       },
       {
@@ -2288,7 +2288,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2798,7 +2798,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2925,7 +2925,7 @@
     "authority": [
       {
         "path": "openhcs/core/aligned_image_payload.py",
-        "sha256": "edc16cbc35514c742518c23619d79e049c259c12a6d74ed6eb44aeabf2810dfb",
+        "sha256": "086a6130abf3e0c759127aeacf4140157aee3b4bdc306c8d02067abce102acd0",
         "role": "Declares the runtime image payload execution modes used to preserve complete stacks."
       },
       {
@@ -3421,7 +3421,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],

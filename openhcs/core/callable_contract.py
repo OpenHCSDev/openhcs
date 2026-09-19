@@ -37,7 +37,9 @@ from python_introspect import (
 )
 
 from openhcs.constants.constants import GroupBy, VariableComponents
-from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.image_payload_execution_mode import (
+    ImagePayloadExecutionMode,
+)
 from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts import (
     ArtifactSpec,

@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import Enum, nonmember
 from math import isfinite
-from typing import ClassVar, TypeVar, cast
+from typing import TYPE_CHECKING, ClassVar, TypeVar, cast
 
 from objectstate import DottedFieldPath
 from pyqt_reactive.services.widget_tree_projection_config import (
@@ -97,7 +97,6 @@ from openhcs.agent.ui_bridge_identities import (
 from openhcs.agent.ui_bridge_identities import (
     UiWidgetIdentityDeclaration as UiWidgetIdentityDeclaration,
 )
-from openhcs.core.progress.live_measurements import LiveMeasurementTablePreview
 from openhcs.core.selection import (
     SelectedAllSelectionMode as UiCodeDocumentSelectionMode,
 )
@@ -222,6 +221,12 @@ class UiBridgeOperationStatus(str, Enum):
             _UiBridgeOperationSelectionT,
             self._completion_selector(active, succeeded, failed),
         )
+
+
+if TYPE_CHECKING:
+    from openhcs.core.progress.live_measurements import (
+        LiveMeasurementTablePreview,
+    )
 
 
 @dataclass(frozen=True, kw_only=True)

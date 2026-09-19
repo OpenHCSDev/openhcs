@@ -91,7 +91,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Projects declaration-owned callable metadata, including memory contracts and artifact relations, at the nominal boundary."
       },
       {
@@ -224,7 +224,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Defines callable artifact input and output ABI ownership and relation validation."
       },
       {
@@ -458,7 +458,7 @@
       },
       {
         "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "236ee6e6cabc50d85eaa0cd5c88cbb50042850f4db7937bb0ec2f06a5ab4887e",
+        "sha256": "585b1701b01b92bfce91437a60881afa769e36de9126807c3f4fcaf0ffc006fb",
         "role": "Carries generic endpoint application and operation-lifecycle declarations through UI bridge descriptors and request/response envelopes."
       },
       {
@@ -1186,7 +1186,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
+        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1344,7 +1344,7 @@
       },
       {
         "path": "external/PolyStore/src/polystore/base.py",
-        "sha256": "71cb1089dac02ee4bf3d7e010882cb4f1d0523514d53d1a36cadb479d58b7fc1",
+        "sha256": "ae641affae21b61448816a14bd68b7f2f3fc0082f0f1fbe51079ed32520450b1",
         "role": "Defines the generic storage backend boundary consumed by OpenHCS integrations."
       },
       {
@@ -1543,7 +1543,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Adds OpenHCS processing, runtime, artifact, scope, and ArrayBridge memory semantics to analysed callables."
       },
       {
@@ -1624,7 +1624,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Projects declaration-owned input, output, and execution memory into immutable callable contracts."
       },
       {
@@ -1908,7 +1908,7 @@
       },
       {
         "path": "openhcs/agent/dto/ui_bridge.py",
-        "sha256": "236ee6e6cabc50d85eaa0cd5c88cbb50042850f4db7937bb0ec2f06a5ab4887e",
+        "sha256": "585b1701b01b92bfce91437a60881afa769e36de9126807c3f4fcaf0ffc006fb",
         "role": "Declares the UI bridge connection and its default control timeout."
       },
       {
@@ -2240,7 +2240,7 @@
       },
       {
         "path": "openhcs/core/callable_contract.py",
-        "sha256": "327622851ef0d39367ec7e34f720d0dacfeccbab3b8fac2b7e08fd4438c064a4",
+        "sha256": "6a39b5e171901131ecb7280a78241e8ea72409a5003eabba3db34eb4851991d7",
         "role": "Projects ArrayBridge metadata into immutable callable input, output, and execution memory contracts."
       },
       {
