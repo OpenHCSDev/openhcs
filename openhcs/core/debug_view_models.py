@@ -366,6 +366,8 @@ class DebugViewModel:
         *,
         title: str = "Runtime Values",
     ) -> "DebugViewModel":
+        from openhcs.core.runtime_stores import RuntimeValueStore
+
         if not isinstance(store, RuntimeValueStore):
             raise TypeError(
                 "DebugViewModel.from_runtime_value_store requires RuntimeValueStore, "

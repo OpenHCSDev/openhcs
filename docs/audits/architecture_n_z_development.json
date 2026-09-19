@@ -2881,7 +2881,7 @@
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "93fc3bc99155d55c2bfeca2a4bc962374265624194a1f129574297fd07f8233e",
+        "sha256": "6b05721536e92ed0f9ce4fdd0b6ebd4dbc75201277d1df1d625bf87456d5a57e",
         "role": "MCP dev-client session, declaration-derived command surface validation, receipt decoding, skip-reason-owned summary status, timeout, and workflow-owned terminal-state criteria."
       },
       {
@@ -2921,7 +2921,7 @@
       },
       {
         "path": "tests/unit/agent/test_mcp_server.py",
-        "sha256": "82edae86d12e1fca90bea762d836d16946b6d8113bcd456d18b4ad7aa53a0a6f",
+        "sha256": "dedb131fb88ba9b6f8e39253e6a016458592915930cb0fcc0ae5a7db2abd25aa",
         "role": "Regression proof for selected-surface preflight, stale-row rejection, idempotent initialization, and every declared or malformed bridge-receipt continuation outcome."
       },
       {

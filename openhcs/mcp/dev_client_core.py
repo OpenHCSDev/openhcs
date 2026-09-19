@@ -9,6 +9,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
@@ -1404,7 +1405,8 @@ class McpDevTransportAuthority:
     """
 
     daemon_environment_variable = "OPENHCS_MCP_DEV_DAEMON"
-    socket_ready_timeout_seconds = 60.0
+    socket_ready_timeout_seconds = 12.0
+    daemon_failure_marker_window_seconds = 300.0
 
     @classmethod
     def daemon_enabled(cls) -> bool:
@@ -1416,6 +1418,38 @@ class McpDevTransportAuthority:
             "true",
             "yes",
         }
+
+    @classmethod
+    def spawn_failure_marker_path(cls, socket_path: Path) -> Path:
+        return socket_path.with_name(socket_path.name + ".spawn-failed")
+
+    @classmethod
+    def record_spawn_failure(cls, socket_path: Path) -> None:
+        """Record one failed resident-server bring-up for a cooldown window."""
+
+        marker = cls.spawn_failure_marker_path(socket_path)
+        try:
+            marker.write_text(str(time.time()), encoding="utf-8")
+        except OSError:
+            pass
+
+    @classmethod
+    def recent_spawn_failure(cls, socket_path: Path) -> bool:
+        marker = cls.spawn_failure_marker_path(socket_path)
+        try:
+            recorded = float(marker.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return False
+        return (time.time() - recorded) < cls.daemon_failure_marker_window_seconds
+
+    @classmethod
+    def clear_spawn_failure(cls, socket_path: Path) -> None:
+        try:
+            cls.spawn_failure_marker_path(socket_path).unlink()
+        except FileNotFoundError:
+            return
+        except OSError:
+            return
 
     @classmethod
     def resident_server_launch_arguments(
@@ -1520,12 +1554,19 @@ async def open_mcp_dev_session(
             yield s
 
     if probe_socket_alive(socket_path):
+        McpDevTransportAuthority.clear_spawn_failure(socket_path)
         try:
             async with _socket_session() as session:
                 yield session
             return
         except (OSError, McpDevProtocolError, McpDevJsonRpcError):
             pass
+
+    if McpDevTransportAuthority.recent_spawn_failure(socket_path):
+        async with new_stdio_session() as session:
+            await session.initialize(timeout_seconds=initialize_timeout_seconds)
+            yield session
+        return
 
     try:
         McpDevTransportAuthority.spawn_resident_server(
@@ -1543,6 +1584,7 @@ async def open_mcp_dev_session(
         socket_path,
         timeout_seconds=McpDevTransportAuthority.socket_ready_timeout_seconds,
     ):
+        McpDevTransportAuthority.record_spawn_failure(socket_path)
         async with new_stdio_session() as session:
             await session.initialize(timeout_seconds=initialize_timeout_seconds)
             yield session
