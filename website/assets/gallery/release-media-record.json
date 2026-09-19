@@ -1,5 +1,5 @@
 {
-  "captured_at": "2026-09-19",
+  "captured_at": "2026-09-17",
   "capture_contract": {
     "surface": "real OpenHCS, Napari, and Fiji/ImageJ X11 windows",
     "visible_interaction_driver": "local MCP calls, native viewer controls, and reviewed UI actions",
@@ -410,7 +410,7 @@
         "width": 2304,
         "height": 1842,
         "duration_seconds": null,
-        "format": "png"
+        "format": "PNG"
       },
       "scientific_evidence": null,
       "published": [
@@ -439,7 +439,7 @@
         "width": 2304,
         "height": 1842,
         "duration_seconds": null,
-        "format": "png"
+        "format": "PNG"
       },
       "scientific_evidence": null,
       "published": [
