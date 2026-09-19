@@ -178,14 +178,15 @@ def test_python_314_core_candidate_uses_installed_wheels_without_centrosome() ->
     job = workflow["jobs"]["python-314-core-tests"]
 
     assert Version("3.14") in SpecifierSet(metadata["project"]["requires-python"])
-    assert "Programming Language :: Python :: 3.14" in metadata["project"][
-        "classifiers"
-    ]
+    assert (
+        "Programming Language :: Python :: 3.14" in metadata["project"]["classifiers"]
+    )
     setup_step = next(
         step for step in job["steps"] if step.get("name") == "Setup Python 3.14"
     )
     assert setup_step["with"]["python-version"] == "3.14"
     install_steps = "\n".join(step.get("run", "") for step in job["steps"])
+    assert "sudo apt-get install -y libegl1" in install_steps
     assert "--dependency-source submodules" in install_steps
     assert "--extras dev,mcp" in install_steps
     assert "cellprofiler-compat" not in install_steps

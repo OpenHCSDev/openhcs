@@ -9,7 +9,8 @@ Requirements
 ------------
 
 - Windows or macOS for the desktop installer; Python is included
-- Python 3.11 through 3.13 for a manual installation on Windows, macOS, or Linux
+- Python 3.11 through 3.14 for a manual base or core-service installation on
+  Windows, macOS, or Linux
 - A CUDA 12 compatible environment only if you choose the optional ``gpu``
   dependencies
 
@@ -54,6 +55,12 @@ Manual Python installation
 
 Create a virtual environment, then install the same CPU-safe capability set as
 the desktop installer:
+
+.. note::
+
+   The complete CellProfiler compatibility extra currently requires Python 3.13
+   or earlier because its optional parity dependency does not publish Python
+   3.14 wheels. Python 3.14 supports the base package and core-service extras.
 
 .. code-block:: bash
 
