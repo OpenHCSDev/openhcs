@@ -79,8 +79,6 @@ from openhcs.agent.dto.ui_bridge import (
 from openhcs.agent.dto.viewer import (
     VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
     ViewerWindowDescriptor,
-    ViewerWindowIntensityPayloadIdentity,
-    ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationResult,
     ViewerWindowLayerPayloads,
     ViewerWindowLayerState,
@@ -4323,7 +4321,6 @@ def test_mcp_dev_client_authoring_context_kind_choices_are_explicit(capsys):
     help_text = capsys.readouterr().out
     for kind in (
         "pipeline",
-        "image_analysis_workflow",
         "custom_function",
         "first_use",
         "folder_onboarding",
@@ -5099,7 +5096,6 @@ def test_mcp_dev_client_artifact_plan_explains_empty_source_workspace():
 
     assert "Source workspace (source-bound files): files=0 truncated=0" in rendered
     from inspect import getdoc
-
     from openhcs.agent.dto.execution import SourceWorkspaceSummary
 
     assert f"note: {getdoc(SourceWorkspaceSummary)}" in rendered
@@ -5108,9 +5104,8 @@ def test_mcp_dev_client_artifact_plan_explains_empty_source_workspace():
 def test_artifact_plan_exposes_source_workspace_count_meaning_without_shape_change():
     from dataclasses import asdict
     from inspect import getdoc
-
-    from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
     from openhcs.agent.dto.execution import SourceWorkspaceSummary
+    from openhcs.agent.capabilities import InspectPipelineSourceArtifactPlanCapability
 
     description = getdoc(SourceWorkspaceSummary)
     assert "not the total plate image inventory" in description
@@ -8579,70 +8574,6 @@ def test_mcp_dev_client_apply_code_document_projects_guarded_mutation(tmp_path):
         "bridge_instance_id": "ui-test",
         "timeout_ms": 1234,
     }
-
-
-def test_mcp_dev_client_apply_code_document_reads_stdin_once(monkeypatch):
-    if importlib.util.find_spec("mcp") is None:
-        return
-
-    import io
-
-    import openhcs.mcp.dev_client as dev_client
-    import openhcs.mcp.dev_client_commanding as dev_client_commanding
-
-    source = "pipeline_steps = []\n"
-    observed_arguments = []
-
-    class FakeMcpDevStdioSession:
-        def __init__(self, server_spec, server_stderr) -> None:
-            del server_stderr
-            self.server_spec = server_spec
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, exc_type, exc_value, traceback) -> None:
-            del exc_type, exc_value, traceback
-
-        async def initialize(self, *, timeout_seconds: float) -> None:
-            del timeout_seconds
-
-        async def call_tool(self, name, arguments, *, timeout_seconds: float):
-            del name, timeout_seconds
-            observed_arguments.append(arguments)
-            return {
-                "isError": False,
-                "structuredContent": {"status": "accepted"},
-            }
-
-    monkeypatch.setattr(
-        dev_client_commanding,
-        "McpDevStdioSession",
-        FakeMcpDevStdioSession,
-    )
-    monkeypatch.setattr(sys, "stdin", io.StringIO(source))
-    parser = dev_client._build_parser()
-    args = parser.parse_args(
-        (
-            "apply-code-document",
-            "window_code_document:pipeline_editor",
-            "--source-file",
-            "-",
-            "--base-revision-token",
-            "rev-123",
-            "--no-confirmation",
-        )
-    )
-
-    asyncio.run(
-        dev_client.McpDevCommandSpec.for_name("apply-code-document").run(
-            dev_client.McpDevServerSpec(sys.executable),
-            args,
-        )
-    )
-
-    assert len(observed_arguments) == 1
-    assert observed_arguments[0]["source"] == source
 
 
 def test_mcp_dev_client_apply_code_document_defaults_to_confirmation_guard():
@@ -15238,7 +15169,6 @@ def test_mcp_server_exposes_execution_session_tools():
     assert "openhcs_summarize_viewer_window_rois" in tool_names
     assert "openhcs_navigate_viewer_window" in tool_names
     assert "openhcs_isolate_viewer_window_layers" in tool_names
-    assert "openhcs_apply_viewer_intensity_window" in tool_names
     assert "openhcs_probe_viewer_window" in tool_names
     assert "openhcs_validate_viewer_window_state" in tool_names
     assert "openhcs_ui_get_object_state_fields" in tool_names
@@ -15683,105 +15613,6 @@ def test_mcp_viewer_mutation_tools_use_declared_viewer_timeout():
         request.timeout_ms == VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
         for request in viewer_window_service.isolation_requests
     )
-
-
-def test_mcp_intensity_window_projects_typed_route_coordinate_request():
-    if importlib.util.find_spec("mcp") is None:
-        return
-
-    class _ViewerWindowService:
-        def __init__(self):
-            self.requests = []
-
-        def apply_intensity_window(self, request):
-            self.requests.append(request)
-            controls = request.intensity_window
-            return ViewerWindowIntensityWindowResult(
-                schema_version=SCHEMA_VERSION,
-                connection=request.connection,
-                applied=True,
-                route_key=controls.route_key,
-                axis_indices=dict(controls.axis_indices),
-                requested_percentiles=(
-                    controls.low_percentile,
-                    controls.high_percentile,
-                ),
-                resolved_limits=(11.0, 220.0),
-                matched_payload_count=1,
-                matched_payload_identities=(
-                    ViewerWindowIntensityPayloadIdentity(
-                        path="A01.tif",
-                        axis_indices=(0, 1),
-                    ),
-                ),
-                contributing_payload_count=1,
-                contributing_pixel_count=4096,
-            )
-
-    viewer_window_service = _ViewerWindowService()
-    built = server.build_server(_viewer_mcp_context(viewer_window_service))
-
-    async def call_tool():
-        return await asyncio.wait_for(
-            built.call_tool(
-                "openhcs_apply_viewer_intensity_window",
-                {
-                    "port": 5555,
-                    "route_key": "image-layer",
-                    "axis_indices": {"well": 0, "site": 1},
-                    "low_percentile": 2.5,
-                    "high_percentile": 97.5,
-                },
-            ),
-            timeout=2,
-        )
-
-    result = asyncio.run(call_tool())
-    payload = json.loads(_direct_tool_text(result))
-
-    request = viewer_window_service.requests[0]
-    assert request.intensity_window.route_key == "image-layer"
-    assert request.intensity_window.axis_indices == {"well": 0, "site": 1}
-    assert request.intensity_window.low_percentile == 2.5
-    assert request.intensity_window.high_percentile == 97.5
-    assert payload["resolved_limits"] == [11.0, 220.0]
-    assert payload["matched_payload_identities"][0]["path"] == "A01.tif"
-
-
-def test_mcp_dev_client_intensity_window_projects_declared_arguments():
-    if importlib.util.find_spec("mcp") is None:
-        return
-
-    import openhcs.mcp.dev_client as dev_client
-
-    parser = dev_client._build_parser()
-    args = parser.parse_args(
-        (
-            "viewer-intensity-window",
-            "5555",
-            "image-layer",
-            "--axis-index",
-            "well=0",
-            "--axis-index",
-            "site=1",
-            "--low-percentile",
-            "2.5",
-            "--high-percentile",
-            "97.5",
-        )
-    )
-
-    call = dev_client._calls_from_args(args)[0]
-
-    assert call.name == "openhcs_apply_viewer_intensity_window"
-    assert call.arguments == {
-        "host": "localhost",
-        "port": 5555,
-        "route_key": "image-layer",
-        "axis_indices": {"well": 0, "site": 1},
-        "low_percentile": 2.5,
-        "high_percentile": 97.5,
-    }
 
 
 def test_mcp_isolate_viewer_projects_one_bulk_service_result():

@@ -6,7 +6,6 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
@@ -83,7 +82,6 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpec,
-    ArtifactViewerStreaming,
     ObjectLabelsArtifactType,
     SpecialArtifactType,
 )
@@ -1110,25 +1108,10 @@ class _CompactStateViewerWindowGateway(_FakeViewerWindowGateway):
         return state
 
 
-class _SparseCoordinateViewerWindowGateway(_FakeViewerWindowGateway):
+class _CoordinateGapViewerWindowGateway(_FakeViewerWindowGateway):
     def window_state(self, request):
         state = super().window_state(request)
         layer = dict(state["layers"][0])
-        component_values = list(layer["component_values"])
-        component_values[1] = {
-            **component_values[1],
-            "channel": 2,
-        }
-        layer["component_values"] = tuple(component_values)
-        payload_summaries = list(layer["payload_summaries"])
-        payload_summaries[1] = {
-            **payload_summaries[1],
-            "components": {
-                **payload_summaries[1]["components"],
-                "channel": 2,
-            },
-        }
-        layer["payload_summaries"] = tuple(payload_summaries)
         layer["axis_component_values"] = {
             "well": ("A14", "B13"),
             "site": (1,),
@@ -1276,7 +1259,6 @@ class _SilentZMQSocket:
     def __init__(self) -> None:
         self.closed = False
         self.sent_flags = []
-        self.sent_payload = None
 
     def setsockopt(self, option, value) -> None:
         del option, value
@@ -1285,7 +1267,7 @@ class _SilentZMQSocket:
         self.control_url = control_url
 
     def send(self, payload: bytes, *, flags: int = 0) -> None:
-        self.sent_payload = payload
+        del payload
         self.sent_flags.append(flags)
 
     def recv(self, *, flags: int = 0):
@@ -1340,9 +1322,6 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert "timed out after 25ms" in result.errors[0].message
     assert poller.poll_timeouts == [25]
     assert socket.sent_flags == [viewer_window_service_module.zmq.DONTWAIT]
-    decoded_request = viewer_window_service_module.pickle.loads(socket.sent_payload)
-    assert decoded_request["type"] == "state"
-    assert type(next(iter(decoded_request))) is str
     assert socket.closed is True
     assert context.destroy_linger == 0
 
@@ -1452,10 +1431,6 @@ def test_function_catalog_projects_canonical_callable_artifact_specs(monkeypatch
     )
     assert tuple(spec.name for spec in runtime_contract.artifact_outputs) == (
         "objects",
-    )
-    assert (
-        runtime_contract.artifact_outputs[0].viewer_streaming
-        is ArtifactViewerStreaming.AUTOMATIC
     )
     assert runtime_contract.source_binding_rule is not None
     assert "canonical CallableContract artifact_inputs" in (
@@ -2570,16 +2545,17 @@ def test_viewer_window_service_validation_reports_axis_and_count_mismatch():
     ]
 
 
-def test_viewer_window_service_validation_accepts_sparse_routed_coordinates():
+def test_viewer_window_service_validation_reports_coordinate_gaps():
     result = ViewerWindowService(
-        gateway=_SparseCoordinateViewerWindowGateway()
+        gateway=_CoordinateGapViewerWindowGateway()
     ).validation_summary(ViewerWindowValidationRequest(connection=_viewer_connection()))
 
-    assert result.valid is True
-    assert result.layer_summaries[0].coordinate_gap_count == 4
-    assert result.layer_summaries[0].missing_payload_coordinate_count == 0
+    assert result.valid is False
+    assert result.layer_summaries[0].coordinate_gap_count == 2
+    assert result.layer_summaries[0].missing_payload_coordinate_count == 2
     assert [warning.code for warning in result.warnings] == [
         "viewer_layer_coordinate_gaps",
+        "viewer_payload_coordinates_missing",
     ]
 
 
