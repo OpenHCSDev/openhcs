@@ -65,3 +65,14 @@ def test_line_points_preserve_cellprofiler_truncation_and_ties() -> None:
     np.testing.assert_array_equal(count, [4, 4, 1])
     np.testing.assert_array_equal(rows, [0, 1, 2, 3, 3, 2, 1, 0, -2])
     np.testing.assert_array_equal(columns, [0, 0, 1, 1, 1, 1, 0, 0, -2])
+
+
+def test_skeletonize_preserves_centrosome_top_border_behavior() -> None:
+    from openhcs.processing.backends.cellprofiler.worm_geometry import (
+        skeletonize_worm_mask,
+    )
+
+    np.testing.assert_array_equal(
+        skeletonize_worm_mask(np.ones((2, 2), dtype=bool)),
+        np.array([[True, True], [False, False]]),
+    )

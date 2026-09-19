@@ -239,22 +239,28 @@ def _skeletonize_loop_numba(
         if result[row, col] == 0:
             continue
 
-        table_index = 0
-        bit = 0
-        for row_delta in range(-1, 2):
-            neighbor_row = row + row_delta
-            for col_delta in range(-1, 2):
-                neighbor_col = col + col_delta
-                if (
-                    0 <= neighbor_row < height
-                    and 0 <= neighbor_col < width
-                    and result[neighbor_row, neighbor_col] != 0
-                ):
-                    table_index |= 1 << bit
-                bit += 1
-
-        if table[table_index] == 0:
-            result[row, col] = 0
+        # Preserve Centrosome's compiled border behavior exactly. Its lower
+        # neighbor checks are intentionally nested under the upper-row guard.
+        table_index = 16
+        if row > 0:
+            if col > 0 and result[row - 1, col - 1]:
+                table_index += 1
+            if result[row - 1, col]:
+                table_index += 2
+            if col < width - 1 and result[row - 1, col + 1]:
+                table_index += 4
+            if col > 0 and result[row, col - 1]:
+                table_index += 8
+            if col < width - 1 and result[row, col + 1]:
+                table_index += 32
+            if row < height - 1:
+                if col > 0 and result[row + 1, col - 1]:
+                    table_index += 64
+                if result[row + 1, col]:
+                    table_index += 128
+                if col < width - 1 and result[row + 1, col + 1]:
+                    table_index += 256
+        result[row, col] = table[table_index]
 
 
 def branchpoints(skeleton: np.ndarray) -> np.ndarray:

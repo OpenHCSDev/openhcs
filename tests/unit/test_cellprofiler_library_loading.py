@@ -3802,6 +3802,45 @@ def test_correct_illumination_centrosome_convex_hull_preserves_input_dtype():
     assert illumination.dtype == image.dtype
 
 
+def test_absorbed_convex_hull_transform_matches_centrosome_oracle():
+    import centrosome.cpmorphology
+    import centrosome.filter
+
+    from openhcs.processing.backends.cellprofiler.illumination import (
+        _cellprofiler_convex_hull_transform,
+        _native_exact_level_set_convex_hull_smoothing,
+    )
+    from openhcs.processing.backends.cellprofiler.morphology import (
+        MorphologyBackendStrategy,
+    )
+
+    rng = np.random.default_rng(20260919)
+    image = rng.random((23, 31), dtype=np.float32)
+    mask = rng.random(image.shape) > 0.15
+
+    expected = centrosome.filter.convex_hull_transform(image.copy(), mask=mask)
+    actual = _cellprofiler_convex_hull_transform(image, mask)
+
+    np.testing.assert_array_equal(actual, expected)
+
+    eroded = centrosome.cpmorphology.grey_erosion(image, 2, mask)
+    transformed = centrosome.filter.convex_hull_transform(eroded, mask=mask)
+    expected_smoothed = np.asarray(
+        centrosome.cpmorphology.grey_dilation(
+            transformed,
+            2,
+            mask,
+        ),
+        dtype=image.dtype,
+    )
+    actual_smoothed = _native_exact_level_set_convex_hull_smoothing(
+        image,
+        mask,
+        MorphologyBackendStrategy.for_memory_type(),
+    )
+    np.testing.assert_array_equal(actual_smoothed, expected_smoothed)
+
+
 def test_correct_illumination_exact_convex_hull_matches_native_reference():
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,

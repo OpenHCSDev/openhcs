@@ -71,6 +71,9 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.granularity import (
     CellProfilerRuntimeProfiler,
 )
+from openhcs.processing.backends.cellprofiler.label_geometry import (
+    _cellprofiler_convex_hull,
+)
 from openhcs.processing.backends.cellprofiler.morphology import (
     MorphologyBackendStrategy,
 )
@@ -80,6 +83,9 @@ from openhcs.processing.backends.cellprofiler.perf_fixtures import (
 )
 from openhcs.processing.backends.cellprofiler.smoothing import (
     MaskedLinearFilterRequest,
+)
+from openhcs.processing.backends.cellprofiler.worm_geometry import (
+    _cellprofiler_line_points,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
@@ -1800,37 +1806,11 @@ class ExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
         morphology: MorphologyBackendStrategy,
     ) -> np.ndarray:
         del filter_size
-        image = np.asarray(pixel_data, dtype=np.float32)
-        if image.ndim != 2:
-            raise NotImplementedError(
-                f"Exact convex-hull smoothing currently supports 2-D NumPy planes, got shape {image.shape!r}."
-            )
-        valid_mask = (
-            np.ones(image.shape, dtype=bool)
-            if mask is None
-            else np.asarray(mask, dtype=bool)
+        return _native_exact_level_set_convex_hull_smoothing(
+            np.asarray(pixel_data, dtype=np.float32),
+            None if mask is None else np.asarray(mask, dtype=bool),
+            morphology,
         )
-        if valid_mask.shape != image.shape:
-            raise ValueError(
-                f"Convex-hull smoothing requires a mask matching the 2-D image plane, got mask {valid_mask.shape!r} for image {image.shape!r}."
-            )
-        if not np.any(valid_mask):
-            return np.zeros(image.shape, dtype=np.float32)
-        grey_morphology = CellProfilerMaskedGreyMorphology.for_convex_hull(morphology)
-        eroded = grey_morphology.erode(image, valid_mask)
-        valid_values = eroded[valid_mask]
-        thresholds = np.linspace(
-            float(np.min(valid_values)),
-            float(np.max(valid_values)),
-            256,
-            dtype=np.float32,
-        )[1:]
-        hull = _exact_level_set_convex_hull_smoothing_numba(
-            np.ascontiguousarray(eroded, dtype=np.float32),
-            np.ascontiguousarray(valid_mask, dtype=np.bool_),
-            np.ascontiguousarray(thresholds, dtype=np.float32),
-        )
-        return grey_morphology.dilate(hull, valid_mask)
 
 
 class NativeExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
@@ -1881,19 +1861,73 @@ def _native_exact_level_set_convex_hull_smoothing(
         return np.zeros(image.shape, dtype=np.float32)
     grey_morphology = CellProfilerMaskedGreyMorphology.for_convex_hull(morphology)
     eroded = grey_morphology.erode(image, valid_mask)
-    valid_values = eroded[valid_mask]
-    minimum = float(np.min(valid_values))
-    maximum = float(np.max(valid_values))
-    output = np.full(image.shape, minimum, dtype=np.float32)
-    output[~valid_mask] = 0
-    if maximum <= minimum:
-        return grey_morphology.dilate(output, valid_mask)
-    for threshold in np.linspace(minimum, maximum, 256, dtype=np.float32)[1:]:
-        level_mask = valid_mask & (eroded >= float(threshold))
-        if not np.any(level_mask):
+    output = _cellprofiler_convex_hull_transform(eroded, valid_mask)
+    return grey_morphology.dilate(output, valid_mask).astype(image.dtype, copy=False)
+
+
+def _cellprofiler_convex_hull_transform(
+    image: np.ndarray,
+    mask: np.ndarray | None = None,
+    *,
+    levels: int = 256,
+) -> np.ndarray:
+    """Apply Centrosome's quantized pixel-center convex-hull transform."""
+    image_array = np.asarray(image)
+    valid_mask = (
+        np.ones(image_array.shape, dtype=bool)
+        if mask is None
+        else np.asarray(mask, dtype=bool)
+    )
+    valid_values = image_array[valid_mask]
+    if valid_values.size == 0:
+        return np.zeros(image_array.shape, dtype=image_array.dtype)
+    minimum = np.min(valid_values)
+    maximum = np.max(valid_values)
+    if minimum == maximum:
+        return image_array.copy()
+
+    scale = minimum + np.arange(levels, dtype=image_array.dtype) * (
+        maximum - minimum
+    ) / float(levels - 1)
+    scaled = (image_array - minimum) * (levels - 1) / (maximum - minimum)
+    scaled[~valid_mask] = 0
+    if levels > 16:
+        rough = _cellprofiler_convex_hull_transform(
+            np.floor(scaled),
+            levels=int(np.sqrt(levels)),
+        )
+        scaled = np.maximum(scaled, rough)
+    scaled = scaled.astype(np.int32)
+    unique_levels = np.unique(scaled)
+    output_levels = np.full(
+        image_array.shape,
+        int(unique_levels[0]),
+        dtype=np.int32,
+    )
+
+    for level in unique_levels[1:]:
+        level_mask = scaled >= int(level)
+        hull, counts = _cellprofiler_convex_hull(
+            level_mask.astype(np.int32),
+            np.array([1], dtype=np.int32),
+        )
+        if counts[0] == 0:
             continue
-        output[morphology.convex_hull_image(level_mask) & valid_mask] = threshold
-    return grey_morphology.dilate(output, valid_mask)
+        vertices = hull[:, 1:]
+        next_vertices = np.roll(vertices, -1, axis=0)
+        _indexes, _counts, rows, columns = _cellprofiler_line_points(
+            vertices[:, 0],
+            vertices[:, 1],
+            next_vertices[:, 0],
+            next_vertices[:, 1],
+        )
+        for column in np.unique(columns):
+            column_rows = rows[columns == column]
+            output_levels[
+                int(np.min(column_rows)) : int(np.max(column_rows)) + 1,
+                int(column),
+            ] = int(level)
+    return scale[output_levels]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1946,7 +1980,7 @@ class CellProfilerMaskedGreyMorphology:
     def _restore_masked_pixels(
         morphed: np.ndarray, image: np.ndarray, mask: np.ndarray
     ) -> np.ndarray:
-        result = np.asarray(morphed, dtype=np.float32)
+        result = np.asarray(morphed, dtype=np.float64)
         result[~mask] = image[~mask]
         return result
 

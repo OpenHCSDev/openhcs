@@ -2985,7 +2985,7 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_library_loading.py",
-        "sha256": "92d04fb64383e635c78abbb713c218ec2d0686f1e6a874812c7f75d43b4429ce",
+        "sha256": "49f503984be6f7d6c64f84f174d07d1045a70d6fb2f2f6f11b8c3cb1b72656f2",
         "role": "Proves object intensity measures a 3D object as one volume and emits Z features."
       },
       {
