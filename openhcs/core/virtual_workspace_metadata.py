@@ -559,6 +559,11 @@ class VirtualWorkspaceSourceMetadataEntries:
 
     @staticmethod
     def require_scalar_metadata_value(value: JsonValue) -> SourceMetadataScalar:
+        # Scalar fast path first: metadata values are overwhelmingly scalars,
+        # and the container ABC isinstance checks below are comparatively
+        # expensive per field.
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
         if isinstance(value, Mapping) or (
             isinstance(value, Sequence) and not isinstance(value, str)
         ):
@@ -566,13 +571,10 @@ class VirtualWorkspaceSourceMetadataEntries:
                 "virtual_workspace source metadata supports scalar values and "
                 "one-level scalar mappings only."
             )
-        if value is None:
-            return None
-        if not isinstance(value, (str, int, float, bool)):
-            raise RuntimeError(
-                "virtual_workspace source metadata scalar values must be strings, "
-                "numbers, booleans, or null."
-            )
+        raise RuntimeError(
+            "virtual_workspace source metadata scalar values must be strings, "
+            "numbers, booleans, or null."
+        )
         return value
 
     def metadata_for(self, virtual_path: str) -> SourceMetadataMapping:
