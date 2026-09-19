@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.6] - 2026-09-19
+
+### Added
+
+- Added Python 3.14 support for the OpenHCS core and MCP surfaces, including an
+  installed-wheel CI gate that validates the recursively pinned first-party
+  dependency candidates without the optional CellProfiler parity oracle.
+- Added acquisition-derived source geometry, voxel calibration, and sparse tile
+  placement for ImageXpress and other declared microscope sources. Stitching can
+  now preserve signed and subpixel stage positions and reuse solved geometry
+  across channels.
+- Added typed MCP controls for viewer viewport and image-intensity presentation,
+  persisted viewer-receipt replay, live viewer endpoint discovery, and explicit
+  closure of detached viewer processes.
+- Added an optional resident local MCP transport that reuses one initialized
+  server across development-client commands while preserving independent MCP
+  sessions and source-checkout isolation.
+
+### Changed
+
+- Artifact production, callable references, terminal materialization, viewer
+  projection, and persistence receipts now derive from compile-time declarations.
+  Consumed intermediate artifacts are no longer exported as terminal outputs.
+- Source projections now use producer output identity to retain multiple declared
+  products at one logical plane address, and persisted metadata uses one
+  declaration-owned key vocabulary.
+- The Official30 CellProfiler corpus now performs retained value comparisons for
+  all 30 workflows through a typed native batch runner and portable reference
+  manifests.
+- Desktop update restoration now reconciles declarations, ObjectState history,
+  and selected-plate state through schema-aware migration and observable native
+  UI replay.
+- Projection metadata fields and plate projections are cached by their declared
+  identities, and declaration-only MCP imports no longer initialize NumPy-heavy
+  runtime graphs.
+
 ### Fixed
 
 - Channel-specific steps now use the preceding output's semantic channel identity.
@@ -17,6 +53,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the output plate root.
 - Napari image and ROI navigation now honours shared display-axis positions when
   a layer has reduced axes, keeping selection on the corresponding image channel.
+- Axis-only pipelines now retain the runtime records required to consolidate
+  declared persistent exports, and produced outputs at the same source address no
+  longer collide during workspace projection.
+- Viewer control now verifies endpoint application identity, reports terminal
+  transport failures during settlement, and waits for debounced layer updates
+  instead of racing detached Napari processes.
+- UTF-8 pipeline and fixture text handling is now independent of the process
+  locale, including spawned execution and benchmark processes.
+
+### Removed
+
+- Removed the production Centrosome dependency by absorbing the remaining
+  CellProfiler-compatible morphology, thresholding, Zernike, and worm-geometry
+  kernels into OpenHCS. Centrosome remains a Python-before-3.14 development
+  dependency used only as a parity oracle.
 
 ## [0.8.0] - 2026-08-26
 

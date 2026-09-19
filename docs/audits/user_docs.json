@@ -3882,7 +3882,7 @@
       },
       {
         "path": "packaging/mcpb/openhcs/manifest.json",
-        "sha256": "620973a06eca792d6beb719e9ee22fde8addfedb7891ceb794e14b58ebf2c756",
+        "sha256": "a51d5f32ad56d1ea22cf338b5b4eed1e343b7bbb62d9a1acde0ce5cf1fab20e5",
         "role": "Declares the packaged MCP server command, arguments, compatibility, and client-visible metadata."
       },
       {
