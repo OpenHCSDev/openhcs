@@ -2171,7 +2171,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/widgets/shared/zmq_server_manager.py",
-        "sha256": "6872f59ada580de0802257f1177914c91c9b31f6547ea0a2f740162b641cc1f8",
+        "sha256": "e7eea5d2390279f4599839ceb3592d5083098ae1711ab3118224163ef15dfc36",
         "role": "OpenHCS server-browser adapter and live tree synchronisation wiring, including identity-derived presentation and execution-row projection from the generic lifecycle observation."
       },
       {
@@ -2906,7 +2906,7 @@
       },
       {
         "path": "openhcs/agent/dto/viewer.py",
-        "sha256": "d70ed2e4782eda50ca2781cf69259803921fcdfb16a24a80fa3ddd58e70cf9d7",
+        "sha256": "61b239ff84ee90b37285f2b10ffac37357f179eaef860c6026cb239ec8f9fd80",
         "role": "Declares the default viewer control timeout."
       },
       {
