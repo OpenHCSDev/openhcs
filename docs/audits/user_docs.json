@@ -168,7 +168,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -410,7 +410,7 @@
       },
       {
         "path": "openhcs/processing/backends/cellprofiler/secondary.py",
-        "sha256": "c49aca73a51d903b808e195a5104a76905f88e6e8b677a9702d409436b93e05b",
+        "sha256": "9a032a11e51c3f950538f89f4e4312094496fd6408e0fdceebc7dc8b91be43de",
         "role": "Declares IdentifySecondaryObjects and IdentifyTertiaryObjects as plane-local processing callables."
       },
       {
@@ -697,7 +697,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -914,7 +914,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1621,7 +1621,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2288,7 +2288,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2509,7 +2509,7 @@
       },
       {
         "path": "tests/unit/test_ci_package_boundaries.py",
-        "sha256": "48dec76944bbabaa41d5995c27363c71c04f01c7b0fc4c940dfc10dd55ff44e2",
+        "sha256": "a27e18725006ddbc0f71dcb13f5f45ccb05e6aa2e95a35cc79b8a44beaec2f0a",
         "role": "Proves source-gate coverage fails closed, website validation uses local candidate owners, and cross-platform candidate and published GUI canaries retain their typed screenshot evidence."
       },
       {
@@ -2798,7 +2798,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2950,7 +2950,7 @@
       },
       {
         "path": "openhcs/processing/backends/cellprofiler/secondary.py",
-        "sha256": "c49aca73a51d903b808e195a5104a76905f88e6e8b677a9702d409436b93e05b",
+        "sha256": "9a032a11e51c3f950538f89f4e4312094496fd6408e0fdceebc7dc8b91be43de",
         "role": "Declares the current plane-local IdentifySecondaryObjects and IdentifyTertiaryObjects routes."
       },
       {
@@ -2985,7 +2985,7 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_library_loading.py",
-        "sha256": "2441732050c52839f9b73c67b69c401f93268c0d29289e3e57c233b43ab7ae9b",
+        "sha256": "92d04fb64383e635c78abbb713c218ec2d0686f1e6a874812c7f75d43b4429ce",
         "role": "Proves object intensity measures a 3D object as one volume and emits Z features."
       },
       {
@@ -3421,7 +3421,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],

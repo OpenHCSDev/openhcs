@@ -4,8 +4,11 @@ from dataclasses import replace
 from unittest.mock import patch
 
 import numpy as np
-import centrosome.cpmorphology
+import pytest
 from skimage.segmentation import find_boundaries
+
+centrosome = pytest.importorskip("centrosome")
+pytest.importorskip("centrosome.cpmorphology")
 
 from openhcs.core.artifacts import (
     ArtifactInputPlan,

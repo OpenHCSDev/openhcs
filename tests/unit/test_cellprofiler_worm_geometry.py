@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from unittest.mock import patch
-
-import centrosome.cpmorphology
 import numpy as np
 
 from openhcs.processing.backends.cellprofiler.worm_geometry import (
+    _cellprofiler_line_points,
     rebuild_worm_from_control_points_approx,
 )
 
@@ -44,31 +42,26 @@ def test_fractional_control_points_match_canonical_centrosome_pixels() -> None:
         ]
     )
 
-    canonical_get_line_pts = centrosome.cpmorphology.get_line_pts
-    with patch.object(
-        centrosome.cpmorphology,
-        "get_line_pts",
-        wraps=canonical_get_line_pts,
-    ) as get_line_pts:
-        rows, columns = rebuild_worm_from_control_points_approx(
-            control_points,
-            radii,
-            (24, 24),
-        )
-
-    get_line_pts.assert_called_once()
-    for actual, expected in zip(
-        get_line_pts.call_args.args,
-        (
-            control_points[:-1, 0],
-            control_points[:-1, 1],
-            control_points[1:, 0],
-            control_points[1:, 1],
-        ),
-        strict=True,
-    ):
-        np.testing.assert_array_equal(actual, expected)
+    rows, columns = rebuild_worm_from_control_points_approx(
+        control_points,
+        radii,
+        (24, 24),
+    )
 
     actual_pixels = np.column_stack((rows, columns))
     row_major_order = np.lexsort((actual_pixels[:, 1], actual_pixels[:, 0]))
     np.testing.assert_array_equal(actual_pixels[row_major_order], expected_pixels)
+
+
+def test_line_points_preserve_cellprofiler_truncation_and_ties() -> None:
+    index, count, rows, columns = _cellprofiler_line_points(
+        np.array([0.8, 3.9, -2.8]),
+        np.array([0.8, 1.9, -2.8]),
+        np.array([3.2, 0.1, -2.1]),
+        np.array([1.2, 0.1, -2.1]),
+    )
+
+    np.testing.assert_array_equal(index, [0, 4, 8])
+    np.testing.assert_array_equal(count, [4, 4, 1])
+    np.testing.assert_array_equal(rows, [0, 1, 2, 3, 3, 2, 1, 0, -2])
+    np.testing.assert_array_equal(columns, [0, 0, 1, 1, 1, 1, 0, 0, -2])

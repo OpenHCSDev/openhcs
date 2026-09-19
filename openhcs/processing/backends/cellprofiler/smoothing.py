@@ -453,9 +453,7 @@ class MedianSmoothingStrategy(SmoothingStrategyLeaf):
     method = SmoothingMethod.MEDIAN_FILTER
 
     def smooth(self, request: SmoothingRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.median_filter(
+        return _native_median_filter(
             request.pixel_data, request.mask, request.object_size / 2 + 1
         )
 
@@ -490,9 +488,7 @@ class CircularAverageSmoothingStrategy(SmoothingStrategyLeaf):
     method = SmoothingMethod.CIRCULAR_AVERAGE_FILTER
 
     def smooth(self, request: SmoothingRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.circular_average_filter(
+        return _native_circular_average_filter(
             request.pixel_data, request.object_size / 2 + 1, request.mask
         )
 
@@ -507,6 +503,170 @@ class SmoothToAverageStrategy(SmoothingStrategyLeaf):
         else:
             mean_value = np.mean(request.pixel_data[request.mask])
         return np.full(request.pixel_data.shape, mean_value, dtype=np.float32)
+
+
+def _cellprofiler_octagon(radius: float) -> np.ndarray:
+    effective_radius = int(radius)
+    corner = max(1, int(effective_radius / 2.414213))
+    if effective_radius <= corner:
+        effective_radius = corner + 1
+    row, column = np.mgrid[
+        -effective_radius : effective_radius + 1,
+        -effective_radius : effective_radius + 1,
+    ]
+    return (
+        (np.abs(row) <= effective_radius)
+        & (np.abs(column) <= effective_radius)
+        & (np.abs(row + column) <= effective_radius + corner)
+        & (np.abs(row - column) <= effective_radius + corner)
+    )
+
+
+def _rank_order_255(values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    flat = np.asarray(values).ravel()
+    order = flat.argsort().astype(np.uint32)
+    sorted_values = flat[order]
+    ranks = np.zeros_like(order)
+    different = sorted_values[:-1] != sorted_values[1:]
+    np.cumsum(different, out=ranks[1:])
+    translation = np.zeros(int(ranks[-1]) + 1, dtype=flat.dtype)
+    translation[0] = sorted_values[0]
+    translation[1:] = sorted_values[1:][different]
+    encoded = np.zeros_like(order)
+    encoded[order] = ranks
+
+    maximum_rank = int(np.max(encoded))
+    while maximum_rank >= 255:
+        histogram = np.bincount(encoded)
+        sparse_order = np.argsort(histogram)
+        candidates = sparse_order[: maximum_rank + 2 - 255]
+        delete = np.zeros(maximum_rank + 2, dtype=bool)
+        delete[candidates] = True
+        delete_mask = delete[:-1] & (
+            ((np.arange(maximum_rank + 1) & 2) == 0) | (~delete[1:])
+        )
+        delete_mask[0] = False
+        remap = np.cumsum(~delete_mask) - 1
+        encoded = remap[encoded]
+        translation = translation[~delete_mask]
+        maximum_rank = len(translation) - 1
+    return encoded.reshape(values.shape), translation
+
+
+def _native_median_filter(
+    image: np.ndarray,
+    mask: np.ndarray | None,
+    radius: float,
+) -> np.ndarray:
+    from skimage.filters.rank import percentile
+
+    mask_array = (
+        np.ones(image.shape, dtype=bool)
+        if mask is None
+        else np.asarray(mask, dtype=bool)
+    )
+    if np.all(~mask_array):
+        return image.copy()
+    ranked_valid, translation = _rank_order_255(image[mask_array])
+    ranked_image = np.zeros(image.shape, dtype=np.uint8)
+    ranked_image[mask_array] = ranked_valid.astype(np.uint8, copy=False)
+    filtered = percentile(
+        ranked_image,
+        footprint=_cellprofiler_octagon(radius),
+        mask=mask_array,
+        p0=np.nextafter(0.5, 0.0),
+    )
+    return translation[filtered]
+
+
+def _circular_average_kernel(radius: float) -> np.ndarray:
+    radius = float(radius)
+    effective_radius = int(np.ceil(radius - 0.5))
+    x, y = np.mgrid[
+        -effective_radius : effective_radius + 1,
+        -effective_radius : effective_radius + 1,
+    ].astype(float)
+    maximum = np.maximum(np.abs(x), np.abs(y))
+    minimum = np.minimum(np.abs(x), np.abs(y))
+    radius_squared = radius**2
+    first = (radius_squared < (maximum + 0.5) ** 2 + (minimum - 0.5) ** 2) * (
+        minimum - 0.5
+    ) + (radius_squared >= (maximum + 0.5) ** 2 + (minimum - 0.5) ** 2) * np.real(
+        np.sqrt(np.asarray(radius_squared - (maximum + 0.5) ** 2, dtype=complex))
+    )
+    second = (radius_squared > (maximum - 0.5) ** 2 + (minimum + 0.5) ** 2) * (
+        minimum + 0.5
+    ) + (radius_squared <= (maximum - 0.5) ** 2 + (minimum + 0.5) ** 2) * np.real(
+        np.sqrt(np.asarray(radius_squared - (maximum - 0.5) ** 2, dtype=complex))
+    )
+    grid = (
+        radius_squared
+        * (
+            0.5 * (np.arcsin(second / radius) - np.arcsin(first / radius))
+            + 0.25
+            * (
+                np.sin(2 * np.arcsin(second / radius))
+                - np.sin(2 * np.arcsin(first / radius))
+            )
+        )
+        - (maximum - 0.5) * (second - first)
+        + (first - minimum + 0.5)
+    ) * (
+        (
+            (radius_squared < (maximum + 0.5) ** 2 + (minimum + 0.5) ** 2)
+            & (radius_squared > (maximum - 0.5) ** 2 + (minimum - 0.5) ** 2)
+        )
+        | ((minimum == 0) & (maximum - 0.5 < radius) & (maximum + 0.5 >= radius))
+    )
+    grid += (maximum + 0.5) ** 2 + (minimum + 0.5) ** 2 < radius_squared
+    center = effective_radius
+    grid[center, center] = min(np.pi * radius_squared, np.pi / 2)
+    if (
+        effective_radius > 0
+        and radius > effective_radius - 0.5
+        and radius_squared < (effective_radius - 0.5) ** 2 + 0.25
+    ):
+        first = np.sqrt(radius_squared - (effective_radius - 0.5) ** 2)
+        normalized = first / radius
+        axial = 2 * (
+            radius_squared
+            * (0.5 * np.arcsin(normalized) + 0.25 * np.sin(2 * np.arcsin(normalized)))
+            - first * (effective_radius - 0.5)
+        )
+        grid[2 * center, center] = axial
+        grid[center, 2 * center] = axial
+        grid[center, 0] = axial
+        grid[0, center] = axial
+        grid[2 * center - 1, center] -= axial
+        grid[center, 2 * center - 1] -= axial
+        grid[center, 1] -= axial
+        grid[1, center] -= axial
+    grid[center, center] = min(grid[center, center], 1)
+    return grid / grid.sum()
+
+
+def _native_circular_average_filter(
+    image: np.ndarray,
+    radius: float,
+    mask: np.ndarray | None,
+) -> np.ndarray:
+    from scipy.ndimage import convolve
+
+    image_array = np.ascontiguousarray(image, dtype=np.float64)
+    mask_array = (
+        np.ones(image.shape, dtype=bool)
+        if mask is None
+        else np.asarray(mask, dtype=bool)
+    )
+    kernel = _circular_average_kernel(radius)
+    output = convolve(
+        np.where(mask_array, image_array, 0.0),
+        kernel,
+        mode="constant",
+        cval=0.0,
+    )
+    output[~mask_array] = image_array[~mask_array]
+    return output
 
 
 def _gaussian_filter_numba(

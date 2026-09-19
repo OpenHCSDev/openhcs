@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from openhcs.core.config import DtypeConfig
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomain
@@ -94,7 +95,7 @@ def test_expand_or_shrink_objects_declares_output_label_extent():
 
 
 def test_expand_or_shrink_objects_matches_cellprofiler_labeled_binary_shrink():
-    from centrosome.cpmorphology import binary_shrink
+    binary_shrink = pytest.importorskip("centrosome.cpmorphology").binary_shrink
 
     image = np.zeros((8, 9), dtype=float)
     labels = np.zeros((8, 9), dtype=np.int32)

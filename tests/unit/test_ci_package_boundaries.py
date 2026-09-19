@@ -111,6 +111,35 @@ def test_shipped_python_sources_have_no_developer_home_paths() -> None:
     assert violations == {}
 
 
+def test_production_sources_and_extras_do_not_depend_on_centrosome() -> None:
+    violations: list[str] = []
+    for path in (REPO_ROOT / "openhcs").rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import) and any(
+                alias.name == "centrosome" or alias.name.startswith("centrosome.")
+                for alias in node.names
+            ):
+                violations.append(str(path.relative_to(REPO_ROOT)))
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module
+                and (
+                    node.module == "centrosome" or node.module.startswith("centrosome.")
+                )
+            ):
+                violations.append(str(path.relative_to(REPO_ROOT)))
+
+    metadata = tomllib.loads(PACKAGE_METADATA.read_text(encoding="utf-8"))
+    extras = metadata["project"]["optional-dependencies"]
+    assert violations == []
+    assert any(requirement.startswith("centrosome") for requirement in extras["dev"])
+    assert not any(
+        requirement.startswith("centrosome")
+        for requirement in extras["cellprofiler-compat"]
+    )
+
+
 def test_source_manifest_prunes_nested_package_build_output() -> None:
     manifest_lines = {
         line.strip()

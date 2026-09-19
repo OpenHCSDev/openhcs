@@ -1015,14 +1015,9 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
         *,
         max_order: int,
     ) -> ShapeZernikeMoments:
-        import centrosome.zernike
-
         labels_array = np.asarray(labels, dtype=np.int32)
         measured_label_ids = np.asarray(measured_labels, dtype=np.int32)
-        zernike_numbers_array = np.asarray(
-            centrosome.zernike.get_zernike_indexes(int(max_order) + 1),
-            dtype=np.int32,
-        )
+        zernike_numbers_array = _zernike_indexes_array(int(max_order))
         zernike_numbers = tuple((int(n), int(m)) for n, m in zernike_numbers_array)
         if measured_label_ids.size == 0:
             return zernike_numbers, np.zeros(
@@ -1323,9 +1318,7 @@ class NativeNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
             for image in images
         )
         if not rows:
-            import centrosome.zernike
-
-            indexes = centrosome.zernike.get_zernike_indexes(int(max_order) + 1)
+            indexes = _zernike_indexes_array(int(max_order))
             return tuple((int(n), int(m)) for n, m in indexes), ()
         return rows[0][0], tuple(
             (magnitudes, phases) for _indexes, magnitudes, phases in rows
@@ -1338,14 +1331,9 @@ class NativeNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
         *,
         max_order: int,
     ) -> ShapeZernikeMoments:
-        import centrosome.zernike
-
         labels_array = np.asarray(labels, dtype=np.int32)
         measured_label_ids = np.asarray(measured_labels, dtype=np.int32)
-        zernike_numbers_array = np.asarray(
-            centrosome.zernike.get_zernike_indexes(int(max_order) + 1),
-            dtype=np.int32,
-        )
+        zernike_numbers_array = _zernike_indexes_array(int(max_order))
         zernike_numbers = tuple((int(n), int(m)) for n, m in zernike_numbers_array)
         if measured_label_ids.size == 0:
             return zernike_numbers, np.zeros(
@@ -1357,10 +1345,16 @@ class NativeNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
                 (measured_label_ids.size, len(zernike_numbers)),
                 dtype=np.float64,
             )
-        values = centrosome.zernike.zernike(
+        centers, radii = minimum_enclosing_circle_from_labels(
+            labels_array,
+            measured_label_ids,
+        )
+        values = _shape_zernike_moments_with_geometry(
             zernike_numbers_array,
             labels_array,
             measured_label_ids,
+            centers,
+            radii,
         )
         return zernike_numbers, np.asarray(values, dtype=np.float64)
 
@@ -1374,16 +1368,12 @@ class NativeNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
         max_order: int,
     ) -> IntensityZernikeMoments:
         """Execute CellProfiler 4.2.8.1 intensity-Zernike semantics exactly."""
-        import centrosome.zernike
         import scipy.ndimage
 
         image_array = np.asarray(image, dtype=np.float64)
         labels_array = np.asarray(labels, dtype=np.int32)
         measured_label_ids = np.asarray(measured_labels, dtype=np.int32)
-        zernike_numbers_array = np.asarray(
-            centrosome.zernike.get_zernike_indexes(int(max_order) + 1),
-            dtype=np.int32,
-        )
+        zernike_numbers_array = _zernike_indexes_array(int(max_order))
         zernike_numbers = tuple(
             (int(degree), int(repetition))
             for degree, repetition in zernike_numbers_array
@@ -1505,9 +1495,7 @@ def _construct_cellprofiler_4281_zernike_polynomials(
     zernike_indexes: np.ndarray,
 ) -> np.ndarray:
     """Preserve the NumPy complex-square semantics used by CP 4.2.8.1."""
-    import centrosome.zernike
-
-    result = centrosome.zernike.construct_zernike_polynomials(
+    result = _construct_zernike_polynomials(
         x,
         y,
         zernike_indexes,
@@ -1516,9 +1504,7 @@ def _construct_cellprofiler_4281_zernike_polynomials(
     if square_columns.size == 0:
         return result
 
-    radial_coefficients = centrosome.zernike.construct_zernike_lookuptable(
-        zernike_indexes
-    )
+    radial_coefficients = _construct_zernike_lookup_table(zernike_indexes)
     radius_squared = np.square(x)
     np.add(radius_squared, np.square(y), out=radius_squared)
     complex_square = np.empty(x.shape, dtype=complex)
@@ -1562,12 +1548,12 @@ def _shape_zernike_moments_with_geometry(
     radii: np.ndarray,
 ) -> np.ndarray:
     """Score shape Zernikes with CP-compatible geometry and CP's scorer."""
-    import centrosome.zernike
-
-    reverse_indexes = np.empty((int(np.max(indexes)) + 1,), int)
-    reverse_indexes.fill(-1)
-    reverse_indexes[indexes] = np.arange(indexes.shape[0], dtype=int)
-    mask = reverse_indexes[labels] != -1
+    order = np.argsort(indexes)
+    sorted_indexes = indexes[order]
+    insertion_points = np.searchsorted(sorted_indexes, labels)
+    in_range = insertion_points < sorted_indexes.size
+    mask = np.zeros(labels.shape, dtype=bool)
+    mask[in_range] = sorted_indexes[insertion_points[in_range]] == labels[in_range]
 
     y, x = np.asarray(
         np.mgrid[
@@ -1579,7 +1565,7 @@ def _shape_zernike_moments_with_geometry(
     x_masked = x[mask]
     y_masked = y[mask]
     label_masked = labels[mask]
-    row_indexes = reverse_indexes[label_masked]
+    row_indexes = order[np.searchsorted(sorted_indexes, label_masked)]
     y_masked -= centers[row_indexes, 0]
     y_masked /= radii[row_indexes]
     x_masked -= centers[row_indexes, 1]
@@ -1589,14 +1575,14 @@ def _shape_zernike_moments_with_geometry(
     normalized_y = np.zeros_like(y)
     normalized_x[mask] = x_masked
     normalized_y[mask] = y_masked
-    zernike_functions = centrosome.zernike.construct_zernike_polynomials(
+    zernike_functions = _construct_zernike_polynomials(
         normalized_x,
         normalized_y,
         zernike_numbers,
         mask,
     )
     return np.asarray(
-        centrosome.zernike.score_zernike(
+        _score_zernike(
             zernike_functions,
             radii,
             labels,
@@ -1604,6 +1590,120 @@ def _shape_zernike_moments_with_geometry(
         ),
         dtype=np.float64,
     )
+
+
+def _construct_zernike_lookup_table(zernike_indexes: np.ndarray) -> np.ndarray:
+    indexes = np.asarray(zernike_indexes, dtype=np.int32).reshape(-1, 2)
+    if indexes.size == 0:
+        return np.zeros((0, 0), dtype=np.float64)
+    width = int(np.max(indexes[:, 0])) // 2 + 1
+    result = np.zeros((len(indexes), width), dtype=np.float64)
+    for row, (degree_value, repetition_value) in enumerate(indexes):
+        degree = int(degree_value)
+        repetition = abs(int(repetition_value))
+        for coefficient_index in range((degree - repetition) // 2 + 1):
+            result[row, coefficient_index] = (
+                (-1.0 if coefficient_index % 2 else 1.0)
+                * float(math.factorial(degree - coefficient_index))
+                / (
+                    float(math.factorial(coefficient_index))
+                    * float(
+                        math.factorial((degree + repetition) // 2 - coefficient_index)
+                    )
+                    * float(
+                        math.factorial((degree - repetition) // 2 - coefficient_index)
+                    )
+                )
+            )
+    return result
+
+
+def _construct_zernike_polynomials(
+    x: np.ndarray,
+    y: np.ndarray,
+    zernike_indexes: np.ndarray,
+    mask: np.ndarray | None = None,
+    weight: np.ndarray | None = None,
+) -> np.ndarray:
+    x_array = np.asarray(x)
+    y_array = np.asarray(y)
+    if x_array.shape != y_array.shape:
+        raise ValueError("Zernike coordinate arrays must have matching shapes.")
+    mask_array = None if mask is None else np.asarray(mask, dtype=bool)
+    if mask_array is not None and mask_array.shape != x_array.shape:
+        raise ValueError("Zernike mask must match the coordinate shape.")
+    weight_array = None if weight is None else np.asarray(weight)
+    if weight_array is not None and weight_array.shape != x_array.shape:
+        raise ValueError("Zernike weight must match the coordinate shape.")
+
+    active_x = x_array if mask_array is None else x_array[mask_array]
+    active_y = y_array if mask_array is None else y_array[mask_array]
+    active_weight = (
+        weight_array
+        if mask_array is None or weight_array is None
+        else weight_array[mask_array]
+    )
+    indexes = np.asarray(zernike_indexes, dtype=np.int32).reshape(-1, 2)
+    output_shape = active_x.shape + (len(indexes),)
+    active_result = np.zeros(output_shape, dtype=np.complex128)
+    if indexes.size:
+        radius_squared = np.square(active_x)
+        np.add(radius_squared, np.square(active_y), out=radius_squared)
+        coordinate = np.empty(active_x.shape, dtype=np.complex128)
+        coordinate.real = active_y
+        coordinate.imag = active_x
+        coefficients = _construct_zernike_lookup_table(indexes)
+        powers: dict[int, np.ndarray | complex] = {0: 1.0 + 0.0j, 1: coordinate}
+        for column, (degree_value, repetition_value) in enumerate(indexes):
+            degree = int(degree_value)
+            repetition = int(repetition_value)
+            radial = np.zeros(active_x.shape, dtype=np.result_type(active_x, float))
+            for coefficient_index in range((degree - repetition) // 2 + 1):
+                radial *= radius_squared
+                radial += coefficients[column, coefficient_index]
+            radial[radius_squared > 1] = 0
+            if active_weight is not None:
+                radial *= active_weight.astype(radial.dtype, copy=False)
+            if repetition not in powers:
+                powers[repetition] = coordinate**repetition
+            active_result[..., column] = radial * powers[repetition]
+
+    if mask_array is None:
+        return active_result
+    result = np.zeros(x_array.shape + (len(indexes),), dtype=np.complex128)
+    result[mask_array] = active_result
+    return result
+
+
+def _score_zernike(
+    zernike_functions: np.ndarray,
+    radii: np.ndarray,
+    labels: np.ndarray,
+    indexes: np.ndarray | None = None,
+) -> np.ndarray:
+    import scipy.ndimage
+
+    label_array = np.asarray(labels)
+    if indexes is None:
+        indexes = np.arange(1, int(label_array.max(initial=0)) + 1, dtype=np.int32)
+    index_array = np.asarray(indexes, dtype=np.int32)
+    areas = np.pi * np.square(np.asarray(radii, dtype=np.float64))
+    result = np.zeros((len(index_array), zernike_functions.shape[-1]), dtype=np.float64)
+    for column in range(zernike_functions.shape[-1]):
+        values = zernike_functions[..., column]
+        real = np.atleast_1d(
+            scipy.ndimage.sum(values.real, label_array, index_array)
+        ).astype(float, copy=False)
+        imaginary = np.atleast_1d(
+            scipy.ndimage.sum(values.imag, label_array, index_array)
+        ).astype(float, copy=False)
+        np.square(real, out=real)
+        np.square(imaginary, out=imaginary)
+        magnitude = real + imaginary
+        np.sqrt(magnitude, out=magnitude)
+        magnitude /= areas
+        result[:, column] = magnitude
+    return result
 
 
 def intensity_zernike_moments(
@@ -1678,7 +1778,7 @@ def _zernike_indexes_array(max_order: int) -> np.ndarray:
     for n_value in range(0, int(max_order) + 1):
         for m_value in range(n_value % 2, n_value + 1, 2):
             indexes.append((n_value, m_value))
-    return np.asarray(indexes, dtype=np.int64)
+    return np.asarray(indexes, dtype=np.int32).reshape(-1, 2)
 
 
 __all__ = public_names_from_objects(

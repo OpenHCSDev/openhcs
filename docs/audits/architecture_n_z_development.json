@@ -1394,7 +1394,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],
@@ -1624,7 +1624,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -1695,7 +1695,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Current Python support, dependency, package-discovery, and installed entry-point authority."
       },
       {
@@ -2031,7 +2031,7 @@
       },
       {
         "path": "tests/unit/test_cellprofiler_processing_backend.py",
-        "sha256": "a981e1dabd51845b1feeb588e2fcf5dc2c791fb07753bd175276a803f18b9eae",
+        "sha256": "42c779c73969d25cff9b48700599b2af1366cec1cfa57c94a8c0b950b9487c63",
         "role": "Proves distinct persistent cache identities for CPU-only and GPU-capable function-catalogue admission contexts."
       },
       {
@@ -2620,7 +2620,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2721,7 +2721,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -2767,7 +2767,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3252,7 +3252,7 @@
       },
       {
         "path": "tests/unit/test_ci_package_boundaries.py",
-        "sha256": "48dec76944bbabaa41d5995c27363c71c04f01c7b0fc4c940dfc10dd55ff44e2",
+        "sha256": "a27e18725006ddbc0f71dcb13f5f45ccb05e6aa2e95a35cc79b8a44beaec2f0a",
         "role": "Proves publication consumes central release requirements and that candidate and published GUI matrices retain their typed screenshot evidence."
       }
     ],
@@ -3471,7 +3471,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       },
       {
@@ -3660,7 +3660,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "ab3a407736a4c2fbff4793d18f9e0f231a0ed8a741914ccbb0da6598a27902d7",
+        "sha256": "6a8c358da4002dfc043a32f50eb0b5e6d75d311e96aef4ba535e87cc394af00e",
         "role": "Current Python support, dependency, package discovery, and entry-point authority."
       }
     ],

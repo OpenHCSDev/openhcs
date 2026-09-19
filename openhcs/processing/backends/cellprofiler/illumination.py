@@ -1707,14 +1707,14 @@ class NativeNumpyRankMedianSmoothingBackendStrategy(RankMedianSmoothingBackendSt
 class CentrosomeNumpyConvexHullSmoothingBackendStrategy(
     ConvexHullSmoothingBackendStrategy
 ):
-    """CellProfiler/centrosome reference convex-hull smoothing for NumPy planes."""
+    """Compatibility provider backed by absorbed convex-hull smoothing."""
 
     backend_key = CellProfilerBackendAuthority.backend_key(
         MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
     )
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.CENTROSOME
-    is_default_backend = True
+    is_default_backend = False
 
     def smooth_background_plane(
         self,
@@ -1724,17 +1724,11 @@ class CentrosomeNumpyConvexHullSmoothingBackendStrategy(
         filter_size: float,
         morphology: MorphologyBackendStrategy,
     ) -> np.ndarray:
-        del filter_size, morphology
-        import centrosome.cpmorphology
-        import centrosome.filter
-
-        image = np.asarray(pixel_data)
-        mask_array = None if mask is None else np.asarray(mask, dtype=bool)
-        eroded = centrosome.cpmorphology.grey_erosion(image, 2, mask_array)
-        transformed = centrosome.filter.convex_hull_transform(eroded, mask=mask_array)
-        return np.asarray(
-            centrosome.cpmorphology.grey_dilation(transformed, 2, mask_array),
-            dtype=image.dtype,
+        del filter_size
+        return _native_exact_level_set_convex_hull_smoothing(
+            np.asarray(pixel_data, dtype=np.float32),
+            None if mask is None else np.asarray(mask, dtype=bool),
+            morphology,
         )
 
 
@@ -1849,7 +1843,7 @@ class NativeExactLevelSetNumpyConvexHullSmoothingBackendStrategy(
     )
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.NATIVE
-    is_default_backend = False
+    is_default_backend = True
 
     def smooth_background_plane(
         self,

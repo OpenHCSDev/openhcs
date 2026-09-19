@@ -40,7 +40,7 @@ class EnhanceEdgesModule(CellProfilerModule):
 
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
 import warnings
@@ -254,9 +254,7 @@ class NumpySobelAllStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.ALL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.sobel(request.image, request.mask)
+        return _native_directional_edge(request, operator="sobel")
 
 
 class NumpySobelHorizontalStrategy(EdgeEnhancementStrategyLeaf):
@@ -265,9 +263,7 @@ class NumpySobelHorizontalStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.HORIZONTAL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.hsobel(request.image, request.mask)
+        return _native_directional_edge(request, operator="sobel")
 
 
 class NumpySobelVerticalStrategy(EdgeEnhancementStrategyLeaf):
@@ -276,9 +272,7 @@ class NumpySobelVerticalStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.VERTICAL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.vsobel(request.image, request.mask)
+        return _native_directional_edge(request, operator="sobel")
 
 
 class NumpyPrewittAllStrategy(EdgeEnhancementStrategyLeaf):
@@ -287,9 +281,7 @@ class NumpyPrewittAllStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.ALL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.prewitt(request.image, request.mask)
+        return _native_directional_edge(request, operator="prewitt")
 
 
 class NumpyPrewittHorizontalStrategy(EdgeEnhancementStrategyLeaf):
@@ -298,9 +290,7 @@ class NumpyPrewittHorizontalStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.HORIZONTAL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.hprewitt(request.image, request.mask)
+        return _native_directional_edge(request, operator="prewitt")
 
 
 class NumpyPrewittVerticalStrategy(EdgeEnhancementStrategyLeaf):
@@ -309,9 +299,7 @@ class NumpyPrewittVerticalStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.VERTICAL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.vprewitt(request.image, request.mask)
+        return _native_directional_edge(request, operator="prewitt")
 
 
 class NumpyLaplacianOfGaussianStrategy(EdgeEnhancementStrategyLeaf):
@@ -320,10 +308,8 @@ class NumpyLaplacianOfGaussianStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.ALL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-
         size = int(request.sigma * 4) + 1
-        return centrosome.filter.laplacian_of_gaussian(
+        return _native_laplacian_of_gaussian(
             request.image, request.mask, size, request.sigma
         )
 
@@ -334,20 +320,33 @@ class NumpyCannyStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.ALL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-        import centrosome.otsu
-
         low_threshold = request.low_threshold
         high_threshold = request.manual_threshold
         if request.automatic_threshold or request.automatic_low_threshold:
-            sobel_image = centrosome.filter.sobel(request.image)
-            low, high = centrosome.otsu.otsu3(sobel_image[request.mask])
+            sobel_request = replace(
+                request,
+                mask=np.ones(request.image.shape, dtype=bool),
+                method=EdgeMethod.SOBEL,
+                direction=EdgeDirection.ALL,
+            )
+            sobel_image = _native_directional_edge(sobel_request, operator="sobel")
+            low, high = _native_otsu3(sobel_image[request.mask])
             if request.automatic_threshold:
                 high_threshold = high * request.threshold_adjustment_factor
             if request.automatic_low_threshold:
                 low_threshold = low * request.threshold_adjustment_factor
-        return centrosome.filter.canny(
-            request.image, request.mask, request.sigma, low_threshold, high_threshold
+        if high_threshold < low_threshold:
+            high_threshold = low_threshold
+        from skimage.feature import canny
+
+        return canny(
+            request.image,
+            sigma=request.sigma,
+            low_threshold=low_threshold,
+            high_threshold=high_threshold,
+            mask=request.mask,
+            mode="constant",
+            cval=0.0,
         )
 
 
@@ -357,9 +356,7 @@ class NumpyRobertsStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.ALL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.filter
-
-        return centrosome.filter.roberts(request.image, request.mask)
+        return _native_roberts(request.image, request.mask)
 
 
 class NumpyKirschStrategy(EdgeEnhancementStrategyLeaf):
@@ -368,9 +365,122 @@ class NumpyKirschStrategy(EdgeEnhancementStrategyLeaf):
     direction = EdgeDirection.ALL
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
-        import centrosome.kirsch
+        return _native_kirsch(request.image)
 
-        return centrosome.kirsch.kirsch(request.image)
+
+def _native_directional_edge(
+    request: EdgeEnhancementRequest,
+    *,
+    operator: str,
+) -> np.ndarray:
+    from skimage import filters
+
+    if operator == "sobel":
+        horizontal_filter = filters.sobel_h
+        vertical_filter = filters.sobel_v
+    else:
+        horizontal_filter = filters.prewitt_h
+        vertical_filter = filters.prewitt_v
+    horizontal = np.abs(horizontal_filter(request.image, mask=request.mask))
+    if request.direction is EdgeDirection.HORIZONTAL:
+        return horizontal
+    vertical = np.abs(vertical_filter(request.image, mask=request.mask))
+    if request.direction is EdgeDirection.VERTICAL:
+        return vertical
+    return np.sqrt(horizontal**2 + vertical**2)
+
+
+def _native_laplacian_of_gaussian(
+    image: np.ndarray,
+    mask: np.ndarray,
+    size: int,
+    sigma: float,
+) -> np.ndarray:
+    from scipy.ndimage import convolve
+
+    half_size = size // 2
+    row, column = np.mgrid[
+        -half_size : half_size + 1,
+        -half_size : half_size + 1,
+    ].astype(float) / float(sigma)
+    distance = (row**2 + column**2) / 2
+    gaussian = np.exp(-distance)
+    gaussian /= np.sum(gaussian)
+    kernel = (distance - 1) * gaussian
+    kernel -= np.mean(kernel)
+    masked_image = image.copy()
+    masked_image[~mask] = 0
+    output = convolve(masked_image, kernel, mode="constant", cval=0)
+    correction = convolve((~mask).astype(float), kernel, mode="constant", cval=1)
+    output += correction * image
+    output[~mask] = image[~mask]
+    return output
+
+
+def _running_variance(values: np.ndarray) -> np.ndarray:
+    means = values.cumsum() / np.arange(1, len(values) + 1)
+    accumulated = ((values[1:] - means[:-1]) * (values[1:] - means[1:])).cumsum()
+    return np.hstack(([0], accumulated / np.arange(1, len(values))))
+
+
+def _native_otsu3(values: np.ndarray, bins: int = 128) -> tuple[float, float]:
+    data = np.asarray(values).ravel()
+    data = np.sort(data[~np.isnan(data)])
+    if data.size == 0:
+        return 0.0, 0.0
+    variance = _running_variance(data)
+    reverse_variance = np.flipud(_running_variance(np.flipud(data)))
+    bins = min(bins, len(data))
+    bin_length = len(data) // bins
+    thresholds = data[0 : len(data) : bin_length]
+    indexes = np.arange(0, len(data), bin_length)
+    low_score = variance[::bin_length] * indexes
+    high_score = reverse_variance[::bin_length] * (len(data) - indexes)
+    cumulative = data.cumsum()
+    cumulative_squared = (data**2).cumsum()
+    first, second = np.mgrid[0 : len(low_score), 0 : len(high_score)] * bin_length
+    width = (second - first).astype(float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        mean = (cumulative[second] - cumulative[first]) / width
+        mean_squared = (cumulative_squared[second] - cumulative_squared[first]) / width
+    middle_score = width * (mean_squared - mean**2)
+    middle_score[first >= second] = np.inf
+    score = (
+        low_score[first * bins // len(data)]
+        + middle_score
+        + high_score[second * bins // len(data)]
+    )
+    best = np.argwhere(score == np.min(score))[0]
+    return float(thresholds[best[0]]), float(thresholds[best[1]])
+
+
+def _native_roberts(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    from scipy.ndimage import binary_erosion, generate_binary_structure
+
+    result = np.zeros(image.shape)
+    valid = binary_erosion(mask, generate_binary_structure(2, 2), border_value=0)
+    center = image[valid]
+    lower_right = image[1:, 1:][valid[:-1, :-1]]
+    upper_right = image[:-1, 1:][valid[1:, :-1]]
+    diagonal = center - upper_right
+    anti_diagonal = center - lower_right
+    result[valid] = np.sqrt(diagonal**2 + anti_diagonal**2)
+    return result
+
+
+def _native_kirsch(image: np.ndarray) -> np.ndarray:
+    from scipy.ndimage import convolve
+
+    compass = [5, -3, -3, -3, -3, -3, 5, 5]
+    result = np.zeros(image.shape)
+    kernel = np.zeros((3, 3), dtype=image.dtype)
+    indexes = np.array([[0, 1, 2], [7, -1, 3], [6, 5, 4]])
+    perimeter = indexes >= 0
+    for _ in range(8):
+        kernel[perimeter] = np.asarray(compass)[indexes[perimeter]]
+        result = np.maximum(result, convolve(image, kernel))
+        compass = compass[-1:] + compass[:-1]
+    return result
 
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
@@ -410,7 +520,11 @@ def enhance_edges(
         backend_provider=edge_backend_provider,
         automatic_threshold=automatic_threshold,
         automatic_low_threshold=automatic_low_threshold,
-        sigma=sigma if not automatic_gaussian else 2.0,
+        sigma=(
+            sigma
+            if not automatic_gaussian
+            else 1.0 if method is EdgeMethod.CANNY else 2.0
+        ),
         low_threshold=low_threshold,
         manual_threshold=manual_threshold,
         threshold_adjustment_factor=threshold_adjustment_factor,
