@@ -715,8 +715,10 @@ class NumbaNumpyObjectOutlineBackendStrategy(ObjectOutlineBackendStrategy):
         return _outline_numba(np.ascontiguousarray(label_array))
 
 
-class CentrosomeNumpyObjectOutlineBackendStrategy(ObjectOutlineBackendStrategy):
-    """Explicit centrosome provider for NumPy object outlines."""
+class CentrosomeNumpyObjectOutlineBackendStrategy(
+    NumbaNumpyObjectOutlineBackendStrategy
+):
+    """Compatibility provider backed by the absorbed outline primitive."""
 
     backend_key = CellProfilerBackendAuthority.backend_key(
         MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
@@ -724,11 +726,6 @@ class CentrosomeNumpyObjectOutlineBackendStrategy(ObjectOutlineBackendStrategy):
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.CENTROSOME
     is_default_backend = False
-
-    def outline(self, labels: np.ndarray) -> np.ndarray:
-        from centrosome.outline import outline
-
-        return outline(labels)
 
 
 @njit(cache=True)

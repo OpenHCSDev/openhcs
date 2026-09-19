@@ -1504,7 +1504,7 @@ def test_cellprofiler_backend_provider_rejects_raw_strings() -> None:
 
 
 def test_numba_threshold_smoothing_kernel_matches_centrosome_public_primitive() -> None:
-    import centrosome.smooth
+    centrosome_smooth = pytest.importorskip("centrosome.smooth")
     import numpy as np
 
     from openhcs.processing.backends.cellprofiler.thresholding import (
@@ -1512,7 +1512,7 @@ def test_numba_threshold_smoothing_kernel_matches_centrosome_public_primitive() 
     )
 
     sigma, kernel = _threshold_smoothing_kernel(1.3488, None)
-    expected = centrosome.smooth.circular_gaussian_kernel(
+    expected = centrosome_smooth.circular_gaussian_kernel(
         sigma,
         int(np.ceil(sigma * 4.0)),
     )
@@ -1521,7 +1521,7 @@ def test_numba_threshold_smoothing_kernel_matches_centrosome_public_primitive() 
 
 
 def test_threshold_application_smoothing_is_mask_normalized() -> None:
-    import centrosome.smooth
+    centrosome_smooth = pytest.importorskip("centrosome.smooth")
     import scipy.ndimage as ndi
 
     from openhcs.processing.backends.cellprofiler.thresholding import (
@@ -1534,7 +1534,7 @@ def test_threshold_application_smoothing_is_mask_normalized() -> None:
     mask[:, :1] = False
 
     smoothed, sigma = ThresholdApplicationSmoothing(1.3488).smooth(image, mask)
-    expected = centrosome.smooth.smooth_with_function_and_mask(
+    expected = centrosome_smooth.smooth_with_function_and_mask(
         image,
         lambda array: ndi.gaussian_filter(
             array,
@@ -2231,6 +2231,62 @@ def test_shape_zernike_backend_uses_declared_measured_label_domain() -> None:
         atol=1e-12,
         rtol=1e-12,
     )
+
+
+def test_native_shape_zernike_ignores_unrequested_higher_labels() -> None:
+    from openhcs.processing.backends.cellprofiler._backend import (
+        CellProfilerBackendProvider,
+    )
+    from openhcs.processing.backends.cellprofiler.zernike import (
+        shape_zernike_moments,
+    )
+
+    labels = np.zeros((12, 14), dtype=np.int32)
+    labels[1:6, 2:8] = 1
+    labels_with_unrequested_object = labels.copy()
+    labels_with_unrequested_object[7:11, 9:13] = 7
+    measured_labels = np.array([1], dtype=np.int32)
+
+    expected_indexes, expected_values = shape_zernike_moments(
+        labels,
+        measured_labels,
+        max_order=5,
+        backend_provider=CellProfilerBackendProvider.NATIVE,
+    )
+    actual_indexes, actual_values = shape_zernike_moments(
+        labels_with_unrequested_object,
+        measured_labels,
+        max_order=5,
+        backend_provider=CellProfilerBackendProvider.NATIVE,
+    )
+
+    assert actual_indexes == expected_indexes
+    np.testing.assert_array_equal(actual_values, expected_values)
+
+
+def test_minimum_enclosing_circle_compacts_sparse_label_ids() -> None:
+    from openhcs.processing.backends.cellprofiler.label_geometry import (
+        minimum_enclosing_circle_from_labels,
+    )
+
+    sparse_label = 2_000_000_000
+    labels = np.zeros((12, 14), dtype=np.int32)
+    labels[1:6, 2:8] = 1
+    labels[7:11, 9:13] = sparse_label
+    compact_labels = labels.copy()
+    compact_labels[compact_labels == sparse_label] = 2
+
+    sparse_centers, sparse_radii = minimum_enclosing_circle_from_labels(
+        labels,
+        np.array([sparse_label, 1, sparse_label - 1], dtype=np.int32),
+    )
+    compact_centers, compact_radii = minimum_enclosing_circle_from_labels(
+        compact_labels,
+        np.array([2, 1, 3], dtype=np.int32),
+    )
+
+    np.testing.assert_array_equal(sparse_centers, compact_centers)
+    np.testing.assert_array_equal(sparse_radii, compact_radii)
 
 
 def test_grouped_minimum_position_matches_numpy_124_quicksort_ties() -> None:
@@ -3052,7 +3108,7 @@ def test_legacy_fast_intensity_zernike_backend_matches_centrosome_provider() -> 
 
 
 def test_native_intensity_zernike_matches_cellprofiler_4281_source_loop() -> None:
-    import centrosome.zernike
+    centrosome_zernike = pytest.importorskip("centrosome.zernike")
     import scipy.ndimage
 
     from openhcs.processing.backends.cellprofiler._backend import (
@@ -3076,7 +3132,7 @@ def test_native_intensity_zernike_matches_cellprofiler_4281_source_loop() -> Non
     image_mask[1:3, 2:5] = False
     image_mask[11:, 13:] = False
     measured_labels = np.array([1, 2], dtype=np.int32)
-    zernike_indexes = centrosome.zernike.get_zernike_indexes(6)
+    zernike_indexes = centrosome_zernike.get_zernike_indexes(6)
     centers, radii = minimum_enclosing_circle_from_labels(
         labels,
         measured_labels,

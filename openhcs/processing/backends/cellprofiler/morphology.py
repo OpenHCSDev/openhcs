@@ -2207,7 +2207,7 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
 
 
 class CentrosomeNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
-    """Optional centrosome provider for NumPy-memory morphology."""
+    """Compatibility provider backed by absorbed NumPy morphology semantics."""
 
     backend_key = CellProfilerBackendAuthority.backend_key(
         MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
@@ -2215,67 +2215,6 @@ class CentrosomeNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.CENTROSOME
     is_default_backend = False
-
-    def disk_footprint(self, radius: float) -> np.ndarray:
-        from centrosome.cpmorphology import strel_disk
-
-        return strel_disk(radius)
-
-    def block_labels(
-        self, image_shape: tuple[int, int], block_size: int
-    ) -> tuple[np.ndarray, np.ndarray]:
-        from centrosome.cpmorphology import block
-
-        block_size = max(1, int(block_size))
-        return block(image_shape, (block_size, block_size))
-
-    def fix_labeled_result(self, values: np.ndarray) -> np.ndarray:
-        from centrosome.cpmorphology import fixup_scipy_ndimage_result
-
-        return fixup_scipy_ndimage_result(values)
-
-    def fill_labeled_holes(
-        self,
-        labels: np.ndarray,
-        *,
-        mask: np.ndarray | None = None,
-        size_predicate: HolePredicate | None = None,
-    ) -> np.ndarray:
-        from centrosome.cpmorphology import fill_labeled_holes
-
-        if size_predicate is None:
-            return fill_labeled_holes(labels, mask=mask)
-        return fill_labeled_holes(labels, mask=mask, size_fn=size_predicate)
-
-    def fill_labeled_holes_below_size(
-        self, labels: np.ndarray, maximum_hole_size: int
-    ) -> np.ndarray:
-        return self.fill_labeled_holes(
-            labels, size_predicate=lambda size, _is_foreground: size < maximum_hole_size
-        )
-
-    def local_maxima_by_label(
-        self, image: np.ndarray, labels: np.ndarray, footprint: np.ndarray
-    ) -> np.ndarray:
-        from centrosome.cpmorphology import is_local_maximum
-
-        return np.asarray(is_local_maximum(image, labels, footprint), dtype=bool)
-
-    def convex_hull_image(self, mask: np.ndarray) -> np.ndarray:
-        from centrosome.cpmorphology import convex_hull_image
-
-        return np.asarray(convex_hull_image(mask), dtype=bool)
-
-    def shrink_components_to_seed_points(self, mask: np.ndarray) -> np.ndarray:
-        from centrosome.cpmorphology import binary_shrink
-
-        return np.asarray(binary_shrink(mask), dtype=bool)
-
-    def relabel_sequential(self, labels: np.ndarray) -> tuple[np.ndarray, int]:
-        from centrosome.cpmorphology import relabel
-
-        relabeled, count = relabel(labels)
-        return (relabeled, int(count))
 
 
 class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):

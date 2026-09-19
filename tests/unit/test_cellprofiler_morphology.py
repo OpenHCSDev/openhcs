@@ -126,7 +126,7 @@ def test_shrink_defined_pixels_uses_topology_preserving_iterations() -> None:
 
 
 def test_shrink_defined_pixels_matches_cellprofiler_at_touching_labels() -> None:
-    from centrosome.cpmorphology import binary_shrink
+    binary_shrink = pytest.importorskip("centrosome.cpmorphology").binary_shrink
 
     labels = np.zeros((9, 9), dtype=np.int32)
     labels[1:8, 1:4] = 1
@@ -325,7 +325,7 @@ def test_local_maxima_by_label_handles_sparse_label_ids() -> None:
 
 
 def test_block_labels_match_cellprofiler_scaled_partitioning() -> None:
-    from centrosome.cpmorphology import block
+    block = pytest.importorskip("centrosome.cpmorphology").block
 
     for image_shape, block_size in (
         ((5, 5), 3),
@@ -373,7 +373,7 @@ def test_numba_blockwise_minimum_handles_color_planes() -> None:
 
 
 def test_explicit_centrosome_block_labels_match_centrosome_partitioning() -> None:
-    from centrosome.cpmorphology import block
+    block = pytest.importorskip("centrosome.cpmorphology").block
 
     centrosome_backend = MorphologyBackendStrategy.for_memory_type(
         MemoryType.NUMPY,
@@ -510,7 +510,7 @@ def test_shrink_components_to_seed_points_returns_one_seed_per_component() -> No
 
 
 def test_shrink_components_to_seed_points_matches_centrosome_binary_shrink() -> None:
-    from centrosome.cpmorphology import binary_shrink
+    binary_shrink = pytest.importorskip("centrosome.cpmorphology").binary_shrink
 
     mask = np.zeros((12, 13), dtype=bool)
     mask[1:4, 2:5] = True
