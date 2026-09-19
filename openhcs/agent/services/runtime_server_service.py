@@ -191,13 +191,17 @@ class ZMQRuntimeServerGateway(RuntimeServerGatewayABC):
         *,
         timeout_ms: int,
     ) -> "DebugPausedWorkerStatus":
-        return self._client(
-            connection,
-            timeout_ms=timeout_ms,
-        ).send_debug_worker_command(
-            debug_session_id=debug_session_id,
-            command_type=command_type,
-        ).status
+        return (
+            self._client(
+                connection,
+                timeout_ms=timeout_ms,
+            )
+            .send_debug_worker_command(
+                debug_session_id=debug_session_id,
+                command_type=command_type,
+            )
+            .status
+        )
 
     def export_debug_artifact(
         self,
@@ -210,16 +214,20 @@ class ZMQRuntimeServerGateway(RuntimeServerGatewayABC):
         *,
         timeout_ms: int,
     ) -> str:
-        return self._client(
-            connection,
-            timeout_ms=timeout_ms,
-        ).export_debug_artifact(
-            debug_session_id=debug_session_id,
-            artifact_ref=artifact_ref,
-            export_root=export_root,
-            snapshot_store_ref=snapshot_store_ref,
-            snapshot_store_backend=snapshot_store_backend,
-        ).exported_ref
+        return (
+            self._client(
+                connection,
+                timeout_ms=timeout_ms,
+            )
+            .export_debug_artifact(
+                debug_session_id=debug_session_id,
+                artifact_ref=artifact_ref,
+                export_root=export_root,
+                snapshot_store_ref=snapshot_store_ref,
+                snapshot_store_backend=snapshot_store_backend,
+            )
+            .exported_ref
+        )
 
     def scan(
         self,

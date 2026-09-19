@@ -35,12 +35,21 @@ class RecordingRuntimeGateway(RuntimeServerGatewayABC):
         self.scan_request = (host, ports, transport_mode, timeout_ms)
         return ()
 
-    def send_debug_command(self, connection, debug_session_id, command_type, *, timeout_ms):
+    def send_debug_command(
+        self, connection, debug_session_id, command_type, *, timeout_ms
+    ):
         raise AssertionError("send_debug_command is not used by this test")
 
     def export_debug_artifact(
-        self, connection, debug_session_id, artifact_ref, export_root,
-        snapshot_store_ref, snapshot_store_backend, *, timeout_ms,
+        self,
+        connection,
+        debug_session_id,
+        artifact_ref,
+        export_root,
+        snapshot_store_ref,
+        snapshot_store_backend,
+        *,
+        timeout_ms,
     ):
         raise AssertionError("export_debug_artifact is not used by this test")
 

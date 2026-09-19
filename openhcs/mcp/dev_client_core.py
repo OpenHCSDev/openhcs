@@ -1410,10 +1410,12 @@ class McpDevTransportAuthority:
     def daemon_enabled(cls) -> bool:
         """Return whether the daemon environment variable opts in."""
 
-        return (
-            os.getenv(cls.daemon_environment_variable, "").strip().lower()
-            in {"1", "on", "true", "yes"}
-        )
+        return os.getenv(cls.daemon_environment_variable, "").strip().lower() in {
+            "1",
+            "on",
+            "true",
+            "yes",
+        }
 
     @classmethod
     def resident_server_launch_arguments(
@@ -1453,9 +1455,7 @@ class McpDevTransportAuthority:
         from openhcs.mcp.socket import MCP_SOCKET_SESSION_LOG_FILE_NAME
 
         socket_path.parent.mkdir(parents=True, exist_ok=True)
-        log_file = open(
-            socket_path.parent / MCP_SOCKET_SESSION_LOG_FILE_NAME, "ab"
-        )
+        log_file = open(socket_path.parent / MCP_SOCKET_SESSION_LOG_FILE_NAME, "ab")
         try:
             return subprocess.Popen(
                 (

@@ -211,9 +211,7 @@ class McpSocketTransport:
         try:
             self.log_file_path.parent.mkdir(parents=True, exist_ok=True)
             timestamp = time.strftime("%Y-%m-%dT%H:%M:%S")
-            rendered = " ".join(
-                f"{key}={value}" for key, value in fields.items()
-            )
+            rendered = " ".join(f"{key}={value}" for key, value in fields.items())
             with self.log_file_path.open("a", encoding="utf-8") as log_file:
                 log_file.write(f"{timestamp} {event} {rendered}\n")
         except OSError:

@@ -880,9 +880,7 @@ class SetViewerViewportCommandSpec(SingleToolCommandSpec):
         if len(center) == 2:
             center = (0.0, center[0], center[1])
         if len(center) != 3:
-            raise SystemExit(
-                "--center requires two or three finite world coordinates."
-            )
+            raise SystemExit("--center requires two or three finite world coordinates.")
         presentation = ViewerNativeViewportPresentation(
             center=center,
             zoom=args.zoom if args.zoom is not None else 1.0,

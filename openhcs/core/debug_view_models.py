@@ -117,7 +117,6 @@ class DebugViewSectionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         """Return section-level empty text."""
 
 
-
 class AvailableEmptySection:
     """Section empty-message strategy for absent available values."""
 
@@ -137,7 +136,6 @@ class ReportedEmptySection:
     @classmethod
     def empty_message(cls) -> str:
         return f"No {cls.empty_subject} was reported."
-
 
 
 class DebugViewTableProjectionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
@@ -213,7 +211,6 @@ class DebugViewTableProjectionDeclarationBase(ABC, metaclass=AutoRegisterMeta):
         return "No rows are available."
 
 
-
 class AvailableEmptyTable:
     """Table empty-message strategy for absent available rows."""
 
@@ -222,7 +219,6 @@ class AvailableEmptyTable:
     @classmethod
     def empty_message(cls) -> str:
         return f"No {cls.empty_subject} are available."
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -286,7 +282,6 @@ class DebugViewTable:
         )
 
 
-
 def dataclass_record_columns(record_type: type) -> tuple[str, ...]:
     if not is_dataclass(record_type):
         raise TypeError(
@@ -304,7 +299,6 @@ def dataclass_record_cells(record: object, columns: tuple[str, ...]) -> tuple[st
         )
     mapping = asdict(record)
     return tuple(debug_view_cell_text(mapping[column]) for column in columns)
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -451,7 +445,6 @@ def debug_view_jsonable(value: object) -> object:
             for field in fields(value)
         }
     return str(value)
-
 
 
 def is_debug_view_model_export(name: str, value: object) -> bool:

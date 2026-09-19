@@ -1186,7 +1186,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "702ab01daaab6642feb508d67d06538ff30a5b66933baba0fbb9046a7c7e62e3",
+        "sha256": "02a44a934386bc8839f247a56b9a7d12a7245b98ce492621dcde9928f5ec38b4",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1893,7 +1893,7 @@
       },
       {
         "path": "openhcs/mcp/dev_client_core.py",
-        "sha256": "d310495b5994ade0d4fcd60f70cd746a1e17478dbbbbb0938b8b9aefbc3413f3",
+        "sha256": "93fc3bc99155d55c2bfeca2a4bc962374265624194a1f129574297fd07f8233e",
         "role": "Resolves tool identity and compatible profiles from the capability declarations at the shared call boundary."
       },
       {
