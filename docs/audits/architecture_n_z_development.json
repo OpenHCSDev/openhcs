@@ -669,7 +669,7 @@
       },
       {
         "path": "openhcs/pyqt_gui/services/pipeline_object_state_binding.py",
-        "sha256": "78000f4d7c75734f7c430444316557d7eca4a55216e7eb50abedd37f633a9039",
+        "sha256": "62fac8e10355ccb140655746eed8f540dff70c90aa58ed6b42c5b2c8c80dff4f",
         "role": "Owns incremental pipeline binding and complete declaration-graph replacement."
       },
       {
