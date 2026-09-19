@@ -2171,7 +2171,7 @@
     "authority": [
       {
         "path": "openhcs/pyqt_gui/widgets/shared/zmq_server_manager.py",
-        "sha256": "e7eea5d2390279f4599839ceb3592d5083098ae1711ab3118224163ef15dfc36",
+        "sha256": "2d2d0ae9e70e04bc7b6c738877bc52e8a37e79a80a849e87388aea400b42977a",
         "role": "OpenHCS server-browser adapter and live tree synchronisation wiring, including identity-derived presentation and execution-row projection from the generic lifecycle observation."
       },
       {
