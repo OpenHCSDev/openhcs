@@ -99,7 +99,6 @@ def minimum_enclosing_circle_from_labels(
     label_ids: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Return circles using CellProfiler 4.2.8.1 vertex ordering."""
-    import centrosome.cpmorphology
     import scipy.ndimage
 
     label_array = np.asarray(labels, dtype=np.int32)
@@ -107,11 +106,13 @@ def minimum_enclosing_circle_from_labels(
         raise ValueError(
             "Minimum enclosing circle requires 2-D labels, got " f"{label_array.ndim}D."
         )
-    indexes = np.asarray(label_ids, dtype=np.int32)
+    requested_indexes = np.asarray(label_ids, dtype=np.int32)
+    indexes = np.arange(1, requested_indexes.size + 1, dtype=np.int32)
     if indexes.size == 0:
         return np.zeros((0, 2), dtype=float), np.zeros(0, dtype=float)
 
-    hull, point_count = centrosome.cpmorphology.convex_hull(label_array, indexes)
+    compact_labels = _compact_requested_labels(label_array, requested_indexes)
+    hull, point_count = _cellprofiler_convex_hull(compact_labels, indexes)
     centers = np.zeros((indexes.size, 2), dtype=float)
     radii = np.zeros(indexes.size, dtype=float)
     point_index = np.zeros(indexes.size, dtype=int)
@@ -266,6 +267,78 @@ def minimum_enclosing_circle_from_labels(
     return centers, radii
 
 
+def _compact_requested_labels(
+    labels: np.ndarray,
+    requested_indexes: np.ndarray,
+) -> np.ndarray:
+    """Map requested positive labels to a dense domain while clearing all others."""
+    compact = np.zeros(labels.shape, dtype=np.int32)
+    positive_positions = np.flatnonzero(requested_indexes > 0)
+    if positive_positions.size == 0:
+        return compact
+    order = np.argsort(requested_indexes[positive_positions])
+    sorted_positions = positive_positions[order]
+    sorted_labels = requested_indexes[sorted_positions]
+    insertion_points = np.searchsorted(sorted_labels, labels)
+    in_range = insertion_points < sorted_labels.size
+    matched = np.zeros(labels.shape, dtype=bool)
+    matched[in_range] = sorted_labels[insertion_points[in_range]] == labels[in_range]
+    compact[matched] = sorted_positions[insertion_points[matched]] + 1
+    return compact
+
+
+def _cellprofiler_convex_hull(
+    labels: np.ndarray,
+    label_ids: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return ordered per-label hull vertices using Centrosome's envelope walk."""
+    indexes = np.asarray(label_ids, dtype=np.int32)
+    counts, offsets, point_y, point_x = _outline_points_by_label_numba(
+        np.ascontiguousarray(labels, dtype=np.int32),
+        indexes,
+    )
+    hull_rows: list[tuple[int, int, int]] = []
+    hull_counts = np.zeros(indexes.size, dtype=np.int32)
+    for object_index, label_id in enumerate(indexes):
+        start = int(offsets[object_index])
+        stop = int(offsets[object_index + 1])
+        if start == stop:
+            continue
+        y_values = point_y[start:stop]
+        x_values = point_x[start:stop]
+        columns = np.unique(x_values)
+        candidates: list[tuple[int, int]] = []
+        for column in columns:
+            rows = y_values[x_values == column]
+            candidates.append((int(np.min(rows)), int(column)))
+        for column in columns[::-1]:
+            rows = y_values[x_values == column]
+            candidates.append((int(np.max(rows)), int(column)))
+
+        vertices: list[tuple[int, int]] = []
+        for candidate in candidates:
+            if vertices and candidate == vertices[-1]:
+                continue
+            while len(vertices) >= 2:
+                previous, middle = vertices[-2:]
+                cross = (middle[1] - previous[1]) * (candidate[0] - middle[0]) - (
+                    candidate[1] - middle[1]
+                ) * (middle[0] - previous[0])
+                if cross > 0 or (
+                    cross == 0 and middle[1] > previous[1] and middle[1] > candidate[1]
+                ):
+                    break
+                vertices.pop()
+            vertices.append(candidate)
+        if len(vertices) > 1 and vertices[-1] == vertices[0]:
+            vertices.pop()
+
+        hull_counts[object_index] = len(vertices)
+        hull_rows.extend((int(label_id), row, column) for row, column in vertices)
+
+    return np.asarray(hull_rows, dtype=np.int32).reshape(-1, 3), hull_counts
+
+
 def _grouped_minimum_positions(
     values: np.ndarray,
     labels: np.ndarray,
@@ -415,39 +488,22 @@ def _outline_points_by_label_numba(
             np.zeros(0, dtype=np.int64),
         )
 
-    max_label = 0
-    for object_index in range(object_count):
-        label_id = int(label_ids[object_index])
-        if label_id > max_label:
-            max_label = label_id
     height, width = labels.shape
-    for y in range(height):
-        for x in range(width):
-            label_id = int(labels[y, x])
-            if label_id > max_label:
-                max_label = label_id
-    if max_label <= 0:
-        return (
-            counts,
-            offsets,
-            np.zeros(0, dtype=np.int64),
-            np.zeros(0, dtype=np.int64),
-        )
-
-    label_to_output = np.full(max_label + 1, -1, dtype=np.int64)
-    for object_index in range(object_count):
-        label_id = int(label_ids[object_index])
-        if label_id > 0 and label_id <= max_label:
-            label_to_output[label_id] = object_index
+    sorted_output_indexes = np.argsort(label_ids)
+    sorted_label_ids = label_ids[sorted_output_indexes]
 
     for y in range(height):
         for x in range(width):
             label_id = int(labels[y, x])
-            if label_id <= 0 or label_id > max_label:
+            if label_id <= 0:
                 continue
-            object_index = label_to_output[label_id]
-            if object_index < 0:
+            sorted_index = np.searchsorted(sorted_label_ids, label_id)
+            if (
+                sorted_index >= object_count
+                or int(sorted_label_ids[sorted_index]) != label_id
+            ):
                 continue
+            object_index = sorted_output_indexes[sorted_index]
             if _is_label_outline_pixel_numba(labels, y, x, label_id):
                 counts[object_index] += 1
 
@@ -460,11 +516,15 @@ def _outline_points_by_label_numba(
     for y in range(height):
         for x in range(width):
             label_id = int(labels[y, x])
-            if label_id <= 0 or label_id > max_label:
+            if label_id <= 0:
                 continue
-            object_index = label_to_output[label_id]
-            if object_index < 0:
+            sorted_index = np.searchsorted(sorted_label_ids, label_id)
+            if (
+                sorted_index >= object_count
+                or int(sorted_label_ids[sorted_index]) != label_id
+            ):
                 continue
+            object_index = sorted_output_indexes[sorted_index]
             if not _is_label_outline_pixel_numba(labels, y, x, label_id):
                 continue
             point_index = cursor[object_index]

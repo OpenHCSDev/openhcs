@@ -880,7 +880,7 @@ def test_enhance_edges_accepts_nominal_method_and_direction():
 
 
 def test_enhance_edges_uses_and_preserves_runtime_mask():
-    import centrosome.filter
+    centrosome_filter = pytest.importorskip("centrosome.filter")
 
     image = np.zeros((9, 9), dtype=np.float32)
     image[:, 5:] = 1.0
@@ -895,7 +895,7 @@ def test_enhance_edges_uses_and_preserves_runtime_mask():
     )
     assert np.allclose(
         image_payload_data(result),
-        centrosome.filter.sobel(image, mask).astype(np.float32),
+        centrosome_filter.sobel(image, mask).astype(np.float32),
     )
     assert np.array_equal(image_payload_mask(result), mask)
 
@@ -1924,7 +1924,7 @@ def test_global_threshold_method_owns_source_selection(
 
 
 def test_cellprofiler_threshold_diagnostics_matches_reference_formula():
-    import centrosome.threshold
+    centrosome_threshold = pytest.importorskip("centrosome.threshold")
 
     rng = np.random.default_rng(7)
     image = rng.random((16, 17), dtype=np.float32)
@@ -1935,11 +1935,11 @@ def test_cellprofiler_threshold_diagnostics_matches_reference_formula():
     )
     np.testing.assert_allclose(
         diagnostics.weighted_variance,
-        centrosome.threshold.weighted_variance(image, mask, binary),
+        centrosome_threshold.weighted_variance(image, mask, binary),
     )
     np.testing.assert_allclose(
         diagnostics.sum_of_entropies,
-        centrosome.threshold.sum_of_entropies(image, mask, binary),
+        centrosome_threshold.sum_of_entropies(image, mask, binary),
     )
 
 
@@ -2814,8 +2814,8 @@ def test_measure_image_quality_uses_openhcs_power_spectrum_backend(monkeypatch):
     np.testing.assert_array_equal(calls[0], image)
 
 
-def test_measure_image_quality_uses_native_centrosome_otsu_semantics(monkeypatch):
-    import centrosome.threshold
+def test_measure_image_quality_otsu_matches_development_oracle():
+    centrosome_threshold = pytest.importorskip("centrosome.threshold")
 
     from openhcs.processing.backends.cellprofiler.image_quality import (
         ImageQualityOtsuObjective,
@@ -2827,37 +2827,26 @@ def test_measure_image_quality_uses_native_centrosome_otsu_semantics(monkeypatch
         CellProfilerThresholdAssignment,
     )
 
-    calls = []
-
-    def get_threshold(threshold_method, threshold_scope, image, **kwargs):
-        calls.append((threshold_method, threshold_scope, image.copy(), kwargs))
-        return (0.125, 0.25)
-
-    monkeypatch.setattr(centrosome.threshold, "get_threshold", get_threshold)
     image = np.arange(16, dtype=np.float64).reshape(4, 4) / 16.0
-
-    assert (
-        image_quality_threshold(
-            image,
-            ImageQualityThresholdMethod.OTSU,
-            object_fraction=0.2,
-            otsu_class_count=CellProfilerOtsuMethod.THREE_CLASS,
-            otsu_objective=ImageQualityOtsuObjective.ENTROPY,
-            assign_middle_to_foreground=(CellProfilerThresholdAssignment.BACKGROUND),
-        )
-        == 0.25
+    actual = image_quality_threshold(
+        image,
+        ImageQualityThresholdMethod.OTSU,
+        object_fraction=0.2,
+        otsu_class_count=CellProfilerOtsuMethod.THREE_CLASS,
+        otsu_objective=ImageQualityOtsuObjective.ENTROPY,
+        assign_middle_to_foreground=CellProfilerThresholdAssignment.BACKGROUND,
     )
-    assert len(calls) == 1
-    threshold_method, threshold_scope, values, kwargs = calls[0]
-    assert threshold_method == centrosome.threshold.TM_OTSU
-    assert threshold_scope == centrosome.threshold.TM_GLOBAL
-    np.testing.assert_array_equal(values, image.astype(np.float32))
-    assert kwargs == {
-        "object_fraction": 0.2,
-        "two_class_otsu": False,
-        "use_weighted_variance": False,
-        "assign_middle_to_foreground": False,
-    }
+    _, expected = centrosome_threshold.get_threshold(
+        centrosome_threshold.TM_OTSU,
+        centrosome_threshold.TM_GLOBAL,
+        image.astype(np.float32),
+        object_fraction=0.2,
+        two_class_otsu=False,
+        use_weighted_variance=False,
+        assign_middle_to_foreground=False,
+    )
+
+    assert np.isclose(actual, expected, rtol=1e-6, atol=1e-7)
 
 
 def test_measure_image_quality_constancy_check_matches_numpy_unique():
@@ -2936,7 +2925,9 @@ def test_measure_image_quality_local_focus_matches_grid_semantics():
     )
 
 
-def test_measure_object_neighbors_accepts_explicit_centrosome_morphology(monkeypatch):
+def test_measure_object_neighbors_compatibility_provider_needs_no_centrosome(
+    monkeypatch,
+):
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
@@ -2945,37 +2936,7 @@ def test_measure_object_neighbors_accepts_explicit_centrosome_morphology(monkeyp
         measure_object_neighbors,
     )
 
-    disk_calls = []
-    outline_calls = []
-
-    def strel_disk(radius):
-        disk_calls.append(radius)
-        return np.ones((3, 3), dtype=bool)
-
-    def outline(labels):
-        outline_calls.append(labels.copy())
-        result = np.zeros_like(labels)
-        result[labels > 0] = labels[labels > 0]
-        return result
-
-    def centers_of_labels(labels):
-        centers = []
-        for label in range(1, int(labels.max()) + 1):
-            coords = np.argwhere(labels == label)
-            centers.append(coords.mean(axis=0) if coords.size else (0.0, 0.0))
-        return np.asarray(centers).T
-
-    centrosome_module = types.ModuleType("centrosome")
-    cpmorphology_module = types.ModuleType("centrosome.cpmorphology")
-    outline_module = types.ModuleType("centrosome.outline")
-    cpmorphology_module.strel_disk = strel_disk
-    cpmorphology_module.centers_of_labels = centers_of_labels
-    outline_module.outline = outline
-    centrosome_module.cpmorphology = cpmorphology_module
-    centrosome_module.outline = outline_module
-    monkeypatch.setitem(sys.modules, "centrosome", centrosome_module)
-    monkeypatch.setitem(sys.modules, "centrosome.cpmorphology", cpmorphology_module)
-    monkeypatch.setitem(sys.modules, "centrosome.outline", outline_module)
+    monkeypatch.setitem(sys.modules, "centrosome", None)
     labels = np.zeros((7, 7), dtype=np.int32)
     labels[2, 2] = 1
     labels[2, 4] = 2
@@ -2988,8 +2949,6 @@ def test_measure_object_neighbors_accepts_explicit_centrosome_morphology(monkeyp
         morphology_backend_provider=CellProfilerBackendProvider.CENTROSOME,
         outline_backend_provider=CellProfilerBackendProvider.CENTROSOME,
     )
-    assert disk_calls == [4, 4.5]
-    np.testing.assert_array_equal(outline_calls[0], labels)
     assert len(measurements) == 2
 
 
@@ -3841,6 +3800,45 @@ def test_correct_illumination_centrosome_convex_hull_preserves_input_dtype():
     )
 
     assert illumination.dtype == image.dtype
+
+
+def test_absorbed_convex_hull_transform_matches_centrosome_oracle():
+    import centrosome.cpmorphology
+    import centrosome.filter
+
+    from openhcs.processing.backends.cellprofiler.illumination import (
+        _cellprofiler_convex_hull_transform,
+        _native_exact_level_set_convex_hull_smoothing,
+    )
+    from openhcs.processing.backends.cellprofiler.morphology import (
+        MorphologyBackendStrategy,
+    )
+
+    rng = np.random.default_rng(20260919)
+    image = rng.random((23, 31), dtype=np.float32)
+    mask = rng.random(image.shape) > 0.15
+
+    expected = centrosome.filter.convex_hull_transform(image.copy(), mask=mask)
+    actual = _cellprofiler_convex_hull_transform(image, mask)
+
+    np.testing.assert_array_equal(actual, expected)
+
+    eroded = centrosome.cpmorphology.grey_erosion(image, 2, mask)
+    transformed = centrosome.filter.convex_hull_transform(eroded, mask=mask)
+    expected_smoothed = np.asarray(
+        centrosome.cpmorphology.grey_dilation(
+            transformed,
+            2,
+            mask,
+        ),
+        dtype=image.dtype,
+    )
+    actual_smoothed = _native_exact_level_set_convex_hull_smoothing(
+        image,
+        mask,
+        MorphologyBackendStrategy.for_memory_type(),
+    )
+    np.testing.assert_array_equal(actual_smoothed, expected_smoothed)
 
 
 def test_correct_illumination_exact_convex_hull_matches_native_reference():

@@ -685,7 +685,7 @@ class NumbaSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrate
     )
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.NUMBA
-    is_default_backend = False
+    is_default_backend = True
 
     def prepare_backend(self) -> None:
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
@@ -760,44 +760,17 @@ class NumbaSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrate
         return LabelPropagationResult(labels=propagated, distances=distances)
 
 
-class NativeSecondaryPropagationBackendStrategy(SecondaryPropagationBackendStrategy):
-    """CellProfiler-native label propagation via centrosome."""
+class NativeSecondaryPropagationBackendStrategy(
+    NumbaSecondaryPropagationBackendStrategy
+):
+    """Native compatibility key backed by absorbed propagation semantics."""
 
     backend_key = CellProfilerBackendAuthority.backend_key(
         MemoryType.NUMPY, CellProfilerBackendProvider.NATIVE
     )
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.NATIVE
-    is_default_backend = True
-
-    def propagate_result(
-        self,
-        image: np.ndarray,
-        labels: np.ndarray,
-        mask: np.ndarray,
-        regularization: float,
-        *,
-        max_distance: float | None = None,
-    ) -> LabelPropagationResult:
-        import centrosome.propagate
-
-        propagated, distances = centrosome.propagate.propagate(
-            np.asarray(image, dtype=np.float64),
-            np.asarray(labels, dtype=np.int32),
-            np.asarray(mask, dtype=np.bool_),
-            float(regularization),
-        )
-        if max_distance is not None:
-            propagated = np.asarray(propagated, dtype=np.int32).copy()
-            source_labels = np.asarray(labels, dtype=np.int32)
-            propagated[
-                np.asarray(distances, dtype=np.float64) > float(max_distance)
-            ] = 0
-            propagated[source_labels > 0] = source_labels[source_labels > 0]
-        return LabelPropagationResult(
-            labels=np.asarray(propagated, dtype=np.int32),
-            distances=np.asarray(distances, dtype=np.float64),
-        )
+    is_default_backend = False
 
 
 def secondary_propagation_backend(

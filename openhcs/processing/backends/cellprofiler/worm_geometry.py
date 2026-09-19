@@ -239,22 +239,28 @@ def _skeletonize_loop_numba(
         if result[row, col] == 0:
             continue
 
-        table_index = 0
-        bit = 0
-        for row_delta in range(-1, 2):
-            neighbor_row = row + row_delta
-            for col_delta in range(-1, 2):
-                neighbor_col = col + col_delta
-                if (
-                    0 <= neighbor_row < height
-                    and 0 <= neighbor_col < width
-                    and result[neighbor_row, neighbor_col] != 0
-                ):
-                    table_index |= 1 << bit
-                bit += 1
-
-        if table[table_index] == 0:
-            result[row, col] = 0
+        # Preserve Centrosome's compiled border behavior exactly. Its lower
+        # neighbor checks are intentionally nested under the upper-row guard.
+        table_index = 16
+        if row > 0:
+            if col > 0 and result[row - 1, col - 1]:
+                table_index += 1
+            if result[row - 1, col]:
+                table_index += 2
+            if col < width - 1 and result[row - 1, col + 1]:
+                table_index += 4
+            if col > 0 and result[row, col - 1]:
+                table_index += 8
+            if col < width - 1 and result[row, col + 1]:
+                table_index += 32
+            if row < height - 1:
+                if col > 0 and result[row + 1, col - 1]:
+                    table_index += 64
+                if result[row + 1, col]:
+                    table_index += 128
+                if col < width - 1 and result[row + 1, col + 1]:
+                    table_index += 256
+        result[row, col] = table[table_index]
 
 
 def branchpoints(skeleton: np.ndarray) -> np.ndarray:
@@ -365,14 +371,66 @@ def sample_control_points(
     return np.vstack((path_coords[:1, :], sampled, path_coords[-1:, :]))
 
 
+def _cellprofiler_line_points(
+    start_rows: np.ndarray,
+    start_columns: np.ndarray,
+    end_rows: np.ndarray,
+    end_columns: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Rasterize line segments with CellProfiler's endpoint and tie semantics."""
+    row0 = np.asarray(start_rows, dtype=int)
+    column0 = np.asarray(start_columns, dtype=int)
+    row1 = np.asarray(end_rows, dtype=int)
+    column1 = np.asarray(end_columns, dtype=int)
+    if not (len(row0) == len(column0) == len(row1) == len(column1)):
+        raise ValueError("Line endpoint arrays must have equal lengths.")
+
+    row_delta = np.abs(row0 - row1)
+    column_delta = np.abs(column0 - column1)
+    count = np.maximum(row_delta, column_delta) + 1
+    index = np.cumsum(count) - count
+    rows = np.empty(int(np.sum(count)), dtype=int)
+    columns = np.empty(rows.size, dtype=int)
+
+    for segment in range(len(count)):
+        output_index = int(index[segment])
+        row = int(row0[segment])
+        column = int(column0[segment])
+        rows[output_index] = row
+        columns[output_index] = column
+        step_row = 1 if row1[segment] > row0[segment] else -1
+        step_column = 1 if column1[segment] > column0[segment] else -1
+
+        if row_delta[segment] >= column_delta[segment]:
+            remainder = 2 * int(column_delta[segment]) - int(row_delta[segment])
+            for offset in range(1, int(count[segment])):
+                if remainder >= 0:
+                    column += step_column
+                    remainder -= 2 * int(row_delta[segment])
+                row += step_row
+                remainder += 2 * int(column_delta[segment])
+                rows[output_index + offset] = row
+                columns[output_index + offset] = column
+        else:
+            remainder = 2 * int(row_delta[segment]) - int(column_delta[segment])
+            for offset in range(1, int(count[segment])):
+                if remainder >= 0:
+                    row += step_row
+                    remainder -= 2 * int(column_delta[segment])
+                column += step_column
+                remainder += 2 * int(row_delta[segment])
+                rows[output_index + offset] = row
+                columns[output_index + offset] = column
+
+    return index, count, rows, columns
+
+
 def rebuild_worm_from_control_points_approx(
     control_coords: np.ndarray,
     worm_radii: np.ndarray,
     shape: tuple[int, int],
 ) -> tuple[np.ndarray, np.ndarray]:
     """Rebuild a worm using CellProfiler's canonical line rasterization."""
-    import centrosome.cpmorphology
-
     if len(control_coords) < 2:
         return np.zeros(0, dtype=int), np.zeros(0, dtype=int)
     control_coords = np.asarray(control_coords, dtype=np.float64)
@@ -380,7 +438,7 @@ def rebuild_worm_from_control_points_approx(
     if len(radii) < len(control_coords):
         radii = np.pad(radii, (0, len(control_coords) - len(radii)), mode="edge")
 
-    index, count, rows, columns = centrosome.cpmorphology.get_line_pts(
+    index, count, rows, columns = _cellprofiler_line_points(
         control_coords[:-1, 0],
         control_coords[:-1, 1],
         control_coords[1:, 0],

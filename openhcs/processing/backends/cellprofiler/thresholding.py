@@ -1530,9 +1530,9 @@ class NumbaNumpyThresholdPrimitiveBackendStrategy(ThresholdPrimitiveBackendStrat
 
 
 class CentrosomeNumpyThresholdPrimitiveBackendStrategy(
-    ThresholdPrimitiveBackendStrategy
+    NumbaNumpyThresholdPrimitiveBackendStrategy
 ):
-    """Centrosome-backed threshold primitives exposed as a backend provider."""
+    """Compatibility provider backed by absorbed threshold primitives."""
 
     backend_key = CellProfilerBackendAuthority.backend_key(
         MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
@@ -1540,98 +1540,6 @@ class CentrosomeNumpyThresholdPrimitiveBackendStrategy(
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.CENTROSOME
     is_default_backend = False
-
-    def log_transform(self, values: np.ndarray) -> tuple[np.ndarray, object]:
-        import centrosome.threshold
-
-        return centrosome.threshold.log_transform(values)
-
-    def inverse_log_transform(
-        self, values: float | np.ndarray, conversion: object
-    ) -> float | np.ndarray:
-        import centrosome.threshold
-
-        return centrosome.threshold.inverse_log_transform(values, conversion)
-
-    def binned_mode(self, values: np.ndarray) -> float:
-        import centrosome.threshold
-
-        return float(centrosome.threshold.binned_mode(values))
-
-    def mad(self, values: np.ndarray) -> float:
-        import centrosome.threshold
-
-        return float(centrosome.threshold.mad(values))
-
-    def otsu_threshold(self, values: np.ndarray) -> float:
-        import centrosome.threshold
-
-        _, global_threshold = centrosome.threshold.get_threshold(
-            centrosome.threshold.TM_OTSU,
-            centrosome.threshold.TM_GLOBAL,
-            np.asarray(values, dtype=np.float32),
-            two_class_otsu=True,
-            use_weighted_variance=True,
-            assign_middle_to_foreground=True,
-        )
-        return float(global_threshold)
-
-    def weighted_otsu_threshold(self, values: np.ndarray) -> float:
-        return self.otsu_threshold(values)
-
-    def li_threshold(self, values: np.ndarray) -> float:
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide Li thresholding. Select the Numba backend explicitly."
-        )
-
-    def triangle_threshold(self, values: np.ndarray) -> float:
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide Triangle thresholding. Select the Numba backend explicitly."
-        )
-
-    def isodata_threshold(self, values: np.ndarray) -> float:
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide Isodata thresholding. Select the Numba backend explicitly."
-        )
-
-    def mean_threshold(self, values: np.ndarray) -> float:
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide Mean thresholding. Select the Numba backend explicitly."
-        )
-
-    def yen_threshold(self, values: np.ndarray) -> float:
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide Yen thresholding. Select the Numba backend explicitly."
-        )
-
-    def minimum_threshold(self, values: np.ndarray) -> float:
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide histogram Minimum thresholding. Select the Numba backend explicitly."
-        )
-
-    def multiotsu_thresholds(self, values: np.ndarray, *, nbins: int) -> np.ndarray:
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide Multi-Otsu thresholding. Select the Numba backend explicitly."
-        )
-
-    def sauvola_threshold_image(
-        self, image: np.ndarray, *, window_size: int
-    ) -> np.ndarray:
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide Sauvola thresholding. Select the Numba backend explicitly."
-        )
-
-    def minimum_cross_entropy_threshold(
-        self,
-        image: np.ndarray,
-        mask: np.ndarray | None = None,
-        *,
-        proven_unit_interval_scale: int | None = None,
-    ) -> float:
-        del proven_unit_interval_scale
-        raise NotImplementedError(
-            "Centrosome threshold primitive backend does not provide CP-style minimum cross-entropy thresholding. Select the Numba backend explicitly."
-        )
 
 
 def threshold_primitives(

@@ -66,6 +66,7 @@ from openhcs.processing.backends.cellprofiler.image_quality import (
     ImageQualityThresholdMetrics,
     MeasureImageQualityModule,
     image_quality_intensity_metrics,
+    image_quality_threshold,
     measure_image_quality,
 )
 from openhcs.processing.backends.cellprofiler.thresholding import (
@@ -122,6 +123,33 @@ def test_image_quality_total_area_uses_native_float_scalar() -> None:
     assert type(metrics.total_area) is float
     assert empty_metrics.total_area == 0.0
     assert type(empty_metrics.total_area) is float
+
+
+def test_image_quality_otsu_preserves_cellprofiler_constant_edge_values() -> None:
+    epsilon = np.finfo(np.float32).eps
+
+    assert image_quality_threshold(
+        np.zeros((3, 4), dtype=np.float32),
+        ImageQualityThresholdMethod.OTSU,
+    ) == float(epsilon)
+    assert image_quality_threshold(
+        np.full((3, 4), 0.25, dtype=np.float32),
+        ImageQualityThresholdMethod.OTSU,
+    ) == float(np.float32(0.25) + epsilon)
+    assert (
+        image_quality_threshold(
+            np.empty((0, 4), dtype=np.float32),
+            ImageQualityThresholdMethod.OTSU,
+        )
+        == 1.0
+    )
+    assert (
+        image_quality_threshold(
+            np.array([-2.0, -1.0, np.nan], dtype=np.float32),
+            ImageQualityThresholdMethod.OTSU,
+        )
+        == 1.0
+    )
 
 
 def test_measure_image_quality_declares_per_plane_processing_contract() -> None:

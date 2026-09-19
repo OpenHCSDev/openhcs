@@ -822,25 +822,155 @@ class OtsuImageQualityThresholdStrategy(ImageQualityThresholdStrategy):
     method = ImageQualityThresholdMethod.OTSU
 
     def threshold(self, request: ImageQualityThresholdRequest) -> float:
-        import centrosome.threshold
-
-        _local_threshold, global_threshold = centrosome.threshold.get_threshold(
-            centrosome.threshold.TM_OTSU,
-            centrosome.threshold.TM_GLOBAL,
-            request.values,
-            object_fraction=request.object_fraction,
-            two_class_otsu=(
-                request.otsu_class_count is CellProfilerOtsuMethod.TWO_CLASS
-            ),
-            use_weighted_variance=(
-                request.otsu_objective is ImageQualityOtsuObjective.WEIGHTED_VARIANCE
-            ),
-            assign_middle_to_foreground=(
-                request.assign_middle_to_foreground
+        values = np.asarray(request.values)
+        values = values[np.isfinite(values) & (values >= 0)]
+        if values.size == 0:
+            return 1.0
+        if np.all(values == values[0]):
+            return float(values[0] + np.finfo(values.dtype).eps)
+        transformed, conversion = threshold_primitives().log_transform(values)
+        if request.otsu_class_count is CellProfilerOtsuMethod.TWO_CLASS:
+            transformed_threshold = _sorted_otsu_threshold(
+                transformed,
+                entropy=(request.otsu_objective is ImageQualityOtsuObjective.ENTROPY),
+            )
+        else:
+            low, high = _sorted_three_class_thresholds(
+                transformed,
+                entropy=(request.otsu_objective is ImageQualityOtsuObjective.ENTROPY),
+            )
+            transformed_threshold = (
+                low
+                if request.assign_middle_to_foreground
                 is CellProfilerThresholdAssignment.FOREGROUND
-            ),
+                else high
+            )
+        return float(
+            threshold_primitives().inverse_log_transform(
+                transformed_threshold,
+                conversion,
+            )
         )
-        return float(global_threshold)
+
+
+def _running_variance(values: np.ndarray) -> np.ndarray:
+    means = values.cumsum() / np.arange(1, len(values) + 1)
+    accumulated = ((values[1:] - means[:-1]) * (values[1:] - means[1:])).cumsum()
+    return np.hstack(([0], accumulated / np.arange(1, len(values))))
+
+
+def _sorted_otsu_threshold(
+    values: np.ndarray,
+    *,
+    entropy: bool,
+    bins: int = 256,
+) -> float:
+    data = np.sort(np.asarray(values).ravel())
+    if data.size <= 1:
+        return float(data[0]) if data.size else 0.0
+    bins = min(bins, len(data))
+    step = len(data) // bins
+    variance = _running_variance(data)
+    reverse_variance = np.flipud(_running_variance(np.flipud(data)))
+    thresholds = data[1 : len(data) : step]
+    if entropy:
+        low_weight = np.arange(0, len(data) - 1, step)
+        high_weight = len(data) - np.arange(1, len(data), step)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            low_score = low_weight * np.log(
+                (variance[0 : len(data) - 1 : step] + 1.0 / 512.0)
+                * low_weight
+                * np.sqrt(2 * np.pi * np.e)
+            )
+            high_score = high_weight * np.log(
+                (reverse_variance[1 : len(data) : step] + 1.0 / 512.0)
+                * high_weight
+                * np.sqrt(2 * np.pi * np.e)
+            )
+        low_score[np.isnan(low_score)] = 0
+        high_score[np.isnan(high_score)] = 0
+    else:
+        low_score = variance[0 : len(data) - 1 : step] * np.arange(
+            0, len(data) - 1, step
+        )
+        high_score = reverse_variance[1 : len(data) : step] * (
+            len(data) - np.arange(1, len(data), step)
+        )
+    scores = low_score + high_score
+    index = int(np.flatnonzero(scores == np.min(scores))[0]) if scores.size else 0
+    low_index = max(0, index - 1)
+    high_index = min(len(thresholds) - 1, index + 1)
+    return float((thresholds[low_index] + thresholds[high_index]) / 2)
+
+
+def _entropy_score(
+    variance: np.ndarray,
+    bins: int,
+    weight: np.ndarray | None = None,
+    *,
+    decimate: bool = True,
+) -> np.ndarray:
+    if weight is None:
+        count = len(variance)
+        weight = np.arange(0, count, count // bins) / float(count)
+    if decimate:
+        count = len(variance)
+        variance = variance[0 : count : count // bins]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        score = weight * np.log(variance * weight * np.sqrt(2 * np.pi * np.e))
+    score[np.isnan(score)] = np.inf
+    return score
+
+
+def _sorted_three_class_thresholds(
+    values: np.ndarray,
+    *,
+    entropy: bool,
+    bins: int = 128,
+) -> tuple[float, float]:
+    data = np.sort(np.asarray(values).ravel())
+    if data.size == 0:
+        return 0.0, 0.0
+    bins = min(bins, len(data))
+    step = len(data) // bins
+    thresholds = data[0 : len(data) : step]
+    variance = _running_variance(data)
+    reverse_variance = np.flipud(_running_variance(np.flipud(data)))
+    if entropy:
+        low_score = _entropy_score(variance + 1.0 / 512.0, bins)
+        high_score = np.flipud(
+            _entropy_score(_running_variance(np.flipud(data)) + 1.0 / 512.0, bins)
+        )
+    else:
+        sample_indexes = np.arange(0, len(data), step)
+        low_score = variance[::step] * sample_indexes
+        high_score = reverse_variance[::step] * (len(data) - sample_indexes)
+    cumulative = data.cumsum()
+    cumulative_squared = (data**2).cumsum()
+    first, second = np.mgrid[0 : len(low_score), 0 : len(high_score)] * step
+    width = (second - first).astype(float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        mean = (cumulative[second] - cumulative[first]) / width
+        mean_squared = (cumulative_squared[second] - cumulative_squared[first]) / width
+    if entropy:
+        middle = _entropy_score(
+            mean_squared - mean**2 + 1.0 / 512.0,
+            bins,
+            width / float(len(data)),
+            decimate=False,
+        )
+        middle[(first >= second) | np.isnan(middle)] = np.inf
+        score = low_score[first // step] + middle + high_score[second // step]
+    else:
+        middle = width * (mean_squared - mean**2)
+        middle[first >= second] = np.inf
+        score = (
+            low_score[first * bins // len(data)]
+            + middle
+            + high_score[second * bins // len(data)]
+        )
+    best = np.argwhere(score == np.min(score))[0]
+    return float(thresholds[best[0]]), float(thresholds[best[1]])
 
 
 class LiImageQualityThresholdStrategy(PrimitiveImageQualityThresholdStrategy):
@@ -927,8 +1057,8 @@ class NumbaNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
         )
 
 
-class CentrosomeNumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
-    """Explicit centrosome provider for image-quality primitives."""
+class CentrosomeNumpyImageQualityBackendStrategy(NumpyImageQualityBackendStrategy):
+    """Compatibility provider backed by absorbed image-quality primitives."""
 
     backend_key = CellProfilerBackendAuthority.backend_key(
         MemoryType.NUMPY, CellProfilerBackendProvider.CENTROSOME
@@ -936,25 +1066,6 @@ class CentrosomeNumpyImageQualityBackendStrategy(ImageQualityBackendStrategy):
     memory_type = MemoryType.NUMPY
     backend_provider = CellProfilerBackendProvider.CENTROSOME
     is_default_backend = False
-
-    def haralick_h3(self, image: np.ndarray, *, scale: int) -> float:
-        import centrosome.haralick
-
-        image_array = np.asarray(image, dtype=np.float32)
-        value = centrosome.haralick.Haralick(
-            image_array, np.ones(image_array.shape, dtype=int), 0, int(scale)
-        ).H3()
-        return _finite_scalar(value)
-
-    def radial_power_spectrum(
-        self, image: np.ndarray
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        import centrosome.radial_power_spectrum
-
-        radii, magnitude, power = centrosome.radial_power_spectrum.rps(
-            np.asarray(image)
-        )
-        return (np.asarray(radii), np.asarray(magnitude), np.asarray(power))
 
 
 def image_quality_backend(
@@ -1080,7 +1191,9 @@ def image_quality_threshold(
     ),
 ) -> float:
     """Calculate an automatic threshold using a MeasureImageQuality method."""
-    if pixel_data.size == 0 or not image_quality_has_multiple_unique_values(pixel_data):
+    if method is not ImageQualityThresholdMethod.OTSU and (
+        pixel_data.size == 0 or not image_quality_has_multiple_unique_values(pixel_data)
+    ):
         return 0.0
     values = pixel_data.astype(np.float32, copy=False)
     return ImageQualityThresholdStrategy.for_method(method).threshold(
