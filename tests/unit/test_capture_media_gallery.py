@@ -337,6 +337,7 @@ def test_current_neurite_still_reuses_existing_catalog_and_capture_leaf(
     current = OpenHCSGalleryScenarioCatalog.for_id("current-neurite-result")
     assert isinstance(current, ViewerStillGalleryScenario)
     assert current.published_paths() == ("current-neurite-result.webp",)
+    assert current.capture_target.human_review_required is True
     assert isinstance(
         OpenHCSGalleryScenarioCatalog.for_id("napari-roi-navigation"),
         MotionGalleryScenario,
@@ -346,6 +347,7 @@ def test_current_neurite_still_reuses_existing_catalog_and_capture_leaf(
     stitched = OpenHCSGalleryScenarioCatalog.for_id("stitched-neurite-overview")
     assert isinstance(stitched, ViewerStillGalleryScenario)
     assert stitched.published_paths() == ("stitched-neurite-overview.webp",)
+    assert stitched.capture_target.human_review_required is True
 
 
 def test_single_scenario_release_reuses_derived_still_batch(
