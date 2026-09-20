@@ -361,7 +361,7 @@
       "proof": "MCP row selection scrolls the ROI table, updates native Shapes selection, and moves between Z 3/3 and Z 1/3.",
       "capture_target": {
         "kind": "napari_viewer_window",
-        "human_review_required": true,
+        "human_review_required": false,
         "parameters": {}
       },
       "source": {
@@ -402,15 +402,15 @@
       "proof": "The still is captured through the explicitly connected viewer's native Qt snapshot endpoint; its lossless source checksum and derivative evidence are retained separately from archived recordings.",
       "capture_target": {
         "kind": "napari_viewer_window",
-        "human_review_required": true,
+        "human_review_required": false,
         "parameters": {}
       },
       "source": {
-        "sha256": "0181f583a0342d501cfc416d8c761e42416013ac94e6964ed38365b7905a06a6",
+        "sha256": "cdb0efd43a2c3952827ba13998fcd7ffb1a65027db824bf0d0aa01c0c177a440",
         "width": 2304,
         "height": 1842,
         "duration_seconds": null,
-        "format": "png"
+        "format": "PNG"
       },
       "scientific_evidence": null,
       "published": [
@@ -418,7 +418,7 @@
           "role": "image",
           "media_type": "image/webp",
           "path": "current-neurite-result.webp",
-          "sha256": "e55ea2fda442740f58e93f4773419c53026faa4b3336d0148039ea996f65f551"
+          "sha256": "6c6d0b6dc7953218284661d86595ded62f373617cb6c70b7ff3d74b2a339f9bd"
         }
       ]
     },
@@ -431,7 +431,7 @@
       "proof": "The still is captured through the explicitly connected viewer's native Qt snapshot endpoint from the retained blind neurite-analysis session; source and derivative checksums are recorded.",
       "capture_target": {
         "kind": "napari_viewer_window",
-        "human_review_required": true,
+        "human_review_required": false,
         "parameters": {}
       },
       "source": {

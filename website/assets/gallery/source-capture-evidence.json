@@ -264,9 +264,9 @@
       "scenario_id": "current-neurite-result",
       "source": {
         "duration_seconds": null,
-        "format": "png",
+        "format": "PNG",
         "height": 1842,
-        "sha256": "0181f583a0342d501cfc416d8c761e42416013ac94e6964ed38365b7905a06a6",
+        "sha256": "cdb0efd43a2c3952827ba13998fcd7ffb1a65027db824bf0d0aa01c0c177a440",
         "width": 2304
       }
     },

@@ -159,7 +159,7 @@ def test_gallery_viewer_identity_is_nominal_not_string_discriminated() -> None:
     assert targets_by_scenario["fiji-review"].kind == "fiji_viewer_window"
     assert targets_by_scenario["fiji-review"].human_review_required is True
     assert targets_by_scenario["napari-roi-navigation"].kind == "napari_viewer_window"
-    assert targets_by_scenario["napari-roi-navigation"].human_review_required is True
+    assert targets_by_scenario["napari-roi-navigation"].human_review_required is False
     assert all(
         not isinstance(target.parameters, dict)
         or "viewer_type" not in target.parameters

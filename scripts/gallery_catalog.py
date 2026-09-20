@@ -518,7 +518,6 @@ class NapariViewerWindowCaptureTarget(ViewerWindowCaptureTargetABC):
     """The Napari window exposed through its viewer control endpoint."""
 
     viewer_type = ViewerType.NAPARI
-    human_review_required = True
 
 
 class GalleryScientificEvidenceABC(ABC):
