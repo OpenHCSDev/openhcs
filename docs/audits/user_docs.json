@@ -171,7 +171,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -220,7 +220,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-16: Re-read the complete retired-impact notice against the benchmark CLI, receipt, inspection service, and focused tests. Clarified that typed provenance and artifact inspection support reproducibility but do not establish equivalence or authorize execution.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -704,7 +705,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -813,7 +814,8 @@
       "2026-09-14: Re-read the complete ownership reference against the changed importer. CellProfiler translation remains owned under openhcs/interop and the new terminal-artifact projection is derived by that owner; no package boundary or registration guidance changed.",
       "2026-09-16: Re-read the complete module-ownership reference against package discovery, benchmark declarations, control service, and MCP capability. Added the packaged benchmark area and explicitly separated command-owned execution from expert MCP inspection; all existing OpenHCS and extracted-foundation boundaries remain accurate.",
       "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`, `openhcs/runtime/viewer_protocol.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -926,7 +928,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1090,7 +1092,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid. Verbose test names, short tracebacks and a 120-second faulthandler diagnostic are documented; test selection and job deadlines are unchanged.",
       "2026-09-16: Re-read the complete installation and first-launch how-to against the new packaged benchmark command and expert MCP capability. Desktop/manual installation, optional extras, launch, demo, and update procedures remain accurate; benchmark operation is a maintainer surface and no prose change was required here.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -1638,7 +1641,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -1688,7 +1691,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-16: Re-read the complete compatibility redirect against benchmark package discovery and the new command. It still correctly delegates all installation and first-launch details to the canonical guide; no copied benchmark procedure was added.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -2310,7 +2314,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Includes the complete openhcs/omero deployment and plugin bundle in installed distributions."
       },
       {
@@ -2384,7 +2388,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-16: Re-read the complete OMERO integration guide against benchmark package discovery in pyproject.toml. OMERO application, PolyStore, OpenHCS deployment, compiler, materialization, and testing boundaries are unchanged; no prose change was required.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -2822,7 +2827,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       },
       {
@@ -2872,7 +2877,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-16: Re-read the complete installation redirect against the new packaged benchmark command. The canonical getting-started guide remains the correct owner of installation, optional surfaces, verification, and updates; no prose change was required.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
@@ -3451,7 +3457,7 @@
       },
       {
         "path": "pyproject.toml",
-        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
+        "sha256": "61621859d0f780d2d3e004782f242ef923d6cd1e83bb3bbc9761197ba33a4165",
         "role": "Declares the package version, Python requirement, dependency extras, scripts, and distribution metadata."
       }
     ],
@@ -3479,7 +3485,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-16: Re-read the complete CPU-only how-to against benchmark package discovery and the new entry point. CPU policy, environment selection, registry filtering, and failure behavior remain unchanged; benchmark runtime configuration stays with the benchmark command and no prose change was required.",
-      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 PolyStore-release follow-up: re-read the complete page against the exact `pyproject.toml` PolyStore floor change from 0.2.17 to released 0.2.18 and the matching tagged submodule advance. The page contains no conflicting PolyStore version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {
