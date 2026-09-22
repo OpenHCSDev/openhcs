@@ -38,11 +38,11 @@ from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     RuntimeArtifactMaterializationPlan,
 )
-from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
     RuntimeExecutionAxisScope,
 )
+from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import AnalysisConsolidationConfig, WellFilterMode
 from openhcs.core.function_patterns import (
     DEFAULT_GROUP_KEY,
@@ -61,8 +61,8 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation,
     RuntimeExecutionObservation,
 )
-from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.pipeline.artifact_planning import TerminalMaterializationSpec
+from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
@@ -121,6 +121,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     observed_materialized_artifact_output_paths,
     planned_materialization_preview,
     runtime_artifact_materializations,
+    runtime_artifact_materializations_from_records,
     runtime_export_artifact_output_paths,
 )
 from openhcs.core.steps.function_output_identity import (
@@ -133,6 +134,9 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerSurface,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
+from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
+    TILE_POSITIONS_OUTPUT,
+)
 from openhcs.processing.materialization import (
     CsvOptions,
     FileBundleOptions,
@@ -152,9 +156,6 @@ from openhcs.processing.materialization.core import (
 from openhcs.processing.materialization.options import (
     ImageFileOptions,
     MaterializedFilenameIdentity,
-)
-from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
-    TILE_POSITIONS_OUTPUT,
 )
 
 
@@ -2243,6 +2244,147 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
     assert isinstance(spec.outputs[0], CsvOptions)
     assert tuple(data) == ({"site": "1", "area": 42},)
     assert path == "/analysis/A01_w1_measurements_step7.roi.zip"
+
+
+def _duplicate_scalar_image_context(
+    output_plan: ArtifactOutputPlan,
+    *,
+    source_channel: str = "3",
+    execution_channels: tuple[str, str] = ("1", "3"),
+    conflicting_payload: bool = False,
+):
+    context = _context(FileManagerStub())
+    metadata = ImagePayloadMetadata(
+        source_path=f"/input/A01_s001_w{source_channel}_z001_t001.tif",
+        source_component_metadata={
+            "well": "A01",
+            "site": "1",
+            "channel": source_channel,
+            "z_index": "1",
+            "timepoint": "1",
+            "extension": ".tif",
+        },
+    )
+    for index, channel in enumerate(execution_channels):
+        fill_value = 2 if conflicting_payload and index == 0 else 1
+        group_plan = output_plan.for_group(channel)
+        execution_scope = RuntimeExecutionAxisScope.from_raw(
+            "A01",
+            component=AllComponents.CHANNEL,
+            value=channel,
+            fixed_component_values=(
+                (AllComponents.Z_INDEX, "1"),
+                (AllComponents.TIMEPOINT, "1"),
+            ),
+        )
+        context.runtime_value_store.record(
+            RuntimeValue.normalize_for_execution_scope(
+                group_plan,
+                metadata.payload_with(
+                    np.full((3, 4), fill_value, dtype=np.uint8),
+                    None,
+                ),
+                execution_scope=execution_scope,
+            ),
+            path=group_plan.path,
+            backend="memory",
+        )
+    return context
+
+
+@pytest.mark.parametrize(
+    ("artifact_name", "source_channel", "execution_channels"),
+    (
+        pytest.param(
+            "OutlinedDNA",
+            "3",
+            ("1", "3"),
+            id="OverlayOutlines-fixed-source",
+        ),
+        pytest.param(
+            "SaveImages_9_image_1",
+            "1",
+            ("2", "1"),
+            id="SaveImages-fixed-source",
+        ),
+    ),
+)
+def test_overlay_and_save_image_materialization_use_source_address_owner(
+    artifact_name,
+    source_channel,
+    execution_channels,
+):
+    output_plan = ArtifactOutputPlan(
+        name=artifact_name,
+        path=f"/memory/A01_{artifact_name}_step7.pkl",
+        artifact_type=ImageArtifactType,
+        group_keys=(None,),
+        group_component=AllComponents.CHANNEL,
+        paths_by_group={None: f"/memory/A01_{artifact_name}_step7.pkl"},
+        materialization=TerminalMaterializationSpec(
+            ImageFileOptions(filename_suffix=".tif")
+        ),
+    )
+    context = _duplicate_scalar_image_context(
+        output_plan,
+        source_channel=source_channel,
+        execution_channels=execution_channels,
+    )
+    plan = _plan(output_plan, group_by_value="channel")
+
+    records = actual_materialization_records(
+        store=context.runtime_value_store,
+        plan=plan,
+        output_plan=output_plan,
+    )
+    materializations = runtime_artifact_materializations(plan, context)
+    observed_materializations = runtime_artifact_materializations_from_records(
+        plan,
+        context,
+        context.runtime_value_store.observed_values,
+    )
+
+    assert len(records) == 1
+    assert (
+        records[0].key.scope.value_text_for_component(AllComponents.CHANNEL)
+        == source_channel
+    )
+    assert len(materializations) == 1
+    assert len(observed_materializations) == 1
+    assert (
+        materializations[0].record.key.scope.value_text_for_component(
+            AllComponents.CHANNEL
+        )
+        == source_channel
+    )
+
+
+def test_scalar_image_materialization_rejects_conflicting_duplicate_payloads():
+    output_plan = ArtifactOutputPlan(
+        name="Overlay",
+        path="/memory/A01_Overlay_step7.pkl",
+        artifact_type=ImageArtifactType,
+        group_keys=(None,),
+        group_component=AllComponents.CHANNEL,
+        paths_by_group={None: "/memory/A01_Overlay_step7.pkl"},
+        materialization=TerminalMaterializationSpec(
+            ImageFileOptions(filename_suffix=".tif")
+        ),
+    )
+    context = _duplicate_scalar_image_context(
+        output_plan,
+        conflicting_payload=True,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Conflicting scalar image materialization payloads",
+    ):
+        actual_materialization_records(
+            store=context.runtime_value_store,
+            plan=_plan(output_plan, group_by_value="channel"),
+            output_plan=output_plan,
+        )
 
 
 def test_actual_materialization_records_uses_dynamic_runtime_groups():
