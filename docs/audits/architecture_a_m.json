@@ -175,7 +175,7 @@
       },
       {
         "path": "tests/unit/test_function_artifact_materialization.py",
-        "sha256": "773538e113585770a286f185ffbc09b768fe0dd5981d1e76accb66c6687e5d8b",
+        "sha256": "4ae063cac0f93a03b5b4aab7304c8d7e6bcfc04ec74d107ea14c94f76be755ca",
         "role": "Proves consolidation consumes runtime CSV values, uses the compiled backend destination, ignores non-table artifacts, and propagates failures."
       },
       {
@@ -206,7 +206,8 @@
       "On 2026-09-08, re-read the full explanation and documented per-directory storage ownership and output-root global consolidation. The native multi-directory regression passes, and a GUI/MCP POST pilot consolidated all three analysis directories and their merged summary successfully.",
       "2026-09-09: Re-read this page against the changed source authorities for release 0.8.3; retained its Diataxis purpose and updated affected workflow claims.",
       "2026-09-16: Re-read the complete page against the projected-ROI filename-identity change. Consolidation still selects paths through the shared target request and does not own source-identity projection; 249 focused materialization and adjacent runtime tests passed.",
-      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`, `tests/unit/test_orchestrator_lane_planning.py`, `openhcs/processing/materialization/core.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`."
+      "2026-09-22 PR #126 targeted authority-delta review: re-read the complete page against `openhcs/core/config.py`, `tests/unit/test_orchestrator_lane_planning.py`, `openhcs/processing/materialization/core.py`; retained the supported claims, findings, and disposition, then refreshed only these compared evidence hashes. Review scope and the separate blocking runtime evidence are recorded in `docs/audits/pr126_authority_delta_review_20260922.md`.",
+      "2026-09-22 PR #126 integrated-repair follow-up: re-read the complete page and the final owner/test changes in `tests/unit/test_function_artifact_materialization.py`. The runtime-observation materialization path now applies the same nominal image reducer as ordinary materialization, preserving exact source-address ownership for consolidation and rejecting conflicting duplicate payloads; the documented no-rescan and typed-record boundary remains accurate. Refreshed only these compared evidence hashes; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {

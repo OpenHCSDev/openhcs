@@ -60,14 +60,39 @@ No dependent page required a factual prose correction. The review therefore
 retains existing findings and dispositions, appends this targeted validation
 record, and refreshes only the 106 compared authority hashes.
 
+## Integrated repair follow-up
+
+After the initial review, the coordinated repair stack added three commits:
+
+- `83143759b` makes result-image inventory records directly streamable through
+  the Image Browser's existing typed path;
+- `2d506c180` projects one declared payload-local plane component into exact
+  scalar Fiji items before window grouping and rejects malformed, mismatched,
+  or conflicting declarations; and
+- `1109bafaf` reduces repeated scalar image materializations to the one
+  execution scope that owns their complete source address and rejects
+  conflicting payloads.
+
+The Image Browser change modifies no recorded audit authority and remains
+consistent with the documented ability to inspect source and output references.
+The Fiji and scalar-materialization repairs invalidate six recorded edges. The
+complete affected Fiji, visualization, storage, and analysis-consolidation pages
+were re-read against the four changed owner/test files. Their existing ownership
+and failure-boundary claims remain accurate: exact coordinates come from the
+typed payload, scalar persistence follows source identity rather than repeated
+execution groups, and malformed or conflicting projections fail rather than
+being guessed or overwritten. No prose correction was required. Only those six
+compared hashes receive a follow-up refresh.
+
 ## Validation boundary
 
-This editorial review does not waive runtime or release gates. PR #126's
-current CI separately reports a duplicate source-projection-address failure,
-a Fiji missing-`site` viewer projection, and an unreleased ObjectState
-candidate. Those fail-loud results remain merge blockers and must be repaired
-and rerun. Any repair that changes one of the 30 reviewed authority files must
-invalidate and refresh its dependent audit edges again after comparison.
+This editorial review does not waive runtime or release gates. At the initial
+review, PR #126's CI separately reported a duplicate
+source-projection-address failure, a Fiji missing-`site` viewer projection, and
+an unreleased ObjectState candidate. The integrated commits above address the
+two runtime failures; their full CI rerun and the independent ObjectState
+release gate remain required. Any later repair that changes a reviewed authority
+must invalidate and refresh its dependent audit edges again after comparison.
 
 The documentation acceptance command is:
 
