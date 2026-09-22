@@ -1195,7 +1195,7 @@
     "authority": [
       {
         "path": "pyproject.toml",
-        "sha256": "7c1303955e30f6cc513542b9a16d20af3663b9524c7a8ba7ff2407e368d883d7",
+        "sha256": "c9cd9d3c76863514dc7fc8f70e3c087e6e0622cb99db83e697a6495bd36c8df7",
         "role": "Pins the eight first-party package constraints and documents their installed integration surface."
       },
       {
@@ -1318,7 +1318,8 @@
       "2026-09-10 UTC: Re-read the complete page against the authoring/preview release changes; compared its affected claims and owner boundaries before refreshing hashes. Review scope, substantive changes and 54 OpenHCS / 77 pyqt-reactive passing regressions are recorded in docs/audits/authoring_preview_review_20260910.md. Unchanged installation, processing and generic-owner redirect claims were retained.",
       "Final combined 0.8.5 review: complete page reread against addd08493, pyqt-reactive 4954bdb and the reviewed dependency-floor delta. Only the pyqt-reactive floor rises to 0.3.23; installation, Python support, extras and ownership claims remain valid.",
       "2026-09-16: Re-read the complete reference against benchmark package discovery and the new console entry point in pyproject.toml. Extracted-package ownership, dependency constraints, and integration-page policy are unchanged; no prose change was required.",
-      "2026-09-16: Re-read the complete ownership catalog against pyqt-reactive d751bf8..f246b58. The package added paint-observed flash playback and bounded renderer-frame observation to its existing Qt snapshot owner; these remain generic pyqt-reactive mechanisms and do not move OpenHCS domain ownership. The changed pyqt-reactive regression selection passed 180 tests."
+      "2026-09-16: Re-read the complete ownership catalog against pyqt-reactive d751bf8..f246b58. The package added paint-observed flash playback and bounded renderer-frame observation to its existing Qt snapshot owner; these remain generic pyqt-reactive mechanisms and do not move OpenHCS domain ownership. The changed pyqt-reactive regression selection passed 180 tests.",
+      "2026-09-22 PR #126 released-dependency follow-up: re-read the complete page against the exact `pyproject.toml` ObjectState floor change from 1.1.7 to released 1.1.8 and the matching tagged submodule advance. The page contains no conflicting version claim, and its package-ownership, supported-environment, installation, or compatibility boundary remains accurate for its Diataxis purpose. Refreshed only this compared evidence hash; details are retained in `docs/audits/pr126_authority_delta_review_20260922.md`."
     ]
   },
   {

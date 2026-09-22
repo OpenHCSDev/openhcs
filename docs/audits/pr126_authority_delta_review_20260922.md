@@ -84,15 +84,35 @@ execution groups, and malformed or conflicting projections fail rather than
 being guessed or overwritten. No prose correction was required. Only those six
 compared hashes receive a follow-up refresh.
 
+## Released-dependency follow-up
+
+ObjectState 1.1.8 was subsequently published from tagged commit `b0004daf` and
+verified as installer-visible. Integration commit `42bcf6e36` advances the
+recorded submodule from the reviewed release candidate to that tag and raises
+the published dependency floor in `pyproject.toml` from 1.1.7 to 1.1.8. The
+owner-package delta after the candidate contains only its release version plus
+code-quality and coverage-receipt cleanup; it does not change the reconciliation
+semantics reviewed above.
+
+The `pyproject.toml` change invalidates 17 recorded evidence edges. The complete
+architecture, development, project-surface, installation, integration, and
+compatibility pages owning those edges were re-read against the exact floor and
+gitlink changes. Their package-ownership, supported-environment, installation,
+and extracted-foundation claims remain accurate, and none states a conflicting
+ObjectState version. No prose correction was required. Only those 17 compared
+`pyproject.toml` hashes receive this follow-up refresh; the gitlink is not a
+recorded authority for these pages.
+
 ## Validation boundary
 
 This editorial review does not waive runtime or release gates. At the initial
 review, PR #126's CI separately reported a duplicate
 source-projection-address failure, a Fiji missing-`site` viewer projection, and
-an unreleased ObjectState candidate. The integrated commits above address the
-two runtime failures; their full CI rerun and the independent ObjectState
-release gate remain required. Any later repair that changes a reviewed authority
-must invalidate and refresh its dependent audit edges again after comparison.
+an unreleased ObjectState candidate. The integrated runtime commits address the
+two runtime failures, and the released dependency follow-up closes the
+ObjectState publication gate. Full integrated CI still must verify the combined
+tree. Any later repair that changes a reviewed authority must invalidate and
+refresh its dependent audit edges again after comparison.
 
 The documentation acceptance command is:
 
