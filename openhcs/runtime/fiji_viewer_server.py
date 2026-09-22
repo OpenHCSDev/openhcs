@@ -25,8 +25,10 @@ from polystore.streaming.receivers.core import (
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.config import TransportMode, ZMQConfig
 from zmqruntime.streaming import StreamingVisualizerServer
+from zmqruntime.viewer_protocol import ViewerWireField
 
 from openhcs.core.config import FijiDisplayConfig
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
@@ -36,8 +38,10 @@ from openhcs.runtime.viewer_component_system import (
     ComponentValue,
     ViewerBatchPayloadFields,
     ViewerComponentAxisSemantics,
+    ViewerComponentMetadataNormalizer,
     ViewerComponentMetadataPayload,
     ViewerComponentNameMetadata,
+    ViewerComponentValueDomainPayload,
     ViewerDimensionValueAuthority,
     ViewerDisplayBatchContext,
     ViewerMappingDisplayConfigInput,
@@ -46,6 +50,7 @@ from openhcs.runtime.viewer_component_system import (
 )
 from openhcs.runtime.viewer_protocol import (
     FijiPayloadKind,
+    OpenHCSViewerServerABC,
     ViewerBatchContextWireField,
     ViewerBatchMessageType,
     ViewerBatchWireField,
@@ -55,7 +60,6 @@ from openhcs.runtime.viewer_protocol import (
     ViewerControlReplyPayload,
     ViewerControlResponseField,
     ViewerProtocolStatus,
-    OpenHCSViewerServerABC,
     ViewerServerLaunchRequest,
     ViewerSettlePhase,
     ViewerSettleProgress,
@@ -351,6 +355,136 @@ class FijiWireItem(WindowProjectionPayloadProvider):
         if value is None:
             return "unknown"
         return str(value)
+
+
+class FijiPayloadLocalPlaneExpander:
+    """Project one ordered payload-local plane axis into scalar Fiji items."""
+
+    @classmethod
+    def expand_items(
+        cls,
+        items: Sequence[FijiWireItem],
+    ) -> list[FijiWireItem]:
+        return [projected for item in items for projected in cls.expand_item(item)]
+
+    @classmethod
+    def expand_item(cls, item: FijiWireItem) -> tuple[FijiWireItem, ...]:
+        domain = cls._plane_component_domain(item)
+        if not domain.entries:
+            return (item,)
+        if len(domain.entries) != 1:
+            raise ValueError(
+                "Fiji payload-local plane projection requires exactly one "
+                "component declaration."
+            )
+        cls._require_plane_axis(item)
+        entry = domain.entries[0]
+        if not entry.values:
+            raise ValueError(
+                "Fiji payload-local plane projection requires at least one "
+                f"coordinate for component {entry.component!r}."
+            )
+        cls._require_consistent_scalar_metadata(item, entry.component, entry.values)
+
+        if ViewerWireField.DATA.value not in item.payload:
+            if len(entry.values) != 1:
+                raise ValueError(
+                    "Fiji cannot project a multi-plane component declaration "
+                    "without an image payload."
+                )
+            return (
+                cls._project_item(
+                    item,
+                    component=entry.component,
+                    value=entry.values[0],
+                    data=None,
+                ),
+            )
+
+        data = item.data
+        if data.ndim < 3:
+            raise ValueError(
+                "Fiji payload-local plane projection requires an image with a "
+                f"leading plane axis, got shape {data.shape!r}."
+            )
+        if data.shape[0] != len(entry.values):
+            raise ValueError(
+                "Fiji payload-local plane coordinate count does not match the "
+                f"leading image axis: {len(entry.values)} != {data.shape[0]}."
+            )
+        return tuple(
+            cls._project_item(
+                item,
+                component=entry.component,
+                value=value,
+                data=data[index],
+            )
+            for index, value in enumerate(entry.values)
+        )
+
+    @staticmethod
+    def _plane_component_domain(
+        item: FijiWireItem,
+    ) -> ViewerComponentValueDomainPayload:
+        raw_domain = item.payload.get(ViewerWireField.PLANE_COMPONENT_VALUES.value)
+        if raw_domain is None:
+            return ViewerComponentValueDomainPayload.empty()
+        if not isinstance(raw_domain, Mapping):
+            raise TypeError("Fiji item plane_component_values field must be a mapping.")
+        return ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
+            raw_domain,
+            context="Fiji image plane component values",
+        )
+
+    @staticmethod
+    def _require_plane_axis(item: FijiWireItem) -> RuntimePlaneAxis:
+        raw_axis = item.payload.get(ViewerWireField.PLANE_AXIS.value)
+        if raw_axis is None:
+            raise ValueError(
+                "Fiji payload-local plane component declaration requires plane_axis."
+            )
+        try:
+            return RuntimePlaneAxis(raw_axis)
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                f"Unsupported Fiji payload-local plane axis {raw_axis!r}."
+            ) from error
+
+    @staticmethod
+    def _require_consistent_scalar_metadata(
+        item: FijiWireItem,
+        component: str,
+        values: Sequence[ComponentValue],
+    ) -> None:
+        if component not in item.metadata:
+            return
+        normalized = ViewerComponentMetadataNormalizer().normalize_value(
+            component,
+            item.metadata[component],
+        )
+        if len(values) != 1 or normalized != values[0]:
+            raise ValueError(
+                "Fiji item scalar metadata conflicts with its payload-local "
+                f"plane component {component!r}."
+            )
+
+    @staticmethod
+    def _project_item(
+        item: FijiWireItem,
+        *,
+        component: str,
+        value: ComponentValue,
+        data: np.ndarray | None,
+    ) -> FijiWireItem:
+        payload = item.payload.copy()
+        metadata = dict(item.metadata)
+        metadata[component] = value
+        payload[ViewerWireField.METADATA.value] = metadata
+        payload.pop(ViewerWireField.PLANE_AXIS.value, None)
+        payload.pop(ViewerWireField.PLANE_COMPONENT_VALUES.value, None)
+        if data is not None:
+            payload[ViewerWireField.DATA.value] = data
+        return FijiWireItem(payload)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1513,8 +1647,9 @@ class FijiWindowItemProjection(GroupedWindowItems[FijiWireItem]):
         items: Sequence[FijiWireItem],
         component_axis_semantics: ViewerComponentAxisSemantics,
     ) -> "FijiWindowItemProjection":
+        projected_items = FijiPayloadLocalPlaneExpander.expand_items(items)
         projection = component_axis_semantics.layout.group_window_payload_providers(
-            items
+            projected_items
         )
         return cls(
             window_components=projection.window_components,

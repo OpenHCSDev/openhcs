@@ -4,10 +4,16 @@ import sys
 from types import ModuleType, SimpleNamespace
 
 import numpy as np
+import pytest
 import tifffile
 from zmqruntime.streaming import StreamingVisualizerServer
 
-from openhcs.core.config import FijiDisplayConfig, FijiStreamingConfig
+from openhcs.core.config import (
+    FijiDisplayConfig,
+    FijiStreamingConfig,
+    NapariDisplayConfig,
+)
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.runtime import fiji_viewer_server as fiji_viewer_server_module
 from openhcs.runtime.fiji_macro_runtime import (
     FijiMacroExecutionRequest,
@@ -27,6 +33,7 @@ from openhcs.runtime.fiji_viewer_server import (
     FijiImagePlaneLookup,
     FijiImageStackBuilder,
     FijiPayloadHandlerRequest,
+    FijiPayloadLocalPlaneExpander,
     FijiPlaneGeometry,
     FijiRoiPayloadHandler,
     FijiSettleControlPlan,
@@ -36,6 +43,10 @@ from openhcs.runtime.fiji_viewer_server import (
     FijiWindowItemProjection,
     FijiWindowRegistry,
     FijiWireItem,
+)
+from openhcs.runtime.napari_viewer_server import (
+    NapariStreamLayerContext,
+    PayloadMap,
 )
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsAuthority,
@@ -566,6 +577,128 @@ def test_fiji_window_item_projection_preserves_nominal_items() -> None:
         for component in FijiDisplayConfig.COMPONENT_ORDER
         if component in {"site", "well", "timepoint"}
     ]
+
+
+def test_payload_local_site_axis_projects_exactly_across_fiji_and_napari() -> None:
+    data = np.stack(
+        (
+            np.full((3, 4), 11, dtype=np.uint8),
+            np.full((3, 4), 22, dtype=np.uint8),
+        )
+    )
+    payload = {
+        "data_type": "image",
+        "producer_identity": PRODUCER_IDENTITY,
+        "metadata": {
+            "well": "A14",
+            "channel": 1,
+            "z_index": 0,
+            "timepoint": 0,
+        },
+        "path": "aggregate.tif",
+        "data": data,
+        "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+        "plane_component_values": {"site": [1, 2]},
+    }
+    component_domain = _component_value_domain(
+        {
+            "well": ["A14"],
+            "site": [1, 2],
+            "channel": [1],
+            "z_index": [0],
+            "timepoint": [0],
+        }
+    )
+
+    fiji_semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerObjectDisplayConfigInput(FijiDisplayConfig()),
+        component_domain,
+    )
+    fiji_projection = FijiWindowItemProjection.from_items(
+        [FijiWireItem.from_payload(payload)],
+        fiji_semantics,
+    )
+    projected_items = next(iter(fiji_projection.windows.values()))
+
+    assert [item.metadata["site"] for item in projected_items] == [1, 2]
+    np.testing.assert_array_equal(projected_items[0].data, data[0])
+    np.testing.assert_array_equal(projected_items[1].data, data[1])
+    assert all("plane_axis" not in item.payload for item in projected_items)
+    assert all("plane_component_values" not in item.payload for item in projected_items)
+
+    fiji_coordinates = fiji_projection.coordinate_components.collect(projected_items)
+    assert fiji_coordinates.frame.values == [
+        (1, 0, "A14"),
+        (2, 0, "A14"),
+    ]
+    label_builder = FijiStackSliceLabelBuilder(fiji_coordinates)
+    assert [
+        label_builder.label_for(fiji_coordinates.key(item.metadata))
+        for item in projected_items
+    ] == ["C1_Z0_T1_0_A14", "C1_Z0_T2_0_A14"]
+
+    napari_semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerObjectDisplayConfigInput(NapariDisplayConfig()),
+        component_domain,
+    )
+    napari_context = NapariStreamLayerContext.from_payload_map(
+        PayloadMap(payload, "cross-backend aggregate image"),
+        napari_semantics,
+        NapariDisplayConfig(),
+    )
+
+    assert "site" not in napari_context.address.components
+    assert napari_context.plane_component_domain.to_wire_mapping() == {"site": [1, 2]}
+
+
+def test_fiji_payload_local_plane_axis_rejects_coordinate_count_mismatch() -> None:
+    item = FijiWireItem.from_payload(
+        {
+            "data_type": "image",
+            "producer_identity": PRODUCER_IDENTITY,
+            "metadata": {
+                "well": "A14",
+                "channel": 1,
+                "z_index": 0,
+                "timepoint": 0,
+            },
+            "data": np.zeros((3, 4, 5), dtype=np.uint8),
+            "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+            "plane_component_values": {"site": [1, 2]},
+        }
+    )
+
+    with pytest.raises(ValueError, match="coordinate count does not match"):
+        FijiPayloadLocalPlaneExpander.expand_item(item)
+
+
+def test_fiji_payload_local_plane_axis_rejects_malformed_declarations() -> None:
+    payload = {
+        "data_type": "image",
+        "producer_identity": PRODUCER_IDENTITY,
+        "metadata": {
+            "well": "A14",
+            "z_index": 0,
+            "timepoint": 0,
+        },
+        "data": np.zeros((2, 4, 5), dtype=np.uint8),
+        "plane_axis": RuntimePlaneAxis.RUNTIME_SLICE.value,
+        "plane_component_values": {
+            "site": [1, 2],
+            "channel": [1, 2],
+        },
+    }
+
+    with pytest.raises(ValueError, match="exactly one component declaration"):
+        FijiPayloadLocalPlaneExpander.expand_item(FijiWireItem.from_payload(payload))
+
+    payload_without_axis = dict(payload)
+    payload_without_axis["plane_component_values"] = {"site": [1, 2]}
+    payload_without_axis.pop("plane_axis")
+    with pytest.raises(ValueError, match="requires plane_axis"):
+        FijiPayloadLocalPlaneExpander.expand_item(
+            FijiWireItem.from_payload(payload_without_axis)
+        )
 
 
 def test_fiji_plane_geometry_owns_extraction_padding_and_shape() -> None:
