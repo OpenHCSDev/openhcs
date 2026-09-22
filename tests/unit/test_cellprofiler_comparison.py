@@ -11,7 +11,6 @@ from benchmark.adapters.cellprofiler import (
     NativeCellProfilerInputDomainStrategyKey,
     NativeCellProfilerProvenanceField,
 )
-from benchmark.cellprofiler_benchmark_cli import _filter_cases_by_name
 from benchmark.cellprofiler_comparison import (
     CellProfilerComparisonCase,
     NativeCellProfilerReferenceScope,
@@ -24,6 +23,7 @@ from benchmark.cellprofiler_comparison import (
     load_comparison_cases,
     load_observations_jsonl,
     run_comparison_suite,
+    select_comparison_cases,
     write_module_coverage_artifacts,
     write_observations_csv,
     write_phase_timing_csv,
@@ -602,7 +602,7 @@ def test_filter_comparison_cases_by_exact_name_preserves_merged_params(
         encoding="utf-8",
     )
 
-    selected = _filter_cases_by_name(load_comparison_cases(manifest), ("second",))
+    selected = select_comparison_cases(load_comparison_cases(manifest), ("second",))
 
     assert tuple(case.name for case in selected) == ("second",)
     assert selected[0].pipeline_params == {
@@ -628,7 +628,7 @@ def test_filter_comparison_cases_by_exact_name_reports_unknown_and_available(
     )
 
     with pytest.raises(ValueError) as exc_info:
-        _filter_cases_by_name(cases, ("missing", "other"))
+        select_comparison_cases(cases, ("missing", "other"))
 
     message = str(exc_info.value)
     assert "Unknown benchmark case name(s): missing, other" in message

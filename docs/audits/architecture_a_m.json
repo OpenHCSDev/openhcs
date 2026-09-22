@@ -1883,7 +1883,7 @@
   },
   {
     "path": "docs/source/architecture/mcp_distribution.rst",
-    "source_sha256": "ba9692f0edcb14652338d209253dfd77e98613a205887128a1c9193c38da57bc",
+    "source_sha256": "f86ec7b5a140c89af783ea6f81a5f0121a58e9c49e5019e04fda0465723feee6",
     "audience": [
       "OpenHCS MCP maintainers",
       "packaging and hosted-deployment integrators"
@@ -2073,7 +2073,7 @@
       },
       {
         "path": "benchmark/cellprofiler_benchmark_cli.py",
-        "sha256": "fb0d0356807d4e8ade9810120fb5ee3dd5acd5d994e26797ff0ea137d3156de1",
+        "sha256": "64e69be0f8792766e2fc312b2610fb12c143e5aee0f074d279670f34cf003883",
         "role": "Owns the registry-derived installed benchmark execution and report command surface."
       },
       {
@@ -2083,17 +2083,17 @@
       },
       {
         "path": "benchmark/contracts/control.py",
-        "sha256": "67ae851277b0115f91a60ef27c8e1c1df173ae132db7590874a9fe57b471c9ff",
+        "sha256": "5a504353bd9c1713fcd4a0a1d001df9a66ebcc2eec99a5bc94a9a1993ad8c33e",
         "role": "Declares the lightweight typed benchmark inspection request, result, and artifact contracts imported by capability discovery."
       },
       {
         "path": "benchmark/control.py",
-        "sha256": "2a9f58ceed80c44830e6a1ccb0547d0ff1fe56a5db9f22847db73e796224ef14",
+        "sha256": "c7f29101836b778e15eb18043894858f391c164dcd545ad3306cf60822430aae",
         "role": "Implements read-only receipt, observation-progress, and structured-artifact inspection without importing benchmark execution modules."
       },
       {
         "path": "tests/unit/test_benchmark_control.py",
-        "sha256": "bc1dd9cb494923cef8ce94f6677c33246a673be3a845809ea4a5e4570878d708",
+        "sha256": "8ea6dbc1838730cc4f7b13b0f4d38aaabf45f6295bab32504c1196040ca12bd1",
         "role": "Proves receipt lifecycle, path policy, typed MCP projection, artifact discovery, and lightweight capability imports."
       }
     ],

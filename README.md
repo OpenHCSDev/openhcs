@@ -336,7 +336,10 @@ The GUI and execution services consume the same `list[FunctionStep]`,
 low-level execution call and progress lifecycle.
 
 Maintainers running CellProfiler/OpenHCS comparisons can use the packaged
-`openhcs-benchmark` command. Each comparison run records a typed receipt with
+`openhcs-benchmark` command. `openhcs-benchmark list-cases --manifest PATH`
+checks declared case sources without acquiring data or starting a run; the
+expert `openhcs_list_benchmark_cases` MCP tool exposes the same selection.
+Each comparison run records a typed receipt with
 its lifecycle state, exact rerun command, declared work, and structured result
 artifacts. On the expert `full` MCP surface, `openhcs_inspect_benchmark_run`
 can inspect an existing result directory allowed by the local read-path policy.

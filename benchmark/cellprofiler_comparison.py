@@ -673,9 +673,13 @@ class CellProfilerComparisonObservation:
         return payload
 
 
-def load_comparison_cases(path: Path) -> tuple[CellProfilerComparisonCase, ...]:
+def load_comparison_cases(
+    path: Path,
+    *,
+    materialize_roots: bool | None = None,
+) -> tuple[CellProfilerComparisonCase, ...]:
     """Load benchmark cases from a JSON manifest."""
-    manifest = ComparisonManifest.load(path)
+    manifest = ComparisonManifest.load(path, materialize_roots=materialize_roots)
     payload = manifest.payload
     raw_cases = payload.get("cases")
     if not isinstance(raw_cases, Sequence):
@@ -746,6 +750,30 @@ def load_comparison_cases(path: Path) -> tuple[CellProfilerComparisonCase, ...]:
             )
         )
     return tuple(cases)
+
+
+def select_comparison_cases(
+    cases: Iterable[CellProfilerComparisonCase],
+    requested_names: tuple[str, ...],
+) -> tuple[CellProfilerComparisonCase, ...]:
+    """Select exact declared cases for both inspection and execution."""
+
+    available = tuple(cases)
+    names = tuple(case.name for case in available)
+    if len(names) != len(set(names)):
+        raise ValueError("Benchmark manifest case names must be unique.")
+    if not requested_names:
+        return available
+    unknown = tuple(
+        name for name in dict.fromkeys(requested_names) if name not in names
+    )
+    if unknown:
+        raise ValueError(
+            "Unknown benchmark case name(s): "
+            f"{', '.join(unknown)}. Available case name(s): {', '.join(names)}"
+        )
+    selected = set(requested_names)
+    return tuple(case for case in available if case.name in selected)
 
 
 def _manifest_well_filter_config(

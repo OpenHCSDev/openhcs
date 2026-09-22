@@ -14,6 +14,37 @@ from benchmark.contracts.run_receipt import ComparisonSuiteRunStatus
 
 
 @dataclass(frozen=True, slots=True)
+class BenchmarkCaseDiscoveryRequest:
+    """Select exact case names from one comparison manifest."""
+
+    manifest_path: str
+    case_names: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkCaseSummary:
+    """Source readiness projected from one manifest-owned case."""
+
+    name: str
+    dataset_id: str
+    dataset_path: str
+    cppipe_path: str
+    dataset_present: bool
+    cppipe_present: bool
+    microscope_type: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkCaseCatalog:
+    """Read-only selected work; no dataset acquisition or run submission."""
+
+    schema_version: str
+    manifest_path: str
+    cases: tuple[BenchmarkCaseSummary, ...]
+    warnings: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class BenchmarkRunInspectionRequest:
     """Select one benchmark output directory for read-only inspection."""
 

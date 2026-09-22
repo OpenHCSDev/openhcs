@@ -83,6 +83,9 @@ The installed ``openhcs-benchmark`` entry point owns benchmark execution and
 report-generation commands. Comparison runs persist a typed lifecycle receipt,
 append-only observations, and structured result artifacts through the benchmark
 contract package.
+The read-only ``openhcs_list_benchmark_cases`` capability and CLI
+``list-cases`` command share exact manifest-case selection. Discovery disables
+manifest acquisition, so inspecting proposed work cannot download data.
 
 The expert-only ``openhcs_inspect_benchmark_run`` capability is a read-only
 projection of one comparison-suite directory. ``AgentPathPolicy`` first requires

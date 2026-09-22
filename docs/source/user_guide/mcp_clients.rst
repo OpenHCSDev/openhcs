@@ -160,12 +160,20 @@ Rejected paths report the effective readable or writable roots used by the
 running server, so an agent can choose a permitted destination without
 inspecting OpenHCS source or guessing an unavailable environment variable.
 
-Inspect an existing benchmark run
----------------------------------
+Inspect benchmark cases and runs
+--------------------------------
 
 The OpenHCS package installs ``openhcs-benchmark`` for benchmark execution and
 report generation. Its comparison runs write a typed lifecycle receipt,
 append-only observations, and structured JSON, JSONL, and CSV artifacts.
+
+Before starting a comparison, list the manifest's declared work with
+``openhcs-benchmark list-cases --manifest PATH``. Add ``--case NAME`` to select
+an exact case. On the expert ``full`` MCP surface, grant the manifest path under
+``OPENHCS_AGENT_READ_ROOTS`` and call ``openhcs_list_benchmark_cases`` with
+``manifest_path`` and optional ``case_names``. Both routes use the same case
+selection and report missing dataset or ``.cppipe`` sources. They do not acquire
+data or submit work.
 
 ``openhcs_inspect_benchmark_run`` is an expert-only local capability, so select
 the ``full`` surface and restart the client before using it. Grant the result

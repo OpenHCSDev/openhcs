@@ -8,6 +8,8 @@ product package never imports this repository-only package.
 from __future__ import annotations
 
 from benchmark.contracts.control import (
+    BenchmarkCaseCatalog,
+    BenchmarkCaseDiscoveryRequest,
     BenchmarkRunInspection,
     BenchmarkRunInspectionRequest,
     MeasuredPipelineRunInspection,
@@ -44,6 +46,25 @@ class MeasuredPipelineCapability(BenchmarkCapability):
     """Shared request boundary for one completed ordinary-pipeline run."""
 
     input_contract = MeasuredPipelineRunInspectionRequest
+
+
+class DiscoverBenchmarkCasesCapability(BenchmarkCapability):
+    name = "openhcs_list_benchmark_cases"
+    kind = CapabilityKind.TOOL
+    title = "List benchmark cases"
+    description = (
+        "Select exact comparison-manifest case names and report source readiness "
+        "without acquiring datasets or running a pipeline."
+    )
+    exposition = BenchmarkCapability.exposition.refine(
+        workflow_stage=CapabilityWorkflowStage.DISCOVERY,
+    )
+    input_contract = BenchmarkCaseDiscoveryRequest
+    output_contract = BenchmarkCaseCatalog
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: BenchmarkControlService(context.path_policy),
+        method=lambda service, request: service.discover_cases(request),
+    )
 
 
 class InspectBenchmarkRunCapability(BenchmarkCapability):
@@ -98,6 +119,7 @@ __all__ = (
     "BenchmarkCapability",
     "MeasuredPipelineCapability",
     "BenchmarkControlService",
+    "DiscoverBenchmarkCasesCapability",
     "InspectBenchmarkRunCapability",
     "InspectMeasuredPipelineRunCapability",
     "ReportMeasuredPipelineRunCapability",

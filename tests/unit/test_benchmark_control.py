@@ -23,6 +23,7 @@ from benchmark.cellprofiler_comparison import (
     run_comparison_suite,
 )
 from benchmark.contracts.control import (
+    BenchmarkCaseDiscoveryRequest,
     BenchmarkRunInspectionRequest,
     MeasuredPipelineRunInspectionRequest,
 )
@@ -42,6 +43,7 @@ from benchmark.contracts.run_receipt import (
     ComparisonSuiteRunReceipt,
     ComparisonSuiteRunStatus,
 )
+from benchmark.control import discover_benchmark_cases
 from benchmark.control_service import BenchmarkControlService
 from benchmark.timing import BenchmarkPhase, PhaseTimingRecord
 from openhcs.agent.capabilities import agent_capabilities, get_capability_registry
@@ -115,6 +117,129 @@ def _measured_run_receipt(output_dir: Path) -> MeasuredPipelineRunReceipt:
     )
     receipt.write(MeasuredPipelineRunArtifact.RECEIPT.path_in(output_dir))
     return receipt
+
+
+def test_case_discovery_shares_exact_selection_across_cli_and_mcp(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    dataset = tmp_path / "images"
+    dataset.mkdir()
+    pipeline = tmp_path / "pipeline.cppipe"
+    pipeline.write_text("CellProfiler Pipeline: http://www.cellprofiler.org\n")
+    manifest = tmp_path / "cases.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {
+                        "name": "present",
+                        "dataset_path": str(dataset),
+                        "cppipe_path": str(pipeline),
+                    },
+                    {
+                        "name": "missing",
+                        "dataset_path": str(tmp_path / "absent"),
+                        "cppipe_path": str(tmp_path / "absent.cppipe"),
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    request = BenchmarkCaseDiscoveryRequest(
+        manifest_path=str(manifest), case_names=("present",)
+    )
+    path_policy = AgentPathPolicy.with_roots(
+        readable_roots=(tmp_path,), writable_roots=()
+    )
+    service = BenchmarkControlService(path_policy)
+
+    selected = service.discover_cases(request)
+    all_cases = discover_benchmark_cases(manifest)
+    assert tuple(case.name for case in selected.cases) == ("present",)
+    assert selected.cases[0].dataset_present is True
+    assert selected.cases[0].cppipe_present is True
+    assert selected.warnings == ()
+    assert len(all_cases.cases) == 2
+    assert len(all_cases.warnings) == 1
+
+    args = create_benchmark_argument_parser().parse_args(
+        ("list-cases", "--manifest", str(manifest), "--case", "present")
+    )
+    assert args.cli_command.run(args) == 0
+    cli_payload = json.loads(capsys.readouterr().out)
+    assert [case["name"] for case in cli_payload["cases"]] == ["present"]
+
+    context = OpenHCSAgentContext(path_policy=path_policy)
+    built = server.build_server(context)
+    names = {tool.name for tool in asyncio.run(built.list_tools())}
+    assert "openhcs_list_benchmark_cases" in names
+    mcp_result = asyncio.run(
+        built.call_tool(
+            "openhcs_list_benchmark_cases",
+            {"manifest_path": str(manifest), "case_names": ["present"]},
+        )
+    )
+    assert [case["name"] for case in mcp_result[1]["cases"]] == ["present"]
+
+
+def test_case_discovery_rejects_duplicate_names_without_acquiring(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = tmp_path / "duplicate.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {"name": "same", "dataset_path": "a", "cppipe_path": "a.cppipe"},
+                    {"name": "same", "dataset_path": "b", "cppipe_path": "b.cppipe"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OPENHCS_BENCHMARK_AUTO_ACQUIRE", "1")
+
+    def reject_acquisition(*_args):
+        raise AssertionError("Discovery must not acquire manifest roots")
+
+    monkeypatch.setattr(
+        "benchmark.contracts.comparison_manifest.materialize_manifest_path_roots",
+        reject_acquisition,
+    )
+
+    with pytest.raises(ValueError, match="must be unique"):
+        discover_benchmark_cases(manifest)
+
+
+def test_case_discovery_keeps_declared_sources_inside_agent_read_roots(
+    tmp_path: Path,
+) -> None:
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    manifest = allowed / "cases.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {
+                        "name": "outside",
+                        "dataset_path": str(tmp_path / "outside"),
+                        "cppipe_path": str(tmp_path / "outside.cppipe"),
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(readable_roots=(allowed,), writable_roots=())
+    )
+
+    with pytest.raises(ValueError, match="outside allowed roots"):
+        service.discover_cases(
+            BenchmarkCaseDiscoveryRequest(manifest_path=str(manifest))
+        )
 
 
 def test_measured_inspection_cli_and_report_share_one_receipt(

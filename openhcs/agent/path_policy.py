@@ -155,9 +155,15 @@ class AgentPathPolicy:
         )
 
     def assert_readable(self, path: str | Path) -> Path:
-        candidate = Path(path).expanduser().resolve(strict=False)
+        candidate = self.assert_readable_location(path)
         if not candidate.exists():
             raise AgentPathPolicyError(f"Readable path does not exist: {candidate}")
+        return candidate
+
+    def assert_readable_location(self, path: str | Path) -> Path:
+        """Allow a declared read path even when its source is not present yet."""
+
+        candidate = Path(path).expanduser().resolve(strict=False)
         if candidate not in self.readable_roots:
             raise AgentPathPolicyError(
                 f"Readable path is outside allowed roots: {candidate}. "

@@ -214,6 +214,9 @@ async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
+    manifest_path = output_dir / "empty_benchmark_manifest.json"
+    manifest_path.write_text('{"cases": []}\n', encoding="utf-8")
+
     parameters = StdioServerParameters(
         command=sys.executable,
         args=("-m", "openhcs.mcp", "--surface", "full"),
@@ -228,6 +231,7 @@ async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
                 )
             )
             expected = {
+                "openhcs_list_benchmark_cases",
                 "openhcs_inspect_measured_pipeline_run",
                 "openhcs_report_measured_pipeline_run",
             }
@@ -247,13 +251,28 @@ async def _run_benchmark_protocol_smoke(output_dir: Path) -> dict:
                     f"expected={expected} listed={listed_names} declared={declared_names}"
                 )
             for name in expected:
+                request = (
+                    {"manifest_path": str(manifest_path)}
+                    if name == "openhcs_list_benchmark_cases"
+                    else {"output_dir": str(output_dir)}
+                )
                 result = await asyncio.wait_for(
-                    session.call_tool(name, {"output_dir": str(output_dir)}),
+                    session.call_tool(name, request),
                     timeout=60,
                 )
                 if result.isError:
                     raise AssertionError(f"Installed benchmark tool failed: {name}")
                 payload = _tool_payload(result)
+                if name == "openhcs_list_benchmark_cases":
+                    if payload.get("manifest_path") != str(manifest_path):
+                        raise AssertionError(
+                            f"Installed benchmark discovery used the wrong manifest: {payload}"
+                        )
+                    if payload.get("cases") != [] or payload.get("warnings") != []:
+                        raise AssertionError(
+                            f"Installed empty benchmark discovery is invalid: {payload}"
+                        )
+                    continue
                 if payload.get("output_dir") != str(output_dir):
                     raise AssertionError(
                         f"Installed benchmark tool inspected the wrong run: {payload}"

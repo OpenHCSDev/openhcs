@@ -107,6 +107,34 @@ class InspectMeasuredPipelineCommand(BenchmarkCliCommand):
         return 0
 
 
+class ListBenchmarkCasesCommand(BenchmarkCliCommand):
+    """Inspect a manifest's declared work without acquiring or executing it."""
+
+    command_name = "list-cases"
+    help_text = "List and check the selected cases in a comparison manifest."
+    sort_order = 4
+
+    def configure(
+        self,
+        subparsers: argparse._SubParsersAction,
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        parser.add_argument("--manifest", type=Path, required=True)
+        parser.add_argument("--case", action="append", dest="case_names")
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        from benchmark.control import discover_benchmark_cases
+        from openhcs.serialization.json import to_jsonable
+
+        result = discover_benchmark_cases(
+            args.manifest,
+            requested_names=tuple(args.case_names or ()),
+        )
+        print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
+        return 0
+
+
 class RunBenchmarkCommand(BenchmarkCliCommand):
     """Run benchmark cases and write complete benchmark artifacts."""
 
@@ -185,12 +213,13 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
             ComparisonMetricPolicy,
             load_comparison_cases,
             run_comparison_suite,
+            select_comparison_cases,
         )
 
         suite_id = args.suite_id or datetime.now().strftime(
             "cp_vs_openhcs_%Y%m%d_%H%M%S"
         )
-        cases = _filter_cases_by_name(
+        cases = select_comparison_cases(
             load_comparison_cases(args.manifest),
             tuple(args.case_names or ()),
         )
@@ -225,29 +254,6 @@ class RunBenchmarkCommand(BenchmarkCliCommand):
             plot_summary(summary_path, figures_output_dir)
             print(f"figures={figures_output_dir}")
         return 0
-
-
-def _filter_cases_by_name(cases, requested_names: tuple[str, ...]):
-    """Return manifest cases selected by exact name, failing on absent names."""
-    if not requested_names:
-        return cases
-
-    available_names = tuple(case.name for case in cases)
-    available_name_set = set(available_names)
-    unknown_names = tuple(
-        name
-        for name in dict.fromkeys(requested_names)
-        if name not in available_name_set
-    )
-    if unknown_names:
-        raise ValueError(
-            "Unknown benchmark case name(s): "
-            f"{', '.join(unknown_names)}. Available case name(s): "
-            f"{', '.join(available_names)}"
-        )
-
-    requested_name_set = set(requested_names)
-    return tuple(case for case in cases if case.name in requested_name_set)
 
 
 class OfficialCp3ManifestCommand(BenchmarkCliCommand):

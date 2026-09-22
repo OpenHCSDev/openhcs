@@ -6,6 +6,8 @@ import hashlib
 from pathlib import Path
 
 from benchmark.contracts.control import (
+    BenchmarkCaseCatalog,
+    BenchmarkCaseSummary,
     BenchmarkRunInspection,
     BenchmarkStructuredArtifact,
     MeasuredPipelineRunInspection,
@@ -24,6 +26,51 @@ BENCHMARK_CONTROL_SCHEMA_VERSION = "openhcs.benchmark.control.v1"
 MEASURED_PIPELINE_INSPECTION_SCHEMA_VERSION = "openhcs.benchmark.measured-inspection.v1"
 MAX_MEASURED_RECEIPT_BYTES = 1_000_000
 MAX_SOURCE_SNAPSHOT_BYTES = 2_000_000
+BENCHMARK_CASE_CATALOG_SCHEMA_VERSION = "openhcs.benchmark.case-catalog.v1"
+
+
+def discover_benchmark_cases(
+    manifest_path: Path,
+    *,
+    requested_names: tuple[str, ...] = (),
+) -> BenchmarkCaseCatalog:
+    """Project one manifest's work without acquiring data or launching jobs."""
+
+    from benchmark.cellprofiler_comparison import (
+        load_comparison_cases,
+        select_comparison_cases,
+    )
+
+    path = Path(manifest_path).resolve()
+    if not path.is_file():
+        raise ValueError(f"Benchmark manifest must be a file: {path}")
+    cases = select_comparison_cases(
+        load_comparison_cases(path, materialize_roots=False),
+        requested_names,
+    )
+    summaries = tuple(
+        BenchmarkCaseSummary(
+            name=case.name,
+            dataset_id=case.resolved_dataset_id,
+            dataset_path=str(case.dataset_path.resolve()),
+            cppipe_path=str(case.cppipe_path.resolve()),
+            dataset_present=case.dataset_path.exists(),
+            cppipe_present=case.cppipe_path.is_file(),
+            microscope_type=case.microscope_type,
+        )
+        for case in cases
+    )
+    warnings = tuple(
+        f"Case {case.name!r} has an unavailable dataset or .cppipe source."
+        for case in summaries
+        if not case.dataset_present or not case.cppipe_present
+    )
+    return BenchmarkCaseCatalog(
+        schema_version=BENCHMARK_CASE_CATALOG_SCHEMA_VERSION,
+        manifest_path=str(path),
+        cases=summaries,
+        warnings=warnings,
+    )
 
 
 def _contained_file(root: Path, candidate: Path) -> Path | None:

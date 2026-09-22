@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from benchmark.contracts.control import (
+    BenchmarkCaseCatalog,
+    BenchmarkCaseDiscoveryRequest,
     BenchmarkRunInspection,
     BenchmarkRunInspectionRequest,
     MeasuredPipelineRunInspection,
@@ -10,6 +12,7 @@ from benchmark.contracts.control import (
     MeasuredPipelineRunReport,
 )
 from benchmark.control import (
+    discover_benchmark_cases,
     inspect_benchmark_run,
     inspect_measured_pipeline_run,
     report_measured_pipeline_run,
@@ -22,6 +25,20 @@ class BenchmarkControlService:
 
     def __init__(self, path_policy: AgentPathPolicy) -> None:
         self._path_policy = path_policy
+
+    def discover_cases(
+        self,
+        request: BenchmarkCaseDiscoveryRequest,
+    ) -> BenchmarkCaseCatalog:
+        manifest = self._path_policy.assert_readable(request.manifest_path)
+        catalog = discover_benchmark_cases(
+            manifest,
+            requested_names=request.case_names,
+        )
+        for case in catalog.cases:
+            self._path_policy.assert_readable_location(case.dataset_path)
+            self._path_policy.assert_readable_location(case.cppipe_path)
+        return catalog
 
     def inspect_run(
         self,
