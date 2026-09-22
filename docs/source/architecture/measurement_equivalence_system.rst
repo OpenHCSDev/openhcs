@@ -101,9 +101,12 @@ Compared modalities and policy
 Measurement of an OpenHCS run is separate from CellProfiler comparison. The
 benchmark wrapper accepts the ordinary ``OpenHCSExecutionSubmission`` and uses
 the normal compile-then-execute path; it only requests runtime observation,
-records phase timing and provenance, and reads the resulting outputs. The
-CellProfiler adapter prepares one such submission and then applies its optional
-native-reference equivalence policy. It does not own a second execution engine.
+validates that observation against compiled expectations, and records phase
+timing and provenance. A typed completed-run receipt derives execution identity,
+source/configuration digests, and output references from those same authorities;
+it does not become a second job-status store. The CellProfiler adapter prepares
+one such submission and then applies its optional native-reference equivalence
+policy. It does not own a second execution engine.
 
 For ordinary reference runs, the OpenHCS benchmark adapter builds typed
 runtime/output snapshots and compares:
@@ -158,6 +161,9 @@ Retain the generated files together with a receipt containing at least:
 recorded invocation, or a compatibility-matrix report is not a durable parity
 receipt. If Napari cases are closed by targeted reruns, report that topology
 explicitly rather than describing it as one uninterrupted all-case run.
+The separate single-pipeline measured-run receipt contains source digests, not
+the source documents themselves, and does not by itself satisfy this suite-level
+publication requirement.
 
 Extension rule
 --------------

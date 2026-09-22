@@ -2166,7 +2166,7 @@
   },
   {
     "path": "docs/source/architecture/measurement_equivalence_system.rst",
-    "source_sha256": "3e55aff0a605f09944eb202db04844b43477b8caa9f3127be13441958650942c",
+    "source_sha256": "dd0a7a621aa9eba6ad46f0cdf3617cf339d0a916448f4d07f091c4437ef8fd28",
     "audience": [
       "OpenHCS equivalence maintainers",
       "CellProfiler parity reviewers"
@@ -2191,8 +2191,18 @@
       },
       {
         "path": "benchmark/adapters/openhcs.py",
-        "sha256": "517f8fc9122ed640b3e3a15ca81bde7aa4d0a90566813981ecfe990b77f3207b",
+        "sha256": "644f54fc8fa147139c2fa0780976019afcbb91eb98314245e2d6e6bbe28d806d",
         "role": "Builds ordinary benchmark runtime snapshots and strict CellProfiler policy; for a digest-bound reference-export plan, selects the exact declared files and records per-artifact comparisons."
+      },
+      {
+        "path": "benchmark/openhcs_measured_run.py",
+        "sha256": "d5583915955d2721911a6fc37eb834eb11ee9349852a9e6819e471e79f8acbf2",
+        "role": "Wraps the ordinary compile-and-execute operation with observation validation, phase timing, endpoint provenance, and the completed-run receipt."
+      },
+      {
+        "path": "benchmark/contracts/measured_run_receipt.py",
+        "sha256": "ba10cea2b54072ebbcfa5abef9c96464d956d37263c9a29df954ffcc91492579",
+        "role": "Declares the typed single-pipeline success receipt and its stable serialisation boundary without mirroring runtime job status."
       },
       {
         "path": "benchmark/manifests/official30_portable_axis1.json",
@@ -2216,8 +2226,13 @@
       },
       {
         "path": "tests/unit/test_openhcs_adapter.py",
-        "sha256": "a9424f8e40a0c73a773e8c4140de3a001019260fe6f433ff581b596d03a59230",
+        "sha256": "d807ee5ed7b3dd564b324e3aa3c2aa4e80697bcca5b5a98dc70a8c0048c22300",
         "role": "Proves the OpenHCS adapter selects a validated reference-export plan when present and records its comparisons."
+      },
+      {
+        "path": "tests/unit/test_openhcs_measured_run.py",
+        "sha256": "4159d64cdc9c5306e9943774dbc1df539445e3e549f5d6538aa0443a78cbf334",
+        "role": "Proves an ordinary non-CellProfiler run validates its observation before writing a round-trippable completed-run receipt."
       }
     ],
     "findings": [
@@ -2231,7 +2246,8 @@
       "Re-reviewed after the Official30 viewer proof began locating route-local stack axes in their shared semantic slots; the parity and receipt claims remain accurate.",
       "2026-09-14: Applied the Diataxis explanation boundary and re-read the complete page against the current adapter and reference-export owner. Revised the comparison section to distinguish ordinary typed-snapshot parity from digest-bound exact-inventory benchmark-only exports, including numeric versus categorical contracts and explicit single-plane label projection. Focused CellProfiler implementation and comparison validation passed 292 tests.",
       "2026-09-22: Targeted authority review for ordinary measured runs and headless cancellation; see docs/audits/benchmark_wrapper_review_20260922.md. This does not claim a full editorial re-audit or live cancellation proof.",
-      "2026-09-22: Re-read the complete equivalence explanation against the adapter delta that moves compiled-expectation validation into the generic measured-run wrapper. The adapter still constructs the strict CellProfiler policy and uses the validated observation for typed snapshots and comparisons. The page's ownership claims remain accurate; 14 focused adapter, wrapper, and live-server tests passed."
+      "2026-09-22: Re-read the complete equivalence explanation against the adapter delta that moves compiled-expectation validation into the generic measured-run wrapper. The adapter still constructs the strict CellProfiler policy and uses the validated observation for typed snapshots and comparisons. The page's ownership claims remain accurate; 14 focused adapter, wrapper, and live-server tests passed.",
+      "2026-09-22: Re-read the explanation after adding the typed single-pipeline success receipt. Clarified that receipt identity and source digests derive from the ordinary submission and validated observation, do not duplicate job status, and do not alone constitute a durable suite-level publication receipt. The affected 25 adapter, wrapper, control, and live-server tests passed; this is not a fresh installed-client proof."
     ]
   },
   {

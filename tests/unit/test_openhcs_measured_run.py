@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,6 +10,8 @@ import pytest
 from zmqruntime import EndpointApplication, EndpointApplicationCompatibility
 
 import benchmark.openhcs_measured_run as measured_run
+from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
+from benchmark.contracts.run_artifacts import MeasuredPipelineRunArtifact
 from benchmark.contracts.tool_adapter import ToolExecutionError
 from benchmark.timing import BenchmarkPhase, PhaseTimingTrace
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
@@ -116,6 +119,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
             )
         assert clients[0].disconnect_count == 1
         assert not (tmp_path / measured_run.ZMQ_RESULTS_SUMMARY_FILENAME).exists()
+        assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
         return
 
     result, source = measured_run.execute_measured_openhcs_pipeline(
@@ -129,6 +133,14 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
     assert result.output_roots == (tmp_path,)
     assert result.observation.records_by_axis == {}
     assert source == submission.pipeline_code()
+    retained = MeasuredPipelineRunReceipt.read(
+        MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
+    )
+    assert retained == result.receipt
+    assert (
+        retained.pipeline_source_sha256
+        == hashlib.sha256(source.encode("utf-8")).hexdigest()
+    )
     assert [record.phase for record in timing.records] == [
         BenchmarkPhase.SUBMIT_OPENHCS,
         BenchmarkPhase.WAIT_OPENHCS,

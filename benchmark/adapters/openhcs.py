@@ -518,7 +518,7 @@ class OpenHCSAdapter(ToolAdapter):
 
         provenance = {
             "openhcs_version": self.version,
-            **server_execution.endpoint_provenance,
+            **server_execution.endpoint_provenance.as_payload(),
             "microscope_type": request.microscope_type,
             "pipeline_source": "converted_cppipe",
             "cppipe_path": str(cppipe_path),

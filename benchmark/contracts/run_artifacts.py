@@ -32,6 +32,15 @@ class ComparisonRunArtifact(Enum):
         return output_dir / self.value
 
 
+class MeasuredPipelineRunArtifact(Enum):
+    """Evidence owned by a single measured ordinary pipeline execution."""
+
+    RECEIPT = "measured_pipeline_receipt.json"
+
+    def path_in(self, output_dir: Path) -> Path:
+        return output_dir / self.value
+
+
 class StructuredArtifactFormat(Enum):
     """Closed structured-file format axis used by run inspection."""
 

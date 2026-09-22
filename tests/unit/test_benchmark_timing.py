@@ -4,6 +4,8 @@ import csv
 import json
 from pathlib import Path
 
+import pytest
+
 from benchmark.timing import (
     BenchmarkPhase,
     PhaseTimingRecord,
@@ -42,6 +44,21 @@ def test_phase_timing_trace_records_typed_phase_payload() -> None:
             "cached": False,
         },
     )
+    assert PhaseTimingRecord.from_payload(trace.payloads()[0]) == trace.records[0]
+
+
+def test_phase_timing_rejects_unknown_persisted_phase() -> None:
+    with pytest.raises(ValueError, match="Unknown benchmark phase"):
+        PhaseTimingRecord.from_payload(
+            {
+                "run_id": "run-1",
+                "pipeline_name": "pipe",
+                "tool": "OpenHCS",
+                "phase": "NOT_A_DECLARED_PHASE",
+                "seconds": 0.25,
+                "cached": False,
+            }
+        )
 
 
 def test_phase_timing_writers_can_use_filemanager_vfs() -> None:

@@ -6,11 +6,14 @@ import csv
 import io
 import json
 import time
+from collections.abc import Mapping
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from enum import Enum, auto
 from pathlib import Path
 from typing import Iterator
+
+from python_introspect import dataclass_from_mapping
 
 from openhcs.core.config import Backend
 from openhcs.core.vfs_protocol import FileManagerLike
@@ -52,6 +55,19 @@ class PhaseTimingRecord:
         payload = asdict(self)
         payload["phase"] = self.phase.name
         return payload
+
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, object]) -> "PhaseTimingRecord":
+        """Decode the stable phase name rather than the enum's ordinal value."""
+
+        phase_name = payload.get("phase")
+        if not isinstance(phase_name, str):
+            raise TypeError("Phase timing phase must be a declared name.")
+        try:
+            phase = BenchmarkPhase[phase_name]
+        except KeyError as exc:
+            raise ValueError(f"Unknown benchmark phase: {phase_name!r}.") from exc
+        return dataclass_from_mapping(cls, {**payload, "phase": phase})
 
 
 class PhaseTimingTrace:

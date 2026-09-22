@@ -278,9 +278,9 @@ def test_benchmark_executes_pipeline_via_zmq_client(
     assert execution.execution_id == "exec-1"
     assert execution.output_roots == (tmp_path,)
     assert execution.results_summary == {"output_plate_root": str(tmp_path)}
-    assert execution.endpoint_provenance["endpoint_openhcs_version"] == "0.8.5"
-    assert execution.endpoint_provenance["endpoint_pid"] == 321
-    assert execution.endpoint_provenance["endpoint_create_time_epoch_seconds"] == 123.0
+    assert execution.endpoint_provenance.endpoint_openhcs_version == "0.8.5"
+    assert execution.endpoint_provenance.endpoint_pid == 321
+    assert execution.endpoint_provenance.endpoint_create_time_epoch_seconds == 123.0
     assert (
         json.loads(
             (tmp_path / ZMQ_RESULTS_SUMMARY_FILENAME).read_text(encoding="utf-8")
