@@ -7,13 +7,13 @@ import logging
 import subprocess
 import sys
 import time
-from contextlib import nullcontext
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import CancelledError
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass, replace
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, ContextManager, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 from arraybridge import MemoryType
 from pyqt_reactive.process_launch import BackgroundProcessLaunchPolicy
@@ -279,11 +279,13 @@ def run_compiled_pipeline(
     client: ZMQExecutionClient,
     submission: OpenHCSExecutionSubmission,
     *,
-    phase_context: Callable[[ZMQPipelineRunPhase], ContextManager[None]] | None = None,
+    phase_context: (
+        Callable[[ZMQPipelineRunPhase], AbstractContextManager[None]] | None
+    ) = None,
 ) -> ZMQCompiledPipelineRun:
     """Compile and execute one ordinary document with an optional phase observer."""
 
-    def phase_scope(phase: ZMQPipelineRunPhase) -> ContextManager[None]:
+    def phase_scope(phase: ZMQPipelineRunPhase) -> AbstractContextManager[None]:
         return nullcontext() if phase_context is None else phase_context(phase)
 
     with phase_scope(ZMQPipelineRunPhase.SUBMIT_COMPILE):

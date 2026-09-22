@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
 import hashlib
 import json
+from collections.abc import Mapping
+from dataclasses import dataclass
+
+from zmqruntime.messages import ExecuteRequest, MessageFields
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
-from zmqruntime.messages import ExecuteRequest, MessageFields
 
 TransportValue = (
     str

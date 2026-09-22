@@ -42,8 +42,8 @@ from openhcs.agent.dto.execution import (
     ArtifactPlanInspection,
     CompileSubmissionRequest,
     ExecutionCancellationRequest,
-    ExecutionJobRef,
     ExecutionJobCancellationResult,
+    ExecutionJobRef,
     ExecutionJobStatus,
     ExecutionStatusRequest,
     OrchestratorSession,
@@ -188,8 +188,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowViewportRequest,
     ViewerWindowViewportResult,
 )
-from openhcs.serialization.json import to_jsonable
 from openhcs.runtime.viewer_controls import ViewerNavigationControlOptions
+from openhcs.serialization.json import to_jsonable
 
 
 class CapabilityKind(Enum):
